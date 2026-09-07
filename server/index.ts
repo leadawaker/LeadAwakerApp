@@ -114,10 +114,11 @@ app.use((req, res, next) => {
     });
   };
   app.get("/", sendFile(premiumDir, "index.html"));
-  // Landing-page variants: /home is the home-improvement page, /uk /us /nl force
-  // a market on the solar page. config.jsx resolves both from location.pathname,
+  // Landing-page variants: /home is the home-improvement page, /solar is the
+  // dormant solar page (moved off root 2026-09-05), /uk /us /nl force a market
+  // on the solar page. config.jsx resolves all of these from location.pathname,
   // so these must serve the same HTML rather than redirect. Mirrors vercel.json.
-  app.get(["/home", "/uk", "/us", "/nl"], sendFile(premiumDir, "index.html"));
+  app.get(["/home", "/solar", "/uk", "/us", "/nl"], sendFile(premiumDir, "index.html"));
   // Browser demo. The token stays in the path (the page reads it from
   // location.pathname), so this serves the file rather than redirecting.
   // Mirrors the /demo/:token rewrite in vercel.json.

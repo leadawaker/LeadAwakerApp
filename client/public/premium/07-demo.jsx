@@ -3,7 +3,7 @@
 function Demo() {
   const isMobile = window.useIsMobile();
   const { t, lang } = window.useI18n();
-  const isSolar = window.SITE_VARIANT !== 'home';
+  const isSolar = window.SITE_VARIANT === 'solar';
   const [firstName, setFirstName] = React.useState("");
   const [niche, setNiche] = React.useState(isSolar ? "solar panel and battery installation" : "");
   const [companyName, setCompanyName] = React.useState("");

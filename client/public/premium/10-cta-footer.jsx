@@ -437,10 +437,13 @@ function CTA() {
                 <FooterMark size={44} />
               </div>
               {/* Terms + Privacy + the other site variant. Without this link a
-                  kitchen company landing on the solar page has nowhere to go. */}
+                  kitchen company landing on the solar page has nowhere to go.
+                  Solar is now the only outlier variant (root and /home both
+                  read as generic), so the cross-link is solar-vs-everyone
+                  else rather than the old home-vs-solar binary. */}
               <div style={{ display: "flex", gap: isMobile ? 16 : 30, alignSelf: "flex-end", paddingBottom: 18 }}>
-                <a href={window.SITE_VARIANT === 'home' ? '/' : '/home'} style={{ ...linkStyle, color: footerInk }}>
-                  {t(window.SITE_VARIANT === 'home' ? 'cta.other_solar' : 'cta.other_home')}
+                <a href={window.SITE_VARIANT === 'solar' ? '/' : '/solar'} style={{ ...linkStyle, color: footerInk }}>
+                  {t(window.SITE_VARIANT === 'solar' ? 'cta.other_home' : 'cta.other_solar')}
                 </a>
                 <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: footerInk }}>{t('cta.terms')}</a>
                 <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" style={{ ...linkStyle, color: footerInk }}>{t('cta.privacy')}</a>

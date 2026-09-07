@@ -16,6 +16,10 @@
       "destination": "/premium/index.html"
     },
     {
+      "source": "/solar",
+      "destination": "/premium/index.html"
+    },
+    {
       "source": "/(uk|us|nl)",
       "destination": "/premium/index.html"
     },

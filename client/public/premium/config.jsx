@@ -74,8 +74,10 @@ const BONE_OVERRIDE = {
 function applyPalette(idx) {
   const base = PALETTES[idx] || PALETTES[0];
   // SITE_VARIANT is resolved further down this file; applyPalette is only ever
-  // called from app-main.jsx, which runs after config.jsx has finished.
-  const p = window.SITE_VARIANT === 'home' ? base : { ...base, ...BONE_OVERRIDE };
+  // called from app-main.jsx, which runs after config.jsx has finished. Only
+  // the dormant /solar variant reads as technical (Bone); root ('main') and
+  // /home both keep the warm Porcelain identity.
+  const p = window.SITE_VARIANT === 'solar' ? { ...base, ...BONE_OVERRIDE } : base;
   const r = document.documentElement.style;
   r.setProperty("--bg", p.bg);
   r.setProperty("--bg-2", p.bg2);
@@ -165,11 +167,13 @@ window.ArrowSm = function ArrowSm() {
 };
 
 /* --------------------------- CHAT CASE DATA ------------------------------ */
-/* Two case sets, one page. leadawaker.com sells solar, where the switcher tabs
-   are service angles (quote reactivation / policy deadline / old leads).
-   leadawaker.com/home sells home renovation, where the tabs stay niches.
-   Both are served from the same index.html; SITE_VARIANT below picks the set,
-   so the switcher, hero imagery and icons all follow from one source. */
+/* Three case sets, one page. leadawaker.com (root) shows NICHE_CASES, the
+   multi-industry pitch. leadawaker.com/solar sells solar, where the switcher
+   tabs are service angles (quote reactivation / policy deadline / old leads)
+   instead of niches. leadawaker.com/home sells home renovation, where the
+   tabs stay niches. All three are served from the same index.html;
+   SITE_VARIANT below picks the set, so the switcher, hero imagery and icons
+   all follow from one source. */
 const HOME_CASES = {
   kitchen: {
     label: "Kitchen",
@@ -754,18 +758,352 @@ window.marketNames = () => window.MARKET_NAMES[MARKET] || window.MARKET_NAMES.nl
 
 SOLAR_CASES.netmetering = DEADLINE_CASES[MARKET];
 
-/* One page, two products. Vercel rewrites /home to the same index.html, so the
-   path decides which set (and therefore which switcher) renders. ?site= is an
-   override so both variants are reachable on the Pi, where the page is served
-   from /premium/index.html and the path never says /home. */
+/* Root's case set: ported from the retired /legacy build's 01-Chat3D use-case
+   demos (solar/coaching/gym/dental/legal), which had the copy but only ran on
+   a page nobody links to anymore. Root pitches the platform across industries
+   rather than one niche, so order matters as sales narrative: coach leads
+   (today's active niche), solar trails last (dormant niche, kept for parity
+   with the /solar variant). Same message shape as HOME_CASES/SOLAR_CASES so
+   ConversationCard needs no changes. */
+const NICHE_CASES = {
+  coach: {
+    label: "Coach",
+    labelNl: "Coach",
+    leadName: "Ellen Jansen",
+    avatar: "E",
+    project: "Career-transition coaching",
+    ago: "6 mo. ago",
+    agentName: "Maya",
+    domain: "thresholdcoaching",
+    messages: [
+      { type: "agent", content: "Hi, Maya from Threshold Coaching here. Is this the same Ellen who booked a free clarity call with us back in February? 🙂", time: "11:00 AM" },
+      { type: "system", content: "Lead engaged" },
+      { type: "user", content: "yes that was me", time: "11:08 AM" },
+      { type: "user", content: "sorry I never showed up, work was insane", time: "11:08 AM" },
+      { type: "system", content: "Lead replied" },
+      { type: "agent", content: "No need to apologize, that's why I'm reaching out. My coach asked me to follow up because the people who ghost a clarity call are usually the ones who need it the most.\n\nStill feeling stuck where you were, or did something shift?", time: "11:09 AM" },
+      { type: "user", content: "honestly its worse", time: "11:20 AM" },
+      { type: "user", content: "still in HR and Im burned out", time: "11:20 AM" },
+      { type: "user", content: "I keep dreaming of doing something with more meaning", time: "11:21 AM" },
+      { type: "agent", content: "That's a really common place to be, Ellen. When you picture \"something with more meaning,\" what actually comes to mind?", time: "11:22 AM" },
+      { type: "user", content: "i think coaching actually", time: "11:35 AM" },
+      { type: "user", content: "working with people hands-on", time: "11:35 AM" },
+      { type: "user", content: "maybe blue-collar workers? In HR I saw how little real support they get", time: "11:36 AM" },
+      { type: "system", content: "Surfacing real goal" },
+      { type: "agent", content: "That's a really specific niche, and honestly a really needed one. Most coaches aim at executives, so you'd be entering a much less crowded space.\n\nWhat's been stopping you from starting?", time: "11:37 AM" },
+      { type: "user", content: "fear I guess", time: "11:48 AM" },
+      { type: "user", content: "and money. I dont want to quit HR until I know it can actually work", time: "11:48 AM" },
+      { type: "agent", content: "Exactly the right instinct. Our work with people in transition is structured around that, you stay employed while we build the coaching practice next to the day job, then transition only when the numbers work.\n\nWould it help to spend 30 minutes with our head coach mapping what the first 6 months could actually look like for you?", time: "11:49 AM" },
+      { type: "user", content: "yes I think I'm ready for that now", time: "12:05 PM" },
+      { type: "system", content: "Lead qualified" },
+      { type: "agent", content: "Great. Here's the booking link for a paid 30-min discovery: https://calendar.app.google", time: "12:06 PM" },
+      { type: "system", content: "Appointment booked 📅", wine: true },
+      { type: "agent", content: "You're booked Thursday at 10:00 ✅\n\nJames will walk you through the transition framework and where coaching blue-collar workers fits in the market.", time: "12:20 PM" },
+      { type: "user", content: "thank you Maya, this is the nudge I needed", time: "12:30 PM" },
+      { type: "agent", content: "That's why we reach out 🙂 Talk Thursday.", time: "12:31 PM" },
+      { type: "system", content: "Closed - Sent to Client", wine: true }
+    ],
+    messagesNl: [
+      { type: "agent", content: "Hoi, Maya van Threshold Coaching hier. Ben jij de Ellen die in februari een gratis oriëntatiegesprek bij ons boekte? 🙂", time: "11:00 AM" },
+      { type: "system", content: "Lead geëngageerd" },
+      { type: "user", content: "ja dat was ik", time: "11:08 AM" },
+      { type: "user", content: "sorry ik ben nooit komen opdagen, werk was waanzin", time: "11:08 AM" },
+      { type: "system", content: "Lead heeft gereageerd" },
+      { type: "agent", content: "Geen excuses nodig, daarom bel ik juist. Mijn coach vroeg me om contact op te nemen omdat de mensen die een oriëntatiegesprek afzeggen vaak juist degenen zijn die het het meest nodig hebben.\n\nZit je nog vast op hetzelfde punt, of is er iets verschoven?", time: "11:09 AM" },
+      { type: "user", content: "eerlijk gezegd erger", time: "11:20 AM" },
+      { type: "user", content: "zit nog bij HR en ik ben opgebrand", time: "11:20 AM" },
+      { type: "user", content: "ik blijf dromen over iets met meer betekenis doen", time: "11:21 AM" },
+      { type: "agent", content: "Dat is een heel herkenbare plek om te zitten, Ellen. Als je \"iets met meer betekenis\" voor je ziet, wat komt dan als eerste op?", time: "11:22 AM" },
+      { type: "user", content: "ik denk eigenlijk coaching", time: "11:35 AM" },
+      { type: "user", content: "direct met mensen werken", time: "11:35 AM" },
+      { type: "user", content: "misschien bouwvakkers of uitvoerend personeel? Vanuit HR zag ik hoe weinig echte support zij krijgen", time: "11:36 AM" },
+      { type: "system", content: "Echt doel boven water" },
+      { type: "agent", content: "Dat is een heel specifieke niche, en eerlijk gezegd een hard-nodige. De meeste coaches richten zich op leidinggevenden, dus jij zou in een veel minder vol veld stappen.\n\nWat heeft je tot nu toe tegengehouden om te beginnen?", time: "11:37 AM" },
+      { type: "user", content: "angst denk ik", time: "11:48 AM" },
+      { type: "user", content: "en geld. Ik wil niet stoppen bij HR tot ik weet dat het echt kan werken", time: "11:48 AM" },
+      { type: "agent", content: "Precies het juiste gevoel. Onze aanpak met mensen in transitie is daar omheen gebouwd: je blijft aan het werk terwijl we de coachingpraktijk naast het dagwerk opbouwen, en je maakt de overstap pas als de cijfers werken.\n\nZou het helpen om 30 minuten met onze hoofdcoach in kaart te brengen hoe de eerste 6 maanden er voor jou uit kunnen zien?", time: "11:49 AM" },
+      { type: "user", content: "ja, ik denk dat ik er nu klaar voor ben", time: "12:05 PM" },
+      { type: "system", content: "Lead gekwalificeerd" },
+      { type: "agent", content: "Top. Hier is de boekingslink voor een betaald kennismakingsgesprek van 30 min: https://calendar.app.google", time: "12:06 PM" },
+      { type: "system", content: "Afspraak ingepland 📅", wine: true },
+      { type: "agent", content: "Je staat ingepland voor donderdag om 10:00 ✅\n\nJames loopt de transitie-aanpak met je door en hoe coaching voor bouwvakkers in de markt past.", time: "12:20 PM" },
+      { type: "user", content: "bedankt Maya, dit is het zetje dat ik nodig had", time: "12:30 PM" },
+      { type: "agent", content: "Daarom bellen we 🙂 Tot donderdag.", time: "12:31 PM" },
+      { type: "system", content: "Afgesloten - Doorgestuurd naar klant", wine: true }
+    ]
+  },
+  gym: {
+    label: "Gym",
+    labelNl: "Sportschool",
+    leadName: "Mark Evans",
+    avatar: "M",
+    project: "Personal training plan",
+    ago: "4 mo. ago",
+    agentName: "Sara",
+    domain: "ironpulsefitness",
+    messages: [
+      { type: "agent", content: "Hello, it's Sara from IronPulse Fitness Club here. Is this the same Mark who used to be a member with us a while back? 🙂", time: "10:00 AM" },
+      { type: "system", content: "Lead engaged" },
+      { type: "user", content: "yes thats me", time: "10:12 AM" },
+      { type: "system", content: "Lead replied" },
+      { type: "agent", content: "Nice! My calendar pinged me to call, but I didn't want to bug you.\n\nAre you still looking to get back into training?", time: "10:13 AM" },
+      { type: "user", content: "I would love to but I just got a baby and time is tight", time: "10:18 AM" },
+      { type: "system", content: "Handling Objection" },
+      { type: "agent", content: "Congrats on the baby! 🎉\n\nHonestly, new parents who train smart tend to stick with it better because they need the energy boost. When you were with us before, what was your main goal?", time: "10:19 AM" },
+      { type: "user", content: "strength and consistency", time: "10:26 AM" },
+      { type: "agent", content: "Solid. What made you stop last time? Was it progress, motivation, or just life getting in the way?", time: "10:27 AM" },
+      { type: "user", content: "progress", time: "10:34 AM" },
+      { type: "user", content: "I couldnt tell if I was improving", time: "10:34 AM" },
+      { type: "agent", content: "That's the worst, because then it feels like effort with no reward.\n\nIf you had clear proof each month that you're improving, would it be easier to stick with it?", time: "10:35 AM" },
+      { type: "user", content: "yes, it is sort of a pattern with me, I start motivated but then it fizzles out", time: "10:42 AM" },
+      { type: "agent", content: "I hear you Mark. We do a monthly check-in so you can see progress clearly, and we adjust the plan fast. Let's book a quick personal trainer plan appointment so you and the PT can map out a realistic routine. Sound good?", time: "10:52 AM" },
+      { type: "user", content: "yes, sounds like a plan!", time: "10:58 AM" },
+      { type: "system", content: "Lead qualified" },
+      { type: "agent", content: "Great. Here's the booking link: https://calendar.app.google/", time: "10:59 AM" },
+      { type: "system", content: "Appointment booked 📅", wine: true },
+      { type: "agent", content: "Awesome, you're booked for Monday 4pm ✅\n\nJake will call you then. He's our go-to at habit systems and progress plans, especially for new parents.\n\nIf you need to reschedule, reply here.", time: "11:05 AM" },
+      { type: "user", content: "perfect thanks", time: "11:10 AM" },
+      { type: "agent", content: "You are welcome, have a good day 🙂", time: "11:11 AM" },
+      { type: "system", content: "Closed - Sent to Client", wine: true }
+    ],
+    messagesNl: [
+      { type: "agent", content: "Hallo, Sara van IronPulse Fitness hier. Ben jij de Mark die vroeger lid was bij ons? 🙂", time: "10:00 AM" },
+      { type: "system", content: "Lead geëngageerd" },
+      { type: "user", content: "ja dat ben ik", time: "10:12 AM" },
+      { type: "system", content: "Lead heeft gereageerd" },
+      { type: "agent", content: "Mooi. Mijn agenda stuurde een herinnering om je te bellen, maar ik wilde je niet storen.\n\nBen je nog steeds van plan om weer te gaan trainen?", time: "10:13 AM" },
+      { type: "user", content: "ik zou graag willen maar ik heb net een baby gekregen en daardoor weinig tijd", time: "10:18 AM" },
+      { type: "system", content: "Behandelen bezwaar" },
+      { type: "agent", content: "Gefeliciteerd met de baby! 🎉\n\nJe zou het niet verwachten, maar nieuwe ouders die slim trainen houden het vaak beter vol omdat ze de energieboost nodig hebben. Toen je bij ons trainde, wat was toen je hoofddoel?", time: "10:19 AM" },
+      { type: "user", content: "kracht en consistentie", time: "10:26 AM" },
+      { type: "agent", content: "Goed.\n\nWaarom ben je de vorige keer gestopt? Was het vooruitgang, motivatie of werd het leven te druk?", time: "10:27 AM" },
+      { type: "user", content: "vooruitgang", time: "10:34 AM" },
+      { type: "user", content: "ik kon niet zien of ik vooruitging", time: "10:34 AM" },
+      { type: "agent", content: "Dat is precies waardoor mensen vaak stoppen, omdat het voelt als inspanning zonder beloning.\n\nAls je elke maand duidelijk bewijs had dat je vooruitgaat, zou het dan makkelijker zijn om vol te houden?", time: "10:35 AM" },
+      { type: "user", content: "ja, het is een beetje mijn valkuil, ik begin gemotiveerd maar dan zakt het weg", time: "10:42 AM" },
+      { type: "agent", content: "Dat hoor ik vaker, Mark. Juist daarom doen we maandelijkse check-ins, zodat je vooruitgang duidelijk ziet, en we het trainingsplan waar nodig aan kunnen passen. Zullen we een korte sessie met een personal trainer inplannen om samen een haalbaar schema uit te stippelen?", time: "10:52 AM" },
+      { type: "user", content: "ja, klinkt als een plan!", time: "10:58 AM" },
+      { type: "system", content: "Lead gekwalificeerd" },
+      { type: "agent", content: "Top. Hier is de boekingslink: https://calendar.app.google", time: "10:59 AM" },
+      { type: "system", content: "Afspraak ingepland 📅", wine: true },
+      { type: "agent", content: "Geweldig, je staat ingepland voor maandag 16:00 ✅\n\nBas belt je dan. Hij is onze specialist in routine opbouw en het opstellen van haalbare plannen, vooral voor (nieuwe) ouders.\n\nAls je de afspraak wil verzetten, kan je me hier een bericht sturen.", time: "11:05 AM" },
+      { type: "user", content: "perfect bedankt", time: "11:10 AM" },
+      { type: "agent", content: "Graag gedaan, fijne dag 🙂", time: "11:11 AM" },
+      { type: "system", content: "Afgesloten - Doorgestuurd naar klant", wine: true }
+    ]
+  },
+  dental: {
+    label: "Dental",
+    labelNl: "Tandarts",
+    leadName: "Laura Brandt",
+    avatar: "L",
+    project: "Cosmetic consult + checkup",
+    ago: "8 mo. ago",
+    agentName: "Sophie",
+    domain: "brightsmiledental",
+    messages: [
+      { type: "agent", content: "Hi, Sophie from BrightSmile Dental here. Is this the same Laura who had a cosmetic consult with us about 8 months ago? 🙂", time: "02:00 PM" },
+      { type: "system", content: "Lead engaged" },
+      { type: "user", content: "yes that was me", time: "02:08 PM" },
+      { type: "system", content: "Lead replied" },
+      { type: "agent", content: "Thanks Laura. My colleague asked me to follow up, we opened a few hygiene slots this month for existing patients.\n\nAre you overdue for a checkup, or still thinking about the whitening plan we talked about?", time: "02:09 PM" },
+      { type: "user", content: "both honestly", time: "02:18 PM" },
+      { type: "user", content: "I know its time for a checkup but the whitening quote scared me a bit", time: "02:19 PM" },
+      { type: "system", content: "Handling objection" },
+      { type: "agent", content: "Totally fair. Most people feel the same on the first quote.\n\nGood news, your basisverzekering covers the checkup fully. For the whitening, we offer an interest-free plan up to 24 months, so it's much more manageable.", time: "02:20 PM" },
+      { type: "user", content: "oh I didnt know about the plan", time: "02:31 PM" },
+      { type: "agent", content: "Quite common. Would it help if we booked the hygiene visit first, and the dentist talks you through the plan for 10 minutes at the same appointment? No extra cost.", time: "02:32 PM" },
+      { type: "user", content: "yes that would work", time: "02:40 PM" },
+      { type: "system", content: "Lead qualified" },
+      { type: "agent", content: "Perfect. Here's the booking link: https://calendar.app.google", time: "02:41 PM" },
+      { type: "system", content: "Appointment booked 📅", wine: true },
+      { type: "agent", content: "All set Laura, you're booked Thursday at 15:00 ✅\n\nDr. Ven will do the hygiene check and review the whitening plan with you.", time: "02:55 PM" },
+      { type: "user", content: "thanks!", time: "03:00 PM" },
+      { type: "user", content: "oh wait actually", time: "05:40 PM" },
+      { type: "user", content: "I just realized I have a work thing thursday afternoon. can I push it to friday morning instead?", time: "05:41 PM" },
+      { type: "system", content: "Handling reschedule" },
+      { type: "agent", content: "Of course. We have Friday at 09:30 or 11:00 open, which works better?", time: "05:42 PM" },
+      { type: "user", content: "9:30 is perfect", time: "05:50 PM" },
+      { type: "agent", content: "Done, moved to Friday 09:30 ✅\n\nIf anything else comes up, just message me here.", time: "05:51 PM" },
+      { type: "system", content: "Appointment re-booked 📅", wine: true },
+      { type: "user", content: "thanks for the flexibility", time: "06:00 PM" },
+      { type: "agent", content: "My pleasure. See you Friday! 🙂", time: "06:01 PM" },
+      { type: "system", content: "Closed - Sent to Client", wine: true }
+    ],
+    messagesNl: [
+      { type: "agent", content: "Hoi, Sophie van BrightSmile Tandartspraktijk hier. Ben jij de Laura die ongeveer 8 maanden geleden een cosmetisch consult had bij ons? 🙂", time: "02:00 PM" },
+      { type: "system", content: "Lead geëngageerd" },
+      { type: "user", content: "ja dat was ik", time: "02:08 PM" },
+      { type: "system", content: "Lead heeft gereageerd" },
+      { type: "agent", content: "Bedankt Laura. Mijn collega vroeg me om contact op te nemen, we hebben deze maand een paar mondhygiëne-slots vrijgehouden voor bestaande patiënten.\n\nBen je toe aan een controle, of denk je nog na over het whitening-plan waarover we spraken?", time: "02:09 PM" },
+      { type: "user", content: "eerlijk gezegd allebei", time: "02:18 PM" },
+      { type: "user", content: "ik weet dat het tijd is voor een controle maar de whitening-offerte schrok me wel af", time: "02:19 PM" },
+      { type: "system", content: "Behandelen bezwaar" },
+      { type: "agent", content: "Helemaal logisch. De meeste mensen hebben die reactie bij de eerste offerte.\n\nGoed nieuws: je basisverzekering dekt de controle volledig. Voor de whitening bieden we een renteloos plan tot 24 maanden, dus per maand valt het heel mee.", time: "02:20 PM" },
+      { type: "user", content: "oh dat plan kende ik niet", time: "02:31 PM" },
+      { type: "agent", content: "Komt vaker voor. Zou het helpen als we eerst de mondhygiëne inplannen, en de tandarts je er 10 minuten in dezelfde afspraak doorheen loopt? Zonder extra kosten.", time: "02:32 PM" },
+      { type: "user", content: "ja dat zou werken", time: "02:40 PM" },
+      { type: "system", content: "Lead gekwalificeerd" },
+      { type: "agent", content: "Perfect. Hier is de boekingslink: https://calendar.app.google", time: "02:41 PM" },
+      { type: "system", content: "Afspraak ingepland 📅", wine: true },
+      { type: "agent", content: "Alles geregeld Laura, je staat ingepland voor donderdag 15:00 ✅\n\nDr. Ven doet de controle en bespreekt het whitening-plan met je.", time: "02:55 PM" },
+      { type: "user", content: "bedankt!", time: "03:00 PM" },
+      { type: "user", content: "oh wacht eigenlijk", time: "05:40 PM" },
+      { type: "user", content: "ik realiseer me net dat ik donderdagmiddag iets voor werk heb. Kan ik naar vrijdagochtend?", time: "05:41 PM" },
+      { type: "system", content: "Behandelen verzetten" },
+      { type: "agent", content: "Natuurlijk. Vrijdag hebben we 09:30 of 11:00 vrij, wat werkt beter?", time: "05:42 PM" },
+      { type: "user", content: "9:30 is perfect", time: "05:50 PM" },
+      { type: "agent", content: "Gedaan, verzet naar vrijdag 09:30 ✅\n\nAls er weer iets verandert, stuur me hier gewoon een bericht.", time: "05:51 PM" },
+      { type: "system", content: "Afspraak verzet 📅", wine: true },
+      { type: "user", content: "bedankt voor de flexibiliteit", time: "06:00 PM" },
+      { type: "agent", content: "Graag gedaan. Tot vrijdag! 🙂", time: "06:01 PM" },
+      { type: "system", content: "Afgesloten - Doorgestuurd naar klant", wine: true }
+    ]
+  },
+  legal: {
+    label: "Legal",
+    labelNl: "Juridisch",
+    leadName: "Oliver Harris",
+    avatar: "O",
+    project: "Car finance refund claim",
+    ago: "3 mo. ago",
+    agentName: "Sophie",
+    domain: "sterlingfinance",
+    messages: [
+      { type: "agent", content: "Hi, this is Sophie from Sterling Finance. Is this Oliver who wanted to check whether they were owed a refund on their car finance?", time: "14:35" },
+      { type: "system", content: "Lead engaged" },
+      { type: "system", content: "Auto-bump" },
+      { type: "agent", content: "Just bumping this up in case you got busy before :)", time: "14:55" },
+      { type: "user", content: "Hi, yes", time: "15:00" },
+      { type: "system", content: "Lead replied" },
+      { type: "user", content: "I would like to check. I had 2 cars on finance 5 years ago", time: "15:01" },
+      { type: "system", content: "Lead qualified" },
+      { type: "agent", content: "That's great, Oliver. Do you happen to have your vehicle finance agreement documents handy for those cars?", time: "15:04" },
+      { type: "user", content: "No sorry", time: "15:05" },
+      { type: "user", content: "Not at hand", time: "15:05" },
+      { type: "agent", content: "No worries at all. We can submit a Data Subject Access Request (DSAR) on your behalf to retrieve those documents.\n\nCould you please complete this short DSAR form by clicking this URL: https://www.dsarform.com", time: "15:09" },
+      { type: "user", content: "What is the process from here?", time: "15:20" },
+      { type: "user", content: "Do you let me know if I'm eligible once you retrieve the docs and then I confirm I want to proceed?", time: "15:20" },
+      { type: "agent", content: "Absolutely. Once you complete the DSAR form, we request your agreement and review it. If we find you are eligible for a claim, we will get in touch to discuss next steps.\n\nIt typically takes around 30 working days to receive and review the documents. We operate on a no-win, no-fee basis, so there is no risk to you.\n\nForm link: https://www.dsarform.com", time: "15:22" },
+      { type: "user", content: "Thanks.", time: "15:24" },
+      { type: "system", content: "Form signed ✅", wine: true },
+      { type: "agent", content: "Thanks for completing the form. You will hear from us soon. If you have any questions, feel free to ask 🙂", time: "15:39" },
+      { type: "user", content: "No, that is all from me", time: "15:40" },
+      { type: "system", content: "Closed - Sent to Client", wine: true },
+      { type: "agent", content: "Ok Oliver, have a great day :)", time: "15:41" }
+    ],
+    messagesNl: [
+      { type: "agent", content: "Hoi, dit is Sophie van Sterling Financieel Recht. Ben jij Oliver die wilde checken of hij recht had op restitutie van zijn autofinanciering?", time: "14:35" },
+      { type: "system", content: "Lead geëngageerd" },
+      { type: "system", content: "Auto-bump" },
+      { type: "agent", content: "Even een reminder voor het geval je druk was :)", time: "14:55" },
+      { type: "user", content: "Hoi, ja", time: "15:00" },
+      { type: "system", content: "Lead heeft gereageerd" },
+      { type: "user", content: "Ik wilde dit graag checken. Ik had 5 jaar geleden 2 auto's op financiering", time: "15:01" },
+      { type: "system", content: "Lead gekwalificeerd" },
+      { type: "agent", content: "Dat is mooi, Oliver. Heb je toevallig je voertuigfinancieringsovereenkomst documenten bij de hand voor die auto's?", time: "15:04" },
+      { type: "user", content: "Nee sorry", time: "15:05" },
+      { type: "user", content: "Niet bij de hand", time: "15:05" },
+      { type: "agent", content: "Geen probleem. We kunnen een AVG-verzoek (gegevenstoegang) namens jou indienen om die documenten op te halen.\n\nKun je dit korte AVG-formulier invullen via deze link? https://www.dsarform.com", time: "15:09" },
+      { type: "user", content: "Hoe gaat het proces hierna?", time: "15:20" },
+      { type: "user", content: "Laten jullie me weten of ik in aanmerking kom zodra jullie de documenten hebben en bevestig ik dan of ik door wil?", time: "15:20" },
+      { type: "agent", content: "Absoluut.\n\nZodra je het AVG-formulier invult, vragen we je overeenkomst op en beoordelen deze. Als we denken dat je in aanmerking komt voor een claim, nemen we contact op om de vervolgstappen te bespreken.\n\nHet duurt normaal gesproken rond de 30 werkdagen om de documenten te ontvangen en te beoordelen. We werken op basis van geen resultaat, geen kosten, dus er is geen risico voor jou.\n\nFormulier link: https://www.dsarform.com/", time: "15:22" },
+      { type: "user", content: "Bedankt.", time: "15:24" },
+      { type: "system", content: "Verzoek ingediend ✅", wine: true },
+      { type: "agent", content: "Bedankt voor het invullen van het formulier. Je hoort snel van ons. Als je vragen hebt, stel ze gerust 🙂", time: "15:39" },
+      { type: "user", content: "Nee, dat is alles van mijn kant", time: "15:40" },
+      { type: "system", content: "Afgesloten - Doorgestuurd naar klant", wine: true },
+      { type: "agent", content: "Oké Oliver, fijne dag :)", time: "15:41" }
+    ]
+  },
+  solar: {
+    label: "Solar",
+    labelNl: "Zonnepanelen",
+    leadName: "James Walker",
+    avatar: "J",
+    project: "Solar panel installation",
+    ago: "5 mo. ago",
+    agentName: "Michael",
+    domain: "aviaxsolar",
+    messages: [
+      { type: "agent", content: "Hi, Michael from Aviax Solar here. Quick check, is this the James who asked us for a solar estimate a while ago? 🙂", time: "09:15 AM" },
+      { type: "system", content: "Lead engaged" },
+      { type: "user", content: "Yes that was me, hi", time: "09:22 AM" },
+      { type: "system", content: "Lead replied" },
+      { type: "agent", content: "Thanks James. My manager asked me to follow up, but I didn't want to spam you.\n\nAre you still aiming to reduce your monthly electricity cost this year?", time: "09:23 AM" },
+      { type: "user", content: "yes, I am still looking", time: "09:35 AM" },
+      { type: "agent", content: "Ok, roughly what are you paying per month right now, and has it increased over the last year?", time: "09:36 AM" },
+      { type: "user", content: "about 200 euros", time: "09:42 AM" },
+      { type: "user", content: "yeah it went up", time: "09:42 AM" },
+      { type: "agent", content: "€200/month is solid motivation, that's €2400 a year. Right now you're renting your electricity with no control over the price. Does that feel sustainable, or would you rather own the system?", time: "09:43 AM" },
+      { type: "user", content: "owning makes more sense when you put it that way", time: "09:55 AM" },
+      { type: "user", content: "but I am concerned about my main roof facing north, I heard it isnt ideal", time: "09:56 AM" },
+      { type: "system", content: "Handling objection" },
+      { type: "agent", content: "That's the common concern.\n\nMost people assume north-facing means \"no,\" but pitch, shading, usable roof area, and whether we can use east or west sections can change the math. Our clients with similar bills typically see payback in 7-9 years.", time: "09:57 AM" },
+      { type: "user", content: "oh I didnt know that", time: "10:05 AM" },
+      { type: "agent", content: "Our main focus is personalization. We match panel layout and assumptions to your exact roof and usage so the payback estimate is realistic.\n\nIf we could confirm on a quick call whether you can hit a payback you feel good about, would that be worth it?", time: "10:06 AM" },
+      { type: "user", content: "maybe", time: "10:15 AM" },
+      { type: "user", content: "do you have examples of north-facing installations that worked out?", time: "10:15 AM" },
+      { type: "agent", content: "Absolutely. We've done dozens in your area. The specialist can show you similar projects with actual payback data and even connect you with a reference if you want. Would a quick call to see those examples work?", time: "10:16 AM" },
+      { type: "user", content: "yes I'd like to see that", time: "10:25 AM" },
+      { type: "system", content: "Lead qualified" },
+      { type: "agent", content: "Here's the booking link: https://calendar.app.google", time: "10:26 AM" },
+      { type: "system", content: "Appointment booked 📅", wine: true },
+      { type: "agent", content: "Perfect James, you're booked for Monday at 11:00 ✅\n\nOur specialist will call you then to go through payback and your north-facing roof.", time: "10:35 AM" },
+      { type: "user", content: "Thanks Michael", time: "10:40 AM" },
+      { type: "agent", content: "You are welcome and have a good day 🙂", time: "10:41 AM" },
+      { type: "system", content: "Closed - Sent to Client", wine: true }
+    ],
+    messagesNl: [
+      { type: "agent", content: "Hoi, Michiel van Aviax Solar hier. Even checken: ben jij de Jan die bij ons een zonne-offerte heeft aangevraagd? 🙂", time: "09:15 AM" },
+      { type: "system", content: "Lead geëngageerd" },
+      { type: "user", content: "Ja dat was ik, hoi", time: "09:22 AM" },
+      { type: "system", content: "Lead heeft gereageerd" },
+      { type: "agent", content: "Bedankt Jan. Mijn manager vroeg me om even contact op te nemen, maar ik wilde je niet storen.\n\nBen je nog steeds van plan om je maandelijkse elektriciteitskosten te verlagen dit jaar?", time: "09:23 AM" },
+      { type: "user", content: "ja, maar ik heb nog niet veel tijd gehad om me erin te verdiepen", time: "09:35 AM" },
+      { type: "agent", content: "Oké, ongeveer hoeveel betaal je nu per maand, en is het het afgelopen jaar gestegen?", time: "09:36 AM" },
+      { type: "user", content: "ongeveer 200 euro", time: "09:42 AM" },
+      { type: "user", content: "ja het is gestegen", time: "09:42 AM" },
+      { type: "agent", content: "€200/maand is niet niks, dat is €2400 per jaar. Nu huur je eigenlijk je elektriciteit, zonder invloed op de prijs. Voelt dat op de lange termijn logisch, of heb je liever zelf de controle?", time: "09:43 AM" },
+      { type: "user", content: "Zelf de controle hebben klinkt logischer nu je het zo stelt", time: "09:55 AM" },
+      { type: "user", content: "Maar mijn hoofddak ligt op het noorden, ik hoorde dat dat niet ideaal is", time: "09:56 AM" },
+      { type: "system", content: "Behandelen bezwaar" },
+      { type: "agent", content: "Dat horen we vaker. Veel mensen denken dat een dak op het noorden zonnepanelen automatisch niet meer interessant maakt, maar factoren zoals hellingshoek, schaduw, beschikbare dakruimte, en of oost- of westzijde bruikbaar zijn, maken vaak een groot verschil. Bij klanten met vergelijkbaar verbruik ligt de terugverdientijd meestal tussen de 7 en 9 jaar.", time: "09:57 AM" },
+      { type: "user", content: "oh dat wist ik niet", time: "10:05 AM" },
+      { type: "agent", content: "Onze focus ligt op maatwerk. We stemmen de paneelindeling en aannames af op jouw specifieke dak en verbruik, zodat de terugverdientijd zo realistisch mogelijk is.\n\nZou het zinvol zijn om in een kort gesprek te bekijken of dit voor jou goed uitpakt?", time: "10:06 AM" },
+      { type: "user", content: "misschien", time: "10:15 AM" },
+      { type: "user", content: "hebben jullie voorbeelden van installaties op het noorden die goed hebben uitgepakt?", time: "10:15 AM" },
+      { type: "agent", content: "Absoluut.\n\nWe hebben er tientallen gedaan in jouw omgeving. De specialist kan je vergelijkbare projecten laten zien met echte terugverdiendata en je zelfs in contact brengen met een referentieklant als je wilt.\n\nZal ik een gesprek inplannen om die voorbeelden te laten zien?", time: "10:16 AM" },
+      { type: "user", content: "ja graag", time: "10:25 AM" },
+      { type: "system", content: "Lead gekwalificeerd" },
+      { type: "agent", content: "Hier is de boekingslink: https://calendar.app.google", time: "10:26 AM" },
+      { type: "system", content: "Afspraak ingepland 📅", wine: true },
+      { type: "agent", content: "Perfect Jan, je staat ingepland voor maandag om 11:00 ✅\n\nOnze specialist belt je dan om de terugverdientijd en je dak op het noorden door te nemen.", time: "10:35 AM" },
+      { type: "user", content: "Bedankt Michiel", time: "10:40 AM" },
+      { type: "agent", content: "Graag gedaan en fijne dag 🙂", time: "10:41 AM" },
+      { type: "system", content: "Afgesloten - Doorgestuurd naar klant", wine: true }
+    ]
+  }
+};
+
+/* Three products, one page. Vercel rewrites /home and /solar to the same
+   index.html, so the path decides which set (and therefore which switcher)
+   renders. ?site= is an override so every variant is reachable on the Pi,
+   where the page is served from /premium/index.html and the path never says
+   /home or /solar. Root (no path match) is now the generic multi-industry
+   pitch — solar moved to its own path per Gabriel's decision to stop
+   targeting that niche (2026-09-05); /home's renovation-niche variant is
+   untouched. */
 const SITE_VARIANT = (() => {
   const q = new URLSearchParams(location.search).get('site');
-  if (q === 'home' || q === 'solar') return q;
-  return /\/home\/?$/.test(location.pathname) ? 'home' : 'solar';
+  if (q === 'home' || q === 'solar' || q === 'main') return q;
+  if (/\/home\/?$/.test(location.pathname)) return 'home';
+  if (/\/solar\/?$/.test(location.pathname)) return 'solar';
+  return 'main';
 })();
 window.SITE_VARIANT = SITE_VARIANT;
 
-const CHAT_CASES = SITE_VARIANT === 'home' ? HOME_CASES : SOLAR_CASES;
+const CHAT_CASES = SITE_VARIANT === 'home' ? HOME_CASES : SITE_VARIANT === 'solar' ? SOLAR_CASES : NICHE_CASES;
 window.CHAT_CASES = CHAT_CASES;
 
 /* --------------------------- AUDIT CALCULATOR ----------------------------- */
