@@ -1,6 +1,6 @@
 {
   "title": "Terms and Conditions",
-  "lastUpdated": "Last updated: January 2026",
+  "lastUpdated": "Last updated: September 2026",
   "section1": {
     "title": "1. Acceptance of the Terms",
     "content": "By contracting or using Lead Awaker’s services, the client confirms that they have read, understood, and agreed to these Terms and Conditions in full. If the client does not agree with any provision, they must refrain from using the services."
@@ -11,19 +11,19 @@
   },
   "section3": {
     "title": "3. Client Responsibilities",
-    "content": "The client is solely responsible for the origin, legality, and legitimacy of the leads provided, as well as for the commercial content, products, and services promoted. The client represents that they have a valid legal basis to contact the leads and that all applicable laws and platform policies are respected. The client remains responsible for compliance with data protection, consumer, and marketing regulations."
+    "content": "The client is solely responsible for the origin, legality, and legitimacy of the leads provided, as well as for the commercial content, products, and services promoted. The client represents that they have a valid legal basis to contact the leads and that all applicable laws and platform policies are respected. The client remains responsible for compliance with data protection, consumer, and marketing regulations. Where the client supplies contact data for a campaign, the client is responsible for establishing and, on request, evidencing a valid basis for electronic marketing contact for each segment supplied, under the Privacy and Electronic Communications Regulations 2003 (PECR) in the United Kingdom or the equivalent national implementation of the ePrivacy Directive in the European Union. Lead Awaker may decline to send to any contact or segment for which that basis has not been provided."
   },
   "section4": {
     "title": "4. Lead Awaker Responsibilities",
     "content": "Lead Awaker is responsible for the technical and operational execution of the services, including system configuration, automation, and use of Artificial Intelligence as agreed. Lead Awaker undertakes not to intentionally create unlawful, abusive, or offensive content. Lead Awaker does not make business decisions on behalf of the client and is not responsible for the client’s commercial strategies or decisions, except where expressly agreed."
   },
   "section5": {
-    "title": "5. Results and Performance Disclaimer",
-    "content": "Unless expressly agreed otherwise, Lead Awaker’s services constitute an obligation of means and not an obligation of results. In certain business arrangements, a performance-based guarantee may be offered, whereby results are evaluated within up to 30 (thirty) days from the start of a campaign. If agreed performance criteria are not met, payment obligations may be waived in accordance with the specific commercial agreement."
+    "title": "5. Results and Performance",
+    "content": "Unless expressly agreed otherwise in writing, Lead Awaker's services constitute an obligation of means and not an obligation of results. Lead Awaker does not guarantee any particular number of replies, appointments, sales or revenue, because the outcome depends on factors outside its control, including the quality and age of the client's data, the client's own offer and pricing, and the client's handling of the conversations that result. Where the agreed commercial model is performance-based, the practical effect is that if the campaign produces nothing, there is nothing to invoice."
   },
   "section6": {
     "title": "6. Fees and Payment Terms",
-    "content": "Fees and payment structures may vary and can include performance-based compensation, recurring fees, setup fees, campaign-based pricing, or other models as agreed. Unless otherwise stated, there are no penalties for cancellation. Refunds, if applicable, shall follow the terms expressly agreed between the parties."
+    "content": "All fees are agreed in writing between the parties before work begins. Lead Awaker's standard model is performance-based compensation: an agreed share of the value of sales that result from the campaign, invoiced only once the client has been paid by the customer. No setup fee, onboarding fee, recurring fee or other charge is payable unless it has been expressly agreed in writing in advance, and other structures such as recurring or campaign-based pricing are available only where the parties expressly agree them. Unless otherwise stated, there are no penalties for cancellation. Refunds, if applicable, shall follow the terms expressly agreed between the parties."
   },
   "section7": {
     "title": "7. Third-Party Platforms",
@@ -43,12 +43,16 @@
   },
   "section11": {
     "title": "11. Governing Law and Jurisdiction",
-    "content": "These Terms and Conditions shall be governed by and construed in accordance with applicable European Union law and, where necessary, the laws of the Netherlands. Any disputes shall be submitted to the competent courts, without prejudice to mandatory legal provisions."
+    "content": "These Terms and Conditions shall be governed by and construed in accordance with the laws of the Netherlands, and any disputes shall be submitted to the competent Dutch courts, unless the parties have expressly agreed a different governing law and jurisdiction in their commercial agreement or in a data processing agreement. Nothing in this clause affects mandatory legal provisions or the jurisdiction of a competent supervisory authority."
   },
   "section12": {
-    "title": "12. Contact Information",
+    "title": "13. Contact Information",
     "intro": "If you have any questions regarding these Terms and Conditions, please contact us:",
-    "email": "Email: leadawaker@gmail.com",
+    "email": "Email: gabriel@leadawaker.com",
     "address": "Address: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
+  },
+  "section13": {
+    "title": "12. Data Protection",
+    "content": "Where Lead Awaker processes personal data on behalf of a client, the client acts as the Data Controller and Lead Awaker acts as a Data Processor. That relationship is governed by a separate written data processing agreement, signed by both parties before any personal data is loaded or any message is sent. The data processing agreement sets out the permitted processing, the security measures, the authorised sub-processors, breach notification, assistance with data subject rights, and deletion or return of data at the end of the engagement. Where its terms conflict with these Terms and Conditions on data protection, the data processing agreement prevails. How Lead Awaker handles personal data more generally is described in the Privacy Policy."
   }
 }

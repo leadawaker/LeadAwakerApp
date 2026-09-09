@@ -1,6 +1,6 @@
 {
   "title": "Algemene Voorwaarden",
-  "lastUpdated": "Laatst bijgewerkt: januari 2026",
+  "lastUpdated": "Laatst bijgewerkt: september 2026",
   "section1": {
     "title": "1. Aanvaarding van de voorwaarden",
     "content": "Door het afsluiten of gebruiken van de diensten van Lead Awaker bevestigt de klant deze Algemene Voorwaarden volledig te hebben gelezen, begrepen en geaccepteerd. Indien de klant niet akkoord gaat met enige bepaling, dient hij het gebruik van de diensten te staken."
@@ -11,19 +11,19 @@
   },
   "section3": {
     "title": "3. Verantwoordelijkheden van de klant",
-    "content": "De klant is volledig verantwoordelijk voor de herkomst, rechtmatigheid en legitimiteit van de aangeleverde leads, evenals voor de commerciële inhoud, producten en diensten die worden gepromoot. De klant verklaart te beschikken over een geldige rechtsgrond om contact op te nemen met de leads en te voldoen aan alle toepasselijke wetgeving en platformregels."
+    "content": "De klant is volledig verantwoordelijk voor de herkomst, rechtmatigheid en legitimiteit van de aangeleverde leads, evenals voor de commerciële inhoud, producten en diensten die worden gepromoot. De klant verklaart te beschikken over een geldige rechtsgrond om contact op te nemen met de leads en te voldoen aan alle toepasselijke wetgeving en platformregels. Wanneer de klant contactgegevens aanlevert voor een campagne, is de klant verantwoordelijk voor het vaststellen en, op verzoek, aantonen van een geldige grondslag voor elektronische marketingcommunicatie voor elk aangeleverd segment, op grond van artikel 11.7 van de Telecommunicatiewet in Nederland, de nationale implementatie van de e-Privacyrichtlijn in andere EU-lidstaten, of de Privacy and Electronic Communications Regulations 2003 (PECR) in het Verenigd Koninkrijk. Lead Awaker kan weigeren berichten te versturen naar contactpersonen of segmenten waarvoor die grondslag niet is aangetoond."
   },
   "section4": {
     "title": "4. Verantwoordelijkheden van Lead Awaker",
     "content": "Lead Awaker is verantwoordelijk voor de technische en operationele uitvoering van de diensten, waaronder configuratie, automatisering en het gebruik van kunstmatige intelligentie zoals overeengekomen. Lead Awaker zal niet opzettelijk onrechtmatige, beledigende of misleidende inhoud creëren en is niet verantwoordelijk voor commerciële beslissingen van de klant, tenzij uitdrukkelijk anders overeengekomen."
   },
   "section5": {
-    "title": "5. Resultaten en prestatiedisclaimer",
-    "content": "Tenzij uitdrukkelijk anders overeengekomen, vormt de dienstverlening van Lead Awaker een inspanningsverplichting en geen resultaatsverplichting. In bepaalde zakelijke afspraken kan een prestatiegarantie worden overeengekomen, waarbij resultaten binnen maximaal 30 (dertig) dagen na de start van de campagne worden geëvalueerd. Indien overeengekomen criteria niet worden behaald, kan betaling geheel of gedeeltelijk vervallen volgens de commerciële afspraken."
+    "title": "5. Resultaten en prestaties",
+    "content": "Tenzij uitdrukkelijk schriftelijk anders overeengekomen, vormt de dienstverlening van Lead Awaker een inspanningsverplichting en geen resultaatsverplichting. Lead Awaker garandeert geen specifiek aantal reacties, afspraken, verkopen of omzet, omdat het resultaat afhangt van factoren buiten haar controle, waaronder de kwaliteit en ouderdom van de gegevens van de klant, het aanbod en de prijsstelling van de klant, en de wijze waarop de klant de daaruit voortvloeiende gesprekken afhandelt. Wanneer het overeengekomen commerciële model prestatiegebaseerd is, betekent dit in de praktijk dat er niets te factureren valt indien de campagne niets oplevert."
   },
   "section6": {
     "title": "6. Vergoedingen en betaling",
-    "content": "Vergoedingen en betalingsstructuren kunnen variëren en omvatten onder andere prestatiegebaseerde vergoedingen, abonnementen, setupkosten, campagneprijzen of andere overeengekomen modellen. Tenzij anders bepaald, gelden er geen boetes bij opzegging. Eventuele terugbetalingen volgen uitsluitend de gemaakte afspraken."
+    "content": "Alle vergoedingen worden voorafgaand aan de werkzaamheden schriftelijk tussen partijen overeengekomen. Het standaardmodel van Lead Awaker is een prestatiegebaseerde vergoeding: een overeengekomen aandeel in de waarde van de verkopen die uit de campagne voortkomen, uitsluitend gefactureerd nadat de klant door zijn eigen afnemer is betaald. Er is geen setupvergoeding, onboardingvergoeding, abonnement of andere kost verschuldigd, tenzij dit vooraf uitdrukkelijk schriftelijk is overeengekomen. Andere structuren, zoals abonnementen of campagneprijzen, zijn uitsluitend beschikbaar wanneer partijen die uitdrukkelijk overeenkomen. Tenzij anders bepaald, gelden er geen boetes bij opzegging. Eventuele terugbetalingen volgen uitsluitend de gemaakte afspraken."
   },
   "section7": {
     "title": "7. Platforms van derden",
@@ -43,12 +43,16 @@
   },
   "section11": {
     "title": "11. Toepasselijk recht en bevoegde rechter",
-    "content": "Op deze Algemene Voorwaarden is het recht van de Europese Unie van toepassing, aangevuld met het recht van Nederland indien nodig. Geschillen worden voorgelegd aan de bevoegde rechter, met inachtneming van dwingendrechtelijke bepalingen."
+    "content": "Op deze Algemene Voorwaarden is Nederlands recht van toepassing en geschillen worden voorgelegd aan de bevoegde Nederlandse rechter, tenzij partijen in hun commerciële overeenkomst of in een verwerkersovereenkomst uitdrukkelijk een ander toepasselijk recht en een andere bevoegde rechter zijn overeengekomen. Deze bepaling laat dwingendrechtelijke bepalingen en de bevoegdheid van een toezichthoudende autoriteit onverlet."
   },
   "section12": {
-    "title": "12. Contactgegevens",
+    "title": "13. Contactgegevens",
     "intro": "Voor vragen over deze Algemene Voorwaarden kunt u contact met ons opnemen:",
-    "email": "E-mail: leadawaker@gmail.com",
+    "email": "E-mail: gabriel@leadawaker.com",
     "address": "Adres: Christiaan Huygensweg 32, s'Hertogenbosch, NL"
+  },
+  "section13": {
+    "title": "12. Gegevensbescherming",
+    "content": "Wanneer Lead Awaker persoonsgegevens verwerkt namens een klant, treedt de klant op als Verwerkingsverantwoordelijke en Lead Awaker als Verwerker. Die relatie wordt geregeld in een afzonderlijke schriftelijke verwerkersovereenkomst, die door beide partijen wordt ondertekend voordat persoonsgegevens worden geladen of berichten worden verstuurd. De verwerkersovereenkomst legt vast welke verwerking is toegestaan, welke beveiligingsmaatregelen gelden, welke subverwerkers zijn toegestaan, hoe datalekken worden gemeld, hoe Lead Awaker meewerkt aan verzoeken van betrokkenen, en hoe gegevens aan het einde van de samenwerking worden verwijderd of teruggegeven. Bij strijdigheid met deze Algemene Voorwaarden op het gebied van gegevensbescherming prevaleert de verwerkersovereenkomst. Hoe Lead Awaker meer in het algemeen met persoonsgegevens omgaat, staat beschreven in het Privacybeleid."
   }
 }

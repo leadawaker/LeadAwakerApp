@@ -16,6 +16,11 @@ export default function TermsOfService() {
     { title: t('section9.title'), body: [t('section9.content')] },
     { title: t('section10.title'), body: [t('section10.content')] },
     { title: t('section11.title'), body: [t('section11.content')] },
+    // Data protection sits before contact details. Only present in locales that
+    // have the key, so nl/pt render nothing rather than a raw key string.
+    ...(t('section13.title', { defaultValue: '' })
+      ? [{ title: t('section13.title'), body: [t('section13.content')] }]
+      : []),
     {
       title: t('section12.title'),
       body: [
