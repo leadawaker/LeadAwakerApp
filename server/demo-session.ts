@@ -58,6 +58,12 @@ export interface NicheContext {
   quote_when: string;
   // Knowledge-base facts for the conversation prompt ({kb}).
   kb: string;
+  // The number the booking confirmation promises the advisor will call from,
+  // in the market's domestic form. Owned by applyDemoDefaults (see
+  // DEMO_CALLING_NUMBER), never produced by the model. Optional because demo
+  // leads minted before this existed have no value: the engine's overlay skips
+  // empties, so those keep falling through to the account's own number.
+  calling_number?: string;
   // Per-niche vocabulary for Prompt 93 substitution.
   advisor_term: string;
   project_term: string;
@@ -145,7 +151,18 @@ const INQUIRY_TIMEFRAME_DEFAULT: Record<string, string> = {
  * niche's own visit term (e.g. "showroom visit" for kitchens), and the chosen
  * scenario as both lead_stage and a canonical what_lead_did the engine can map.
  */
-export function applyDemoDefaults(ctx: NicheContext, language: string, scenario: DemoScenario): NicheContext {
+export function applyDemoDefaults(
+  ctx: NicheContext,
+  language: string,
+  scenario: DemoScenario,
+  market?: DemoMarket,
+): NicheContext {
+  // Market-aware, so the booking confirmation never promises a call from a
+  // foreign number. Resolved through resolveMarket rather than read straight
+  // off `market` so the number and the currency can never disagree: both go
+  // through the same nl/pt-imply-their-own-market defaulting.
+  ctx.calling_number =
+    DEMO_CALLING_NUMBER[resolveMarket(language as "en" | "nl" | "pt", market)];
   ctx.lead_stage = scenario;
   ctx.what_lead_did = SCENARIO_WHAT_LEAD_DID[scenario];
   ctx.inquiry_timeframe = INQUIRY_TIMEFRAME_DEFAULT[language] ?? INQUIRY_TIMEFRAME_DEFAULT.en;
@@ -249,6 +266,35 @@ const MARKET_PROFILE: Record<ResolvedMarket, { name: string; currency: string; s
   br: { name: "Brazil", currency: "BRL", symbol: "R$" },
 };
 
+/** The number the booking confirmation says the advisor will call from, per
+ *  market. Reaches the prompt as {calling_number} via the demo_niche overlay
+ *  (_overlay_demo_niche_onto_campaign in the engine's prompt_builder.py).
+ *
+ *  Why this exists: without it {calling_number} falls through to the ACCOUNT's
+ *  number, which is +31 6 84446349. A "Real Coaching Co." selling into the UK
+ *  then signs off by promising a call from a Dutch mobile, in international
+ *  format, which is the one detail in the whole demo that cannot be explained
+ *  away. Every number is written in the market's own DOMESTIC form for the same
+ *  reason the engine's demo fallback is ("06 27458300", not "+31 6 ..."): a
+ *  local business calling a local customer does not announce a country code.
+ *
+ *  nl is Gabriel's real, messageable demo number, deliberately: a Dutch number
+ *  is CORRECT for a Dutch demo, so the prospect ends the demo holding something
+ *  they can actually use. It matches DEMO_WHATSAPP_NUMBER below and the engine's
+ *  own demo fallback in tools/ai_service.py — change all three or they drift.
+ *
+ *  The other three are illustrative and must never ring a real person, so they
+ *  come from the ranges reserved for exactly this: Ofcom's drama range for the
+ *  UK (07700 900xxx) and the NANP's fiction range for the US (555-01xx). Brazil
+ *  reserves no such range, so br uses a pattern that is well-formed for DDD 47
+ *  without being a plausible live handset. */
+const DEMO_CALLING_NUMBER: Record<ResolvedMarket, string> = {
+  uk: "07700 900123",
+  us: "(415) 555-0142",
+  nl: "06 27458300",
+  br: "(47) 99999-0100",
+};
+
 /** Language and market are independent: a Dutch prospect demoed to in English
  *  still sells into the Netherlands and still needs euros. This is the same
  *  conflation already corrected for AI disclosure, which used to be derived
@@ -305,7 +351,7 @@ Purpose: <what this answer changes in the quote>
 Ask: "<one natural question a real employee would text>"
 Options: <closed set, or "open">
 
-Order them cheapest-to-answer first. Do NOT include slots for still-interested, timing or budget: those are universal and handled elsewhere. Every Purpose line must name something that changes the quote; "to understand their needs" is not acceptable. Include the two biggest price drivers for this specific trade.
+Order them cheapest-to-answer first. Do NOT include slots for still-interested or timing: those are universal and handled elsewhere. Budget is different: add it as an EXTRA final slot, but only when the price genuinely varies with scope, materials or quantity (solar, kitchens, a hardware distributor sized by order volume). Skip it for a business priced as a flat package or fixed rate regardless of scope (coaching, consulting retainers, fixed program fees): there budget doesn't change what gets proposed, so asking it only adds friction. Every Purpose line must name something that changes the quote; "to understand their needs" is not acceptable. Include the two biggest price drivers for this specific trade.
 
 Worked example of a correct ladder (kitchens, abridged to 3 of its 6 slots). Match this depth, specificity and formatting exactly:
 
@@ -324,7 +370,7 @@ Purpose: the largest visible price driver, and a strong quality signal.
 Ask: "any thoughts on worktops yet, laminate, quartz, granite or solid wood?"
 Options: laminate, quartz, granite, solid wood, not sure.
 
-Note what that example never contains: no timeline slot, no budget slot, no financing or payment-options slot, and no "are you still interested" slot. Those four are banned outright, however natural they feel to add. Every Purpose line names a concrete consequence in the quote (unit count, whether the plumbing moves, which price bracket), never "to understand their needs".
+Note what that example never contains: no timeline slot, no financing or payment-options slot, and no "are you still interested" slot. Those three are banned outright, however natural they feel to add. A budget slot is allowed only as the ladder's final slot, and only under the variable-price rule above. Every Purpose line names a concrete consequence in the quote (unit count, whether the plumbing moves, which price bracket), never "to understand their needs".
 The slots must be the ones an experienced employee of THAT trade would ask, not generic sales questions. For dental implants that means the number of teeth being replaced, the condition of the jawbone and whether a temporary is needed while healing. It does not mean desired timeline or financing.
 The whole ladder, labels included, must be in the output language. The example above is English; in Dutch the three labels are "Doel:", "Vraag:" and "Opties:", never "Purpose:", "Ask:" and "Options:". Dutch addresses the reader as "je", never "u". In Portuguese the three labels are "Objetivo:", "Pergunta:" and "Opções:". Portuguese output is ALWAYS Brazilian Portuguese, never European Portuguese: use the gerund ("está pensando em"), never "está a pensar em"; write "paradas" not "paragens", "cabine" not "cabina", "equipe" not "equipa", "trem" not "comboio", "café da manhã" not "pequeno-almoço"; address the reader as "você" in the warm, everyday tone a Brazilian company actually uses on WhatsApp, not the formal distance of European Portuguese. Spell every accent correctly. Always produce at least 5 slots, and put the two biggest price drivers among them: for a trade that installs something, the run from the existing connection point and whether the existing supply or structure can take it are usually bigger price drivers than the customer's choice of features.
 - second_message: the follow-up — format: "Thank Goodness! The team asked me to go back through our older enquiries, and I'd rather drop you a message than have someone ring you out of the blue. Are you still interested in [opener_phrase]?" — never claim a manager asked you to reach out and never say you dislike phone calls: on a disclosure-on campaign the assistant must not claim anything only a human could claim
@@ -422,12 +468,14 @@ export async function generateNicheContext(
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        // gpt-5.6-luna, was gpt-4o-mini. 4o-mini was the residual quality ceiling
-        // on this path: it wrote formal Dutch "u" against campaign 60's "je" and
-        // missed real price drivers even after two rounds of explicit instruction
-        // were added to row 91. The reviewed Niche_Vocabulary ladders were
-        // generated with gpt-5.4-mini and came out clean first time.
-        model: "gpt-5.6-luna",
+        // gpt-5.6-terra, was gpt-5.6-luna, was gpt-4o-mini. 4o-mini was the residual
+        // quality ceiling on this path: it wrote formal Dutch "u" against campaign
+        // 60's "je" and missed real price drivers even after two rounds of explicit
+        // instruction were added to row 91. luna fixed that but sits a tier below
+        // terra; moved up for the extra quality on the same reasoning-family API
+        // (no temperature, max_completion_tokens). Not yet re-measured for
+        // reasoning-token spend against the 6000 budget below, sized off luna.
+        model: "gpt-5.6-terra",
         messages: [
           { role: "system", content: system },
           { role: "user", content: `Business niche: ${niche}\nOutput language: ${langLabel}\nTarget market: ${profile.name} (${profile.currency})\nLead scenario: ${scenarioHint}` },
@@ -579,7 +627,7 @@ export async function generateNicheContext(
     }
     parsed.emoji = (parsed.emoji || "").toString().trim() || undefined;
     parsed.category = (parsed.category || "").toString().trim() || undefined;
-    return applyDemoDefaults(parsed, language, scenario);
+    return applyDemoDefaults(parsed, language, scenario, market);
   } catch (err) {
     // Covers the abort timeout, network failures and (most often) JSON.parse on
     // a truncated or fenced response. If finish_reason was "length" the line
@@ -596,6 +644,7 @@ export function buildFallbackNicheContext(
   niche: string,
   language: "en" | "nl" | "pt",
   scenario: DemoScenario = "inquired",
+  market?: DemoMarket,
 ): NicheContext {
   const templates = {
     en: {
@@ -654,7 +703,7 @@ export function buildFallbackNicheContext(
     inquiry_timeframe: "",
     first_touch: "",
     ai_style: "",
-  }, language, scenario);
+  }, language, scenario, market);
 }
 
 /**
@@ -792,6 +841,47 @@ export async function isDemoCampaign(campaignId: number): Promise<boolean> {
     .limit(1);
   const row = rows[0];
   return !!(row && (row as any).isDemo === true);
+}
+
+/**
+ * The service demos: one campaign per AI service the demo can perform.
+ *
+ * Mirrors PERSONA_DEMO_CAMPAIGN_IDS in the engine
+ * (src/automations/demo_campaigns.py) and reads the SAME env var, so one
+ * variable moves both sides at once. These are the campaigns whose leads carry
+ * their own persona in `demo_niche`: the prospect is the persona, the campaign
+ * is the service. Everything else flagged is_demo (the legacy per-niche
+ * discovery campaigns, the Company Campaign kept for showing the UI) is a real
+ * campaign that should not appear as a service to demo.
+ */
+export const SERVICE_DEMO_CAMPAIGN_IDS: number[] = (() => {
+  const raw = process.env.DEMO_PERSONA_CAMPAIGN_IDS || "";
+  const fromEnv = raw
+    .split(",")
+    .map((p) => Number(p.trim()))
+    .filter((n) => Number.isInteger(n) && n > 0);
+  return fromEnv.length ? Array.from(new Set([60, 67, 68, ...fromEnv])) : [60, 67, 68];
+})();
+
+/**
+ * Every campaign flagged as a demo, for the "which demo am I showing?" picker.
+ *
+ * One campaign per SERVICE (database reactivation, speed to lead, and the voice
+ * / reputation / social demos to come), never one per prospect: the prospect is
+ * the persona overlaid on top. Read from the DB rather than a constant so a new
+ * service campaign appears in the picker the moment it is flagged is_demo,
+ * with no frontend change.
+ */
+export async function listDemoServiceCampaigns(): Promise<Array<{ id: number; name: string }>> {
+  const rows = await db
+    .select({ id: campaigns.id, name: campaigns.name, isDemo: campaigns.isDemo })
+    .from(campaigns)
+    .where(eq(campaigns.isDemo, true));
+  const allowed = new Set(SERVICE_DEMO_CAMPAIGN_IDS);
+  return rows
+    .filter((r) => allowed.has(r.id as number))
+    .map((r) => ({ id: r.id as number, name: (r.name as string) || `Campaign ${r.id}` }))
+    .sort((a, b) => a.id - b.id);
 }
 
 type RateEntry = { count: number; firstAt: number };

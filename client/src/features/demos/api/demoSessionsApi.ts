@@ -27,6 +27,10 @@ export interface DemoSession {
   clientNiche: string;
   /** "inquired" = no quote, "deciding" = the lead already has one. */
   scenario: string;
+  /** Which service column this link belongs in, and which prospect's row.
+   *  Both empty on links minted before the page grouped by prospect. */
+  service: string;
+  prospectGroup: string;
   invited: boolean;
   campaignId: number | null;
   createdAt: string | null;
@@ -63,6 +67,10 @@ export interface NewDemoInput {
   scenario?: "inquired" | "deciding";
   aiDisclosure?: "off" | "opener" | "second_message";
   market?: "uk" | "us" | "nl";
+  /** Which offered service this link demos, and which prospect's set of links
+   *  it joins. Both are bookkeeping for the Demos page; see SERVICES. */
+  service?: string;
+  prospectGroup?: string;
 }
 
 export interface NewDemoResult {
@@ -92,11 +100,38 @@ export function useDemoSessions() {
 export function useCreateDemoLink() {
   const qc = useQueryClient();
   return useMutation<NewDemoResult, Error, NewDemoInput>({
-    mutationFn: async (body) => {
-      const res = await apiRequest("POST", "/api/demo/create-link", body);
-      return res.json();
-    },
+    mutationFn: createDemoLink,
     // A new link is a new row in the list behind the form.
     onSuccess: () => qc.invalidateQueries({ queryKey: SESSIONS_KEY }),
   });
 }
+
+/** Mint one link. Shared by the New demo panel and the Demos table, which mint
+ *  the same way but do different things with the result. */
+export async function createDemoLink(body: NewDemoInput): Promise<NewDemoResult> {
+  const res = await apiRequest("POST", "/api/demo/create-link", body);
+  return res.json();
+}
+
+/**
+ * Rename the prospect behind a set of links.
+ *
+ * Every token in one prospect's row is patched, so a name fixed on the Demos
+ * page cannot drift between the services that prospect was sent. The requests
+ * go out together: one slow token should not hold up the rest.
+ */
+export function useUpdateDemoIdentity() {
+  const qc = useQueryClient();
+  return useMutation<void, Error, { tokens: string[]; firstName?: string; companyName?: string }>({
+    mutationFn: async ({ tokens, firstName, companyName }) => {
+      const patch = {
+        ...(firstName === undefined ? {} : { firstName }),
+        ...(companyName === undefined ? {} : { companyName }),
+      };
+      await Promise.all(tokens.map((t) => apiRequest("PATCH", `/api/demo/${t}/identity`, patch)));
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: SESSIONS_KEY }),
+  });
+}
+
+export { SESSIONS_KEY as DEMO_SESSIONS_KEY };

@@ -3,7 +3,8 @@
   "subtitle": "Every demo link you have minted, and how far each prospect got.",
   "tabs": {
     "sessions": "Sessions",
-    "new": "New demo"
+    "new": "New demo",
+    "clients": "Clients"
   },
   "table": {
     "prospect": "Prospect",
@@ -14,7 +15,18 @@
     "browser": "Browser",
     "whatsapp": "WhatsApp",
     "created": "Sent",
-    "actions": "Links"
+    "actions": "Links",
+    "other": "Other",
+    "editHint": "Click to edit",
+    "svc": {
+      "dbr": "DBR",
+      "quote": "Quote",
+      "speed": "Speed",
+      "widget": "Widget",
+      "voice": "Voice",
+      "reputation": "Reviews",
+      "socials": "Socials"
+    }
   },
   "mode": {
     "inquired": "No quote",
@@ -68,11 +80,40 @@
     "reused": "Built from the saved Client \"{{name}}\".",
     "fallback": "The niche model did not run, so this link carries a generic persona rather than the niche you asked for.",
     "nameRequired": "A prospect name is required.",
-    "failed": "Could not create the link."
+    "failed": "Could not create the link.",
+    "website": "Prospect website",
+    "websitePlaceholder": "https://their-company.com",
+    "websiteScrape": "Scan site",
+    "websiteScanning": "Scanning...",
+    "websiteDone": "Built \"{{client}}\" from {{pages}} pages. Selected below.",
+    "websiteFailed": "Could not read that site. Create the Client manually.",
+    "websiteHint": "Reads their site and builds a Client with their real services, hours and area.",
+    "notes": "Or paste the business details",
+    "notesPlaceholder": "Paste what you know: services, area, hours, how they quote...",
+    "notesBuild": "Build from notes"
   },
   "disclosure": {
     "off": "Off",
     "opener": "In the opener",
     "second_message": "Second message"
+  },
+  "services": {
+    "heading": "Demos for this prospect",
+    "hint": "One persona, one link per service. Pick the Client above first.",
+    "dbr": "Database reactivation",
+    "speed": "Speed to Lead",
+    "widget": "Website widget",
+    "voice": "Voice receptionist",
+    "reputation": "Reputation",
+    "socials": "Social DMs",
+    "soon": "Not built yet",
+    "open": "Open",
+    "copy": "Copy",
+    "copied": "Copied",
+    "minting": "Creating...",
+    "needClient": "Choose or scan a Client first.",
+    "quote": "Quote follow-up",
+    "whatsapp": "WhatsApp link (right-click to copy)",
+    "create": "Create"
   }
 }

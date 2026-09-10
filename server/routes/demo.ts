@@ -13,11 +13,12 @@ import {
   buildWhatsAppLink,
   buildDemoPageLink,
   generateNicheContext,
+  listDemoServiceCampaigns,
   buildFallbackNicheContext,
   buildSolarNicheContext,
   type DemoScenario,
 } from "../demo-session";
-import { getWebDemoConfig, updateWebDemoConfig, listDemoSessions } from "../demo-admin";
+import { getWebDemoConfig, updateWebDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
 // personas Gabriel actually minted for a prospect (decided 2026-08-11).
@@ -179,6 +180,18 @@ export function registerDemoRoutes(app: Express): void {
     res.json({ campaigns: DEMO_CAMPAIGNS });
   });
 
+  // The service demos: one campaign per AI service the demo can perform
+  // (database reactivation, speed to lead, and voice/reputation/social later).
+  // DB-driven so flagging a new campaign is_demo is all it takes to make it
+  // selectable on the +New Demo form.
+  app.get(
+    "/api/demo/service-campaigns",
+    requireAgency,
+    wrapAsync(async (_req, res) => {
+      res.json({ campaigns: await listDemoServiceCampaigns() });
+    }),
+  );
+
   // ── The Clients library ──────────────────────────────────────────────────
   // Saved demo personas, for the Clients tab and the Share dialog's picker.
   // requireAgency, not requireAuth: Niche_Vocabulary is a GLOBAL table with no
@@ -191,6 +204,115 @@ export function registerDemoRoutes(app: Express): void {
     requireAgency,
     wrapAsync(async (_req, res) => {
       res.json({ clients: await listDemoClients() });
+    }),
+  );
+
+  // ── Build a Client from a prospect's own website ──
+  //
+  // The prospect pastes-in path: one URL becomes a saved persona whose facts
+  // are the prospect's real site rather than a model's guess at their trade.
+  //
+  // Two sources, deliberately split by what each is good at:
+  //  - The engine's scraper supplies the FACTS (company, services, hours,
+  //    area, phone). Those must never be invented, so they come from the site.
+  //  - generateNicheContext supplies the SHAPE (vocabulary, scoping ladder,
+  //    opener, objection bank). Those are demo craft, not facts about the
+  //    prospect, and the generator is already tuned for them.
+  //
+  // The scrape wins on every field the site actually answered; a blank scrape
+  // field leaves the generated one standing. That ordering is the whole point:
+  // a demo that quotes their real opening hours lands, and one that invents
+  // them dies on the call.
+  app.post(
+    "/api/demo/clients/from-website",
+    requireAgency,
+    wrapAsync(async (req, res) => {
+      const schema = z.object({
+        // One of the two. `text` is the escape hatch for a site that blocks
+        // bots or renders only in JavaScript: paste what you know instead.
+        url: z.string().trim().max(500).optional().default(""),
+        text: z.string().trim().max(20000).optional().default(""),
+        language: z.enum(["en", "nl", "pt"]),
+        // The library key. Defaults to the scraped company name, which is what
+        // makes "paste a URL" a complete action with nothing else to fill in.
+        niche: z.string().trim().min(2).max(300).optional(),
+        scenario: z.enum(["inquired", "deciding"]).optional().default("inquired"),
+        market: z.enum(["uk", "us", "nl"]).optional(),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return handleZodError(res, parsed.error);
+      const { url, text, language, niche, scenario, market } = parsed.data;
+      if (!url && !text) {
+        return res.status(400).json({ message: "Give a website URL or paste the business details." });
+      }
+
+      const engineBase = process.env.ENGINE_URL || "http://localhost:8100";
+      let scraped: Record<string, any> | null = null;
+      try {
+        const resp = await fetch(`${engineBase}/api/site-kb`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Internal-Key": process.env.INTERNAL_API_KEY || "",
+          },
+          body: JSON.stringify(text ? { text, language } : { url, language }),
+          // A cold site with six subpages can take a while; the model call is
+          // on top of that. Below any sensible proxy timeout, above the p95.
+          signal: AbortSignal.timeout(120_000),
+        });
+        if (resp.ok) scraped = (await resp.json()) as Record<string, any>;
+        else console.error("[demo-website] engine returned", resp.status, await resp.text());
+      } catch (err) {
+        console.error("[demo-website] scrape call failed", err);
+      }
+
+      if (!scraped || scraped.scrape_failed || !scraped.kb) {
+        return res.status(422).json({
+          message: text
+            ? "Could not build a Client from that text. Add a few more details about the business and try again."
+            : "Could not read that website. It may block bots or be JavaScript-only. Paste the business details into the notes box instead.",
+        });
+      }
+
+      // The niche the generator is asked to theme. The site's own label beats a
+      // guess from the domain, and an explicit one from the caller beats both.
+      const nicheKey = (niche || scraped.company_name || "").trim();
+      const nicheForGeneration = (scraped.niche_label || niche || scraped.company_name || "").trim();
+      if (!nicheKey) {
+        return res.status(422).json({ message: "Could not determine a name for this Client. Pass `niche` explicitly." });
+      }
+
+      const ctx =
+        (await generateNicheContext(nicheForGeneration, language, scenario as DemoScenario, market)) ||
+        buildFallbackNicheContext(nicheForGeneration, language, "inquired", market);
+
+      // Facts from the site override the generated stand-ins. Empty scrape
+      // fields deliberately leave the generated value in place.
+      const overlay: Array<[keyof typeof ctx, string]> = [
+        ["company_name", scraped.company_name],
+        ["kb", scraped.kb],
+        ["business_description", scraped.business_description],
+        ["service_name", scraped.service_name],
+        ["usp", scraped.usp],
+        ["niche_label", scraped.niche_label],
+      ];
+      for (const [field, value] of overlay) {
+        if (typeof value === "string" && value.trim()) (ctx as Record<string, unknown>)[field] = value.trim();
+      }
+
+      const saved = await saveDemoClient(nicheKey, language as DemoLang, ctx);
+
+      res.json({
+        client: nicheKey,
+        saved: saved.saved,
+        company_name: ctx.company_name,
+        niche_label: ctx.niche_label,
+        kb_chars: (ctx.kb || "").length,
+        source_url: scraped.source_url,
+        pages_scraped: scraped.pages_scraped ?? [],
+        city: scraped.city || "",
+        phone: scraped.phone || "",
+      });
     }),
   );
 
@@ -307,7 +429,7 @@ export function registerDemoRoutes(app: Express): void {
           // costs one condition to keep it impossible rather than unlikely.
           const usable = row && clientSupportsLanguage(row, language);
           nicheCtx =
-            (usable && demoClientToContext(row!, language, scenario)) ||
+            (usable && demoClientToContext(row!, language, scenario, market)) ||
             buildSolarNicheContext(language, scenario, companyName);
           // The visitor's own firm always wins over the Client's default name,
           // exactly as it does on the admin create-link path.
@@ -315,7 +437,7 @@ export function registerDemoRoutes(app: Express): void {
         } else {
           nicheCtx =
             (await generateNicheContext(niche, language, scenario, market)) ??
-            buildFallbackNicheContext(niche, language, scenario);
+            buildFallbackNicheContext(niche, language, scenario, market);
         }
         const { token } = generateToken();
 
@@ -386,6 +508,16 @@ export function registerDemoRoutes(app: Express): void {
     // when the language is English; nl and pt resolve their own market inside
     // generateNicheContext().
     market: z.enum(["uk", "us", "nl"]).optional(),
+    // Which of the offered services this link demos. Inert to the engine (the
+    // campaign already decides how the AI behaves); it exists so the Demos page
+    // can put a prospect's links in the right column. `voice` and `speed` share
+    // a campaign and are indistinguishable without it.
+    service: z.enum(["dbr", "quote", "speed", "widget", "voice"]).optional(),
+    // Ties every service link minted for one prospect into one row on the Demos
+    // page. Generated by the client, because the links are minted one button at
+    // a time over the course of a call and nothing server-side knows they belong
+    // together.
+    prospectGroup: z.string().trim().max(80).optional(),
   });
 
   app.post(
@@ -395,7 +527,7 @@ export function registerDemoRoutes(app: Express): void {
       const parsed = adminSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
 
-      const { firstName, language, campaignId, niche, clientNiche, companyName, scenario, aiDisclosure, market } = parsed.data;
+      const { firstName, language, campaignId, niche, clientNiche, companyName, scenario, aiDisclosure, market, service, prospectGroup } = parsed.data;
 
       if (!(await isDemoCampaign(campaignId))) {
         return res.status(400).json({
@@ -430,7 +562,7 @@ export function registerDemoRoutes(app: Express): void {
             message: `"${clientNiche}" has no ${language.toUpperCase()} version — it only exists in ${have}. Add the ${language.toUpperCase()} opener fields on the Clients tab, or mint this link in ${have}.`,
           });
         }
-        const ctx = demoClientToContext(row, language, scenario);
+        const ctx = demoClientToContext(row, language, scenario, market);
         if (!ctx) {
           // Vocabulary-only rows (the pre-existing curated niches) have word
           // lists but no persona. Say so instead of minting a hollow demo:
@@ -455,7 +587,7 @@ export function registerDemoRoutes(app: Express): void {
         // test for "did this really generate" has a false positive in it.
         const model = await generateNicheContext(niche, language, scenario, market);
         generated = model !== null;
-        const ctx = model ?? buildFallbackNicheContext(niche, language, scenario);
+        const ctx = model ?? buildFallbackNicheContext(niche, language, scenario, market);
 
         // Save to the Clients library BEFORE the per-prospect overrides below,
         // so the row keeps the model's own company name as its DEFAULT and this
@@ -484,6 +616,16 @@ export function registerDemoRoutes(app: Express): void {
           ...(aiDisclosure ? { ai_disclosure: aiDisclosure } : {}),
           ...(companyName ? { company_name: companyName } : {}),
         });
+      }
+
+      // Bookkeeping for the Demos page, merged in after the persona is settled
+      // so it rides along whichever branch above built the blob — including the
+      // "send the campaign as it is" case, which has no blob of its own.
+      if (service || prospectGroup) {
+        const bookkeeping = demoNiche ? JSON.parse(demoNiche) : {};
+        if (service) bookkeeping.service = service;
+        if (prospectGroup) bookkeeping.prospect_group = prospectGroup;
+        demoNiche = JSON.stringify(bookkeeping);
       }
 
       const { token } = generateToken();
@@ -641,6 +783,35 @@ export function registerDemoRoutes(app: Express): void {
       const raw = Number(req.query.limit);
       const limit = Number.isSafeInteger(raw) && raw > 0 ? Math.min(raw, 500) : 200;
       res.json({ sessions: await listDemoSessions(limit) });
+    }),
+  );
+
+  // ── The Demos page's inline rename ──
+  // Separate from /config below because it edits both surfaces and works on a
+  // link that has never been opened. See updateDemoIdentity.
+  const identityPatchSchema = z
+    .object({
+      firstName: z.string().trim().min(1).max(80).optional(),
+      companyName: z.string().trim().max(120).optional(),
+    })
+    .refine((v) => v.firstName !== undefined || v.companyName !== undefined, {
+      message: "Nothing to change.",
+    });
+
+  app.patch(
+    "/api/demo/:token/identity",
+    requireAuth,
+    wrapAsync(async (req, res) => {
+      if (!isDemoAdmin(req)) return res.status(403).json({ message: "Not allowed." });
+      const token = String(req.params.token || "");
+      if (!DEMO_TOKEN_RE.test(token)) return res.status(400).json({ message: "Bad token." });
+
+      const parsed = identityPatchSchema.safeParse(req.body);
+      if (!parsed.success) return handleZodError(res, parsed.error);
+
+      const updated = await updateDemoIdentity(token, parsed.data);
+      if (!updated) return res.status(404).json({ message: "No demo with that link." });
+      res.json({ ok: true, updated });
     }),
   );
 

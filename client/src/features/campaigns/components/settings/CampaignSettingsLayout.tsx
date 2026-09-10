@@ -6,18 +6,17 @@ import { BusinessSectionFields } from "./BusinessSectionFields";
 import { AISectionFields } from "./AISectionFields";
 import { BehaviorSectionFields } from "./BehaviorSectionFields";
 import { CampaignGenerateButton } from "./CampaignGenerateButton";
-import type { DemoMode } from "../../demoMode";
+import { isServiceDemoCampaign, type DemoMode } from "../../demoMode";
 
 // Opens WhatsApp on a chat with the Lead Awaker AI line, "/start" prefilled.
 // wa.me can only prefill the text box — the operator taps send and the AI replies.
 const LAUNCH_WA_NUMBER = "31627458300";
 const LAUNCH_WA_MESSAGE = "/start";
 
-// Mirrors the engine's UNIVERSAL_DEMO_CAMPAIGN_ID (demo_recap.py). The universal
-// demo generates its business persona per lead (gpt-4o-mini via the website
-// widget), so the Business tab is hidden for it: only the opener template and
-// agent name remain operator-editable, and they live in the AI tab instead.
-const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
+// Every service demo (universal DBR, speed to lead, ...) generates its business
+// persona per lead, so the Business tab is hidden for all of them: only the
+// opener template and agent name remain operator-editable, and they live in the
+// AI tab instead. See isServiceDemoCampaign for the shared list.
 
 interface SectionDef {
   id: string;
@@ -51,8 +50,9 @@ interface CampaignSettingsLayoutProps {
 export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
   const { t } = useTranslation("campaigns");
   const { compact = false } = props;
-  const isUniversal =
-    ((props.campaign?.id ?? props.campaign?.Id) as number | undefined) === UNIVERSAL_DEMO_CAMPAIGN_ID;
+  const isUniversal = isServiceDemoCampaign(
+    (props.campaign?.id ?? props.campaign?.Id) as number | undefined,
+  );
   const [active, setActive] = useState(isUniversal ? "ai" : "business");
   // Optional name typed live during a discovery-call screenshare. Rides along in
   // the Launch button's "/start <campaignId> <name>" message so the engine

@@ -1,31 +1,10 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useQuery } from "@tanstack/react-query";
-import { Check, Copy, Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { useDemoClients, type DemoLang } from "@/features/campaigns/api/demoClientsApi";
-import { demoOpenUrl, useCreateDemoLink, type NewDemoResult } from "../api/demoSessionsApi";
+import { ProspectDemoPanel } from "./ProspectDemoPanel";
 
-const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
 
-interface DemoCampaign {
-  id: number;
-  key: string;
-  niche: string;
-  emoji: string;
-}
-
-function useDemoCampaigns() {
-  return useQuery<DemoCampaign[]>({
-    queryKey: ["/api/demo/campaigns"],
-    queryFn: async () => {
-      const res = await apiFetch("/api/demo/campaigns");
-      if (!res.ok) throw new Error("Failed to load demo campaigns");
-      return (await res.json()).campaigns ?? [];
-    },
-    staleTime: 5 * 60 * 1000,
-  });
-}
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -50,87 +29,64 @@ const inputStyle: React.CSSProperties = {
   fontFamily: "var(--sans)",
 };
 
-function LinkRow({ label, url }: { label: string; url: string }) {
-  const { t } = useTranslation("demos");
-  const [copied, setCopied] = useState(false);
-  return (
-    <div className="mb-2 flex items-center gap-2">
-      <span
-        style={{
-          flex: "0 0 84px",
-          fontSize: 10.5,
-          fontWeight: 700,
-          textTransform: "uppercase",
-          letterSpacing: "0.06em",
-          color: "var(--mute-2)",
-        }}
-      >
-        {label}
-      </span>
-      <input readOnly value={url} style={{ ...inputStyle, height: 32, fontSize: 11.5, color: "var(--mute)" }} />
-      <button
-        type="button"
-        onClick={() => {
-          navigator.clipboard.writeText(url).then(() => {
-            setCopied(true);
-            setTimeout(() => setCopied(false), 1500);
-          });
-        }}
-        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md hover:bg-muted"
-        style={{ color: "var(--mute-2)" }}
-        aria-label={t("actions.copied")}
-      >
-        {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
-      </button>
-    </div>
-  );
-}
-
 export function NewDemoForm() {
   const { t } = useTranslation("demos");
   const { data: clients } = useDemoClients();
-  const { data: campaigns } = useDemoCampaigns();
-  const create = useCreateDemoLink();
 
   const [firstName, setFirstName] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [clientNiche, setClientNiche] = useState("");
   const [niche, setNiche] = useState("");
   const [language, setLanguage] = useState<DemoLang>("en");
-  const [market, setMarket] = useState("");
-  const [scenario, setScenario] = useState<"inquired" | "deciding">("inquired");
-  const [aiDisclosure, setAiDisclosure] = useState("");
-  const [campaignId, setCampaignId] = useState(UNIVERSAL_DEMO_CAMPAIGN_ID);
-  const [result, setResult] = useState<NewDemoResult | null>(null);
+  const [market, setMarket] = useState<"" | "uk" | "us" | "nl">("");
+  const [aiDisclosure, setAiDisclosure] = useState<"" | "off" | "opener" | "second_message">("");
+  // One id for this prospect, minted once and carried by every service link
+  // created below it, which is what lets the Demos page show them as one row.
+  // Services are created one button at a time during a call, so nothing
+  // server-side could infer that they belong together.
+  const [prospectGroup] = useState(() => crypto.randomUUID());
   const [error, setError] = useState("");
+  const [website, setWebsite] = useState("");
+  const [notes, setNotes] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const [scanNote, setScanNote] = useState("");
 
-  const submit = () => {
+  // Build a Client from the prospect's own website, then select it. The scrape
+  // supplies the facts (services, hours, area); the niche generator supplies
+  // the vocabulary and ladder. Clears the free-text niche because create-link
+  // ignores `clientNiche` whenever `niche` is also set.
+  const scanWebsite = async (fromNotes = false) => {
+    const url = website.trim();
+    const text = notes.trim();
+    if (fromNotes ? !text : !url) return;
+    setScanning(true);
+    setScanNote("");
     setError("");
-    if (!firstName.trim()) {
-      setError(t("new.nameRequired"));
-      return;
+    try {
+      const res = await apiFetch("/api/demo/clients/from-website", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...(fromNotes ? { text } : { url }),
+          language,
+          ...(language === "en" && market ? { market } : {}),
+        }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(body?.message || t("new.websiteFailed"));
+        return;
+      }
+      setClientNiche(body.client);
+      setNiche("");
+      setScanNote(
+        t("new.websiteDone", { client: body.client, pages: (body.pages_scraped ?? []).length }),
+      );
+    } catch {
+      setError(t("new.websiteFailed"));
+    } finally {
+      setScanning(false);
     }
-    create.mutate(
-      {
-        firstName: firstName.trim(),
-        language,
-        campaignId,
-        scenario,
-        // Free text beats the picker: typing a niche is an explicit request for
-        // a new persona, and create-link ignores `niche` when `clientNiche` is
-        // also set, so sending both would silently drop the typed one.
-        ...(niche.trim() ? { niche: niche.trim() } : clientNiche ? { clientNiche } : {}),
-        ...(companyName.trim() ? { companyName: companyName.trim() } : {}),
-        ...(aiDisclosure ? { aiDisclosure: aiDisclosure as "off" | "opener" | "second_message" } : {}),
-        // Only meaningful on an English link: nl and pt resolve their own
-        // market inside the generator.
-        ...(language === "en" && market ? { market: market as "uk" | "us" | "nl" } : {}),
-      },
-      {
-        onSuccess: (r) => setResult(r),
-        onError: (e) => setError(e.message || t("new.failed")),
-      },
-    );
   };
 
   return (
@@ -156,6 +112,86 @@ export function NewDemoForm() {
             placeholder={t("new.companyPlaceholder")}
           />
         </Field>
+
+        {/* Spans both columns: the URL is the fastest way to fill the Client
+            picker below it, so it reads as the step before it, not beside it. */}
+        <div className="col-span-2">
+          <Field label={t("new.website")}>
+            <div className="flex items-center gap-2">
+              <input
+                style={inputStyle}
+                value={website}
+                onChange={(e) => setWebsite(e.target.value)}
+                placeholder={t("new.websitePlaceholder")}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    if (!scanning) void scanWebsite();
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => void scanWebsite()}
+                disabled={scanning || !website.trim()}
+                style={{
+                  flex: "0 0 auto",
+                  height: 36,
+                  padding: "0 12px",
+                  borderRadius: "var(--r-surface)",
+                  border: "1px solid var(--line)",
+                  background: "var(--bg)",
+                  color: "var(--ink)",
+                  fontSize: 12,
+                  fontWeight: 600,
+                  whiteSpace: "nowrap",
+                  opacity: scanning || !website.trim() ? 0.5 : 1,
+                  cursor: scanning || !website.trim() ? "default" : "pointer",
+                }}
+              >
+                {scanning ? t("new.websiteScanning") : t("new.websiteScrape")}
+              </button>
+            </div>
+          </Field>
+          <p style={{ marginTop: 4, fontSize: 11, color: "var(--mute)" }}>
+            {scanNote || t("new.websiteHint")}
+          </p>
+
+          {/* The escape hatch. Some sites answer a scraper with 403 or render
+              only in JavaScript, and the presenter usually knows the business
+              anyway: paste it and get the same Client, saved the same way. */}
+          <div style={{ marginTop: 10 }}>
+            <Field label={t("new.notes")}>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder={t("new.notesPlaceholder")}
+                rows={4}
+                style={{ ...inputStyle, height: "auto", padding: "8px 10px", resize: "vertical" }}
+              />
+            </Field>
+            <button
+              type="button"
+              onClick={() => void scanWebsite(true)}
+              disabled={scanning || !notes.trim()}
+              style={{
+                marginTop: 6,
+                height: 30,
+                padding: "0 12px",
+                borderRadius: "var(--r-surface)",
+                border: "1px solid var(--line)",
+                background: "var(--bg)",
+                color: "var(--ink)",
+                fontSize: 11,
+                fontWeight: 600,
+                opacity: scanning || !notes.trim() ? 0.5 : 1,
+                cursor: scanning || !notes.trim() ? "default" : "pointer",
+              }}
+            >
+              {scanning ? t("new.websiteScanning") : t("new.notesBuild")}
+            </button>
+          </div>
+        </div>
 
         <Field label={t("new.client")}>
           <select style={inputStyle} value={clientNiche} onChange={(e) => setClientNiche(e.target.value)}>
@@ -187,18 +223,12 @@ export function NewDemoForm() {
           </Field>
         </div>
 
-        <Field label={t("new.scenario")}>
+        <Field label={t("new.disclosure")}>
           <select
             style={inputStyle}
-            value={scenario}
-            onChange={(e) => setScenario(e.target.value as "inquired" | "deciding")}
+            value={aiDisclosure}
+            onChange={(e) => setAiDisclosure(e.target.value as typeof aiDisclosure)}
           >
-            <option value="inquired">{t("mode.inquired")}</option>
-            <option value="deciding">{t("mode.deciding")}</option>
-          </select>
-        </Field>
-        <Field label={t("new.disclosure")}>
-          <select style={inputStyle} value={aiDisclosure} onChange={(e) => setAiDisclosure(e.target.value)}>
             <option value="">{t("new.disclosureDefault")}</option>
             <option value="off">{t("disclosure.off")}</option>
             <option value="opener">{t("disclosure.opener")}</option>
@@ -208,7 +238,11 @@ export function NewDemoForm() {
 
         {language === "en" && (
           <Field label={t("new.market")}>
-            <select style={inputStyle} value={market} onChange={(e) => setMarket(e.target.value)}>
+            <select
+              style={inputStyle}
+              value={market}
+              onChange={(e) => setMarket(e.target.value as typeof market)}
+            >
               <option value="">{t("new.marketDefault")}</option>
               <option value="uk">UK (£)</option>
               <option value="us">US ($)</option>
@@ -216,41 +250,7 @@ export function NewDemoForm() {
             </select>
           </Field>
         )}
-        <Field label={t("new.campaign")}>
-          <select style={inputStyle} value={campaignId} onChange={(e) => setCampaignId(Number(e.target.value))}>
-            {/* The universal demo is listed explicitly because it is NOT in
-                DEMO_CAMPAIGNS: that list is the legacy per-niche campaigns the
-                public /try flow offers, and adding 60 to it would change what
-                anonymous visitors are served. It is the default here because it
-                is the campaign every minted link actually runs on. */}
-            <option value={UNIVERSAL_DEMO_CAMPAIGN_ID}>{t("new.universalCampaign")}</option>
-            {(campaigns ?? []).map((c) => (
-              <option key={c.id} value={c.id}>
-                {(c.emoji ? `${c.emoji} ` : "") + c.niche}
-              </option>
-            ))}
-          </select>
-        </Field>
       </div>
-
-      <button
-        type="button"
-        onClick={submit}
-        disabled={create.isPending}
-        className="la-btn mt-4 inline-flex items-center gap-2"
-        style={{
-          background: "var(--wine)",
-          color: "var(--paper)",
-          borderRadius: "var(--r-surface)",
-          padding: "9px 18px",
-          fontSize: 13,
-          fontWeight: 600,
-          opacity: create.isPending ? 0.6 : 1,
-        }}
-      >
-        {create.isPending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-        {create.isPending ? t("new.submitting") : t("new.submit")}
-      </button>
 
       {error && (
         <p className="mt-3" style={{ fontSize: 12.5, color: "var(--danger, #9A3B2E)" }}>
@@ -258,47 +258,17 @@ export function NewDemoForm() {
         </p>
       )}
 
-      {result && (
-        <div
-          className="mt-5"
-          style={{
-            padding: 14,
-            borderRadius: "var(--r-surface)",
-            background: "var(--surface)",
-            boxShadow: "var(--sh-inset-crisp)",
-          }}
-        >
-          <div
-            className="mb-3"
-            style={{ fontSize: 10.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute-2)" }}
-          >
-            {t("new.resultHeading")}
-          </div>
-          {/* Said out loud on purpose: a fallback link looks identical to a good
-              one, and sending a prospect a generic demo believing it is theirs
-              is the worst outcome this form can produce. */}
-          {result.generated === false && (
-            <p className="mb-3" style={{ fontSize: 12, lineHeight: 1.5, color: "var(--ink)" }}>
-              {t("new.fallback")}
-            </p>
-          )}
-          {result.reused && (
-            <p className="mb-3" style={{ fontSize: 12, color: "var(--mute)" }}>
-              {t("new.reused", { name: result.reused })}
-            </p>
-          )}
-          <LinkRow label={t("new.browserLink")} url={result.demoUrl} />
-          <LinkRow label={t("new.whatsappLink")} url={result.whatsappUrl} />
-          <a
-            href={demoOpenUrl(result.demoUrl)}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ fontSize: 12.5, color: "var(--wine)", textDecoration: "underline", textUnderlineOffset: 2 }}
-          >
-            {t("new.openIt")} →
-          </a>
-        </div>
-      )}
+      <ProspectDemoPanel
+        input={{
+          firstName,
+          language,
+          clientNiche,
+          companyName,
+          market,
+          aiDisclosure,
+          prospectGroup,
+        }}
+      />
     </div>
   );
 }

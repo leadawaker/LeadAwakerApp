@@ -26,3 +26,18 @@ export const DEMO_MODE_SCENARIO: Record<DemoMode, "inquired" | "deciding"> = {
 // mirrors the server's scenario enum. Keep the two lists in step.
 export const DEMO_MARKETS = ["uk", "us", "nl"] as const;
 export type DemoMarket = (typeof DEMO_MARKETS)[number];
+
+// The service demos: one campaign per AI service (database reactivation, speed
+// to lead, and voice/reputation to come). These behave identically in the CRM:
+// two settings tabs instead of three, and a niche generator, because their
+// "business" identity comes from the prospect persona on each demo lead rather
+// than from the campaign row.
+//
+// Mirrors SERVICE_DEMO_CAMPAIGN_IDS in server/demo-session.ts, which in turn
+// mirrors PERSONA_DEMO_CAMPAIGN_IDS in the engine. Keep the three in step.
+export const SERVICE_DEMO_CAMPAIGN_IDS = [60, 67, 68] as const;
+
+/** Does this campaign demo a service, with the prospect supplied per link? */
+export function isServiceDemoCampaign(id: number | undefined | null): boolean {
+  return typeof id === "number" && (SERVICE_DEMO_CAMPAIGN_IDS as readonly number[]).includes(id);
+}

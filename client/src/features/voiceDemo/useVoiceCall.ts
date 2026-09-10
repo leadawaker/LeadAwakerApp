@@ -17,7 +17,7 @@ import type {
  * this app is served from Vercel, so this is always cross-origin (the
  * engine's CORS allows it).
  */
-const ENGINE_BASE_URL =
+export const ENGINE_BASE_URL =
   import.meta.env.VITE_VOICE_ENGINE_URL ?? "https://webhooks.leadawaker.com";
 
 /** Browser side of the OpenAI Realtime WebRTC handshake: SDP offer in, answer out. */
@@ -93,7 +93,21 @@ const MS_PER_WORD = 400;
 const MIN_FAREWELL_MS = 3500;
 const MAX_FAREWELL_MS = 9000;
 
+/** The demo token from the URL (`/voice-demo?token=...`), or "".
+ *
+ * Read from the query string rather than threaded through props: the plain
+ * page has no token and must keep behaving exactly as it does today, and a
+ * themed link then needs no other change anywhere. */
+function readDemoToken(): string {
+  if (typeof window === "undefined") return "";
+  const raw = new URLSearchParams(window.location.search).get("token") || "";
+  // Same shape the demo routes validate, so a junk query string is ignored
+  // rather than sent to the engine.
+  return /^[A-Za-z0-9]{4,64}$/.test(raw) ? raw : "";
+}
+
 export function useVoiceCall() {
+  const demoToken = readDemoToken();
   const [state, setState] = useState<CallState>("idle");
   const [options, setOptions] = useState<VoiceOptions>(FALLBACK_OPTIONS);
   const [floor, setFloor] = useState<Floor>("connecting");
@@ -583,6 +597,10 @@ export function useVoiceCall() {
             language: setup.language,
             company_name: companyName,
             caller_number: callerNumberRef.current || null,
+            // A demo token themes the call as the prospect: same persona the
+            // chat demos use. Absent on the plain /voice-demo page, where the
+            // engine keeps its own single-tenant receptionist.
+            ...(demoToken ? { token: demoToken } : {}),
             model: setup.model,
             voice: setup.voice,
             speed: setup.speed,

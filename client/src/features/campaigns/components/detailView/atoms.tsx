@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { apiFetch } from "@/lib/apiUtils";
 import { xBase, xDefault, xSpan } from "./constants";
 import { useDemoClients } from "../../api/demoClientsApi";
-import { DEMO_MODES, DEMO_MODE_SCENARIO, DEMO_MARKETS, type DemoMode, type DemoMarket } from "../../demoMode";
+import { DEMO_MODES, DEMO_MODE_SCENARIO, DEMO_MARKETS, isServiceDemoCampaign, type DemoMode, type DemoMarket } from "../../demoMode";
 
 // ── Duplicate button (inline confirm) ─────────────────────────────────────────
 export function DuplicateButton({
@@ -347,11 +347,10 @@ export function WhatsAppDemoLinkButton({
 // the demo link inline. WhatsApp needs a name + language (pre-primes a Lead);
 // Telegram is an instant deep link.
 
-// Only the Universal Demo campaign runs the per-lead niche overlay
-// (context_injection.py gates it on `campaign_id == 60`), so the niche and
-// company fields below are shown for that campaign alone. Offering them
-// elsewhere would accept input the engine then silently ignores.
-const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
+// Only the service-demo campaigns run the per-lead niche overlay (the engine
+// gates it on PERSONA_DEMO_CAMPAIGN_IDS in demo_campaigns.py), so the niche and
+// company fields below are shown for those alone. Offering them elsewhere would
+// accept input the engine then silently ignores.
 
 export function ShareButton({ campaign }: { campaign: Campaign }) {
   const { t } = useTranslation("campaigns");
@@ -397,7 +396,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
   const { data: savedClients } = useDemoClients();
 
   const campaignId = (campaign.id || (campaign as any).Id) as number;
-  const canGenerateNiche = campaignId === UNIVERSAL_DEMO_CAMPAIGN_ID;
+  const canGenerateNiche = isServiceDemoCampaign(campaignId);
 
   // Which languages the picked Client can actually be minted in.
   //

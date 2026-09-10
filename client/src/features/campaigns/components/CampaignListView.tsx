@@ -90,7 +90,6 @@ const DETAIL_TAB_DEFS = [
   { id: "configurations", labelKey: "tabs.configurations", icon: Settings2 },
   // The saved demo-persona library. Agency-only, like configurations: it is
   // Gabriel's prospects, not something a client account should browse.
-  { id: "clients",        labelKey: "tabs.clients",        icon: Users },
 ];
 
 // ── Virtual list item types ──────────────────────────────────────────────────
@@ -193,7 +192,7 @@ export function CampaignListView({
 
   const DETAIL_TABS: TabDef[] = useMemo(() =>
     DETAIL_TAB_DEFS
-      .filter((tab) => isAgencyUser || (tab.id !== "configurations" && tab.id !== "clients"))
+      .filter((tab) => isAgencyUser || tab.id !== "configurations")
       .map((tab) => ({ ...tab, label: t(tab.labelKey) })),
   [t, isAgencyUser]);
 

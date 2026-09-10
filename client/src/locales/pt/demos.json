@@ -3,7 +3,8 @@
   "subtitle": "Todos os links de demo que você gerou, e até onde cada prospect chegou.",
   "tabs": {
     "sessions": "Sessões",
-    "new": "Nova demo"
+    "new": "Nova demo",
+    "clients": "Clients"
   },
   "table": {
     "prospect": "Prospect",
@@ -14,7 +15,18 @@
     "browser": "Navegador",
     "whatsapp": "WhatsApp",
     "created": "Enviado",
-    "actions": "Links"
+    "actions": "Links",
+    "other": "Outros",
+    "editHint": "Clique para editar",
+    "svc": {
+      "dbr": "DBR",
+      "quote": "Orçamento",
+      "speed": "Speed",
+      "widget": "Widget",
+      "voice": "Voz",
+      "reputation": "Avaliações",
+      "socials": "Redes"
+    }
   },
   "mode": {
     "inquired": "Sem orçamento",
@@ -68,11 +80,40 @@
     "reused": "Criado a partir do Client salvo \"{{name}}\".",
     "fallback": "O modelo de nicho não rodou, então este link tem uma persona genérica em vez do nicho que você pediu.",
     "nameRequired": "O nome do prospect é obrigatório.",
-    "failed": "Não foi possível criar o link."
+    "failed": "Não foi possível criar o link.",
+    "website": "Site do prospect",
+    "websitePlaceholder": "https://empresa-deles.com.br",
+    "websiteScrape": "Escanear site",
+    "websiteScanning": "Escaneando...",
+    "websiteDone": "\"{{client}}\" criado a partir de {{pages}} páginas. Selecionado abaixo.",
+    "websiteFailed": "Não foi possível ler o site. Crie o Client manualmente.",
+    "websiteHint": "Lê o site deles e cria um Client com os serviços, horários e região reais.",
+    "notes": "Ou cole os dados do negócio",
+    "notesPlaceholder": "Cole o que você sabe: serviços, região, horários, orçamentos...",
+    "notesBuild": "Criar das notas"
   },
   "disclosure": {
     "off": "Desligado",
     "opener": "Na abertura",
     "second_message": "Segunda mensagem"
+  },
+  "services": {
+    "heading": "Demos deste prospect",
+    "hint": "Uma persona, um link por serviço. Escolha o Client acima primeiro.",
+    "dbr": "Reativação de base",
+    "speed": "Speed to Lead",
+    "widget": "Widget do site",
+    "voice": "Recepcionista de voz",
+    "reputation": "Reputação",
+    "socials": "DMs de redes",
+    "soon": "Ainda não criado",
+    "open": "Abrir",
+    "copy": "Copiar",
+    "copied": "Copiado",
+    "minting": "Criando...",
+    "needClient": "Escolha ou escaneie um Client primeiro.",
+    "quote": "Follow-up de orçamento",
+    "whatsapp": "Link do WhatsApp (clique direito para copiar)",
+    "create": "Criar"
   }
 }

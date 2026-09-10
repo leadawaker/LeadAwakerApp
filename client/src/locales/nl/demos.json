@@ -3,7 +3,8 @@
   "subtitle": "Elke demolink die je hebt aangemaakt, en hoe ver elke prospect kwam.",
   "tabs": {
     "sessions": "Sessies",
-    "new": "Nieuwe demo"
+    "new": "Nieuwe demo",
+    "clients": "Clients"
   },
   "table": {
     "prospect": "Prospect",
@@ -14,7 +15,18 @@
     "browser": "Browser",
     "whatsapp": "WhatsApp",
     "created": "Verstuurd",
-    "actions": "Links"
+    "actions": "Links",
+    "other": "Overig",
+    "editHint": "Klik om te bewerken",
+    "svc": {
+      "dbr": "DBR",
+      "quote": "Offerte",
+      "speed": "Speed",
+      "widget": "Widget",
+      "voice": "Voice",
+      "reputation": "Reviews",
+      "socials": "Socials"
+    }
   },
   "mode": {
     "inquired": "Geen offerte",
@@ -68,11 +80,40 @@
     "reused": "Gebouwd op de opgeslagen Client \"{{name}}\".",
     "fallback": "Het nichemodel draaide niet, dus deze link heeft een algemene persona in plaats van de niche die je vroeg.",
     "nameRequired": "Een naam van de prospect is verplicht.",
-    "failed": "Kon de link niet aanmaken."
+    "failed": "Kon de link niet aanmaken.",
+    "website": "Website prospect",
+    "websitePlaceholder": "https://hun-bedrijf.nl",
+    "websiteScrape": "Scan site",
+    "websiteScanning": "Bezig...",
+    "websiteDone": "\"{{client}}\" gebouwd uit {{pages}} pagina's. Hieronder geselecteerd.",
+    "websiteFailed": "Kon die site niet lezen. Maak de Client handmatig aan.",
+    "websiteHint": "Leest hun site en bouwt een Client met hun echte diensten, openingstijden en werkgebied.",
+    "notes": "Of plak de bedrijfsgegevens",
+    "notesPlaceholder": "Plak wat je weet: diensten, werkgebied, openingstijden, offertes...",
+    "notesBuild": "Bouw uit notities"
   },
   "disclosure": {
     "off": "Uit",
     "opener": "In de opener",
     "second_message": "Tweede bericht"
+  },
+  "services": {
+    "heading": "Demo's voor deze prospect",
+    "hint": "Eén persona, één link per dienst. Kies eerst de Client hierboven.",
+    "dbr": "Database reactivatie",
+    "speed": "Speed to Lead",
+    "widget": "Website widget",
+    "voice": "Telefonist AI",
+    "reputation": "Reputatie",
+    "socials": "Social DM's",
+    "soon": "Nog niet gebouwd",
+    "open": "Openen",
+    "copy": "Kopieer",
+    "copied": "Gekopieerd",
+    "minting": "Aanmaken...",
+    "needClient": "Kies of scan eerst een Client.",
+    "quote": "Offerte opvolging",
+    "whatsapp": "WhatsApp-link (rechtsklik om te kopiëren)",
+    "create": "Maken"
   }
 }

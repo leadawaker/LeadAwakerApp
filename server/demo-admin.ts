@@ -160,6 +160,40 @@ export async function updateWebDemoConfig(
   return true;
 }
 
+/**
+ * Rename the prospect behind a link, on BOTH surfaces.
+ *
+ * Deliberately not updateWebDemoConfig: that one edits the browser lead only
+ * (so a presenter cannot disturb a running WhatsApp demo), and the browser lead
+ * does not exist until the prospect opens the page. The Demos page's whole
+ * reason for offering this is fixing a name on a link that was already sent and
+ * not yet opened, which is exactly the case that has no browser lead.
+ *
+ * Returns how many lead rows were touched; zero means no such token.
+ */
+export async function updateDemoIdentity(
+  token: string,
+  patch: { firstName?: string; companyName?: string },
+): Promise<number> {
+  const rows = await db
+    .select()
+    .from(leads)
+    .where(inArray(leads.channelIdentifier, [`web-demo:${token}`, `wa-demo:${token}`]));
+
+  for (const lead of rows) {
+    const values: Record<string, unknown> = { updatedAt: new Date() };
+    if (patch.firstName !== undefined) values.firstName = patch.firstName;
+    if (patch.companyName !== undefined) {
+      // Merged, never replaced: the blob is the whole persona.
+      const niche = parseDemoNiche(lead.demoNiche);
+      niche.company_name = patch.companyName;
+      values.demoNiche = JSON.stringify(niche);
+    }
+    await db.update(leads).set(values as any).where(eq(leads.id, lead.id));
+  }
+  return rows.length;
+}
+
 /** One row on the Demos page: a token, with both of its surfaces. */
 export type DemoSessionRow = {
   token: string;
@@ -176,6 +210,13 @@ export type DemoSessionRow = {
   /** "inquired" (no quote) or "deciding" (quote), from the browser lead if it
    *  exists, since that is the surface the panel steers. */
   scenario: string;
+  /** Which offered service this link demos ("dbr", "voice", ...), and which
+   *  prospect's set of links it belongs to. Both are stamped at mint time and
+   *  never edited afterwards, so they come from the wa-demo lead — the row
+   *  minting created. Empty on links minted before the Demos page grouped by
+   *  prospect; those stand alone, which is what the page renders them as. */
+  service: string;
+  prospectGroup: string;
   invited: boolean;
   campaignId: number | null;
   createdAt: Date | null;
@@ -294,6 +335,8 @@ export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
         companyName: str(niche.company_name),
         clientNiche: str(niche.client_niche),
         scenario: "inquired",
+        service: str(niche.service),
+        prospectGroup: str(niche.prospect_group),
         invited: !!lead.demoInvited,
         campaignId: lead.campaignsId ?? null,
         createdAt: (lead.createdAt as Date) ?? null,
@@ -316,6 +359,8 @@ export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
       row.whatsapp = surface;
       // Minting creates this row, so it owns the fields the link was born with.
       row.invited = !!lead.demoInvited;
+      if (str(niche.service)) row.service = str(niche.service);
+      if (str(niche.prospect_group)) row.prospectGroup = str(niche.prospect_group);
       row.createdAt = (lead.createdAt as Date) ?? row.createdAt;
       if (!row.firstName) row.firstName = lead.firstName || "";
       if (!row.companyName) row.companyName = str(niche.company_name);

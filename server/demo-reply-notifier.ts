@@ -20,7 +20,7 @@
 
 import { db } from "./db";
 import { leads, interactions, notifications } from "@shared/schema";
-import { and, eq, gte, inArray, like, or, min } from "drizzle-orm";
+import { and, eq, gte, inArray, like, or, min, sql } from "drizzle-orm";
 import { storage } from "./storage";
 import { createAndDispatchNotification } from "./notification-dispatcher";
 
@@ -69,10 +69,24 @@ async function checkDemoReplies(): Promise<void> {
   // The FIRST inbound per lead, which is what decides "they just started
   // replying". Counting messages instead would miss anyone who sent two in the
   // same minute, since by the time a pass ran the count would no longer be one.
+  //
+  // Excludes Gabriel's (or another agency admin's) own admin-test turns, tagged
+  // by web_demo_routes.py via the same isDemoAdmin session check that already
+  // lifts the turn cap for a CRM-authenticated tester. Without this, testing a
+  // link before sending it out makes the test message itself "the first
+  // reply" forever: it both fires the email for your own test AND, since a
+  // lead's first inbound never changes, permanently hides the real prospect's
+  // actual first reply on that same token.
   const firsts = await db
     .select({ leadsId: interactions.leadsId, first: min(interactions.createdAt) })
     .from(interactions)
-    .where(and(inArray(interactions.leadsId, candidateIds), eq(interactions.direction, "inbound")))
+    .where(
+      and(
+        inArray(interactions.leadsId, candidateIds),
+        eq(interactions.direction, "inbound"),
+        sql`COALESCE(${interactions.metadata}->>'is_admin_test', 'false') <> 'true'`,
+      ),
+    )
     .groupBy(interactions.leadsId);
   const firstByLead = new Map<number, Date | null>();
   for (const f of firsts) firstByLead.set(f.leadsId as number, (f.first as Date) ?? null);
@@ -113,10 +127,18 @@ async function checkDemoReplies(): Promise<void> {
 
     // Their actual words, because "someone replied" makes you go and look while
     // "is this available in oak?" tells you whether to drop what you are doing.
+    // Same admin-test exclusion as `firsts` above, so a token you tested before
+    // sending quotes the prospect's real opening line, not your own test turn.
     const [firstReply] = await db
       .select({ content: interactions.content })
       .from(interactions)
-      .where(and(eq(interactions.leadsId, lead.id as number), eq(interactions.direction, "inbound")))
+      .where(
+        and(
+          eq(interactions.leadsId, lead.id as number),
+          eq(interactions.direction, "inbound"),
+          sql`COALESCE(${interactions.metadata}->>'is_admin_test', 'false') <> 'true'`,
+        ),
+      )
       .orderBy(interactions.createdAt)
       .limit(1);
     const said = String(firstReply?.content || "").replace(/^\[Voice Note\]:\s*/, "").trim();

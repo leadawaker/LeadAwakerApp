@@ -3,6 +3,7 @@ import { CallPanel } from "@/features/voiceDemo/components/CallPanel";
 import { CrmPanel } from "@/features/voiceDemo/components/CrmPanel";
 import {
   DEMO_COMPANY,
+  ENGINE_BASE_URL,
   PHONE_STORAGE_KEY,
   useVoiceCall,
 } from "@/features/voiceDemo/useVoiceCall";
@@ -51,6 +52,37 @@ export default function VoiceDemoPage() {
   const [model, setModel] = useState(DEFAULT_MODEL);
   const [voice, setVoice] = useState(preset?.voice ?? DEFAULT_VOICE);
   const [speed, setSpeed] = useState(DEFAULT_SPEED);
+
+  /**
+   * A `?token=` link carries a prospect persona minted on the +New Demo form,
+   * so the setup screen should already say their company and their language
+   * rather than asking the presenter to retype both mid-call.
+   *
+   * Only fills fields the visitor has not touched: `touchedRef` is set by the
+   * company input's own onChange, so a typed name always wins over the fetch.
+   */
+  const touchedRef = useRef(false);
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("token") || "";
+    if (!/^[A-Za-z0-9]{4,64}$/.test(token)) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await fetch(`${ENGINE_BASE_URL}/voice/demo-context?token=${token}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        if (cancelled || !data?.found) return;
+        if (data.language && LANGS.includes(data.language)) setLanguage(data.language);
+        if (data.company_name && !touchedRef.current) setCompanyName(data.company_name);
+      } catch {
+        // A themed link that cannot reach the engine still runs as the plain
+        // demo, which is a better failure than a blocked setup screen.
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   /**
    * Each language's persona has its own demo brand, so switching language
@@ -114,7 +146,12 @@ export default function VoiceDemoPage() {
             options={call.options}
             simple={preset?.autoStart ?? false}
             onLanguage={handleLanguage}
-            onCompany={setCompanyName}
+            onCompany={(next: string) => {
+              // A name the presenter typed outranks anything the token fetch
+              // may still be about to fill in.
+              touchedRef.current = true;
+              setCompanyName(next);
+            }}
             onCallerNumber={setCallerNumber}
             onModel={setModel}
             onVoice={setVoice}

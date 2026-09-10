@@ -30,6 +30,7 @@ import {
   buildGenericScopingLadder,
   type NicheContext,
   type DemoScenario,
+  type DemoMarket,
 } from "./demo-session";
 
 /** Languages a demo can run in. Mirrors the demo route's zod enum. */
@@ -521,6 +522,7 @@ export function demoClientToContext(
   row: ClientRow,
   language: DemoLang,
   scenario: DemoScenario,
+  market?: DemoMarket,
 ): NicheContext | null {
   const label = pick(row.nicheLabel as NicheText, language) || row.niche;
   const description = pick(row.descriptionTemplate as NicheText, language);
@@ -588,5 +590,5 @@ export function demoClientToContext(
     ai_disclosure: "",
   };
 
-  return applyDemoDefaults(ctx, language, scenario);
+  return applyDemoDefaults(ctx, language, scenario, market);
 }
