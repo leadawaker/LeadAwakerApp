@@ -81,6 +81,29 @@ export const FALLBACK_OPTIONS: VoiceOptions = {
 };
 
 /** Reads as pace rather than as a number, which is what is being judged. */
+/**
+ * The caller's own IANA timezone, e.g. "Europe/Amsterdam".
+ *
+ * The engine resolves and stamps the booked slot in this zone, because the
+ * booked card renders it with `toLocaleTimeString(undefined, ...)` — i.e. in
+ * whatever zone this browser is in. When the engine stamped the persona's
+ * home zone instead, a caller in Amsterdam asked for ten, heard "ten in the
+ * morning" read back, and watched the calendar draw 11:00 (10:00 BST is 11:00
+ * CEST). Sending the zone makes the spoken hour and the drawn hour the same
+ * hour by construction.
+ *
+ * Wrapped because `resolvedOptions().timeZone` is allowed to return undefined
+ * on old engines, and the whole call should not fail over a diary detail: the
+ * engine falls back to the persona's city when this is null.
+ */
+function browserTimezone(): string | null {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
+  } catch {
+    return null;
+  }
+}
+
 export const SPEED_CHOICES = [
   { value: 0.9, label: "Unhurried" },
   { value: 1.0, label: "Natural" },
@@ -327,6 +350,7 @@ export function useVoiceCall() {
           campaign_id: DEMO_CAMPAIGN_ID,
           phone: callerNumberRef.current || "web",
           language: languageRef.current,
+          timezone: browserTimezone(),
           event,
         }),
       });
@@ -627,6 +651,7 @@ export function useVoiceCall() {
             language: setup.language,
             company_name: companyName,
             caller_number: callerNumberRef.current || null,
+            timezone: browserTimezone(),
             // A demo token themes the call as the prospect: same persona the
             // chat demos use. Absent on the plain /voice-demo page, where the
             // engine keeps its own single-tenant receptionist.
