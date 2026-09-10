@@ -1,11 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { CallPanel } from "@/features/voiceDemo/components/CallPanel";
 import { CrmPanel } from "@/features/voiceDemo/components/CrmPanel";
+import { VoiceDemoLock } from "@/features/voiceDemo/components/VoiceDemoLock";
 import {
   DEMO_COMPANY,
   ENGINE_BASE_URL,
+  isValidVoicePassword,
+  normalizeVoicePassword,
   PHONE_STORAGE_KEY,
   useVoiceCall,
+  VOICE_DEMO_UNLOCK_KEY,
 } from "@/features/voiceDemo/useVoiceCall";
 import { DEFAULT_MODEL, DEFAULT_VOICE, DEFAULT_SPEED } from "@/features/voiceDemo/constants";
 import type { VoiceLang } from "@/features/voiceDemo/types";
@@ -43,6 +47,14 @@ function readSetupFromUrl() {
 export default function VoiceDemoPage() {
   const call = useVoiceCall();
   const preset = useRef(readSetupFromUrl()).current;
+
+  const [unlocked, setUnlocked] = useState(() => {
+    try {
+      return isValidVoicePassword(localStorage.getItem(VOICE_DEMO_UNLOCK_KEY) || "");
+    } catch {
+      return false;
+    }
+  });
 
   const [language, setLanguage] = useState<VoiceLang>(preset?.language ?? "en");
   const [companyName, setCompanyName] = useState(
@@ -116,6 +128,23 @@ export default function VoiceDemoPage() {
     }
     void call.start({ language, companyName, callerNumber, model, voice, speed });
   };
+
+  if (!unlocked) {
+    return (
+      <VoiceDemoLock
+        onUnlock={(raw) => {
+          if (!isValidVoicePassword(raw)) return false;
+          try {
+            localStorage.setItem(VOICE_DEMO_UNLOCK_KEY, normalizeVoicePassword(raw));
+          } catch {
+            // Private mode: unlock still holds for this tab via the state below.
+          }
+          setUnlocked(true);
+          return true;
+        }}
+      />
+    );
+  }
 
   return (
     // Bone page ground, so the panels read as sheets sitting ON something.
