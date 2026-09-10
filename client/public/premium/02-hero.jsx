@@ -217,21 +217,20 @@ function Hero({ wineIntensity, textures }) {
 
 
 /* The /legacy hero's highlight band, minus its opening animation (legacy swept
-   it in with scaleX 0->1 on a 1.2s delay; here it's simply there) and in light
-   orange rather than the legacy brand yellow.
+   it in with scaleX 0->1 on a 1.2s delay; here it's simply there).
 
-   Legacy bled the band 400vw in both directions. That doesn't survive this
-   layout: the hero is a two-column grid, so a right-side bleed washes straight
-   across the conversation card. This one bleeds off the left edge of the
-   viewport only and fades out just past the last word (html/body already set
-   overflow-x: hidden in design-tokens.css, so the left bleed can't produce a
-   scrollbar). The whole line lives inside the band's container so the text
-   paints above it — with only the highlighted word wrapped, the absolutely
-   positioned band covered the words before it.
+   White rather than the legacy brand yellow, and full-bleed like the legacy
+   original: 400vw centred on the line, which covers the viewport edge to edge
+   whatever the line's own offset is (a 100vw band would leave a gap, since the
+   line sits in the left column rather than centred). html/body already set
+   overflow-x: hidden in design-tokens.css, so the overhang can't produce a
+   scrollbar. Vertically it stays the height of the line's own box.
 
-   Legacy flipped the word to white on top of the bar; wine reads better on
-   light orange and keeps the hero on-palette. */
-const HIGHLIGHT_ORANGE = "#F6B26B";
+   The whole line lives inside the container so the text paints above the band
+   — with only the highlighted word wrapped, the absolutely positioned band
+   covered the words before it. The band passes behind the conversation card,
+   which is translucent (.glass), so it reads as a faint lightening there. */
+const HIGHLIGHT_COLOR = "#FFFFFF";
 
 function HighlightBar({ children }) {
   return (
@@ -240,10 +239,10 @@ function HighlightBar({ children }) {
         aria-hidden
         style={{
           position: "absolute",
-          top: "0.08em", bottom: "0.10em",
-          left: "-100vw", right: "-0.45em",
+          top: 0, bottom: 0,
+          left: "calc(50% - 200vw)", width: "400vw",
           zIndex: 0,
-          background: `linear-gradient(to right, ${HIGHLIGHT_ORANGE} 0%, ${HIGHLIGHT_ORANGE} 88%, rgba(246,178,107,0) 100%)`,
+          background: HIGHLIGHT_COLOR,
         }}
       />
       <span style={{ position: "relative", zIndex: 1 }}>{children}</span>

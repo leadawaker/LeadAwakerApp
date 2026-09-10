@@ -70,6 +70,8 @@ reset-pw-temp.ts
 get-users.mjs
 probe-ports.mjs
 check-db.mjs
+/q-*.mjs
+/p93-*.mjs
 
 # Script run artifacts
 scripts/
