@@ -1,6 +1,7 @@
 // Managed messaging provisioning (Twilio) — spec: specs/messaging-provisioning.
 // Phase 1: one-click SMS provisioning (subaccount + NL number + messaging service),
-// status, and deprovision. Phase 2 (WhatsApp sender registration) is added later.
+// status, and deprovision. Phase 2: WhatsApp sender registration via Meta Embedded
+// Signup (Twilio ISV) + Twilio Senders API v2 (v1 was retired 2026-09-01).
 //
 // SAFETY: provisioning makes real Twilio calls that COST MONEY (buys a number).
 // It is idempotent (a second call returns existing status, never double-buys) and
@@ -37,15 +38,115 @@ function buildStatus(a: any) {
     provisionedAt: a.messagingProvisionedAt || null,
     // managed = we provisioned a subaccount; false = manually-pasted (Tier-1) creds.
     managed: !!a.messagingProvisionedAt,
+    // A subaccount exists but setup stopped before a number was bought.
+    partial: !!a.twilioAccountSid && !fromNumber,
   };
+}
+
+// Twilio requires an Address on the same (sub)account that buys a number; copy the master's.
+async function ensureAddress(master: any, subClient: any): Promise<string | undefined> {
+  const own = await subClient.addresses.list({ limit: 1 });
+  if (own.length) return own[0].sid;
+  const [src] = await master.addresses.list({ isoCountry: "NL", limit: 1 });
+  if (!src) return undefined;
+  const created = await subClient.addresses.create({
+    customerName: src.customerName,
+    street: src.street,
+    city: src.city,
+    region: src.region || src.city,
+    postalCode: src.postalCode,
+    isoCountry: src.isoCountry,
+  });
+  return created.sid;
+}
+
+function mapSenderStatus(s: string): "pending" | "approved" | "rejected" {
+  if (s === "ONLINE" || s === "ONLINE:UPDATING") return "approved";
+  if (s === "OFFLINE") return "rejected";
+  return "pending";
 }
 
 export function registerMessagingRoutes(app: Express): void {
   // ── Status ────────────────────────────────────────────────────────────────
+  // No Twilio webhook for sender review, so a pending sender is re-checked on read.
   app.get("/api/accounts/:id/messaging/status", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    let account = await storage.getAccountById(Number(req.params.id));
+    if (!account) return res.status(404).json({ message: "Account not found" });
+
+    if (account.whatsappSenderSid && account.whatsappSenderStatus === "pending" && account.twilioAccountSid) {
+      try {
+        const subClient = twilio(account.twilioAccountSid, account.twilioAuthToken || undefined);
+        const sender = await subClient.messaging.v2.channelsSender(account.whatsappSenderSid).fetch();
+        const mapped = mapSenderStatus(sender.status);
+        if (mapped !== account.whatsappSenderStatus) {
+          account = (await storage.updateAccount(account.id, { whatsappSenderStatus: mapped } as any)) || account;
+        }
+      } catch { /* best-effort: never fail the status read on a Twilio hiccup */ }
+    }
+
+    res.json(buildStatus(account));
+  }));
+
+  // ── Meta verification code ───────────────────────────────────────────────────
+  // During Embedded Signup Meta texts a code to the number. On a Twilio number that SMS
+  // lands in Twilio, not on anyone's phone, so we read it back for the signup screen.
+  app.get("/api/accounts/:id/messaging/whatsapp/verification-code", requireAuth, requireAgency, wrapAsync(async (req, res) => {
     const account = await storage.getAccountById(Number(req.params.id));
     if (!account) return res.status(404).json({ message: "Account not found" });
-    res.json(buildStatus(account));
+    const to = account.twilioDefaultFromNumber;
+    if (!account.twilioAccountSid || !to || to.startsWith("whatsapp:")) return res.json({ code: null });
+    try {
+      const subClient = twilio(account.twilioAccountSid, account.twilioAuthToken || undefined);
+      const msgs = await subClient.messages.list({ to, dateSentAfter: new Date(Date.now() - 15 * 60 * 1000), limit: 10 });
+      const latest = msgs.find((m) => m.direction === "inbound" && /\d{3}[-\s]?\d{3}/.test(m.body || ""));
+      const code = latest?.body?.match(/\d{3}[-\s]?\d{3}/)?.[0]?.replace(/[-\s]/g, "") || null;
+      res.json({ code, receivedAt: latest?.dateSent || latest?.dateCreated || null });
+    } catch {
+      res.json({ code: null });
+    }
+  }));
+
+  // ── Register WhatsApp sender (after Meta Embedded Signup) ──────────────────────
+  // The popup only returns waba_id; the E.164 number is collected in our own form first.
+  app.post("/api/accounts/:id/messaging/whatsapp/register", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const id = Number(req.params.id);
+    const account = await storage.getAccountById(id);
+    if (!account) return res.status(404).json({ message: "Account not found" });
+    if (!account.twilioAccountSid || !account.twilioAuthToken) {
+      return res.status(400).json({ message: "Set up messaging before enabling WhatsApp" });
+    }
+    if (account.whatsappSenderSid) {
+      return res.json({ ...buildStatus(account), alreadyRegistered: true });
+    }
+
+    const phoneNumber = String(req.body?.phoneNumber || "").replace(/[\s\-()]/g, "");
+    const displayName = String(req.body?.displayName || "").trim();
+    const wabaId = String(req.body?.wabaId || "").trim();
+    if (!/^\+[1-9]\d{6,14}$/.test(phoneNumber)) {
+      return res.status(400).json({ message: "Phone number must be in international format, e.g. +31612345678" });
+    }
+    if (!displayName || !wabaId) {
+      return res.status(400).json({ message: "Display name and WhatsApp Business Account are required" });
+    }
+
+    const subClient = twilio(account.twilioAccountSid, account.twilioAuthToken);
+    let sender;
+    try {
+      sender = await subClient.messaging.v2.channelsSender.create({
+        senderId: `whatsapp:${phoneNumber}`,
+        configuration: { wabaId },
+        profile: { name: displayName },
+      } as any);
+    } catch (e: any) {
+      return res.status(502).json({ message: `WhatsApp sender registration failed: ${e?.message || e}` });
+    }
+
+    const updated = await storage.updateAccount(id, {
+      whatsappSenderSid: sender.sid,
+      whatsappSenderStatus: mapSenderStatus(sender.status),
+      whatsappDisplayName: displayName,
+    } as any);
+    res.json({ ...buildStatus(updated || account), registered: true });
   }));
 
   // ── Provision (SMS) ─────────────────────────────────────────────────────────
@@ -57,44 +158,61 @@ export function registerMessagingRoutes(app: Express): void {
     const account = await storage.getAccountById(id);
     if (!account) return res.status(404).json({ message: "Account not found" });
 
-    // Idempotent: if a subaccount already exists, never create a second one.
-    if (account.twilioAccountSid) {
+    const master = twilio(MASTER_SID, MASTER_TOKEN);
+    const existingNumber = account.twilioDefaultFromNumber && !account.twilioDefaultFromNumber.startsWith("whatsapp:")
+      ? account.twilioDefaultFromNumber : null;
+
+    // Idempotent: a finished setup is returned as-is, never re-bought.
+    if (account.twilioAccountSid && existingNumber && account.twilioMessagingServiceSid) {
       return res.json({ ...buildStatus(account), alreadyProvisioned: true });
     }
 
-    const master = twilio(MASTER_SID, MASTER_TOKEN);
-
-    // 1) Create a subaccount for this client (billing isolation).
-    const sub = await master.api.v2010.accounts.create({
-      friendlyName: `LeadAwaker — ${account.name || "account"} (#${id})`,
-    });
-    const subSid = sub.sid;
-    const subToken = (sub as any).authToken as string;
+    // 1) Resume the subaccount an earlier failed attempt left behind, or create one.
+    let subSid: string;
+    let subToken: string;
+    if (account.twilioAccountSid) {
+      const ours = account.twilioAccountSid !== MASTER_SID && await master.api.v2010.accounts(account.twilioAccountSid)
+        .fetch().then((a) => a.ownerAccountSid === MASTER_SID).catch(() => false);
+      if (!ours) {
+        return res.status(409).json({ message: "This account uses its own Twilio credentials (Advanced). Clear them to use managed setup." });
+      }
+      subSid = account.twilioAccountSid;
+      subToken = account.twilioAuthToken || "";
+    } else {
+      const sub = await master.api.v2010.accounts.create({
+        friendlyName: `LeadAwaker — ${account.name || "account"} (#${id})`,
+      });
+      subSid = sub.sid;
+      subToken = (sub as any).authToken as string;
+      await storage.updateAccount(id, { twilioAccountSid: subSid, twilioAuthToken: subToken } as any);
+    }
     const subClient = twilio(subSid, subToken);
 
-    // 2) Buy an NL two-way number (mobile preferred, local fallback). On failure,
-    //    persist the subaccount creds so a retry doesn't orphan a second subaccount.
+    // 2) Buy an NL mobile number unless an earlier attempt already did. Mobile only:
+    //    NL local numbers need a KvK + in-area address bundle, so an unattended buy fails.
     let fromNumber: string;
-    try {
-      let available: Array<{ phoneNumber: string }> = await subClient.availablePhoneNumbers("NL").mobile.list({ smsEnabled: true, limit: 1 });
-      if (!available.length) {
-        available = await subClient.availablePhoneNumbers("NL").local.list({ smsEnabled: true, limit: 1 });
+    if (existingNumber) {
+      fromNumber = existingNumber;
+    } else {
+      try {
+        const addressSid = await ensureAddress(master, subClient);
+        const available: Array<{ phoneNumber: string }> = await subClient.availablePhoneNumbers("NL").mobile.list({ smsEnabled: true, limit: 1 });
+        if (!available.length) {
+          return res.status(502).json({ message: "No NL mobile numbers currently available to purchase" });
+        }
+        const bought = await subClient.incomingPhoneNumbers.create({
+          phoneNumber: available[0].phoneNumber,
+          addressSid,
+          smsUrl: INBOUND_URL,
+          smsMethod: "POST",
+          statusCallback: STATUS_URL,
+          statusCallbackMethod: "POST",
+        });
+        fromNumber = bought.phoneNumber;
+        await storage.updateAccount(id, { twilioDefaultFromNumber: fromNumber } as any);
+      } catch (e: any) {
+        return res.status(502).json({ message: `Number purchase failed: ${e?.message || e}` });
       }
-      if (!available.length) {
-        await storage.updateAccount(id, { twilioAccountSid: subSid, twilioAuthToken: subToken } as any);
-        return res.status(502).json({ message: "No NL numbers currently available to purchase" });
-      }
-      const bought = await subClient.incomingPhoneNumbers.create({
-        phoneNumber: available[0].phoneNumber,
-        smsUrl: INBOUND_URL,
-        smsMethod: "POST",
-        statusCallback: STATUS_URL,
-        statusCallbackMethod: "POST",
-      });
-      fromNumber = bought.phoneNumber;
-    } catch (e: any) {
-      await storage.updateAccount(id, { twilioAccountSid: subSid, twilioAuthToken: subToken } as any);
-      return res.status(502).json({ message: `Number purchase failed: ${e?.message || e}` });
     }
 
     // 3) Create a Messaging Service and attach the number. On failure, persist the

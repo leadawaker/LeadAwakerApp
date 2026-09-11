@@ -7,9 +7,11 @@ import {
 import { PanelAction, ConnectedPill, IntegrationField, EditButton, BrandTile } from "./atoms";
 import { useAccountEdit } from "./useAccountEdit";
 import {
-  fetchMessagingStatus, provisionMessaging, deprovisionMessaging,
+  fetchMessagingStatus, provisionMessaging, deprovisionMessaging, registerWhatsappSender,
+  fetchWhatsappVerificationCode,
   type MessagingStatus,
 } from "../../api/messagingApi";
+import { launchWhatsAppEmbeddedSignup } from "./embeddedSignup";
 import {
   fetchEmailSenderStatus, saveEmailSender, verifyEmailDomain,
   type EmailSenderStatus, type DnsRecord,
@@ -113,6 +115,37 @@ export function MessagingCard({ account, d, onSave, fieldCols }: { account: Acco
   const [error, setError] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [waForm, setWaForm] = useState<{ phone: string; displayName: string } | null>(null);
+  const [waBusy, setWaBusy] = useState(false);
+  const [waError, setWaError] = useState<string | null>(null);
+  const [waCode, setWaCode] = useState<string | null>(null);
+
+  // While Meta's popup is open for our own Twilio number, watch for the code Meta texts to it.
+  const usingOwnNumber = !!waForm && !!status?.fromNumber && waForm.phone.replace(/[\s\-()]/g, "") === status.fromNumber;
+  useEffect(() => {
+    if (!waBusy || !usingOwnNumber) return;
+    setWaCode(null);
+    const poll = () => fetchWhatsappVerificationCode(accountId).then((r) => { if (r.code) setWaCode(r.code); }).catch(() => {});
+    poll();
+    const timer = setInterval(poll, 4000);
+    return () => clearInterval(timer);
+  }, [waBusy, usingOwnNumber, accountId]);
+
+  const enableWhatsapp = async () => {
+    if (!waForm) return;
+    setWaBusy(true); setWaError(null);
+    try {
+      // The number must be collected before the popup: Meta only returns waba_id.
+      const { wabaId } = await launchWhatsAppEmbeddedSignup();
+      setStatus(await registerWhatsappSender(accountId, {
+        phoneNumber: waForm.phone.trim(),
+        displayName: waForm.displayName.trim(),
+        wabaId,
+      }));
+      setWaForm(null);
+    } catch (e: any) { setWaError(e.message || t("messaging.waFailed")); }
+    finally { setWaBusy(false); }
+  };
 
   useEffect(() => {
     if (!accountId) return;
@@ -137,8 +170,9 @@ export function MessagingCard({ account, d, onSave, fieldCols }: { account: Acco
   if (!loaded) return null;
 
   const managed = !!status?.managed;
-  // Has a usable sender either way (managed subaccount or manually-pasted Tier-1 creds).
-  const connected = managed || !!status?.fromNumber || d.twilio.connected;
+  // Only a real number counts: a subaccount left by a failed setup is not a sender.
+  const connected = !!status?.fromNumber;
+  const partial = !!status?.partial;
 
   return (
     <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
@@ -150,10 +184,10 @@ export function MessagingCard({ account, d, onSave, fieldCols }: { account: Acco
 
       {!connected ? (
         <>
-          <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 14, lineHeight: 1.5 }}>{t("messaging.explainer")}</p>
+          <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 14, lineHeight: 1.5 }}>{t(partial ? "messaging.partialExplainer" : "messaging.explainer")}</p>
           <button className="la-btn la-btn--soft" disabled={busy} onClick={provision}>
             {busy ? <Loader2 size={12} className="animate-spin" /> : <Plus size={12} />}
-            {busy ? t("messaging.provisioning") : t("messaging.provision")}
+            {busy ? t("messaging.provisioning") : t(partial ? "messaging.resume" : "messaging.provision")}
           </button>
           {error && <p style={{ fontSize: 11.5, color: "var(--wine)", marginTop: 10 }}>{error}</p>}
         </>
@@ -170,7 +204,68 @@ export function MessagingCard({ account, d, onSave, fieldCols }: { account: Acco
             <StatePill label={t("messaging.whatsapp")} state={status?.whatsapp || "none"} />
           </div>
           {status?.sms === "ready" && (!status?.whatsapp || status.whatsapp === "none") && (
-            <p style={{ fontSize: 10.5, color: "var(--mute)", fontStyle: "italic" }}>{t("messaging.whatsappHint")}</p>
+            <>
+              <p style={{ fontSize: 10.5, color: "var(--mute)", fontStyle: "italic" }}>{t("messaging.whatsappHint")}</p>
+              {waForm === null ? (
+                <div>
+                  <button className="la-btn la-btn--soft" onClick={() => setWaForm({ phone: status?.sandbox ? "" : status?.fromNumber || "", displayName: account.name || "" })}>
+                    <Plus size={12} />
+                    {t("messaging.enableWhatsapp")}
+                  </button>
+                </div>
+              ) : (
+                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                  <p style={{ fontSize: 12, color: "var(--mute)", lineHeight: 1.5 }}>{t("messaging.waExplainer")}</p>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: "10px 14px" }}>
+                    <div>
+                      <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("messaging.waPhone")}</div>
+                      <input
+                        className="neu-input"
+                        style={{ fontSize: 12, padding: "8px 11px", width: "100%", fontFamily: "var(--mono)" }}
+                        value={waForm.phone}
+                        placeholder="+31612345678"
+                        inputMode="tel"
+                        onChange={(e) => setWaForm({ ...waForm, phone: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("messaging.waDisplayName")}</div>
+                      <input
+                        className="neu-input"
+                        style={{ fontSize: 12, padding: "8px 11px", width: "100%" }}
+                        value={waForm.displayName}
+                        onChange={(e) => setWaForm({ ...waForm, displayName: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="row" style={{ gap: 8 }}>
+                    <PanelAction onClick={() => { setWaForm(null); setWaError(null); }} disabled={waBusy} icon={<X size={12} />}>{t("detail.cancel")}</PanelAction>
+                    <PanelAction
+                      wine
+                      onClick={enableWhatsapp}
+                      disabled={waBusy || !waForm.phone.trim() || !waForm.displayName.trim()}
+                      icon={waBusy ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
+                    >
+                      {waBusy ? t("messaging.waConnecting") : t("messaging.waContinue")}
+                    </PanelAction>
+                  </div>
+                  {waBusy && usingOwnNumber && (
+                    <div style={{ padding: "10px 12px", borderRadius: "var(--r-button)", background: "var(--card)", boxShadow: "var(--sh-inset)" }}>
+                      <div style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("messaging.waCodeLabel")}</div>
+                      {waCode ? (
+                        <div style={{ fontFamily: "var(--mono)", fontSize: 18, fontWeight: 700, color: "var(--ink)", letterSpacing: "0.1em" }}>{waCode}</div>
+                      ) : (
+                        <div className="row" style={{ gap: 6, fontSize: 11.5, color: "var(--mute)" }}>
+                          <Loader2 size={12} className="animate-spin" />{t("messaging.waCodeWaiting")}
+                        </div>
+                      )}
+                      <p style={{ fontSize: 10.5, color: "var(--mute)", marginTop: 6 }}>{t("messaging.waCodeHint")}</p>
+                    </div>
+                  )}
+                  {waError && <p style={{ fontSize: 11.5, color: "var(--wine)" }}>{waError}</p>}
+                </div>
+              )}
+            </>
           )}
           {managed && (
             <div className="row" style={{ gap: 10 }}>

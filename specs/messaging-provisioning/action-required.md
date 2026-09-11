@@ -12,9 +12,13 @@ Steps a human must do that code can't, in rough order. Check off as completed.
       SMS/WhatsApp status pills + release; manual Twilio kept behind "Advanced"). i18n `accounts`
       namespace en/nl/pt. Route verified registered (401 on status). **Not yet exercised** — needs the
       master Twilio prerequisites below + a real click (buys a number = real money).
-- [ ] **Phase 2 (WhatsApp sender registration)** — not built. Adds `POST .../messaging/whatsapp/register`
-      + status sync; surfaces the pending/approved pill; links the reputation/speed-to-lead templates
-      (`whatsapp-templates.md`) onto `campaign.twilio_first_message_template_sid`.
+- [x] **Phase 2 (WhatsApp sender registration) BUILT (2026-09-11).** Meta Embedded Signup via the
+      Twilio ISV program (Partner Solution ID `2099802720957463`, Meta Config ID `1116998894227763`).
+      `POST .../messaging/whatsapp/register` calls Twilio Senders API **v2** (`messaging.v2.channelsSender`)
+      on the account's subaccount. Status sync = re-check a `pending` sender on every status read (no
+      webhook). UI: "Enable WhatsApp" on `MessagingCard` collects number + display name first (Meta's
+      popup only returns `waba_id`), then launches the popup. Helper: `workspace/embeddedSignup.ts`.
+      **Blocked on `VITE_META_APP_ID`** (in `.env` and Vercel). Template linkage still not built.
 - [ ] Inbound/status webhook URLs default to `https://webhooks.leadawaker.com/webhooks/sms/{inbound,status}`
       (override via `ENGINE_INBOUND_WEBHOOK_URL` / `ENGINE_STATUS_WEBHOOK_URL`). The `/status` receiver
       is owned by `specs/channel-fallback/` (harmless 404s until built). **Verify the inbound URL** is

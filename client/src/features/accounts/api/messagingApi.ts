@@ -11,6 +11,7 @@ export interface MessagingStatus {
   displayName: string | null;
   provisionedAt: string | null;
   managed: boolean;
+  partial?: boolean;
   alreadyProvisioned?: boolean;
   provisioned?: boolean;
 }
@@ -27,6 +28,30 @@ export const provisionMessaging = async (accountId: number): Promise<MessagingSt
   if (!res.ok) {
     const msg = await res.json().catch(() => ({}));
     throw new Error(msg.message || "Failed to set up messaging");
+  }
+  return res.json();
+};
+
+/** Latest Meta verification code texted to the account's Twilio number (last 15 min). */
+export const fetchWhatsappVerificationCode = async (accountId: number): Promise<{ code: string | null }> => {
+  const res = await apiFetch(`/api/accounts/${accountId}/messaging/whatsapp/verification-code`);
+  if (!res.ok) return { code: null };
+  return res.json();
+};
+
+/** Registers the WhatsApp sender with Twilio after Meta Embedded Signup returns a WABA. */
+export const registerWhatsappSender = async (
+  accountId: number,
+  data: { phoneNumber: string; displayName: string; wabaId: string },
+): Promise<MessagingStatus> => {
+  const res = await apiFetch(`/api/accounts/${accountId}/messaging/whatsapp/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const msg = await res.json().catch(() => ({}));
+    throw new Error(msg.message || "Failed to enable WhatsApp");
   }
   return res.json();
 };
