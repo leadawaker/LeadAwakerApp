@@ -102,3 +102,41 @@ export interface VoiceOptions {
   models: string[];
   voices: string[];
 }
+
+// --- GPT-Live ---------------------------------------------------------------
+
+/**
+ * Language and accent in one value. Two locales can share a `VoiceLang` (the
+ * prompt row, knowledge base and CRM copy they read) while sounding completely
+ * different: pt-BR and pt-PT both read the Portuguese row, and only one of
+ * them says "está a fazer".
+ */
+export type VoiceLocale = "en-GB" | "en-US" | "nl" | "pt-BR" | "pt-PT" | "es-ES";
+
+export interface LocaleOption {
+  id: VoiceLocale;
+  label: string;
+  language: VoiceLang;
+  voice: string;
+  /**
+   * True where OpenAI documents no native voice for this language, so she
+   * speaks it through a voice built for another one. Their guidance is
+   * explicit that this is not guaranteed to hold the accent, so the setup
+   * screen says so rather than implying parity.
+   */
+  needs_listening_test: boolean;
+}
+
+export interface LiveOptions {
+  default_locale: VoiceLocale;
+  locales: LocaleOption[];
+  voices: { id: string; label: string }[];
+}
+
+export interface LiveSetup {
+  locale: VoiceLocale;
+  companyName: string;
+  callerNumber: string;
+  /** Overrides the locale's default voice. Empty means "use the default". */
+  voice: string;
+}

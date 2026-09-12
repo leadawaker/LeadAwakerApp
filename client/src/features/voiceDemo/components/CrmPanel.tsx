@@ -1,4 +1,4 @@
-import { CalendarCheck, Database, MessageSquare, Phone, Sparkles, UserPlus } from "lucide-react";
+import { CalendarCheck, Database, Download, Phone, Sparkles, UserPlus } from "lucide-react";
 import type { Booking, CallIntent, CallSummary, CrmReceipt } from "../types";
 
 /**
@@ -8,8 +8,8 @@ import type { Booking, CallIntent, CallSummary, CrmReceipt } from "../types";
  * in the call panel, and printing every turn twice on one screen made the page
  * read as two transcripts rather than "a call on the left, your CRM filling in
  * on the right". This shows the CRM *record* — what the caller wants, the
- * lead, the counts, the appointment. Every figure corresponds to a write
- * acknowledged by `/voice/relay`; nothing is drawn optimistically.
+ * lead, the appointment, the recording. Everything here corresponds to a write
+ * acknowledged by the engine; nothing is drawn optimistically.
  */
 
 /**
@@ -46,6 +46,7 @@ export function CrmPanel({
   live,
   summary,
   booking,
+  recordingUrl,
 }: {
   receipts: CrmReceipt[];
   leadId: number | null;
@@ -53,11 +54,9 @@ export function CrmPanel({
   live: boolean;
   summary: CallSummary | null;
   booking: Booking | null;
+  /** Stereo WAV of the call, caller left and her right. Null until it exists. */
+  recordingUrl?: string | null;
 }) {
-  const logged = receipts.filter((r) => r.interaction_id);
-  const inbound = logged.filter((r) => r.direction === "inbound").length;
-  const outbound = logged.length - inbound;
-
   return (
     // Warm near-white ground with white cards floating on it, header and
     // footer included. `bg-muted` is the same token the call panel's header
@@ -71,7 +70,9 @@ export function CrmPanel({
         </div>
         <div className="min-w-0 flex-1">
           <div className="text-sm font-semibold">In the CRM</div>
-          <div className="text-xs text-muted-foreground">Written live, as the call happens</div>
+          <div className="text-xs text-muted-foreground">
+            {live ? "Written live, as the call happens" : "Written while you were talking"}
+          </div>
         </div>
         {live && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
@@ -117,8 +118,8 @@ export function CrmPanel({
                 </div>
               ) : (
                 <p className="text-sm text-muted-foreground">
-                  {/* Written once, right at the end of the call — not live,
-                      so there is nothing to show until she wraps up. */}
+                  {/* Derived from the transcript once the call is over, so
+                      there is nothing to show while it is still running. */}
                   {live ? "Fills in once the call wraps up." : "Nothing recorded for this call."}
                 </p>
               )}
@@ -145,17 +146,18 @@ export function CrmPanel({
               </dl>
             </div>
 
-            <div className="rounded-[var(--r-surface)] border border-border/60 p-4" style={CARD_BG}>
-              <div className="mb-3 flex items-center gap-2">
-                <MessageSquare className="h-4 w-4 flex-none text-primary" />
-                <span className="text-sm font-semibold">Conversation logged</span>
-              </div>
-              <div className="grid grid-cols-3 gap-3 text-center">
-                <Stat label="Turns" value={logged.length} />
-                <Stat label="Caller" value={inbound} />
-                <Stat label="Alex" value={outbound} />
-              </div>
-            </div>
+            {recordingUrl && !live && (
+              <a
+                href={recordingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2.5 rounded-[var(--r-surface)] border border-border/60 px-4 py-3 text-sm hover:border-primary/50"
+                style={CARD_BG}
+              >
+                <Download className="h-4 w-4 flex-none text-primary" />
+                <span>Download the recording</span>
+              </a>
+            )}
 
             {booking ? (
               <BookedCard booking={booking} />
@@ -262,11 +264,3 @@ function Row({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-[var(--r-surface)] bg-muted px-2 py-2.5">
-      <div className="text-lg font-semibold tabular-nums">{value}</div>
-      <div className="text-[11px] uppercase tracking-wide text-muted-foreground">{label}</div>
-    </div>
-  );
-}

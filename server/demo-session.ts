@@ -123,9 +123,19 @@ export type AiDisclosureMode = "off" | "opener" | "second_message";
  */
 
 /**
- * The AI's name, per language. A demo is a first impression, and "Mark" reads
- * as a foreign call-centre agent to a Brazilian prospect the same way "Marcos"
- * would to a Dutch one.
+ * The AI's name, per language. A demo is a first impression, and a name that
+ * reads as a foreign call-centre agent undoes it in one line.
+ *
+ * "Sara" in all three: it is native in English, Dutch and Portuguese alike, so
+ * it costs nothing that the old per-language split bought, and it is female,
+ * which the old map was not.
+ *
+ * The gender matters because every voice in `SELECTABLE_VOICES` is
+ * female-presenting and the PT voice prompt hardcodes feminine agreement
+ * ("Sou A {agent_name}, A recepcionista"). "Marcos" there produced "Aqui é a
+ * Marcos" in a woman's voice on a live prospect call. Portuguese forces a
+ * gender on the article and the participle, so a unisex name cannot dodge
+ * this the way it can in English: name, voice and grammar have to agree.
  *
  * Set on every generated session rather than left to campaign 60's own
  * agent_name column, because one column cannot serve three languages at once.
@@ -133,9 +143,9 @@ export type AiDisclosureMode = "off" | "opener" | "second_message";
  * demo_niche and still wins, since it is applied after generation.
  */
 const AGENT_NAME_BY_LANGUAGE: Record<string, string> = {
-  en: "Mark",
-  nl: "Mark",
-  pt: "Marcos",
+  en: "Sara",
+  nl: "Sara",
+  pt: "Sara",
 };
 
 /** Localized "six months ago" default for {inquiry_timeframe}. */
