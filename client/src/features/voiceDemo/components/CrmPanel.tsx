@@ -1,5 +1,6 @@
 import { CalendarCheck, Database, Download, Phone, Sparkles, UserPlus } from "lucide-react";
 import type { Booking, CallIntent, CallSummary, CrmReceipt } from "../types";
+import type { DemoCopy } from "../copy";
 
 /**
  * What the engine confirms it wrote to the CRM during the call.
@@ -21,13 +22,13 @@ import type { Booking, CallIntent, CallSummary, CrmReceipt } from "../types";
 const CARD_BG = { background: "var(--card)" } as const;
 
 /** Reads as an outcome a business owner recognises, not an enum. */
-const INTENT_LABEL: Record<CallIntent, string> = {
-  book_appointment: "Wants to book",
-  request_quote: "Wants a quote",
-  ask_advice: "Wants advice",
-  existing_customer: "Existing customer",
-  complaint_or_fault: "Fault or complaint",
-  not_relevant: "Not relevant",
+const INTENT_KEY: Record<CallIntent, keyof DemoCopy> = {
+  book_appointment: "wantsToBook",
+  request_quote: "wantsAQuote",
+  ask_advice: "wantsAdvice",
+  existing_customer: "existingCustomer",
+  complaint_or_fault: "faultOrComplaint",
+  not_relevant: "notRelevant",
 };
 
 const INTENT_TONE: Record<CallIntent, string> = {
@@ -47,6 +48,8 @@ export function CrmPanel({
   summary,
   booking,
   recordingUrl,
+  copy,
+  dateLocale,
 }: {
   receipts: CrmReceipt[];
   leadId: number | null;
@@ -56,6 +59,9 @@ export function CrmPanel({
   booking: Booking | null;
   /** Stereo WAV of the call, caller left and her right. Null until it exists. */
   recordingUrl?: string | null;
+  copy: DemoCopy;
+  /** BCP-47 tag for dates, so the appointment reads in the call's language. */
+  dateLocale: string;
 }) {
   return (
     // Warm near-white ground with white cards floating on it, header and
@@ -69,15 +75,15 @@ export function CrmPanel({
           <Database className="h-4 w-4" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="text-sm font-semibold">In the CRM</div>
+          <div className="text-sm font-semibold">{copy.crmTitle}</div>
           <div className="text-xs text-muted-foreground">
-            {live ? "Written live, as the call happens" : "Written while you were talking"}
+            {live ? copy.crmLive : copy.crmAfter}
           </div>
         </div>
         {live && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:bg-emerald-900/20 dark:text-emerald-400">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-500" />
-            Live
+            {copy.liveBadge}
           </span>
         )}
       </div>
@@ -85,15 +91,14 @@ export function CrmPanel({
       <div className="flex-1 overflow-y-auto p-5">
         {receipts.length === 0 ? (
           <p className="mt-10 text-center text-sm text-muted-foreground">
-            Nothing written yet. The moment either of you speaks, a lead is created
-            and every turn is saved against it.
+            {copy.crmEmpty}
           </p>
         ) : (
           <div className="space-y-4">
             <div className="rounded-[var(--r-surface)] border border-border/60 p-4" style={CARD_BG}>
               <div className="mb-3 flex items-center gap-2">
                 <Sparkles className="h-4 w-4 flex-none text-primary" />
-                <span className="text-sm font-semibold">What they called about</span>
+                <span className="text-sm font-semibold">{copy.whatTheyCalledAbout}</span>
               </div>
               {summary?.items?.length ? (
                 <div className="space-y-3">
@@ -107,7 +112,7 @@ export function CrmPanel({
                           INTENT_TONE[item.intent] ?? "bg-muted text-muted-foreground"
                         }`}
                       >
-                        {INTENT_LABEL[item.intent] ?? item.intent}
+                        {copy[INTENT_KEY[item.intent]] ?? item.intent}
                       </span>
                       {item.interest && <p className="text-sm font-medium">{item.interest}</p>}
                       {item.notes && (
@@ -120,7 +125,7 @@ export function CrmPanel({
                 <p className="text-sm text-muted-foreground">
                   {/* Derived from the transcript once the call is over, so
                       there is nothing to show while it is still running. */}
-                  {live ? "Fills in once the call wraps up." : "Nothing recorded for this call."}
+                  {live ? copy.fillsInLater : copy.nothingRecorded}
                 </p>
               )}
             </div>
@@ -129,19 +134,19 @@ export function CrmPanel({
               <div className="mb-3 flex items-center gap-2">
                 <UserPlus className="h-4 w-4 flex-none text-primary" />
                 <span className="text-sm font-semibold">
-                  {leadId ? `Lead #${leadId}` : "Lead"}
+                  {leadId ? `${copy.lead} #${leadId}` : copy.lead}
                 </span>
                 <span className="rounded-full bg-highlight-selected px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide">
-                  New
+                  {copy.isNew}
                 </span>
               </div>
               <dl className="space-y-1.5 text-sm">
-                {summary?.name && <Row label="Name" value={summary.name} />}
-                <Row label="Phone" value={phone || "web"} />
-                <Row label="Source" value="Inbound call" />
+                {summary?.name && <Row label={copy.name} value={summary.name} />}
+                <Row label={copy.phone} value={phone || "web"} />
+                <Row label={copy.source} value={copy.inboundCall} />
                 <Row
-                  label="Status"
-                  value={booking ? "Appointment booked" : "In conversation"}
+                  label={copy.status}
+                  value={booking ? copy.appointmentBooked : copy.inConversation}
                 />
               </dl>
             </div>
@@ -155,16 +160,16 @@ export function CrmPanel({
                 style={CARD_BG}
               >
                 <Download className="h-4 w-4 flex-none text-primary" />
-                <span>Download the recording</span>
+                <span>{copy.downloadRecording}</span>
               </a>
             )}
 
             {booking ? (
-              <BookedCard booking={booking} />
+              <BookedCard booking={booking} copy={copy} dateLocale={dateLocale} />
             ) : (
               <div className="flex items-center gap-2.5 rounded-[var(--r-surface)] border border-dashed border-border px-4 py-3 text-sm text-muted-foreground" style={CARD_BG}>
                 <Phone className="h-4 w-4 flex-none" />
-                <span>No appointment booked yet</span>
+                <span>{copy.noAppointmentYet}</span>
               </div>
             )}
           </div>
@@ -175,7 +180,15 @@ export function CrmPanel({
 }
 
 /** The appointment, on a real calendar — the moment the demo is selling. */
-function BookedCard({ booking }: { booking: Booking }) {
+function BookedCard({
+  booking,
+  copy,
+  dateLocale,
+}: {
+  booking: Booking;
+  copy: DemoCopy;
+  dateLocale: string;
+}) {
   const when = booking.iso ? new Date(booking.iso) : null;
   const valid = when && !Number.isNaN(when.getTime());
 
@@ -183,23 +196,23 @@ function BookedCard({ booking }: { booking: Booking }) {
     <div className="overflow-hidden rounded-[var(--r-surface)] border border-emerald-500/30 bg-emerald-50 dark:bg-emerald-900/20">
       <div className="flex items-center gap-2.5 px-4 py-3 text-sm font-medium">
         <CalendarCheck className="h-4 w-4 flex-none text-emerald-600 dark:text-emerald-400" />
-        <span>Appointment booked</span>
+        <span>{copy.appointmentBooked}</span>
       </div>
       {valid ? (
         <div className="flex items-start gap-4 border-t border-emerald-500/20 px-4 py-3.5">
-          <MiniMonth date={when!} />
+          <MiniMonth date={when!} copy={copy} />
           <div className="min-w-0 pt-0.5">
             <div className="text-sm font-semibold">
-              {when!.toLocaleDateString(undefined, {
+              {when!.toLocaleDateString(dateLocale, {
                 weekday: "long",
                 day: "numeric",
                 month: "long",
               })}
             </div>
             <div className="mt-0.5 text-sm text-muted-foreground">
-              {when!.toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" })}
+              {when!.toLocaleTimeString(dateLocale, { hour: "numeric", minute: "2-digit" })}
             </div>
-            <div className="mt-2 text-xs text-muted-foreground">Site survey · 45 min</div>
+            <div className="mt-2 text-xs text-muted-foreground">{copy.siteSurvey}</div>
           </div>
         </div>
       ) : (
@@ -210,7 +223,7 @@ function BookedCard({ booking }: { booking: Booking }) {
 }
 
 /** A four-week strip around the booked day. Enough to read "that's next week". */
-function MiniMonth({ date }: { date: Date }) {
+function MiniMonth({ date, copy }: { date: Date; copy: DemoCopy }) {
   // Start on the Monday of the booked week's preceding week.
   const start = new Date(date);
   start.setDate(start.getDate() - ((start.getDay() + 6) % 7) - 7);
@@ -224,7 +237,7 @@ function MiniMonth({ date }: { date: Date }) {
   return (
     <div className="flex-none">
       <div className="grid grid-cols-7 gap-[3px] text-center text-[9px] font-semibold uppercase text-muted-foreground">
-        {["M", "T", "W", "T", "F", "S", "S"].map((d, i) => (
+        {copy.weekdayInitials.map((d, i) => (
           <span key={i} className="w-5">
             {d}
           </span>

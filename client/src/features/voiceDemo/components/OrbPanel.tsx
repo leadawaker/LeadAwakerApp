@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import SiriOrb from "@/components/siriOrb/SiriOrb";
 import type { AIState } from "@/components/siriOrb/aiCore";
 import type { Booking, VoiceLocale } from "../types";
+import { dateLocaleOf, type DemoCopy } from "../copy";
 
 /**
  * The right-hand panel while a call is running: the orb, and nothing else
@@ -42,26 +43,18 @@ function useOrbSize() {
   return large ? ORB_PX.lg : ORB_PX.base;
 }
 
-/** The locale the card should format the date in, not the browser's. */
-const DATE_LOCALE: Record<VoiceLocale, string> = {
-  "en-GB": "en-GB",
-  "en-US": "en-US",
-  nl: "nl-NL",
-  "pt-BR": "pt-BR",
-  "pt-PT": "pt-PT",
-  "es-ES": "es-ES",
-};
-
 export function OrbPanel({
   orbState,
   amplitude,
   booking,
   locale,
+  copy,
 }: {
   orbState: AIState;
   amplitude: MotionValue<number>;
   booking: Booking | null;
   locale: VoiceLocale;
+  copy: DemoCopy;
 }) {
   const orbSize = useOrbSize();
 
@@ -69,22 +62,30 @@ export function OrbPanel({
     <div className="flex flex-1 flex-col overflow-hidden border-border bg-muted max-lg:border-t lg:border-l">
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-8 p-6">
         <SiriOrb size={`${orbSize}px`} state={orbState} amplitude={amplitude} />
-        {booking && <BookedCard booking={booking} locale={locale} />}
+        {booking && <BookedCard booking={booking} locale={locale} copy={copy} />}
       </div>
     </div>
   );
 }
 
-function BookedCard({ booking, locale }: { booking: Booking; locale: VoiceLocale }) {
+function BookedCard({
+  booking,
+  locale,
+  copy,
+}: {
+  booking: Booking;
+  locale: VoiceLocale;
+  copy: DemoCopy;
+}) {
   const when = booking.iso ? new Date(booking.iso) : null;
   const valid = when && !Number.isNaN(when.getTime());
-  const intl = DATE_LOCALE[locale] ?? "en-GB";
+  const intl = dateLocaleOf(locale);
 
   return (
     <div className="w-full max-w-xs rounded-[var(--r-surface)] border border-emerald-500/30 bg-emerald-50 px-4 py-3 text-center dark:bg-emerald-900/20">
       <div className="mb-1 flex items-center justify-center gap-1.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-700 dark:text-emerald-400">
         <Check className="h-3 w-3" />
-        Booked
+        {copy.booked}
       </div>
       {valid ? (
         <>

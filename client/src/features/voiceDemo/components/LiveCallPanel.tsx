@@ -9,6 +9,7 @@ import type {
   Turn,
   VoiceLocale,
 } from "../types";
+import type { DemoCopy } from "../copy";
 
 /**
  * The left panel: call setup before the call, transcript during and after.
@@ -27,11 +28,11 @@ const LABEL = "mb-1.5 block text-xs font-medium text-muted-foreground";
 /** The clock the caller sees. Matches MAX_CALL_MS in useLiveCall. */
 const MAX_CALL_MS = 5 * 60 * 1000;
 
-const ENDED_LABEL: Record<Exclude<EndedReason, null>, string> = {
-  time_limit: "The demo's five-minute limit was reached.",
-  dropped: "The connection dropped.",
-  completed: "She finished the call.",
-  silence: "Nobody spoke for a while, so she rang off.",
+const ENDED_KEY: Record<Exclude<EndedReason, null>, keyof DemoCopy> = {
+  time_limit: "endedTimeLimit",
+  dropped: "endedDropped",
+  completed: "endedCompleted",
+  silence: "endedSilence",
 };
 
 function CallTimer({ startedAt }: { startedAt: number | null }) {
@@ -58,6 +59,7 @@ export function LiveCallPanel({
   setup,
   options,
   simple,
+  copy,
   onSetup,
   onCall,
   onHangup,
@@ -78,6 +80,7 @@ export function LiveCallPanel({
    * front of someone you are trying to impress.
    */
   simple: boolean;
+  copy: DemoCopy;
   onSetup: (next: Partial<LiveSetup>) => void;
   onCall: () => void;
   onHangup: () => void;
@@ -105,7 +108,7 @@ export function LiveCallPanel({
         <div>
           <h1 className="text-xl font-semibold">{setup.companyName}</h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            Call the reception and see what happens.
+            {copy.simplePrompt}
           </p>
         </div>
         <button
@@ -114,7 +117,7 @@ export function LiveCallPanel({
           className="inline-flex items-center justify-center gap-2.5 rounded-full bg-primary px-7 py-3.5 text-sm font-semibold text-primary-foreground shadow-lg transition hover:brightness-110"
         >
           <Phone className="h-4 w-4" />
-          Call
+          {copy.call}
         </button>
         {error && <p className="max-w-xs text-sm text-destructive">{error}</p>}
       </div>
@@ -124,14 +127,14 @@ export function LiveCallPanel({
   if (state === "idle") {
     return (
       <div className="flex flex-1 flex-col overflow-y-auto p-6 lg:p-8">
-        <h1 className="text-lg font-semibold">Call the AI receptionist</h1>
+        <h1 className="text-lg font-semibold">{copy.setupTitle}</h1>
         <p className="mb-6 mt-1 text-sm text-muted-foreground">
-          She answers the phone, works out what you need, and books you in.
+          {copy.setupSubtitle}
         </p>
 
         <div className="space-y-4">
           <div>
-            <label htmlFor="vd-locale" className={LABEL}>Language</label>
+            <label htmlFor="vd-locale" className={LABEL}>{copy.languageLabel}</label>
             <select
               id="vd-locale"
               className={FIELD}
@@ -147,14 +150,13 @@ export function LiveCallPanel({
               // this language, so she speaks it through a voice built for
               // another one and the accent is not guaranteed.
               <p className="mt-1.5 text-xs text-muted-foreground">
-                No native voice exists for this language yet, so the accent may
-                not be perfect.
+                {copy.noNativeVoice}
               </p>
             )}
           </div>
 
           <div>
-            <label htmlFor="vd-company" className={LABEL}>Company she answers for</label>
+            <label htmlFor="vd-company" className={LABEL}>{copy.companyLabel}</label>
             <input
               id="vd-company"
               className={FIELD}
@@ -165,7 +167,7 @@ export function LiveCallPanel({
           </div>
 
           <div>
-            <label htmlFor="vd-phone" className={LABEL}>The number you are calling from</label>
+            <label htmlFor="vd-phone" className={LABEL}>{copy.phoneLabel}</label>
             <input
               id="vd-phone"
               className={FIELD}
@@ -177,7 +179,7 @@ export function LiveCallPanel({
 
           <details className="rounded-[var(--r-surface)] border border-border/60 px-3 py-2">
             <summary className="cursor-pointer text-xs text-muted-foreground">
-              Voice · {setup.voice || current?.voice || "default"}
+              {copy.voiceLabel} · {setup.voice || current?.voice || "—"}
             </summary>
             <div className="pt-3">
               <select
@@ -185,7 +187,7 @@ export function LiveCallPanel({
                 value={setup.voice}
                 onChange={(e) => onSetup({ voice: e.target.value })}
               >
-                <option value="">Default for this language</option>
+                <option value="">{copy.voiceDefault}</option>
                 {(options?.voices ?? []).map((v) => (
                   <option key={v.id} value={v.id}>{v.id} — {v.label}</option>
                 ))}
@@ -202,7 +204,7 @@ export function LiveCallPanel({
           className="mt-6 inline-flex items-center justify-center gap-2 rounded-[var(--r-field)] bg-primary px-4 py-2.5 text-sm font-semibold text-primary-foreground"
         >
           <Phone className="h-4 w-4" />
-          Call her
+          {copy.callHer}
         </button>
       </div>
     );
@@ -214,19 +216,23 @@ export function LiveCallPanel({
         <div className="min-w-0 flex-1">
           <div className="truncate text-sm font-semibold">{company || setup.companyName}</div>
           <div className="text-xs text-muted-foreground">
-            {state === "connecting" ? "Connecting…" : state === "live" ? "On the call" : "Call ended"}
+            {state === "connecting"
+              ? copy.connecting
+              : state === "live"
+                ? copy.onCall
+                : copy.callEnded}
           </div>
         </div>
         {state === "live" && <CallTimer startedAt={startedAt} />}
         {state === "ended" ? (
           <button type="button" onClick={onReset} className="inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5 text-xs font-medium">
             <RotateCcw className="h-3.5 w-3.5" />
-            Again
+            {copy.again}
           </button>
         ) : (
           <button type="button" onClick={onHangup} className="inline-flex items-center gap-1.5 rounded-full bg-destructive px-3 py-1.5 text-xs font-semibold text-destructive-foreground">
             <PhoneOff className="h-3.5 w-3.5" />
-            Hang up
+            {copy.hangUp}
           </button>
         )}
       </div>
@@ -234,7 +240,7 @@ export function LiveCallPanel({
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-5">
         {turns.length === 0 && (
           <p className="mt-8 text-center text-sm text-muted-foreground">
-            Say hello when you're ready.
+            {copy.sayHello}
           </p>
         )}
         {turns.map((t) => (
@@ -251,7 +257,7 @@ export function LiveCallPanel({
           </div>
         ))}
         {endedReason && (
-          <p className="pt-2 text-center text-xs text-muted-foreground">{ENDED_LABEL[endedReason]}</p>
+          <p className="pt-2 text-center text-xs text-muted-foreground">{copy[ENDED_KEY[endedReason]]}</p>
         )}
         {error && <p className="pt-2 text-center text-xs text-destructive">{error}</p>}
       </div>

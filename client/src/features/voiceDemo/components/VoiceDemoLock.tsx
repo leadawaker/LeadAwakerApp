@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { Lock } from "lucide-react";
+import type { DemoCopy } from "../copy";
 
 const FIELD =
   "h-10 w-full rounded-[var(--r-button)] border border-border bg-[hsl(var(--input-bg))] px-3 text-sm";
@@ -10,7 +11,13 @@ const FIELD =
  * that mints real, billable Realtime sessions. Gabriel tells prospects the
  * word directly (verbally, or over WhatsApp).
  */
-export function VoiceDemoLock({ onUnlock }: { onUnlock: (raw: string) => boolean }) {
+export function VoiceDemoLock({
+  onUnlock,
+  copy,
+}: {
+  onUnlock: (raw: string) => boolean;
+  copy: DemoCopy;
+}) {
   const [value, setValue] = useState("");
   const [wrong, setWrong] = useState(false);
 
@@ -34,8 +41,8 @@ export function VoiceDemoLock({ onUnlock }: { onUnlock: (raw: string) => boolean
         style={{ background: "var(--card)" }}
       >
         <Lock className="mb-1 h-6 w-6 text-muted-foreground" />
-        <h1 className="text-lg font-semibold tracking-tight">This demo is locked</h1>
-        <p className="text-sm text-muted-foreground">Enter the password to continue.</p>
+        <h1 className="text-lg font-semibold tracking-tight">{copy.lockedTitle}</h1>
+        <p className="text-sm text-muted-foreground">{copy.lockedHint}</p>
         <input
           autoFocus
           type="password"
@@ -45,14 +52,14 @@ export function VoiceDemoLock({ onUnlock }: { onUnlock: (raw: string) => boolean
             setWrong(false);
           }}
           className={FIELD}
-          placeholder="Password"
+          placeholder={copy.passwordPlaceholder}
         />
-        {wrong && <p className="text-sm text-destructive">Wrong password. Try again.</p>}
+        {wrong && <p className="text-sm text-destructive">{copy.wrongPassword}</p>}
         <button
           type="submit"
           className="h-10 w-full rounded-[var(--r-button)] bg-primary text-sm font-semibold text-primary-foreground"
         >
-          Continue
+          {copy.continueLabel}
         </button>
       </form>
     </div>

@@ -13,6 +13,7 @@ import {
 } from "@/features/voiceDemo/door";
 import { ENGINE_BASE_URL, useLiveCall } from "@/features/voiceDemo/useLiveCall";
 import type { LiveSetup, VoiceLang, VoiceLocale } from "@/features/voiceDemo/types";
+import { copyFor, dateLocaleOf } from "@/features/voiceDemo/copy";
 
 /**
  * The voice receptionist demo, on GPT-Live.
@@ -178,9 +179,12 @@ export default function VoiceDemoPage() {
     void call.start(setup, storedVoicePassword());
   };
 
+  const copy = copyFor(setup.locale);
+
   if (!unlocked) {
     return (
       <VoiceDemoLock
+        copy={copy}
         onUnlock={(raw) => {
           if (!isValidVoicePassword(raw)) return false;
           try {
@@ -223,6 +227,7 @@ export default function VoiceDemoPage() {
             setup={setup}
             options={call.options}
             simple={simple}
+            copy={copy}
             onSetup={updateSetup}
             onCall={handleCall}
             onHangup={() => call.hangup()}
@@ -239,6 +244,8 @@ export default function VoiceDemoPage() {
               summary={call.summary}
               booking={call.booking}
               recordingUrl={call.recordingUrl}
+              copy={copy}
+              dateLocale={dateLocaleOf(setup.locale)}
             />
           ) : (
             <OrbPanel
@@ -246,6 +253,7 @@ export default function VoiceDemoPage() {
               amplitude={call.amplitude}
               booking={call.booking}
               locale={setup.locale}
+              copy={copy}
             />
           )}
         </div>

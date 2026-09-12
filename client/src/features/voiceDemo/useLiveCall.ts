@@ -60,6 +60,47 @@ const MAX_CALL_MS = 5 * 60 * 1000;
 const SILENCE_MS = 12 * 1000;
 const SILENCE_TICK_MS = 2000;
 
+/**
+ * How long to wait after she has actually said goodbye.
+ *
+ * Twelve seconds of dead air after "até breve" reads as a call that failed to
+ * end, which is the last thing a prospect should be left with. Once a farewell
+ * is on the transcript the call is over in every sense except the connection,
+ * so the only thing left to wait for is the caller saying something that takes
+ * it back ("actually, one more thing"). Three seconds covers that; more is just
+ * the prospect staring at a live call nobody is on.
+ */
+const FAREWELL_SILENCE_MS = 3000;
+
+/**
+ * How long the microphone stays muted at the start of a call, so she can get
+ * her greeting out.
+ *
+ * GPT-Live is full duplex and exposes no turn-detection settings at all: there
+ * is no VAD threshold, no silence duration, nothing. She simply does not take
+ * the floor while she can hear a caller, and a real room is never silent, so
+ * the greeting we ask for is heard as an interruption of someone already
+ * talking and never arrives. Demos opened with the prospect saying "hello?"
+ * into a void.
+ *
+ * Muting the caller for the first moment of the call gives her the true silence
+ * she is waiting for. It ends the instant she starts speaking, so in practice
+ * the mic is live again before anyone has drawn breath.
+ */
+const GREETING_FLOOR_MS = 2500;
+
+/**
+ * Her signing off, in the six languages the demo speaks.
+ *
+ * Deliberately only the unambiguous forms. Dutch "dag" is both "goodbye" and
+ * "day", and Portuguese "boa tarde" is a greeting as often as a farewell, so
+ * neither is here: hanging up on a caller mid-sentence is a far worse failure
+ * than waiting out the silence timer, and the timer is already the safety net
+ * behind this.
+ */
+const FAREWELL_RE =
+  /\b(goodbye|bye now|take care|have a (good|great|lovely) (day|evening)|speak soon|até breve|ate breve|até logo|ate logo|até mais|ate mais|tchau|tenha um (bom|ótimo) dia|tot ziens|tot snel|fijne dag|prettige dag|hasta luego|adiós|adios|que tenga un buen día)\b/i;
+
 function browserTimezone(): string | null {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
@@ -122,6 +163,11 @@ export function useLiveCall() {
   const limitRef = useRef<number | null>(null);
   const silenceRef = useRef<number | null>(null);
   const lastHeardRef = useRef<number>(0);
+  /** Set once she has signed off, so the hangup no longer waits out SILENCE_MS. */
+  const farewellRef = useRef<boolean>(false);
+  /** The caller's own track, held so the greeting can have the floor. */
+  const micRef = useRef<MediaStreamTrack | null>(null);
+  const unmuteRef = useRef<number | null>(null);
   /**
    * The transcript as of right now. `hangup` runs from timers and from the
    * data channel, where a captured `turns` would be whatever it was when the
@@ -206,6 +252,13 @@ export function useLiveCall() {
     }
   }, []);
 
+  /** Hand the microphone back, whether she greeted or not. */
+  const openMic = useCallback(() => {
+    if (unmuteRef.current) window.clearTimeout(unmuteRef.current);
+    unmuteRef.current = null;
+    if (micRef.current) micRef.current.enabled = true;
+  }, []);
+
   // --- transcript -----------------------------------------------------------
 
   const flush = useCallback(
@@ -215,6 +268,14 @@ export function useLiveCall() {
       bubbleRef.current[side] = null;
       timerRef.current[side] = null;
       if (!text) return;
+      if (side === "them") {
+        // Tested on the whole turn rather than each delta, which can split a
+        // word across two frames.
+        if (FAREWELL_RE.test(text)) farewellRef.current = true;
+      } else {
+        // They spoke again, so it was not the end after all.
+        farewellRef.current = false;
+      }
       void relay({
         type: side === "you" ? "live.caller_turn" : "live.ai_turn",
         transcript: text,
@@ -226,6 +287,9 @@ export function useLiveCall() {
   const appendDelta = useCallback(
     (side: "you" | "them", delta: string) => {
       if (!delta) return;
+      // She has the floor: the greeting is under way, so the caller can have
+      // their microphone back well before they would ever need it.
+      if (side === "them") openMic();
       lastHeardRef.current = Date.now();
       bufRef.current[side] += delta;
 
@@ -245,7 +309,7 @@ export function useLiveCall() {
         flush(side);
       }, TURN_GAP_MS);
     },
-    [flush],
+    [flush, openMic],
   );
 
   /**
@@ -293,6 +357,9 @@ export function useLiveCall() {
     limitRef.current = null;
     if (silenceRef.current) window.clearInterval(silenceRef.current);
     silenceRef.current = null;
+    if (unmuteRef.current) window.clearTimeout(unmuteRef.current);
+    unmuteRef.current = null;
+    micRef.current = null;
     try {
       dcRef.current?.close();
     } catch {
@@ -376,8 +443,14 @@ export function useLiveCall() {
           setStartedAt(Date.now());
           setOrbState("listening");
           lastHeardRef.current = Date.now();
+          if (micRef.current && greetingRef.current) {
+            micRef.current.enabled = false;
+            unmuteRef.current = window.setTimeout(openMic, GREETING_FLOOR_MS);
+          }
           silenceRef.current = window.setInterval(() => {
-            if (Date.now() - lastHeardRef.current > SILENCE_MS) hangup("silence");
+            const quietFor = Date.now() - lastHeardRef.current;
+            const limit = farewellRef.current ? FAREWELL_SILENCE_MS : SILENCE_MS;
+            if (quietFor > limit) hangup(farewellRef.current ? "completed" : "silence");
           }, SILENCE_TICK_MS);
           // GPT-Live has no response.create-to-greet. The documented way to
           // make her open the call is to append an instruction once the
@@ -428,7 +501,7 @@ export function useLiveCall() {
           break;
       }
     },
-    [appendDelta, handleTool, hangup, send, teardown, wrapUp],
+    [appendDelta, handleTool, hangup, openMic, send, teardown, wrapUp],
   );
 
   // --- connect --------------------------------------------------------------
@@ -446,6 +519,7 @@ export function useLiveCall() {
       setLeadId(null);
       summaryRef.current = null;
       setSessionId(null);
+      farewellRef.current = false;
       callIdRef.current = `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       localeRef.current = setup.locale;
       callerRef.current = setup.callerNumber;
@@ -457,6 +531,7 @@ export function useLiveCall() {
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         });
         localRef.current = stream;
+        micRef.current = stream.getAudioTracks()[0] ?? null;
         attach(stream);
 
         const pc = new RTCPeerConnection();
