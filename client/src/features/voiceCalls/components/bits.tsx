@@ -25,15 +25,3 @@ export function BookedPill({ small }: { small?: boolean }) {
     </span>
   );
 }
-
-/** Raised card used for the Booked / Conclusion / Summary blocks. */
-export function Panel({ children }: { children: React.ReactNode }) {
-  return (
-    <div
-      className="neu-raised"
-      style={{ borderRadius: "var(--r-surface)", background: "var(--card)", padding: "12px 14px" }}
-    >
-      {children}
-    </div>
-  );
-}

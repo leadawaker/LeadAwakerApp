@@ -29,7 +29,7 @@ export function CallRecording({ sessionId, fallbackSeconds }: { sessionId: strin
 
   if (!sessionId || failed) {
     return (
-      <div style={{ borderRadius: "var(--r-surface)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", padding: "12px 14px", fontSize: 13, color: "var(--mute)" }}>
+      <div style={{ padding: "8px 4px", fontSize: 12.5, color: "var(--mute)" }}>
         {t("recordingExpired")}
       </div>
     );
@@ -54,7 +54,7 @@ export function CallRecording({ sessionId, fallbackSeconds }: { sessionId: strin
   };
 
   return (
-    <div className="neu-raised" style={{ borderRadius: "var(--r-surface)", background: "var(--card)", padding: "12px 14px", display: "flex", alignItems: "center", gap: 14 }}>
+    <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
       <audio
         key={sessionId}
         ref={audioRef}

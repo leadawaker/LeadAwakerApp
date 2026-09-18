@@ -1,64 +1,85 @@
-import type { ReactNode } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AudioLines, CalendarCheck } from "lucide-react";
+import { AudioLines, Calendar } from "lucide-react";
 import { MonoLabel, VoiceAvatar } from "@/features/voice/components/atoms";
 import { useVoiceCall, type VoiceCallDetail as Detail } from "../api/voiceCallsApi";
-import { formatBooked, formatDateTime, formatDuration } from "../format";
-import { BookedPill, Panel, callerInitials } from "./bits";
+import { formatDateTime, formatDuration } from "../format";
+import { callerInitials } from "./bits";
+import { CallRecap } from "./CallRecap";
 import { CallRecording } from "./CallRecording";
 import { CallTranscript } from "./CallTranscript";
 
-function Block({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <MonoLabel>{label}</MonoLabel>
-      {children}
-    </div>
-  );
+function useNarrow(): boolean {
+  const [narrow, setNarrow] = useState(typeof window !== "undefined" && window.innerWidth < 1100);
+  useEffect(() => {
+    const onR = () => setNarrow(window.innerWidth < 1100);
+    window.addEventListener("resize", onR);
+    return () => window.removeEventListener("resize", onR);
+  }, []);
+  return narrow;
 }
 
-function Divider({ label }: { label: string }) {
-  return (
-    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-      <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
-      <MonoLabel>{label}</MonoLabel>
-      <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
-    </div>
-  );
-}
-
-const sep = <span style={{ color: "var(--line-strong)" }}>·</span>;
-
-function DetailHeader({ call }: { call: Detail }) {
+/** Same header card as the Chats page: who called, when, and how it ended. */
+function DetailHeader({ call, narrow }: { call: Detail; narrow: boolean }) {
   const { t, i18n } = useTranslation("voiceCalls");
+  const when = call.bookedIso ? new Date(call.bookedIso) : null;
+  const outcome = call.summary?.outcome;
   return (
-    <div style={{ flexShrink: 0, padding: "16px 22px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 14 }}>
-      <VoiceAvatar ini={callerInitials(call.callerName, t("webCaller"))} size={44} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)", lineHeight: 1.1, marginBottom: 3 }}>
-          {call.callerName || t("webCaller")}
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap", fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", letterSpacing: "0.06em", textTransform: "uppercase" }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--wine)" }}>
-            <AudioLines size={11} />{t("voiceCall")}
-          </span>
-          {sep}
-          <span>{formatDateTime(call.startedAt, i18n.language)}</span>
-          {sep}
-          <span>{formatDuration(call.durationSeconds)}</span>
-          {sep}
-          <span>{t("turns", { count: call.turnCount })}</span>
-          {call.language && <>{sep}<span>{call.language}</span></>}
+    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", overflow: "hidden", flexShrink: 0 }}>
+      <div style={{ padding: narrow ? "14px 16px" : "16px 20px", display: "flex", alignItems: "center", gap: narrow ? 12 : 16 }}>
+        <VoiceAvatar ini={callerInitials(call.callerName, t("webCaller"))} size={narrow ? 42 : 50} radius={14} />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
+            <span style={{ fontFamily: "var(--serif)", fontSize: narrow ? 22 : 27, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em" }}>
+              {call.callerName || t("webCaller")}
+            </span>
+            {call.bookedSlot && (
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--good-tint)", borderRadius: "var(--r-pill)", padding: "4px 11px 4px 9px", color: "var(--good)", fontSize: 11.5, fontWeight: 600 }}>
+                <Calendar className="h-[12px] w-[12px]" />
+                {t("booked")}
+                {when && `, ${when.toLocaleDateString(i18n.language, { weekday: "short", day: "numeric", month: "short" })} ${when.toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}`}
+              </span>
+            )}
+          </div>
+          <div style={{ display: "flex", gap: 14, alignItems: "center", fontSize: 12, color: "var(--mute)", flexWrap: "wrap" }}>
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--wine)", fontWeight: 600 }}>
+              <AudioLines size={13} />{t("voiceCall")}
+            </span>
+            <span>{formatDateTime(call.startedAt, i18n.language)}</span>
+            <span>{formatDuration(call.durationSeconds)}</span>
+            <span>{t("turns", { count: call.turnCount })}</span>
+            {call.language && <span>{call.language.toUpperCase()}</span>}
+          </div>
         </div>
       </div>
-      {call.bookedSlot && <BookedPill />}
+      <div style={{ borderTop: "1px solid var(--line)", padding: narrow ? "12px 16px 14px" : "14px 20px 16px", display: "flex", gap: 12, alignItems: "baseline" }}>
+        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mute)", flexShrink: 0 }}>{t("sections.outcome")}</span>
+        <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: narrow ? 15 : 16.5, lineHeight: 1.45, color: outcome ? "var(--ink)" : "var(--mute)" }}>
+          {outcome || t("noSummary")}
+        </p>
+      </div>
+    </div>
+  );
+}
+
+/** The call itself: recording in the head strip, transcript below. */
+function ConversationPanel({ call }: { call: Detail }) {
+  return (
+    <div className="glass" style={{ flex: 1, minWidth: 0, minHeight: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
+      <div style={{ flexShrink: 0, padding: "10px 12px", borderBottom: "1px solid var(--line)" }}>
+        <CallRecording key={call.callId} sessionId={call.sessionId} fallbackSeconds={call.durationSeconds} />
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "18px 18px 22px" }}>
+        <CallTranscript turns={call.turns} />
+      </div>
     </div>
   );
 }
 
 export function VoiceCallDetail({ callId }: { callId: string }) {
-  const { t, i18n } = useTranslation("voiceCalls");
+  const { t } = useTranslation("voiceCalls");
   const { data: call, isLoading } = useVoiceCall(callId);
+  const narrow = useNarrow();
 
   if (isLoading) return null;
   if (!call) {
@@ -70,69 +91,15 @@ export function VoiceCallDetail({ callId }: { callId: string }) {
   }
 
   return (
-    <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-      <DetailHeader call={call} />
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "20px 22px", display: "flex", flexDirection: "column", gap: 22 }}>
-        {call.bookedSlot && (
-          <Block label={t("sections.booked")}>
-            <Panel>
-              <div style={{ display: "flex", alignItems: "center", gap: 10, color: "var(--ink)" }}>
-                <CalendarCheck size={16} style={{ color: "var(--good)", flexShrink: 0 }} />
-                <span style={{ fontFamily: "var(--serif)", fontSize: 17 }}>
-                  {call.bookedIso ? formatBooked(call.bookedIso, i18n.language) : call.bookedSlot}
-                </span>
-              </div>
-              {call.bookedIso && (
-                <p style={{ margin: "6px 0 0 26px", fontSize: 12, color: "var(--mute)" }}>
-                  {t("spokenAs")}: {call.bookedSlot}
-                </p>
-              )}
-            </Panel>
-          </Block>
-        )}
-
-        {(!call.summary || call.summary.outcome) && (
-          <Block label={t("sections.outcome")}>
-            <Panel>
-              <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: call.summary?.outcome ? "var(--ink-soft)" : "var(--mute)" }}>
-                {call.summary?.outcome || t("noSummary")}
-              </p>
-            </Panel>
-          </Block>
-        )}
-
-        {call.summary && call.summary.items.length > 0 && (
-          <Block label={t("sections.summary")}>
-            {call.summary.items.map((item, i) => (
-              <Panel key={i}>
-                <span style={{ display: "inline-flex", fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", padding: "3px 9px", borderRadius: "var(--r-pill)", color: "var(--wine)", background: "var(--wine-tint)", marginBottom: 8 }}>
-                  {t(`intents.${item.intent}`, { defaultValue: item.intent })}
-                </span>
-                {item.interest && (
-                  <p style={{ margin: "0 0 4px", fontSize: 13, lineHeight: 1.55, color: "var(--ink-soft)" }}>
-                    <span style={{ color: "var(--mute)" }}>{t("interest")}: </span>{item.interest}
-                  </p>
-                )}
-                {item.notes && (
-                  <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "var(--ink-soft)" }}>
-                    <span style={{ color: "var(--mute)" }}>{t("notes")}: </span>{item.notes}
-                  </p>
-                )}
-              </Panel>
-            ))}
-          </Block>
-        )}
-
-        <Block label={t("sections.recording")}>
-          <CallRecording key={call.callId} sessionId={call.sessionId} fallbackSeconds={call.durationSeconds} />
-        </Block>
-
-        {call.turns.length > 0 && (
-          <>
-            <Divider label={t("sections.transcript")} />
-            <CallTranscript turns={call.turns} />
-          </>
-        )}
+    <div style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: "column", gap: 14, overflowY: narrow ? "auto" : "hidden" }}>
+      <DetailHeader call={call} narrow={narrow} />
+      <div style={{ flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: narrow ? "column-reverse" : "row", gap: 14 }}>
+        <div style={{ flex: narrow ? undefined : 1, minWidth: 0, minHeight: narrow ? 520 : 0, display: "flex" }}>
+          <ConversationPanel call={call} />
+        </div>
+        <div style={{ width: narrow ? "auto" : 290, flexShrink: 0, minHeight: narrow ? "auto" : 0, display: "flex" }}>
+          <CallRecap call={call} />
+        </div>
       </div>
     </div>
   );

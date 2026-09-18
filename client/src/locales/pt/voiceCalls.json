@@ -15,7 +15,9 @@
     "outcome": "Conclusão",
     "summary": "Resumo",
     "recording": "Gravação",
-    "transcript": "Transcrição"
+    "transcript": "Transcrição",
+    "recap": "Resumo",
+    "wanted": "O que pediram"
   },
   "noSummary": "Nenhum resumo foi gerado para esta chamada.",
   "recordingExpired": "Gravação indisponível (a OpenAI guarda por 30 dias).",

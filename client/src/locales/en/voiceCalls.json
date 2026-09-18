@@ -15,7 +15,9 @@
     "outcome": "Conclusion",
     "summary": "Summary",
     "recording": "Recording",
-    "transcript": "Transcript"
+    "transcript": "Transcript",
+    "recap": "Recap",
+    "wanted": "What they asked for"
   },
   "noSummary": "No recap was generated for this call.",
   "recordingExpired": "Recording no longer available (OpenAI keeps it for 30 days).",

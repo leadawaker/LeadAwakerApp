@@ -15,7 +15,9 @@
     "outcome": "Conclusie",
     "summary": "Samenvatting",
     "recording": "Opname",
-    "transcript": "Transcript"
+    "transcript": "Transcript",
+    "recap": "Samenvatting",
+    "wanted": "Waar ze om vroegen"
   },
   "noSummary": "Voor dit gesprek is geen samenvatting gemaakt.",
   "recordingExpired": "Opname niet meer beschikbaar (OpenAI bewaart die 30 dagen).",
