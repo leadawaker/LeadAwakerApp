@@ -444,7 +444,7 @@ export function InvoicesInlineTable({
             className={cn(
               "h-4 w-4 rounded border flex items-center justify-center shrink-0 cursor-pointer",
               isMultiSelected
-                ? "border-[#5E2230] bg-[#5E2230]"
+                ? "border-primary bg-primary"
                 : "border-border/40 group-hover/row:border-border/60"
             )}
             onClick={(e) => handleCheckboxClick(invoice, e)}
@@ -818,10 +818,10 @@ export function InvoicesInlineTable({
                                 className={cn(
                                   "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                                   yearRows.every((inv) => selectedIds.has(inv.id))
-                                    ? "bg-[#5E2230] border-[#5E2230]"
+                                    ? "bg-primary border-primary"
                                     : yearRows.some((inv) => selectedIds.has(inv.id))
-                                    ? "bg-[#5E2230]/30 border-[#5E2230]/60"
-                                    : "border-border/60 hover:border-[#5E2230]/40"
+                                    ? "bg-primary/30 border-primary/60"
+                                    : "border-border/60 hover:border-primary/40"
                                 )}
                                 onClick={() => {
                                   const allYearSelected = yearRows.every((inv) => selectedIds.has(inv.id));
@@ -878,10 +878,10 @@ export function InvoicesInlineTable({
                                       className={cn(
                                         "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                                         rows.every((inv) => selectedIds.has(inv.id))
-                                          ? "bg-[#5E2230] border-[#5E2230]"
+                                          ? "bg-primary border-primary"
                                           : rows.some((inv) => selectedIds.has(inv.id))
-                                          ? "bg-[#5E2230]/30 border-[#5E2230]/60"
-                                          : "border-border/60 hover:border-[#5E2230]/40"
+                                          ? "bg-primary/30 border-primary/60"
+                                          : "border-border/60 hover:border-primary/40"
                                       )}
                                       onClick={() => {
                                         const allQSelected = rows.every((inv) => selectedIds.has(inv.id));

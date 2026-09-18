@@ -6,7 +6,7 @@ export type DesktopFilter = 'all' | 'next7' | 'overdue' | 'waiting' | 'completed
 
 // Assignee avatar backgrounds (shown behind transparent profile photos).
 // First user (Gabriel) dark red, then fallbacks.
-export const AVATAR_BG = ['#5E2230', '#3D2A66', '#2F5E4A', '#5E4A22'];
+export const AVATAR_BG = ['var(--wine)', '#3D2A66', '#2F5E4A', '#5E4A22'];
 
 // Users who still exist account-wide (comments, activity, Accounts page) but are
 // no longer assignable on Tasks. Finn (31) stepped back to Friday-only coaching.

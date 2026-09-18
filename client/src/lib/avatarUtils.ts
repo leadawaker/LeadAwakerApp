@@ -527,11 +527,11 @@ export function getProspectLogoUrl(
 
 // ── Per-user avatar color (named overrides + deterministic fallback) ──────────
 const USER_AVATAR_OVERRIDES: Record<string, string> = {
-  "Finn": "#5E2230",       // wine
+  "Finn": "var(--wine)",
   "Gabriel": "#1E3A5F",    // navy
   "Gabriel Fronza": "#1E3A5F",
 };
-const USER_AVATAR_COLORS = ["#5E2230", "#3D2A66", "#2F5E4A", "#5E4A22", "#7A2E3E"];
+const USER_AVATAR_COLORS = ["var(--wine)", "#3D2A66", "#2F5E4A", "#5E4A22", "var(--wine-soft)"];
 function _userAvatarHash(name: string): number {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;

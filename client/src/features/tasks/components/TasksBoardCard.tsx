@@ -72,7 +72,7 @@ function getInitials(name: string | null | undefined): string {
 }
 
 function nameColor(name: string | null | undefined): string {
-  const COLORS = ['#5E2230', '#3D2A66', '#2F5E4A', '#5E4A22', '#3D7EAA', '#607080'];
+  const COLORS = ['var(--wine)', '#3D2A66', '#2F5E4A', '#5E4A22', '#3D7EAA', '#607080'];
   if (!name) return COLORS[0];
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xffffff;

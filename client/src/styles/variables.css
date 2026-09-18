@@ -10,8 +10,8 @@
   --background: 360 71% 99%;          /* #FEFCF9 — warm near-white page ground */
   --foreground: 300 14% 10%;          /* #1F1A14 — warm near-black text */
   --bg-main: 36 71% 99%;             /* matches background */
-  --bg-2: 38 29% 85%;                /* #E4DCCC — sidebar / nav rail */
-  --footer-bg: 38 40% 93%;           /* #F2EADE — mobile bottom bar: creamier/lighter than --bg-2 */
+  --bg-2: 38 32% 92%;                /* #F1ECE4 — sidebar / nav rail */
+  --footer-bg: 36 45% 96%;           /* #F9F6F0 — mobile bottom bar: creamier/lighter than --bg-2 */
 
   --card: 0 0% 100%;                 /* #FFFFFF — white cards */
   --card-foreground: 30 14% 10%;
@@ -25,7 +25,7 @@
   --primary-foreground: 0 0% 100%;
 
   /* Secondary: warm bone surface */
-  --secondary: 38 29% 85%;
+  --secondary: 38 32% 92%;
   --secondary-foreground: 30 14% 10%;
 
   /* Muted */
@@ -47,8 +47,8 @@
   --info-foreground: 0 0% 100%;
 
   /* Borders */
-  --border: 38 20% 60%;              /* warm bone border */
-  --input: 38 27% 88%;
+  --border: 38 20% 68%;              /* warm bone border */
+  --input: 38 30% 93%;
   --ring: 346 43% 25%;
 
   --radius: 1.5rem;
@@ -94,22 +94,22 @@
   --highlight-active: 22 85% 88%;
   --highlight-selected: 24 78% 90%;
   --highlight-hover: 20 68% 83%;
-  --input-bg: 38 27% 88%;
+  --input-bg: 38 30% 93%;
 
   /* Sidebar rail (left nav) — stays dark */
-  --sidebar-bg: 38 32% 91%;          /* #EFEAE1 — topbar chrome (in-between warm cream) */
+  --sidebar-bg: 36 35% 95%;          /* #F7F3EE — topbar chrome (in-between warm cream) */
   --sidebar-foreground: 30 14% 10%;
   --sidebar-active: 346 43% 25%;
   --sidebar-active-foreground: 0 0% 100%;
 
   /* Page toolbars (sticky header rows) — same in-between chrome */
-  --panel-list-bg: 38 32% 91%;
+  --panel-list-bg: 36 35% 95%;
 
   /* ── Design System Tokens (used in inline styles / new components) ── */
   --surface: #FEFCF9;                /* near-white raised chips/buttons */
   --paper: #FFFFFF;                   /* elevated paper / hero band */
   --card-bright: #FFFFFF;            /* polished hero card */
-  --chrome: #E4DCCC;                 /* explicit alias for nav chrome */
+  --chrome: #F1ECE4;                 /* explicit alias for nav chrome */
   --ink-soft: #322B22;               /* secondary text */
   --mute: #6C6354;                   /* secondary warm text */
   --mute-2: #948A77;                 /* tertiary warm text */

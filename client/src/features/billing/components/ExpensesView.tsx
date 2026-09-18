@@ -127,7 +127,7 @@ function ExpenseDataRow({
             className={cn(
               "h-4 w-4 rounded border flex items-center justify-center transition-colors",
               sel
-                ? "bg-[#5E2230] border-[#5E2230]"
+                ? "bg-primary border-primary"
                 : "border-border/60"
             )}
           >
@@ -160,7 +160,7 @@ function ExpenseDataRow({
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className="inline-flex items-center justify-center h-7 w-7 rounded-lg hover:bg-[#5E2230]/10 text-[#5E2230]/50 hover:text-[#5E2230] transition-colors"
+            className="inline-flex items-center justify-center h-7 w-7 rounded-lg hover:bg-primary/10 text-primary/50 hover:text-primary transition-colors"
             title={t("expenses.table.viewPdf")}
           >
             <FileText className="h-4 w-4" />
@@ -510,12 +510,12 @@ export function ExpensesView({
               <div className="w-px h-8 bg-border/30" />
               <div className="flex items-center gap-1.5">
                 {yearFilter && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#5E2230]/8 text-[#5E2230]">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/8 text-primary">
                     {yearFilter}
                   </span>
                 )}
                 {quarterFilter && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#5E2230]/8 text-[#5E2230]">
+                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/8 text-primary">
                     {quarterFilter}
                   </span>
                 )}
@@ -549,7 +549,7 @@ export function ExpensesView({
 
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
-            <div className="w-6 h-6 rounded-full border-2 border-[#5E2230]/30 border-t-[#5E2230] animate-spin" />
+            <div className="w-6 h-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
           </div>
         ) : isError ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 p-8 text-center">
@@ -576,10 +576,10 @@ export function ExpensesView({
                         className={cn(
                           "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                           allSelected
-                            ? "bg-[#5E2230] border-[#5E2230]"
+                            ? "bg-primary border-primary"
                             : someSelected
-                            ? "bg-[#5E2230]/30 border-[#5E2230]/60"
-                            : "border-border/60 hover:border-[#5E2230]/40"
+                            ? "bg-primary/30 border-primary/60"
+                            : "border-border/60 hover:border-primary/40"
                         )}
                       >
                         {(allSelected || someSelected) && <Check className="h-2.5 w-2.5 text-[#FFFBF7]" />}
@@ -631,10 +631,10 @@ export function ExpensesView({
                                     className={cn(
                                       "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                                       yearRows.every((r) => selectedIds?.has(r.id))
-                                        ? "bg-[#5E2230] border-[#5E2230]"
+                                        ? "bg-primary border-primary"
                                         : yearRows.some((r) => selectedIds?.has(r.id))
-                                        ? "bg-[#5E2230]/30 border-[#5E2230]/60"
-                                        : "border-border/60 hover:border-[#5E2230]/40"
+                                        ? "bg-primary/30 border-primary/60"
+                                        : "border-border/60 hover:border-primary/40"
                                     )}
                                     onClick={() => {
                                       if (!onSelectionChange || !selectedIds) return;
@@ -715,10 +715,10 @@ export function ExpensesView({
                                               className={cn(
                                                 "h-4 w-4 rounded border flex items-center justify-center transition-colors",
                                                 qRows.every((r) => selectedIds?.has(r.id))
-                                                  ? "bg-[#5E2230] border-[#5E2230]"
+                                                  ? "bg-primary border-primary"
                                                   : qRows.some((r) => selectedIds?.has(r.id))
-                                                  ? "bg-[#5E2230]/30 border-[#5E2230]/60"
-                                                  : "border-border/60 hover:border-[#5E2230]/40"
+                                                  ? "bg-primary/30 border-primary/60"
+                                                  : "border-border/60 hover:border-primary/40"
                                               )}
                                               onClick={() => {
                                                 if (!onSelectionChange || !selectedIds) return;

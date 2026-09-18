@@ -4,14 +4,14 @@
 
 :root {
   /* Backgrounds & Surfaces — brighter, white cards on a soft warm ground */
-  --bg: #f3eee5;         /* page ground — in-between warm cream (matches --surface) */
-  --bg-2: #E4DCCC;       /* sidebar / nav rail — slightly deeper to frame the bright content */
-  --chrome: #E4DCCC;     /* explicit alias for nav chrome */
+  --bg: #F8F4EC;         /* page ground — in-between warm cream (matches --surface) */
+  --bg-2: #F1ECE4;       /* sidebar / nav rail — slightly deeper to frame the bright content */
+  --chrome: #F1ECE4;     /* explicit alias for nav chrome */
   --paper: #FFFFFF;      /* elevated paper / hero band — clean white */
-  --surface: #EFEAE1;    /* in-between warm cream — page bg, topbar, toolbars */
+  --surface: #F7F3EE;    /* in-between warm cream — page bg, topbar, toolbars */
   --card: #FFFFFF;       /* white cards — the brightness lift */
   --card-bright: #FFFFFF; /* polished hero — pure white, warmth comes from the gradient overlay */
-  --bone: #F5F1E8;       /* warm bone — prompt editor + preview writing surface */
+  --bone: #FAF7F1;       /* warm bone — prompt editor + preview writing surface */
 
   /* Ink */
   --ink: #1F1A14;
