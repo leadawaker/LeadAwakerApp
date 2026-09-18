@@ -162,7 +162,7 @@ function LangSwitcher({ isMobile }) {
       paddingLeft: isMobile ? 4 : 10,
       borderLeft: isMobile ? "none" : "1px solid rgba(110,95,65,0.18)",
     }}>
-      {['en', 'nl'].map((l) => {
+      {['en', 'nl', 'pt'].map((l) => {
         const active = lang === l;
         return (
           <button

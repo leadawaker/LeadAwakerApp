@@ -5,95 +5,95 @@ export default {
   "footnote": "Let op: Deze interactie wordt 100% afgehandeld door Lead Awaker AI. Geen menselijke tussenkomst nodig totdat de intentie is bevestigd.",
   "ctaButton": "Toepassen op Jouw Bedrijf",
   "cases": {
-    "solarPanel": {
-      "title": "Zonnepanelen",
-      "heading": "Voorbeeld - <colored>Installatie Zonnepanelen</colored>",
-      "description": "De meeste zonne-offertes lopen dood omdat de klant twijfelt over terugverdientijd en dakligging. Lead Awaker pakt de draad op, maakt de pijn concreet in euro's, en boekt een dak-specifiek gesprek waar het verschil gemaakt wordt.",
-      "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Fotoverzameling van dak en meterkast, controle subsidiemogelijkheden, geautomatiseerde vooronderzoeksvragenlijsten, herinneringen om no-show te verminderen en follow-ups na het gesprek met gepersonaliseerde vervolgstappen.",
-      "agentProfile": "<strong>Spreekprofiel agent:</strong> Rustige technische adviseur. Direct, enthousiast en houdt vaart richting een geboekte beoordeling.",
+    "carDealership": {
+      "title": "Autodealer",
+      "heading": "Voorbeeld - <colored>Auto-inruil</colored>",
+      "description": "De meeste autodealer-offertes lopen dood omdat de koper twijfelt over financiering en inruilwaarde. Lead Awaker pakt de draad op, maakt de pijn concreet in euro's, en boekt een inruiltaxatie waar het verschil gemaakt wordt.",
+      "additionalUseCases": "<strong>Extra toepassingen voor deze sector:</strong> Onderhoudsherinneringen op basis van kilometerstand, geautomatiseerde no-show follow-ups voor proefritten, aanvragen voor inruiltaxaties, herinneringen voor financieringsgoedkeuring, en beoordelingsverzoeken na aankoop.",
+      "agentProfile": "<strong>Spreekprofiel agent:</strong> Vriendelijke verkoopadviseur. Direct, enthousiast en houdt vaart richting een geboekte proefrit.",
       "messages": [
         {
           "type": "agent",
           "sender": "Michiel",
-          "content": "Hoi, Michiel van Aviax Solar hier. Even checken: ben jij de Jan die bij ons een zonne-offerte heeft aangevraagd? 🙂",
+          "content": "Hoi, Michiel van Carlton Motors hier. Even checken: ben jij de Jan die laatst naar een gebruikte SUV bij ons informeerde? 🙂",
           "time": "09:15 AM"
         },
-        { "type": "system", "content": "Lead geëngageerd", "id": "sol-1" },
+        { "type": "system", "content": "Lead geëngageerd", "id": "car-1" },
         { "type": "user", "sender": "Jan", "content": "Ja dat was ik, hoi", "time": "09:22 AM" },
-        { "type": "system", "content": "Lead heeft gereageerd", "id": "sol-2" },
+        { "type": "system", "content": "Lead heeft gereageerd", "id": "car-2" },
         {
           "type": "agent",
           "sender": "Michiel",
-          "content": "Bedankt Jan. Mijn manager vroeg me om even contact op te nemen, maar ik wilde je niet storen.\n\nBen je nog steeds van plan om je maandelijkse elektriciteitskosten te verlagen dit jaar?",
+          "content": "Bedankt Jan. Mijn manager vroeg me om even contact op te nemen, maar ik wilde je niet storen.\n\nBen je nog steeds van plan om dit jaar van auto te wisselen?",
           "time": "09:23 AM"
         },
-        { "type": "user", "sender": "Jan", "content": "ja, maar ik heb nog niet veel tijd gehad om me erin te verdiepen", "time": "09:35 AM" },
+        { "type": "user", "sender": "Jan", "content": "ja, nog steeds aan het kijken", "time": "09:35 AM" },
         {
           "type": "agent",
           "sender": "Michiel",
-          "content": "Oké, ongeveer hoeveel betaal je nu per maand, en is het het afgelopen jaar gestegen?",
+          "content": "Oké, ongeveer hoeveel betaal je nu per maand voor je huidige auto, en is dat het afgelopen jaar gestegen?",
           "time": "09:36 AM"
         },
-        { "type": "user", "sender": "Jan", "content": "ongeveer 200 euro", "time": "09:42 AM" },
+        { "type": "user", "sender": "Jan", "content": "ongeveer 350 euro", "time": "09:42 AM" },
         { "type": "user", "sender": "Jan", "content": "ja het is gestegen", "time": "09:42 AM" },
         {
           "type": "agent",
           "sender": "Michiel",
-          "content": "€200/maand is niet niks, dat is €2400 per jaar. Nu huur je eigenlijk je elektriciteit, zonder invloed op de prijs. Voelt dat op de lange termijn logisch, of heb je liever zelf de controle?",
+          "content": "€350/maand is niet niks, dat is €4200 per jaar. Op dit moment financier je een auto die elke maand in waarde daalt, zonder dat je overwaarde opbouwt. Voelt dat op de lange termijn logisch, of zou je liever inruilen voor iets nieuwers?",
           "time": "09:43 AM"
         },
-        { "type": "user", "sender": "Jan", "content": "Zelf de controle hebben klinkt logischer nu je het zo stelt", "time": "09:55 AM" },
+        { "type": "user", "sender": "Jan", "content": "Inruilen klinkt logischer nu je het zo stelt", "time": "09:55 AM" },
         {
           "type": "user",
           "sender": "Jan",
-          "content": "Maar mijn hoofddak ligt op het noorden, ik hoorde dat dat niet ideaal is",
+          "content": "Maar ik maak me zorgen dat mijn auto veel kilometers heeft, ik hoorde dat dat de inruilwaarde flink drukt",
           "time": "09:56 AM"
         },
-        { "type": "system", "content": "Behandelen bezwaar", "id": "sol-3" },
+        { "type": "system", "content": "Behandelen bezwaar", "id": "car-3" },
         {
           "type": "agent",
           "sender": "Michiel",
-          "content": "Dat horen we vaker. Veel mensen denken dat een dak op het noorden zonnepanelen automatisch niet meer interessant maakt, maar factoren zoals hellingshoek, schaduw, beschikbare dakruimte, en of oost- of westzijde bruikbaar zijn, maken vaak een groot verschil. Bij klanten met vergelijkbaar verbruik ligt de terugverdientijd meestal tussen de 7 en 9 jaar.",
+          "content": "Dat horen we vaker. Veel mensen denken dat een hoge kilometerstand automatisch een laag bod betekent, maar onderhoudshistorie, staat van de auto, en de actuele vraag naar jouw exacte model maken vaak een groot verschil. Bij vergelijkbare auto's dekt het inruilbod meestal een groot deel van de aanbetaling.",
           "time": "09:57 AM"
         },
         { "type": "user", "sender": "Jan", "content": "oh dat wist ik niet", "time": "10:05 AM" },
         {
           "type": "agent",
           "sender": "Michiel",
-          "content": "Onze focus ligt op maatwerk. We stemmen de paneelindeling en aannames af op jouw specifieke dak en verbruik, zodat de terugverdientijd zo realistisch mogelijk is.\n\nZou het zinvol zijn om in een kort gesprek te bekijken of dit voor jou goed uitpakt?",
+          "content": "Onze focus ligt op een reëel bod, geen slag in de lucht. We taxeren jouw exacte auto en vergelijken die met de actuele vraag, zodat het inruilbod realistisch is.\n\nZou het zinvol zijn om in een kort gesprek te bekijken wat jouw auto écht waard is?",
           "time": "10:06 AM"
         },
         { "type": "user", "sender": "Jan", "content": "misschien", "time": "10:15 AM" },
         {
           "type": "user",
           "sender": "Jan",
-          "content": "hebben jullie voorbeelden van installaties op het noorden die goed hebben uitgepakt?",
+          "content": "hebben jullie voorbeelden van inruil met veel kilometers die goed zijn uitgepakt?",
           "time": "10:15 AM"
         },
         {
           "type": "agent",
           "sender": "Michiel",
-          "content": "Absoluut.\n\nWe hebben er tientallen gedaan in jouw omgeving. De specialist kan je vergelijkbare projecten laten zien met echte terugverdiendata en je zelfs in contact brengen met een referentieklant als je wilt.\n\nZal ik een gesprek inplannen om die voorbeelden te laten zien?",
+          "content": "Absoluut.\n\nWe hebben deze maand tientallen vergelijkbare auto's getaxeerd. De specialist kan je vergelijkbare inruilen laten zien met echte biedingen en je zelfs in contact brengen met een referentieklant als je wilt.\n\nZal ik een gesprek inplannen om die voorbeelden te laten zien?",
           "time": "10:16 AM"
         },
         { "type": "user", "sender": "Jan", "content": "ja graag", "time": "10:25 AM" },
-        { "type": "system", "content": "Lead gekwalificeerd", "id": "sol-4" },
+        { "type": "system", "content": "Lead gekwalificeerd", "id": "car-4" },
         {
           "type": "agent",
           "sender": "Michiel",
           "content": "Hier is de boekingslink: https://calendar.app.google",
           "time": "10:26 AM"
         },
-        { "type": "system", "content": "Afspraak ingepland 📅", "id": "sol-5" },
+        { "type": "system", "content": "Afspraak ingepland 📅", "id": "car-5" },
         {
           "type": "agent",
           "sender": "Michiel",
-          "content": "Perfect Jan, je staat ingepland voor maandag om 11:00 ✅\n\nOnze specialist belt je dan om de terugverdientijd en je dak op het noorden door te nemen.",
+          "content": "Perfect Jan, je staat ingepland voor maandag om 11:00 ✅\n\nOnze specialist belt je dan om je inruilwaarde en financieringsopties door te nemen.",
           "time": "10:35 AM"
         },
         { "type": "user", "sender": "Jan", "content": "Bedankt Michiel", "time": "10:40 AM" },
         { "type": "agent", "sender": "Michiel", "content": "Graag gedaan en fijne dag 🙂", "time": "10:41 AM" },
-        { "type": "system", "content": "Afgesloten - Doorgestuurd naar klant", "id": "sol-6" }
+        { "type": "system", "content": "Afgesloten - Doorgestuurd naar klant", "id": "car-6" }
       ]
     },
     "gym": {

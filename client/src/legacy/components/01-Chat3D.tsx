@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useEffect, useState, useRef, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { Sun, GraduationCap, Dumbbell, Scale, Laugh, ChevronDown, CheckCheck } from "lucide-react";
+import { Car, GraduationCap, Dumbbell, Scale, Laugh, ChevronDown, CheckCheck } from "lucide-react";
 
 type MessageItem = {
   type: "agent" | "user" | "system";
@@ -12,7 +12,7 @@ type MessageItem = {
 };
 
 const CASES = [
-  { key: "solar",    caseKey: "solarPanel", icon: Sun,           label: "Solar",    color: "#2563EB", leadName: "James Walker"  },
+  { key: "car",      caseKey: "carDealership", icon: Car,        label: "Cars",     color: "#2563EB", leadName: "James Walker"  },
   { key: "coaching", caseKey: "coaching",   icon: GraduationCap, label: "Coaching", color: "#0D9488", leadName: "Ellen Jansen"  },
   { key: "gym",      caseKey: "gym",        icon: Dumbbell,      label: "Gym",      color: "#8B5CF6", leadName: "Mark Evans"    },
   { key: "dental",   caseKey: "dental",     icon: Laugh,         label: "Dental",   color: "#10B981", leadName: "Laura Brandt"  },
@@ -21,7 +21,7 @@ const CASES = [
 
 // Keyed by message ID so translation differences don't matter
 const BADGE_BY_ID: Record<string, string> = {
-  'sol-3':   '🛡️ Objection handled automatically',
+  'car-3':   '🛡️ Objection handled automatically',
   'gym-3':   '🛡️ Objection handled automatically',
   'dent-3':  '🛡️ Objection handled automatically',
   'dent-6':  '🔄 Reschedule handled automatically',

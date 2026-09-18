@@ -35,9 +35,10 @@ function ConversationCard({ niche, onSetNiche }) {
   // under a UK lead's header. Market-specific cases carry their own
   // translations inline (messagesNl) instead.
   const nlMessages = (window.TRANSLATIONS?.[lang]?.chatMessages || {})[niche];
+  const inlineKey = lang === 'nl' ? 'messagesNl' : lang === 'pt' ? 'messagesPt' : null;
   const messages = Array.isArray(nlMessages)
     ? nlMessages
-    : (lang === 'nl' && Array.isArray(data.messagesNl) ? data.messagesNl : data.messages);
+    : (inlineKey && Array.isArray(data[inlineKey]) ? data[inlineKey] : data.messages);
 
   // Most cases are dormant enquiries ("inquired 5 mo. ago"). The referrals case
   // is a finished customer, so it opts out via agoKey.
@@ -379,7 +380,7 @@ function NicheSwitcher({ value, onChange }) {
     const key = 'convUI.niche_' + k;
     const tr = t(key);
     const c = CHAT_CASES[k];
-    const label = (tr && tr !== key) ? tr : ((lang === 'nl' && c.labelNl) || c.label);
+    const label = (tr && tr !== key) ? tr : ((lang === 'nl' && c.labelNl) || (lang === 'pt' && c.labelPt) || c.label);
     return { k, label, icon: NICHE_ICONS[k] };
   });
   return (
@@ -433,7 +434,7 @@ const NICHE_ICONS = {
   gym:         <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 6v6M14 6v6"/><path d="M2 7.5v3M16 7.5v3"/><path d="M6 9h6"/></svg>,
   dental:      <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 3c-2 0-3.5 1.2-3.5 3 0 1-.3 2-.6 3-.4 1.4-.7 3.2.4 4.3.7.7 1.4.2 1.7-.6.3-.8.5-1.7 1-1.7s.7.9 1 1.7c.3.8 1 1.3 1.7.6 1.1-1.1.8-2.9.4-4.3-.3-1-.6-2-.6-3 0-1.8-1.5-3-3.5-3Z"/></svg>,
   legal:       <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 2.5v13M5 15.5h8"/><path d="M9 4 3.5 6.5M9 4l5.5 2.5"/><path d="M3.5 6.5 2 10a1.8 1.8 0 0 0 3.6 0L3.5 6.5ZM14.5 6.5 13 10a1.8 1.8 0 0 0 3.6 0l-2.1-3.5Z"/></svg>,
-  solar:       <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="9" cy="9" r="3"/><path d="M9 2v2M9 14v2M2 9h2M14 9h2M4.4 4.4l1.4 1.4M12.2 12.2l1.4 1.4M13.6 4.4l-1.4 1.4M5.8 12.2l-1.4 1.4"/></svg>
+  dealership:  <svg viewBox="0 0 18 18" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12V9.2c0-.5.3-.9.7-1.1L5.5 7 6.5 4.5h5L12.5 7l1.8 1.1c.4.2.7.6.7 1.1V12"/><path d="M2.2 12h13.6"/><path d="M3.5 8.2h11"/><circle cx="5.6" cy="12" r="1.3"/><circle cx="12.4" cy="12" r="1.3"/></svg>
 };
 
 function Msg({ from, time, readReceipt, children }) {

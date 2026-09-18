@@ -30,7 +30,7 @@ export default {
     "continue": "Doorgaan"
   },
   "cases": {
-    "solar": "Solar",
+    "car": "Auto's",
     "coaching": "Coaching",
     "gym": "Sportschool",
     "dental": "Tandarts",

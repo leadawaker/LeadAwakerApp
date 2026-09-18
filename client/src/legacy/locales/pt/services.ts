@@ -5,95 +5,95 @@ export default {
   "footnote": "Obs.: Esta interação é conduzida 100% pela IA da Lead Awaker. Nenhuma intervenção humana é necessária até a intenção ser confirmada.",
   "ctaButton": "Aplicar no seu Negócio",
   "cases": {
-    "solarPanel": {
-      "title": "Energia Solar",
-      "heading": "Exemplo - <colored>Instalação de Energia Solar</colored>",
-      "description": "A maioria dos orçamentos solares esfria porque o cliente trava no retorno financeiro e na orientação do telhado. A Lead Awaker retoma a conversa, traduz a dor em reais, e agenda uma ligação específica sobre o telhado onde importa.",
-      "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Coleta de fotos do telhado e do medidor, checagem de elegibilidade para incentivos, questionários automáticos de pré-visita, lembretes para reduzir faltas na ligação e follow-ups pós-ligação com próximos passos personalizados.",
-      "agentProfile": "<strong>Perfil de fala do agente:</strong> Consultor técnico calmo. Direto, entusiasmado e mantém o ritmo até o diagnóstico ficar agendado.",
+    "carDealership": {
+      "title": "Concessionária",
+      "heading": "Exemplo - <colored>Troca de Carro na Concessionária</colored>",
+      "description": "A maioria dos orçamentos de concessionária esfria porque o cliente trava no financiamento e no valor de troca do carro usado. A Lead Awaker retoma a conversa, traduz a dor em reais, e agenda uma avaliação de troca onde importa.",
+      "additionalUseCases": "<strong>Casos extras para este nicho:</strong> Lembretes de revisão com base na quilometragem, follow-ups automáticos para faltas em test-drives, pedidos de avaliação do carro na troca, lembretes de pré-aprovação de financiamento, e pedidos de avaliação pós-venda.",
+      "agentProfile": "<strong>Perfil de fala do agente:</strong> Consultor de vendas simpático. Direto, animado e mantém o ritmo até o test-drive ficar agendado.",
       "messages": [
         {
           "type": "agent",
           "sender": "Rafael",
-          "content": "Oi! Aqui é o Rafael da Aviax Energia Solar. Rapidinho, você é o Thiago que pediu um orçamento de solar com a gente há um tempo? 🙂",
+          "content": "Oi! Aqui é o Rafael da Carlton Motors. Rapidinho, você é o Thiago que perguntou sobre um SUV seminovo com a gente há um tempo? 🙂",
           "time": "09:15 AM"
         },
-        { "type": "system", "content": "Lead engajado", "id": "sol-1" },
+        { "type": "system", "content": "Lead engajado", "id": "car-1" },
         { "type": "user", "sender": "Thiago", "content": "Sim, fui eu mesmo, oi", "time": "09:22 AM" },
-        { "type": "system", "content": "Lead respondeu", "id": "sol-2" },
+        { "type": "system", "content": "Lead respondeu", "id": "car-2" },
         {
           "type": "agent",
           "sender": "Rafael",
-          "content": "Valeu, Thiago. Meu gerente me pediu pra fazer um acompanhamento, mas eu não queria te encher de mensagens.\n\nVocê ainda está buscando reduzir sua conta de luz este ano?",
+          "content": "Valeu, Thiago. Meu gerente me pediu pra fazer um acompanhamento, mas eu não queria te encher de mensagens.\n\nVocê ainda está pensando em trocar de carro este ano?",
           "time": "09:23 AM"
         },
         { "type": "user", "sender": "Thiago", "content": "Sim, ainda estou olhando isso", "time": "09:35 AM" },
         {
           "type": "agent",
           "sender": "Rafael",
-          "content": "Entendi. Em média, quanto você está pagando por mês hoje, e aumentou no último ano?",
+          "content": "Entendi. Em média, quanto você está pagando por mês no carro atual, e isso aumentou no último ano?",
           "time": "09:36 AM"
         },
-        { "type": "user", "sender": "Thiago", "content": "uns R$ 650", "time": "09:42 AM" },
+        { "type": "user", "sender": "Thiago", "content": "uns R$ 1.200", "time": "09:42 AM" },
         { "type": "user", "sender": "Thiago", "content": "sim, aumentou", "time": "09:42 AM" },
         {
           "type": "agent",
           "sender": "Rafael",
-          "content": "R$ 650/mês é um belo motivo, isso dá R$ 7.800 por ano. Do jeito atual você aluga a sua energia sem controle sobre o preço. Isso parece sustentável, ou faria mais sentido ter o sistema que é só seu?",
+          "content": "R$ 1.200/mês é bastante, isso dá R$ 14.400 por ano. Do jeito atual você está financiando um carro que perde valor todo mês, sem construir nenhum patrimônio. Isso parece sustentável, ou faria mais sentido trocar por um mais novo?",
           "time": "09:43 AM"
         },
-        { "type": "user", "sender": "Thiago", "content": "ter o sistema faz mais sentido pensando assim", "time": "09:55 AM" },
+        { "type": "user", "sender": "Thiago", "content": "trocar faz mais sentido pensando assim", "time": "09:55 AM" },
         {
           "type": "user",
           "sender": "Thiago",
-          "content": "mas eu fico preocupado porque meu telhado principal é voltado para o norte, ouvi dizer que não é o ideal",
+          "content": "mas eu fico preocupado porque meu carro tem bastante quilometragem, ouvi dizer que isso derruba o valor de troca",
           "time": "09:56 AM"
         },
-        { "type": "system", "content": "Tratando objeção", "id": "sol-3" },
+        { "type": "system", "content": "Tratando objeção", "id": "car-3" },
         {
           "type": "agent",
           "sender": "Rafael",
-          "content": "Essa é uma preocupação bem comum.\n\nMuita gente acha que telhado voltado para o norte é um \"não\" na hora, mas inclinação, sombra, área útil e a possibilidade de usar partes a leste ou oeste podem mudar totalmente a conta. Em casos parecidos com o seu, é comum ver retorno em 7 a 9 anos.",
+          "content": "Essa é uma preocupação bem comum.\n\nMuita gente acha que quilometragem alta já é um \"não\" na hora, mas histórico de manutenção, estado do carro e a demanda atual pelo seu modelo exato podem mudar bastante a conta. Em casos parecidos com o seu, o valor de troca costuma cobrir boa parte da entrada.",
           "time": "09:57 AM"
         },
         { "type": "user", "sender": "Thiago", "content": "ah, não sabia disso", "time": "10:05 AM" },
         {
           "type": "agent",
           "sender": "Rafael",
-          "content": "O nosso foco é personalização. A gente ajusta layout e premissas para o seu telhado e o seu consumo, para a estimativa de retorno ser realista.\n\nValeria a pena fazermos uma ligação rápida para a gente confirmar se dá para chegar num retorno que você considere bom?",
+          "content": "O nosso foco é te dar um número real, não um chute por baixo. A gente avalia o seu carro exato e compara com a demanda atual, para o valor de troca ser realista.\n\nValeria a pena fazermos uma ligação rápida para confirmar quanto o seu carro realmente vale?",
           "time": "10:06 AM"
         },
         { "type": "user", "sender": "Thiago", "content": "talvez", "time": "10:15 AM" },
         {
           "type": "user",
           "sender": "Thiago",
-          "content": "vocês têm exemplos de instalações com telhado voltado para o norte que deram certo?",
+          "content": "vocês têm exemplos de trocas de carros com bastante quilometragem que deram certo?",
           "time": "10:15 AM"
         },
         {
           "type": "agent",
           "sender": "Rafael",
-          "content": "Com certeza.\n\nJá fizemos dezenas na sua região. O especialista pode te mostrar projetos semelhantes com dados reais de retorno e, se você quiser, até colocar você em contato com um cliente de referência. Uma ligação rápida para ver esses exemplos funciona pra você?",
+          "content": "Com certeza.\n\nJá avaliamos dezenas de carros parecidos esse mês. O especialista pode te mostrar trocas semelhantes com valores reais e, se você quiser, até colocar você em contato com um cliente de referência. Uma ligação rápida para ver esses exemplos funciona pra você?",
           "time": "10:16 AM"
         },
         { "type": "user", "sender": "Thiago", "content": "Nesse caso vamos fazer sim", "time": "10:25 AM" },
-        { "type": "system", "content": "Lead qualificado", "id": "sol-4" },
+        { "type": "system", "content": "Lead qualificado", "id": "car-4" },
         {
           "type": "agent",
           "sender": "Rafael",
           "content": "Aqui está o link para agendar: https://calendar.app.google",
           "time": "10:26 AM"
         },
-        { "type": "system", "content": "Agendamento confirmado 📅", "id": "sol-5" },
+        { "type": "system", "content": "Agendamento confirmado 📅", "id": "car-5" },
         {
           "type": "agent",
           "sender": "Rafael",
-          "content": "Perfeito, Thiago. Ficou agendado para segunda-feira às 11:00 ✅\n\nNosso especialista vai te ligar nesse horário para falar de retorno e do seu telhado voltado para o norte.",
+          "content": "Perfeito, Thiago. Ficou agendado para segunda-feira às 11:00 ✅\n\nNosso especialista vai te ligar nesse horário para falar do valor de troca e das opções de financiamento.",
           "time": "10:35 AM"
         },
         { "type": "user", "sender": "Thiago", "content": "Valeu, Rafael", "time": "10:40 AM" },
         { "type": "agent", "sender": "Rafael", "content": "Por nada. Tenha um ótimo dia 🙂", "time": "10:41 AM" },
-        { "type": "system", "content": "Encerrado - Enviado ao cliente", "id": "sol-6" }
+        { "type": "system", "content": "Encerrado - Enviado ao cliente", "id": "car-6" }
       ]
     },
     "gym": {

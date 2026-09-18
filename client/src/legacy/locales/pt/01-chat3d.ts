@@ -30,7 +30,7 @@ export default {
     "continue": "Continuar"
   },
   "cases": {
-    "solar": "Solar",
+    "car": "Carros",
     "coaching": "Coaching",
     "gym": "Academia",
     "dental": "Dental",
