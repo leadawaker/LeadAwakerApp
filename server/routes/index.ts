@@ -31,6 +31,7 @@ import { registerMessagingRoutes } from "./messaging";
 import { registerEmailSenderRoutes } from "./emailSender";
 import { registerMissedCallRoutes } from "./missedCall";
 import { registerDemoRoutes } from "./demo";
+import { registerVoiceCallsRoutes } from "./voice-calls";
 import { registerTwilioVoiceRoutes } from "./twilio-voice";
 import { registerUserSettingsRoutes } from "./user-settings";
 import { registerAutomationRoutes } from "./automation";
@@ -78,6 +79,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerEmailSenderRoutes(app);
   registerMissedCallRoutes(app);
   registerDemoRoutes(app);
+  registerVoiceCallsRoutes(app);
   registerTwilioVoiceRoutes(app);
   registerUserSettingsRoutes(app);
   registerAutomationRoutes(app);

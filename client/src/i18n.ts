@@ -26,6 +26,7 @@ import enCadence from "./locales/en/cadence.json";
 import enTasks from "./locales/en/tasks.json";
 import enAutomation from "./locales/en/automation.json";
 import enDemos from "./locales/en/demos.json";
+import enVoiceCalls from "./locales/en/voiceCalls.json";
 import enPrompts from "./locales/en/prompts.json";
 import enUsers from "./locales/en/users.json";
 import enCalendar from "./locales/en/calendar.json";
@@ -55,6 +56,7 @@ import ptCadence from "./locales/pt/cadence.json";
 import ptTasks from "./locales/pt/tasks.json";
 import ptAutomation from "./locales/pt/automation.json";
 import ptDemos from "./locales/pt/demos.json";
+import ptVoiceCalls from "./locales/pt/voiceCalls.json";
 import ptPrompts from "./locales/pt/prompts.json";
 import ptUsers from "./locales/pt/users.json";
 import ptCalendar from "./locales/pt/calendar.json";
@@ -84,6 +86,7 @@ import nlCadence from "./locales/nl/cadence.json";
 import nlTasks from "./locales/nl/tasks.json";
 import nlAutomation from "./locales/nl/automation.json";
 import nlDemos from "./locales/nl/demos.json";
+import nlVoiceCalls from "./locales/nl/voiceCalls.json";
 import nlPrompts from "./locales/nl/prompts.json";
 import nlUsers from "./locales/nl/users.json";
 import nlCalendar from "./locales/nl/calendar.json";
@@ -115,6 +118,7 @@ const resources = {
     tasks: enTasks,
     automation: enAutomation,
     demos: enDemos,
+    voiceCalls: enVoiceCalls,
     prompts: enPrompts,
     users: enUsers,
     calendar: enCalendar,
@@ -145,6 +149,7 @@ const resources = {
     tasks: ptTasks,
     automation: ptAutomation,
     demos: ptDemos,
+    voiceCalls: ptVoiceCalls,
     prompts: ptPrompts,
     users: ptUsers,
     calendar: ptCalendar,
@@ -175,6 +180,7 @@ const resources = {
     tasks: nlTasks,
     automation: nlAutomation,
     demos: nlDemos,
+    voiceCalls: nlVoiceCalls,
     prompts: nlPrompts,
     users: nlUsers,
     calendar: nlCalendar,
@@ -216,6 +222,7 @@ i18n
       "tasks",
       "automation",
       "demos",
+      "voiceCalls",
       "prompts",
       "users",
       "calendar",

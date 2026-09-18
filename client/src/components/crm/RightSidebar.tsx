@@ -40,6 +40,7 @@ import {
   Home,
   Star,
   Megaphone,
+  AudioLines,
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
@@ -276,6 +277,7 @@ export function RightSidebar({
     outreachOnly?: boolean;
   }[] = [
     { href: `${prefix}/campaigns`, label: t("sidebar.campaigns"), labelKey: "Campaigns", icon: Megaphone, testId: "nav-reactivation" },
+    { href: `${prefix}/voice-calls`, label: t("sidebar.voiceCalls"), labelKey: "Voice calls", icon: AudioLines, testId: "nav-voice-calls", ownerOnly: true },
     // Agency = full chat ("Chats"); clients = summary-only view ("Interactions"). No gate needed.
     { href: `${prefix}/conversations`, label: isAgencyUser ? t("sidebar.chats") : t("sidebar.interactions"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
     { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
@@ -682,7 +684,7 @@ export function RightSidebar({
           {/* Nav section groups */}
           {(() => {
             const sections = [
-              { section: "Engage", items: visibleNavItems.filter(it => ["Conversations", "Calendar", "Contacts"].includes(it.labelKey)) },
+              { section: "Engage", items: visibleNavItems.filter(it => ["Voice calls", "Conversations", "Calendar", "Contacts"].includes(it.labelKey)) },
               { section: "Admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
               { section: "Backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automations", "Demos"].includes(it.labelKey)) },
               { section: "Outreach", items: visibleNavItems.filter(it => ["Inbox", "Prospects", "Cadence"].includes(it.labelKey)) },

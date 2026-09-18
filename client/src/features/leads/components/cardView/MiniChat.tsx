@@ -446,8 +446,8 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
     ? `In: ${aiPrompt.toLocaleString()} / Out: ${aiCompletion.toLocaleString()}, $${aiCostVal.toFixed(4)}`
     : undefined;
 
-  // inbound (lead) = crisp neumorphic balloon; AI (our) = solid wine widget
-  // (not neumorphic); human agent = white raised card.
+  // inbound (lead) = crisp neumorphic balloon; AI (our) = solid ink widget
+  // (not neumorphic, flips to cream in dark mode); human agent = white raised card.
   const bubbleStyle: React.CSSProperties = inbound
     ? {
        
@@ -457,21 +457,21 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
       }
     : aiMsg
       ? {
-          background: "var(--wine-grad)",
+          background: "var(--ink)",
           borderRadius: "13px 13px 3px 13px",
-          color: "#fff",
+          color: "var(--paper)",
         }
       : {
           boxShadow: "var(--sh-inset-crisp)",
           borderRadius: "13px 13px 3px 13px",
         };
-  // AI → white text on wine (both modes); human agent → white + ink (dark flips).
+  // AI → paper text on ink; human agent → white + ink (dark flips).
   const bubbleColorClass = inbound
     ? ""
     : aiMsg
-      ? "text-white"
+      ? ""
       : "bg-white text-[color:var(--ink)] dark:bg-card dark:text-[color:var(--ink-soft)]";
-  const timeColor = inbound ? "var(--mute-2)" : aiMsg ? "rgba(255,255,255,0.72)" : "var(--muted-foreground)";
+  const timeColor = inbound ? "var(--mute-2)" : aiMsg ? "color-mix(in srgb, var(--paper) 72%, transparent)" : "var(--muted-foreground)";
 
   return (
     <div

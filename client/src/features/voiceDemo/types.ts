@@ -42,6 +42,7 @@ export interface SummaryItem {
 /** What the model reports it has understood, via the `update_call_summary` tool. */
 export interface CallSummary {
   name?: string;
+  outcome?: string | null;
   items: SummaryItem[];
 }
 

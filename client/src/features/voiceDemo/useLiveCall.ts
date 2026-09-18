@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AIState } from "@/components/siriOrb/aiCore";
 import { useCallAmplitude } from "./useCallAmplitude";
+import { ENGINE_BASE_URL } from "./engine";
 import type {
   Booking,
   CallState,
@@ -30,8 +31,7 @@ import type {
  * now.
  */
 
-export const ENGINE_BASE_URL =
-  import.meta.env.VITE_VOICE_ENGINE_URL ?? "https://webhooks.leadawaker.com";
+export { ENGINE_BASE_URL };
 
 export const DEMO_ACCOUNT_ID = 1;
 export const DEMO_CAMPAIGN_ID = 60;
@@ -175,12 +175,16 @@ export function useLiveCall() {
    */
   const turnsRef = useRef<Turn[]>([]);
   const summaryRef = useRef<CallSummary | null>(null);
+  /** Guards wrapUp against running twice (the hangup timer and session.closed can both call it). */
+  const wrappedUpRef = useRef(false);
   /**
    * The opening line, composed by the engine because it needs the company and
    * what the company does. Arrives with the SDP answer, i.e. always before the
    * data channel opens, so it is in place by the time session.started fires.
    */
   const greetingRef = useRef<string>("");
+  /** Set once the opening instruction has gone out, so it is sent only once. */
+  const greetedRef = useRef(false);
 
   /** Text accumulating for each side, plus the timer that will close it. */
   const bufRef = useRef<{ you: string; them: string }>({ you: "", them: "" });
@@ -259,6 +263,29 @@ export function useLiveCall() {
     if (micRef.current) micRef.current.enabled = true;
   }, []);
 
+  /**
+   * Ask her to open the call. Sent the moment the data channel opens rather
+   * than on `session.started`, which arrives about half a second later: every
+   * bit of dead air at the start is a prospect wondering if the call works.
+   */
+  const greet = useCallback(() => {
+    if (greetedRef.current || !greetingRef.current) return;
+    greetedRef.current = true;
+    if (micRef.current) {
+      micRef.current.enabled = false;
+      unmuteRef.current = window.setTimeout(openMic, GREETING_FLOOR_MS);
+    }
+    // GPT-Live has no response.create-to-greet. The documented way to make
+    // her open the call is to append an instruction naming the language
+    // explicitly: OpenAI's guidance is not to let her infer it from a name or
+    // a number.
+    send({
+      type: "session.instructions.append",
+      delegation_id: null,
+      content: greetingRef.current,
+    });
+  }, [openMic, send]);
+
   // --- transcript -----------------------------------------------------------
 
   const flush = useCallback(
@@ -313,16 +340,15 @@ export function useLiveCall() {
   );
 
   /**
-   * Write the recap from the transcript, now the call is over.
-   *
-   * Only runs if `update_call_summary` did not already produce one. That tool
-   * still exists and still wins when she delegates; this is what makes a recap
-   * certain rather than likely.
+   * Close the call's record and, if `update_call_summary` did not already
+   * produce a recap, write one from the transcript.
    */
   const wrapUp = useCallback(async () => {
-    if (summaryRef.current) return;
     const turnsNow = turnsRef.current;
-    if (turnsNow.length < 3) return;
+    if (!callIdRef.current || turnsNow.length === 0) return;
+    if (wrappedUpRef.current) return;
+    wrappedUpRef.current = true;
+    const generate = !summaryRef.current?.outcome && turnsNow.length >= 3;
     try {
       const res = await fetch(`${ENGINE_BASE_URL}/voice/live/wrap-up`, {
         method: "POST",
@@ -331,9 +357,13 @@ export function useLiveCall() {
           password: passwordRef.current,
           language: languageRef.current,
           turns: turnsNow.map((t) => ({ side: t.side, text: t.text })),
+          call_id: callIdRef.current,
+          session_id: sessionIdRef.current,
+          account_id: DEMO_ACCOUNT_ID,
+          generate,
         }),
       });
-      if (!res.ok) return;
+      if (!res.ok || !generate) return;
       const data = (await res.json()) as { summary: CallSummary | null };
       if (data.summary) {
         summaryRef.current = data.summary;
@@ -443,26 +473,14 @@ export function useLiveCall() {
           setStartedAt(Date.now());
           setOrbState("listening");
           lastHeardRef.current = Date.now();
-          if (micRef.current && greetingRef.current) {
-            micRef.current.enabled = false;
-            unmuteRef.current = window.setTimeout(openMic, GREETING_FLOOR_MS);
-          }
           silenceRef.current = window.setInterval(() => {
             const quietFor = Date.now() - lastHeardRef.current;
             const limit = farewellRef.current ? FAREWELL_SILENCE_MS : SILENCE_MS;
             if (quietFor > limit) hangup(farewellRef.current ? "completed" : "silence");
           }, SILENCE_TICK_MS);
-          // GPT-Live has no response.create-to-greet. The documented way to
-          // make her open the call is to append an instruction once the
-          // session is up, naming the language explicitly: OpenAI's guidance
-          // is not to let her infer it from a name or a number.
-          if (greetingRef.current) {
-            send({
-              type: "session.instructions.append",
-              delegation_id: null,
-              content: greetingRef.current,
-            });
-          }
+          // Normally already sent when the channel opened; this is the
+          // fallback if it was not.
+          greet();
           break;
         }
 
@@ -501,7 +519,7 @@ export function useLiveCall() {
           break;
       }
     },
-    [appendDelta, handleTool, hangup, openMic, send, teardown, wrapUp],
+    [appendDelta, greet, handleTool, hangup, teardown, wrapUp],
   );
 
   // --- connect --------------------------------------------------------------
@@ -521,6 +539,8 @@ export function useLiveCall() {
       setSessionId(null);
       farewellRef.current = false;
       callIdRef.current = `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      wrappedUpRef.current = false;
+      greetedRef.current = false;
       localeRef.current = setup.locale;
       callerRef.current = setup.callerNumber;
       passwordRef.current = password;
@@ -551,6 +571,7 @@ export function useLiveCall() {
         // Must exist before createOffer, and must carry this exact label.
         const dc = pc.createDataChannel("oai-events");
         dcRef.current = dc;
+        dc.onopen = greet;
         dc.onmessage = (e) => {
           try {
             onEvent(JSON.parse(e.data) as LiveEvent);
@@ -599,7 +620,7 @@ export function useLiveCall() {
         setError(err instanceof Error ? err.message : "Could not start the call.");
       }
     },
-    [attach, hangup, onEvent, teardown],
+    [attach, greet, hangup, onEvent, teardown],
   );
 
   const reset = useCallback(() => {

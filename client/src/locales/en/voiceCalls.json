@@ -1,0 +1,50 @@
+{
+  "title": "Voice calls",
+  "webCaller": "Web caller",
+  "booked": "Booked",
+  "empty": "No voice calls yet. Calls made on the voice demo will appear here.",
+  "selectCall": "Select a call to see what happened.",
+  "notFound": "This call could not be found.",
+  "spokenAs": "As said on the call",
+  "loadError": "Could not load voice calls.",
+  "back": "Back to calls",
+  "turns_one": "{{count}} turn",
+  "turns_other": "{{count}} turns",
+  "sections": {
+    "booked": "Booked appointment",
+    "outcome": "Conclusion",
+    "summary": "Summary",
+    "recording": "Recording",
+    "transcript": "Transcript"
+  },
+  "noSummary": "No recap was generated for this call.",
+  "recordingExpired": "Recording no longer available (OpenAI keeps it for 30 days).",
+  "caller": "Caller",
+  "ai": "AI receptionist",
+  "interest": "Wants",
+  "notes": "Notes",
+  "intents": {
+    "book_appointment": "Book appointment",
+    "request_quote": "Quote request",
+    "ask_advice": "Advice",
+    "existing_customer": "Existing customer",
+    "complaint_or_fault": "Complaint or fault",
+    "not_relevant": "Not relevant"
+  },
+  "views": {
+    "all": "All calls",
+    "booked": "Booked",
+    "notBooked": "Not booked"
+  },
+  "search": "Search calls…",
+  "groups": {
+    "today": "Today",
+    "earlier": "Earlier"
+  },
+  "showing": "Showing {{shown}} of {{total}}",
+  "voiceCall": "Voice call",
+  "nothingHere": "Nothing here",
+  "play": "Play recording",
+  "pause": "Pause recording",
+  "download": "Download recording"
+}

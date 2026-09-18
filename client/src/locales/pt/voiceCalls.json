@@ -1,0 +1,50 @@
+{
+  "title": "Chamadas de voz",
+  "webCaller": "Visitante do site",
+  "booked": "Agendado",
+  "empty": "Nenhuma chamada de voz ainda. As chamadas feitas na demo de voz aparecem aqui.",
+  "selectCall": "Selecione uma chamada para ver o que aconteceu.",
+  "notFound": "Esta chamada não foi encontrada.",
+  "spokenAs": "Como foi dito na chamada",
+  "loadError": "Não foi possível carregar as chamadas de voz.",
+  "back": "Voltar para as chamadas",
+  "turns_one": "{{count}} fala",
+  "turns_other": "{{count}} falas",
+  "sections": {
+    "booked": "Agendamento",
+    "outcome": "Conclusão",
+    "summary": "Resumo",
+    "recording": "Gravação",
+    "transcript": "Transcrição"
+  },
+  "noSummary": "Nenhum resumo foi gerado para esta chamada.",
+  "recordingExpired": "Gravação indisponível (a OpenAI guarda por 30 dias).",
+  "caller": "Cliente",
+  "ai": "Recepcionista IA",
+  "interest": "Quer",
+  "notes": "Observações",
+  "intents": {
+    "book_appointment": "Agendar horário",
+    "request_quote": "Pedido de orçamento",
+    "ask_advice": "Orientação",
+    "existing_customer": "Cliente atual",
+    "complaint_or_fault": "Reclamação ou defeito",
+    "not_relevant": "Não relevante"
+  },
+  "views": {
+    "all": "Todas",
+    "booked": "Agendadas",
+    "notBooked": "Sem agendamento"
+  },
+  "search": "Buscar chamadas…",
+  "groups": {
+    "today": "Hoje",
+    "earlier": "Anteriores"
+  },
+  "showing": "Mostrando {{shown}} de {{total}}",
+  "voiceCall": "Chamada de voz",
+  "nothingHere": "Nada por aqui",
+  "play": "Ouvir gravação",
+  "pause": "Pausar gravação",
+  "download": "Baixar gravação"
+}

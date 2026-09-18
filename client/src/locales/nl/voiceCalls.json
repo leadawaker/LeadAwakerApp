@@ -1,0 +1,50 @@
+{
+  "title": "Spraakgesprekken",
+  "webCaller": "Webbeller",
+  "booked": "Geboekt",
+  "empty": "Nog geen spraakgesprekken. Gesprekken via de spraakdemo verschijnen hier.",
+  "selectCall": "Selecteer een gesprek om te zien wat er gebeurde.",
+  "notFound": "Dit gesprek is niet gevonden.",
+  "spokenAs": "Zoals gezegd in het gesprek",
+  "loadError": "Spraakgesprekken konden niet worden geladen.",
+  "back": "Terug naar gesprekken",
+  "turns_one": "{{count}} beurt",
+  "turns_other": "{{count}} beurten",
+  "sections": {
+    "booked": "Geboekte afspraak",
+    "outcome": "Conclusie",
+    "summary": "Samenvatting",
+    "recording": "Opname",
+    "transcript": "Transcript"
+  },
+  "noSummary": "Voor dit gesprek is geen samenvatting gemaakt.",
+  "recordingExpired": "Opname niet meer beschikbaar (OpenAI bewaart die 30 dagen).",
+  "caller": "Beller",
+  "ai": "AI-receptionist",
+  "interest": "Wil",
+  "notes": "Notities",
+  "intents": {
+    "book_appointment": "Afspraak maken",
+    "request_quote": "Offerteaanvraag",
+    "ask_advice": "Advies",
+    "existing_customer": "Bestaande klant",
+    "complaint_or_fault": "Klacht of storing",
+    "not_relevant": "Niet relevant"
+  },
+  "views": {
+    "all": "Alle gesprekken",
+    "booked": "Geboekt",
+    "notBooked": "Niet geboekt"
+  },
+  "search": "Zoek gesprekken…",
+  "groups": {
+    "today": "Vandaag",
+    "earlier": "Eerder"
+  },
+  "showing": "{{shown}} van {{total}}",
+  "voiceCall": "Spraakgesprek",
+  "nothingHere": "Niets gevonden",
+  "play": "Opname afspelen",
+  "pause": "Opname pauzeren",
+  "download": "Opname downloaden"
+}
