@@ -615,5 +615,33 @@
     "saveFailed": "Could not save the domain.",
     "verifyFailed": "Could not verify the domain.",
     "removeFailed": "Could not remove the domain."
+  },
+  "websiteChat": {
+    "title": "Website chat",
+    "subtitle": "An AI assistant on the client's own website.",
+    "none": "No widget on this account yet.",
+    "create": "Create widget",
+    "enabled": "Widget enabled",
+    "campaign": "Campaign",
+    "campaignNone": "Pick a campaign",
+    "agentName": "Assistant name",
+    "domains": "Allowed domains",
+    "domainsHint": "Comma separated. The widget only runs on these. Empty means nowhere.",
+    "greeting": "First message",
+    "defaultGreeting": "Hi! Ask me anything, I'm here to help.",
+    "position": "Position",
+    "positionRight": "Bottom right",
+    "positionLeft": "Bottom left",
+    "language": "Language",
+    "snippet": "Install snippet",
+    "snippetHint": "Paste this once, just before </body> on every page.",
+    "preview": "Preview",
+    "usage": "{{used}} of {{cap}} messages today",
+    "delete": "Delete this widget"
+  },
+  "inboundWhatsApp": {
+    "title": "WhatsApp from new contacts",
+    "subtitle": "Who answers when someone messages this number for the first time.",
+    "off": "Nobody (messages ignored)"
   }
 }

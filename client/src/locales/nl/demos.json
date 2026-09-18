@@ -4,9 +4,11 @@
   "tabs": {
     "sessions": "Sessies",
     "new": "Nieuwe demo",
-    "clients": "Clients"
+    "clients": "Clients",
+    "settings": "Instellingen"
   },
   "table": {
+    "site": "Site",
     "prospect": "Prospect",
     "company": "Bedrijf",
     "client": "Client",
@@ -115,5 +117,15 @@
     "quote": "Offerte opvolging",
     "whatsapp": "WhatsApp-link (rechtsklik om te kopiëren)",
     "create": "Maken"
+  },
+  "settings": {
+    "empty": "Nog geen instellingen voor deze dienst.",
+    "widget": {
+      "avatarTitle": "Foto van de medewerker",
+      "avatarHint": "Zichtbaar in het welkomstbericht, de chatkop en bij elk antwoord, in elke widgetdemo.",
+      "upload": "Foto uploaden",
+      "reset": "Standaard gebruiken",
+      "avatarError": "Deze afbeelding kon niet worden gelezen. Probeer een PNG, JPG of WebP."
+    }
   }
 }

@@ -11,6 +11,9 @@ import { ServiceCell } from "./ServiceCell";
  *  two <table>s share one <colgroup>, which is the house pattern for a list
  *  whose header must not scroll away (see TagsInlineTable). */
 const LEAD_COLS = [
+  // The homepage thumbnail. First column and narrow: it is an identifier, not
+  // content, and a row of sites is far faster to scan than a row of names.
+  { key: "site", width: 72 },
   { key: "prospect", width: 140 },
   { key: "company", width: 160 },
   { key: "client", width: 140 },
@@ -260,6 +263,32 @@ export function DemoSessionsTable({ sessions }: { sessions: DemoSession[] }) {
   );
 }
 
+/** The prospect's own homepage, captured when the demo was built from their
+ *  URL (specs/website-widget). A list of names all looks alike; a list of sites
+ *  does not. Rows without a screenshot get a neutral block so every row keeps
+ *  the same height and the column stays aligned. */
+function ProspectThumb({ row }: { row: ProspectRow }) {
+  if (!row.screenshot) {
+    return (
+      <div
+        className="h-9 w-14 rounded border"
+        style={{ borderColor: "var(--line)", background: "var(--paper)" }}
+        aria-hidden
+      />
+    );
+  }
+  return (
+    <img
+      src={`/api/site-shot/${row.screenshot}`}
+      alt=""
+      loading="lazy"
+      title={row.websiteUrl || row.companyName}
+      className="h-9 w-14 rounded border object-cover object-top"
+      style={{ borderColor: "var(--line)" }}
+    />
+  );
+}
+
 function ProspectTableRow({
   row,
   dateFmt,
@@ -271,6 +300,9 @@ function ProspectTableRow({
 }) {
   return (
     <tr className="la-lead-row h-[56px]">
+      <td className="pl-2 pr-0">
+        <ProspectThumb row={row} />
+      </td>
       <td className="px-2">
         <EditableCell
           value={row.firstName}

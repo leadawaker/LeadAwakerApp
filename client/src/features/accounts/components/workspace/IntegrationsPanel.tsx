@@ -4,6 +4,7 @@ import { MeetingTypeCard } from "./MeetingTypeCard";
 import type { AccountRow, AccountDetail } from "./types";
 import { CalendarConnectCard, BookingPageCard, BookingLinkReadOnly, CustomBookingDomainCard } from "./CalendarConnectCard";
 import { MessagingCard, EmailSenderCard } from "./MessagingCards";
+import { WebsiteChatCard, InboundWhatsAppCard } from "./WebsiteChatCard";
 
 const cardStyle: React.CSSProperties = { borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" };
 
@@ -24,6 +25,16 @@ export function IntegrationsPanel({ account, d, onSave, fieldCols = 3, stacked =
       {/* ── Messaging & email ─────────────────────────────────────── */}
       {!readOnly && (
         <MessagingCard account={account} d={d} onSave={onSave} fieldCols={fieldCols} />
+      )}
+
+      {/* ── Website chat widget (specs/website-widget) ────────────── */}
+      {!readOnly && <WebsiteChatCard accountId={accountId} />}
+      {!readOnly && (
+        <InboundWhatsAppCard
+          accountId={accountId}
+          account={account as unknown as Record<string, unknown>}
+          onSave={onSave}
+        />
       )}
 
       {/* ── Meetings & calendar ───────────────────────────────────── */}

@@ -1,16 +1,17 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { List, Plus, RefreshCw, Users } from "lucide-react";
+import { List, Plus, RefreshCw, Settings, Users } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { cn } from "@/lib/utils";
 import { useDemoSessions } from "../api/demoSessionsApi";
 import { DemoSessionsTable, DemosLoading } from "../components/DemoSessionsTable";
 import { NewDemoForm } from "../components/NewDemoForm";
+import { DemoSettingsTab } from "../components/DemoSettingsTab";
 // The Clients library lives here rather than on the Campaigns page: a Client is
 // a demo persona, not a campaign setting, and this is where demos are made.
 import { ClientsTab } from "@/features/campaigns/components/clients/ClientsTab";
 
-type Tab = "sessions" | "new" | "clients";
+type Tab = "sessions" | "new" | "clients" | "settings";
 
 function DemosContent() {
   const { t } = useTranslation("demos");
@@ -22,6 +23,7 @@ function DemosContent() {
     { key: "sessions", Icon: List },
     { key: "new", Icon: Plus },
     { key: "clients", Icon: Users },
+    { key: "settings", Icon: Settings },
   ];
 
   return (
@@ -69,7 +71,9 @@ function DemosContent() {
       </div>
 
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {tab === "clients" ? (
+        {tab === "settings" ? (
+          <DemoSettingsTab />
+        ) : tab === "clients" ? (
           <div className="h-full min-h-0 overflow-hidden">
             <ClientsTab selectedNiche={selectedClientNiche} onSelectNiche={setSelectedClientNiche} />
           </div>

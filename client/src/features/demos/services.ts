@@ -26,6 +26,10 @@ export interface ServiceDef {
   /** Voice runs in the browser, not as a chat link: it needs a token, then a
    *  page. It has no WhatsApp side at all. */
   voice?: boolean;
+  /** The widget demo opens its own page: the prospect's homepage screenshot
+   *  with the chat widget on top (/widget-demo/<token>, specs/website-widget).
+   *  Server-rendered on the Pi, so it has no Vercel copy. */
+  widgetPage?: boolean;
 }
 
 export const SERVICES: ServiceDef[] = [
@@ -34,7 +38,7 @@ export const SERVICES: ServiceDef[] = [
   // engine resolves decision mode and the quoted opener.
   { key: "quote", labelKey: "services.quote", icon: FileText, campaignId: 60, scenario: "deciding" },
   { key: "speed", labelKey: "services.speed", icon: MessageCircle, campaignId: 67, scenario: "inquired" },
-  { key: "widget", labelKey: "services.widget", icon: Globe, campaignId: 68, scenario: "inquired" },
+  { key: "widget", labelKey: "services.widget", icon: Globe, campaignId: 68, scenario: "inquired", widgetPage: true },
   // Voice mints its persona on the Speed to Lead campaign (any service campaign
   // carries the same persona) and then opens the voice page with that token.
   { key: "voice", labelKey: "services.voice", icon: Phone, campaignId: 67, scenario: "inquired", voice: true },
@@ -50,9 +54,17 @@ export function tokenFromUrl(demoUrl: string): string {
   return m ? m[1]! : "";
 }
 
+/** The screenshot-backdrop widget demo for a minted chat link. */
+export function widgetDemoUrl(demoUrl: string): string {
+  return `${window.location.origin}/widget-demo/${tokenFromUrl(demoUrl)}`;
+}
+
 /** The link to hand a prospect. Always the canonical public origin the link was
  *  minted with — never the CRM host it is being copied from. */
 export function serviceCopyUrl(svc: ServiceDef, session: DemoSession): string {
+  // The widget page only exists on the Pi, never on the Vercel origin the chat
+  // link was minted with, so it is always handed out from the CRM host.
+  if (svc.widgetPage) return widgetDemoUrl(session.demoUrl);
   if (!svc.voice) return session.demoUrl;
   let origin = "";
   try {
@@ -66,6 +78,7 @@ export function serviceCopyUrl(svc: ServiceDef, session: DemoSession): string {
 /** The link WE open, which points at the host we are already on, so the Pi
  *  serves the build being edited. Same reasoning as demoOpenUrl. */
 export function serviceOpenUrl(svc: ServiceDef, session: DemoSession): string {
+  if (svc.widgetPage) return widgetDemoUrl(session.demoUrl);
   return svc.voice
     ? `${window.location.origin}/voice-demo?token=${tokenFromUrl(session.demoUrl)}`
     : demoOpenUrl(session.demoUrl);

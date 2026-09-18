@@ -1,0 +1,196 @@
+/* The widget frame's own look. demo.css is loaded first for the message-thread
+   markup it styles (.row/.bub/.av/.ts, typing dots, voice players); this file
+   restyles all of it into a neutral chat (white ground, grey incoming, near-
+   black outgoing) and drops the demo page's bone-and-wine chrome. Everything
+   is scoped under .wdg / .wdg-body, so the demo page itself is untouched.
+
+   Neutral on purpose, with no per-client accent: it has to sit on any website
+   without clashing, and black/white/grey never does.
+
+   Safe to lean on demo.css's global reset here: this document is inside an
+   iframe, so nothing it declares can reach the client's page. */
+
+.wdg-body {
+  --w-bg: #ffffff;
+  --w-ink: #09090b;
+  --w-ink-2: #3f3f46;
+  --w-mute: #71717a;
+  --w-mute-2: #a1a1aa;
+  --w-line: #e4e4e7;
+  --w-in: #f4f4f5;
+  --w-out: #18181b;
+  --w-ok: #22c55e;
+  --w-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, system-ui, sans-serif;
+  margin: 0;
+  height: 100dvh;
+  background: var(--w-bg);
+  color: var(--w-ink);
+  font-family: var(--w-sans);
+}
+/* design-tokens.css paints the landing page's warm light onto body::before and
+   ::after; inside a client's widget that reads as a beige wash. */
+.wdg-body::before, .wdg-body::after { display: none; }
+
+#root { height: 100%; }
+
+.wdg {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  background: var(--w-bg);
+}
+
+/* ── header ─────────────────────────────────────────────────────────── */
+.wdg-hdr {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 14px 16px;
+  border-bottom: 1px solid var(--w-line);
+  background: var(--w-bg);
+}
+.wdg-id { display: flex; align-items: center; gap: 11px; min-width: 0; }
+.wdg-ph { position: relative; width: 42px; height: 42px; flex: 0 0 auto; }
+.wdg-ph img {
+  width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;
+  background: var(--w-in);
+}
+/* "Someone is actually there": the one piece of status a visitor reads. */
+.wdg-dot {
+  position: absolute; right: 0; bottom: 1px;
+  width: 11px; height: 11px; border-radius: 50%;
+  background: var(--w-ok); border: 2px solid var(--w-bg);
+}
+.wdg-who { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.wdg-name {
+  font-weight: 650; font-size: 15px; color: var(--w-ink); letter-spacing: -0.01em;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wdg-role {
+  font-size: 12px; color: var(--w-mute);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.wdg-x {
+  appearance: none; flex: 0 0 auto;
+  width: 36px; height: 36px; border-radius: 10px;
+  border: 1px solid var(--w-line); background: var(--w-bg); color: var(--w-ink-2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.wdg-x:hover { background: var(--w-in); color: var(--w-ink); }
+
+/* ── thread ─────────────────────────────────────────────────────────── */
+.wdg-stream {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px 16px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: var(--w-bg);
+}
+.wdg-stream > :first-child { margin-top: auto; }
+
+.wdg .row { gap: 8px; align-items: flex-start; }
+.wdg .row .av {
+  width: 30px; height: 30px; margin: 0; background: var(--w-in);
+}
+.wdg .bub-wrap { max-width: 80%; }
+.wdg .bub {
+  font-family: var(--w-sans);
+  font-size: 14px; line-height: 1.5;
+  padding: 9px 13px; border-radius: 12px;
+}
+.wdg .row.ai .bub { background: var(--w-in); color: var(--w-ink); border-bottom-left-radius: 12px; }
+.wdg .row.me .bub { background: var(--w-out); color: #fafafa; border-bottom-right-radius: 12px; }
+.wdg .ts {
+  font-family: var(--w-sans); font-size: 11px; color: var(--w-mute);
+  margin: 5px 2px 0;
+}
+.wdg .bub .lnk { color: #2563eb; }
+.wdg .row.me .bub .lnk { color: #bfdbfe; }
+.wdg .typing i { background: var(--w-mute-2); }
+
+/* Voice players on the new grounds. */
+.wdg .vplay { background: var(--w-bg); border-color: var(--w-line); color: var(--w-ink); }
+.wdg .row.me .vplay { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.28); color: #fafafa; }
+.wdg .vtime { font-family: var(--w-sans); }
+.wdg .vpending {
+  background: linear-gradient(90deg, rgba(0,0,0,.06), rgba(0,0,0,.16), rgba(0,0,0,.06));
+  background-size: 200% 100%;
+}
+.wdg .row.me .vpending {
+  background: linear-gradient(90deg, rgba(255,255,255,.14), rgba(255,255,255,.4), rgba(255,255,255,.14));
+  background-size: 200% 100%;
+}
+
+/* ── composer ───────────────────────────────────────────────────────── */
+.wdg-composer {
+  flex: 0 0 auto;
+  display: flex;
+  padding: 12px 14px 14px;
+  border-top: 1px solid var(--w-line);
+  background: var(--w-bg);
+}
+.wdg-field, .wdg-rec {
+  flex: 1 1 auto; min-width: 0;
+  display: flex; align-items: flex-end; gap: 8px;
+  border: 1px solid var(--w-line); border-radius: 14px;
+  padding: 5px 5px 5px 14px;
+  background: var(--w-bg);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+.wdg-field:focus-within { border-color: #a1a1aa; box-shadow: 0 0 0 3px rgba(24,24,27,.06); }
+.wdg-input {
+  flex: 1 1 auto; min-width: 0;
+  resize: none; border: 0; outline: none; background: transparent;
+  font: inherit; font-size: 14px; line-height: 1.45; color: var(--w-ink);
+  padding: 7px 0; max-height: 120px;
+}
+.wdg-input::placeholder { color: var(--w-mute-2); }
+.wdg-send {
+  flex: 0 0 auto;
+  width: 36px; height: 36px; border: 0; border-radius: 10px;
+  background: var(--w-out); color: #fafafa;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background-color 150ms ease, transform 150ms ease, opacity 150ms ease;
+}
+.wdg-send:hover:not(:disabled) { background: #27272a; }
+.wdg-send:active:not(:disabled) { transform: scale(.96); }
+.wdg-send:disabled { opacity: .4; cursor: default; }
+
+/* Recording: the bar replaces the field, discard and send at opposite ends. */
+.wdg-rec { align-items: center; padding-left: 5px; }
+.wdg-rec-x {
+  width: 36px; height: 36px; flex: 0 0 auto; border: 0; border-radius: 10px;
+  background: transparent; color: var(--w-mute); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+.wdg-rec-x:hover { color: #dc2626; background: #fef2f2; }
+.wdg .rec-dot { background: #dc2626; }
+.wdg .rec-time { font-family: var(--w-sans); color: var(--w-ink); }
+.wdg .rec-meter i { background: var(--w-mute-2); }
+
+.wdg-done {
+  flex: 1 1 auto;
+  text-align: center;
+  font-size: 13px;
+  color: var(--w-mute);
+  padding: 8px 4px;
+}
+
+.wdg-fatal {
+  padding: 24px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--w-mute);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wdg * { animation: none !important; transition: none !important; }
+}

@@ -615,5 +615,33 @@
     "saveFailed": "Kon het domein niet opslaan.",
     "verifyFailed": "Kon het domein niet verifiëren.",
     "removeFailed": "Kon het domein niet verwijderen."
+  },
+  "websiteChat": {
+    "title": "Websitechat",
+    "subtitle": "Een AI-assistent op de eigen website van de klant.",
+    "none": "Nog geen widget op dit account.",
+    "create": "Widget aanmaken",
+    "enabled": "Widget ingeschakeld",
+    "campaign": "Campagne",
+    "campaignNone": "Kies een campagne",
+    "agentName": "Naam assistent",
+    "domains": "Toegestane domeinen",
+    "domainsHint": "Gescheiden door komma's. De widget werkt alleen hier. Leeg betekent nergens.",
+    "greeting": "Eerste bericht",
+    "defaultGreeting": "Hoi! Stel gerust je vraag, ik help je graag.",
+    "position": "Positie",
+    "positionRight": "Rechtsonder",
+    "positionLeft": "Linksonder",
+    "language": "Taal",
+    "snippet": "Installatiecode",
+    "snippetHint": "Plak dit één keer, vlak voor </body> op elke pagina.",
+    "preview": "Voorbeeld",
+    "usage": "{{used}} van {{cap}} berichten vandaag",
+    "delete": "Deze widget verwijderen"
+  },
+  "inboundWhatsApp": {
+    "title": "WhatsApp van nieuwe contacten",
+    "subtitle": "Wie antwoordt als iemand dit nummer voor het eerst appt.",
+    "off": "Niemand (berichten genegeerd)"
   }
 }

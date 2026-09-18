@@ -117,6 +117,10 @@ export const accounts = nocodb.table("Accounts", {
   missedCallGreetingAudioData: text("missed_call_greeting_audio_data"),  // base64 mp3, served via <Play>
   missedCallGreetingFileName: varchar("missed_call_greeting_file_name"),
   missedCallVoicemailEnabled: boolean("missed_call_voicemail_enabled").default(false),  // Tier 2
+  // Inbound WhatsApp: the campaign that answers a message from a number matching
+  // no existing lead. Explicit per account, exactly like missedCallCampaignId —
+  // a stranger is never routed by guesswork. NULL = keep dropping strangers.
+  inboundCampaignId: integer("inbound_campaign_id"),
   // Per-account email From-identity — see specs/channel-fallback (task #676 "step 8").
   // Fallback/opener email sends from the client's own domain (deliverability + brand) once their
   // domain is DNS-verified (SPF+DKIM+DMARC). A per-account DKIM keypair is generated server-side;
@@ -425,6 +429,12 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   // row also has a description_template, so content alone cannot tell them
   // apart.
   isDemoClient: boolean("is_demo_client").default(false),
+  // Website-scrape provenance + the homepage screenshot used as the backdrop of
+  // the widget demo (specs/website-widget phase 5). screenshotPath is a file name
+  // inside uploads/site-shots/, served by GET /api/site-shot/:file.
+  websiteUrl: text("website_url"),
+  screenshotPath: text("screenshot_path"),
+  screenshotAt: timestamp("screenshot_at", { withTimezone: true }),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
@@ -511,6 +521,10 @@ export const campaigns = nocodb.table("Campaigns", {
   // Service discriminator: reactivation | reputation | speed_to_lead | nurture.
   // Reactivation is the default; the engine routes inbound replies by this value.
   campaignType: text("campaign_type").default("reactivation"),
+  // Borrow another campaign's Prompt_Library rows when this one has none of its
+  // own, so two campaigns share ONE prompt instead of drifting copies. Read by
+  // the engine's get_prompt_for_campaign (campaign 68 -> 67's prompt #108).
+  promptCampaignId: integer("prompt_campaign_id"),
   // Reputation: minutes after service_completed_at before the feedback ask is sent.
   reputationDelayMinutes: integer("reputation_delay_minutes"),
   accountsId: integer("Accounts_id"),
@@ -764,6 +778,45 @@ export const insertInteractionsSchema = createInsertSchema(interactions).omit({
 export type Interactions = typeof interactions.$inferSelect;
 export type InsertInteractions = z.infer<typeof insertInteractionsSchema>;
 
+// ─── Voice_Calls ───────────────────────────────────────────────────────────────
+// One row per AI voice call, written by the automations engine (CallLogger +
+// /voice/live/wrap-up). The transcript stays in Interactions under the same
+// conversation_thread_id.
+
+export interface VoiceCallSummaryItem {
+  intent: string;
+  interest: string | null;
+  notes: string | null;
+}
+
+export interface VoiceCallSummary {
+  name: string | null;
+  outcome?: string | null;
+  items: VoiceCallSummaryItem[];
+}
+
+export const voiceCalls = nocodb.table("Voice_Calls", {
+  id: serial("id").primaryKey(),
+  callId: text("call_id").notNull(),
+  sessionId: text("session_id"),
+  accountsId: integer("accounts_id").notNull(),
+  campaignsId: integer("campaigns_id"),
+  leadsId: integer("leads_id"),
+  language: text("language"),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+  endedAt: timestamp("ended_at", { withTimezone: true }),
+  turnCount: integer("turn_count").notNull().default(0),
+  summary: jsonb("summary").$type<VoiceCallSummary>(),
+  bookedSlot: text("booked_slot"),
+  bookedIso: timestamp("booked_iso", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+}, (t) => [
+  uniqueIndex("uq_voice_calls_call_id").on(t.callId),
+  index("idx_voice_calls_started_at").on(t.startedAt),
+]);
+
+export type VoiceCall = typeof voiceCalls.$inferSelect;
 
 // ─── Leads ───────────────────────────────────────────────────────────────
 
@@ -1770,3 +1823,60 @@ export const insertOpenerTemplateSchema = createInsertSchema(openerTemplates).om
 });
 export type OpenerTemplateRow = typeof openerTemplates.$inferSelect;
 export type InsertOpenerTemplate = z.infer<typeof insertOpenerTemplateSchema>;
+
+// ─── Website Chat Widget ──────────────────────────────────────────────────────
+// One row per installed widget: the public key a client pastes into their site,
+// bound to exactly one account + one campaign. See specs/website-widget/.
+//
+// The key is PUBLIC by design (it ships in the page source of every visitor).
+// Security is the domain allowlist plus the caps below, never key secrecy.
+
+export const widgetConfigs = nocodb.table("Widget_Configs", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+  accountsId: integer("Accounts_id").notNull(),
+  // The campaign whose prompt, knowledge base and calendar answer this widget.
+  campaignsId: integer("Campaigns_id"),
+  publicKey: text("public_key").notNull(),
+  name: text("name"),
+  enabled: boolean("enabled").default(true),
+  // Hostnames allowed to frame the widget, e.g. ["example.com","www.example.com"].
+  // Empty = the widget refuses to run anywhere, which is the safe default for a
+  // freshly minted key rather than a wildcard.
+  allowedDomains: jsonb("allowed_domains").$type<string[]>().default([]),
+  greeting: text("greeting"),
+  accentColor: text("accent_color").default("#6B2737"),
+  launcherPosition: text("launcher_position").default("right"),  // 'right' | 'left'
+  agentName: text("agent_name"),
+  avatarUrl: text("avatar_url"),
+  language: text("language").default("en"),
+  // Cost ceilings on a public endpoint. Per visitor, and per key per day.
+  maxTurnsPerVisitor: integer("max_turns_per_visitor").default(30),
+  maxMessagesPerDay: integer("max_messages_per_day").default(500),
+  messagesToday: integer("messages_today").default(0),
+  messagesDay: text("messages_day"),  // YYYY-MM-DD stamp the counter belongs to
+}, (t) => [
+  uniqueIndex("widget_configs_public_key_idx").on(t.publicKey),
+]);
+
+export const insertWidgetConfigSchema = createInsertSchema(widgetConfigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  messagesToday: true,
+  messagesDay: true,
+});
+export type WidgetConfig = typeof widgetConfigs.$inferSelect;
+export type InsertWidgetConfig = z.infer<typeof insertWidgetConfigSchema>;
+
+// Per-service settings for the Demos page's Settings tab, one row per service
+// key from client/src/features/demos/services.ts. Free-form jsonb because each
+// service needs different knobs and most have none yet; the route validates
+// the shape per service. widget: { avatarFile } (a file in uploads/demo-avatars).
+export const demoSettings = nocodb.table("Demo_Settings", {
+  service: text("service").primaryKey(),
+  settings: jsonb("settings").$type<Record<string, unknown>>().notNull().default({}),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+export type DemoSettings = typeof demoSettings.$inferSelect;

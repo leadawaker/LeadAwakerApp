@@ -17,6 +17,11 @@ export interface ProspectRow {
   companyName: string;
   clientNiche: string;
   language: string;
+  /** The prospect's homepage screenshot, from whichever link in the row has
+   *  one. Shown as the row's thumbnail, which is what makes a long list of
+   *  demos scannable. */
+  screenshot: string;
+  websiteUrl: string;
   /** The most recent link in the row: "when did I last send this prospect
    *  something", which is what the column is read for. */
   createdAt: string | null;
@@ -42,6 +47,8 @@ export function groupProspects(sessions: DemoSession[]): ProspectRow[] {
         companyName: "",
         clientNiche: "",
         language: "",
+        screenshot: "",
+        websiteUrl: "",
         createdAt: null,
         tokens: [],
         byService: {},
@@ -58,6 +65,8 @@ export function groupProspects(sessions: DemoSession[]): ProspectRow[] {
     if (!row.companyName) row.companyName = s.companyName;
     if (!row.clientNiche) row.clientNiche = s.clientNiche;
     if (!row.language) row.language = s.language;
+    if (!row.screenshot) row.screenshot = s.screenshot || "";
+    if (!row.websiteUrl) row.websiteUrl = s.websiteUrl || "";
     if (s.createdAt && (!row.createdAt || s.createdAt > row.createdAt)) row.createdAt = s.createdAt;
 
     const svc = serviceOf(s);

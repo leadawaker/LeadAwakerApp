@@ -541,6 +541,10 @@ export function demoClientToContext(
   const visitTerm = firstTerm(row, 4, language);
   const ctx: NicheContext = {
     raw: row.niche,
+    // Present only for a Client built from a website URL; the widget demo page
+    // renders a plain backdrop without it.
+    screenshot: (row as { screenshotPath?: string | null }).screenshotPath || undefined,
+    website_url: (row as { websiteUrl?: string | null }).websiteUrl || undefined,
     niche_label: label,
     company_name: pick(row.companyNameTemplate as NicheText, language),
     service_name: pick(row.serviceName as NicheText, language),

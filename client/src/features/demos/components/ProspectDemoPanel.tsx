@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Copy, ExternalLink, Loader2, MessageCircle } from "lucide-react";
 import { createDemoLink, demoOpenUrl } from "../api/demoSessionsApi";
-import { SERVICES, tokenFromUrl, type ServiceDef } from "../services";
+import { SERVICES, tokenFromUrl, widgetDemoUrl, type ServiceDef } from "../services";
 import type { DemoLang } from "@/features/campaigns/api/demoClientsApi";
 
 /**
@@ -54,9 +54,11 @@ export function ProspectDemoPanel({ input }: { input: ProspectDemoInput }) {
         ...(input.aiDisclosure ? { aiDisclosure: input.aiDisclosure } : {}),
         ...(input.language === "en" && input.market ? { market: input.market } : {}),
       });
-      const url = svc.voice
-        ? `${window.location.origin}/voice-demo?token=${tokenFromUrl(body.demoUrl)}`
-        : demoOpenUrl(body.demoUrl);
+      const url = svc.widgetPage
+        ? widgetDemoUrl(body.demoUrl)
+        : svc.voice
+          ? `${window.location.origin}/voice-demo?token=${tokenFromUrl(body.demoUrl)}`
+          : demoOpenUrl(body.demoUrl);
       setLinks((prev) => ({
         ...prev,
         // Voice has no WhatsApp side: it is a browser call, not a chat thread.

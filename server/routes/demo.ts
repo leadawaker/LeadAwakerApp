@@ -19,6 +19,10 @@ import {
   type DemoScenario,
 } from "../demo-session";
 import { getWebDemoConfig, updateWebDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
+import { captureSiteShot, shotExists, isPublicHttpUrl, normalizeUrl } from "../siteShot";
+import { db } from "../db";
+import { eq } from "drizzle-orm";
+import { nicheVocabulary } from "@shared/schema";
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
 // personas Gabriel actually minted for a prospect (decided 2026-08-11).
@@ -302,9 +306,37 @@ export function registerDemoRoutes(app: Express): void {
 
       const saved = await saveDemoClient(nicheKey, language as DemoLang, ctx);
 
+      // The homepage screenshot for the widget demo (specs/website-widget).
+      // Awaited rather than fired and forgotten: the scrape above already took
+      // seconds, the capture is one more, and the caller gets a truthful answer
+      // about whether the backdrop exists. A failure is never fatal — a demo
+      // without a backdrop is still a demo.
+      let screenshot: string | null = null;
+      if (url && isPublicHttpUrl(url)) {
+        try {
+          const existing = await shotExists(url);
+          if (existing) {
+            screenshot = existing;
+          } else {
+            const shot = await captureSiteShot(url);
+            if (shot.ok) screenshot = shot.file;
+            else console.error("[demo-website] screenshot failed", shot.error);
+          }
+          if (screenshot) {
+            await db
+              .update(nicheVocabulary)
+              .set({ websiteUrl: normalizeUrl(url), screenshotPath: screenshot, screenshotAt: new Date() })
+              .where(eq(nicheVocabulary.niche, nicheKey));
+          }
+        } catch (err) {
+          console.error("[demo-website] screenshot step failed", err);
+        }
+      }
+
       res.json({
         client: nicheKey,
         saved: saved.saved,
+        screenshot,
         company_name: ctx.company_name,
         niche_label: ctx.niche_label,
         kb_chars: (ctx.kb || "").length,

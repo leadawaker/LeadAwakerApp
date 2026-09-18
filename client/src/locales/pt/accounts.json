@@ -566,5 +566,33 @@
     "callingNumberEmpty": "Nao definido",
     "callingNumberHint": "Os leads verao este numero na confirmacao do agendamento para saber quem esta ligando.",
     "whatsappHint": "A ligacao agendada acontece pelo WhatsApp usando o seu numero de mensagens conectado."
+  },
+  "websiteChat": {
+    "title": "Chat do site",
+    "subtitle": "Um assistente de IA no site do próprio cliente.",
+    "none": "Ainda não há widget nesta conta.",
+    "create": "Criar widget",
+    "enabled": "Widget ativado",
+    "campaign": "Campanha",
+    "campaignNone": "Escolha uma campanha",
+    "agentName": "Nome do assistente",
+    "domains": "Domínios permitidos",
+    "domainsHint": "Separados por vírgula. O widget só funciona neles. Vazio significa nenhum.",
+    "greeting": "Primeira mensagem",
+    "defaultGreeting": "Oi! Pode perguntar o que quiser, estou aqui para ajudar.",
+    "position": "Posição",
+    "positionRight": "Inferior direito",
+    "positionLeft": "Inferior esquerdo",
+    "language": "Idioma",
+    "snippet": "Código de instalação",
+    "snippetHint": "Cole uma vez, logo antes de </body> em todas as páginas.",
+    "preview": "Prévia",
+    "usage": "{{used}} de {{cap}} mensagens hoje",
+    "delete": "Excluir este widget"
+  },
+  "inboundWhatsApp": {
+    "title": "WhatsApp de novos contatos",
+    "subtitle": "Quem responde quando alguém manda mensagem para este número pela primeira vez.",
+    "off": "Ninguém (mensagens ignoradas)"
   }
 }

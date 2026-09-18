@@ -95,9 +95,21 @@ function voiceBubbleHtml(msg, voice) {
 var paintedCount = 0;
 var paintedPending = false;
 
-export function messagesHtml(s, pending, voice) {
+// Mirrors profileConstants.ts's AGENT_GENDER/effectiveGender on the CRM side:
+// the two male agent names get the male portrait, every other name (including
+// a niche-generated one like "Sara") defaults female. Duplicated here rather
+// than imported because the demo/widget pages are an unbundled static site
+// with no access to client/src modules.
+var MALE_AGENT_NAMES = ["thomas", "mark"];
+function avatarForAgent(name) {
+  var n = String(name || "").trim().toLowerCase();
+  return MALE_AGENT_NAMES.indexOf(n) > -1 ? "/avatars/male.webp" : "/avatars/female.webp";
+}
+
+export function messagesHtml(s, pending, voice, opts) {
   var out = [];
   var v = voice || {};
+  var avatarSrc = (opts && opts.avatarSrc) || avatarForAgent(s.agent);
   // A restart hands back a shorter thread; treat that as a fresh one so the
   // new opener animates in rather than being mistaken for an old bubble.
   if (s.messages.length < paintedCount) paintedCount = 0;
@@ -111,7 +123,7 @@ export function messagesHtml(s, pending, voice) {
     out.push(
       '<div class="row ' + (mine ? "me" : "ai") + '">' +
         (mine ? "" : (showAv
-          ? '<div class="av"><img src="/avatars/images.jpeg" alt="' + esc(initials(s.agent)) + '" /></div>'
+          ? '<div class="av"><img src="' + esc(avatarSrc) + '" alt="' + esc(initials(s.agent)) + '" /></div>'
           : '<div class="av" style="visibility:hidden"></div>')) +
         '<div class="bub-wrap">' +
           '<div class="bub' + (isVoice ? " is-voice" : "") + fresh + '">' +
@@ -125,7 +137,7 @@ export function messagesHtml(s, pending, voice) {
   if (pending) {
     out.push(
       '<div class="row ai">' +
-        '<div class="av"><img src="/avatars/images.jpeg" alt="' + esc(initials(s.agent)) + '" /></div>' +
+        '<div class="av"><img src="' + esc(avatarSrc) + '" alt="' + esc(initials(s.agent)) + '" /></div>' +
         '<div class="bub-wrap"><div class="bub typing' + (paintedPending ? "" : " is-new") +
           '"><i></i><i></i><i></i></div></div>' +
       "</div>"

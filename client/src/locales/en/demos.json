@@ -4,9 +4,11 @@
   "tabs": {
     "sessions": "Sessions",
     "new": "New demo",
-    "clients": "Clients"
+    "clients": "Clients",
+    "settings": "Settings"
   },
   "table": {
+    "site": "Site",
     "prospect": "Prospect",
     "company": "Company",
     "client": "Client",
@@ -115,5 +117,15 @@
     "quote": "Quote follow-up",
     "whatsapp": "WhatsApp link (right-click to copy)",
     "create": "Create"
+  },
+  "settings": {
+    "empty": "No settings for this service yet.",
+    "widget": {
+      "avatarTitle": "Agent photo",
+      "avatarHint": "Shown on the launcher bubble, the chat header and every reply, in every widget demo.",
+      "upload": "Upload photo",
+      "reset": "Use default",
+      "avatarError": "That image could not be read. Try a PNG, JPG or WebP."
+    }
   }
 }

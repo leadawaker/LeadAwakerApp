@@ -4,9 +4,11 @@
   "tabs": {
     "sessions": "Sessões",
     "new": "Nova demo",
-    "clients": "Clients"
+    "clients": "Clients",
+    "settings": "Configurações"
   },
   "table": {
+    "site": "Site",
     "prospect": "Prospect",
     "company": "Empresa",
     "client": "Client",
@@ -115,5 +117,15 @@
     "quote": "Follow-up de orçamento",
     "whatsapp": "Link do WhatsApp (clique direito para copiar)",
     "create": "Criar"
+  },
+  "settings": {
+    "empty": "Ainda não há configurações para este serviço.",
+    "widget": {
+      "avatarTitle": "Foto da atendente",
+      "avatarHint": "Aparece no balão de boas-vindas, no cabeçalho do chat e em cada resposta, em todas as demos do widget.",
+      "upload": "Enviar foto",
+      "reset": "Usar padrão",
+      "avatarError": "Não foi possível ler esta imagem. Tente PNG, JPG ou WebP."
+    }
   }
 }

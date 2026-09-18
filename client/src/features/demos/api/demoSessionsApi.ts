@@ -34,6 +34,10 @@ export interface DemoSession {
   invited: boolean;
   campaignId: number | null;
   createdAt: string | null;
+  /** Homepage screenshot file for demos built from a website URL; served by
+   *  /api/site-shot/:file. Empty on every typed-persona demo. */
+  screenshot: string;
+  websiteUrl: string;
   browser: DemoSessionSurface;
   whatsapp: DemoSessionSurface;
 }

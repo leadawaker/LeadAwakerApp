@@ -22,6 +22,14 @@ const SCENARIO_WHAT_LEAD_DID: Record<DemoScenario, string> = {
 
 export interface NicheContext {
   raw: string;
+  // The prospect's own homepage, captured once at Client-creation time and used
+  // as the backdrop of the widget demo (specs/website-widget). A file name in
+  // uploads/site-shots, served by GET /api/site-shot/:file. Carried on the
+  // persona rather than looked up per page view, so the demo page needs no
+  // second round trip. The prompt overlay ignores keys it does not name, which
+  // is what makes an extra field here safe.
+  screenshot?: string;
+  website_url?: string;
   niche_label: string;
   company_name: string;
   service_name: string;

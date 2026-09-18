@@ -220,6 +220,12 @@ export type DemoSessionRow = {
   invited: boolean;
   campaignId: number | null;
   createdAt: Date | null;
+  /** The prospect's homepage screenshot (specs/website-widget), when this demo
+   *  was built from a website URL. A file name served by /api/site-shot/:file;
+   *  empty for every demo minted from a typed persona. */
+  screenshot: string;
+  /** The site that screenshot came from, shown under the row. */
+  websiteUrl: string;
   /** Per surface. `opened` is whether the lead row exists at all: the browser
    *  row is created on first visit, so its absence means the link was never
    *  clicked, which is the single most useful thing this page reports. */
@@ -340,6 +346,8 @@ export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
         invited: !!lead.demoInvited,
         campaignId: lead.campaignsId ?? null,
         createdAt: (lead.createdAt as Date) ?? null,
+        screenshot: str(niche.screenshot),
+        websiteUrl: str(niche.website_url),
         browser: { opened: false, openedAt: null, replies: 0, lastAt: null, status: "" },
         whatsapp: { opened: false, openedAt: null, replies: 0, lastAt: null, status: "" },
       };
@@ -354,6 +362,8 @@ export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
       // panel edit.
       if (str(niche.company_name)) row.companyName = str(niche.company_name);
       if (str(niche.client_niche)) row.clientNiche = str(niche.client_niche);
+      if (!row.screenshot && str(niche.screenshot)) row.screenshot = str(niche.screenshot);
+      if (!row.websiteUrl && str(niche.website_url)) row.websiteUrl = str(niche.website_url);
       row.scenario = resolveDemoScenario(niche);
     } else {
       row.whatsapp = surface;
@@ -365,6 +375,10 @@ export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
       if (!row.firstName) row.firstName = lead.firstName || "";
       if (!row.companyName) row.companyName = str(niche.company_name);
       if (!row.clientNiche) row.clientNiche = str(niche.client_niche);
+      // Stamped at mint time from the Client row, so the wa-demo lead is the
+      // authority; the browser row only fills it in when minting predated this.
+      if (str(niche.screenshot)) row.screenshot = str(niche.screenshot);
+      if (str(niche.website_url)) row.websiteUrl = str(niche.website_url);
     }
   }
 
