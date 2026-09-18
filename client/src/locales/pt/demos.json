@@ -127,5 +127,12 @@
       "reset": "Usar padrão",
       "avatarError": "Não foi possível ler esta imagem. Tente PNG, JPG ou WebP."
     }
+  },
+  "widgetColor": {
+    "title": "Cor do widget",
+    "hint": "Muda só a cor do botão do chat. Detectada no site deles; preto quando não há site.",
+    "custom": "Cor personalizada",
+    "detected": "Usar cor detectada",
+    "default": "Voltar ao preto"
   }
 }

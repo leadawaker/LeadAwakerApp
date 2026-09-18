@@ -127,5 +127,12 @@
       "reset": "Standaard gebruiken",
       "avatarError": "Deze afbeelding kon niet worden gelezen. Probeer een PNG, JPG of WebP."
     }
+  },
+  "widgetColor": {
+    "title": "Widgetkleur",
+    "hint": "Kleurt alleen de chatknop. Herkend van hun website; zwart als die er niet is.",
+    "custom": "Eigen kleur",
+    "detected": "Herkende kleur gebruiken",
+    "default": "Terug naar zwart"
   }
 }

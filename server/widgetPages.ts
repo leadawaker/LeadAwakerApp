@@ -8,6 +8,8 @@
 // prospect sees is the widget they would get. `--la-pos` / `--la-h` let a host
 // pin it inside a container instead of the viewport.
 
+import { inkFor } from "./brandColor";
+
 export interface FrameConfig {
   key: string;
   greeting: string;
@@ -70,6 +72,10 @@ export const LAUNCHER_CSS = `
 .la-core{position:absolute;inset:2.5px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#e4e4e7;
   background:radial-gradient(120% 95% at 50% 0%,#303035 0%,#0d0d0f 55%,#000 100%);
   box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 -8px 14px rgba(0,0,0,.65)}
+/* A brand colour tints only the button's core; the chrome ring, teaser and chat
+   stay neutral so any colour still reads as the same premium object. */
+.la-root.has-c .la-core{color:var(--la-ink);
+  background:radial-gradient(120% 95% at 50% 0%,color-mix(in srgb,var(--la-c) 70%,#fff) 0%,var(--la-c) 52%,color-mix(in srgb,var(--la-c) 62%,#000) 100%)}
 .la-core::before{content:"";position:absolute;inset:0;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.13),transparent 46%)}
 .la-core>span{position:absolute;display:flex;transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
 .la-core svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
@@ -159,8 +165,13 @@ export function escapeHtml(value: string): string {
 export function renderDemoPageHtml(o: {
   token: string; shotUrl: string; company: string;
   avatar: string; agentName: string; language: string;
+  /** The launcher's brand colour; null keeps the black default. */
+  color: string | null;
 }): string {
   const l = lang2(o.language);
+  const tint = o.color && /^#[0-9a-f]{6}$/i.test(o.color)
+    ? ` has-c" style="--la-c:${o.color};--la-ink:${inkFor(o.color)}`
+    : "";
   // The prospect's homepage IS the page: full width, scrolling like their real
   // site, with the launcher fixed to the viewport corner exactly where it would
   // sit on it. No browser mock-up or caption around it; anything we add is
@@ -185,7 +196,7 @@ export function renderDemoPageHtml(o: {
 ${o.shotUrl
   ? `<img class="bg" src="${escapeHtml(o.shotUrl)}" alt="${escapeHtml(o.company)}" />`
   : `<div class="empty">No screenshot for this demo yet.</div>`}
-<div class="la-root" id="la-root">
+<div class="la-root${tint}" id="la-root">
   <iframe class="la-panel" id="la-panel" title="Chat" allow="microphone"></iframe>
   <div class="la-teaser" id="la-teaser" role="button" tabindex="0">
     <img src="${escapeHtml(o.avatar)}" alt="" />

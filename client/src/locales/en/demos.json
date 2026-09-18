@@ -127,5 +127,12 @@
       "reset": "Use default",
       "avatarError": "That image could not be read. Try a PNG, JPG or WebP."
     }
+  },
+  "widgetColor": {
+    "title": "Widget colour",
+    "hint": "Colours the launcher button only. Detected from their website; black when there is none.",
+    "custom": "Custom colour",
+    "detected": "Use detected colour",
+    "default": "Back to black"
   }
 }

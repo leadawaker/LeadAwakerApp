@@ -6,6 +6,7 @@ import { createDemoLink, DEMO_SESSIONS_KEY, type DemoSession } from "../api/demo
 import { serviceCopyUrl, serviceOpenUrl, type ServiceDef } from "../services";
 import type { ProspectRow } from "../prospectRows";
 import type { DemoLang } from "@/features/campaigns/api/demoClientsApi";
+import { WidgetColorSwatch } from "./WidgetColorSwatch";
 
 const ICON = { color: "var(--mute-2)" } as const;
 
@@ -151,6 +152,7 @@ export function ServiceCell({
         <IconLink title={t("services.open")} href={serviceOpenUrl(svc, session)}>
           <ExternalLink className="h-3.5 w-3.5" />
         </IconLink>
+        {svc.widgetPage && row.clientNiche && <WidgetColorSwatch niche={row.clientNiche} />}
         {/* Voice is a browser call, not a chat thread: it has no WhatsApp side
             at all, so the button is absent rather than disabled. */}
         {!svc.voice && (

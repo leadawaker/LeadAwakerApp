@@ -7,10 +7,11 @@ import type { Express, Request, Response } from "express";
 import { createHash } from "crypto";
 import { promises as fs } from "fs";
 import path from "path";
-import { eq } from "drizzle-orm";
+import { eq, isNotNull, or } from "drizzle-orm";
 import { z } from "zod";
 import { db } from "../db";
-import { demoSettings } from "@shared/schema";
+import { demoSettings, nicheVocabulary } from "@shared/schema";
+import { brandColorForShot } from "../brandColor";
 import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
 
@@ -47,7 +48,46 @@ export async function widgetDemoAvatarUrl(): Promise<string> {
   }
 }
 
+const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+/**
+ * The widget demo launcher colour for one Client: the one picked by hand, else
+ * the brand colour read off its screenshot, else null (the page draws black).
+ * Read live at page render, so a change reaches links already sent.
+ */
+export async function widgetColorFor(row: { widgetColor?: string | null; screenshotPath?: string | null }) {
+  const manual = row.widgetColor && HEX_RE.test(row.widgetColor) ? row.widgetColor.toLowerCase() : null;
+  const auto = row.screenshotPath ? await brandColorForShot(row.screenshotPath) : null;
+  return { manual, auto, color: manual || auto };
+}
+
 export function registerDemoSettingsRoutes(app: Express) {
+  // Every Client's launcher colour, keyed by niche, for the swatches in the
+  // Demos table's widget column. One request for the whole table.
+  app.get("/api/demo/widget-colors", requireAuth, requireAgency, wrapAsync(async (_req: Request, res: Response) => {
+    const rows = await db
+      .select({ niche: nicheVocabulary.niche, widgetColor: nicheVocabulary.widgetColor, screenshotPath: nicheVocabulary.screenshotPath })
+      .from(nicheVocabulary)
+      .where(or(isNotNull(nicheVocabulary.screenshotPath), isNotNull(nicheVocabulary.widgetColor)));
+    const colors: Record<string, Awaited<ReturnType<typeof widgetColorFor>>> = {};
+    for (const r of rows) colors[r.niche] = await widgetColorFor(r);
+    res.json({ colors });
+  }));
+
+  // null clears the pick, which falls back to the detected colour (or black).
+  app.put("/api/demo/clients/:niche/widget-color", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
+    const niche = String(req.params.niche || "");
+    const parsed = z.object({ color: z.string().regex(HEX_RE).nullable() }).safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const [row] = await db
+      .update(nicheVocabulary)
+      .set({ widgetColor: parsed.data.color ? parsed.data.color.toLowerCase() : null })
+      .where(eq(nicheVocabulary.niche, niche))
+      .returning({ widgetColor: nicheVocabulary.widgetColor, screenshotPath: nicheVocabulary.screenshotPath });
+    if (!row) return res.status(404).json({ message: "Unknown client." });
+    res.json(await widgetColorFor(row));
+  }));
+
   app.get("/api/demo-settings", requireAuth, requireAgency, wrapAsync(async (_req: Request, res: Response) => {
     const rows = await db.select().from(demoSettings);
     const out: Record<string, Record<string, unknown>> = {};

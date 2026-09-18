@@ -43,3 +43,39 @@ export function useSetWidgetAvatar() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+/** Launcher colour per Client (niche). `color` is what the widget demo shows:
+ *  the hand-picked one, else the one detected from the screenshot. Null on
+ *  both means black. */
+export interface WidgetColor {
+  color: string | null;
+  manual: string | null;
+  auto: string | null;
+}
+
+const COLORS_KEY = ["demo-widget-colors"];
+
+export function useWidgetColors() {
+  return useQuery({
+    queryKey: COLORS_KEY,
+    queryFn: async () =>
+      (await json<{ colors: Record<string, WidgetColor> }>(await apiFetch("/api/demo/widget-colors"))).colors,
+    staleTime: 60_000,
+  });
+}
+
+/** Pick a colour for one Client, or null to go back to the detected one. */
+export function useSetWidgetColor(niche: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (color: string | null) =>
+      json<WidgetColor>(await apiFetch(`/api/demo/clients/${encodeURIComponent(niche)}/widget-color`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ color }),
+      })),
+    onSuccess: (next) => {
+      qc.setQueryData<Record<string, WidgetColor>>(COLORS_KEY, (prev) => ({ ...(prev || {}), [niche]: next }));
+    },
+  });
+}

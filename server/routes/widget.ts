@@ -17,12 +17,12 @@ import path from "path";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
 import { db, pool } from "../db";
-import { widgetConfigs, campaigns as campaignsTable, accounts, type WidgetConfig } from "@shared/schema";
+import { widgetConfigs, campaigns as campaignsTable, accounts, nicheVocabulary, type WidgetConfig } from "@shared/schema";
 import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
 import { captureSiteShot, shotExists, shotFileName, isPublicHttpUrl, SHOT_DIR } from "../siteShot";
 import { renderFrameHtml, renderDemoPageHtml, LOADER_JS, teaserMeta, type FrameConfig } from "../widgetPages";
-import { widgetDemoAvatarUrl, DEFAULT_WIDGET_AVATAR } from "./demoSettings";
+import { widgetDemoAvatarUrl, widgetColorFor, DEFAULT_WIDGET_AVATAR } from "./demoSettings";
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 
@@ -435,23 +435,29 @@ export function registerWidgetRoutes(app: Express) {
 
     const { persona, language } = await loadDemoPersona(token);
 
+    // The Client row is read live (not only the persona snapshot) so a
+    // recaptured screenshot or a newly picked colour reaches links already sent.
     let shot = String(persona.screenshot || "");
-    // A link minted before its Client had a screenshot (or re-captured since)
-    // falls back to the Client row, so recapturing fixes old links too.
-    if (!shot && persona.raw) {
-      const { rows: clientRows } = await pool.query(
-        `SELECT screenshot_path FROM "p2mxx34fvbf3ll6"."Niche_Vocabulary" WHERE niche = $1 LIMIT 1`,
-        [String(persona.raw)]
-      );
-      shot = String(clientRows[0]?.screenshot_path || "");
+    let color: string | null = null;
+    if (persona.raw) {
+      const [client] = await db
+        .select({ screenshotPath: nicheVocabulary.screenshotPath, widgetColor: nicheVocabulary.widgetColor })
+        .from(nicheVocabulary)
+        .where(eq(nicheVocabulary.niche, String(persona.raw)))
+        .limit(1);
+      if (client) {
+        if (!shot) shot = client.screenshotPath || "";
+        color = (await widgetColorFor({ widgetColor: client.widgetColor, screenshotPath: client.screenshotPath || shot })).color;
+      }
     }
+    if (!color && shot) color = (await widgetColorFor({ screenshotPath: shot })).color;
     const shotUrl = /^[a-f0-9]{16}\.webp$/.test(shot) ? `/api/site-shot/${shot}` : "";
     const company = String(persona.company_name || "");
 
     res.set("content-type", "text/html; charset=utf-8");
     res.set("cache-control", "no-store");
     res.send(renderDemoPageHtml({
-      token, shotUrl, company, language,
+      token, shotUrl, company, language, color,
       avatar: await widgetDemoAvatarUrl(),
       agentName: String(persona.agent_name || ""),
     }));

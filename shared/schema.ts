@@ -435,6 +435,9 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   websiteUrl: text("website_url"),
   screenshotPath: text("screenshot_path"),
   screenshotAt: timestamp("screenshot_at", { withTimezone: true }),
+  // Widget demo launcher colour, set by hand on the Demos page. Null = use the
+  // colour detected from the screenshot (server/brandColor.ts), else black.
+  widgetColor: text("widget_color"),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
