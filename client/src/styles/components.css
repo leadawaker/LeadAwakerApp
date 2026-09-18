@@ -253,7 +253,7 @@
   box-shadow: var(--sh-raised-crisp), inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 .la-mono-tile.inactive {
-  background: hsl(var(--bg-2));
+  background: var(--bg-2);
   color: var(--muted-foreground);
   box-shadow: var(--sh-inset-crisp);
 }

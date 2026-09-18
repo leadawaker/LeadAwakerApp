@@ -128,7 +128,7 @@
   transition: background-color 150ms ease, border-color 150ms ease,
               color 150ms ease, transform 150ms ease;
   &:hover:not(:disabled) {
-    background-color: hsl(var(--card));
+    background-color: var(--card);
     border-color: rgb(0 0 0 / 0.175);
     color: hsl(var(--foreground));
   }

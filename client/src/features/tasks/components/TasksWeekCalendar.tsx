@@ -210,7 +210,7 @@ function DayColumn({
       style={{
         flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0,
         borderLeft: firstCol ? 'none' : '1px solid var(--line)',
-        background: isOver ? 'rgba(94,34,48,0.06)' : isToday ? 'rgba(94,34,48,0.022)' : isWeekend ? 'var(--bg-2)' : 'transparent',
+        background: isOver ? 'hsl(var(--brand) / 0.06)' : isToday ? 'hsl(var(--brand) / 0.022)' : isWeekend ? 'var(--bg-2)' : 'transparent',
         transition: 'background 120ms',
         opacity: dimmed ? 0.45 : 1,
       }}

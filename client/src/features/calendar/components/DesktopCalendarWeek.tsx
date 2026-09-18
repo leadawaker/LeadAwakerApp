@@ -115,8 +115,8 @@ function AvailabilityOverlay({ p, days, nCols, onEditBlock }: {
               position: "absolute", top: `${pct(s)}%`, height: `${Math.max(pct(e) - pct(s), 1.2)}%`,
               left: `calc(${colLeft(di)} + 2px)`, width: `calc(${colWidth} - 4px)`,
               borderRadius: "var(--r-flush)",
-              background: "repeating-linear-gradient(45deg, rgba(94,34,48,0.10), rgba(94,34,48,0.10) 5px, rgba(94,34,48,0.04) 5px, rgba(94,34,48,0.04) 10px)",
-              border: "1px solid rgba(94,34,48,0.12)",
+              background: "repeating-linear-gradient(45deg, hsl(var(--brand) / 0.10), hsl(var(--brand) / 0.10) 5px, hsl(var(--brand) / 0.04) 5px, hsl(var(--brand) / 0.04) 10px)",
+              border: "1px solid hsl(var(--brand) / 0.12)",
             }} />
           );
         });
@@ -144,9 +144,9 @@ function AvailabilityOverlay({ p, days, nCols, onEditBlock }: {
                 left: `calc(${colLeft(di)} + 3px)`,
                 width: `calc(${colWidth} - 6px)`,
                 borderRadius: "var(--r-flush)",
-                background: "rgba(94,34,48,0.13)",
-                border: "1.5px solid rgba(94,34,48,0.30)",
-                borderLeft: "3px solid rgba(94,34,48,0.55)",
+                background: "hsl(var(--brand) / 0.13)",
+                border: "1.5px solid hsl(var(--brand) / 0.30)",
+                borderLeft: "3px solid hsl(var(--brand) / 0.55)",
                 pointerEvents: onEditBlock ? "auto" : "none",
                 cursor: onEditBlock ? "pointer" : "default",
                 overflow: "hidden",
@@ -156,7 +156,7 @@ function AvailabilityOverlay({ p, days, nCols, onEditBlock }: {
               }}
             >
               {!tiny && (
-                <span style={{ fontSize: 9.5, fontWeight: 700, color: "rgba(94,34,48,0.85)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.4 }}>
+                <span style={{ fontSize: 9.5, fontWeight: 700, color: "hsl(var(--brand) / 0.85)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", lineHeight: 1.4 }}>
                   {b.label ?? t("blocks.busyBlock")}
                 </span>
               )}
@@ -262,7 +262,7 @@ export function WeekGrid(p: DesktopCalendarProps) {
             <div />
             {days.map((d) => {
               const iso = dateKeyOf(d), isToday = iso === p.todayStr;
-              return <div key={iso} style={{ borderLeft: "1px solid var(--line-strong)", background: isToday ? "rgba(94,34,48,0.04)" : "transparent" }} />;
+              return <div key={iso} style={{ borderLeft: "1px solid var(--line-strong)", background: isToday ? "hsl(var(--brand) / 0.04)" : "transparent" }} />;
             })}
           </div>
           {/* horizontal hour lines + half-hour dashed lines + gutter labels */}
@@ -297,7 +297,7 @@ export function WeekGrid(p: DesktopCalendarProps) {
           {/* current-time line */}
           {nowPct != null && (
             <div style={{ position: "absolute", top: `${nowPct}%`, left: 56, right: 0, height: 0, borderTop: "1.5px solid var(--wine)", zIndex: 5, pointerEvents: "none" }}>
-              <span style={{ position: "absolute", left: -4, top: -4, width: 8, height: 8, borderRadius: "50%", background: "var(--wine)", boxShadow: "0 0 0 3px rgba(94,34,48,0.18)" }} />
+              <span style={{ position: "absolute", left: -4, top: -4, width: 8, height: 8, borderRadius: "50%", background: "var(--wine)", boxShadow: "0 0 0 3px hsl(var(--brand) / 0.18)" }} />
               {todayIdx >= 0 && <span style={{ position: "absolute", left: `calc(100% * ${todayIdx + 1} / ${nCols})`, top: -9, ...MONO, fontSize: 11, fontWeight: 700, color: "var(--paper)", background: "var(--wine)", borderRadius: 4, padding: "2px 6px", transform: "translateX(calc(-100% - 6px))" }}>{p.currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</span>}
             </div>
           )}

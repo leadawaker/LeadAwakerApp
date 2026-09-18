@@ -1,61 +1,157 @@
-/* Neumorphic Warm-Bone Design System — Light Mode */
+/* ═════════════════════════════════════════════════════════════════════════
+   LeadAwaker theme: the ONLY file that defines colors.
+   design-system.css holds geometry (radius, spacing, shadow shapes, type)
+   and component classes, but never a color value.
+
+   THE DIALS (change these, everything else follows):
+     --brand-h / --brand-s / --brand-l   the brand color (currently wine).
+                                          Rebrand to blue = change --brand-h.
+     --ground-h / --ground-s             the warm "bone" tint of the grounds.
+     --ground-page/-panel/-chrome        lightness of the three ground tiers.
+   Dark mode overrides only the lightness/saturation it needs further down.
+
+   TWO FORMATS, never mixed under one name:
+     channel triples "H S% L%"  (shadcn names: --background, --primary,
+       --muted, --border, --sidebar-bg ...) consumed as hsl(var(--x)) and by
+       the Tailwind classes in tokens.css (bg-background, text-primary ...).
+     full colors (--bg, --bg-2, --surface, --paper, --card, --wine, --line,
+       --ink ...) consumed as var(--x) directly.
+   ═════════════════════════════════════════════════════════════════════════ */
 
 :root {
-  /* Safe-area insets */
-  --safe-top: env(safe-area-inset-top, 0px);
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-  --bottombar-h: calc(88px + var(--safe-bottom));
+  /* ── Dials ── */
+  --brand-h: 346;
+  --brand-s: 43%;
+  --brand-l: 25%;                    /* #5E2230 deep wine */
 
-  /* ── Grounds & Surfaces ── */
-  --background: 360 71% 99%;          /* #FEFCF9 — warm near-white page ground */
-  --foreground: 300 14% 10%;          /* #1F1A14 — warm near-black text */
-  --bg-main: 36 71% 99%;             /* matches background */
-  --bg-2: 38 32% 92%;                /* #F1ECE4 — sidebar / nav rail */
-  --footer-bg: 36 45% 96%;           /* #F9F6F0 — mobile bottom bar: creamier/lighter than --bg-2 */
+  --ground-h: 38;
+  --ground-s: 42%;
+  --ground-page: var(--ground-h) var(--ground-s) 98.5%;    /* page ground */
+  --ground-panel: var(--ground-h) var(--ground-s) 97.5%;    /* topbar, toolbars, list panels */
+  --ground-chrome: var(--ground-h) var(--ground-s) 95.5%;  /* nav rail */
 
-  --card: 0 0% 100%;                 /* #FFFFFF — white cards */
-  --card-foreground: 30 14% 10%;
-  --card-hover: 40 43% 97%;          /* #FBF8F2 — near-white warm hover */
+  /* ── Brand, derived ── */
+  --brand: var(--brand-h) var(--brand-s) var(--brand-l);
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 30 14% 10%;
-
-  /* Primary: Deep Wine */
-  --primary: 346 43% 25%;            /* #5E2230 */
+  --primary: var(--brand);
   --primary-foreground: 0 0% 100%;
-
-  /* Secondary: warm bone surface */
-  --secondary: 38 32% 92%;
-  --secondary-foreground: 30 14% 10%;
-
-  /* Muted */
-  --muted: 39 30% 96%;               /* warm near-white */
-  --muted-foreground: 39 15% 38%;    /* #6C6354 — warm muted text */
-
-  /* Accent: Wine */
-  --accent: 346 43% 25%;
+  --accent: var(--brand);
   --accent-foreground: 0 0% 100%;
+  --info: var(--brand);
+  --info-foreground: 0 0% 100%;
+  --ring: var(--brand);
 
-  /* Destructive */
+  /* Legacy brand-* names (all resolve to the brand color) */
+  --brand-blue: var(--brand);
+  --brand-blue-foreground: 0 0% 100%;
+  --brand-deep-blue: var(--brand-h) var(--brand-s) calc(var(--brand-l) - 7%);
+  --brand-deep-blue-foreground: 0 0% 100%;
+  --brand-yellow: var(--brand);
+  --brand-yellow-foreground: 0 0% 100%;
+  --brand-soft-yellow: var(--brand-h) var(--brand-s) calc(var(--brand-l) + 20%);
+  --brand-soft-yellow-foreground: 0 0% 100%;
+  --brand-indigo: var(--brand);
+  --brand-indigo-foreground: 0 0% 100%;
+
+  --wine: hsl(var(--brand));
+  --wine-soft: hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) + 8%));   /* hover */
+  --wine-tint: hsl(var(--brand) / 0.08);
+  --wine-glow: hsl(var(--brand) / 0.18);
+  /* The single primary-action gradient. Reference the token, not the hex. */
+  --wine-grad: linear-gradient(145deg,
+    hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) + 4%)),
+    hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) - 5%)));
+
+  /* ── Grounds & surfaces, derived ── */
+  --background: var(--ground-page);
+  --bg-main: var(--ground-page);
+  --bg: hsl(var(--ground-page));
+  --surface: hsl(var(--ground-panel));        /* topbar, toolbars, raised chips */
+  --bg-2: hsl(var(--ground-chrome));          /* nav rail / sidebar */
+  --chrome: var(--bg-2);
+  --footer-bg: var(--ground-panel);           /* mobile bottom bar */
+  --sidebar-bg: var(--ground-panel);          /* topbar chrome */
+  --panel-list-bg: var(--ground-panel);       /* page toolbars (sticky header rows) */
+  --secondary: var(--ground-chrome);
+  --secondary-foreground: 30 14% 10%;
+  --muted: var(--ground-h) 30% 96%;
+  --muted-foreground: 39 15% 38%;             /* #6C6354 warm muted text */
+  --card-hover: var(--ground-h) 43% 97%;
+  --input: var(--ground-h) 30% 93%;
+  --input-bg: var(--ground-h) 30% 93%;
+  --border: var(--ground-h) 20% 68%;
+  --bone: hsl(var(--ground-h) 40% 97%);       /* prompt editor + preview writing surface */
+  --brand-indian-yellow: var(--muted);
+  --brand-indian-yellow-foreground: 30 14% 10%;
+
+  /* White surfaces */
+  --card: #FFFFFF;                            /* full color: use var(--card) or bg-card */
+  --card-bright: #FFFFFF;
+  --paper: #FFFFFF;
+  --popover: 0 0% 100%;
+
+  /* Lines (warm brown at low alpha) */
+  --line: hsl(40 26% 34% / 0.14);
+  --line-strong: hsl(40 26% 34% / 0.24);
+
+  /* ── Ink ── */
+  --foreground: 30 14% 10%;                   /* #1F1A14 */
+  --card-foreground: 30 14% 10%;
+  --popover-foreground: 30 14% 10%;
+  --sidebar-foreground: 30 14% 10%;
+  --sidebar-active: var(--brand);
+  --sidebar-active-foreground: 0 0% 100%;
+  --ink: #1F1A14;
+  --ink-soft: #322B22;                        /* secondary text */
+  --mute: #6C6354;                            /* secondary warm text */
+  --mute-2: #948A77;                          /* tertiary warm text */
+
+  /* ── Status ── */
   --destructive: 0 84.2% 60.2%;
   --destructive-foreground: 0 0% 98%;
-
-  /* Toast semantic colors */
-  --success: 150 52% 38%;            /* #2F9461 — emerald */
+  --success: 150 52% 38%;                     /* #2F9461 emerald */
   --success-foreground: 0 0% 100%;
-  --info: 346 43% 25%;
-  --info-foreground: 0 0% 100%;
+  --good: #2F9461;
+  --good-tint: rgba(47, 148, 97, 0.12);
+  --warn: #DA9426;                            /* amber */
+  --warn-tint: rgba(218, 148, 38, 0.13);
 
-  /* Borders */
-  --border: 38 20% 68%;              /* warm bone border */
-  --input: 38 30% 93%;
-  --ring: 346 43% 25%;
+  /* Highlight tokens: warm amber tints for active/selected (alpha in tokens.css) */
+  --highlight-active: 22 85% 88%;
+  --highlight-selected: 24 78% 90%;
+  --highlight-hover: 20 68% 83%;
 
-  --radius: 1.5rem;
+  /* ── Charts ── */
+  --chart-1: var(--brand);
+  --chart-2: 150 52% 38%;
+  --chart-3: 37 70% 50%;
+  --chart-4: 260 23% 45%;
+  --chart-5: 10 50% 40%;
+
+  /* ── Pipeline stages ── */
+  --stage-new: #6C5A8C;
+  --stage-contacted: #547BB0;
+  --stage-responded: #3F8E8E;
+  --stage-multi: #5E8E5E;
+  --stage-qualified: #B58F3E;
+  --stage-booked: #C48A2F;
+  --stage-closed: #6E7A5E;
+  --stage-lost: #A24B3F;
+  --stage-dnd: #9D8E76;
+
+  /* ── Neumorphic shadow + glass colors (shapes live in design-system.css) ── */
+  --neu-dark: rgba(105, 75, 40, 0.40);
+  --neu-light: rgb(255, 253, 245);
+  --inset-rim-color: rgba(255, 255, 255, 1);
+  --glass-bg: rgba(255, 250, 240, 0.28);
+  --glass-bg-strong: rgba(255, 250, 240, 0.46);
+  --glass-border: rgba(255, 255, 255, 0.45);
+  --glass-edge: rgba(255, 255, 255, 0.70);
 
   /* ── Layout tokens ── */
+  --radius: 1.5rem;
   --panel-gap: 16px;
-  --toolbar-w: 300px;   /* default width of a page's list panel ("toolbar") — Leads/Campaigns/Prospects/etc. */
+  --toolbar-w: 300px;   /* default width of a page's list panel ("toolbar"): Leads/Campaigns/Prospects/etc. */
   --panel-shadow: var(--sh-raised-medium);
   --card-glow: var(--sh-raised-crisp);
   --card-shadow: var(--sh-raised-crisp);
@@ -68,122 +164,6 @@
   --btn-height-sm: 2rem;
   --btn-height-lg: 2.75rem;
   --btn-px: 1rem;
-
-  /* ── Chart colors ── */
-  --chart-1: 346 43% 25%;
-  --chart-2: 150 52% 38%;
-  --chart-3: 37 70% 50%;
-  --chart-4: 260 23% 45%;
-  --chart-5: 10 50% 40%;
-
-  /* ── Brand tokens (all wine in light mode) ── */
-  --brand-blue: 346 43% 25%;
-  --brand-blue-foreground: 0 0% 100%;
-  --brand-deep-blue: 346 50% 18%;
-  --brand-deep-blue-foreground: 0 0% 100%;
-  --brand-yellow: 346 43% 25%;
-  --brand-yellow-foreground: 0 0% 100%;
-  --brand-soft-yellow: 346 40% 45%;
-  --brand-soft-yellow-foreground: 0 0% 100%;
-  --brand-indigo: 346 43% 25%;
-  --brand-indigo-foreground: 0 0% 100%;
-  --brand-indian-yellow: 39 30% 96%;
-  --brand-indian-yellow-foreground: 30 14% 10%;
-
-  /* Highlight tokens — warm amber tints for active/selected */
-  --highlight-active: 22 85% 88%;
-  --highlight-selected: 24 78% 90%;
-  --highlight-hover: 20 68% 83%;
-  --input-bg: 38 30% 93%;
-
-  /* Sidebar rail (left nav) — stays dark */
-  --sidebar-bg: 36 35% 95%;          /* #F7F3EE — topbar chrome (in-between warm cream) */
-  --sidebar-foreground: 30 14% 10%;
-  --sidebar-active: 346 43% 25%;
-  --sidebar-active-foreground: 0 0% 100%;
-
-  /* Page toolbars (sticky header rows) — same in-between chrome */
-  --panel-list-bg: 36 35% 95%;
-
-  /* ── Design System Tokens (used in inline styles / new components) ── */
-  --surface: #FEFCF9;                /* near-white raised chips/buttons */
-  --paper: #FFFFFF;                   /* elevated paper / hero band */
-  --card-bright: #FFFFFF;            /* polished hero card */
-  --chrome: #F1ECE4;                 /* explicit alias for nav chrome */
-  --ink-soft: #322B22;               /* secondary text */
-  --mute: #6C6354;                   /* secondary warm text */
-  --mute-2: #948A77;                 /* tertiary warm text */
-  --wine: #5E2230;                   /* brand wine hex */
-  --wine-soft: #7A2E3E;             /* wine hover */
-  --wine-tint: rgba(94, 34, 48, 0.08);
-  --wine-glow: rgba(94, 34, 48, 0.18);
-  --wine-grad: linear-gradient(145deg, #6E2638, #4B1A26);
-  --good: #2F9461;                   /* emerald status */
-  --good-tint: rgba(47, 148, 97, 0.12);
-  --warn: #DA9426;                   /* amber status */
-  --warn-tint: rgba(218, 148, 38, 0.13);
-  --line: rgba(110, 95, 65, 0.14);
-  --line-strong: rgba(110, 95, 65, 0.24);
-
-  /* ── Pipeline stage colors ── */
-  --stage-new: #6C5A8C;
-  --stage-contacted: #547BB0;
-  --stage-responded: #3F8E8E;
-  --stage-multi: #5E8E5E;
-  --stage-qualified: #B58F3E;
-  --stage-booked: #C48A2F;
-  --stage-closed: #6E7A5E;
-  --stage-lost: #A24B3F;
-  --stage-dnd: #9D8E76;
-
-  /* ── Directional light system ── */
-  --lx: 0.94;
-  --ly: -0.34;
-  --light-x: 92%;
-  --light-y: 6%;
-  --light-intensity: 0.7;
-  --light-warm: 255, 224, 168;
-  --light-strength: 1;
-  --depth-scale: 1;
-  --depth-polished: 4;
-
-  /* ── Neumorphic shadow base colors ── */
-  --neu-dark: rgba(105, 75, 40, 0.40);
-  --neu-light: rgb(255, 253, 245);
-
-  /* Shadow offset/blur tiers + all --sh-raised/inset/polished tokens live in
-     design-system.css's later :root, which overrides anything set here. They
-     used to be duplicated in this file; removed to keep one source of truth.
-     The --neu-dark/--neu-light base colors above stay live (design-system.css
-     does not redefine them). */
-
-  /* ── Glass tokens ── */
-  --glass-bg: rgba(255, 250, 240, 0.55);
-  --glass-bg-strong: rgba(255, 250, 240, 0.75);
-  --glass-border: rgba(255, 255, 255, 0.6);
-  --glass-edge: rgba(255, 255, 255, 0.85);
-
-  /* ── Radius tiers ── */
-  --r-flush: 6px;
-  --r-button: 8px;
-  --r-surface: 11px;
-  --r-card: 16px;
-  --r-panel: 22px;
-  --r-pill: 999px;
-
-  /* ── Spacing scale ── */
-  --space-xxs: 4px;
-  --space-xs: 8px;
-  --space-sm: 12px;
-  --space-md: 16px;
-  --space-lg: 20px;
-  --space-xl: 24px;
-  --space-xxl: 32px;
-
-  /* ── Density tokens ── */
-  --pad: 28px;
-  --pad-tight: 18px;
-  --gap: 18px;
 
   /* ── Surface primitive tokens ── */
   --list-card-radius: 0.75rem;
@@ -205,120 +185,91 @@
   --pill-pad-y: 0.125rem;
   /* Section panel */
   --panel-pad: 0.75rem;
-  --panel-bg: hsl(var(--card));
+  --panel-bg: var(--card);
 }
 
 /* ─────────────────────────────────────────────────────────────────────────
-   Neumorphic Warm-Bone Design System — Dark Mode
-   Applied when <html class="dark"> (toggled by useTheme / the dark-mode button).
-   Same hues as light mode (warm hue ~30, wine accent ~348), inverted lightness.
-   Only color/shadow/glass tokens are overridden — radii, spacing, layout,
-   shadow geometry and light direction are inherited from :root.
+   Dark mode: <html class="dark"> (useTheme / the dark-mode button).
+   Brand hue is inherited from the dials above; only lightness/alpha change.
+   Grounds are a warm-charcoal ladder (hue ~30).
    ───────────────────────────────────────────────────────────────────────── */
 :root.dark {
-  /* ── Grounds & Surfaces (warm charcoal ladder) ── */
-  --background: 30 12% 8%;            /* #171411 — warm near-black page ground */
-  --foreground: 36 20% 90%;           /* #EAE3D7 — warm off-white text */
+  /* ── Dials ── */
+  --brand-s: 42%;
+  --brand-l: 49%;                    /* #B14A5C brightened wine */
+
+  /* ── Brand, derived (dark needs different offsets) ── */
+  --ring: var(--brand-h) 50% calc(var(--brand-l) + 7%);
+  --brand-deep-blue: var(--brand-h) 45% calc(var(--brand-l) - 11%);
+  --brand-soft-yellow: var(--brand-h) 40% calc(var(--brand-l) + 9%);
+  --wine-soft: hsl(var(--brand-h) 45% calc(var(--brand-l) + 7%));
+  --wine-tint: hsl(var(--brand) / 0.18);
+  --wine-glow: hsl(var(--brand) / 0.32);
+  --wine-grad: linear-gradient(145deg,
+    hsl(var(--brand)),
+    hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) - 14%)));
+
+  /* ── Grounds & surfaces ── */
+  --background: 30 12% 8%;            /* #171411 */
   --bg-main: 30 12% 8%;
-  --bg-2: 30 12% 11%;                 /* nav rail / sidebar chrome */
-  --footer-bg: 30 12% 14%;            /* mobile bottom bar — slightly lifted from bg-2 in dark */
-
-  --card: 30 11% 13%;                 /* #241F1B — elevated card surface */
-  --card-foreground: 36 20% 90%;
-  --card-hover: 30 11% 16%;           /* lifted card hover */
-
-  --popover: 30 12% 14%;
-  --popover-foreground: 36 20% 90%;
-
-  /* Primary: brightened wine so it separates from the dark ground */
-  --primary: 348 42% 49%;            /* #B14A5C */
-  --primary-foreground: 0 0% 100%;
-
-  /* Secondary: warm dark surface */
+  --bg: #16120F;                      /* page ground */
+  --surface: #1E1A16;                 /* topbar, toolbars, raised chips */
+  --bg-2: #1B1714;                    /* nav rail / sidebar */
+  --footer-bg: 30 12% 14%;
+  --sidebar-bg: 30 12% 11%;
+  --panel-list-bg: 30 12% 11%;
   --secondary: 30 10% 19%;
   --secondary-foreground: 36 20% 90%;
-
-  /* Muted */
   --muted: 30 10% 13%;
-  --muted-foreground: 38 10% 60%;     /* #A39A88 — warm muted text */
+  --muted-foreground: 38 10% 60%;     /* #A39A88 */
+  --card-hover: 30 11% 16%;
+  --input: 30 10% 19%;
+  --input-bg: 30 10% 19%;
+  --border: 30 9% 26%;
+  --bone: #221D18;
+  --brand-indian-yellow: 30 10% 17%;
+  --brand-indian-yellow-foreground: 36 20% 90%;
 
-  /* Accent: matches primary wine */
-  --accent: 348 42% 49%;
-  --accent-foreground: 0 0% 100%;
+  --card: #241F1B;
+  --card-bright: #2A2420;
+  --paper: #221D19;
+  --popover: 30 12% 14%;
 
-  /* Destructive */
+  --line: rgba(225, 208, 178, 0.10);
+  --line-strong: rgba(225, 208, 178, 0.20);
+
+  /* ── Ink ── */
+  --foreground: 36 20% 90%;           /* #EAE3D7 */
+  --card-foreground: 36 20% 90%;
+  --popover-foreground: 36 20% 90%;
+  --sidebar-foreground: 36 18% 88%;
+  --ink: #EAE3D7;
+  --ink-soft: #D7CDBE;
+  --mute: #A39A88;
+  --mute-2: #877E6D;
+
+  /* ── Status ── */
   --destructive: 0 70% 55%;
   --destructive-foreground: 0 0% 100%;
-
-  /* Toast semantic colors */
-  --success: 150 50% 46%;            /* brighter emerald for dark */
+  --success: 150 50% 46%;
   --success-foreground: 0 0% 100%;
-  --info: 348 42% 49%;
-  --info-foreground: 0 0% 100%;
+  --good: #3FB57A;
+  --good-tint: rgba(63, 181, 122, 0.16);
+  --warn: #E6A23C;
+  --warn-tint: rgba(230, 162, 60, 0.16);
 
-  /* Borders */
-  --border: 30 9% 26%;
-  --input: 30 10% 19%;
-  --ring: 348 50% 56%;
+  --highlight-active: 22 55% 30%;
+  --highlight-selected: 24 50% 32%;
+  --highlight-hover: 20 38% 26%;
 
-  /* ── Chart colors (brightened for dark ground) ── */
-  --chart-1: 348 50% 58%;
+  /* ── Charts ── */
+  --chart-1: var(--brand-h) 50% calc(var(--brand-l) + 9%);
   --chart-2: 150 50% 50%;
   --chart-3: 37 75% 58%;
   --chart-4: 260 35% 64%;
   --chart-5: 10 58% 58%;
 
-  /* ── Brand tokens (all wine) ── */
-  --brand-blue: 348 42% 49%;
-  --brand-blue-foreground: 0 0% 100%;
-  --brand-deep-blue: 348 45% 38%;
-  --brand-deep-blue-foreground: 0 0% 100%;
-  --brand-yellow: 348 42% 49%;
-  --brand-yellow-foreground: 0 0% 100%;
-  --brand-soft-yellow: 348 40% 58%;
-  --brand-soft-yellow-foreground: 0 0% 100%;
-  --brand-indigo: 348 42% 49%;
-  --brand-indigo-foreground: 0 0% 100%;
-  --brand-indian-yellow: 30 10% 17%;
-  --brand-indian-yellow-foreground: 36 20% 90%;
-
-  /* Highlight tokens — warm wine/amber tints for active/selected on dark
-     (alpha is applied in tokens.css; these are the base colors) */
-  --highlight-active: 22 55% 30%;
-  --highlight-selected: 24 50% 32%;
-  --highlight-hover: 20 38% 26%;
-  --input-bg: 30 10% 19%;
-
-  /* Sidebar rail (left nav) — darkest chrome tier */
-  --sidebar-bg: 30 12% 11%;
-  --sidebar-foreground: 36 18% 88%;
-  --sidebar-active: 348 42% 49%;
-  --sidebar-active-foreground: 0 0% 100%;
-
-  /* Page toolbars (sticky header rows) */
-  --panel-list-bg: 30 12% 11%;
-
-  /* ── Design System Tokens (inline styles / new components) ── */
-  --surface: #1F1A16;                /* raised chips/buttons */
-  --paper: #1B1714;                   /* elevated paper / hero band */
-  --card-bright: #241E19;            /* polished hero card */
-  --chrome: #16120F;                 /* nav chrome */
-  --ink-soft: #D7CDBE;               /* secondary text */
-  --mute: #A39A88;                   /* secondary warm text */
-  --mute-2: #877E6D;                 /* tertiary warm text */
-  --wine: #B14A5C;                   /* brightened brand wine */
-  --wine-soft: #C25E72;             /* wine hover */
-  --wine-tint: rgba(177, 74, 92, 0.18);
-  --wine-glow: rgba(177, 74, 92, 0.32);
-  --wine-grad: linear-gradient(145deg, #B14A5C, #7E3343);
-  --good: #3FB57A;                   /* emerald status */
-  --good-tint: rgba(63, 181, 122, 0.16);
-  --warn: #E6A23C;                   /* amber status */
-  --warn-tint: rgba(230, 162, 60, 0.16);
-  --line: rgba(225, 208, 178, 0.10);
-  --line-strong: rgba(225, 208, 178, 0.18);
-
-  /* ── Pipeline stage colors (brightened for dark) ── */
+  /* ── Pipeline stages ── */
   --stage-new: #8A77AB;
   --stage-contacted: #6E97CC;
   --stage-responded: #54AAAA;
@@ -329,15 +280,14 @@
   --stage-lost: #C26659;
   --stage-dnd: #B3A488;
 
-  /* ── Neumorphic shadow base colors ──
+  /* ── Neumorphic shadow + glass colors ──
      Dark shadow becomes near-black; light edge becomes a very faint warm
      highlight (a bright white edge would glow harshly on a dark surface). */
   --neu-dark: rgba(0, 0, 0, 0.55);
   --neu-light: rgba(255, 240, 220, 0.045);
-
-  /* ── Glass tokens ── */
-  --glass-bg: rgba(31, 26, 22, 0.55);
-  --glass-bg-strong: rgba(31, 26, 22, 0.74);
+  --inset-rim-color: rgba(255, 240, 220, 0.10);
+  --glass-bg: rgba(31, 26, 22, 0.42);
+  --glass-bg-strong: rgba(31, 26, 22, 0.64);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-edge: rgba(255, 255, 255, 0.12);
 }

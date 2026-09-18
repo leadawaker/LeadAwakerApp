@@ -106,7 +106,7 @@ export function RolePill({ role }: { role: string }) {
     <span style={{
       fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase",
       padding: "3px 9px", borderRadius: "var(--r-pill)", color: owner ? "var(--wine)" : "var(--mute)",
-      background: owner ? "var(--wine-tint)" : "var(--bg)", boxShadow: owner ? "inset 0 0 0 1px rgba(94,34,48,0.18)" : "var(--sh-inset-super-crisp)",
+      background: owner ? "var(--wine-tint)" : "var(--bg)", boxShadow: owner ? "inset 0 0 0 1px hsl(var(--brand) / 0.18)" : "var(--sh-inset-super-crisp)",
     }}>{role}</span>
   );
 }

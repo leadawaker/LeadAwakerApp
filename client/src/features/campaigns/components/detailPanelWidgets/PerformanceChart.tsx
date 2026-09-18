@@ -59,7 +59,7 @@ export function PerformanceChart({ metrics }: { metrics: CampaignMetricsHistory[
             contentStyle={{
               borderRadius: "10px",
               border: "1px solid hsl(var(--border))",
-              backgroundColor: "hsl(var(--card))",
+              backgroundColor: "var(--card)",
               color: "hsl(var(--foreground))",
               fontSize: "11px",
               padding: "6px 10px",

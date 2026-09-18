@@ -3,48 +3,7 @@
    (Google Fonts @import lives at the top of index.css — CSS requires @import to precede all other statements) */
 
 :root {
-  /* Backgrounds & Surfaces — brighter, white cards on a soft warm ground */
-  --bg: #F8F4EC;         /* page ground — in-between warm cream (matches --surface) */
-  --bg-2: #F1ECE4;       /* sidebar / nav rail — slightly deeper to frame the bright content */
-  --chrome: #F1ECE4;     /* explicit alias for nav chrome */
-  --paper: #FFFFFF;      /* elevated paper / hero band — clean white */
-  --surface: #F7F3EE;    /* in-between warm cream — page bg, topbar, toolbars */
-  --card: #FFFFFF;       /* white cards — the brightness lift */
-  --card-bright: #FFFFFF; /* polished hero — pure white, warmth comes from the gradient overlay */
-  --bone: #FAF7F1;       /* warm bone — prompt editor + preview writing surface */
-
-  /* Ink */
-  --ink: #1F1A14;
-  --ink-soft: #322B22;
-  --mute: #6C6354;
-  --mute-2: #948A77;
-
-  /* Borders */
-  --line: rgba(110, 95, 65, 0.14);
-  --line-strong: rgba(110, 95, 65, 0.24);
-
-  /* Wine accent */
-  --wine: #5E2230;
-  --wine-soft: #7A2E3E;
-  --wine-tint: rgba(94, 34, 48, 0.08);
-  --wine-glow: rgba(94, 34, 48, 0.18);
-
-  /* Status accents — brighter, pop against white */
-  --good: #2F9461;       /* emerald — booked / positive */
-  --good-tint: rgba(47, 148, 97, 0.12);
-  --warn: #DA9426;       /* amber — warm / about-to-send */
-  --warn-tint: rgba(218, 148, 38, 0.13);
-
-  /* Pipeline stage colors (warm-aligned) */
-  --stage-new: #6C5A8C;
-  --stage-contacted: #547BB0;
-  --stage-responded: #3F8E8E;
-  --stage-multi: #5E8E5E;
-  --stage-qualified: #B58F3E;
-  --stage-booked: #C48A2F;
-  --stage-closed: #6E7A5E;
-  --stage-lost: #A24B3F;
-  --stage-dnd: #9D8E76;
+  /* Colors live in variables.css (the only theme file). This block is geometry only. */
 
   /* Light system */
   --lx: 1;
@@ -74,7 +33,6 @@
      read sharp. Follows the light direction (--lx/--ly), so it lands on the
      same two walls as the soft highlight. Width in px, color = brightness. */
   --inset-rim-w: 2px;
-  --inset-rim-color: rgba(255, 255, 255, 1);
 
   /* Offset/Blur Tiers */
   --d-supercrisp-o: 3px;  /* shallowest press — small buttons, tags, chips */
@@ -85,12 +43,6 @@
   --d-medium-b: 15px;
   --d-large-o: 18px;
   --d-large-b: 18px;
-
-  /* Glass */
-  --glass-bg: rgba(255, 250, 240, 0.28);
-  --glass-bg-strong: rgba(255, 250, 240, 0.46);
-  --glass-border: rgba(255, 255, 255, 0.45);
-  --glass-edge: rgba(255, 255, 255, 0.70);
 
   /* Typography */
   --serif: "Playfair Display", "Playfair Display", Georgia, serif;
@@ -127,9 +79,6 @@
   --space-xl:      24px;
   --space-xxl:     32px;
   --space-section: 80px;
-
-  /* Wine — the single primary-action gradient. Reference the token, not the hex. */
-  --wine-grad: linear-gradient(145deg, #6E2638, #4B1A26);
 
   /* ── Mobile shell ───────────────────────────────────────────────
      Consumed by the mobile host so chrome height + safe areas are
@@ -589,7 +538,7 @@ body, html { margin: 0; padding: 0; }
 /* Active / applied state — toolbar control with a live filter/sort */
 .la-btn--soft.on {
   color: var(--wine);
-  background: var(--wine-tint, rgba(94,34,48,0.07));
+  background: var(--wine-tint);
   box-shadow: var(--sh-inset-crisp);
 }
 /* Inset — recessed icon / utility button on the bone ground */
@@ -1060,7 +1009,7 @@ body, html { margin: 0; padding: 0; }
   overflow: hidden;
   background:
     radial-gradient(ellipse 55% 90% at 96% -25%, rgba(255, 226, 168, 0.45), transparent 62%),
-    radial-gradient(ellipse 42% 70% at 1% 125%, rgba(94, 34, 48, 0.06), transparent 70%),
+    radial-gradient(ellipse 42% 70% at 1% 125%, hsl(var(--brand) / 0.06), transparent 70%),
     var(--paper);
   box-shadow: var(--sh-raised-large);
 }
@@ -1074,58 +1023,7 @@ body, html { margin: 0; padding: 0; }
    Applied via <html class="dark"> (useTheme / the dark-mode button).
    ═════════════════════════════════════════════════════════════════════════ */
 :root.dark {
-  /* Backgrounds & Surfaces — warm charcoal ladder */
-  --bg: #16120F;          /* page ground */
-  --bg-2: #1B1714;        /* sidebar / nav rail */
-  --chrome: #1B1714;      /* nav chrome alias */
-  --paper: #221D19;       /* elevated paper / hero band */
-  --surface: #1E1A16;     /* in-between — page bg, topbar, toolbars */
-  --card: #241F1B;        /* card surface */
-  --card-bright: #2A2420; /* polished hero */
-  --bone: #221D18;        /* prompt editor / preview writing surface */
-
-  /* Ink — warm off-whites */
-  --ink: #EAE3D7;
-  --ink-soft: #D7CDBE;
-  --mute: #A39A88;
-  --mute-2: #877E6D;
-
-  /* Borders — faint warm light on dark */
-  --line: rgba(225, 208, 178, 0.10);
-  --line-strong: rgba(225, 208, 178, 0.20);
-
-  /* Wine accent — brightened so it separates from the dark ground */
-  --wine: #B14A5C;
-  --wine-soft: #C25E72;
-  --wine-tint: rgba(177, 74, 92, 0.18);
-  --wine-glow: rgba(177, 74, 92, 0.32);
-  --wine-grad: linear-gradient(145deg, #B14A5C, #7E3343);
-
-  /* Status accents */
-  --good: #3FB57A;
-  --good-tint: rgba(63, 181, 122, 0.16);
-  --warn: #E6A23C;
-  --warn-tint: rgba(230, 162, 60, 0.16);
-
-  /* Pipeline stage colors — brightened for dark */
-  --stage-new: #8A77AB;
-  --stage-contacted: #6E97CC;
-  --stage-responded: #54AAAA;
-  --stage-multi: #74AB74;
-  --stage-qualified: #D0A954;
-  --stage-booked: #DCA146;
-  --stage-closed: #8A9674;
-  --stage-lost: #C26659;
-  --stage-dnd: #B3A488;
-
-  /* Glass */
-  --glass-bg: rgba(31, 26, 22, 0.42);
-  --glass-bg-strong: rgba(31, 26, 22, 0.64);
-  --glass-border: rgba(255, 255, 255, 0.08);
-  --glass-edge: rgba(255, 255, 255, 0.12);
-
-  /* Inset rim — much fainter in dark mode (a bright white line would blow out) */
-  --inset-rim-color: rgba(255, 240, 220, 0.10);
+  /* Dark colors live in variables.css. Only shadow recipes are re-declared here. */
 
   /* ─── Shadow tokens — same geometry, dark cast + faint warm light edge ─── */
   --sh-raised-crisp:

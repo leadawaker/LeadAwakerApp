@@ -27,7 +27,7 @@ export function ScopeChip({ scope, campaigns, allLabel, hiddenLabel }: {
     kind = "some";
   }
   const styles = {
-    all: { color: "var(--wine)", bg: "var(--wine-tint)", sh: "inset 0 0 0 1px rgba(94,34,48,0.14)" },
+    all: { color: "var(--wine)", bg: "var(--wine-tint)", sh: "inset 0 0 0 1px hsl(var(--brand) / 0.14)" },
     some: { color: "var(--warn)", bg: "var(--warn-tint)", sh: "none" },
     hidden: { color: "var(--mute)", bg: "var(--bg)", sh: "var(--sh-inset-super-crisp)" },
   }[kind];

@@ -18,7 +18,7 @@
   --color-foreground: hsl(var(--foreground));
   --color-bg-main: hsl(var(--bg-main));
 
-  --color-card: hsl(var(--card));
+  --color-card: var(--card);
   --color-card-foreground: hsl(var(--card-foreground));
 
   --color-popover: hsl(var(--popover));

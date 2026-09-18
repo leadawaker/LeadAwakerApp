@@ -32,7 +32,7 @@ function ScopePicker({ scope, onChange, campaigns }: { scope: KBScope; onChange:
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
-      <button type="button" onClick={() => setOpen((o) => !o)} className="row" style={{ gap: 7, padding: "6px 11px", borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", background: "var(--wine-tint)", boxShadow: "inset 0 0 0 1px rgba(94,34,48,0.14)", color: "var(--wine)", fontFamily: "var(--mono)", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.04em" }}>
+      <button type="button" onClick={() => setOpen((o) => !o)} className="row" style={{ gap: 7, padding: "6px 11px", borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", background: "var(--wine-tint)", boxShadow: "inset 0 0 0 1px hsl(var(--brand) / 0.14)", color: "var(--wine)", fontFamily: "var(--mono)", fontSize: 10.5, fontWeight: 700, letterSpacing: "0.04em" }}>
         {label}<span style={{ display: "flex" }}><ChevronDown size={11} /></span>
       </button>
       {open && (

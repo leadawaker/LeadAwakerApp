@@ -146,7 +146,7 @@ export function MonthGrid(p: DesktopCalendarProps) {
                   role="button"
                   tabIndex={0}
                   aria-label={t("selectDate", { date: iso })}
-                  style={{ borderLeft: di ? "1px solid var(--line)" : "none", padding: "7px 8px", minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", gap: 3, background: isToday ? "rgba(94,34,48,0.03)" : "transparent", opacity: inMonth ? 1 : 0.38 }}
+                  style={{ borderLeft: di ? "1px solid var(--line)" : "none", padding: "7px 8px", minHeight: 0, overflow: "hidden", display: "flex", flexDirection: "column", gap: 3, background: isToday ? "hsl(var(--brand) / 0.03)" : "transparent", opacity: inMonth ? 1 : 0.38 }}
                 >
                   <div style={{ display: "flex", justifyContent: "flex-end" }}>
                     <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", minWidth: 24, height: 24, borderRadius: "var(--r-button)", ...SERIF, fontSize: 18, fontWeight: isToday ? 700 : 400, color: isToday ? "var(--paper)" : "var(--ink-soft)", background: isToday ? "var(--wine)" : "transparent" }}>{cell.date.getDate()}</span>

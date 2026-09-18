@@ -95,7 +95,7 @@ export default function MobileTaskWeekStrip({ tasks, todayISO, categoryMap, onSe
                 </span>
               </div>
               {/* Body — flat with a subtle tint for today, matching desktop's DayColumn */}
-              <div style={{ flex: 1, padding: 8, display: "flex", flexDirection: "column", gap: 7, minHeight: 96, background: day.isToday ? "rgba(94,34,48,0.045)" : "transparent" }}>
+              <div style={{ flex: 1, padding: 8, display: "flex", flexDirection: "column", gap: 7, minHeight: 96, background: day.isToday ? "hsl(var(--brand) / 0.045)" : "transparent" }}>
                 {items.length === 0 ? (
                   <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", minHeight: 60, fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute-2)" }}>—</div>
                 ) : (

@@ -13,12 +13,7 @@ import type { DemoCopy } from "../copy";
  * acknowledged by the engine; nothing is drawn optimistically.
  */
 
-/**
- * White card surface. NOT the `bg-card` utility: `design-system.css` defines
- * `--card` as a hex while `tokens.css` maps `--color-card` to
- * `hsl(var(--card))`, so the utility resolves to `hsl(#FFFFFF)` — invalid, and
- * painted as transparent. The raw variable is a valid colour in both themes.
- */
+/** White card surface (valid in both themes). */
 const CARD_BG = { background: "var(--card)" } as const;
 
 /** Reads as an outcome a business owner recognises, not an enum. */
