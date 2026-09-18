@@ -3,10 +3,19 @@
  *
  * The layout encodes a tested finding (specs/demo-persona-library/plan.md, "A
  * Client is ENGLISH, except its terms"): everything the MODEL reads works in
- * English alone, because the model translates as it writes. Only the five term
- * lists are substituted verbatim into the opener with no model in the loop, so
- * only those get a slot per language. That is why the long fields below are a
- * single English column and the terms are a three-column grid.
+ * whatever language it was authored in alone, because the model translates as
+ * it writes (the engine's pick() resolves it lead-language-first, English
+ * next). Only the five term lists are substituted verbatim into the opener
+ * with no model in the loop, so only those get a slot per language.
+ *
+ * Persona fields still show a SINGLE box (not one per language): a Client is
+ * authored once, in one language (English by convention, but the
+ * website-scrape flow writes directly in the demo's own language — Zonneplan
+ * is NL-only, Moniz de Sá PT-only). The box defaults to whichever language
+ * actually has content instead of hardcoding "en", with a small toggle above
+ * it to switch languages when more than one is filled in. Without this, a
+ * non-English-only Client looks entirely empty here even though the engine
+ * reads it fine at runtime.
  *
  * Autosaves 1.5s after the last edit (mirrors useCampaignDetail.ts). Duplicate
  * and Delete live in the topbar's "..." menu (ClientActionsMenu.tsx), not here.
@@ -153,6 +162,10 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
   const [draft, setDraft] = useState<Draft | null>(null);
   const [originalDraft, setOriginalDraft] = useState<Draft | null>(null);
   const [saving, setSaving] = useState(false);
+  // Which language slot the Persona section currently shows/edits. Reset
+  // below whenever a different Client loads, defaulting to whichever
+  // language its content actually lives in.
+  const [personaLang, setPersonaLang] = useState<DemoLang>("en");
 
   const draftRef = useRef(draft);
   draftRef.current = draft;
@@ -173,6 +186,8 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
     const d = buildDraft(client);
     setDraft(d);
     setOriginalDraft(d);
+    const withContent = LANGS.filter((l) => TEXT_FIELDS.some(({ field }) => (d.text[field]?.[l] ?? "").trim()));
+    setPersonaLang(withContent.includes("en") ? "en" : withContent[0] ?? "en");
   }, [client?.niche]);
 
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -265,6 +280,11 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
 
   const languagesWithTerms = useMemo(
     () => (draft ? LANGS.filter((l) => TERM_GROUPS.some((g) => (draft.terms[g]?.[l] ?? "").trim())) : []),
+    [draft],
+  );
+
+  const languagesWithPersona = useMemo(
+    () => (draft ? LANGS.filter((l) => TEXT_FIELDS.some(({ field }) => (draft.text[field]?.[l] ?? "").trim())) : []),
     [draft],
   );
 
@@ -370,19 +390,46 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
         </div>
       </section>
 
-      {/* ── Everything the model reads: English is enough ── */}
+      {/* ── Everything the model reads: one language at a time ── */}
       <section className="neu-raised" style={{ padding: 22, borderRadius: "var(--r-card)" }}>
         <div className="eyebrow wine" style={{ marginBottom: 4 }}>{t("clients.personaTitle", "Persona")}</div>
-        <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 16, lineHeight: 1.5 }}>
+        <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 12, lineHeight: 1.5 }}>
           {t("clients.personaHint")}
         </p>
+        {/* Authored once, in whichever language it was written in (English by
+            convention, but a scraped Client may live in NL or PT only). This
+            switches which slot the boxes below show and edit; it never shows
+            three at once, unlike Words/Opener, because a Client's persona is
+            not normally written in more than one language at a time. */}
+        <div style={{ display: "flex", gap: 14, marginBottom: 16 }}>
+          {LANGS.map((l) => (
+            <button
+              key={l}
+              type="button"
+              onClick={() => setPersonaLang(l)}
+              style={{
+                ...labelStyle,
+                marginBottom: 0,
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                color: personaLang === l ? "var(--ink)" : "var(--mute-2)",
+                textDecoration: personaLang === l ? "underline" : "none",
+              }}
+            >
+              {l.toUpperCase()}
+              {!languagesWithPersona.includes(l) && <span style={{ opacity: 0.6 }}> {t("clients.empty", "(empty)")}</span>}
+            </button>
+          ))}
+        </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {TEXT_FIELDS.map(({ field, labelKey, rows }) => (
             <div key={field}>
               <label style={labelStyle}>{t(labelKey)}</label>
               <textarea
-                value={draft.text[field]?.en ?? ""}
-                onChange={(e) => setTextSlot(field, "en", e.target.value)}
+                value={draft.text[field]?.[personaLang] ?? ""}
+                onChange={(e) => setTextSlot(field, personaLang, e.target.value)}
                 rows={rows ?? 1}
                 style={inputStyle}
               />
