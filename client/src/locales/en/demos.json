@@ -92,7 +92,12 @@
     "websiteHint": "Reads their site and builds a Client with their real services, hours and area.",
     "notes": "Or paste the business details",
     "notesPlaceholder": "Paste what you know: services, area, hours, how they quote...",
-    "notesBuild": "Build from notes"
+    "notesBuild": "Build from notes",
+    "provider": "Built by",
+    "claudeModel": "Claude model",
+    "providerHint": "OpenAI takes over if Claude fails.",
+    "via": "(via {{provider}})",
+    "retry": "Retry"
   },
   "disclosure": {
     "off": "Off",

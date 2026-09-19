@@ -13,11 +13,14 @@ import {
   buildWhatsAppLink,
   buildDemoPageLink,
   generateNicheContext,
+  generateNicheContextStrict,
   listDemoServiceCampaigns,
   buildFallbackNicheContext,
   buildSolarNicheContext,
   type DemoScenario,
+  type NicheContext,
 } from "../demo-session";
+import { GenerationError } from "../demoGenerator/providers";
 import { getWebDemoConfig, updateWebDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
 import { captureSiteShot, shotExists, isPublicHttpUrl, normalizeUrl } from "../siteShot";
 import { db } from "../db";
@@ -242,10 +245,12 @@ export function registerDemoRoutes(app: Express): void {
         niche: z.string().trim().min(2).max(300).optional(),
         scenario: z.enum(["inquired", "deciding"]).optional().default("inquired"),
         market: z.enum(["uk", "us", "nl"]).optional(),
+        provider: z.enum(["claude", "openai"]).optional().default("claude"),
+        claudeModel: z.enum(["opus", "sonnet"]).optional().default("sonnet"),
       });
       const parsed = schema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
-      const { url, text, language, niche, scenario, market } = parsed.data;
+      const { url, text, language, niche, scenario, market, provider, claudeModel } = parsed.data;
       if (!url && !text) {
         return res.status(400).json({ message: "Give a website URL or paste the business details." });
       }
@@ -286,9 +291,22 @@ export function registerDemoRoutes(app: Express): void {
         return res.status(422).json({ message: "Could not determine a name for this Client. Pass `niche` explicitly." });
       }
 
-      const ctx =
-        (await generateNicheContext(nicheForGeneration, language, scenario as DemoScenario, market)) ||
-        buildFallbackNicheContext(nicheForGeneration, language, "inquired", market);
+      // No template fallback here: a failed generation used to save the generic
+      // template as if it were the Client (65 and 67 were saved that way).
+      // Now it fails loudly and saves nothing, and the page offers a retry.
+      let ctx: NicheContext;
+      let providerUsed: string;
+      try {
+        ({ ctx, providerUsed } = await generateNicheContextStrict(
+          nicheForGeneration, language, scenario as DemoScenario, market, { provider, claudeModel },
+        ));
+      } catch (err) {
+        return res.status(502).json({
+          message: (err as Error).message,
+          stage: err instanceof GenerationError ? err.stage : "generate",
+          retryable: true,
+        });
+      }
 
       // Facts from the site override the generated stand-ins. Empty scrape
       // fields deliberately leave the generated value in place.
@@ -336,6 +354,7 @@ export function registerDemoRoutes(app: Express): void {
       res.json({
         client: nicheKey,
         saved: saved.saved,
+        provider_used: providerUsed,
         screenshot,
         company_name: ctx.company_name,
         niche_label: ctx.niche_label,

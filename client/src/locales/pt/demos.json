@@ -92,7 +92,12 @@
     "websiteHint": "Lê o site deles e cria um Client com os serviços, horários e região reais.",
     "notes": "Ou cole os dados do negócio",
     "notesPlaceholder": "Cole o que você sabe: serviços, região, horários, orçamentos...",
-    "notesBuild": "Criar das notas"
+    "notesBuild": "Criar das notas",
+    "provider": "Gerado por",
+    "claudeModel": "Modelo Claude",
+    "providerHint": "A OpenAI assume se o Claude falhar.",
+    "via": "(via {{provider}})",
+    "retry": "Tentar de novo"
   },
   "disclosure": {
     "off": "Desligado",

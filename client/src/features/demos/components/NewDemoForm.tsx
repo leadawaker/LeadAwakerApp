@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { apiFetch } from "@/lib/apiUtils";
 import { useDemoClients, type DemoLang } from "@/features/campaigns/api/demoClientsApi";
 import { ProspectDemoPanel } from "./ProspectDemoPanel";
+import { ProviderToggle, providerLabel, useGenProvider } from "./ProviderToggle";
 
 
 
@@ -50,6 +51,11 @@ export function NewDemoForm() {
   const [notes, setNotes] = useState("");
   const [scanning, setScanning] = useState(false);
   const [scanNote, setScanNote] = useState("");
+  const gen = useGenProvider();
+  // The last scan that failed at the generation step, so Retry re-runs it as
+  // it was. Null when there is nothing worth retrying (a scrape that could not
+  // read the site will not read it on a second try either).
+  const [retryScan, setRetryScan] = useState<boolean | null>(null);
 
   // Build a Client from the prospect's own website, then select it. The scrape
   // supplies the facts (services, hours, area); the niche generator supplies
@@ -62,6 +68,7 @@ export function NewDemoForm() {
     setScanning(true);
     setScanNote("");
     setError("");
+    setRetryScan(null);
     try {
       const res = await apiFetch("/api/demo/clients/from-website", {
         method: "POST",
@@ -70,17 +77,21 @@ export function NewDemoForm() {
           ...(fromNotes ? { text } : { url }),
           language,
           ...(language === "en" && market ? { market } : {}),
+          provider: gen.provider,
+          ...(gen.provider === "claude" ? { claudeModel: gen.claudeModel } : {}),
         }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) {
         setError(body?.message || t("new.websiteFailed"));
+        if (body?.retryable) setRetryScan(fromNotes);
         return;
       }
       setClientNiche(body.client);
       setNiche("");
       setScanNote(
-        t("new.websiteDone", { client: body.client, pages: (body.pages_scraped ?? []).length }),
+        t("new.websiteDone", { client: body.client, pages: (body.pages_scraped ?? []).length }) +
+          (providerLabel(body.provider_used) ? ` ${t("new.via", { provider: providerLabel(body.provider_used) })}` : ""),
       );
     } catch {
       setError(t("new.websiteFailed"));
@@ -156,6 +167,9 @@ export function NewDemoForm() {
           <p style={{ marginTop: 4, fontSize: 11, color: "var(--mute)" }}>
             {scanNote || t("new.websiteHint")}
           </p>
+          <div style={{ marginTop: 8 }}>
+            <ProviderToggle gen={gen} disabled={scanning} />
+          </div>
 
           {/* The escape hatch. Some sites answer a scraper with 403 or render
               only in JavaScript, and the presenter usually knows the business
@@ -255,6 +269,27 @@ export function NewDemoForm() {
       {error && (
         <p className="mt-3" style={{ fontSize: 12.5, color: "var(--danger, #9A3B2E)" }}>
           {error}
+          {retryScan !== null && (
+            <button
+              type="button"
+              onClick={() => void scanWebsite(retryScan)}
+              disabled={scanning}
+              style={{
+                marginLeft: 8,
+                height: 24,
+                padding: "0 10px",
+                borderRadius: "var(--r-surface)",
+                border: "1px solid var(--line)",
+                background: "var(--bg)",
+                color: "var(--ink)",
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: scanning ? "default" : "pointer",
+              }}
+            >
+              {scanning ? t("new.websiteScanning") : t("new.retry")}
+            </button>
+          )}
         </p>
       )}
 

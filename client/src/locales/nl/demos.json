@@ -92,7 +92,12 @@
     "websiteHint": "Leest hun site en bouwt een Client met hun echte diensten, openingstijden en werkgebied.",
     "notes": "Of plak de bedrijfsgegevens",
     "notesPlaceholder": "Plak wat je weet: diensten, werkgebied, openingstijden, offertes...",
-    "notesBuild": "Bouw uit notities"
+    "notesBuild": "Bouw uit notities",
+    "provider": "Gebouwd door",
+    "claudeModel": "Claude-model",
+    "providerHint": "OpenAI neemt het over als Claude faalt.",
+    "via": "(via {{provider}})",
+    "retry": "Opnieuw"
   },
   "disclosure": {
     "off": "Uit",

@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { db } from "./db";
 import { leads, campaigns, promptLibrary, nicheVocabulary } from "@shared/schema";
 import { eq, isNotNull } from "drizzle-orm";
+import { runJson, type ClaudeModel, type GenProvider } from "./demoGenerator/providers";
 
 export const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
 
@@ -395,22 +396,19 @@ The whole ladder, labels included, must be in the output language. The example a
 
 Return ONLY valid JSON, no markdown.`;
 
-export async function generateNicheContext(
+export interface GenerateOptions {
+  /** Default "openai" keeps the public flow and older callers as they were. */
+  provider?: GenProvider;
+  claudeModel?: ClaudeModel;
+}
+
+/** Row 91 (or its in-file copy) plus the language, market and category lines. */
+async function buildNicheGeneratorPrompt(
   niche: string,
   language: "en" | "nl" | "pt",
-  scenario: DemoScenario = "inquired",
+  scenario: DemoScenario,
   market?: DemoMarket,
-): Promise<NicheContext | null> {
-  const apiKey = process.env.OPEN_AI_API_KEY;
-  if (!apiKey) {
-    // Every return-null path in this function logs. A silent null is
-    // indistinguishable at the call site (server/routes/demo.ts) from a
-    // successful generation, so the demo quietly serves the generic template
-    // and nobody notices for hours. Log loudly, grep later.
-    console.error("[demo-niche] no OPEN_AI_API_KEY set, falling back to the generic template");
-    return null;
-  }
-
+): Promise<{ system: string; user: string }> {
   // "Brazilian Portuguese", not bare "Portuguese": asking for "Portuguese"
   // reliably yields EUROPEAN Portuguese ("esta a pensar", "paragens", "cabina"),
   // which a Brazilian reader clocks instantly as foreign. Brazilian PT is the
@@ -471,185 +469,175 @@ export async function generateNicheContext(
     deciding: "The lead already received a quote/proposal and is actively deciding between options.",
   }[scenario];
 
+  const user = `Business niche: ${niche}\nOutput language: ${langLabel}\nTarget market: ${profile.name} (${profile.currency})\nLead scenario: ${scenarioHint}`;
+  return { system, user };
+}
+
+/** Whether a raw generation is complete enough to become a Client. */
+function validateNicheContext(d: any): string | null {
+  if (!d || typeof d !== "object" || Array.isArray(d)) return "not an object";
+  if (typeof d.first_message !== "string" || !d.first_message.trim()) return "first_message is missing";
+  for (const key of ["opener_phrase", "service_name", "niche_label"]) {
+    if (typeof d[key] !== "string" || !d[key].trim()) return `${key} is missing`;
+  }
+  const ladder = d.scoping_ladder;
+  const slots = Array.isArray(ladder)
+    ? ladder.length
+    : (String(ladder || "").match(/^\s*SLOT\s*\d/gim) || []).length;
+  if (slots < 4 || slots > 7) return `scoping_ladder has ${slots} slots, expected 4 to 7`;
+  return null;
+}
+
+/** Coerce a raw generation into the NicheContext shape the engine expects. */
+function normalizeGenerated(
+  parsed: NicheContext,
+  niche: string,
+  language: "en" | "nl" | "pt",
+  scenario: DemoScenario,
+  market?: DemoMarket,
+): NicheContext {
+  parsed.raw = niche;
+  // Coerce kb from array to newline string if the model returned a list.
+  if (Array.isArray((parsed as any).kb)) (parsed as any).kb = (parsed as any).kb.join("\n");
+  // The generator prompt asks for scoping_ladder as a plain SLOT-1/Purpose/Ask/
+  // Options text block, but the model sometimes returns it as a JSON array of
+  // per-slot objects instead (it IS already writing JSON, so this drifts easily).
+  // Reformat back into the same plain-text shape Niche_Vocabulary.scoping_ladder
+  // uses, rather than a bare Array.prototype.toString() ("[object Object],...").
+  if (Array.isArray((parsed as any).scoping_ladder)) {
+    (parsed as any).scoping_ladder = (parsed as any).scoping_ladder
+      .map((slot: unknown, i: number) => {
+        if (typeof slot === "string") return slot;
+        if (slot && typeof slot === "object") {
+          return Object.entries(slot as Record<string, unknown>)
+            .map(([key, value]) => {
+              const val = typeof value === "string" ? value : JSON.stringify(value);
+              return /^slot/i.test(key) ? `SLOT ${i + 1} - ${val}` : `${key}: ${val}`;
+            })
+            .join("\n");
+        }
+        return String(slot);
+      })
+      .join("\n\n");
+  }
+  // Ensure {agent_name} and {first_name} placeholders are present
+  if (parsed.first_message && !parsed.first_message.includes("{agent_name}")) {
+    parsed.first_message = parsed.first_message.replace(/\bSophie\b/, "{agent_name}");
+  }
+  if (parsed.first_message && !parsed.first_message.includes("{first_name}")) {
+    // Try to replace a literal name in the "same <word> who/die/que" pattern first.
+    // GPT sometimes writes "same Alex who" instead of "same {first_name} who".
+    const fixed = parsed.first_message.replace(
+      /\b(same|zelfde|mesmo|mesma)\s+\S+\s+(who|die|que)\b/gi,
+      "$1 {first_name} $2",
+    );
+    if (fixed.includes("{first_name}")) {
+      parsed.first_message = fixed;
+    } else {
+      parsed.first_message = parsed.first_message.trimEnd().replace(/\??\s*$/, "") +
+        `, is this {first_name}?`;
+    }
+  }
+  // Guarantee niche-term keys exist even if the model omitted them.
+  parsed.advisor_term = (parsed.advisor_term || "").trim();
+  parsed.project_term = (parsed.project_term || parsed.niche_label || niche).trim();
+  parsed.proposal_term = (parsed.proposal_term || "").trim();
+  parsed.visit_term = (parsed.visit_term || "").trim();
+  parsed.decision_term = (parsed.decision_term || "").trim();
+  // {opener_phrase} is substituted into Prompt 93's examples as well as the
+  // opener, so an undefined here would render as an empty gap mid-sentence.
+  parsed.opener_phrase = (parsed.opener_phrase || parsed.niche_label || niche).trim();
+  // NEVER leave this empty. The comment that used to sit here claimed a blank
+  // ladder lets the engine's __default__ (kitchen) ladder take over. It does
+  // not, and the truth is worse: the demo overlay in the engine
+  // (src/automations/conversation/prompt_builder.py, `_set`) skips empty
+  // values, and the Niche_Vocabulary packs are merged onto the campaign
+  // BEFORE the overlay runs. So an empty ladder here inherits whatever ladder
+  // the underlying demo campaign carries, which for campaign 60 is Solar
+  // Panels. A failed dental-implants generation would then interrogate the
+  // visitor about roof faces and battery storage.
+  // A generic on-topic ladder is strictly better than another trade's ladder.
+  parsed.scoping_ladder =
+    (parsed.scoping_ladder || "").toString().trim() ||
+    buildGenericScopingLadder(parsed.niche_label || niche, language);
+  parsed.kb = (parsed.kb || "").toString();
+  // Empty is fine here, unlike scoping_ladder: the engine's overlay skips
+  // empty values, so a missing context just leaves the campaign's own
+  // (usually blank), and the ladder starts from slot one. That is the
+  // pre-existing behaviour, not a broken demo.
+  parsed.enquiry_context = (parsed.enquiry_context || "").toString().trim();
+  // Same for the quote half, with one extra step: the model is asked for
+  // several short lines and may return them as an array.
+  const q = (parsed as any).quote_context;
+  parsed.quote_context = (Array.isArray(q) ? q.join("\n") : (q || "").toString()).trim();
+  // Opener halves. Single-line by contract, but coerce arrays the same way:
+  // the model occasionally returns a one-element list for a short string.
+  // Left empty when absent — personalize_message then falls back to the
+  // niche's own project term rather than rendering a hole in message one.
+  for (const key of ["quote_subject", "quote_when"] as const) {
+    const v = (parsed as any)[key];
+    parsed[key] = (Array.isArray(v) ? v.join(" ") : (v || "").toString()).trim();
+  }
+  // Example packs: coerce array output to newline strings; empty is fine
+  // (the engine then keeps the __default__ packs untouched).
+  for (const key of ["niche_question_bank", "niche_objection_examples"] as const) {
+    const v = (parsed as any)[key];
+    (parsed as any)[key] = (Array.isArray(v) ? v.join("\n") : (v || "").toString()).trim();
+  }
+  parsed.emoji = (parsed.emoji || "").toString().trim() || undefined;
+  parsed.category = (parsed.category || "").toString().trim() || undefined;
+  return applyDemoDefaults(parsed, language, scenario, market);
+}
+
+/**
+ * Generate a Client's niche context. Throws GenerationError when every
+ * provider failed; it never falls back to a template, so a caller that saves
+ * the result saves a real generation or nothing.
+ */
+export async function generateNicheContextStrict(
+  niche: string,
+  language: "en" | "nl" | "pt",
+  scenario: DemoScenario = "inquired",
+  market?: DemoMarket,
+  opts: GenerateOptions = {},
+): Promise<{ ctx: NicheContext; providerUsed: string }> {
+  const { system, user } = await buildNicheGeneratorPrompt(niche, language, scenario, market);
+  const { data, providerUsed } = await runJson({
+    system,
+    user,
+    provider: opts.provider ?? "openai",
+    claudeModel: opts.claudeModel ?? "sonnet",
+    validate: validateNicheContext,
+    stage: "generate",
+    openai: {
+      // gpt-5.6-terra, was luna, was gpt-4o-mini (4o-mini wrote formal Dutch
+      // "u" and missed real price drivers).
+      model: "gpt-5.6-terra",
+      // Reasoning tokens count against this budget. Measured on row 91 for
+      // "home lifts": pt 2139 completion / 890 reasoning, so 6000 leaves ~2.8x.
+      maxTokens: 6000,
+      // Measured 15-20s on luna; 90s leaves room for terra's slow days.
+      timeoutMs: 90_000,
+    },
+  });
+  return { ctx: normalizeGenerated(data as NicheContext, niche, language, scenario, market), providerUsed };
+}
+
+/**
+ * The older, forgiving form: null on failure, so the public demo flow can
+ * fall back to the generic template. Logs loudly, since a silent null looks
+ * like success at the call site.
+ */
+export async function generateNicheContext(
+  niche: string,
+  language: "en" | "nl" | "pt",
+  scenario: DemoScenario = "inquired",
+  market?: DemoMarket,
+  opts: GenerateOptions = {},
+): Promise<NicheContext | null> {
   try {
-    const controller = new AbortController();
-    // 60s, was 20s. gpt-5.6-luna reasons before it answers, so this call got much
-    // slower: measured 15.6s (en), 18.8s (nl), 20.1s (pt) on the real row 91
-    // prompt. The Portuguese run ALREADY EXCEEDED the old 20s abort, i.e. bumping
-    // the model without this line would have aborted pt demos outright.
-    const timer = setTimeout(() => controller.abort(), 60000);
-    const res = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        // gpt-5.6-terra, was gpt-5.6-luna, was gpt-4o-mini. 4o-mini was the residual
-        // quality ceiling on this path: it wrote formal Dutch "u" against campaign
-        // 60's "je" and missed real price drivers even after two rounds of explicit
-        // instruction were added to row 91. luna fixed that but sits a tier below
-        // terra; moved up for the extra quality on the same reasoning-family API
-        // (no temperature, max_completion_tokens). Not yet re-measured for
-        // reasoning-token spend against the 6000 budget below, sized off luna.
-        model: "gpt-5.6-terra",
-        messages: [
-          { role: "system", content: system },
-          { role: "user", content: `Business niche: ${niche}\nOutput language: ${langLabel}\nTarget market: ${profile.name} (${profile.currency})\nLead scenario: ${scenarioHint}` },
-        ],
-        // Row 91 (universal_demo_niche_generator) asks for ~20 keys including
-        // niche_question_bank, niche_objection_examples and the 5-7 slot
-        // scoping_ladder. Measured need for a full non-truncated response: ~706
-        // completion tokens (dental implants, en). 600 truncated every response
-        // mid-JSON (finish_reason "length"), silently discarding the whole
-        // generation (JSON.parse throws, caught below, falls back to the generic
-        // template).
-        // Why 6000: see the max_completion_tokens note below. Historical: 1400 was sized on ENGLISH.
-        // The same 7-slot ladder in Dutch measures ~478 tokens against ~418 in
-        // English, so the real margin in the primary market language was only
-        // ~1.2-1.4x, not the 2x the old comment claimed.
-        //
-        // max_completion_tokens, NOT max_tokens: gpt-5.6-luna rejects max_tokens
-        // outright ("Unsupported parameter ... use max_completion_tokens instead").
-        // 6000 and not 2500 because this model spends REASONING tokens that also
-        // count against this budget. Measured on the real row 91 prompt for
-        // "home lifts": en 1620 completion / 485 reasoning, nl 2105 / 853,
-        // pt 2139 / 890. At the old 2500 the Portuguese path had only ~1.17x
-        // headroom and reasoning spend is variable, so a truncated demo was a
-        // matter of time. 6000 restores ~2.8x on the worst measured language.
-        // Row 91's own max_tokens DB column (400) is not read anywhere in this
-        // file; this literal is the only knob.
-        max_completion_tokens: 6000,
-        // temperature is DELIBERATELY ABSENT: gpt-5.6-luna accepts only the
-        // default (1) and 400s on any explicit value, including the 0.7 that
-        // used to be here.
-        // Guarantees parseable JSON. Without it a fenced ```json response
-        // (which this file, unlike scripts/prompt93/generate_ladders.js, never
-        // strips) throws in JSON.parse and silently discards the generation.
-        // Deliberately json_object and NOT json_schema: a strict schema would
-        // freeze row 91's key set into this file, so adding a key from the
-        // prompt-library UI would silently drop it. That trades one silent
-        // failure for a worse one. Shape drift within valid JSON is still
-        // handled by the kb / scoping_ladder coercions below.
-        response_format: { type: "json_object" },
-      }),
-    });
-    clearTimeout(timer);
-    if (!res.ok) {
-      console.error(
-        `[demo-niche] OpenAI HTTP ${res.status} for niche "${niche}" (${language}), falling back to the generic template:`,
-        (await res.text().catch(() => "")).slice(0, 300),
-      );
-      return null;
-    }
-    const json = await res.json() as any;
-    const finishReason = json?.choices?.[0]?.finish_reason;
-    if (finishReason === "length") {
-      // The response is truncated mid-JSON, so the JSON.parse below will throw
-      // and the catch will return null. Name the real cause here: without this
-      // line the only symptom is a demo that quietly serves generic copy.
-      console.error(
-        `[demo-niche] response truncated (finish_reason=length) for niche "${niche}" (${language}). Raise max_tokens.`,
-      );
-    }
-    const raw = (json?.choices?.[0]?.message?.content || "").trim();
-    const parsed = JSON.parse(raw) as NicheContext;
-    parsed.raw = niche;
-    // Coerce kb from array to newline string if the model returned a list.
-    if (Array.isArray((parsed as any).kb)) (parsed as any).kb = (parsed as any).kb.join("\n");
-    // The generator prompt asks for scoping_ladder as a plain SLOT-1/Purpose/Ask/
-    // Options text block, but the model sometimes returns it as a JSON array of
-    // per-slot objects instead (it IS already writing JSON, so this drifts easily).
-    // Reformat back into the same plain-text shape Niche_Vocabulary.scoping_ladder
-    // uses, rather than a bare Array.prototype.toString() ("[object Object],...").
-    if (Array.isArray((parsed as any).scoping_ladder)) {
-      (parsed as any).scoping_ladder = (parsed as any).scoping_ladder
-        .map((slot: unknown, i: number) => {
-          if (typeof slot === "string") return slot;
-          if (slot && typeof slot === "object") {
-            return Object.entries(slot as Record<string, unknown>)
-              .map(([key, value]) => {
-                const val = typeof value === "string" ? value : JSON.stringify(value);
-                return /^slot/i.test(key) ? `SLOT ${i + 1} - ${val}` : `${key}: ${val}`;
-              })
-              .join("\n");
-          }
-          return String(slot);
-        })
-        .join("\n\n");
-    }
-    // Ensure {agent_name} and {first_name} placeholders are present
-    if (parsed.first_message && !parsed.first_message.includes("{agent_name}")) {
-      parsed.first_message = parsed.first_message.replace(/\bSophie\b/, "{agent_name}");
-    }
-    if (parsed.first_message && !parsed.first_message.includes("{first_name}")) {
-      // Try to replace a literal name in the "same <word> who/die/que" pattern first.
-      // GPT sometimes writes "same Alex who" instead of "same {first_name} who".
-      const fixed = parsed.first_message.replace(
-        /\b(same|zelfde|mesmo|mesma)\s+\S+\s+(who|die|que)\b/gi,
-        "$1 {first_name} $2",
-      );
-      if (fixed.includes("{first_name}")) {
-        parsed.first_message = fixed;
-      } else {
-        parsed.first_message = parsed.first_message.trimEnd().replace(/\??\s*$/, "") +
-          `, is this {first_name}?`;
-      }
-    }
-    // Guarantee niche-term keys exist even if the model omitted them.
-    parsed.advisor_term = (parsed.advisor_term || "").trim();
-    parsed.project_term = (parsed.project_term || parsed.niche_label || niche).trim();
-    parsed.proposal_term = (parsed.proposal_term || "").trim();
-    parsed.visit_term = (parsed.visit_term || "").trim();
-    parsed.decision_term = (parsed.decision_term || "").trim();
-    // {opener_phrase} is substituted into Prompt 93's examples as well as the
-    // opener, so an undefined here would render as an empty gap mid-sentence.
-    parsed.opener_phrase = (parsed.opener_phrase || parsed.niche_label || niche).trim();
-    // NEVER leave this empty. The comment that used to sit here claimed a blank
-    // ladder lets the engine's __default__ (kitchen) ladder take over. It does
-    // not, and the truth is worse: the demo overlay in the engine
-    // (src/automations/conversation/prompt_builder.py, `_set`) skips empty
-    // values, and the Niche_Vocabulary packs are merged onto the campaign
-    // BEFORE the overlay runs. So an empty ladder here inherits whatever ladder
-    // the underlying demo campaign carries, which for campaign 60 is Solar
-    // Panels. A failed dental-implants generation would then interrogate the
-    // visitor about roof faces and battery storage.
-    // A generic on-topic ladder is strictly better than another trade's ladder.
-    parsed.scoping_ladder =
-      (parsed.scoping_ladder || "").toString().trim() ||
-      buildGenericScopingLadder(parsed.niche_label || niche, language);
-    parsed.kb = (parsed.kb || "").toString();
-    // Empty is fine here, unlike scoping_ladder: the engine's overlay skips
-    // empty values, so a missing context just leaves the campaign's own
-    // (usually blank), and the ladder starts from slot one. That is the
-    // pre-existing behaviour, not a broken demo.
-    parsed.enquiry_context = (parsed.enquiry_context || "").toString().trim();
-    // Same for the quote half, with one extra step: the model is asked for
-    // several short lines and may return them as an array.
-    const q = (parsed as any).quote_context;
-    parsed.quote_context = (Array.isArray(q) ? q.join("\n") : (q || "").toString()).trim();
-    // Opener halves. Single-line by contract, but coerce arrays the same way:
-    // the model occasionally returns a one-element list for a short string.
-    // Left empty when absent — personalize_message then falls back to the
-    // niche's own project term rather than rendering a hole in message one.
-    for (const key of ["quote_subject", "quote_when"] as const) {
-      const v = (parsed as any)[key];
-      parsed[key] = (Array.isArray(v) ? v.join(" ") : (v || "").toString()).trim();
-    }
-    // Example packs: coerce array output to newline strings; empty is fine
-    // (the engine then keeps the __default__ packs untouched).
-    for (const key of ["niche_question_bank", "niche_objection_examples"] as const) {
-      const v = (parsed as any)[key];
-      (parsed as any)[key] = (Array.isArray(v) ? v.join("\n") : (v || "").toString()).trim();
-    }
-    parsed.emoji = (parsed.emoji || "").toString().trim() || undefined;
-    parsed.category = (parsed.category || "").toString().trim() || undefined;
-    return applyDemoDefaults(parsed, language, scenario, market);
+    return (await generateNicheContextStrict(niche, language, scenario, market, opts)).ctx;
   } catch (err) {
-    // Covers the abort timeout, network failures and (most often) JSON.parse on
-    // a truncated or fenced response. If finish_reason was "length" the line
-    // above already named the real cause.
     console.error(
       `[demo-niche] generation failed for niche "${niche}" (${language}), falling back to the generic template:`,
       (err as Error)?.message,

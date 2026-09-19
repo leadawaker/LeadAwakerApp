@@ -7,7 +7,10 @@
  * Designed for short, fast completions (< 30s). No streaming, no thinking.
  */
 
-import { execFile } from "child_process";
+import { execFile, spawn } from "child_process";
+import { mkdtempSync } from "fs";
+import { tmpdir } from "os";
+import { join } from "path";
 
 const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 const CLAUDE_TIMEOUT_MS = 30_000;
@@ -257,4 +260,86 @@ export async function completeTextLarge(
   if (claude) return claude;
 
   return tryOpenAILarge(prompt, systemPrompt, opts);
+}
+
+// An empty folder to run structured Claude calls from. The CLI loads
+// CLAUDE.md files from its working directory upwards, so running from the repo
+// would hand every generation this project's coding rules.
+let neutralDir: string | null = null;
+function neutralCwd(): string {
+  if (!neutralDir) neutralDir = mkdtempSync(join(tmpdir(), "la-claude-"));
+  return neutralDir;
+}
+
+/**
+ * One structured completion through the Claude CLI (subscription), for long
+ * generations with a real system prompt. The user text goes over stdin, so
+ * size is not limited by argv.
+ *
+ * Isolation, verified by hand on 2026-09-19 (asked the model to list its
+ * instructions): `--setting-sources ""` drops the user and project CLAUDE.md
+ * files and keeps the subscription login; `--strict-mcp-config` plus
+ * ENABLE_CLAUDEAI_MCP_SERVERS=false drops the claude.ai connectors' prompts.
+ *
+ * Returns the model's result text, or an error message. Never throws.
+ */
+export async function claudeJson(opts: {
+  system: string;
+  user: string;
+  model: "opus" | "sonnet";
+  timeoutMs: number;
+  jsonSchema?: object;
+}): Promise<{ text: string } | { error: string }> {
+  const args = [
+    "-p",
+    "--model", opts.model,
+    "--system-prompt", opts.system,
+    "--setting-sources", "",
+    "--strict-mcp-config",
+    "--tools", "",
+    "--output-format", "json",
+    "--no-session-persistence",
+    "--max-turns", "1",
+  ];
+  if (opts.jsonSchema) args.push("--json-schema", JSON.stringify(opts.jsonSchema));
+
+  return new Promise((resolve) => {
+    let out = "";
+    let err = "";
+    let settled = false;
+    const done = (r: { text: string } | { error: string }) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(r);
+    };
+    const child = spawn(CLAUDE_BIN, args, {
+      cwd: neutralCwd(),
+      env: { ...cleanClaudeEnv(), ENABLE_CLAUDEAI_MCP_SERVERS: "false" },
+      stdio: ["pipe", "pipe", "pipe"],
+    });
+    const timer = setTimeout(() => {
+      child.kill("SIGTERM");
+      done({ error: `Claude ${opts.model} timed out after ${Math.round(opts.timeoutMs / 1000)}s` });
+    }, opts.timeoutMs);
+    child.stdout.on("data", (d) => { out += d; });
+    child.stderr.on("data", (d) => { err += d; });
+    child.on("error", (e) => done({ error: `Claude CLI failed to start: ${e.message}` }));
+    child.on("close", (code) => {
+      let envelope: any = null;
+      try { envelope = JSON.parse(out); } catch { /* reported below */ }
+      if (!envelope) {
+        return done({ error: `Claude CLI exited ${code}: ${(err || out).trim().slice(0, 300) || "no output"}` });
+      }
+      if (envelope.is_error) {
+        return done({ error: `Claude ${opts.model}: ${String(envelope.result || envelope.subtype || "error").slice(0, 300)}` });
+      }
+      // With --json-schema the answer arrives as structured_output; otherwise
+      // it is the result text.
+      if (envelope.structured_output) return done({ text: JSON.stringify(envelope.structured_output) });
+      const text = typeof envelope.result === "string" ? envelope.result.trim() : "";
+      done(text ? { text } : { error: `Claude ${opts.model} returned an empty answer` });
+    });
+    child.stdin.end(opts.user);
+  });
 }
