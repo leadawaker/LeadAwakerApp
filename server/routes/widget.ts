@@ -14,7 +14,7 @@
 import express, { type Express, type Request, type Response } from "express";
 import { randomBytes } from "crypto";
 import path from "path";
-import { eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, pool } from "../db";
 import { widgetConfigs, campaigns as campaignsTable, accounts, nicheVocabulary, type WidgetConfig } from "@shared/schema";
@@ -98,8 +98,10 @@ async function loadKey(key: string): Promise<WidgetConfig | null> {
 }
 
 // ── Caps ─────────────────────────────────────────────────────────────────────
-// Per-IP throttle on first contact only (the expensive part is the AI turn, and
+// Per-IP throttle on real messages only (the expensive part is the AI turn, and
 // every turn belongs to a visitor id we already rate-limit per key per day).
+// The frame's background polls are not counted: an open chat polls every few
+// seconds and would spend the whole allowance in minutes.
 const ipHits = new Map<string, { count: number; resetAt: number }>();
 const IP_WINDOW_MS = 60 * 60 * 1000;
 const IP_MAX = 60;
@@ -130,17 +132,19 @@ function today(): string {
  * Count one billable message against the key's daily cap.
  * Returns false when the cap is already spent. The counter resets by date stamp
  * rather than by a timer, so a restart never hands out a fresh allowance.
+ * One UPDATE decides and counts together, so concurrent messages cannot both
+ * read the same total and overshoot the cap.
  */
 async function consumeDailyMessage(cfg: WidgetConfig): Promise<boolean> {
   const day = today();
   const cap = cfg.maxMessagesPerDay ?? 500;
-  const used = cfg.messagesDay === day ? (cfg.messagesToday ?? 0) : 0;
-  if (used >= cap) return false;
-  await db
+  const usedToday = sql`CASE WHEN ${widgetConfigs.messagesDay} = ${day} THEN COALESCE(${widgetConfigs.messagesToday}, 0) ELSE 0 END`;
+  const rows = await db
     .update(widgetConfigs)
-    .set({ messagesToday: used + 1, messagesDay: day, updatedAt: new Date() })
-    .where(eq(widgetConfigs.id, cfg.id));
-  return true;
+    .set({ messagesToday: sql`${usedToday} + 1`, messagesDay: day, updatedAt: new Date() })
+    .where(and(eq(widgetConfigs.id, cfg.id), sql`${usedToday} < ${cap}`))
+    .returning({ id: widgetConfigs.id });
+  return rows.length > 0;
 }
 
 // ── Public config handed to the frame ────────────────────────────────────────
@@ -306,8 +310,11 @@ export function registerWidgetRoutes(app: Express) {
       return res.status(409).json({ code: "no_campaign", message: "This chat is not configured yet." });
     }
 
+    // The chat frame is served from our own host and calls this route
+    // same-origin, so its Origin is ours, not the embedding site's. The frame
+    // route already checked the embedder, and frame-ancestors enforces it.
     const host = requestHost(req);
-    if (host && !domainAllowed(host, cfg.allowedDomains)) {
+    if (host && host !== req.hostname && !domainAllowed(host, cfg.allowedDomains)) {
       return res.status(403).json({ code: "domain_not_allowed", message: "This chat is not enabled for this site." });
     }
 
@@ -316,22 +323,20 @@ export function registerWidgetRoutes(app: Express) {
       return res.status(400).json({ code: "bad_visitor", message: "Invalid session." });
     }
 
-    const ip = String(req.ip || req.socket.remoteAddress || "unknown");
-    if (!checkIpRate(ip)) {
-      return res.status(429).json({ code: "rate_limited", message: "Too many requests. Try again later." });
-    }
-
-    // Only a real turn costs money, so only a real turn spends the daily budget.
-    if (req.method === "POST" && (segment === "message" || segment === "voice")) {
+    // Only a real turn costs money, so only a real turn counts against the IP
+    // and spends the daily budget (after every cheap check has passed).
+    const billable = req.method === "POST" && (segment === "message" || segment === "voice");
+    if (billable) {
+      const ip = String(req.ip || req.socket.remoteAddress || "unknown");
+      if (!checkIpRate(ip)) {
+        return res.status(429).json({ code: "rate_limited", message: "Too many requests. Try again later." });
+      }
       if (segment === "message") {
         const text = String(req.body?.text || "");
         if (!text.trim()) return res.status(400).json({ code: "empty", message: "Say something first." });
         if (text.length > MAX_TEXT_CHARS) {
           return res.status(413).json({ code: "too_long", message: "That message is too long." });
         }
-      }
-      if (!(await consumeDailyMessage(cfg))) {
-        return res.status(429).json({ code: "daily_cap", message: "This chat has reached today's limit." });
       }
     }
 
@@ -351,6 +356,9 @@ export function registerWidgetRoutes(app: Express) {
 
     if (segment === "voice" && Buffer.byteLength(body ?? "") > MAX_VOICE_BYTES) {
       return res.status(413).json({ code: "audio_too_large", message: "That recording is too long." });
+    }
+    if (billable && !(await consumeDailyMessage(cfg))) {
+      return res.status(429).json({ code: "daily_cap", message: "This chat has reached today's limit." });
     }
 
     // Rebuilt from validated values rather than forwarded, so req.query cannot

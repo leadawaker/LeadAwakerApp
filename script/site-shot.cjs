@@ -23,6 +23,8 @@ const { execFile } = require("child_process");
 const { promisify } = require("util");
 const fs = require("fs/promises");
 const path = require("path");
+const dns = require("dns").promises;
+const { isIP } = require("net");
 
 const execFileAsync = promisify(execFile);
 
@@ -32,6 +34,65 @@ const DISMISS_RE = /(sluiten|close|weiger|reject|decline|necessary|noodzakelijk|
 const VIEWPORT = { width: 1280, height: 800 };
 const CAPTURE_HEIGHT = 1600;       // two screens: hero plus what follows it
 const NAV_TIMEOUT = 30000;
+
+// ── Keeping the browser on the public internet ───────────────────────────────
+// The submitted URL is checked by server/siteShot.ts, but a public page can
+// redirect to, or load, an internal address. Every request the browser makes is
+// checked here too. isPrivateAddress mirrors the copy in server/siteShot.ts.
+function isPrivateAddress(raw) {
+  const ip = String(raw).replace(/^\[|\]$/g, "").toLowerCase();
+  const kind = isIP(ip);
+  if (kind === 4) {
+    const [a, b, c] = ip.split(".").map(Number);
+    return (
+      a === 0 || a === 10 || a === 127 || a >= 224 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 192 && b === 0 && c === 0) ||
+      (a === 198 && (b === 18 || b === 19))
+    );
+  }
+  if (kind === 6) {
+    if (ip === "::" || ip === "::1") return true;
+    const mapped = ip.match(/^::ffff:(?:(\d+\.\d+\.\d+\.\d+)|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
+    if (mapped) {
+      if (mapped[1]) return isPrivateAddress(mapped[1]);
+      const hi = parseInt(mapped[2], 16), lo = parseInt(mapped[3], 16);
+      return isPrivateAddress(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+    }
+    return /^fe[89ab]/.test(ip) || /^f[cd]/.test(ip) || ip.startsWith("ff");
+  }
+  return false;
+}
+
+const hostVerdicts = new Map();
+async function hostIsPublic(host) {
+  if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".internal")) return false;
+  if (isIP(host)) return !isPrivateAddress(host);
+  if (!hostVerdicts.has(host)) {
+    hostVerdicts.set(
+      host,
+      // A name that resolves to any private address is refused. A name that does
+      // not resolve at all is refused too: the request would fail anyway.
+      dns.lookup(host, { all: true }).then(
+        (rows) => rows.length > 0 && rows.every((r) => !isPrivateAddress(r.address)),
+        () => false,
+      ),
+    );
+  }
+  return hostVerdicts.get(host);
+}
+
+async function requestAllowed(rawUrl) {
+  let u;
+  try { u = new URL(rawUrl); } catch { return false; }
+  // Inline resources carry no address to check.
+  if (u.protocol === "data:" || u.protocol === "blob:" || u.protocol === "about:") return true;
+  if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+  return hostIsPublic(u.hostname.toLowerCase().replace(/^\[|\]$/g, ""));
+}
 
 async function dismissBanner(page) {
   for (const re of [ACCEPT_RE, DISMISS_RE]) {
@@ -69,6 +130,11 @@ async function capture(url, outFile) {
       ignoreHTTPSErrors: true,
       userAgent:
         "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36",
+    });
+    // Fires for the first request, every redirect hop and every subresource.
+    await ctx.route("**/*", async (route) => {
+      if (await requestAllowed(route.request().url())) return route.continue();
+      return route.abort("blockedbyclient");
     });
     const page = await ctx.newPage();
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: NAV_TIMEOUT });

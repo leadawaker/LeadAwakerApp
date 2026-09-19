@@ -8,6 +8,7 @@ import { execFile } from "child_process";
 import { createHash } from "crypto";
 import path from "path";
 import fs from "fs/promises";
+import { isIP } from "net";
 
 export const SHOT_DIR = path.resolve("uploads/site-shots");
 
@@ -32,6 +33,39 @@ export function normalizeUrl(raw: string): string {
   return u.toString();
 }
 
+/** True for an IP literal that is not a public internet address. Kept in step
+ *  with the copy in script/site-shot.cjs, which re-checks every redirect and
+ *  every request the page makes. */
+export function isPrivateAddress(raw: string): boolean {
+  const ip = raw.replace(/^\[|\]$/g, "").toLowerCase();
+  const kind = isIP(ip);
+  if (kind === 4) {
+    const [a, b, c] = ip.split(".").map(Number);
+    return (
+      a === 0 || a === 10 || a === 127 || a >= 224 ||
+      (a === 100 && b >= 64 && b <= 127) ||
+      (a === 169 && b === 254) ||
+      (a === 172 && b >= 16 && b <= 31) ||
+      (a === 192 && b === 168) ||
+      (a === 192 && b === 0 && c === 0) ||
+      (a === 198 && (b === 18 || b === 19))
+    );
+  }
+  if (kind === 6) {
+    if (ip === "::" || ip === "::1") return true;
+    // ::ffff:127.0.0.1 or its hex form ::ffff:7f00:1 is an IPv4 address in disguise.
+    const mapped = ip.match(/^::ffff:(?:(\d+\.\d+\.\d+\.\d+)|([0-9a-f]{1,4}):([0-9a-f]{1,4}))$/);
+    if (mapped) {
+      if (mapped[1]) return isPrivateAddress(mapped[1]);
+      const hi = parseInt(mapped[2], 16), lo = parseInt(mapped[3], 16);
+      return isPrivateAddress(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
+    }
+    // fe80::/10 link-local, fc00::/7 unique-local, ff00::/8 multicast.
+    return /^fe[89ab]/.test(ip) || /^f[cd]/.test(ip) || ip.startsWith("ff");
+  }
+  return false;
+}
+
 /** Only http(s), and never a private address: this fetches a URL the caller
  *  chose, so it is an SSRF surface even though it only produces an image. */
 export function isPublicHttpUrl(raw: string): boolean {
@@ -42,16 +76,11 @@ export function isPublicHttpUrl(raw: string): boolean {
     return false;
   }
   if (u.protocol !== "http:" && u.protocol !== "https:") return false;
-  const host = u.hostname.toLowerCase();
+  const host = u.hostname.toLowerCase().replace(/^\[|\]$/g, "");
   if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".internal")) return false;
-  if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) {
-    const [a, b] = host.split(".").map(Number);
-    if (a === 127 || a === 10 || a === 0 || a === 169) return false;
-    if (a === 172 && b >= 16 && b <= 31) return false;
-    if (a === 192 && b === 168) return false;
-  }
-  if (host === "::1" || host.startsWith("fe80:") || host.startsWith("fc") || host.startsWith("fd")) return false;
-  return true;
+  // Only IP literals are range-checked, so a domain such as fcbarcelona.com or
+  // fdic.gov is not mistaken for an IPv6 prefix.
+  return !isPrivateAddress(host);
 }
 
 let chain: Promise<unknown> = Promise.resolve();
