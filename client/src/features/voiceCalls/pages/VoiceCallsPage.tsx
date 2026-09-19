@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useVoiceCalls } from "../api/voiceCallsApi";
-import { VoiceCallsInbox, filterCalls, type VoiceCallView } from "../components/VoiceCallsInbox";
+import { VoiceCallsInbox } from "../components/VoiceCallsInbox";
+import { VoiceCallsMenus } from "../components/VoiceCallsMenus";
+import { filterCalls, type ListOptions, type VoiceCallView } from "../listOptions";
 
 const VIEWS: VoiceCallView[] = ["all", "booked", "notBooked"];
 
@@ -11,8 +13,12 @@ function VoiceCallsContent() {
   const { t } = useTranslation("voiceCalls");
   const { data: calls = [], isLoading, error } = useVoiceCalls();
   const [selection, setSelection] = useState<string | null>(null);
-  const [view, setView] = useState<VoiceCallView>("all");
-  const [query, setQuery] = useState("");
+  const [options, setOptionsState] = useState<ListOptions>({ view: "all", query: "", statuses: [], languages: [], sort: "recent", group: "date" });
+  const setOptions = (patch: Partial<ListOptions>) => setOptionsState((o) => ({ ...o, ...patch }));
+  const { view, query } = options;
+  const setView = (v: VoiceCallView) => setOptions({ view: v });
+  const setQuery = (q: string) => setOptions({ query: q });
+  const languages = useMemo(() => Array.from(new Set(calls.map((c) => c.language ?? ""))).sort(), [calls]);
 
   return (
     <div className="la-page" style={{ display: "flex", flexDirection: "column" }}>
@@ -25,7 +31,7 @@ function VoiceCallsContent() {
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
           {VIEWS.map((key) => {
             const on = view === key;
-            const count = filterCalls(calls, key, "").length;
+            const count = filterCalls(calls, { ...options, view: key, query: "" }).length;
             return (
               <button
                 key={key}
@@ -52,6 +58,8 @@ function VoiceCallsContent() {
             style={{ border: "none", outline: "none", background: "transparent", fontSize: 12.5, color: "var(--ink)", flex: 1, fontFamily: "var(--sans)", minWidth: 0 }}
           />
         </div>
+
+        <VoiceCallsMenus options={options} setOptions={setOptions} languages={languages} />
       </div>
 
       {/* Body */}
@@ -60,8 +68,7 @@ function VoiceCallsContent() {
           calls={calls}
           isLoading={isLoading}
           error={error}
-          view={view}
-          query={query}
+          options={options}
           selection={selection}
           setSelection={setSelection}
         />

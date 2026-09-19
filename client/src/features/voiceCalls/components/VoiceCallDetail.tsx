@@ -1,13 +1,13 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AudioLines, Calendar } from "lucide-react";
-import { MonoLabel, VoiceAvatar } from "@/features/voice/components/atoms";
+import { MonoLabel } from "@/features/voice/components/atoms";
 import { useVoiceCall, type VoiceCallDetail as Detail } from "../api/voiceCallsApi";
 import { formatDateTime, formatDuration } from "../format";
-import { callerInitials } from "./bits";
+import { callStatus } from "../status";
+import { CallAvatar, callerInitials } from "./bits";
+import { CallConversation } from "./CallConversation";
 import { CallRecap } from "./CallRecap";
-import { CallRecording } from "./CallRecording";
-import { CallTranscript } from "./CallTranscript";
 
 function useNarrow(): boolean {
   const [narrow, setNarrow] = useState(typeof window !== "undefined" && window.innerWidth < 1100);
@@ -27,7 +27,7 @@ function DetailHeader({ call, narrow }: { call: Detail; narrow: boolean }) {
   return (
     <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", overflow: "hidden", flexShrink: 0 }}>
       <div style={{ padding: narrow ? "14px 16px" : "16px 20px", display: "flex", alignItems: "center", gap: narrow ? 12 : 16 }}>
-        <VoiceAvatar ini={callerInitials(call.callerName, t("webCaller"))} size={narrow ? 42 : 50} radius={14} />
+        <CallAvatar ini={callerInitials(call.callerName, t("webCaller"))} status={callStatus(call)} size={narrow ? 42 : 50} radius={14} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
             <span style={{ fontFamily: "var(--serif)", fontSize: narrow ? 22 : 27, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em" }}>
@@ -62,20 +62,6 @@ function DetailHeader({ call, narrow }: { call: Detail; narrow: boolean }) {
   );
 }
 
-/** The call itself: recording in the head strip, transcript below. */
-function ConversationPanel({ call }: { call: Detail }) {
-  return (
-    <div className="glass" style={{ flex: 1, minWidth: 0, minHeight: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-      <div style={{ flexShrink: 0, padding: "10px 12px", borderBottom: "1px solid var(--line)" }}>
-        <CallRecording key={call.callId} sessionId={call.sessionId} fallbackSeconds={call.durationSeconds} />
-      </div>
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "18px 18px 22px" }}>
-        <CallTranscript turns={call.turns} />
-      </div>
-    </div>
-  );
-}
-
 export function VoiceCallDetail({ callId }: { callId: string }) {
   const { t } = useTranslation("voiceCalls");
   const { data: call, isLoading } = useVoiceCall(callId);
@@ -94,8 +80,8 @@ export function VoiceCallDetail({ callId }: { callId: string }) {
     <div style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: "column", gap: 14, overflowY: narrow ? "auto" : "hidden" }}>
       <DetailHeader call={call} narrow={narrow} />
       <div style={{ flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: narrow ? "column-reverse" : "row", gap: 14 }}>
-        <div style={{ flex: narrow ? undefined : 1, minWidth: 0, minHeight: narrow ? 520 : 0, display: "flex" }}>
-          <ConversationPanel call={call} />
+        <div style={{ flex: narrow ? undefined : 1, minWidth: 0, minHeight: narrow ? 760 : 0, display: "flex" }}>
+          <CallConversation key={call.callId} call={call} />
         </div>
         <div style={{ width: narrow ? "auto" : 290, flexShrink: 0, minHeight: narrow ? "auto" : 0, display: "flex" }}>
           <CallRecap call={call} />

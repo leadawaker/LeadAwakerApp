@@ -31,7 +31,9 @@
     "ask_advice": "Advice",
     "existing_customer": "Existing customer",
     "complaint_or_fault": "Complaint or fault",
-    "not_relevant": "Not relevant"
+    "not_relevant": "Not relevant",
+    "leave_message": "Message",
+    "do_not_contact": "Do not contact"
   },
   "views": {
     "all": "All calls",
@@ -48,5 +50,51 @@
   "nothingHere": "Nothing here",
   "play": "Play recording",
   "pause": "Pause recording",
-  "download": "Download recording"
+  "download": "Download recording",
+  "aiShort": "AI",
+  "volume": "Volume",
+  "skipBack": "Back 15 seconds",
+  "skipForward": "Forward 15 seconds",
+  "speed": "Speed",
+  "hideSpeakers": "Hide",
+  "showSpeakers": "Show who spoke when",
+  "downloadShort": "Download",
+  "loadingRecording": "Loading the recording…",
+  "searchTranscript": "Search the transcript",
+  "matches_one": "{{count}} match",
+  "matches_other": "{{count}} matches",
+  "followAudio": "Follow audio",
+  "followAudioHint": "Keep the transcript on what is being said",
+  "playFromHere": "Play from here",
+  "status": {
+    "booked": "Booked",
+    "quote": "Wanted a quote",
+    "message": "Left a message",
+    "info": "Asked for info",
+    "responded": "Responded",
+    "dnc": "Do not contact"
+  },
+  "menus": {
+    "filter": "Filter",
+    "sort": "Sort",
+    "group": "Group",
+    "status": "Status",
+    "language": "Language",
+    "clearFilters": "Clear filters"
+  },
+  "sort": {
+    "recent": "Most recent",
+    "oldest": "Oldest first",
+    "longest": "Longest call",
+    "shortest": "Shortest call",
+    "name": "Name A–Z"
+  },
+  "group": {
+    "date": "Date",
+    "status": "Status",
+    "language": "Language",
+    "none": "No grouping"
+  },
+  "unknownLanguage": "Unknown",
+  "playbackFailed": "This recording could not be played. Try downloading it instead."
 }

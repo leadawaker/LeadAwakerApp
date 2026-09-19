@@ -3,20 +3,9 @@ import { useTranslation } from "react-i18next";
 import { AudioLines } from "lucide-react";
 import { MonoLabel } from "@/features/voice/components/atoms";
 import type { VoiceCallListItem } from "../api/voiceCallsApi";
-import { isToday } from "../format";
+import { filterCalls, groupCalls, sortCalls, type ListOptions } from "../listOptions";
 import { VoiceCallListCard } from "./VoiceCallListCard";
 import { VoiceCallDetail } from "./VoiceCallDetail";
-
-export type VoiceCallView = "all" | "booked" | "notBooked";
-
-export function filterCalls(calls: VoiceCallListItem[], view: VoiceCallView, query: string): VoiceCallListItem[] {
-  let list = calls;
-  if (view === "booked") list = list.filter((c) => c.bookedSlot);
-  if (view === "notBooked") list = list.filter((c) => !c.bookedSlot);
-  const q = query.trim().toLowerCase();
-  if (q) list = list.filter((c) => (c.callerName ?? "").toLowerCase().includes(q) || (c.outcome ?? "").toLowerCase().includes(q));
-  return list;
-}
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
@@ -40,13 +29,12 @@ interface Props {
   calls: VoiceCallListItem[];
   isLoading: boolean;
   error: unknown;
-  view: VoiceCallView;
-  query: string;
+  options: ListOptions;
   selection: string | null;
   setSelection: (id: string | null) => void;
 }
 
-export function VoiceCallsInbox({ calls, isLoading, error, view, query, selection, setSelection }: Props) {
+export function VoiceCallsInbox({ calls, isLoading, error, options, selection, setSelection }: Props) {
   const { t } = useTranslation("voiceCalls");
   const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 1600);
   useEffect(() => {
@@ -56,11 +44,8 @@ export function VoiceCallsInbox({ calls, isLoading, error, view, query, selectio
   }, []);
   const narrow = vw < 920;
 
-  const items = useMemo(() => filterCalls(calls, view, query), [calls, view, query]);
-  const sections = useMemo(() => [
-    { key: "today", label: t("groups.today"), items: items.filter((c) => isToday(c.startedAt)) },
-    { key: "earlier", label: t("groups.earlier"), items: items.filter((c) => !isToday(c.startedAt)) },
-  ].filter((s) => s.items.length > 0), [items, t]);
+  const items = useMemo(() => sortCalls(filterCalls(calls, options), options.sort), [calls, options]);
+  const sections = useMemo(() => groupCalls(items, options.group, t), [items, options.group, t]);
 
   // Open onto the first call, desktop only.
   useEffect(() => {
@@ -80,7 +65,7 @@ export function VoiceCallsInbox({ calls, isLoading, error, view, query, selectio
   ) : (
     sections.map((sec) => (
       <div key={sec.key}>
-        <GroupHeader label={sec.label} count={sec.items.length} />
+        {sec.label && <GroupHeader label={sec.label} count={sec.items.length} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
           {sec.items.map((c) => (
             <VoiceCallListCard key={c.callId} call={c} active={selection === c.callId} onClick={() => setSelection(c.callId)} />

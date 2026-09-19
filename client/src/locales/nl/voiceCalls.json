@@ -31,7 +31,9 @@
     "ask_advice": "Advies",
     "existing_customer": "Bestaande klant",
     "complaint_or_fault": "Klacht of storing",
-    "not_relevant": "Niet relevant"
+    "not_relevant": "Niet relevant",
+    "leave_message": "Bericht",
+    "do_not_contact": "Niet benaderen"
   },
   "views": {
     "all": "Alle gesprekken",
@@ -48,5 +50,51 @@
   "nothingHere": "Niets gevonden",
   "play": "Opname afspelen",
   "pause": "Opname pauzeren",
-  "download": "Opname downloaden"
+  "download": "Opname downloaden",
+  "aiShort": "AI",
+  "volume": "Volume",
+  "skipBack": "15 seconden terug",
+  "skipForward": "15 seconden vooruit",
+  "speed": "Snelheid",
+  "hideSpeakers": "Verbergen",
+  "showSpeakers": "Toon wie wanneer sprak",
+  "downloadShort": "Downloaden",
+  "loadingRecording": "Opname laden…",
+  "searchTranscript": "Zoek in het transcript",
+  "matches_one": "{{count}} resultaat",
+  "matches_other": "{{count}} resultaten",
+  "followAudio": "Volg audio",
+  "followAudioHint": "Houd het transcript bij wat er gezegd wordt",
+  "playFromHere": "Speel vanaf hier",
+  "status": {
+    "booked": "Geboekt",
+    "quote": "Wilde een offerte",
+    "message": "Liet een bericht achter",
+    "info": "Vroeg om info",
+    "responded": "Gereageerd",
+    "dnc": "Niet benaderen"
+  },
+  "menus": {
+    "filter": "Filteren",
+    "sort": "Sorteren",
+    "group": "Groeperen",
+    "status": "Status",
+    "language": "Taal",
+    "clearFilters": "Filters wissen"
+  },
+  "sort": {
+    "recent": "Nieuwste eerst",
+    "oldest": "Oudste eerst",
+    "longest": "Langste gesprek",
+    "shortest": "Kortste gesprek",
+    "name": "Naam A–Z"
+  },
+  "group": {
+    "date": "Datum",
+    "status": "Status",
+    "language": "Taal",
+    "none": "Niet groeperen"
+  },
+  "unknownLanguage": "Onbekend",
+  "playbackFailed": "Deze opname kon niet worden afgespeeld. Probeer hem te downloaden."
 }

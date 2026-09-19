@@ -1,6 +1,6 @@
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db } from "../db";
-import { interactions, voiceCalls, type VoiceCall, type VoiceCallSummary } from "@shared/schema";
+import { interactions, leads, voiceCalls, type VoiceCall, type VoiceCallSummary } from "@shared/schema";
 
 export interface VoiceCallListItem {
   callId: string;
@@ -14,6 +14,10 @@ export interface VoiceCallListItem {
   bookedSlot: string | null;
   bookedIso: string | null;
   outcome: string | null;
+  /** What the caller raised, from the recap; drives the avatar colour. */
+  intents: string[];
+  /** The linked lead's pipeline status, so a DND lead shows as such. */
+  leadStatus: string | null;
 }
 
 export interface VoiceCallTurn {
@@ -60,7 +64,11 @@ const lastTurnAt = sql<string | null>`(
   WHERE i.conversation_thread_id = ${voiceCalls.callId}
 )`;
 
-function toItem(row: VoiceCall, lastTurn: string | Date | null): VoiceCallListItem {
+const leadStatusOf = sql<string | null>`(
+  SELECT l."Conversion_Status" FROM ${leads} l WHERE l.id = ${voiceCalls.leadsId}
+)`;
+
+function toItem(row: VoiceCall, lastTurn: string | Date | null, leadStatus: string | null): VoiceCallListItem {
   const end = row.endedAt ?? (lastTurn ? new Date(lastTurn) : null);
   const durationSeconds = end
     ? Math.max(0, Math.round((end.getTime() - row.startedAt.getTime()) / 1000))
@@ -78,23 +86,25 @@ function toItem(row: VoiceCall, lastTurn: string | Date | null): VoiceCallListIt
     bookedSlot: row.bookedSlot,
     bookedIso: row.bookedIso ? row.bookedIso.toISOString() : null,
     outcome: summary?.outcome ?? null,
+    intents: summary?.items.map((i) => i.intent) ?? [],
+    leadStatus,
   };
 }
 
 export const voiceCallsStorage = {
   async listVoiceCalls({ limit, offset }: { limit: number; offset: number }): Promise<VoiceCallListItem[]> {
     const rows = await db
-      .select({ call: voiceCalls, lastTurn: lastTurnAt })
+      .select({ call: voiceCalls, lastTurn: lastTurnAt, leadStatus: leadStatusOf })
       .from(voiceCalls)
       .orderBy(desc(voiceCalls.startedAt))
       .limit(limit)
       .offset(offset);
-    return rows.map((r) => toItem(r.call, r.lastTurn));
+    return rows.map((r) => toItem(r.call, r.lastTurn, r.leadStatus));
   },
 
   async getVoiceCall(callId: string): Promise<VoiceCallDetail | undefined> {
     const [row] = await db
-      .select({ call: voiceCalls, lastTurn: lastTurnAt })
+      .select({ call: voiceCalls, lastTurn: lastTurnAt, leadStatus: leadStatusOf })
       .from(voiceCalls)
       .where(eq(voiceCalls.callId, callId));
     if (!row) return undefined;
@@ -113,7 +123,7 @@ export const voiceCallsStorage = {
       ))
       .orderBy(asc(interactions.createdAt), asc(interactions.id));
     return {
-      ...toItem(row.call, row.lastTurn),
+      ...toItem(row.call, row.lastTurn, row.leadStatus),
       summary: normalizeSummary(row.call.summary),
       turns: turns.map((t) => ({
         id: t.id as number,

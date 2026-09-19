@@ -14,6 +14,8 @@ export interface VoiceCallListItem {
   bookedSlot: string | null;
   bookedIso: string | null;
   outcome: string | null;
+  intents: string[];
+  leadStatus: string | null;
 }
 
 export interface VoiceCallSummaryItem {
@@ -36,6 +38,8 @@ export interface VoiceCallDetail extends VoiceCallListItem {
 }
 
 const LIST_KEY = ["/api/voice-calls"];
+// A demo call lasts at most 5 minutes; after this, a missing summary is final.
+const STILL_LIVE_MS = 15 * 60 * 1000;
 
 export function useVoiceCalls() {
   return useQuery<VoiceCallListItem[]>({
@@ -62,7 +66,12 @@ export function useVoiceCall(callId: string | null) {
     },
     staleTime: 30 * 1000,
     // Poll while a call is still in progress (no summary written yet); stop
-    // once wrap-up has landed.
-    refetchInterval: (query) => (query.state.data && !query.state.data.summary ? 15_000 : false),
+    // once wrap-up has landed, or once the call is old enough that it never will
+    // (a tab closed before wrap-up leaves the summary empty for good).
+    refetchInterval: (query) => {
+      const call = query.state.data;
+      if (!call || call.summary) return false;
+      return Date.now() - new Date(call.startedAt).getTime() < STILL_LIVE_MS ? 15_000 : false;
+    },
   });
 }

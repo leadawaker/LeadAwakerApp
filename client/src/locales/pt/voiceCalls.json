@@ -31,7 +31,9 @@
     "ask_advice": "Orientação",
     "existing_customer": "Cliente atual",
     "complaint_or_fault": "Reclamação ou defeito",
-    "not_relevant": "Não relevante"
+    "not_relevant": "Não relevante",
+    "leave_message": "Recado",
+    "do_not_contact": "Não contatar"
   },
   "views": {
     "all": "Todas",
@@ -48,5 +50,51 @@
   "nothingHere": "Nada por aqui",
   "play": "Ouvir gravação",
   "pause": "Pausar gravação",
-  "download": "Baixar gravação"
+  "download": "Baixar gravação",
+  "aiShort": "IA",
+  "volume": "Volume",
+  "skipBack": "Voltar 15 segundos",
+  "skipForward": "Avançar 15 segundos",
+  "speed": "Velocidade",
+  "hideSpeakers": "Ocultar",
+  "showSpeakers": "Mostrar quem falou quando",
+  "downloadShort": "Baixar",
+  "loadingRecording": "Carregando a gravação…",
+  "searchTranscript": "Buscar na transcrição",
+  "matches_one": "{{count}} resultado",
+  "matches_other": "{{count}} resultados",
+  "followAudio": "Seguir áudio",
+  "followAudioHint": "Mantém a transcrição no que está sendo dito",
+  "playFromHere": "Tocar a partir daqui",
+  "status": {
+    "booked": "Agendado",
+    "quote": "Pediu orçamento",
+    "message": "Deixou recado",
+    "info": "Pediu informação",
+    "responded": "Respondeu",
+    "dnc": "Não contatar"
+  },
+  "menus": {
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "group": "Agrupar",
+    "status": "Status",
+    "language": "Idioma",
+    "clearFilters": "Limpar filtros"
+  },
+  "sort": {
+    "recent": "Mais recentes",
+    "oldest": "Mais antigas",
+    "longest": "Ligação mais longa",
+    "shortest": "Ligação mais curta",
+    "name": "Nome A–Z"
+  },
+  "group": {
+    "date": "Data",
+    "status": "Status",
+    "language": "Idioma",
+    "none": "Sem agrupamento"
+  },
+  "unknownLanguage": "Desconhecido",
+  "playbackFailed": "Não foi possível reproduzir esta gravação. Tente baixá-la."
 }
