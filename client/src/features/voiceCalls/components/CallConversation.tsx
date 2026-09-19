@@ -4,11 +4,21 @@ import { Download, LocateFixed, Search } from "lucide-react";
 import type { VoiceCallDetail } from "../api/voiceCallsApi";
 import { useCallAudio } from "../useCallAudio";
 import { activeTurn, turnTimes } from "../turnTimes";
-import { callerInitials } from "./bits";
+import { callerIni, callerTitle } from "./bits";
 import { CallPlayer, type PlayerControls, type PlayerState } from "./CallPlayer";
 import { CallTranscript } from "./CallTranscript";
 
 /** The call itself: player with speaker tracks on top, searchable transcript below. */
+// OpenAI needs a few minutes after hang-up to finish a recording, and keeps it
+// for 30 days. Only blame the 30 days once the call is actually that old.
+const RECORDING_PENDING_MS = 60 * 60 * 1000;
+const RECORDING_KEPT_MS = 30 * 24 * 60 * 60 * 1000;
+function recordingMissingKey(startedAt: string): string {
+  const age = Date.now() - new Date(startedAt).getTime();
+  if (age < RECORDING_PENDING_MS) return "recordingPending";
+  return age > RECORDING_KEPT_MS ? "recordingExpired" : "recordingUnavailable";
+}
+
 export function CallConversation({ call }: { call: VoiceCallDetail }) {
   const { t } = useTranslation("voiceCalls");
   const audio = useCallAudio(call.sessionId);
@@ -89,7 +99,7 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
         </div>
 
         {audio.status === "missing" ? (
-          <div style={{ padding: "4px 0 6px", fontSize: 12.5, color: "var(--mute)" }}>{t("recordingExpired")}</div>
+          <div style={{ padding: "4px 0 6px", fontSize: 12.5, color: "var(--mute)" }}>{t(recordingMissingKey(call.startedAt))}</div>
         ) : audio.status === "loading" ? (
           <div style={{ padding: "4px 0 6px", fontSize: 12.5, color: "var(--mute)" }}>{t("loadingRecording")}</div>
         ) : (
@@ -110,8 +120,8 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
               controls={controls}
               caller={audio.caller}
               ai={audio.ai}
-              callerLabel={callerInitials(call.callerName, t("webCaller"))}
-              callerTitle={call.callerName || t("caller")}
+              callerLabel={callerIni(call, t("webCaller"))}
+              callerTitle={callerTitle(call, t("caller"))}
             />
           </>
         )}

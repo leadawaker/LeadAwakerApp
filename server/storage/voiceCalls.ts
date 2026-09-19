@@ -18,6 +18,8 @@ export interface VoiceCallListItem {
   intents: string[];
   /** The linked lead's pipeline status, so a DND lead shows as such. */
   leadStatus: string | null;
+  /** The number the caller rang from (made up for the web demo). */
+  callerNumber: string | null;
 }
 
 export interface VoiceCallTurn {
@@ -68,7 +70,13 @@ const leadStatusOf = sql<string | null>`(
   SELECT l."Conversion_Status" FROM ${leads} l WHERE l.id = ${voiceCalls.leadsId}
 )`;
 
-function toItem(row: VoiceCall, lastTurn: string | Date | null, leadStatus: string | null): VoiceCallListItem {
+// Calls from before the demo made up numbers share a lead whose phone is the
+// placeholder "web": that is not a number, so it reads as none.
+const leadPhoneOf = sql<string | null>`(
+  SELECT NULLIF(l.phone, 'web') FROM ${leads} l WHERE l.id = ${voiceCalls.leadsId}
+)`;
+
+function toItem(row: VoiceCall, lastTurn: string | Date | null, leadStatus: string | null, callerNumber: string | null): VoiceCallListItem {
   const end = row.endedAt ?? (lastTurn ? new Date(lastTurn) : null);
   const durationSeconds = end
     ? Math.max(0, Math.round((end.getTime() - row.startedAt.getTime()) / 1000))
@@ -88,23 +96,24 @@ function toItem(row: VoiceCall, lastTurn: string | Date | null, leadStatus: stri
     outcome: summary?.outcome ?? null,
     intents: summary?.items.map((i) => i.intent) ?? [],
     leadStatus,
+    callerNumber,
   };
 }
 
 export const voiceCallsStorage = {
   async listVoiceCalls({ limit, offset }: { limit: number; offset: number }): Promise<VoiceCallListItem[]> {
     const rows = await db
-      .select({ call: voiceCalls, lastTurn: lastTurnAt, leadStatus: leadStatusOf })
+      .select({ call: voiceCalls, lastTurn: lastTurnAt, leadStatus: leadStatusOf, callerNumber: leadPhoneOf })
       .from(voiceCalls)
       .orderBy(desc(voiceCalls.startedAt))
       .limit(limit)
       .offset(offset);
-    return rows.map((r) => toItem(r.call, r.lastTurn, r.leadStatus));
+    return rows.map((r) => toItem(r.call, r.lastTurn, r.leadStatus, r.callerNumber));
   },
 
   async getVoiceCall(callId: string): Promise<VoiceCallDetail | undefined> {
     const [row] = await db
-      .select({ call: voiceCalls, lastTurn: lastTurnAt, leadStatus: leadStatusOf })
+      .select({ call: voiceCalls, lastTurn: lastTurnAt, leadStatus: leadStatusOf, callerNumber: leadPhoneOf })
       .from(voiceCalls)
       .where(eq(voiceCalls.callId, callId));
     if (!row) return undefined;
@@ -123,7 +132,7 @@ export const voiceCallsStorage = {
       ))
       .orderBy(asc(interactions.createdAt), asc(interactions.id));
     return {
-      ...toItem(row.call, row.lastTurn, row.leadStatus),
+      ...toItem(row.call, row.lastTurn, row.leadStatus, row.callerNumber),
       summary: normalizeSummary(row.call.summary),
       turns: turns.map((t) => ({
         id: t.id as number,

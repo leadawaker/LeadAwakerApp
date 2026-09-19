@@ -21,6 +21,8 @@
   },
   "noSummary": "Nenhum resumo foi gerado para esta chamada.",
   "recordingExpired": "Gravação indisponível (a OpenAI guarda por 30 dias).",
+  "recordingPending": "Gravação ainda não está pronta. Ela costuma aparecer alguns minutos depois da ligação.",
+  "recordingUnavailable": "Gravação indisponível para esta ligação.",
   "caller": "Cliente",
   "ai": "Recepcionista IA",
   "interest": "Quer",

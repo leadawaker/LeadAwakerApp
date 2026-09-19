@@ -26,7 +26,13 @@ export function filterCalls(calls: VoiceCallListItem[], opts: Pick<ListOptions, 
   if (opts.statuses.length) list = list.filter((c) => opts.statuses.includes(callStatus(c)));
   if (opts.languages.length) list = list.filter((c) => opts.languages.includes(c.language ?? ""));
   const q = opts.query.trim().toLowerCase();
-  if (q) list = list.filter((c) => (c.callerName ?? "").toLowerCase().includes(q) || (c.outcome ?? "").toLowerCase().includes(q));
+  if (q) {
+    const qDigits = q.replace(/\D/g, "");
+    list = list.filter((c) =>
+      (c.callerName ?? "").toLowerCase().includes(q) ||
+      (c.outcome ?? "").toLowerCase().includes(q) ||
+      (!!qDigits && (c.callerNumber ?? "").replace(/\D/g, "").includes(qDigits)));
+  }
   return list;
 }
 
@@ -38,7 +44,7 @@ export function sortCalls(calls: VoiceCallListItem[], sort: VoiceCallSort): Voic
     case "oldest": return out.sort((a, b) => time(a) - time(b));
     case "longest": return out.sort((a, b) => len(b) - len(a));
     case "shortest": return out.sort((a, b) => len(a) - len(b));
-    case "name": return out.sort((a, b) => (a.callerName ?? "~").localeCompare(b.callerName ?? "~"));
+    case "name": return out.sort((a, b) => (a.callerName ?? a.callerNumber ?? "~").localeCompare(b.callerName ?? b.callerNumber ?? "~"));
     default: return out.sort((a, b) => time(b) - time(a));
   }
 }

@@ -8,6 +8,20 @@ export function callerInitials(name: string | null, fallback: string): string {
   return ini || "?";
 }
 
+type Caller = { callerName: string | null; callerNumber: string | null };
+
+/** Who called: the name they gave, else the number they rang from. */
+export function callerTitle(call: Caller, fallback: string): string {
+  return call.callerName || call.callerNumber || fallback;
+}
+
+/** Avatar text: initials of the name, else the number's last two digits. */
+export function callerIni(call: Caller, fallback: string): string {
+  if (call.callerName) return callerInitials(call.callerName, fallback);
+  const tail = (call.callerNumber || "").replace(/\D/g, "").slice(-2);
+  return tail || callerInitials(null, fallback);
+}
+
 /** Same shape as the Missed Calls status pill, for the "Booked" state. */
 export function BookedPill({ small }: { small?: boolean }) {
   const { t } = useTranslation("voiceCalls");

@@ -21,6 +21,8 @@
   },
   "noSummary": "No recap was generated for this call.",
   "recordingExpired": "Recording no longer available (OpenAI keeps it for 30 days).",
+  "recordingPending": "Recording not ready yet. It usually appears a few minutes after the call ends.",
+  "recordingUnavailable": "Recording not available for this call.",
   "caller": "Caller",
   "ai": "AI receptionist",
   "interest": "Wants",

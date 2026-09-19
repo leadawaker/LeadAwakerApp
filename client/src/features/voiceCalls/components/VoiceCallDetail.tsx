@@ -5,7 +5,7 @@ import { MonoLabel } from "@/features/voice/components/atoms";
 import { useVoiceCall, type VoiceCallDetail as Detail } from "../api/voiceCallsApi";
 import { formatDateTime, formatDuration } from "../format";
 import { callStatus } from "../status";
-import { CallAvatar, callerInitials } from "./bits";
+import { CallAvatar, callerIni, callerTitle } from "./bits";
 import { CallConversation } from "./CallConversation";
 import { CallRecap } from "./CallRecap";
 
@@ -27,11 +27,11 @@ function DetailHeader({ call, narrow }: { call: Detail; narrow: boolean }) {
   return (
     <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", overflow: "hidden", flexShrink: 0 }}>
       <div style={{ padding: narrow ? "14px 16px" : "16px 20px", display: "flex", alignItems: "center", gap: narrow ? 12 : 16 }}>
-        <CallAvatar ini={callerInitials(call.callerName, t("webCaller"))} status={callStatus(call)} size={narrow ? 42 : 50} radius={14} />
+        <CallAvatar ini={callerIni(call, t("webCaller"))} status={callStatus(call)} size={narrow ? 42 : 50} radius={14} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
             <span style={{ fontFamily: "var(--serif)", fontSize: narrow ? 22 : 27, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em" }}>
-              {call.callerName || t("webCaller")}
+              {callerTitle(call, t("webCaller"))}
             </span>
             {call.bookedSlot && (
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--good-tint)", borderRadius: "var(--r-pill)", padding: "4px 11px 4px 9px", color: "var(--good)", fontSize: 11.5, fontWeight: 600 }}>
@@ -45,6 +45,7 @@ function DetailHeader({ call, narrow }: { call: Detail; narrow: boolean }) {
             <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--wine)", fontWeight: 600 }}>
               <AudioLines size={13} />{t("voiceCall")}
             </span>
+            {call.callerName && call.callerNumber && <span style={{ fontFamily: "var(--mono)" }}>{call.callerNumber}</span>}
             <span>{formatDateTime(call.startedAt, i18n.language)}</span>
             <span>{formatDuration(call.durationSeconds)}</span>
             <span>{t("turns", { count: call.turnCount })}</span>

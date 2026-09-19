@@ -16,6 +16,7 @@ export interface VoiceCallListItem {
   outcome: string | null;
   intents: string[];
   leadStatus: string | null;
+  callerNumber: string | null;
 }
 
 export interface VoiceCallSummaryItem {

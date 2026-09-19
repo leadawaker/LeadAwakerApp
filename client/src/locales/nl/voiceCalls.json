@@ -21,6 +21,8 @@
   },
   "noSummary": "Voor dit gesprek is geen samenvatting gemaakt.",
   "recordingExpired": "Opname niet meer beschikbaar (OpenAI bewaart die 30 dagen).",
+  "recordingPending": "Opname nog niet klaar. Die verschijnt meestal een paar minuten na het gesprek.",
+  "recordingUnavailable": "Geen opname beschikbaar voor dit gesprek.",
   "caller": "Beller",
   "ai": "AI-receptionist",
   "interest": "Wil",

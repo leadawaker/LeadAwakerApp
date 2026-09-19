@@ -3,7 +3,7 @@ import { AudioLines } from "lucide-react";
 import type { VoiceCallListItem } from "../api/voiceCallsApi";
 import { formatDuration, formatListTime } from "../format";
 import { callStatus } from "../status";
-import { BookedPill, CallAvatar, callerInitials } from "./bits";
+import { BookedPill, CallAvatar, callerIni, callerTitle } from "./bits";
 
 interface Props {
   call: VoiceCallListItem;
@@ -13,7 +13,7 @@ interface Props {
 
 export function VoiceCallListCard({ call, active, onClick }: Props) {
   const { t, i18n } = useTranslation("voiceCalls");
-  const title = call.callerName || t("webCaller");
+  const title = callerTitle(call, t("webCaller"));
   return (
     <div
       onClick={onClick}
@@ -32,7 +32,7 @@ export function VoiceCallListCard({ call, active, onClick }: Props) {
         <div style={{ position: "absolute", left: 0, top: 6, bottom: 6, width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0" }} />
       )}
       <div style={{ padding: "9px 12px", display: "flex", gap: 10 }}>
-        <CallAvatar ini={callerInitials(call.callerName, t("webCaller"))} status={callStatus(call)} size={38} />
+        <CallAvatar ini={callerIni(call, t("webCaller"))} status={callStatus(call)} size={38} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 2 }}>
             <span style={{ fontFamily: "var(--serif)", fontSize: 15.5, color: "var(--ink)", fontWeight: active ? 600 : 400, lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
