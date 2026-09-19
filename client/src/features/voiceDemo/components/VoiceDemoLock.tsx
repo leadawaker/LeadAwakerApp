@@ -57,7 +57,7 @@ export function VoiceDemoLock({
         {wrong && <p className="text-sm text-destructive">{copy.wrongPassword}</p>}
         <button
           type="submit"
-          className="h-10 w-full rounded-[var(--r-button)] bg-primary text-sm font-semibold text-primary-foreground"
+          className="h-10 w-full rounded-[var(--r-button)] bg-foreground text-sm font-semibold text-background transition hover:opacity-90"
         >
           {copy.continueLabel}
         </button>

@@ -1,4 +1,4 @@
-import { CalendarCheck, Database, Download, Phone, Sparkles, UserPlus } from "lucide-react";
+import { CalendarCheck, Database, Download, Phone, RotateCcw, Sparkles, UserPlus } from "lucide-react";
 import type { Booking, CallIntent, CallSummary, CrmReceipt } from "../types";
 import type { DemoCopy } from "../copy";
 
@@ -45,6 +45,7 @@ export function CrmPanel({
   recordingUrl,
   copy,
   dateLocale,
+  onAgain,
 }: {
   receipts: CrmReceipt[];
   leadId: number | null;
@@ -57,6 +58,8 @@ export function CrmPanel({
   copy: DemoCopy;
   /** BCP-47 tag for dates, so the appointment reads in the call's language. */
   dateLocale: string;
+  /** Start over. Lives here since the transcript panel lost its header. */
+  onAgain?: () => void;
 }) {
   return (
     // Warm near-white ground with white cards floating on it, header and
@@ -64,7 +67,7 @@ export function CrmPanel({
     // uses, so the two panels sit on one continuous surface — and it carries
     // its own dark-mode value, so this does not become a light slab on a dark
     // page the way a literal would.
-    <div className="flex flex-1 flex-col overflow-hidden border-border bg-muted max-lg:border-t lg:border-l">
+    <div className="flex flex-1 flex-col overflow-hidden bg-muted">
       <div className="flex items-center gap-3 border-b border-border px-5 py-3.5">
         <div className="flex h-10 w-10 flex-none items-center justify-center rounded-full border border-border/60 text-muted-foreground" style={CARD_BG}>
           <Database className="h-4 w-4" />
@@ -81,6 +84,16 @@ export function CrmPanel({
             {copy.liveBadge}
           </span>
         )}
+        {onAgain && (
+          <button
+            type="button"
+            onClick={onAgain}
+            className="group inline-flex flex-none items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-medium transition hover:border-foreground/30"
+          >
+            <RotateCcw className="h-3.5 w-3.5 transition-transform duration-500 group-hover:-rotate-180" />
+            {copy.again}
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-y-auto p-5">
@@ -92,7 +105,7 @@ export function CrmPanel({
           <div className="space-y-4">
             <div className="rounded-[var(--r-surface)] border border-border/60 p-4" style={CARD_BG}>
               <div className="mb-3 flex items-center gap-2">
-                <Sparkles className="h-4 w-4 flex-none text-primary" />
+                <Sparkles className="h-4 w-4 flex-none text-foreground" />
                 <span className="text-sm font-semibold">{copy.whatTheyCalledAbout}</span>
               </div>
               {summary?.items?.length ? (
@@ -127,7 +140,7 @@ export function CrmPanel({
 
             <div className="rounded-[var(--r-surface)] border border-border/60 p-4" style={CARD_BG}>
               <div className="mb-3 flex items-center gap-2">
-                <UserPlus className="h-4 w-4 flex-none text-primary" />
+                <UserPlus className="h-4 w-4 flex-none text-foreground" />
                 <span className="text-sm font-semibold">
                   {leadId ? `${copy.lead} #${leadId}` : copy.lead}
                 </span>
@@ -151,10 +164,10 @@ export function CrmPanel({
                 href={recordingUrl}
                 target="_blank"
                 rel="noreferrer"
-                className="flex items-center gap-2.5 rounded-[var(--r-surface)] border border-border/60 px-4 py-3 text-sm hover:border-primary/50"
+                className="flex items-center gap-2.5 rounded-[var(--r-surface)] border border-border/60 px-4 py-3 text-sm hover:border-foreground/30"
                 style={CARD_BG}
               >
-                <Download className="h-4 w-4 flex-none text-primary" />
+                <Download className="h-4 w-4 flex-none text-foreground" />
                 <span>{copy.downloadRecording}</span>
               </a>
             )}

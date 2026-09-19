@@ -28,7 +28,7 @@
   --ground-s: 42%;
   --ground-page: var(--ground-h) var(--ground-s) 98.5%;    /* page ground */
   --ground-panel: var(--ground-h) var(--ground-s) 97.5%;    /* topbar, toolbars, list panels */
-  --ground-chrome: var(--ground-h) var(--ground-s) 95.5%;  /* nav rail */
+  --ground-chrome: var(--ground-h) var(--ground-s) 92.5%;  /* nav rail */
 
   /* ── Brand, derived ── */
   --brand: var(--brand-h) var(--brand-s) var(--brand-l);

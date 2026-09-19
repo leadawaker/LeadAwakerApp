@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AIState } from "@/components/siriOrb/aiCore";
-import { useCallAmplitude } from "./useCallAmplitude";
+import { useCallLevels } from "./useCallLevels";
 import { ENGINE_BASE_URL } from "./engine";
 import type {
   Booking,
@@ -45,7 +45,7 @@ export const DEMO_CAMPAIGN_ID = 60;
 const TURN_GAP_MS = 1400;
 
 /** Hard stop, so an abandoned tab cannot bill a session indefinitely. */
-const MAX_CALL_MS = 5 * 60 * 1000;
+export const MAX_CALL_MS = 5 * 60 * 1000;
 
 /**
  * Hang up after this long with neither side saying anything.
@@ -147,7 +147,7 @@ export function useLiveCall() {
   /** Drives the orb. Derived from what is happening, not from an API event. */
   const [orbState, setOrbState] = useState<AIState>("idle");
 
-  const { amplitude, attach, reset: resetAmplitude } = useCallAmplitude();
+  const { attach, read: readLevels, reset: resetAmplitude } = useCallLevels();
 
   const pcRef = useRef<RTCPeerConnection | null>(null);
   const dcRef = useRef<RTCDataChannel | null>(null);
@@ -471,6 +471,10 @@ export function useLiveCall() {
           sessionIdRef.current = ev.session?.id ?? sessionIdRef.current;
           setState("live");
           setStartedAt(Date.now());
+          // The clock on screen starts here, so the cut-off is timed from here
+          // too: it ends at exactly the maximum the caller was shown.
+          if (limitRef.current) window.clearTimeout(limitRef.current);
+          limitRef.current = window.setTimeout(() => hangup("time_limit"), MAX_CALL_MS);
           setOrbState("listening");
           lastHeardRef.current = Date.now();
           silenceRef.current = window.setInterval(() => {
@@ -492,6 +496,12 @@ export function useLiveCall() {
         case "session.output_transcript.delta":
           appendDelta("them", ev.delta ?? "");
           setOrbState("streaming");
+          break;
+
+        case "session.delegation.created":
+          // She has handed the question to the backend and is waiting on it.
+          // The wave breathes through this gap instead of lying flat.
+          setOrbState("thinking");
           break;
 
         case "response.event":
@@ -552,13 +562,13 @@ export function useLiveCall() {
         });
         localRef.current = stream;
         micRef.current = stream.getAudioTracks()[0] ?? null;
-        attach(stream);
+        attach(stream, "you");
 
         const pc = new RTCPeerConnection();
         pcRef.current = pc;
         pc.ontrack = (e) => {
           if (audioRef.current) audioRef.current.srcObject = e.streams[0];
-          attach(e.streams[0]);
+          attach(e.streams[0], "them");
         };
         pc.onconnectionstatechange = () => {
           if (["failed", "disconnected"].includes(pc.connectionState)) {
@@ -612,7 +622,8 @@ export function useLiveCall() {
         setCompany(data.company ?? setup.companyName);
         await pc.setRemoteDescription({ type: "answer", sdp: data.sdp });
 
-        limitRef.current = window.setTimeout(() => hangup("time_limit"), MAX_CALL_MS);
+        // Fallback if session.started has not armed it yet.
+        if (!limitRef.current) limitRef.current = window.setTimeout(() => hangup("time_limit"), MAX_CALL_MS);
       } catch (err) {
         teardown();
         setState("idle");
@@ -642,7 +653,7 @@ export function useLiveCall() {
   return {
     state,
     orbState,
-    amplitude,
+    readLevels,
     error,
     turns,
     receipts,

@@ -24,22 +24,19 @@ export interface DemoCopy {
   wrongPassword: string;
   continueLabel: string;
 
-  setupTitle: string;
-  setupSubtitle: string;
   languageLabel: string;
   noNativeVoice: string;
   companyLabel: string;
   phoneLabel: string;
   voiceLabel: string;
   voiceDefault: string;
-  callHer: string;
+  nightMode: string;
+  settingsLabel: string;
+  dayMode: string;
 
-  simplePrompt: string;
   call: string;
 
   connecting: string;
-  onCall: string;
-  callEnded: string;
   again: string;
   hangUp: string;
   sayHello: string;
@@ -90,22 +87,19 @@ const EN: DemoCopy = {
   wrongPassword: "Wrong password. Try again.",
   continueLabel: "Continue",
 
-  setupTitle: "Call the AI receptionist",
-  setupSubtitle: "She answers the phone, works out what you need, and books you in.",
   languageLabel: "Language",
   noNativeVoice: "No native voice exists for this language yet, so the accent may not be perfect.",
   companyLabel: "Company she answers for",
   phoneLabel: "The number you are calling from",
   voiceLabel: "Voice",
   voiceDefault: "Default for this language",
-  callHer: "Call her",
+  nightMode: "Night mode",
+  settingsLabel: "Call settings",
+  dayMode: "Day mode",
 
-  simplePrompt: "Call the reception and see what happens.",
   call: "Call",
 
   connecting: "Connecting…",
-  onCall: "On the call",
-  callEnded: "Call ended",
   again: "Again",
   hangUp: "Hang up",
   sayHello: "Say hello when you're ready.",
@@ -156,8 +150,6 @@ const NL: DemoCopy = {
   wrongPassword: "Verkeerd wachtwoord. Probeer het opnieuw.",
   continueLabel: "Verder",
 
-  setupTitle: "Bel de AI-receptioniste",
-  setupSubtitle: "Ze neemt op, achterhaalt wat u nodig hebt en plant u in.",
   languageLabel: "Taal",
   noNativeVoice:
     "Voor deze taal bestaat nog geen eigen stem, dus het accent klopt mogelijk niet helemaal.",
@@ -165,14 +157,13 @@ const NL: DemoCopy = {
   phoneLabel: "Het nummer waarvandaan u belt",
   voiceLabel: "Stem",
   voiceDefault: "Standaard voor deze taal",
-  callHer: "Bel haar",
+  nightMode: "Nachtmodus",
+  settingsLabel: "Belinstellingen",
+  dayMode: "Dagmodus",
 
-  simplePrompt: "Bel de receptie en hoor wat er gebeurt.",
   call: "Bellen",
 
   connecting: "Verbinden…",
-  onCall: "In gesprek",
-  callEnded: "Gesprek beëindigd",
   again: "Opnieuw",
   hangUp: "Ophangen",
   sayHello: "Zeg gerust hallo wanneer u zover bent.",
@@ -223,8 +214,6 @@ const PT: DemoCopy = {
   wrongPassword: "Senha incorreta. Tente novamente.",
   continueLabel: "Continuar",
 
-  setupTitle: "Ligue para a recepcionista de IA",
-  setupSubtitle: "Ela atende, entende o que você precisa e já agenda para você.",
   languageLabel: "Idioma",
   noNativeVoice:
     "Ainda não existe uma voz nativa para este idioma, então o sotaque pode não sair perfeito.",
@@ -232,14 +221,13 @@ const PT: DemoCopy = {
   phoneLabel: "O número de onde você está ligando",
   voiceLabel: "Voz",
   voiceDefault: "Padrão para este idioma",
-  callHer: "Ligar para ela",
+  nightMode: "Modo noturno",
+  settingsLabel: "Configurações da chamada",
+  dayMode: "Modo claro",
 
-  simplePrompt: "Ligue para a recepção e veja o que acontece.",
   call: "Ligar",
 
   connecting: "Conectando…",
-  onCall: "Na ligação",
-  callEnded: "Ligação encerrada",
   again: "De novo",
   hangUp: "Desligar",
   sayHello: "É só dizer oi quando estiver pronto.",
@@ -290,8 +278,6 @@ const ES: DemoCopy = {
   wrongPassword: "Contraseña incorrecta. Inténtalo de nuevo.",
   continueLabel: "Continuar",
 
-  setupTitle: "Llama a la recepcionista de IA",
-  setupSubtitle: "Contesta el teléfono, entiende lo que necesitas y te agenda una cita.",
   languageLabel: "Idioma",
   noNativeVoice:
     "Todavía no existe una voz nativa para este idioma, así que puede que el acento no sea perfecto.",
@@ -299,14 +285,13 @@ const ES: DemoCopy = {
   phoneLabel: "El número desde el que llamas",
   voiceLabel: "Voz",
   voiceDefault: "Predeterminada para este idioma",
-  callHer: "Llamarla",
+  nightMode: "Modo noche",
+  settingsLabel: "Ajustes de la llamada",
+  dayMode: "Modo día",
 
-  simplePrompt: "Llama a recepción y mira lo que pasa.",
   call: "Llamar",
 
   connecting: "Conectando…",
-  onCall: "En la llamada",
-  callEnded: "Llamada finalizada",
   again: "Otra vez",
   hangUp: "Colgar",
   sayHello: "Saluda cuando estés listo.",
@@ -358,22 +343,17 @@ const ES: DemoCopy = {
  */
 const PT_PT: Partial<DemoCopy> = {
   // Post-1990 orthography: Portugal drops the p in "recepcionista".
-  setupTitle: "Ligue para a rececionista de IA",
   lockedHint: "Introduza a palavra-passe para continuar.",
   passwordPlaceholder: "Palavra-passe",
   wrongPassword: "Palavra-passe incorreta. Tente novamente.",
-  setupSubtitle: "Ela atende, percebe o que precisa e marca consigo.",
   companyLabel: "Empresa pela qual atende",
   phoneLabel: "O número de onde está a ligar",
-  simplePrompt: "Ligue para a receção e veja o que acontece.",
   sayHello: "Diga olá quando estiver pronto.",
   crmAfter: "Escrito enquanto estava a falar",
   crmEmpty:
     "Ainda nada registado. Assim que um de vós falar, é criado um contacto e cada fala fica guardada nele.",
   crmLive: "Escrito em direto, durante a chamada",
   liveBadge: "Em direto",
-  onCall: "Em chamada",
-  callEnded: "Chamada terminada",
   endedTimeLimit: "Foi atingido o limite de cinco minutos da demonstração.",
   endedCompleted: "Ela terminou a chamada.",
   endedSilence: "Ninguém falou durante algum tempo, por isso desligou.",

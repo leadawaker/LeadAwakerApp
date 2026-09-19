@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { LiveCallPanel } from "@/features/voiceDemo/components/LiveCallPanel";
-import { OrbPanel } from "@/features/voiceDemo/components/OrbPanel";
+import { Moon, Sun } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useTheme } from "@/hooks/useTheme";
+import { TranscriptPanel } from "@/features/voiceDemo/components/TranscriptPanel";
+import { CallSettings } from "@/features/voiceDemo/components/CallSettings";
+import { demoCallerNumber } from "@/features/voiceDemo/demoNumber";
+import { PhonePanel } from "@/features/voiceDemo/components/PhonePanel";
 import { CrmPanel } from "@/features/voiceDemo/components/CrmPanel";
 import { VoiceDemoLock } from "@/features/voiceDemo/components/VoiceDemoLock";
 import {
@@ -18,11 +23,14 @@ import { copyFor, dateLocaleOf } from "@/features/voiceDemo/copy";
 /**
  * The voice receptionist demo, on GPT-Live.
  *
- * Two panels: the transcript on the left, the orb on the right while the call
- * runs, and the CRM in the orb's place once it is over. The orb holds the
- * prospect's eye during the call; the CRM receipts tick in underneath it so
- * the evidence is accumulating in plain sight rather than being claimed at the
- * end.
+ * Before the call: one panel, and a phone in the middle of it with a green
+ * button on its screen (the call's settings sit behind a gear underneath).
+ * Pressing call splits the panel: the transcript opens on the left, the
+ * phone ends up on the right, and the CRM takes the phone's place once the
+ * call is over.
+ *
+ * The page follows the system's light/dark setting until someone presses the
+ * toggle, so the demo can be shown in either.
  */
 
 const LOCALES: VoiceLocale[] = ["en-GB", "en-US", "nl", "pt-BR", "pt-PT", "es-ES"];
@@ -83,6 +91,7 @@ export default function VoiceDemoPage() {
   const call = useLiveCall();
   const preset = useRef(readSetupFromUrl()).current;
   const simple = useRef(isDemoLink()).current;
+  const showSettings = useRef(isAppHost()).current;
 
   const [unlocked, setUnlocked] = useState(() => isValidVoicePassword(storedVoicePassword()));
 
@@ -176,10 +185,19 @@ export default function VoiceDemoPage() {
     } catch {
       /* private mode — not worth failing a call over */
     }
-    void call.start(setup, storedVoicePassword());
+    // No number typed or in the link: the caller gets a made-up local one, so
+    // the AI hears a caller ID and the CRM files them as their own caller.
+    const callerNumber = setup.callerNumber.trim() || demoCallerNumber(setup.locale);
+    void call.start({ ...setup, callerNumber }, storedVoicePassword());
   };
 
   const copy = copyFor(setup.locale);
+
+  // The phone outlives the call by a beat, so the wave can shrink back into
+  // its dot before the phone fades out and the CRM fades in.
+  const showCrm = useDelayedFlag(call.state === "ended", PHONE_LINGER_MS);
+  const split = call.state !== "idle";
+  const large = useMediaQuery("(min-width: 1024px)");
 
   if (!unlocked) {
     return (
@@ -204,63 +222,162 @@ export default function VoiceDemoPage() {
     );
   }
 
-  const ended = call.state === "ended";
-
   return (
     // Bone page ground, so the panels read as sheets sitting ON something.
     <div
       className="flex min-h-svh flex-col items-center justify-center p-3 sm:p-5"
       style={{ background: "var(--bone)" }}
     >
+      <ThemeToggle copy={copy} />
       <div
         className="flex h-[min(92svh,940px)] w-full max-w-[1200px] overflow-hidden rounded-[var(--r-panel)] border border-border shadow-lg max-lg:h-auto max-lg:min-h-[88svh] max-lg:flex-col"
         style={{ background: "var(--card)" }}
       >
-        <div className="flex min-h-0 flex-1 flex-col lg:w-1/2">
-          <LiveCallPanel
-            state={call.state}
-            turns={call.turns}
-            company={call.company}
-            startedAt={call.startedAt}
-            endedReason={call.endedReason}
-            error={call.error}
-            setup={setup}
-            options={call.options}
-            simple={simple}
-            copy={copy}
-            onSetup={updateSetup}
-            onCall={handleCall}
-            onHangup={() => call.hangup()}
-            onReset={call.reset}
-          />
-        </div>
-        <div className="flex min-h-0 flex-1 flex-col lg:w-1/2">
-          {ended ? (
-            <CrmPanel
-              receipts={call.receipts}
-              leadId={call.leadId}
-              phone={setup.callerNumber}
-              live={false}
-              summary={call.summary}
-              booking={call.booking}
-              recordingUrl={call.recordingUrl}
-              copy={copy}
-              dateLocale={dateLocaleOf(setup.locale)}
-            />
-          ) : (
-            <OrbPanel
-              orbState={call.orbState}
-              amplitude={call.amplitude}
-              booking={call.booking}
-              locale={setup.locale}
-              copy={copy}
-            />
+        {/*
+          Before the call there is one panel with the phone in the middle.
+          Pressing call opens the transcript beside it, and the phone glides
+          across with the shrinking panel: nothing moves the phone itself,
+          it simply stays centred in a panel that is getting narrower.
+        */}
+        <AnimatePresence initial={false}>
+          {split && (
+            <motion.div
+              key="transcript"
+              className="flex min-h-0 flex-none flex-col overflow-hidden border-border max-lg:order-2 max-lg:border-t lg:border-r"
+              initial={large ? { width: 0, opacity: 0 } : { height: 0, opacity: 0 }}
+              animate={large ? { width: "50%", opacity: 1 } : { height: "45svh", opacity: 1 }}
+              exit={large ? { width: 0, opacity: 0 } : { height: 0, opacity: 0 }}
+              transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: call.state === "connecting" ? 0.25 : 0 }}
+            >
+              {/* Fixed width inside, so text does not reflow while it opens. */}
+              <div className="flex min-h-0 flex-1 flex-col lg:w-[min(600px,calc(50vw-1.25rem))]">
+                <TranscriptPanel
+                  turns={call.turns}
+                  endedReason={call.endedReason}
+                  error={call.error}
+                  copy={copy}
+                />
+              </div>
+            </motion.div>
           )}
+        </AnimatePresence>
+
+        {/* The ground stays put while the phone and the CRM swap on top of it. */}
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col bg-muted">
+          <AnimatePresence mode="wait" initial={false}>
+            {showCrm ? (
+              <motion.div key="crm" className="flex min-h-0 flex-1 flex-col" {...PANEL_IN}>
+                <CrmPanel
+                  receipts={call.receipts}
+                  leadId={call.leadId}
+                  phone={setup.callerNumber.trim() || demoCallerNumber(setup.locale)}
+                  live={false}
+                  summary={call.summary}
+                  booking={call.booking}
+                  recordingUrl={call.recordingUrl}
+                  copy={copy}
+                  dateLocale={dateLocaleOf(setup.locale)}
+                  onAgain={call.reset}
+                />
+              </motion.div>
+            ) : (
+              <motion.div key="phone" className="flex min-h-0 flex-1 flex-col" {...PANEL_IN}>
+                <PhonePanel
+                  callState={call.state}
+                  aiState={call.orbState}
+                  readLevels={call.readLevels}
+                  company={call.company || setup.companyName}
+                  startedAt={call.startedAt}
+                  booking={call.booking}
+                  locale={setup.locale}
+                  copy={copy}
+                  error={call.error}
+                  settings={
+                    showSettings ? (
+                      <CallSettings
+                        setup={setup}
+                        options={call.options}
+                        simple={simple}
+                        copy={copy}
+                        onSetup={updateSetup}
+                      />
+                    ) : undefined
+                  }
+                  onCall={handleCall}
+                  onHangup={() => call.hangup()}
+                />
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
 
       <audio ref={call.audioRef} autoPlay className="hidden" />
     </div>
+  );
+}
+
+/**
+ * The settings gear is for us. The public site (www.leadawaker.com) shows the
+ * phone and nothing else; only the app host, and local development, get it.
+ */
+function isAppHost(): boolean {
+  const host = window.location.hostname;
+  return host.startsWith("app.") || host === "localhost" || host === "127.0.0.1";
+}
+
+/** How long the phone stays after the call ends, for the wave's exit. */
+const PHONE_LINGER_MS = 650;
+
+/** Shared enter/exit for the right-hand panel swap. */
+const PANEL_IN = {
+  initial: { opacity: 0, y: 12 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] } },
+  exit: { opacity: 0, scale: 0.97, transition: { duration: 0.4, ease: [0.4, 0, 1, 1] } },
+} as const;
+
+function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState(() => window.matchMedia(query).matches);
+  useEffect(() => {
+    const mq = window.matchMedia(query);
+    const onChange = (e: MediaQueryListEvent) => setMatches(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [query]);
+  return matches;
+}
+
+/** `value`, but a true only lands after `delayMs`; a false lands at once. */
+function useDelayedFlag(value: boolean, delayMs: number): boolean {
+  const [flag, setFlag] = useState(value);
+  useEffect(() => {
+    if (!value) {
+      setFlag(false);
+      return;
+    }
+    const id = window.setTimeout(() => setFlag(true), delayMs);
+    return () => window.clearTimeout(id);
+  }, [value, delayMs]);
+  return flag;
+}
+
+/**
+ * Day/night switch. Until it is pressed the page follows the system setting
+ * (the theme's default); pressing it pins the opposite of what is showing.
+ */
+function ThemeToggle({ copy }: { copy: ReturnType<typeof copyFor> }) {
+  const { isDark, setThemeMode } = useTheme();
+  const label = isDark ? copy.dayMode : copy.nightMode;
+  return (
+    <button
+      type="button"
+      onClick={() => setThemeMode(isDark ? "light" : "dark")}
+      aria-label={label}
+      title={label}
+      className="fixed bottom-4 right-4 z-10 inline-flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card text-muted-foreground shadow-sm transition hover:text-foreground"
+    >
+      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+    </button>
   );
 }
 
