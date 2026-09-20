@@ -278,6 +278,50 @@ async function assertDemoAssets() {
   console.log(`build-premium: verified ${refs.length} demo assets: ${refs.join(", ")}`);
 }
 
+// /voice-demo is a page inside the React CRM bundle, so it shares app.html's
+// <head>, and link crawlers (WhatsApp, iMessage) never run JS to fix the tags
+// up. Vercel can't vary <head> per route either, so the build writes a copy of
+// the built app shell with this page's own preview tags and vercel.json
+// rewrites /voice-demo to it. Relative asset URLs in app.html are root-absolute
+// (/assets/...), so the copy loads the same bundle.
+const VOICE_DEMO_PREVIEW = {
+  title: "Talk to an AI receptionist: Lead Awaker",
+  description: "Call a live AI voice receptionist. Ask it anything and book an appointment.",
+  image: "https://www.leadawaker.com/og-demo.jpg",
+};
+
+async function writeVoiceDemoPage() {
+  const appPath = path.resolve("dist/public/app.html");
+  let html = await readFile(appPath, "utf-8");
+  const stripTags = /^[ \t]*<meta (?:property="og:|name="twitter:)[^>]*>\r?\n/gm;
+  const { title, description, image } = VOICE_DEMO_PREVIEW;
+  const tags = [
+    `<meta property="og:type" content="website" />`,
+    `<meta property="og:site_name" content="Lead Awaker" />`,
+    `<meta property="og:title" content="${title}" />`,
+    `<meta property="og:description" content="${description}" />`,
+    `<meta property="og:image" content="${image}" />`,
+    `<meta property="og:image:width" content="1200" />`,
+    `<meta property="og:image:height" content="630" />`,
+    `<meta name="twitter:card" content="summary_large_image" />`,
+  ].map((t) => `    ${t}\n`).join("");
+  html = html.replace(stripTags, "");
+  html = replaceRequired(html, /<\/head>/, `${tags}  </head>`, "the closing </head> tag", "app.html");
+  await writeFile(path.resolve("dist/public/voice-demo.html"), html);
+
+  const config = JSON.parse(await readFile(path.resolve("vercel.json"), "utf-8")) as {
+    rewrites?: { source: string; destination: string }[];
+  };
+  const match = (config.rewrites || []).find((r) => r.source === "/voice-demo");
+  if (match?.destination !== "/voice-demo.html") {
+    throw new Error(
+      'build-premium: vercel.json must rewrite /voice-demo to /voice-demo.html, otherwise the ' +
+        'catch-all serves app.html and the link preview loses its tags'
+    );
+  }
+  console.log("build-premium: wrote voice-demo.html with link-preview tags");
+}
+
 async function main() {
   const indexPath = path.join(DIST_PREMIUM, "index.html");
   let html = await readFile(indexPath, "utf-8");
@@ -336,6 +380,7 @@ async function main() {
 
   await assertRewriteTargets();
   await assertDemoAssets();
+  await writeVoiceDemoPage();
 }
 
 main().catch((err) => {

@@ -36,6 +36,10 @@
       "destination": "/premium/demo.html"
     },
     {
+      "source": "/voice-demo",
+      "destination": "/voice-demo.html"
+    },
+    {
       "source": "/(.*)",
       "destination": "/app.html"
     }
