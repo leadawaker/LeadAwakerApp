@@ -35,6 +35,7 @@ import {
   type TermGroup,
 } from "../../api/demoClientsApi";
 import { CategorySelect } from "./CategorySelect";
+import { ClientScreenshot } from "./ClientScreenshot";
 
 /** Long fields, in the order they read as a persona. `multiline` drives height. */
 const TEXT_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: number }> = [
@@ -335,6 +336,9 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
           />
         </div>
       </div>
+
+      {/* ── The site behind this Client's widget demo ── */}
+      <ClientScreenshot niche={niche} screenshot={client?.screenshot ?? null} />
 
       {/* ── Terms: the only genuinely per-language part ── */}
       <section className="neu-raised" style={{ padding: 22, borderRadius: "var(--r-card)" }}>

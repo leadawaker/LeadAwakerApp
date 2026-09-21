@@ -131,6 +131,20 @@
       "upload": "Upload photo",
       "reset": "Use default",
       "avatarError": "That image could not be read. Try a PNG, JPG or WebP."
+    },
+    "voice": {
+      "voicesTitle": "Voice per language",
+      "voicesHint": "Which voice answers the phone in each language. Changes reach the next call, not one already running.",
+      "engineDefault": "Default ({{voice}})",
+      "loading": "Loading the engine's voices…",
+      "engineDown": "Could not reach the voice engine, so these cannot be edited right now.",
+      "passwordTitle": "Demo password",
+      "passwordHint": "Extra words that open the demo page, separated by commas. The built-in ones keep working.",
+      "passwordPlaceholder": "e.g. solar, demo2026",
+      "limitTitle": "Call limit (minutes)",
+      "limitHint": "How long one demo call may run before it ends itself.",
+      "save": "Save",
+      "cancel": "Cancel"
     }
   },
   "widgetColor": {

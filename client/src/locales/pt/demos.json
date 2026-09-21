@@ -131,6 +131,20 @@
       "upload": "Enviar foto",
       "reset": "Usar padrão",
       "avatarError": "Não foi possível ler esta imagem. Tente PNG, JPG ou WebP."
+    },
+    "voice": {
+      "voicesTitle": "Voz por idioma",
+      "voicesHint": "Qual voz atende em cada idioma. A mudança vale para a próxima ligação, não para uma em andamento.",
+      "engineDefault": "Padrão ({{voice}})",
+      "loading": "Carregando as vozes do engine…",
+      "engineDown": "Não foi possível acessar o engine de voz, então isso não pode ser editado agora.",
+      "passwordTitle": "Senha da demonstração",
+      "passwordHint": "Palavras extras que abrem a página da demonstração, separadas por vírgula. As palavras originais continuam valendo.",
+      "passwordPlaceholder": "ex.: solar, demo2026",
+      "limitTitle": "Limite da ligação (minutos)",
+      "limitHint": "Quanto tempo uma ligação de demonstração pode durar antes de encerrar sozinha.",
+      "save": "Salvar",
+      "cancel": "Cancelar"
     }
   },
   "widgetColor": {

@@ -205,7 +205,9 @@ export function DemoSessionsTable({ sessions }: { sessions: DemoSession[] }) {
     TAIL_COLS.reduce((n, c) => n + c.width, 0);
 
   const headClass =
-    "select-none whitespace-nowrap border-b border-border/20 bg-muted px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50";
+    // sticky + an opaque background: with borderSpacing the rows would
+    // otherwise show through the gaps as they pass behind it.
+    "sticky top-0 z-10 select-none whitespace-nowrap border-b border-border/20 bg-muted px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50";
   const sortable: Record<string, SortKey | undefined> = {
     prospect: "prospect",
     company: "company",
@@ -224,34 +226,32 @@ export function DemoSessionsTable({ sessions }: { sessions: DemoSession[] }) {
 
   return (
     <div className="flex h-full min-h-0 flex-col">
-      <table
-        className="w-full shrink-0"
-        style={{ tableLayout: "fixed", borderCollapse: "separate", borderSpacing: 0, minWidth }}
-      >
-        {colgroup}
-        <thead>
-          <tr>
-            {LEAD_COLS.map((c) => header(c.key))}
-            {SERVICES.map((s) => (
-              <th key={s.key} className={headClass} title={t(s.labelKey)}>
-                <span className="flex items-center gap-1">
-                  <s.icon size={11} />
-                  {t(`table.svc.${s.key}`)}
-                </span>
-              </th>
-            ))}
-            {hasOther && <th className={headClass}>{t("table.other")}</th>}
-            {TAIL_COLS.map((c) => header(c.key))}
-          </tr>
-        </thead>
-      </table>
-
+      {/* One table inside the scroll box, with a sticky header row. The header
+          used to be a second table above it, which meant it held still while
+          the body scrolled sideways and the labels stopped matching their
+          columns. A sticky <th> moves with the columns and stays put
+          vertically, which is what a header has to do on both axes. */}
       <div className="min-h-0 flex-1 overflow-auto">
         <table
           className="w-full"
           style={{ tableLayout: "fixed", borderCollapse: "separate", borderSpacing: "0 3px", minWidth }}
         >
           {colgroup}
+          <thead>
+            <tr>
+              {LEAD_COLS.map((c) => header(c.key))}
+              {SERVICES.map((s) => (
+                <th key={s.key} className={headClass} title={t(s.labelKey)}>
+                  <span className="flex items-center gap-1">
+                    <s.icon size={11} />
+                    {t(`table.svc.${s.key}`)}
+                  </span>
+                </th>
+              ))}
+              {hasOther && <th className={headClass}>{t("table.other")}</th>}
+              {TAIL_COLS.map((c) => header(c.key))}
+            </tr>
+          </thead>
           <tbody>
             {rows.map((row) => (
               <ProspectTableRow key={row.key} row={row} dateFmt={dateFmt} hasOther={hasOther} />

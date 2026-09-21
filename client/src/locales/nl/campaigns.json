@@ -831,6 +831,16 @@
       "quoteContext": "De offerte waar ze op zitten",
       "quoteSubject": "Waar de offerte voor was",
       "quoteWhen": "Wanneer de offerte is verstuurd"
+    },
+    "shot": {
+      "title": "Website-afbeelding",
+      "hint": "De pagina waarop de widgetdemo staat. Handmatig te uploaden voor een Client zonder eigen website.",
+      "none": "Nog geen afbeelding",
+      "upload": "Uploaden",
+      "replace": "Vervangen",
+      "remove": "Verwijderen",
+      "tooLarge": "Die afbeelding is te groot.",
+      "failed": "Uploaden mislukt."
     }
   }
 }

@@ -83,6 +83,8 @@ export interface DemoClientSummary {
   /** False for the curated niche packs: listed and editable, never deletable. */
   isDemoClient: boolean;
   updatedAt: string | null;
+  /** Filename of the widget demo's backdrop, or null. Served by /api/site-shot/. */
+  screenshot: string | null;
 }
 
 export interface EditableDemoClient {
@@ -131,6 +133,33 @@ export function useDemoClient(niche: string | null) {
       const res = await apiFetch(`/api/demo/clients/${encodeURIComponent(niche!)}`);
       if (!res.ok) throw new Error("Failed to load Client");
       return (await res.json()).client ?? null;
+    },
+  });
+}
+
+/**
+ * Set or clear the homepage image behind this Client's widget demo.
+ *
+ * The file goes up as a data URL, as the widget's agent photo does: the server
+ * converts it to the same content-addressed .webp a scrape produces, so
+ * everything downstream cannot tell the two apart. null removes it.
+ */
+export function useSetClientScreenshot(niche: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (dataUrl: string | null) => {
+      const res = await apiFetch(`/api/demo/clients/${encodeURIComponent(niche)}/screenshot`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dataUrl }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error((body as { message?: string }).message || "Upload failed");
+      return body as { screenshot: string | null };
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: [...CLIENTS_KEY, niche] });
+      qc.invalidateQueries({ queryKey: ["demo-widget-colors"] });
     },
   });
 }

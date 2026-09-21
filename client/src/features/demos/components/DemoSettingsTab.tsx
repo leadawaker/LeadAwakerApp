@@ -9,7 +9,14 @@ import { useTranslation } from "react-i18next";
 import { Loader2, RotateCcw, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SERVICES } from "../services";
-import { apiAsset, useDemoSettings, useSetWidgetAvatar } from "../api/demoSettingsApi";
+import {
+  apiAsset,
+  useDemoSettings,
+  useEngineVoiceOptions,
+  useSaveVoiceSettings,
+  useSetWidgetAvatar,
+  type VoiceDemoSettings,
+} from "../api/demoSettingsApi";
 
 // Shown at 42px in the widget; 192 covers 3x screens with room to spare and
 // keeps the upload to a few tens of KB.
@@ -107,6 +114,151 @@ function WidgetSettings() {
   );
 }
 
+const CARD: React.CSSProperties = {
+  borderRadius: "var(--r-card)",
+  background: "var(--bone)",
+  padding: "20px 22px",
+  maxWidth: 560,
+};
+const INPUT: React.CSSProperties = {
+  height: 34,
+  borderRadius: "var(--r-field, 8px)",
+  border: "1px solid var(--line)",
+  background: "var(--card)",
+  color: "var(--ink)",
+  padding: "0 9px",
+  fontSize: 13,
+};
+
+/**
+ * The /voice-demo page's own settings: which voice answers per language, the
+ * door password and how long a call may run.
+ *
+ * The languages and voices come from the engine rather than a list kept here,
+ * so a voice added in Python shows up without a second edit. Saving is
+ * explicit: these change what a prospect hears on the next call, which is not
+ * something to do on every keystroke.
+ */
+function VoiceSettings() {
+  const { t } = useTranslation("demos");
+  const { data } = useDemoSettings();
+  const { data: engine, isLoading, error } = useEngineVoiceOptions();
+  const save = useSaveVoiceSettings();
+
+  const saved = (data?.settings?.voice || {}) as VoiceDemoSettings;
+  const [draft, setDraft] = useState<VoiceDemoSettings | null>(null);
+  const current = draft ?? saved;
+  const dirty = draft !== null;
+
+  const patch = (next: Partial<VoiceDemoSettings>) => setDraft({ ...current, ...next });
+
+  const onSave = async () => {
+    if (!draft) return;
+    await save.mutateAsync({
+      defaultVoices: draft.defaultVoices ?? {},
+      passwords: draft.passwords ?? [],
+      maxCallMinutes: draft.maxCallMinutes,
+    });
+    setDraft(null);
+  };
+
+  if (error) {
+    return <span style={{ fontSize: 13, color: "var(--danger, #B3261E)" }}>{t("settings.voice.engineDown")}</span>;
+  }
+
+  return (
+    <div className="neu-raised" style={CARD}>
+      <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
+        {t("settings.voice.voicesTitle")}
+      </span>
+      <span style={{ display: "block", fontSize: 12, color: "var(--mute)", marginTop: 2 }}>
+        {t("settings.voice.voicesHint")}
+      </span>
+
+      <div style={{ display: "grid", gap: 8, marginTop: 14 }}>
+        {(engine?.locales ?? []).map((l) => (
+          <label key={l.id} style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <span style={{ flex: 1, fontSize: 13, color: "var(--ink)" }}>{l.label}</span>
+            <select
+              style={{ ...INPUT, width: 190 }}
+              value={current.defaultVoices?.[l.id] ?? ""}
+              onChange={(e) =>
+                patch({ defaultVoices: { ...(current.defaultVoices ?? {}), [l.id]: e.target.value } })
+              }
+            >
+              {/* Empty means the engine's own default, which is named here so
+                  nobody has to guess what "default" sounds like. */}
+              <option value="">{t("settings.voice.engineDefault", { voice: l.voice })}</option>
+              {(engine?.voices ?? []).map((v) => (
+                <option key={v.id} value={v.id}>{v.id} — {v.label}</option>
+              ))}
+            </select>
+          </label>
+        ))}
+        {isLoading && <span style={{ fontSize: 12, color: "var(--mute)" }}>{t("settings.voice.loading")}</span>}
+      </div>
+
+      <div style={{ height: 1, background: "var(--line)", margin: "18px 0" }} />
+
+      <label style={{ display: "block" }}>
+        <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+          {t("settings.voice.passwordTitle")}
+        </span>
+        <span style={{ display: "block", fontSize: 12, color: "var(--mute)", margin: "2px 0 8px" }}>
+          {t("settings.voice.passwordHint")}
+        </span>
+        <input
+          style={{ ...INPUT, width: "100%" }}
+          value={(current.passwords ?? []).join(", ")}
+          placeholder={t("settings.voice.passwordPlaceholder")}
+          onChange={(e) =>
+            patch({ passwords: e.target.value.split(",").map((p) => p.trim()).filter(Boolean) })
+          }
+        />
+      </label>
+
+      <label style={{ display: "block", marginTop: 16 }}>
+        <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+          {t("settings.voice.limitTitle")}
+        </span>
+        <span style={{ display: "block", fontSize: 12, color: "var(--mute)", margin: "2px 0 8px" }}>
+          {t("settings.voice.limitHint")}
+        </span>
+        <input
+          type="number"
+          min={1}
+          max={30}
+          style={{ ...INPUT, width: 90 }}
+          value={current.maxCallMinutes ?? engine?.max_call_minutes ?? 5}
+          onChange={(e) => patch({ maxCallMinutes: Number(e.target.value) || undefined })}
+        />
+      </label>
+
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 18 }}>
+        <button
+          type="button"
+          className="la-btn la-btn--primary"
+          disabled={!dirty || save.isPending}
+          onClick={() => void onSave()}
+        >
+          {save.isPending && <Loader2 size={13} className="animate-spin" />}
+          {t("settings.voice.save")}
+        </button>
+        {dirty && (
+          <button type="button" className="la-btn la-btn--soft" onClick={() => setDraft(null)}>
+            {t("settings.voice.cancel")}
+          </button>
+        )}
+        {save.isError && (
+          <span style={{ fontSize: 12, color: "var(--danger, #B3261E)" }}>
+            {(save.error as Error)?.message}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function DemoSettingsTab() {
   const { t } = useTranslation("demos");
   const [service, setService] = useState(SERVICES[0]!.key);
@@ -132,6 +284,8 @@ export function DemoSettingsTab() {
 
         {service === "widget" ? (
           <WidgetSettings />
+        ) : service === "voice" ? (
+          <VoiceSettings />
         ) : (
           <span style={{ fontSize: 13, color: "var(--mute-2)" }}>{t("settings.empty")}</span>
         )}

@@ -305,7 +305,10 @@
     "language": "Idioma",
     "agentName": "Nome do agente",
     "positioning": "Posicionamento",
-    "positioningOptions": { "premium": "Premium", "mid_market": "Mercado intermediário" },
+    "positioningOptions": {
+      "premium": "Premium",
+      "mid_market": "Mercado intermediário"
+    },
     "aiDisclosure": "Aviso de IA",
     "whatLeadDid": "O que o lead fez",
     "inquiryDate": "Data da consulta",
@@ -609,6 +612,16 @@
     "fields": {
       "quoteSubject": "Do que era o orçamento",
       "quoteWhen": "Quando o orçamento foi enviado"
+    },
+    "shot": {
+      "title": "Imagem do site",
+      "hint": "A página em que a demonstração do widget aparece. Enviada manualmente para um Client sem site próprio.",
+      "none": "Ainda sem imagem",
+      "upload": "Enviar",
+      "replace": "Substituir",
+      "remove": "Remover",
+      "tooLarge": "Essa imagem é muito grande.",
+      "failed": "Falha no envio."
     }
   }
 }

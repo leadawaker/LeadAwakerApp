@@ -131,6 +131,20 @@
       "upload": "Foto uploaden",
       "reset": "Standaard gebruiken",
       "avatarError": "Deze afbeelding kon niet worden gelezen. Probeer een PNG, JPG of WebP."
+    },
+    "voice": {
+      "voicesTitle": "Stem per taal",
+      "voicesHint": "Welke stem in welke taal opneemt. Een wijziging geldt vanaf het volgende gesprek, niet tijdens een lopend gesprek.",
+      "engineDefault": "Standaard ({{voice}})",
+      "loading": "Stemmen van de engine laden…",
+      "engineDown": "De voice-engine is niet bereikbaar, dus dit is nu niet te wijzigen.",
+      "passwordTitle": "Demowachtwoord",
+      "passwordHint": "Extra woorden die de demopagina openen, gescheiden door komma's. De ingebouwde woorden blijven werken.",
+      "passwordPlaceholder": "bijv. zon, demo2026",
+      "limitTitle": "Gesprekslimiet (minuten)",
+      "limitHint": "Hoe lang een demogesprek mag duren voordat het zichzelf beëindigt.",
+      "save": "Opslaan",
+      "cancel": "Annuleren"
     }
   },
   "widgetColor": {

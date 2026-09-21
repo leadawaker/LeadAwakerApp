@@ -12,6 +12,10 @@ import { z } from "zod";
 import { db } from "../db";
 import { demoSettings, nicheVocabulary } from "@shared/schema";
 import { brandColorForShot } from "../brandColor";
+import { SHOT_DIR } from "../siteShot";
+import { execFile } from "child_process";
+import { promisify } from "util";
+import os from "os";
 import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
 
@@ -88,6 +92,78 @@ export function registerDemoSettingsRoutes(app: Express) {
     res.json(await widgetColorFor(row));
   }));
 
+  /**
+   * The homepage image behind a Client's widget demo.
+   *
+   * Clients built from a URL get one automatically from the scrape. A Client
+   * typed as a niche never had a site to photograph, so its widget demo had
+   * nothing behind it: this is how one gets there by hand, a generated mockup
+   * or a screenshot taken manually.
+   *
+   * Stored exactly like a scraped one (content-addressed .webp in
+   * uploads/site-shots, name on the Client row), so everything downstream --
+   * the widget demo, the thumbnail in the sessions table, the launcher colour
+   * read off the image -- works without knowing where it came from.
+   */
+  const MAX_SHOT_BYTES = 8_000_000;
+  const execFileAsync = promisify(execFile);
+
+  app.put("/api/demo/clients/:niche/screenshot", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
+    const niche = String(req.params.niche || "");
+    const parsed = z
+      .object({ dataUrl: z.string().regex(/^data:image\/(webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/).nullable() })
+      .safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+
+    if (parsed.data.dataUrl === null) {
+      // The file is left on disk: another Client may point at the same image,
+      // and a stray 40KB webp is cheaper than a wrong delete.
+      const [row] = await db
+        .update(nicheVocabulary)
+        .set({ screenshotPath: null, screenshotAt: null })
+        .where(eq(nicheVocabulary.niche, niche))
+        .returning({ niche: nicheVocabulary.niche });
+      if (!row) return res.status(404).json({ message: "Unknown client." });
+      return res.json({ screenshot: null });
+    }
+
+    const [, mime, b64] = /^data:image\/(webp|png|jpeg);base64,(.+)$/.exec(parsed.data.dataUrl)!;
+    let bytes = Buffer.from(b64, "base64");
+    if (!bytes.length || bytes.length > MAX_SHOT_BYTES) {
+      return res.status(413).json({ message: "That image is too large." });
+    }
+
+    // The serve route (GET /api/site-shot/:file) only ever hands out .webp, so
+    // anything else is converted here rather than being stored as-is and 404ing
+    // for the rest of its life.
+    if (mime !== "webp") {
+      const tmp = path.join(os.tmpdir(), `shot-${Date.now()}.${mime === "jpeg" ? "jpg" : mime}`);
+      const out = `${tmp}.webp`;
+      try {
+        await fs.writeFile(tmp, bytes);
+        await execFileAsync("cwebp", ["-quiet", "-q", "82", "-resize", "1280", "0", tmp, "-o", out]);
+        bytes = await fs.readFile(out);
+      } catch (err) {
+        console.error("[demo-shot] cwebp failed", err);
+        return res.status(500).json({ message: "Could not convert that image." });
+      } finally {
+        await fs.rm(tmp, { force: true });
+        await fs.rm(out, { force: true });
+      }
+    }
+
+    const file = `${createHash("sha256").update(bytes).digest("hex").slice(0, 16)}.webp`;
+    await fs.mkdir(SHOT_DIR, { recursive: true });
+    await fs.writeFile(path.join(SHOT_DIR, file), bytes);
+    const [row] = await db
+      .update(nicheVocabulary)
+      .set({ screenshotPath: file, screenshotAt: new Date() })
+      .where(eq(nicheVocabulary.niche, niche))
+      .returning({ niche: nicheVocabulary.niche });
+    if (!row) return res.status(404).json({ message: "Unknown client." });
+    res.json({ screenshot: file });
+  }));
+
   app.get("/api/demo-settings", requireAuth, requireAgency, wrapAsync(async (_req: Request, res: Response) => {
     const rows = await db.select().from(demoSettings);
     const out: Record<string, Record<string, unknown>> = {};
@@ -124,6 +200,57 @@ export function registerDemoSettingsRoutes(app: Express) {
     await fs.writeFile(path.join(DEMO_AVATAR_DIR, file), bytes);
     await writeSettings("widget", { ...current, avatarFile: file });
     res.json({ widgetAvatarUrl: `/api/demo-avatar/${file}` });
+  }));
+
+  /**
+   * The voice demo's own settings: which voice answers in each language, the
+   * door password and how long a demo call may run.
+   *
+   * The engine reads this row directly (src/automations/voice/demo_settings.py)
+   * and keeps its own defaults for anything missing, so an empty row is the
+   * same as no row. Voice ids are not checked against the engine's list here:
+   * that list lives in Python, and the engine ignores an id it does not know
+   * rather than passing it to OpenAI mid-call.
+   */
+  const voiceSchema = z.object({
+    defaultVoices: z.record(z.string().max(40), z.string().trim().max(40)).optional(),
+    // Stored as typed. The engine casefolds and strips accents on both sides,
+    // so "Olá" and "ola" are the same word at the door.
+    passwords: z.array(z.string().trim().min(1).max(60)).max(10).optional(),
+    maxCallMinutes: z.number().int().min(1).max(30).optional(),
+  });
+
+  app.put("/api/demo-settings/voice", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
+    const parsed = voiceSchema.safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const current = await readSettings("voice");
+    const next = { ...current, ...parsed.data };
+    // An empty pick means "use the engine's built-in default for that
+    // language", so it is removed rather than stored as "".
+    if (next.defaultVoices && typeof next.defaultVoices === "object") {
+      next.defaultVoices = Object.fromEntries(
+        Object.entries(next.defaultVoices as Record<string, string>).filter(([, v]) => v),
+      );
+    }
+    await writeSettings("voice", next);
+    res.json({ settings: next });
+  }));
+
+  /**
+   * The /voice-demo door, for the page's own password box. Public, because the
+   * page is: it answers yes or no rather than handing the browser the list.
+   * The engine checks the password again on every call, so this is a door, not
+   * the lock.
+   */
+  app.post("/api/voice-demo/door", wrapAsync(async (req: Request, res: Response) => {
+    const parsed = z.object({ password: z.string().max(60) }).safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const extra = (await readSettings("voice")).passwords;
+    const list = Array.isArray(extra) ? (extra as string[]) : [];
+    const normalize = (v: string) =>
+      v.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const typed = normalize(parsed.data.password);
+    res.json({ ok: list.some((p) => normalize(p) === typed) });
   }));
 
   // Public: a prospect's demo page loads it.

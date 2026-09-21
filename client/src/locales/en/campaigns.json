@@ -831,6 +831,16 @@
       "quoteContext": "The quote they are sitting on",
       "quoteSubject": "What the quote was for",
       "quoteWhen": "When the quote was sent"
+    },
+    "shot": {
+      "title": "Website image",
+      "hint": "The page the widget demo sits on. Uploaded by hand for a Client with no website of its own.",
+      "none": "No image yet",
+      "upload": "Upload",
+      "replace": "Replace",
+      "remove": "Remove",
+      "tooLarge": "That image is too large.",
+      "failed": "Upload failed."
     }
   }
 }

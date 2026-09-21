@@ -499,6 +499,9 @@ export function demoClientToEditable(row: ClientRow) {
     niche: row.niche,
     bookingModeCall: row.bookingModeCall ?? false,
     isDemoClient: row.isDemoClient ?? false,
+    // The homepage image behind this Client's widget demo: scraped from their
+    // site, or uploaded by hand for a Client that never had one.
+    screenshot: row.screenshotPath ?? null,
     updatedAt: row.updatedAt ?? null,
     text,
     terms,
