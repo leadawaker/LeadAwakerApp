@@ -15,7 +15,7 @@ export function VoiceDemoLock({
   onUnlock,
   copy,
 }: {
-  onUnlock: (raw: string) => boolean;
+  onUnlock: (raw: string) => boolean | Promise<boolean>;
   copy: DemoCopy;
 }) {
   const [value, setValue] = useState("");
@@ -24,10 +24,24 @@ export function VoiceDemoLock({
   const submit = (e: FormEvent) => {
     e.preventDefault();
     if (!value.trim()) return;
-    if (!onUnlock(value)) {
+    // The built-in words answer synchronously, which is what keeps a minted
+    // link's auto-start inside the click the browser wants before it hands
+    // over a microphone. A password set on the Demos page has to be checked
+    // by the server, so that one resolves a tick later and the caller taps
+    // the green button themselves.
+    const verdict = onUnlock(value);
+    if (typeof verdict === "boolean") {
+      if (!verdict) {
+        setWrong(true);
+        setValue("");
+      }
+      return;
+    }
+    void verdict.then((ok) => {
+      if (ok) return;
       setWrong(true);
       setValue("");
-    }
+    });
   };
 
   return (

@@ -21,6 +21,7 @@ import {
   type NicheContext,
 } from "../demo-session";
 import { GenerationError } from "../demoGenerator/providers";
+import { mintVoiceDemoPass } from "../voice-demo-pass";
 import { getWebDemoConfig, updateWebDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
 import { captureSiteShot, shotExists, isPublicHttpUrl, normalizeUrl } from "../siteShot";
 import { db } from "../db";
@@ -183,6 +184,13 @@ function clientIp(req: Request): string {
 }
 
 export function registerDemoRoutes(app: Express): void {
+  // Lifts the engine's voice-demo rate limit for agency staff. Never 401s:
+  // the page is public, so a visitor simply gets no pass.
+  app.get("/api/voice-demo/pass", (req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ pass: isDemoAdmin(req) ? mintVoiceDemoPass() : null });
+  });
+
   app.get("/api/demo/campaigns", (_req, res) => {
     res.json({ campaigns: DEMO_CAMPAIGNS });
   });

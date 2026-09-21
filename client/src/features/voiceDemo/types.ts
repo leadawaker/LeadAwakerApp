@@ -132,6 +132,8 @@ export interface LiveOptions {
   default_locale: VoiceLocale;
   locales: LocaleOption[];
   voices: { id: string; label: string }[];
+  /** How long a demo call may run, set on the Demos page. */
+  max_call_minutes?: number;
 }
 
 export interface LiveSetup {

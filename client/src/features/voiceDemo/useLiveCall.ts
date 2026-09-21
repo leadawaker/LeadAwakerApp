@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AIState } from "@/components/siriOrb/aiCore";
 import { useCallLevels } from "./useCallLevels";
 import { ENGINE_BASE_URL } from "./engine";
+import { apiFetch } from "@/lib/apiUtils";
 import type {
   Booking,
   CallState,
@@ -47,6 +48,14 @@ const TURN_GAP_MS = 1400;
 /** Hard stop, so an abandoned tab cannot bill a session indefinitely. */
 export const MAX_CALL_MS = 5 * 60 * 1000;
 
+/** The limit the Demos page set, if the options call answered before this one. */
+const limitMsRef = { current: MAX_CALL_MS };
+
+/** The limit in force right now: the configured one, else the built-in five minutes. */
+export function callLimitMs(): number {
+  return limitMsRef.current;
+}
+
 /**
  * Hang up after this long with neither side saying anything.
  *
@@ -90,6 +99,20 @@ const FAREWELL_SILENCE_MS = 3000;
 const GREETING_FLOOR_MS = 2500;
 
 /**
+ * How long to wait for her to open the call before asking a second time.
+ *
+ * The opening instruction is appended when the data channel opens, about half
+ * a second before `session.started`, and an append that lands before the
+ * session is running is simply lost: the call then sits in silence until the
+ * prospect says "hello?". Long enough that she is genuinely not coming rather
+ * than merely slow, so a greeting already under way is never doubled.
+ */
+const GREETING_RETRY_MS = 2500;
+
+/** Correlates the greeting's ack (and any refusal) with the event that asked. */
+const GREETING_EVENT_ID = "greeting_1";
+
+/**
  * Her signing off, in the six languages the demo speaks.
  *
  * Deliberately only the unambiguous forms. Dutch "dag" is both "goodbye" and
@@ -115,7 +138,9 @@ interface LiveEvent {
   reason?: string;
   session?: { id?: string };
   usage?: { seconds?: number };
-  error?: { message?: string };
+  error?: { message?: string; type?: string; code?: string; client_event_id?: string };
+  /** On an ack, the `event_id` of the client event it answers. */
+  client_event_id?: string;
   event?: { type?: string; item?: ToolItem };
 }
 
@@ -185,6 +210,11 @@ export function useLiveCall() {
   const greetingRef = useRef<string>("");
   /** Set once the opening instruction has gone out, so it is sent only once. */
   const greetedRef = useRef(false);
+  /** Set the moment she says anything, which is what tells us the greeting landed. */
+  const spokeRef = useRef(false);
+  /** Set once the commentary cue has gone out, so it goes out only once. */
+  const cuedRef = useRef(false);
+  const retryRef = useRef<number | null>(null);
 
   /** Text accumulating for each side, plus the timer that will close it. */
   const bufRef = useRef<{ you: string; them: string }>({ you: "", them: "" });
@@ -195,7 +225,13 @@ export function useLiveCall() {
   useEffect(() => {
     fetch(`${ENGINE_BASE_URL}/voice/live/options`)
       .then((r) => (r.ok ? r.json() : null))
-      .then((d) => d && setOptions(d as LiveOptions))
+      .then((d) => {
+        if (!d) return;
+        const opts = d as LiveOptions;
+        setOptions(opts);
+        const mins = opts.max_call_minutes;
+        if (typeof mins === "number" && mins >= 1 && mins <= 30) limitMsRef.current = mins * 60_000;
+      })
       .catch(() => {
         // The setup screen falls back to its own defaults; a demo that cannot
         // reach the options endpoint should still be able to place a call.
@@ -264,9 +300,23 @@ export function useLiveCall() {
   }, []);
 
   /**
-   * Ask her to open the call. Sent the moment the data channel opens rather
-   * than on `session.started`, which arrives about half a second later: every
-   * bit of dead air at the start is a prospect wondering if the call works.
+   * Ask her to open the call, the way the GPT-Live guide documents it.
+   *
+   * Two events, not one. `session.instructions.append` carries the wording and
+   * is acked with `session.instructions.appended`; the ack means "accepted",
+   * not "spoken". What makes her take the floor is a second event,
+   * `session.commentary.append`, sent once that ack arrives.
+   *
+   * Sent on `session.started`, not on the data channel opening. The guide is
+   * explicit: wait for `session.started` before sending application commands.
+   * This used to fire about half a second earlier, on `dc.onopen`, to save
+   * dead air, which is outside the contract and has no ack path: that is why
+   * she opened the call on some calls and sat in silence on others until the
+   * caller said hello.
+   *
+   * GPT-Live has no `response.create` for speech (it exists, but drives the
+   * delegated backend) and no turn-detection settings at all, so this pair is
+   * the whole mechanism.
    */
   const greet = useCallback(() => {
     if (greetedRef.current || !greetingRef.current) return;
@@ -281,10 +331,29 @@ export function useLiveCall() {
     // a number.
     send({
       type: "session.instructions.append",
+      event_id: GREETING_EVENT_ID,
       delegation_id: null,
       content: greetingRef.current,
     });
-  }, [openMic, send]);
+    void relay({ type: "live.greeting_sent", attempt: 1, chars: greetingRef.current.length });
+  }, [openMic, relay, send]);
+
+  /**
+   * The cue that turns accepted instructions into a spoken turn. Commentary is
+   * "information the model should say aloud", which it may reword; the wording
+   * it should keep went in the instructions above.
+   */
+  const cueGreeting = useCallback(() => {
+    if (cuedRef.current || spokeRef.current) return;
+    cuedRef.current = true;
+    send({
+      type: "session.commentary.append",
+      event_id: `${GREETING_EVENT_ID}_cue`,
+      delegation_id: null,
+      content: "Begin the conversation now, following the instructions provided.",
+    });
+    void relay({ type: "live.greeting_cued" });
+  }, [relay, send]);
 
   // --- transcript -----------------------------------------------------------
 
@@ -316,7 +385,14 @@ export function useLiveCall() {
       if (!delta) return;
       // She has the floor: the greeting is under way, so the caller can have
       // their microphone back well before they would ever need it.
-      if (side === "them") openMic();
+      if (side === "them") {
+        spokeRef.current = true;
+        if (retryRef.current) {
+          window.clearTimeout(retryRef.current);
+          retryRef.current = null;
+        }
+        openMic();
+      }
       lastHeardRef.current = Date.now();
       bufRef.current[side] += delta;
 
@@ -389,6 +465,8 @@ export function useLiveCall() {
     silenceRef.current = null;
     if (unmuteRef.current) window.clearTimeout(unmuteRef.current);
     unmuteRef.current = null;
+    if (retryRef.current) window.clearTimeout(retryRef.current);
+    retryRef.current = null;
     micRef.current = null;
     try {
       dcRef.current?.close();
@@ -474,9 +552,30 @@ export function useLiveCall() {
           // The clock on screen starts here, so the cut-off is timed from here
           // too: it ends at exactly the maximum the caller was shown.
           if (limitRef.current) window.clearTimeout(limitRef.current);
-          limitRef.current = window.setTimeout(() => hangup("time_limit"), MAX_CALL_MS);
+          limitRef.current = window.setTimeout(() => hangup("time_limit"), limitMsRef.current);
           setOrbState("listening");
           lastHeardRef.current = Date.now();
+          // The documented moment to send application commands.
+          greet();
+          // Ask again if the first append was lost to the race above. Cleared
+          // the instant she speaks, so a slow greeting is never doubled.
+          if (retryRef.current) window.clearTimeout(retryRef.current);
+          retryRef.current = window.setTimeout(() => {
+            retryRef.current = null;
+            if (spokeRef.current || !greetingRef.current) {
+              void relay({
+                type: "live.greeting_retry_skipped",
+                spoke: spokeRef.current,
+                had_greeting: !!greetingRef.current,
+              });
+              return;
+            }
+            // Still silent: cue her again. The instructions are already in
+            // context, so this repeats the nudge, not the wording.
+            cuedRef.current = false;
+            cueGreeting();
+            void relay({ type: "live.greeting_sent", attempt: 2, chars: greetingRef.current.length });
+          }, GREETING_RETRY_MS);
           silenceRef.current = window.setInterval(() => {
             const quietFor = Date.now() - lastHeardRef.current;
             const limit = farewellRef.current ? FAREWELL_SILENCE_MS : SILENCE_MS;
@@ -487,6 +586,11 @@ export function useLiveCall() {
           greet();
           break;
         }
+
+        case "session.instructions.appended":
+          // Accepted. Now ask her to actually say it.
+          if (!ev.client_event_id || ev.client_event_id === GREETING_EVENT_ID) cueGreeting();
+          break;
 
         case "session.input_transcript.delta":
           appendDelta("you", ev.delta ?? "");
@@ -523,13 +627,16 @@ export function useLiveCall() {
 
         case "error":
           // Moderation can cut her off and emit this WITHOUT ending the
-          // session, so this reports but never tears the call down.
+          // session, so this reports but never tears the call down. Relayed as
+          // well as shown: a rejected greeting would land here, and the screen
+          // is not where we can read one back later.
+          void relay({ type: "live.client_error", error: ev.error ?? null });
           setError(ev.error?.message ?? "Something went wrong on the call.");
           setOrbState("error");
           break;
       }
     },
-    [appendDelta, greet, handleTool, hangup, teardown, wrapUp],
+    [appendDelta, cueGreeting, greet, handleTool, hangup, relay, send, teardown, wrapUp],
   );
 
   // --- connect --------------------------------------------------------------
@@ -551,6 +658,8 @@ export function useLiveCall() {
       callIdRef.current = `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       wrappedUpRef.current = false;
       greetedRef.current = false;
+      spokeRef.current = false;
+      cuedRef.current = false;
       localeRef.current = setup.locale;
       callerRef.current = setup.callerNumber;
       passwordRef.current = password;
@@ -581,7 +690,9 @@ export function useLiveCall() {
         // Must exist before createOffer, and must carry this exact label.
         const dc = pc.createDataChannel("oai-events");
         dcRef.current = dc;
-        dc.onopen = greet;
+        // Deliberately not greeting here: see `greet`. The session is not
+        // ready until `session.started` arrives on this channel.
+        dc.onopen = null;
         dc.onmessage = (e) => {
           try {
             onEvent(JSON.parse(e.data) as LiveEvent);
@@ -598,11 +709,22 @@ export function useLiveCall() {
         // to be complete before it is sent.
         await iceComplete(pc);
 
+        // Staff get no rate limit. Fetched per call (a pass is cheap and
+        // expires), and a failure just means we are treated as anyone else.
+        let adminPass: string | null = null;
+        try {
+          const r = await apiFetch("/api/voice-demo/pass");
+          if (r.ok) adminPass = ((await r.json()) as { pass: string | null }).pass;
+        } catch {
+          /* no pass: the ordinary limit applies */
+        }
+
         const res = await fetch(`${ENGINE_BASE_URL}/voice/live/session`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             password,
+            admin_pass: adminPass,
             locale: setup.locale,
             company_name: setup.companyName,
             caller_number: setup.callerNumber,
@@ -623,7 +745,7 @@ export function useLiveCall() {
         await pc.setRemoteDescription({ type: "answer", sdp: data.sdp });
 
         // Fallback if session.started has not armed it yet.
-        if (!limitRef.current) limitRef.current = window.setTimeout(() => hangup("time_limit"), MAX_CALL_MS);
+        if (!limitRef.current) limitRef.current = window.setTimeout(() => hangup("time_limit"), limitMsRef.current);
       } catch (err) {
         teardown();
         setState("idle");

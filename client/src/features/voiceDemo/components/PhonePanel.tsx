@@ -6,7 +6,7 @@ import { SiriWave } from "@/components/siriWave/SiriWave";
 import type { AIState } from "@/components/siriOrb/aiCore";
 import type { Booking, CallState, VoiceLocale } from "../types";
 import type { CallLevels } from "../useCallLevels";
-import { MAX_CALL_MS } from "../useLiveCall";
+import { callLimitMs } from "../useLiveCall";
 import { useWaveMotion } from "../waveMotion";
 import { dateLocaleOf, type DemoCopy } from "../copy";
 
@@ -144,9 +144,20 @@ function CallButton({
             aria-hidden
             className="pointer-events-none absolute inset-0 rounded-full"
             style={{ border: `2px solid ${IOS_GREEN}` }}
-            initial={{ scale: 1, opacity: 0.6 }}
-            animate={{ scale: 1.6, opacity: 0 }}
-            transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+            // Keyframes rather than a straight A-to-B loop: that version ended
+            // at scale 1.6 / opacity 0 and snapped back to scale 1 / opacity
+            // 0.6 in one frame, so the ring reappeared with a visible pop.
+            // Starting and ending transparent puts the loop seam where nothing
+            // is drawn, and the pause between beats happens at opacity 0.
+            initial={false}
+            animate={{ scale: [1, 1.18, 1.6], opacity: [0, 0.5, 0] }}
+            transition={{
+              duration: 2,
+              times: [0, 0.3, 1],
+              repeat: Infinity,
+              repeatDelay: 0.3,
+              ease: "easeOut",
+            }}
           />
         )}
         <motion.button
@@ -202,7 +213,7 @@ function Elapsed({ startedAt }: { startedAt: number | null }) {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, []);
-  const max = Math.round(MAX_CALL_MS / 1000);
+  const max = Math.round(callLimitMs() / 1000);
   const secs = startedAt ? Math.min(max, Math.max(0, Math.floor((now - startedAt) / 1000))) : 0;
   const closing = max - secs <= WARN_REMAINING_S;
   return (

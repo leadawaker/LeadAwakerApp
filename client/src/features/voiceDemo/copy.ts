@@ -102,7 +102,7 @@ const EN: DemoCopy = {
   connecting: "Connecting…",
   again: "Again",
   hangUp: "Hang up",
-  sayHello: "Say hello when you're ready.",
+  sayHello: "She opens the call.",
 
   endedTimeLimit: "The demo's five-minute limit was reached.",
   endedDropped: "The connection dropped.",
@@ -166,7 +166,7 @@ const NL: DemoCopy = {
   connecting: "Verbinden…",
   again: "Opnieuw",
   hangUp: "Ophangen",
-  sayHello: "Zeg gerust hallo wanneer u zover bent.",
+  sayHello: "Zij begint het gesprek.",
 
   endedTimeLimit: "De limiet van vijf minuten voor deze demo is bereikt.",
   endedDropped: "De verbinding is verbroken.",
@@ -230,7 +230,7 @@ const PT: DemoCopy = {
   connecting: "Conectando…",
   again: "De novo",
   hangUp: "Desligar",
-  sayHello: "É só dizer oi quando estiver pronto.",
+  sayHello: "Ela começa a conversa.",
 
   endedTimeLimit: "O limite de cinco minutos da demonstração foi atingido.",
   endedDropped: "A conexão caiu.",
@@ -294,7 +294,7 @@ const ES: DemoCopy = {
   connecting: "Conectando…",
   again: "Otra vez",
   hangUp: "Colgar",
-  sayHello: "Saluda cuando estés listo.",
+  sayHello: "Ella empieza la llamada.",
 
   endedTimeLimit: "Se alcanzó el límite de cinco minutos de la demo.",
   endedDropped: "Se cortó la conexión.",
@@ -348,7 +348,7 @@ const PT_PT: Partial<DemoCopy> = {
   wrongPassword: "Palavra-passe incorreta. Tente novamente.",
   companyLabel: "Empresa pela qual atende",
   phoneLabel: "O número de onde está a ligar",
-  sayHello: "Diga olá quando estiver pronto.",
+  sayHello: "É ela que começa a conversa.",
   crmAfter: "Escrito enquanto estava a falar",
   crmEmpty:
     "Ainda nada registado. Assim que um de vós falar, é criado um contacto e cada fala fica guardada nele.",

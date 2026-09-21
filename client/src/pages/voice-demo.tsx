@@ -8,6 +8,7 @@ import { demoCallerNumber } from "@/features/voiceDemo/demoNumber";
 import { PhonePanel } from "@/features/voiceDemo/components/PhonePanel";
 import { CrmPanel } from "@/features/voiceDemo/components/CrmPanel";
 import { VoiceDemoLock } from "@/features/voiceDemo/components/VoiceDemoLock";
+import { apiFetch } from "@/lib/apiUtils";
 import {
   DEMO_COMPANY,
   isValidVoicePassword,
@@ -78,6 +79,32 @@ function readSetupFromUrl() {
     voice: voice?.trim() || "",
     autoStart: q.get("start") === "1",
   };
+}
+
+/**
+ * The door's second try: a password set on the Demos page. Checked by the
+ * server so the page never holds the list, and only reached once the built-in
+ * words have been ruled out.
+ */
+async function unlockViaServer(raw: string, setUnlocked: (v: boolean) => void): Promise<boolean> {
+  try {
+    const res = await apiFetch("/api/voice-demo/door", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: raw }),
+    });
+    const body = (await res.json().catch(() => ({}))) as { ok?: boolean };
+    if (!res.ok || !body.ok) return false;
+    try {
+      localStorage.setItem(VOICE_DEMO_UNLOCK_KEY, normalizeVoicePassword(raw));
+    } catch {
+      /* private mode: the unlock still holds for this tab */
+    }
+    setUnlocked(true);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /** A link minted for a prospect, rather than the bare page we test on. */
@@ -204,7 +231,7 @@ export default function VoiceDemoPage() {
       <VoiceDemoLock
         copy={copy}
         onUnlock={(raw) => {
-          if (!isValidVoicePassword(raw)) return false;
+          if (!isValidVoicePassword(raw)) return unlockViaServer(raw, setUnlocked);
           try {
             localStorage.setItem(VOICE_DEMO_UNLOCK_KEY, normalizeVoicePassword(raw));
           } catch {
