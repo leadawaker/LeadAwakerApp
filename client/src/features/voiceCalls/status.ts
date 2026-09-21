@@ -22,7 +22,7 @@ export function callStatus(call: Pick<VoiceCallListItem, "bookedSlot" | "intents
   if (call.leadStatus === "DND" || has("do_not_contact")) return "dnc";
   if (call.bookedSlot) return "booked";
   if (has("request_quote")) return "quote";
-  if (has("leave_message") || has("existing_customer") || has("complaint_or_fault")) return "message";
+  if (has("callback_now") || has("leave_message") || has("existing_customer") || has("complaint_or_fault")) return "message";
   if (has("ask_advice")) return "info";
   return "responded";
 }

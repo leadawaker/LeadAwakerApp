@@ -48,6 +48,7 @@ export interface CallSummary {
 
 export type CallIntent =
   | "book_appointment"
+  | "callback_now"
   | "request_quote"
   | "ask_advice"
   | "existing_customer"

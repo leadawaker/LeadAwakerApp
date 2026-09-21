@@ -70,6 +70,7 @@ export interface DemoCopy {
   siteSurvey: string;
 
   wantsToBook: string;
+  wantsCallback: string;
   wantsAQuote: string;
   wantsAdvice: string;
   existingCustomer: string;
@@ -134,6 +135,7 @@ const EN: DemoCopy = {
   siteSurvey: "Site survey · 45 min",
 
   wantsToBook: "Wants to book",
+  wantsCallback: "Wants a callback",
   wantsAQuote: "Wants a quote",
   wantsAdvice: "Wants advice",
   existingCustomer: "Existing customer",
@@ -198,6 +200,7 @@ const NL: DemoCopy = {
   siteSurvey: "Opname ter plaatse · 45 min",
 
   wantsToBook: "Wil inplannen",
+  wantsCallback: "Wil teruggebeld worden",
   wantsAQuote: "Wil een offerte",
   wantsAdvice: "Wil advies",
   existingCustomer: "Bestaande klant",
@@ -262,6 +265,7 @@ const PT: DemoCopy = {
   siteSurvey: "Visita técnica · 45 min",
 
   wantsToBook: "Quer agendar",
+  wantsCallback: "Quer retorno da ligação",
   wantsAQuote: "Quer um orçamento",
   wantsAdvice: "Quer orientação",
   existingCustomer: "Cliente atual",

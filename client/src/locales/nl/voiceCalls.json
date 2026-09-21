@@ -29,6 +29,7 @@
   "notes": "Notities",
   "intents": {
     "book_appointment": "Afspraak maken",
+    "callback_now": "Terugbelverzoek",
     "request_quote": "Offerteaanvraag",
     "ask_advice": "Advies",
     "existing_customer": "Bestaande klant",

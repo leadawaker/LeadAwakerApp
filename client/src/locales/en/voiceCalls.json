@@ -29,6 +29,7 @@
   "notes": "Notes",
   "intents": {
     "book_appointment": "Book appointment",
+    "callback_now": "Callback requested",
     "request_quote": "Quote request",
     "ask_advice": "Advice",
     "existing_customer": "Existing customer",

@@ -29,6 +29,7 @@
   "notes": "Observações",
   "intents": {
     "book_appointment": "Agendar horário",
+    "callback_now": "Pedido de retorno",
     "request_quote": "Pedido de orçamento",
     "ask_advice": "Orientação",
     "existing_customer": "Cliente atual",

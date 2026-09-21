@@ -19,6 +19,7 @@ const CARD_BG = { background: "var(--card)" } as const;
 /** Reads as an outcome a business owner recognises, not an enum. */
 const INTENT_KEY: Record<CallIntent, keyof DemoCopy> = {
   book_appointment: "wantsToBook",
+  callback_now: "wantsCallback",
   request_quote: "wantsAQuote",
   ask_advice: "wantsAdvice",
   existing_customer: "existingCustomer",
@@ -28,6 +29,7 @@ const INTENT_KEY: Record<CallIntent, keyof DemoCopy> = {
 
 const INTENT_TONE: Record<CallIntent, string> = {
   book_appointment: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/25 dark:text-emerald-300",
+  callback_now: "bg-amber-50 text-amber-800 dark:bg-amber-900/25 dark:text-amber-300",
   request_quote: "bg-emerald-50 text-emerald-700 dark:bg-emerald-900/25 dark:text-emerald-300",
   ask_advice: "bg-highlight-selected text-foreground",
   existing_customer: "bg-highlight-selected text-foreground",
