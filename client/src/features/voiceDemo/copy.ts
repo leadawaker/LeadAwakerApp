@@ -15,7 +15,7 @@ import type { VoiceLocale } from "./types";
  * middle of a Portuguese demo.
  */
 
-export type UiLang = "en" | "nl" | "pt" | "es";
+export type UiLang = "en" | "nl" | "pt";
 
 export interface DemoCopy {
   lockedTitle: string;
@@ -271,69 +271,6 @@ const PT: DemoCopy = {
   weekdayInitials: ["S", "T", "Q", "Q", "S", "S", "D"],
 };
 
-const ES: DemoCopy = {
-  lockedTitle: "Esta demo está bloqueada",
-  lockedHint: "Introduce la contraseña para continuar.",
-  passwordPlaceholder: "Contraseña",
-  wrongPassword: "Contraseña incorrecta. Inténtalo de nuevo.",
-  continueLabel: "Continuar",
-
-  languageLabel: "Idioma",
-  noNativeVoice:
-    "Todavía no existe una voz nativa para este idioma, así que puede que el acento no sea perfecto.",
-  companyLabel: "Empresa para la que contesta",
-  phoneLabel: "El número desde el que llamas",
-  voiceLabel: "Voz",
-  voiceDefault: "Predeterminada para este idioma",
-  nightMode: "Modo noche",
-  settingsLabel: "Ajustes de la llamada",
-  dayMode: "Modo día",
-
-  call: "Llamar",
-
-  connecting: "Conectando…",
-  again: "Otra vez",
-  hangUp: "Colgar",
-  sayHello: "Ella empieza la llamada.",
-
-  endedTimeLimit: "Se alcanzó el límite de cinco minutos de la demo.",
-  endedDropped: "Se cortó la conexión.",
-  endedCompleted: "Ella terminó la llamada.",
-  endedSilence: "Nadie habló durante un rato, así que colgó.",
-
-  booked: "Agendado",
-
-  crmTitle: "En el CRM",
-  crmLive: "Escrito en vivo, durante la llamada",
-  crmAfter: "Escrito mientras hablabas",
-  liveBadge: "En vivo",
-  crmEmpty:
-    "Todavía no hay nada. En cuanto alguno de los dos hable, se crea un contacto y cada intervención queda guardada en él.",
-  whatTheyCalledAbout: "Motivo de la llamada",
-  fillsInLater: "Se completa cuando termine la llamada.",
-  nothingRecorded: "No se registró nada en esta llamada.",
-  lead: "Contacto",
-  isNew: "Nuevo",
-  name: "Nombre",
-  phone: "Teléfono",
-  source: "Origen",
-  inboundCall: "Llamada entrante",
-  status: "Estado",
-  appointmentBooked: "Cita agendada",
-  inConversation: "En conversación",
-  downloadRecording: "Descargar la grabación",
-  noAppointmentYet: "Todavía no hay ninguna cita",
-  siteSurvey: "Visita técnica · 45 min",
-
-  wantsToBook: "Quiere agendar",
-  wantsAQuote: "Quiere un presupuesto",
-  wantsAdvice: "Quiere asesoramiento",
-  existingCustomer: "Cliente actual",
-  faultOrComplaint: "Avería o reclamación",
-  notRelevant: "No relevante",
-
-  weekdayInitials: ["L", "M", "X", "J", "V", "S", "D"],
-};
 
 /**
  * European Portuguese, where it genuinely differs from Brazilian. Only the
@@ -366,13 +303,12 @@ const PT_PT: Partial<DemoCopy> = {
   noAppointmentYet: "Ainda não há marcação",
 };
 
-const BY_LANG: Record<UiLang, DemoCopy> = { en: EN, nl: NL, pt: PT, es: ES };
+const BY_LANG: Record<UiLang, DemoCopy> = { en: EN, nl: NL, pt: PT };
 
 /** The language the page should be written in, given the language of the call. */
 export function uiLangOf(locale: VoiceLocale): UiLang {
   if (locale.startsWith("nl")) return "nl";
   if (locale.startsWith("pt")) return "pt";
-  if (locale.startsWith("es")) return "es";
   return "en";
 }
 
@@ -387,7 +323,6 @@ const DATE_LOCALE: Record<VoiceLocale, string> = {
   nl: "nl-NL",
   "pt-BR": "pt-BR",
   "pt-PT": "pt-PT",
-  "es-ES": "es-ES",
 };
 
 export function dateLocaleOf(locale: VoiceLocale): string {

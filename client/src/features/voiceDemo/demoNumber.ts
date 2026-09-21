@@ -25,7 +25,6 @@ const MAKERS: Record<VoiceLocale, () => string> = {
   nl: () => `06-${1 + Math.floor(Math.random() * 6)}${digits(7)}`,
   "en-GB": () => `+44 7700 900${digits(3)}`,
   "en-US": () => `+1 (${pick(US_AREAS)}) 555-01${digits(2)}`,
-  "es-ES": () => { const d = digits(8); return `6${d.slice(0, 2)} ${d.slice(2, 4)} ${d.slice(4, 6)} ${d.slice(6)}`; },
 };
 
 /** This browser's made-up number for a locale, created on first use. */

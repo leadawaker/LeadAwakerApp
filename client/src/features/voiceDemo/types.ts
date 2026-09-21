@@ -112,7 +112,7 @@ export interface VoiceOptions {
  * different: pt-BR and pt-PT both read the Portuguese row, and only one of
  * them says "está a fazer".
  */
-export type VoiceLocale = "en-GB" | "en-US" | "nl" | "pt-BR" | "pt-PT" | "es-ES";
+export type VoiceLocale = "en-GB" | "en-US" | "nl" | "pt-BR" | "pt-PT";
 
 export interface LocaleOption {
   id: VoiceLocale;

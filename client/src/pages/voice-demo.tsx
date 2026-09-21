@@ -34,7 +34,7 @@ import { copyFor, dateLocaleOf } from "@/features/voiceDemo/copy";
  * toggle, so the demo can be shown in either.
  */
 
-const LOCALES: VoiceLocale[] = ["en-GB", "en-US", "nl", "pt-BR", "pt-PT", "es-ES"];
+const LOCALES: VoiceLocale[] = ["en-GB", "en-US", "nl", "pt-BR", "pt-PT"];
 
 /**
  * Old links carry `?lang=en|nl|pt`, which predates locales. They still work,
