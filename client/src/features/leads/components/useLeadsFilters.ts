@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { buildEntityRows } from "@/components/crm/entityList";
 import type { GroupByOption, SortByOption } from "./LeadsCardView";
 import type { VirtualListItem } from "./LeadsCardView";
+import { getConversationType, CONVERSATION_TYPES, type ConversationType } from "./conversationType";
 
 // ── Re-export so callers don't need two imports ──
 export type { GroupByOption, SortByOption };
@@ -44,7 +45,7 @@ export interface UseLeadsFiltersOptions {
   filterStatus: string[];
   filterTags: string[];
   leadTagsInfo: Map<number, { name: string; color: string }[]>;
-  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
+  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null; campaignType?: string | null }>;
   accountsById?: Map<number, string>;
   onSortByChange: (v: SortByOption) => void;
   onToggleFilterStatus: (s: string) => void;
@@ -55,6 +56,8 @@ export interface UseLeadsFiltersReturn {
   // Local filter state (not lifted to parent)
   filterAccount: string;
   filterCampaign: string;
+  filterType: ConversationType[];
+  toggleFilterType: (v: ConversationType) => void;
   tagSearchInput: string;
   upcomingCallsOnly: boolean;
   setFilterAccount: (v: string) => void;
@@ -90,6 +93,10 @@ export function useLeadsFilters({
 
   const [filterAccount, setFilterAccount] = useState<string>("");
   const [filterCampaign, setFilterCampaign] = useState<string>("");
+  const [filterType, setFilterType] = useState<ConversationType[]>([]);
+  const toggleFilterType = useCallback((v: ConversationType) => {
+    setFilterType((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v]));
+  }, []);
   const [tagSearchInput, setTagSearchInput] = useState<string>("");
   const [upcomingCallsOnly, setUpcomingCallsOnly] = useState<boolean>(() => {
     try { return localStorage.getItem("leads_upcoming_calls_only") === "true"; } catch {} return false;
@@ -106,9 +113,10 @@ export function useLeadsFilters({
     const result: { id: string; name: string }[] = [];
     leads.forEach((l) => {
       const id = String(l.Accounts_id || l.account_id || l.accounts_id || "");
-      if (id && !seen.has(id)) {
+      // Only accounts that still exist (leads can point at deleted ones).
+      if (id && !seen.has(id) && accountsById.has(Number(id))) {
         seen.add(id);
-        const name = accountsById.get(Number(id)) || `Account ${id}`;
+        const name = accountsById.get(Number(id))!;
         result.push({ id, name });
       }
     });
@@ -120,7 +128,8 @@ export function useLeadsFilters({
     leads.forEach((l) => {
       if (filterAccount && String(l.Accounts_id || l.account_id || l.accounts_id || "") !== filterAccount) return;
       const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
-      if (cId) campaignIds.add(cId);
+      // Only campaigns that still exist (not deleted or archived).
+      if (cId && campaignsById?.has(cId)) campaignIds.add(cId);
     });
     const result: { id: string; name: string }[] = [];
     campaignIds.forEach((cId) => {
@@ -162,6 +171,8 @@ export function useLeadsFilters({
         // 3c. Campaign filter
         if (filterCampaign &&
           String(l.Campaigns_id || l.campaigns_id || l.campaignsId || "") !== filterCampaign) return false;
+        // 3c-2. Conversation type filter
+        if (filterType.length > 0 && !filterType.includes(getConversationType(l, campaignsById))) return false;
         // 3d. Upcoming calls only
         if (upcomingCallsOnly && getStatusLocal(l) === "Booked") {
           const d = l.booked_call_date || l.bookedCallDate;
@@ -199,37 +210,43 @@ export function useLeadsFilters({
           const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
           return (cId && campaignsById?.get(cId)?.name) || l.Campaign || l.campaign || l.campaign_name || t("group.noCampaign");
         }
+        if (groupBy === "type") return getConversationType(l, campaignsById);
         const tags = leadTagsInfo.get(getLeadIdLocal(l)) || [];
         return tags[0]?.name || t("group.untagged");
       },
       orderGroups: groupBy === "status"
         ? (keys) => STATUS_GROUP_ORDER.filter((k) => keys.includes(k))
             .concat(keys.filter((k) => !STATUS_GROUP_ORDER.includes(k)))
+        : groupBy === "type"
+        ? (keys) => CONVERSATION_TYPES.filter((k) => keys.includes(k))
         : groupBy === "date"
         ? (keys) => dateGroupOrder.filter((k) => keys.includes(k))
         : undefined,
       makeHeader: (key, count) => ({
         kind: "header",
-        label: groupBy === "status" ? t(`kanban.stageLabels.${key.replace(/ /g, "")}`, key) : key,
+        label: groupBy === "status" ? t(`kanban.stageLabels.${key.replace(/ /g, "")}`, key) : groupBy === "type" ? t(`conversationType.${key}`) : key,
         count,
       }),
       makeItem: (l) => ({ kind: "lead", lead: l, tags: leadTagsInfo.get(getLeadIdLocal(l)) || [] }),
     });
-  }, [leads, listSearch, groupBy, sortBy, filterStatus, filterTags, filterAccount, filterCampaign, leadTagsInfo, campaignsById, upcomingCallsOnly, t]);
+  }, [leads, listSearch, groupBy, sortBy, filterStatus, filterTags, filterAccount, filterCampaign, filterType, leadTagsInfo, campaignsById, upcomingCallsOnly, t]);
 
-  const isFilterActive = filterStatus.length > 0 || filterTags.length > 0 || !!filterAccount || !!filterCampaign || upcomingCallsOnly;
+  const isFilterActive = filterStatus.length > 0 || filterTags.length > 0 || !!filterAccount || !!filterCampaign || filterType.length > 0 || upcomingCallsOnly;
 
   const handleFilterReset = useCallback(() => {
     filterStatus.forEach((s) => onToggleFilterStatus(s));
     filterTags.forEach((tag) => onToggleFilterTag(tag));
     setFilterAccount("");
     setFilterCampaign("");
+    setFilterType([]);
     if (sortBy !== "recent") onSortByChange("recent");
   }, [filterStatus, filterTags, onToggleFilterStatus, onToggleFilterTag, sortBy, onSortByChange]);
 
   return {
     filterAccount,
     filterCampaign,
+    filterType,
+    toggleFilterType,
     tagSearchInput,
     upcomingCallsOnly,
     setFilterAccount,

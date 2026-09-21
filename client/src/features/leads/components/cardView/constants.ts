@@ -193,3 +193,11 @@ export const TAG_COLOR_MAP: Record<string, string> = {
   orange: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   gray:   "bg-zinc-100 text-zinc-600 dark:bg-zinc-800/60 dark:text-zinc-400",
 };
+
+// Tag names that only mirror a lead's status or sentiment. They are not real
+// tags, so they never appear as tag filter options.
+const NON_TAG_NAMES = new Set([
+  "new", "contacted", "responded", "multiple responses", "qualified", "booked", "lost", "dnd",
+  "closed", "lead lost", "conversation closed", "negative sentiment", "positive sentiment",
+]);
+export const isRealTag = (name: string) => !NON_TAG_NAMES.has(name.trim().toLowerCase());

@@ -58,6 +58,9 @@ var fatal = "";
 // recording repaints once it is false again.
 var recording = false;
 var starting = false;
+// The restart confirmation has replaced the composer. A restart throws the
+// thread away, so it is never one stray tap.
+var confirming = false;
 
 var LANG = (CFG.language || browserLang() || "en").toLowerCase();
 setLang(LANG);
@@ -103,7 +106,13 @@ function headerHtml(agent) {
           '<span class="wdg-role">' + esc(role) + "</span>" +
         "</span>" +
       "</div>" +
-      '<button class="wdg-x" type="button" aria-label="' + esc(w("close")) + '">' + X_SVG + "</button>" +
+      '<div class="wdg-acts">' +
+        (canRestart()
+          ? '<button class="wdg-act wdg-restart" type="button" aria-label="' + esc(w("restart")) +
+            '" title="' + esc(w("restart")) + '">' + icon("rotate-ccw", 16) + "</button>"
+          : "") +
+        '<button class="wdg-act wdg-x" type="button" aria-label="' + esc(w("close")) + '">' + X_SVG + "</button>" +
+      "</div>" +
     "</header>";
 }
 
@@ -113,7 +122,42 @@ function micMode() {
   return voice.micAvailable() && !draft.trim();
 }
 
+// The live surface answers this directly; the demo surface counts its own
+// restart budget instead, so the same button reads whichever one is present.
+function canRestart() {
+  if (!state) return false;
+  if (DEMO) return !state.done && (state.restartsMax || 0) - (state.restartsUsed || 0) > 0;
+  return !!state.canRestart;
+}
+
+function confirmHtml() {
+  return '<div class="wdg-confirm" role="group">' +
+      "<p>" + esc(w("restartAsk")) + "</p>" +
+      '<div class="wdg-confirm-row">' +
+        '<button type="button" class="wdg-cbtn" data-confirm="no">' + esc(w("cancel")) + "</button>" +
+        '<button type="button" class="wdg-cbtn is-go" data-confirm="yes">' + esc(w("restartYes")) + "</button>" +
+      "</div>" +
+    "</div>";
+}
+
+// Starter chips. They answer "what can I even ask this thing?", which is the
+// question that closes a widget in the first three seconds. Offered ONCE: the
+// moment the visitor has said anything they are gone, because a row of buttons
+// that never leaves turns the chat into a phone menu, which is exactly the
+// impression the AI is there to kill.
+function chipsHtml(msgs, done) {
+  var chips = CFG.quickReplies || [];
+  if (done || recording || confirming || !chips.length) return "";
+  for (var i = 0; i < msgs.length; i++) if (msgs[i].role === "visitor") return "";
+  var out = '<div class="wdg-chips">';
+  for (var c = 0; c < chips.length && c < 3; c++) {
+    out += '<button type="button" class="wdg-chip" data-chip="' + c + '">' + esc(chips[c].label) + "</button>";
+  }
+  return out + "</div>";
+}
+
 function composerHtml(done) {
+  if (confirming) return confirmHtml();
   if (done) return '<div class="wdg-done">' + esc(w("ended")) + "</div>";
   if (recording) {
     return '<div class="wdg-rec" role="group" aria-label="' + esc(t("voiceRecording")) + '">' +
@@ -157,6 +201,7 @@ function paint() {
       '<div class="wdg-stream" id="stream">' +
         messagesHtml({ messages: msgs, agent: agent }, pending, memo.playerState(), { avatarSrc: AVATAR }) +
       "</div>" +
+      chipsHtml(msgs, done) +
       '<div class="wdg-composer">' + composerHtml(done) + "</div>" +
     "</div>";
   wire();
@@ -201,6 +246,29 @@ function wire() {
   if (recSend) recSend.addEventListener("click", function () { voice.stopRecording(); });
   var recX = root.querySelector(".wdg-rec-x");
   if (recX) recX.addEventListener("click", function () { voice.cancelRecording(); });
+  var chips = root.querySelectorAll("[data-chip]");
+  for (var c = 0; c < chips.length; c++) {
+    chips[c].addEventListener("click", function (e) {
+      var chip = (CFG.quickReplies || [])[Number(e.currentTarget.getAttribute("data-chip"))];
+      if (!chip || busy) return;
+      draft = chip.text;
+      doSend();
+    });
+  }
+  var restart = root.querySelector(".wdg-restart");
+  if (restart) restart.addEventListener("click", function () {
+    if (recording) voice.cancelRecording();
+    confirming = true;
+    paint();
+  });
+  var confirmBtns = root.querySelectorAll("[data-confirm]");
+  for (var i = 0; i < confirmBtns.length; i++) {
+    confirmBtns[i].addEventListener("click", function (e) {
+      confirming = false;
+      if (e.currentTarget.getAttribute("data-confirm") === "yes") doRestart();
+      else paint();
+    });
+  }
   var x = root.querySelector(".wdg-x");
   if (x) x.addEventListener("click", function () {
     // The loader owns the panel, so closing is a request, not an action.
@@ -210,7 +278,11 @@ function wire() {
 
 function autoGrow(el) {
   el.style.height = "auto";
-  el.style.height = Math.min(el.scrollHeight, 120) + "px";
+  var h = el.scrollHeight;
+  // Hidden until the cap: a fractional line box makes scrollHeight a hair
+  // taller than the box, and the browser flashes a scrollbar per keystroke.
+  el.style.overflowY = h > 120 ? "auto" : "hidden";
+  el.style.height = Math.min(h, 120) + "px";
 }
 
 function render() { if (!recording) paint(); }
@@ -258,6 +330,33 @@ function doSend() {
     pending = false;
     failSend(err);
     if (!fatal) draft = text;   // give them their words back rather than losing them
+    render();
+  });
+}
+
+// A restart does not clear anything on the server: the engine writes a marker,
+// the contact keeps every conversation, and this thread starts at the greeting
+// again. The local state is dropped so the next poll cannot paint the old
+// messages back for a second.
+function doRestart() {
+  if (busy) return;
+  busy = true;
+  epoch++;
+  draft = "";
+  state = null;
+  lastSig = "";
+  pending = false;
+  paint();
+
+  api("/restart", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(withContext({})),
+  }).catch(function (err) {
+    failSend(err);
+  }).then(function () {
+    busy = false;
+    schedulePoll(400);
     render();
   });
 }
@@ -341,6 +440,8 @@ function poll() {
   api(qs()).then(function (next) {
     if (pollEpoch !== epoch) { schedulePoll(pending ? 1600 : 6000); return; }
     var grew = state && next.messages.length > (state.messages || []).length;
+    var fresh = grew ? next.messages.slice((state.messages || []).length).filter(function (m) { return m.role === "ai"; }).length : 0;
+    if (confirming) fresh = 0;
     if (grew) pending = false;
     memo.adopt(state && state.messages, next);
     state = next;
@@ -350,7 +451,7 @@ function poll() {
       render();
       // A reply that lands while the panel is closed should be visible from the
       // outside, which only the loader can do.
-      if (grew) parent.postMessage({ type: "la-widget-unread" }, "*");
+      if (fresh) parent.postMessage({ type: "la-widget-unread", count: fresh }, "*");
     }
     schedulePoll(pending ? 1600 : 6000);
   }).catch(function () {

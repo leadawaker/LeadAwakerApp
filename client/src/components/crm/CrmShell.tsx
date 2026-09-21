@@ -166,7 +166,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
 
   // Track last time user visited chats — use a ref so it updates synchronously
   // during render (before the memo runs), avoiding all async state timing issues.
-  const onConversations = location.includes('/conversations');
+  const onConversations = /\/chat(\/|$)/.test(location);
   const lastChatVisitRef = useRef<string | null>(localStorage.getItem("leadawaker_lastChatVisitedAt"));
   // Initialize to false so the transition always fires on mount (even when page loads directly
   // on /conversations), ensuring the cutoff is set to "now" rather than a stale localStorage value.

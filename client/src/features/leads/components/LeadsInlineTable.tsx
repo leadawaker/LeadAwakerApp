@@ -1028,7 +1028,7 @@ export function LeadsInlineTable({
                                     localStorage.setItem("selected-lead-id", String(lid));
                                   } catch {}
                                   const basePath = "/platform";
-                                  setLocation(`${basePath}/conversations`);
+                                  setLocation(`${basePath}/chat`);
                                 }}
                                 title={t("conversations.title", "Chats")}
                               >

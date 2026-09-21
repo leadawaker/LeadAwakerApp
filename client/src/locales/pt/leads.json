@@ -1,5 +1,13 @@
 {
+  "conversationType": {
+    "label": "Tipo",
+    "widget": "Widget",
+    "voice": "Voz",
+    "dbr": "DBR / Or\u00e7amentos",
+    "other": "Outros"
+  },
   "page": {
+    "chatsTitle": "Conversas",
     "title": "Meus Leads",
     "opportunities": "Oportunidades"
   },

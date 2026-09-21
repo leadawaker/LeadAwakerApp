@@ -272,7 +272,7 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
     try {
       localStorage.setItem("selected-lead-id", String(leadId));
     } catch {}
-    setLocation(`${prefix}/conversations`);
+    setLocation(`${prefix}/chat`);
   }, [prefix, setLocation]);
 
   return (

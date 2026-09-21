@@ -23,6 +23,7 @@ import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { resolveColor } from "@/features/tags/types";
 import { CompactLeadCard } from "./CompactLeadCard";
+import { CONVERSATION_TYPES, type ConversationType } from "../conversationType";
 import { GroupHeader, ListSkeleton } from "./atoms";
 import { LeadListCard } from "./LeadListCard";
 import { MobileSimpleKanban } from "./MobileViews";
@@ -35,7 +36,7 @@ import {
   DrawerMainButton,
 } from "@/components/crm/mobile/MobileListHeader";
 import { getLeadId, getFullName, getStatus, getPhone } from "./leadUtils";
-import { ALL_LEAD_FILTER_STAGES, PIPELINE_HEX } from "./constants";
+import { ALL_LEAD_FILTER_STAGES, PIPELINE_HEX, isRealTag } from "./constants";
 import type { ViewMode, GroupByOption, SortByOption } from "./types";
 
 type ViewTab = { id: string; label: string; icon: any };
@@ -89,6 +90,9 @@ export function LeadsListPanel({
   isGroupNonDefault,
   onToggleFilterStatus,
   onToggleFilterTag,
+  isConversationsMode,
+  filterType,
+  onToggleFilterType,
   allTags,
   availableAccounts,
   availableCampaigns,
@@ -148,6 +152,9 @@ export function LeadsListPanel({
   isGroupNonDefault: boolean;
   onToggleFilterStatus: (s: string) => void;
   onToggleFilterTag: (t: string) => void;
+  isConversationsMode?: boolean;
+  filterType: ConversationType[];
+  onToggleFilterType: (v: ConversationType) => void;
   allTags: { name: string; color: string }[];
   availableAccounts: { id: string; name: string }[];
   availableCampaigns: { id: string; name: string }[];
@@ -159,7 +166,7 @@ export function LeadsListPanel({
 }) {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
-  const filterOn = isFilterActive || filterStatus.length > 0 || filterTags.length > 0;
+  const filterOn = isFilterActive || filterStatus.length > 0 || filterTags.length > 0 || filterType.length > 0;
   const [moreDeleteConfirm, setMoreDeleteConfirm] = useState(false);
   const hasSelection = selectedLeadIds.size > 0;
   const pdfPrintRef = useRef<HTMLDivElement>(null);
@@ -196,15 +203,23 @@ export function LeadsListPanel({
     { value: "date",     label: t("sort.mostRecent") },
     { value: "status",   label: t("group.status") },
     { value: "campaign", label: t("group.campaign") },
+    ...(isConversationsMode ? [{ value: "type" as GroupByOption, label: t("conversationType.label") }] : []),
   ];
 
   // Tags table has leftover conversion-status/sentiment entries that were never
   // real tags — never show them as filter options (Gabriel, 2026-06-21).
-  const NON_TAG_NAMES = new Set(["responded", "contacted", "qualified", "negative sentiment", "positive sentiment"]);
-  const realTags = allTags.filter((tag) => !NON_TAG_NAMES.has(tag.name.toLowerCase()));
+  const realTags = allTags.filter((tag) => isRealTag(tag.name));
 
   const leadsFilterPanel = (
     <>
+      {isConversationsMode && (
+        <>
+          <MobileDrawerSubheading>{t("conversationType.label")}</MobileDrawerSubheading>
+          {CONVERSATION_TYPES.map((v) => (
+            <MobileDrawerOption key={v} label={t(`conversationType.${v}`)} selected={filterType.includes(v)} onClick={() => onToggleFilterType(v)} />
+          ))}
+        </>
+      )}
       <MobileDrawerSubheading>{t("group.status", "Status")}</MobileDrawerSubheading>
       {ALL_LEAD_FILTER_STAGES.map((s) => (
         <MobileDrawerOption
@@ -324,7 +339,7 @@ export function LeadsListPanel({
                   const lid = getLeadId(item.lead);
                   const selectedId = selectedLead ? getLeadId(selectedLead) : null;
                   return (
-                    <div key={lid} data-lead-id={lid} className="shrink-0">
+                    <div key={lid} data-lead-id={lid} className="shrink-0" style={{ contentVisibility: "auto", containIntrinsicSize: "38px" }}>
                       <CompactLeadCard
                         lead={item.lead}
                         isActive={selectedId === lid}
@@ -348,7 +363,7 @@ export function LeadsListPanel({
         <>
           {/* True mobile (<768): shared two-row header (switcher+search+bell / title+filter+actions) */}
           <MobileListHeader
-            title={t("page.title")}
+            title={isConversationsMode ? t("page.chatsTitle") : t("page.title")}
             tabSwitcher={(
               <MobileTabSeg
                 // Mobile: List + Pipeline only (no Table). The tab drives the
@@ -416,7 +431,7 @@ export function LeadsListPanel({
           {/* Tablet chrome (768–1023): legacy header (title + view tabs + actions + search) */}
           <div className="hidden md:flex pl-[17px] pr-[17px] pt-3 pb-1 shrink-0 flex-col gap-2">
             <div className="flex items-center justify-between w-full">
-              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
+              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{isConversationsMode ? t("page.chatsTitle") : t("page.title")}</h2>
               {/* Mobile action buttons: filter + kanban toggle + add (Feature #42 + #39 + #45) */}
               <div className="flex items-center gap-1.5">
                 {/* Filter button (Feature #42) */}

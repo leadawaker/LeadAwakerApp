@@ -117,3 +117,4 @@ login.png
 
 # Playwright accessibility-tree snapshots (regenerated output, never source)
 /*.yaml
+client/public/images/*.png

@@ -63,7 +63,7 @@ export function CommandPalette() {
   const allNavItems: NavItem[] = useMemo(() => [
     { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, keywords: "clients organizations", agencyOnly: true },
     { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, keywords: "campaigns messages outreach drip reactivation" },
-    { href: `${prefix}/conversations`, label: "Conversations", icon: MessageSquare, keywords: "chats whatsapp threads leads messages inbox" },
+    { href: `${prefix}/chat`, label: "Conversations", icon: MessageSquare, keywords: "chats whatsapp threads leads messages inbox" },
     { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, keywords: "leads people prospects directory table pipeline" },
     { href: `${prefix}/outreach-inbox`, label: "Inbox", icon: MessageSquare, keywords: "inbox messages whatsapp prospects outreach chats", agencyOnly: true },
     { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, keywords: "events schedule bookings" },

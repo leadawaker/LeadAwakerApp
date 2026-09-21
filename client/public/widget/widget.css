@@ -73,14 +73,40 @@
   font-size: 12px; color: var(--w-mute);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.wdg-x {
+.wdg-acts { display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+.wdg-act {
   appearance: none; flex: 0 0 auto;
   width: 36px; height: 36px; border-radius: 10px;
   border: 1px solid var(--w-line); background: var(--w-bg); color: var(--w-ink-2);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: background-color 150ms ease, color 150ms ease;
 }
-.wdg-x:hover { background: var(--w-in); color: var(--w-ink); }
+.wdg-act:hover { background: var(--w-in); color: var(--w-ink); }
+.wdg-act svg { width: 16px; height: 16px; }
+
+/* Restart confirmation: it takes the composer's place rather than floating over
+   the thread, so the one control the visitor reaches for is the one they meant. */
+.wdg-confirm { flex: 1 1 auto; text-align: center; }
+.wdg-confirm p { margin: 0 0 10px; font-size: 13px; line-height: 1.45; color: var(--w-mute); }
+.wdg-confirm-row { display: flex; gap: 8px; }
+.wdg-cbtn {
+  flex: 1 1 0; padding: 9px 12px; border-radius: 10px;
+  border: 1px solid var(--w-line); background: var(--w-bg); color: var(--w-ink);
+  font: inherit; font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: background-color 150ms ease, opacity 150ms ease;
+}
+.wdg-cbtn:hover { background: var(--w-in); }
+.wdg-cbtn.is-go { background: var(--w-out); border-color: var(--w-out); color: #fafafa; }
+.wdg-cbtn.is-go:hover { background: #27272a; opacity: .95; }
+
+/* Selected text. design-tokens.css paints the whole document's selection wine,
+   which is Lead Awaker's colour, not the client's: inside the panel it belongs
+   to whoever the widget is for. Falls back to the panel's own ink when a widget
+   has no accent configured, never to another brand's. */
+.wdg-body ::selection {
+  background: color-mix(in srgb, var(--w-accent, var(--w-out)) 24%, transparent);
+  color: inherit;
+}
 
 /* ── thread ─────────────────────────────────────────────────────────── */
 .wdg-stream {
@@ -128,6 +154,21 @@
   background-size: 200% 100%;
 }
 
+/* ── starter chips ───────────────────────────────────────────────────── */
+.wdg-chips {
+  flex: 0 0 auto;
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 0 14px 2px;
+}
+.wdg-chip {
+  border: 1px solid var(--w-line); border-radius: 999px;
+  padding: 7px 13px; background: var(--w-bg); color: var(--w-ink);
+  font: inherit; font-size: 13px; line-height: 1.2; cursor: pointer;
+  transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
+}
+.wdg-chip:hover { background: var(--w-in); border-color: var(--w-mute-2); }
+.wdg-chip:active { transform: scale(.97); }
+
 /* ── composer ───────────────────────────────────────────────────────── */
 .wdg-composer {
   flex: 0 0 auto;
@@ -148,8 +189,9 @@
 .wdg-input {
   flex: 1 1 auto; min-width: 0;
   resize: none; border: 0; outline: none; background: transparent;
-  font: inherit; font-size: 14px; line-height: 1.45; color: var(--w-ink);
-  padding: 7px 0; max-height: 120px;
+  font: inherit; font-size: 14px; line-height: 20px; color: var(--w-ink);
+  padding: 7px 0; max-height: 120px; overflow-y: hidden;
+  scrollbar-width: none;
 }
 .wdg-input::placeholder { color: var(--w-mute-2); }
 .wdg-send {
@@ -194,3 +236,5 @@
 @media (prefers-reduced-motion: reduce) {
   .wdg * { animation: none !important; transition: none !important; }
 }
+
+.wdg-input::-webkit-scrollbar { display: none; }

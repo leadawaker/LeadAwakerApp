@@ -351,6 +351,39 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.2s infinite linear;
 }
+/* A booking link, as a button. It is the one link in a conversation that
+   exists to be clicked, so it gets a target worth tapping on a phone instead
+   of an underlined URL wrapped across three lines. */
+.lnk-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-top: 7px; padding: 8px 13px;
+  border-radius: 10px; border: 1px solid currentColor;
+  font-size: 13px; font-weight: 500; line-height: 1.2;
+  text-decoration: none; color: inherit;
+  transition: background-color 150ms ease, transform 150ms ease;
+}
+.lnk-btn svg { width: 15px; height: 15px; flex: 0 0 auto; }
+.lnk-btn:hover { background: rgba(127, 127, 127, .14); }
+.lnk-btn:active { transform: scale(.98); }
+
+/* A colleague has taken over: one quiet line, the width of the thread, at the
+   message where it happened. Not a bubble, because it is not something anyone
+   said. Its avatar is initials, so a human reply never wears the AI's face. */
+.row-note {
+  display: flex; justify-content: center;
+  margin: 14px 0 10px;
+}
+.row-note span {
+  font-size: 12px; line-height: 1.3; color: var(--w-mute, #71717a);
+  background: var(--w-in, rgba(0,0,0,.04));
+  border-radius: 999px; padding: 5px 12px; text-align: center;
+}
+.av.is-human {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 600; letter-spacing: .01em;
+  color: var(--w-ink, #18181b); background: var(--w-in, rgba(0,0,0,.06));
+}
+
 @keyframes shimmer { from { background-position: 200% 0; } to { background-position: -200% 0; } }
 
 /* On the visitor's wine bubble both of those sit on dark ground instead of

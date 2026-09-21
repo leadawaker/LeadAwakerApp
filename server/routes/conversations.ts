@@ -102,6 +102,17 @@ export function registerConversationsRoutes(app: Express): void {
   app.post("/api/interactions", requireAuth, wrapAsync(async (req, res) => {
     const parsed = insertInteractionsSchema.safeParse(fromDbKeys(req.body, interactions));
     if (!parsed.success) return handleZodError(res, parsed.error);
+
+    // Stamp the colleague who is actually typing. Taken from the session, never
+    // from the body: it is the only record of WHO answered, and the website
+    // widget reads it to announce the handover by name instead of letting a
+    // human reply arrive wearing the assistant's face.
+    const sender = (req as any).user;
+    const isOutbound = String((parsed.data as any).direction || "").toLowerCase() === "outbound";
+    if (isOutbound && !(parsed.data as any).aiGenerated && sender?.id) {
+      (parsed.data as any).usersId = sender.id;
+    }
+
     const interaction = await storage.createInteraction(parsed.data);
     const responseBody = toDbKeys(interaction as any, interactions);
     // Broadcast to SSE clients (covers manual messages sent from UI)

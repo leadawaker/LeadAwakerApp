@@ -3,12 +3,38 @@
 // Plain ES modules, same-origin: the page still ships no bundler and no
 // third-party script.
 
+import { t } from "./copy.js";
+
 // ---- text and formatting helpers ----
 
 export function esc(s) {
   return String(s == null ? "" : s)
     .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
+
+// Hosts whose links exist to be clicked once, to pick a time. Matched on the
+// host only: the path carries a token that differs per lead.
+var BOOKING_HOSTS = /(^|\.)(cal\.leadawaker\.com|book\.leadawaker\.com|cal\.com|caldiy\.[a-z.]+)$/i;
+
+var CAL_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" ' +
+  'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<rect x="3" y="4.5" width="18" height="16" rx="2.5"/><path d="M3 9.5h18M8 2.5v4M16 2.5v4"/></svg>';
+
+function urlHost(url) {
+  // The URL has been HTML-escaped by now, so &amp; is back to & before parsing.
+  try { return new URL(String(url).replace(/&amp;/g, "&")).hostname; } catch (e) { return ""; }
+}
+
+export function isBookingUrl(url) {
+  return BOOKING_HOSTS.test(urlHost(url));
+}
+
+/** "cal.leadawaker.com/x/y" -> "cal.leadawaker.com". Falls back to the raw
+ *  string when the URL will not parse, so a link is never lost. */
+function hostLabel(url) {
+  var host = urlHost(url);
+  return host ? host.replace(/^www\./, "") : String(url);
 }
 
 // Turn bare URLs in a message into real links.
@@ -41,7 +67,17 @@ export function linkify(escaped) {
       break;
     }
     if (!/^https?:\/\/\S/.test(url)) return match;
-    return '<a class="lnk" href="' + url + '" target="_blank" rel="noopener noreferrer">' + url + "</a>" + tail;
+    // A booking link is an action, not a reference, so it reads as a button
+    // with a calendar icon rather than forty characters of URL in the middle
+    // of a sentence. Every other link keeps its host as the label for the same
+    // reason: nobody reads a query string, and a wrapped URL makes an
+    // otherwise human-sounding message look machine-generated.
+    if (isBookingUrl(url)) {
+      return '<a class="lnk-btn" href="' + url + '" target="_blank" rel="noopener noreferrer">' +
+        CAL_SVG + "<span>" + t("openCalendar") + "</span></a>" + tail;
+    }
+    return '<a class="lnk" href="' + url + '" target="_blank" rel="noopener noreferrer">' +
+      esc(hostLabel(url)) + "</a>" + tail;
   });
 }
 

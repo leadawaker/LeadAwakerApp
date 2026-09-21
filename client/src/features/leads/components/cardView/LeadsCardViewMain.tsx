@@ -77,6 +77,7 @@ export function LeadsCardView({
   onMobileViewChange,
   accountsById,
   campaignsById,
+  isConversationsMode,
 }: LeadsCardViewProps) {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
@@ -105,7 +106,7 @@ export function LeadsCardView({
       localStorage.setItem("selected-lead-id", String(leadId));
     } catch { /* ignore */ }
     const basePath = "/platform";
-    setLocation(`${basePath}/conversations`);
+    setLocation(`${basePath}/chat`);
   }, [isAgencyUser, setLocation]);
 
   // ── Quick action tray state (Feature #41) ────────────────────────────────────
@@ -134,12 +135,6 @@ export function LeadsCardView({
   const [currentPage, setCurrentPage]   = useState(0);
   const [cardAnimKey, setCardAnimKey] = useState(0);
 
-  const [toolbarCollapsed, setToolbarCollapsed] = useState(() => typeof window !== "undefined" && window.innerWidth < 1200);
-  useEffect(() => {
-    const onResize = () => setToolbarCollapsed(window.innerWidth < 1200);
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
-  }, []);
   const PAGE_SIZE = 50;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   // Keeps the mobile sheet showing the last lead's content while it animates closed.
@@ -186,6 +181,8 @@ export function LeadsCardView({
   const {
     filterAccount,
     filterCampaign,
+    filterType,
+    toggleFilterType,
     tagSearchInput,
     upcomingCallsOnly,
     setFilterAccount,
@@ -322,7 +319,6 @@ export function LeadsCardView({
           setLeftPanelState={setLeftPanelState}
           listSearch={listSearch}
           onListSearchChange={onListSearchChange}
-          toolbarCollapsed={toolbarCollapsed}
           isFilterActive={isFilterActive}
           isSortNonDefault={isSortNonDefault}
           isGroupNonDefault={isGroupNonDefault}
@@ -343,6 +339,10 @@ export function LeadsCardView({
           onGroupByChange={onGroupByChange}
           onCreateLead={onCreateLead}
           showLeadActions={isAgencyUser && !!selectedLead}
+          title={isConversationsMode ? t("page.chatsTitle") : undefined}
+          showTypeControls={isConversationsMode}
+          filterType={filterType}
+          onToggleFilterType={toggleFilterType}
         />
       )}
 
@@ -368,6 +368,9 @@ export function LeadsCardView({
           filterTags={filterTags}
           filterAccount={filterAccount}
           filterCampaign={filterCampaign}
+          isConversationsMode={isConversationsMode}
+          filterType={filterType}
+          onToggleFilterType={toggleFilterType}
           setFilterSheetOpen={setFilterSheetOpen}
           mobileListMode={mobileListMode}
           setMobileListMode={setMobileListMode}

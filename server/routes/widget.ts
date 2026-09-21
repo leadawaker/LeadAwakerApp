@@ -18,6 +18,7 @@ import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, pool } from "../db";
 import { widgetConfigs, campaigns as campaignsTable, accounts, nicheVocabulary, type WidgetConfig } from "@shared/schema";
+import { deriveQuickReplies, parseOverride, type QuickReply } from "../widgetQuickReplies";
 import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
 import { captureSiteShot, shotExists, shotFileName, isPublicHttpUrl, SHOT_DIR } from "../siteShot";
@@ -32,7 +33,7 @@ const LEADS_TABLE = '"p2mxx34fvbf3ll6"."Leads"';
 
 // Same shape as the demo proxy's allowlist. Without it this is an open proxy
 // into every engine route for anyone who can guess a path.
-const WIDGET_SUFFIXES = new Set(["", "message", "voice", "audio"]);
+const WIDGET_SUFFIXES = new Set(["", "message", "voice", "audio", "restart"]);
 
 // express.json() is mounted globally at 20mb, which is right for CRM uploads and
 // far too generous for a public endpoint. Same ceiling the demo voice route uses.
@@ -155,6 +156,8 @@ async function publicConfig(cfg: WidgetConfig): Promise<FrameConfig> {
   const [acct] = await db.select({ name: accounts.name }).from(accounts).where(eq(accounts.id, cfg.accountsId)).limit(1);
   return {
     key: cfg.publicKey,
+    accent: cfg.accentColor || null,
+    quickReplies: deriveQuickReplies({ language: cfg.language, override: cfg.quickReplies }),
     greeting: cfg.greeting || "",
     agentName: cfg.agentName || "",
     companyName: acct?.name || "",
@@ -178,6 +181,34 @@ async function loadDemoPersona(token: string): Promise<{ persona: Record<string,
   let persona: Record<string, unknown> = {};
   try { persona = JSON.parse(String(rows[0]?.demo_niche || "{}")) || {}; } catch { /* no persona */ }
   return { persona, language: String(rows[0]?.language || "en") };
+}
+
+// The demo's starter chips. Read from the Client row every time rather than
+// from the persona snapshot on the lead: the snapshot is deliberately frozen
+// (an existing demo keeps the persona it was minted with), but chips are
+// presentation, and Gabriel edits them minutes before a call.
+async function demoQuickReplies(persona: Record<string, unknown>, language: string): Promise<QuickReply[]> {
+  const niche = String(persona.raw || "");
+  if (niche) {
+    const [row] = await db
+      .select({
+        quickReplies: nicheVocabulary.quickReplies,
+        proposalTerms: nicheVocabulary.proposalTerms,
+        proposalTermsEn: nicheVocabulary.proposalTermsEn,
+        proposalTermsPt: nicheVocabulary.proposalTermsPt,
+        visitTerms: nicheVocabulary.visitTerms,
+        visitTermsEn: nicheVocabulary.visitTermsEn,
+        visitTermsPt: nicheVocabulary.visitTermsPt,
+        bookingModeCall: nicheVocabulary.bookingModeCall,
+      })
+      .from(nicheVocabulary)
+      .where(eq(nicheVocabulary.niche, niche))
+      .limit(1);
+    if (row) return deriveQuickReplies({ ...row, language, override: row.quickReplies });
+  }
+  // No vocabulary row (or a persona minted without one): still offer the three
+  // intents, in the right language, rather than nothing.
+  return deriveQuickReplies({ language });
 }
 
 export function registerWidgetRoutes(app: Express) {
@@ -216,11 +247,17 @@ export function registerWidgetRoutes(app: Express) {
     // UI, same caps, no widget key needed, so a prospect demo costs no config.
     if (!key && token) {
       if (!/^[A-Za-z0-9]{4,64}$/.test(token)) return res.status(400).send("Invalid demo link.");
+      const { persona, language } = await loadDemoPersona(token);
+      // The demo page resolved the launcher colour already (widgetColorFor is a
+      // screenshot read); it passes it down rather than making the frame repeat
+      // that work. Validated here because it arrives from the browser.
+      const rawAccent = String(req.query.c || "");
+      const accent = /^#[0-9a-fA-F]{6}$/.test(rawAccent) ? rawAccent : null;
+      const quickReplies = await demoQuickReplies(persona, language);
       res.set("content-type", "text/html; charset=utf-8");
       // Demo frames are ours, embedded on our own demo page only.
       res.set("content-security-policy", "frame-ancestors 'self'");
       res.removeHeader("X-Frame-Options");
-      const { persona, language } = await loadDemoPersona(token);
       return res.send(renderFrameHtml({
         mode: "demo",
         demo: {
@@ -229,6 +266,8 @@ export function registerWidgetRoutes(app: Express) {
           agentName: String(persona.agent_name || ""),
           companyName: String(persona.company_name || ""),
           language,
+          accent,
+          quickReplies,
         },
       }));
     }

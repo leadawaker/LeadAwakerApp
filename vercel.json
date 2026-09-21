@@ -40,6 +40,14 @@
       "destination": "/voice-demo.html"
     },
     {
+      "source": "/widget-demo/:token",
+      "destination": "https://api.leadawaker.com/widget-demo/:token"
+    },
+    {
+      "source": "/widget/:path*",
+      "destination": "https://api.leadawaker.com/widget/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/app.html"
     }

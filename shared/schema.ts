@@ -438,6 +438,11 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   // Widget demo launcher colour, set by hand on the Demos page. Null = use the
   // colour detected from the screenshot (server/brandColor.ts), else black.
   widgetColor: text("widget_color"),
+  // Hand-written starter chips for this Client's demo widget, overriding the
+  // ones derived from the term lists above. Same {label, text} shape as
+  // Widget_Configs.quickReplies. Read live, not through the persona snapshot,
+  // so an edit reaches demo links that were already sent.
+  quickReplies: jsonb("quick_replies").$type<{ label: string; text: string }[] | null>(),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
@@ -1854,6 +1859,10 @@ export const widgetConfigs = nocodb.table("Widget_Configs", {
   agentName: text("agent_name"),
   avatarUrl: text("avatar_url"),
   language: text("language").default("en"),
+  // Starter chips: up to three {label, text} pairs offered above the composer
+  // until the visitor's first message. Null (not []) means "derive the usual
+  // three from the language defaults", so an untouched widget still gets them.
+  quickReplies: jsonb("quick_replies").$type<{ label: string; text: string }[] | null>(),
   // Cost ceilings on a public endpoint. Per visitor, and per key per day.
   maxTurnsPerVisitor: integer("max_turns_per_visitor").default(30),
   maxMessagesPerDay: integer("max_messages_per_day").default(500),

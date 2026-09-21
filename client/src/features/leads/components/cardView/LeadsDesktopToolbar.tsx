@@ -10,7 +10,6 @@ import {
   Filter,
   ArrowUpDown,
   Layers,
-  Settings,
   MessageSquare,
   Trash2,
   Pencil,
@@ -26,14 +25,24 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  DropdownMenuSub,
-  DropdownMenuSubContent,
-  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
 import type { ViewMode } from "./types";
 import { PIPELINE_HEX, ALL_LEAD_FILTER_STAGES } from "./constants";
+import type { ConversationType } from "../conversationType";
+import {
+  FilterMenuItems,
+  SortMenuItems,
+  GroupMenuItems,
+  FILTER_MENU_CLASS,
+  SORT_MENU_CLASS,
+} from "./LeadsToolbarMenus";
+
+function WineDot() {
+  return (
+    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
+  );
+}
 
 type ViewTab = { id: string; label: string; icon: any };
 type NamedOption = { id: string; name: string };
@@ -64,7 +73,6 @@ export function LeadsDesktopToolbar({
   setLeftPanelState,
   listSearch,
   onListSearchChange,
-  toolbarCollapsed,
   isFilterActive,
   isSortNonDefault,
   isGroupNonDefault,
@@ -85,6 +93,10 @@ export function LeadsDesktopToolbar({
   onGroupByChange,
   onCreateLead,
   showLeadActions,
+  title,
+  showTypeControls,
+  filterType,
+  onToggleFilterType,
 }: {
   leadsCount: number;
   viewTabs: ViewTab[];
@@ -110,7 +122,6 @@ export function LeadsDesktopToolbar({
   setLeftPanelState: (v: "full" | "compact" | "hidden") => void;
   listSearch: string;
   onListSearchChange: (v: string) => void;
-  toolbarCollapsed: boolean;
   isFilterActive: boolean;
   isSortNonDefault: boolean;
   isGroupNonDefault: boolean;
@@ -132,13 +143,24 @@ export function LeadsDesktopToolbar({
   onCreateLead?: () => void;
   /** When true (agency + a lead is open), show the per-lead "..." actions menu. */
   showLeadActions?: boolean;
+  /** Page title (defaults to the Leads title). */
+  title?: string;
+  /** Conversations page: adds the Type filter and Group-by-Type. */
+  showTypeControls?: boolean;
+  filterType: ConversationType[];
+  onToggleFilterType: (v: ConversationType) => void;
 }) {
   const { t } = useTranslation("leads");
   const [leadDeleteConfirm, setLeadDeleteConfirm] = useState(false);
+  const filterMenuProps = {
+    showTypeControls, isFilterActive, filterStatus, onToggleFilterStatus, filterTags, onToggleFilterTag,
+    filterType, onToggleFilterType, availableAccounts, filterAccount, setFilterAccount,
+    availableCampaigns, filterCampaign, setFilterCampaign, allTags,
+  };
   return (
     <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
       <div className="flex items-baseline gap-2 shrink-0">
-        <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
+        <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{title ?? t("page.title")}</span>
         <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leadsCount}</span>
       </div>
       {/* Single-view pages (e.g. Conversations) hide the segmented switcher. */}
@@ -311,113 +333,18 @@ export function LeadsDesktopToolbar({
         </span>
       </div>
 
-      {toolbarCollapsed ? (
-        /* Collapsed: single ⚙ button with dot when any control is active */
-        <div style={{ position: "relative" }}>
-          <button className="la-btn la-btn--soft la-btn--icon">
-            <Settings size={13} />
-          </button>
-          {(isFilterActive || isSortNonDefault || isGroupNonDefault) && (
-            <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
-          )}
-        </div>
-      ) : (
-        <>
       {/* Filter */}
       <DropdownMenu>
         <div style={{ position: "relative" }}>
           <DropdownMenuTrigger asChild>
-            <button className="la-btn la-btn--soft la-btn--icon">
+            <button className="la-btn la-btn--soft la-btn--icon" title={t("toolbar.filter")}>
               <Filter className="h-4 w-4 shrink-0" />
             </button>
           </DropdownMenuTrigger>
-          {isFilterActive && (
-            <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
-          )}
+          {isFilterActive && <WineDot />}
         </div>
-        <DropdownMenuContent align="start" className="w-52 max-h-[400px] overflow-y-auto bg-white">
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-              <span className="flex-1">{t("group.status")}</span>
-              {filterStatus.length > 0 && <span className="text-[10px] tabular-nums text-brand-indigo font-semibold">{filterStatus.length}</span>}
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-48">
-              {["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"].map((s) => (
-                <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                  <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
-                  <span className="flex-1">{s}</span>
-                  {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-          {availableAccounts.length > 0 && (
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                <span className="flex-1">{t("detail.fields.account")}</span>
-                {filterAccount && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-48 max-h-64 overflow-y-auto">
-                <DropdownMenuItem onClick={(e) => { e.preventDefault(); setFilterAccount(""); setFilterCampaign(""); }} className={cn("text-[12px]", !filterAccount && "font-semibold text-brand-indigo")}>
-                  {t("filters.allAccounts")}
-                  {!filterAccount && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {availableAccounts.map((a) => (
-                  <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); if (filterAccount === a.id) { setFilterAccount(""); } else { setFilterAccount(a.id); setFilterCampaign(""); } }} className={cn("text-[12px]", filterAccount === a.id && "font-semibold text-brand-indigo")}>
-                    <span className="flex-1 truncate">{a.name}</span>
-                    {filterAccount === a.id && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          )}
-          {availableCampaigns.length > 0 && (
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                <span className="flex-1">{t("detailView.campaign")}</span>
-                {filterCampaign && <span className="text-[10px] text-brand-indigo font-semibold">1</span>}
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-52 max-h-64 overflow-y-auto">
-                <DropdownMenuItem onClick={(e) => { e.preventDefault(); setFilterCampaign(""); }} className={cn("text-[12px]", !filterCampaign && "font-semibold text-brand-indigo")}>
-                  {t("filters.allCampaigns")}
-                  {!filterCampaign && <Check className="h-3 w-3 ml-auto text-brand-indigo" />}
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                {availableCampaigns.map((c) => (
-                  <DropdownMenuItem key={c.id} onClick={(e) => { e.preventDefault(); setFilterCampaign(filterCampaign === c.id ? "" : c.id); }} className={cn("text-[12px]", filterCampaign === c.id && "font-semibold text-brand-indigo")}>
-                    <span className="flex-1 truncate">{c.name}</span>
-                    {filterCampaign === c.id && <Check className="h-3 w-3 ml-auto text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          )}
-          {allTags.length > 0 && (
-            <DropdownMenuSub>
-              <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-                <span className="flex-1">{t("detail.sections.tags")}</span>
-                {filterTags.length > 0 && <span className="text-[10px] tabular-nums text-brand-indigo font-semibold">{filterTags.length}</span>}
-              </DropdownMenuSubTrigger>
-              <DropdownMenuSubContent className="w-48 max-h-64 overflow-y-auto">
-                {allTags.map((tag) => (
-                  <DropdownMenuItem key={tag.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(tag.name); }} className="flex items-center gap-2 text-[12px]">
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
-                    <span className="flex-1 truncate">{tag.name}</span>
-                    {filterTags.includes(tag.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuSubContent>
-            </DropdownMenuSub>
-          )}
-          {(isFilterActive || filterAccount || filterCampaign) && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => { filterStatus.forEach((s) => onToggleFilterStatus(s)); filterTags.forEach((tag) => onToggleFilterTag(tag)); setFilterAccount(""); setFilterCampaign(""); }} className="text-[12px] text-muted-foreground">
-                {t("toolbar.clearAllFilters", "Clear filters")}
-              </DropdownMenuItem>
-            </>
-          )}
+        <DropdownMenuContent align="end" className={FILTER_MENU_CLASS}>
+          <FilterMenuItems {...filterMenuProps} />
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -425,27 +352,14 @@ export function LeadsDesktopToolbar({
       <DropdownMenu>
         <div style={{ position: "relative" }}>
           <DropdownMenuTrigger asChild>
-            <button className="la-btn la-btn--soft la-btn--icon">
+            <button className="la-btn la-btn--soft la-btn--icon" title={t("toolbar.sort")}>
               <ArrowUpDown className="h-4 w-4 shrink-0" />
             </button>
           </DropdownMenuTrigger>
-          {isSortNonDefault && (
-            <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
-          )}
+          {isSortNonDefault && <WineDot />}
         </div>
-        <DropdownMenuContent align="start" className="w-44 bg-white">
-          {(["recent", "latest_message", "name_asc", "name_desc", "score_desc", "score_asc"] as const).map((value) => {
-            const sortLabels: Record<string, string> = {
-              recent: t("sort.mostRecent"), latest_message: t("sort.latestMessage"), name_asc: t("sort.nameAZ"), name_desc: t("sort.nameZA"),
-              score_desc: t("sort.scoreDown"), score_asc: t("sort.scoreUp"),
-            };
-            return (
-              <DropdownMenuItem key={value} onClick={() => onSortByChange(value)} className={cn("text-[12px]", sortBy === value && "font-semibold text-brand-indigo")}>
-                {sortLabels[value]}
-                {sortBy === value && <Check className="h-3 w-3 ml-auto" />}
-              </DropdownMenuItem>
-            );
-          })}
+        <DropdownMenuContent align="end" className={SORT_MENU_CLASS}>
+          <SortMenuItems sortBy={sortBy} onSortByChange={onSortByChange} />
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -453,31 +367,16 @@ export function LeadsDesktopToolbar({
       <DropdownMenu>
         <div style={{ position: "relative" }}>
           <DropdownMenuTrigger asChild>
-            <button className="la-btn la-btn--soft la-btn--icon">
+            <button className="la-btn la-btn--soft la-btn--icon" title={t("toolbar.group")}>
               <Layers className="h-4 w-4 shrink-0" />
             </button>
           </DropdownMenuTrigger>
-          {isGroupNonDefault && (
-            <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
-          )}
+          {isGroupNonDefault && <WineDot />}
         </div>
-        <DropdownMenuContent align="start" className="w-44 bg-white">
-          {(["date", "status", "campaign", "tag", "none"] as const).map((value) => {
-            const groupLabels: Record<string, string> = {
-              date: t("sort.mostRecent"), status: t("group.status"), campaign: t("group.campaign"),
-              tag: t("detail.sections.tags"), none: t("group.none"),
-            };
-            return (
-              <DropdownMenuItem key={value} onClick={() => onGroupByChange(value)} className={cn("text-[12px]", groupBy === value && "font-semibold text-brand-indigo")}>
-                {groupLabels[value]}
-                {groupBy === value && <Check className="h-3 w-3 ml-auto" />}
-              </DropdownMenuItem>
-            );
-          })}
+        <DropdownMenuContent align="end" className={SORT_MENU_CLASS}>
+          <GroupMenuItems groupBy={groupBy} onGroupByChange={onGroupByChange} showTypeControls={showTypeControls} />
         </DropdownMenuContent>
       </DropdownMenu>
-        </>
-      )}
 
       {/* +Add */}
       {onCreateLead && (

@@ -279,7 +279,7 @@ export function RightSidebar({
     { href: `${prefix}/campaigns`, label: t("sidebar.campaigns"), labelKey: "Campaigns", icon: Megaphone, testId: "nav-reactivation" },
     { href: `${prefix}/voice-calls`, label: t("sidebar.voiceCalls"), labelKey: "Voice calls", icon: AudioLines, testId: "nav-voice-calls", ownerOnly: true },
     // Agency = full chat ("Chats"); clients = summary-only view ("Interactions"). No gate needed.
-    { href: `${prefix}/conversations`, label: isAgencyUser ? t("sidebar.chats") : t("sidebar.interactions"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
+    { href: `${prefix}/chat`, label: isAgencyUser ? t("sidebar.chats") : t("sidebar.interactions"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
     { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/contacts`, label: t("sidebar.contacts"), labelKey: "Contacts", icon: BookUser, testId: "nav-contacts" },
     {
@@ -447,8 +447,8 @@ export function RightSidebar({
             : { key: "campaigns", href: `${prefix}/campaigns`, icon: Megaphone, label: t("sidebar.campaigns"), testId: "mobile-nav-campaigns" },
           // Agency = full chat ("Chats"); clients = summary-only ("Interactions").
           isAgencyUser
-            ? { key: "conversations", href: `${prefix}/conversations`, icon: MessageSquare, label: t("sidebar.chats"), testId: "mobile-nav-conversations" }
-            : { key: "conversations", href: `${prefix}/conversations`, icon: MessageSquare, label: t("sidebar.interactions"), testId: "mobile-nav-conversations" },
+            ? { key: "conversations", href: `${prefix}/chat`, icon: MessageSquare, label: t("sidebar.chats"), testId: "mobile-nav-conversations" }
+            : { key: "conversations", href: `${prefix}/chat`, icon: MessageSquare, label: t("sidebar.interactions"), testId: "mobile-nav-conversations" },
           { key: "calendar", href: `${prefix}/calendar`, icon: CalendarDays, label: t("sidebar.calendar"), testId: "mobile-nav-calendar" },
           // Agency users get Tasks; clients get their Accounts page instead.
           isAgencyUser

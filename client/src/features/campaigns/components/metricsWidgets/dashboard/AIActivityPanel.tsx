@@ -59,7 +59,7 @@ export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; a
     try {
       localStorage.setItem("selected-lead-id", String(leadId));
     } catch { /* ignore */ }
-    setLocation("/platform/conversations");
+    setLocation("/platform/chat");
   };
 
   return (

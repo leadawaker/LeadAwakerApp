@@ -109,6 +109,7 @@ export function LeadsFiltersBar({
     status:   t("group.status"),
     campaign: t("group.campaign"),
     tag:      t("detail.sections.tags"),
+    type:     t("conversationType.label"),
     none:     t("group.none"),
   };
   const sortLabels: Record<SortByOption, string> = {

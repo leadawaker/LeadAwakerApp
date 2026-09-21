@@ -220,7 +220,7 @@ export function NotificationCenter({
       const rawPath = n.link.replace(/^\/platform/, "");
       const idPatterns: { re: RegExp; entity: "leads" | "tasks" | "campaigns" }[] = [
         { re: /^\/leads\/(\d+)$/, entity: "leads" },
-        { re: /^\/conversations\?lead=(\d+)$/, entity: "leads" },
+        { re: /^\/(?:conversations|chat)\?lead=(\d+)$/, entity: "leads" },
         { re: /^\/tasks\/(\d+)$/, entity: "tasks" },
         { re: /^\/campaigns\/(\d+)$/, entity: "campaigns" },
       ];

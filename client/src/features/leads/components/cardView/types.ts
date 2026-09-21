@@ -6,7 +6,7 @@ import type { Interaction } from "@/types/models";
 export type ViewMode = "list" | "table" | "pipeline";
 
 // ── Group / sort option types ─────────────────────────────────────────────────
-export type GroupByOption = "date" | "status" | "campaign" | "tag" | "none";
+export type GroupByOption = "date" | "status" | "campaign" | "tag" | "type" | "none";
 export type SortByOption  = "recent" | "latest_message" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
 
 // ── Virtual list item union type ──────────────────────────────────────────────
@@ -112,5 +112,7 @@ export interface LeadsCardViewProps {
   mobileView?: "list" | "detail";
   onMobileViewChange?: (v: "list" | "detail") => void;
   accountsById?: Map<number, string>;
-  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
+  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null; campaignType?: string | null }>;
+  /** Conversations page: shows the Type filter/group and the "Chats" title. */
+  isConversationsMode?: boolean;
 }

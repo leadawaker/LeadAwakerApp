@@ -120,10 +120,18 @@ export function messagesHtml(s, pending, voice, opts) {
     var showAv = !mine && (!prev || prev.role !== "ai");
     var fresh = i >= paintedCount ? " is-new" : "";
     var isVoice = msg.kind === "voice";
+    // A colleague has taken over. Announced once, at the message where it
+    // happens, so the visitor knows who they are talking to now; after that
+    // the name rides on each of that person's bubbles.
+    if (msg.human && msg.agentName && (!prev || !prev.human)) {
+      out.push('<div class="row-note"><span>' + esc(t("handover").replace("{name}", msg.agentName)) + "</span></div>");
+    }
     out.push(
       '<div class="row ' + (mine ? "me" : "ai") + '">' +
-        (mine ? "" : (showAv
-          ? '<div class="av"><img src="' + esc(avatarSrc) + '" alt="' + esc(initials(s.agent)) + '" /></div>'
+        (mine ? "" : (showAv || (msg.human && (!prev || !prev.human))
+          ? (msg.human && msg.agentName
+              ? '<div class="av is-human">' + esc(initials(msg.agentName)) + "</div>"
+              : '<div class="av"><img src="' + esc(avatarSrc) + '" alt="' + esc(initials(s.agent)) + '" /></div>')
           : '<div class="av" style="visibility:hidden"></div>')) +
         '<div class="bub-wrap">' +
           '<div class="bub' + (isVoice ? " is-voice" : "") + fresh + '">' +

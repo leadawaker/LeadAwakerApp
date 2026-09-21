@@ -24,6 +24,7 @@ import { LeadsInlineTable } from "./LeadsInlineTable";
 import { LeadsKanban } from "./LeadsKanban";
 import { LeadDetailPanel } from "./LeadDetailPanel";
 import { PipelineLeadPanel } from "./cardView/PipelineLeadPanel";
+import { isRealTag } from "./cardView/constants";
 import { CsvImportWizard } from "./CsvImportWizard";
 import { createLead, bulkDeleteLeads, bulkUpdateLeads, updateLead, deleteLead } from "../api/leadsApi";
 import { apiFetch } from "@/lib/apiUtils";
@@ -355,7 +356,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   /* ── Lifted list-view controls (persisted) ───────────────────────────────── */
   const [listSearch,   setListSearch]   = useState("");
   const [searchOpen,   setSearchOpen]   = useState(false);
-  const [listPrefs, setListPrefs]       = usePersistedState(LIST_PREFS_KEY, {
+  const [listPrefs, setListPrefs]       = usePersistedState(mode === "conversations" ? `${LIST_PREFS_KEY}:conversations` : LIST_PREFS_KEY, {
     groupBy: "date" as GroupByOption,
     sortBy: "recent" as SortByOption,
     filterStatus: [] as string[],
@@ -852,7 +853,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   /* ── List-view helpers ──────────────────────────────────────────────────── */
   const allTags = useMemo(() => {
     const seen = new Map<string, { name: string; color: string }>();
-    leadTagsInfo.forEach((tags) => tags.forEach((t) => { if (!seen.has(t.name)) seen.set(t.name, t); }));
+    leadTagsInfo.forEach((tags) => tags.forEach((t) => { if (isRealTag(t.name) && !seen.has(t.name)) seen.set(t.name, t); }));
     return Array.from(seen.values());
   }, [leadTagsInfo]);
 
@@ -1343,6 +1344,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             onMobileViewChange={setMobileView}
             accountsById={accountsById}
             campaignsById={campaignsById}
+            isConversationsMode={mode === "conversations"}
           />
         </div>
       )}

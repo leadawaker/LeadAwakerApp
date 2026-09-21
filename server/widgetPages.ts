@@ -12,6 +12,11 @@ import { inkFor } from "./brandColor";
 
 export interface FrameConfig {
   key: string;
+  /** Starter chips, already resolved to {label, text} by widgetQuickReplies. */
+  quickReplies?: { label: string; text: string }[];
+  /** The launcher's colour. The panel wears it only where a colour means
+   *  something (selected text), never as decoration. */
+  accent?: string | null;
   greeting: string;
   agentName: string;
   companyName: string;
@@ -22,6 +27,8 @@ export interface FrameConfig {
 
 export interface DemoFrame {
   token: string;
+  accent?: string | null;
+  quickReplies?: { label: string; text: string }[];
   avatar: string;
   agentName: string;
   companyName: string;
@@ -82,7 +89,10 @@ export const LAUNCHER_CSS = `
 .la-core .la-i-x{opacity:0;transform:rotate(-90deg) scale(.6)}
 .la-root.is-open .la-core .la-i-chat{opacity:0;transform:rotate(90deg) scale(.6)}
 .la-root.is-open .la-core .la-i-x{opacity:1;transform:none}
-.la-dot{position:absolute;top:1px;right:1px;width:13px;height:13px;border-radius:50%;background:#ef4444;border:2px solid #fff;display:none;z-index:3}
+.la-dot{position:absolute;top:-3px;right:-3px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#ef4444;color:#fff;border:2px solid #fff;
+  font:700 11px/16px -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif;text-align:center;display:none;z-index:3;
+  animation:la-pop .35s cubic-bezier(.2,.8,.2,1)}
+@keyframes la-pop{from{transform:scale(.4)}to{transform:none}}
 @keyframes la-spin{to{transform:rotate(360deg)}}
 
 .la-teaser{position:var(--la-pos,fixed);bottom:calc(var(--la-gap) + 74px);right:var(--la-gap);width:290px;max-width:calc(100vw - 40px);
@@ -101,7 +111,7 @@ export const LAUNCHER_CSS = `
 .la-tx svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 
 .la-panel{position:var(--la-pos,fixed);bottom:calc(var(--la-gap) + 76px);right:var(--la-gap);width:380px;
-  height:min(640px,calc(var(--la-h,100vh) - 120px));border:0;border-radius:20px;overflow:hidden;background:#fff;display:none;z-index:1;
+  height:min(640px,calc(var(--la-h,100vh) - 190px));border:0;border-radius:20px;overflow:hidden;background:#fff;display:none;z-index:1;
   box-shadow:0 28px 60px -14px rgba(0,0,0,.38),0 0 0 1px rgba(0,0,0,.06)}
 .la-panel.open{display:block;animation:la-rise .32s cubic-bezier(.2,.8,.2,1)}
 @keyframes la-rise{from{opacity:0;transform:translateY(12px) scale(.98)}to{opacity:1;transform:none}}
@@ -121,6 +131,65 @@ export const LAUNCHER_CSS = `
 const BUTTON_INNER =
   `<span class="la-core"><span class="la-i-chat">${ICON_CHAT}</span><span class="la-i-x">${ICON_X}</span></span><span class="la-dot"></span>`;
 
+
+// Unread badge + ding, shared by the loader and the demo page. The ding is
+// synthesised (two short sine tones) so there is no audio file to host. Browsers
+// only let a page make sound after the visitor has interacted with it; when
+// that has not happened the context stays suspended and the ding is skipped,
+// which is the "only if allowed" behaviour, with no error surfaced.
+const UNREAD_JS = String.raw`
+  var unread=0,actx=null;
+  function ding(){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC)return;
+      actx=actx||new AC();
+      if(actx.state==="suspended")actx.resume();
+      if(actx.state!=="running")return;
+      [[880,0],[1318,.11]].forEach(function(n){
+        var o=actx.createOscillator(),g=actx.createGain(),t=actx.currentTime+n[1];
+        o.type="sine";o.frequency.value=n[0];
+        g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(.16,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.35);
+        o.connect(g);g.connect(actx.destination);o.start(t);o.stop(t+.4);
+      });
+    }catch(e){}
+  }
+  function showUnread(dotEl,n){
+    unread+=Math.max(1,n|0);
+    dotEl.textContent=unread>9?"9+":String(unread);
+    dotEl.style.display="block";
+    ding();
+  }
+  function clearUnread(dotEl){unread=0;dotEl.style.display="none";}
+`;
+
+// Changes on every server restart (pm2 reloads on each file save), so the browser
+// and Cloudflare never serve the frame's JS/CSS from before the last edit.
+//
+// Cloudflare rewrites our `cache-control: no-cache` on /widget/* to a 4-hour
+// browser TTL, so the version query is the only thing that actually busts a
+// visitor's cache. It has to cover the WHOLE module graph, not just the entry
+// file: a fresh widget.js importing a four-hour-old copy.js is how a rename
+// shows up as raw translation keys on screen. Static imports cannot carry a
+// query, hence the import map, which rewrites each resolved URL before fetch.
+const ASSET_V = Date.now().toString(36);
+
+const FRAME_MODULES = [
+  "/widget/copy.js",
+  "/widget/voicememo.js",
+  "/premium/demo/chat.js",
+  "/premium/demo/format.js",
+  "/premium/demo/copy.js",
+  "/premium/demo/icons.js",
+  "/premium/demo/voice.js",
+];
+
+function frameImportMap(): string {
+  const imports: Record<string, string> = {};
+  for (const path of FRAME_MODULES) imports[path] = `${path}?v=${ASSET_V}`;
+  return `<script type="importmap">${JSON.stringify({ imports })}</script>`;
+}
+
 // ── The frame document ───────────────────────────────────────────────────────
 // Kept server-side because the CSP header and the injected config must be
 // decided per request, and a static file cannot carry either.
@@ -135,23 +204,28 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
           companyName: opts.demo.companyName,
           avatar: opts.demo.avatar,
           language: opts.demo.language,
+          quickReplies: opts.demo.quickReplies || [],
         },
       };
   const lang = opts.mode === "live" ? opts.config.language : opts.demo.language;
+  const raw = opts.mode === "live" ? opts.config.accent : opts.demo.accent;
+  const accent = raw && /^#[0-9a-fA-F]{6}$/.test(raw) ? raw.toLowerCase() : "";
   return `<!doctype html>
 <html lang="${escapeHtml(lang2(lang))}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Chat</title>
-<link rel="stylesheet" href="/premium/design-tokens.css">
-<link rel="stylesheet" href="/premium/demo/demo.css">
-<link rel="stylesheet" href="/widget/widget.css">
+<link rel="stylesheet" href="/premium/design-tokens.css?v=${ASSET_V}">
+<link rel="stylesheet" href="/premium/demo/demo.css?v=${ASSET_V}">
+<link rel="stylesheet" href="/widget/widget.css?v=${ASSET_V}">
+${accent ? `<style>:root{--w-accent:${accent};--w-accent-ink:${inkFor(accent)}}</style>` : ""}
+${frameImportMap()}
 </head>
 <body class="wdg-body">
 <div id="root"></div>
 <script>window.__WIDGET__ = ${JSON.stringify(boot).replace(/</g, "\\u003c")};</script>
-<script type="module" src="/widget/widget.js"></script>
+<script type="module" src="/widget/widget.js?v=${ASSET_V}"></script>
 </body>
 </html>`;
 }
@@ -207,15 +281,18 @@ ${o.shotUrl
 </div>
 <script>
 (function(){
+  ${UNREAD_JS}
+  var dot=document.querySelector(".la-dot");
   var root=document.getElementById("la-root"),panel=document.getElementById("la-panel"),btn=document.getElementById("la-btn"),
       teaser=document.getElementById("la-teaser"),tx=document.getElementById("la-tx");
   var loaded=false,open=false;
   function toggle(){
     open=!open;
-    if(open&&!loaded){panel.src="/widget/frame?token=${encodeURIComponent(o.token)}";loaded=true;}
+    if(open&&!loaded){panel.src="/widget/frame?token=${encodeURIComponent(o.token)}${o.color ? `&c=${encodeURIComponent(o.color)}` : ""}";loaded=true;}
     panel.classList.toggle("open",open);
     root.classList.toggle("is-open",open);
     teaser.classList.remove("show");
+    if(open)clearUnread(dot);
   }
   btn.addEventListener("click",toggle);
   teaser.addEventListener("click",function(){if(!open)toggle();});
@@ -225,6 +302,7 @@ ${o.shotUrl
   setTimeout(function(){if(!open)teaser.classList.add("show");},1200);
   window.addEventListener("message",function(e){
     if(e.data&&e.data.type==="la-widget-close"&&open)toggle();
+    if(e.data&&e.data.type==="la-widget-unread"&&!open)showUnread(dot,e.data.count);
   });
 })();
 </script>
@@ -237,6 +315,7 @@ ${o.shotUrl
 // embedded as JSON strings so the loader and the demo page cannot drift apart.
 export const LOADER_JS = String.raw`(function () {
   "use strict";
+  ` + UNREAD_JS + String.raw`
   var LAUNCHER_CSS = ` + JSON.stringify(LAUNCHER_CSS) + String.raw`;
   var BUTTON_INNER = ` + JSON.stringify(BUTTON_INNER) + String.raw`;
   var ICON_X = ` + JSON.stringify(ICON_X) + String.raw`;
@@ -312,7 +391,7 @@ export const LOADER_JS = String.raw`(function () {
     frame.classList.toggle("open", open);
     root.classList.toggle("is-open", open);
     btn.setAttribute("aria-label", open ? "Close chat" : "Open chat");
-    if (open) { dot.style.display = "none"; hideTeaser(); }
+    if (open) { clearUnread(dot); hideTeaser(); }
   }
   btn.addEventListener("click", toggle);
 
@@ -346,7 +425,7 @@ export const LOADER_JS = String.raw`(function () {
   window.addEventListener("message", function (e) {
     if (e.origin !== origin || !e.data || typeof e.data !== "object") return;
     if (e.data.type === "la-widget-close" && open) toggle();
-    if (e.data.type === "la-widget-unread" && !open) dot.style.display = "block";
+    if (e.data.type === "la-widget-unread" && !open) showUnread(dot, e.data.count);
   });
 })();`;
 

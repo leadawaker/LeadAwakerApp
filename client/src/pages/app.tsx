@@ -152,7 +152,8 @@ export default function AppArea() {
           </Route>
           {/* Conversations / Contacts split: same workspace component, two modes.
               Conversations = chat threads only; Contacts = directory (table + pipeline). */}
-          <Route path="/platform/conversations">
+          <Route path="/platform/conversations"><Redirect to="/platform/chat" /></Route>
+          <Route path="/platform/chat">
             {isAgencyUser()
               ? <AppLeads mode="conversations" />
               : <Redirect to="/platform/contacts" />}

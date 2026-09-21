@@ -11,6 +11,10 @@ var COPY = {
     startFailed: "This chat could not start.",
     close: "Close chat",
     send: "Send",
+    restart: "Restart chat",
+    restartAsk: "Start a new conversation? This one stays in our records.",
+    restartYes: "Restart",
+    cancel: "Cancel",
   },
   nl: {
     assistant: "Assistent",
@@ -20,6 +24,10 @@ var COPY = {
     startFailed: "Deze chat kon niet starten.",
     close: "Chat sluiten",
     send: "Versturen",
+    restart: "Chat opnieuw starten",
+    restartAsk: "Een nieuw gesprek beginnen? Dit gesprek blijft bewaard.",
+    restartYes: "Opnieuw starten",
+    cancel: "Annuleren",
   },
   pt: {
     assistant: "Assistente",
@@ -29,6 +37,10 @@ var COPY = {
     startFailed: "Não foi possível iniciar o chat.",
     close: "Fechar chat",
     send: "Enviar",
+    restart: "Reiniciar conversa",
+    restartAsk: "Começar uma nova conversa? Esta fica salva no histórico.",
+    restartYes: "Reiniciar",
+    cancel: "Cancelar",
   },
 };
 

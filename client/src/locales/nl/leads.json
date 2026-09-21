@@ -1,5 +1,13 @@
 {
+  "conversationType": {
+    "label": "Type",
+    "widget": "Widget",
+    "voice": "Spraak",
+    "dbr": "DBR / Offertes",
+    "other": "Overig"
+  },
   "page": {
+    "chatsTitle": "Chats",
     "title": "Mijn Leads",
     "opportunities": "Kansen"
   },
