@@ -61,8 +61,11 @@ same AI, booking flow and CRM inbox as every other service.
   return `/social-demo/<token>` on the CRM host, and `serviceOf` places an untagged
   campaign-S link in the socials column.
 - **A2.** Minting a socials link for a Client in language L makes sure that Client has a
-  **social post** for L (section B). If it exists, it is reused. If not, it is generated
-  during the mint, and the mint button shows a loading state for the extra seconds.
+  **social post** for L (section B). If it exists, it is reused. If not, the TEXT is
+  generated during the mint (a few seconds, the mint button already shows a spinner)
+  and the IMAGE is started in the background, so the mint never waits 10 to 60 seconds
+  or hits a proxy timeout. The page reads the image live and shows the fallback (B5)
+  until it exists. Socials needs a Client: a mint without one is refused.
 - **A3.** The social post is copied into the lead's `demo_niche` snapshot at mint, like
   every other persona field, so a link already sent keeps showing the post it was sent
   with. The image is the one exception: it is read live from the Client (as the widget
@@ -137,10 +140,16 @@ committed WebP/SVG files at display size.
 - Bubbles in Instagram's light-mode style: the business in light grey on the left, the
   user in Instagram blue/purple on the right, typing dots while the AI replies.
 - The thread uses the existing web-demo transport unchanged (`/api/web-demo/:token`
-  opener, message, poll, restart). The chat client module in
-  `client/public/premium/demo/` is reused for transport and state; only the rendering
-  is new. If a clean split between transport and rendering does not exist there, the
-  plan creates it rather than copying the transport.
+  opener, message, poll, restart). Transport is NOT separated from rendering today (it
+  lives inside `main.js`, and `widget.js` has its own copy), so this build creates
+  `client/public/premium/demo/transport.js` and the new page uses it. Moving `main.js`
+  and `widget.js` onto it is a follow-up, kept out of this build so the live demo and
+  widget are not touched. The pure render modules (`chat.js`, `tracker.js`,
+  `recap.js`, `confetti.js`, `admin.js`) are reused as they are.
+- The page must not call the engine before the comment (the first GET creates the lead
+  and sends the opener). The server-rendered page tells the client whether the thread
+  has started (the web-demo lead exists and has an inbound message); if so, a reload
+  opens straight in the DM view.
 - Booking links, the tracker, the recap panel, confetti on booking and the presenter
   ⋯ menu behave exactly as on `/demo/<token>`.
 - Restart (presenter menu) wipes the thread and returns to the feed view, so the demo
@@ -186,20 +195,24 @@ the widget demo page).
   persona has none (a lead minted before the post existed), a fixed per-language
   template is used: thanks for commenting on the post, it's {agent_name} from
   {company_name}, how is your day going.
-- **D3.** A new Prompt_Library prompt for campaign S, derived from prompt 108. Changes
-  from 108, and only these:
-  - The situation: the lead commented the keyword on the company's Instagram post about
-    `offer`, received the opener in DM, and is now replying. They have raised their
-    hand for that offer, so the AI treats them as warm: it does not ask why they got in
-    touch, it picks up from the post.
-  - Tone for Instagram DMs: short, casual, one question per message.
-  - The post's caption and offer are available as variables and are the context for the
-    first reply.
-  Everything else (qualification, booking, handoff, objection handling) stays 108's.
-  Written in each language the way the existing prompts are, following
-  `feedback_prompt_editing_verbatim_and_conditionals` and
-  `feedback_prompt_rules_cheapest_compliant_output`. Tested with `bot-test` across
-  several niches and all three languages, never tuned on one conversation.
+- **D3.** No copied prompt (amended 2026-09-23 after reading 108). Prompt 108 already
+  describes this lead ("contacted {company_name} moments ago, through the website or an
+  ad ... warm, expecting a reply"), and the resolver has no include mechanism, so a copy
+  would be 45k characters that drift from 108. Instead:
+  - Campaign S borrows 108 through `prompt_campaign_id = 67`, like the widget campaign.
+  - 108 gains ONE block guarded by `{{#if lead_source == "social_comment"}}`, inert for
+    every other campaign, that says: the lead commented the keyword on the company's
+    Instagram post about `offer`, got the opener in DM, and is replying; they raised
+    their hand for that offer, so do not ask why they got in touch, pick up from the
+    post; Instagram DMs are short and casual, one question per message. The post
+    context is the new variable `{social_context}`.
+  - The post context also feeds `{lead_context}` (via `enquiry_context`), so the
+    scoping ladder skips what the post already says.
+  Everything else (qualification, booking, handoff, objections) is 108's. Written
+  following `feedback_prompt_editing_verbatim_and_conditionals` and
+  `feedback_prompt_rules_cheapest_compliant_output`. Evaluated on several niches and
+  all three languages, never tuned on one conversation. If that evaluation shows the
+  block is not enough, a separate prompt is a follow-up decision, not part of this build.
 - **D4.** No change to the web-demo transport or `process_inbound`. The lead keeps the
   existing `web-demo:<token>` channel identifier. The Instagram identity comes from the
   campaign type, which avoids touching the surface-split logic.
@@ -236,9 +249,10 @@ the widget demo page).
 - **Stale page JS.** Demo pages have no cache busting and Cloudflare caches static
   paths (see `feedback_demo_page_render_and_static_cache`,
   `project_widget_restart_unread_2026_09_21`). Version the page's module URLs.
-- **Prompt drift.** A copied prompt drifts from 108 when 108 is improved. The plan should
-  prefer a thin prompt that reuses 108's text with a social-context section, if the
-  prompt resolver allows it, over a full copy.
+- **Prompt 108 is live.** It serves campaigns 67 and 68. The new block is inert unless
+  `lead_source == "social_comment"`, and the CRM autosave can silently revert a SQL
+  write to a prompt that is open in a tab (`feedback_prompt93_editing_workflow`): close
+  it first, then re-read the row after writing.
 
 ## Acceptance
 
