@@ -6,10 +6,12 @@ const { Pool } = require("pg");
 const S = "p2mxx34fvbf3ll6";
 const NAME = "Reputation Demo";
 
+// {service_name} comes from the persona generator as a noun, a verb phrase or a
+// business type, so every sentence reads with any of the three ("helped with").
 const FIRST_MESSAGE = JSON.stringify({
-  en: "Hey {first_name}, it's {agent_name}{disclosure_clause}. Just checking in: are you the same {first_name} who recently had {service_name} done with us?",
-  nl: "Hoi {first_name}, met {agent_name}{disclosure_clause}. Even checken: ben jij dezelfde {first_name} die onlangs {service_name} bij ons heeft laten doen?",
-  pt: "Oi {first_name}, aqui é {agent_name}{disclosure_clause}. Só pra confirmar: é você que fez {service_name} com a gente há pouco tempo?",
+  en: "Hey {first_name}, it's {agent_name}{disclosure_clause}. Quick check: am I speaking with the same {first_name} we recently helped with {service_name}?",
+  nl: "Hoi {first_name}, met {agent_name}{disclosure_clause}. Even checken: spreek ik met de {first_name} die we onlangs hebben geholpen met {service_name}?",
+  pt: "Oi {first_name}, aqui é {agent_name}{disclosure_clause}. Só pra confirmar: é você que a gente atendeu recentemente em {service_name}?",
 });
 
 (async () => {
