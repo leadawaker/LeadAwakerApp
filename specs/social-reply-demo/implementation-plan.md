@@ -65,8 +65,8 @@
 | `client/public/social-demo/main.js` | create | Boot, view switching, wiring transport and reused modules |
 | `client/public/social-demo/social.css` | create | Instagram-like light theme |
 | `client/public/social-demo/social.test.mjs` | create | Plain-node tests for keyword/copy/feed/dm |
-| `client/public/social-demo/img/` | create | Static post images + inbox avatars (WebP) |
-| `scripts/social-demo/generate-static-images.ts` | create | One-off generator for `img/` |
+| `client/public/social-demo/img/` | create | Gabriel's two feed photos + generated inbox avatars (WebP) |
+| `scripts/social-demo/generate-avatars.ts` | create | One-off low-res avatar generator for `img/` |
 | `client/src/features/demos/services.ts` | modify | socials: campaign 69, `socialPage` |
 | `client/src/features/demos/components/ProspectDemoPanel.tsx` | modify | URL after mint for `socialPage` |
 | `client/src/features/campaigns/components/clients/SocialPostSection.tsx` | create | Editor section |
@@ -753,7 +753,7 @@ git commit -m "feat(social-demo): social post generation and validation"
 **Interfaces:**
 - Consumes: `SHOT_DIR` from `server/siteShot.ts` (`path.resolve("uploads/site-shots")`; export it if it is not exported), `OPENAI_API_KEY` (fallback `OPEN_AI_API_KEY`), system `cwebp`.
 - Produces:
-  - `generateSocialImage(prompt: string, deps?: ImageDeps): Promise<string>`: returns a filename matching `/^[a-f0-9]{16}\.webp$/`, served by the existing `GET /api/site-shot/:file`.
+  - `generateSocialImage(prompt: string, deps?: ImageDeps, quality?: "low" | "medium"): Promise<string>` (default `"medium"`): returns a filename matching `/^[a-f0-9]{16}\.webp$/`, served by the existing `GET /api/site-shot/:file`.
   - `ensureSocialImage(key: string, prompt: string, onDone: (file: string) => Promise<void>, deps?: ImageDeps): Promise<void>`: fire-and-forget safe; one generation per `key` at a time; logs and swallows errors.
   - `interface ImageDeps { fetch: typeof fetch; exec: (cmd: string, args: string[]) => Promise<void>; dir: string; apiKey: string | undefined }`
 
@@ -853,7 +853,11 @@ function defaultDeps(): ImageDeps {
 
 const MODEL = "gpt-image-1";
 
-export async function generateSocialImage(prompt: string, deps: ImageDeps = defaultDeps()): Promise<string> {
+export async function generateSocialImage(
+  prompt: string,
+  deps: ImageDeps = defaultDeps(),
+  quality: "low" | "medium" = "medium",
+): Promise<string> {
   if (!deps.apiKey) throw new Error("OPENAI_API_KEY is not set");
   const res = await deps.fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
@@ -862,7 +866,7 @@ export async function generateSocialImage(prompt: string, deps: ImageDeps = defa
       model: MODEL,
       prompt: `${prompt}. Square photo. No text, no logos, no watermarks, no signs.`,
       size: "1024x1024",
-      quality: "medium",
+      quality,
       n: 1,
     }),
   });
@@ -1825,16 +1829,16 @@ export const COPY = {
 
 export const STATIC_POSTS = {
   en: [
-    { handle: "mia.kitchen", avatarLetter: "M", image: "/social-demo-assets/img/post-en-1.webp", caption: "New sourdough crumb shot, we got there 🍞", likes: 327, sponsored: false },
-    { handle: "noah.notes", avatarLetter: "N", image: "/social-demo-assets/img/post-en-2.webp", caption: "Sunday desk reset. Coffee first, emails later.", likes: 189, sponsored: false },
+    { handle: "mia.kitchen", avatarLetter: "M", image: "/social-demo-assets/img/post-1.webp", caption: "New sourdough crumb shot, we got there 🍞", likes: 327, sponsored: false },
+    { handle: "noah.notes", avatarLetter: "N", image: "/social-demo-assets/img/post-2.webp", caption: "Sunday desk reset. Coffee first, emails later.", likes: 189, sponsored: false },
   ],
   nl: [
-    { handle: "lotte.bakt", avatarLetter: "L", image: "/social-demo-assets/img/post-nl-1.webp", caption: "Eindelijk een zuurdesem met mooie gaatjes 🍞", likes: 214, sponsored: false },
-    { handle: "daan.fietst", avatarLetter: "D", image: "/social-demo-assets/img/post-nl-2.webp", caption: "Rondje langs de Vecht vanochtend. Niet verkeerd.", likes: 156, sponsored: false },
+    { handle: "lotte.bakt", avatarLetter: "L", image: "/social-demo-assets/img/post-1.webp", caption: "Eindelijk een zuurdesem met mooie gaatjes 🍞", likes: 214, sponsored: false },
+    { handle: "daan.fietst", avatarLetter: "D", image: "/social-demo-assets/img/post-2.webp", caption: "Rondje langs de Vecht vanochtend. Niet verkeerd.", likes: 156, sponsored: false },
   ],
   pt: [
-    { handle: "ana.nacozinha", avatarLetter: "A", image: "/social-demo-assets/img/post-pt-1.webp", caption: "Pão de fermentação natural saiu do forno agora 🍞", likes: 402, sponsored: false },
-    { handle: "lucas.pedala", avatarLetter: "L", image: "/social-demo-assets/img/post-pt-2.webp", caption: "Pedal de domingo no Ibirapuera, que dia bonito.", likes: 233, sponsored: false },
+    { handle: "ana.nacozinha", avatarLetter: "A", image: "/social-demo-assets/img/post-1.webp", caption: "Pão de fermentação natural saiu do forno agora 🍞", likes: 402, sponsored: false },
+    { handle: "lucas.pedala", avatarLetter: "L", image: "/social-demo-assets/img/post-2.webp", caption: "Pedal de domingo no Ibirapuera, que dia bonito.", likes: 233, sponsored: false },
   ],
 };
 
@@ -2243,22 +2247,37 @@ git commit -m "feat(social-demo): Instagram-like feed, comment keyword and DM th
 
 ---
 
-### Task 10: Static feed images and inbox avatars
+### Task 10: Static feed photos and inbox avatars
 
 **Files:**
-- Create: `scripts/social-demo/generate-static-images.ts`
-- Create: `client/public/social-demo/img/post-{en,nl,pt}-{1,2}.webp`, `client/public/social-demo/img/av-{en,nl,pt}-{1..8}.webp`
+- Create: `scripts/social-demo/generate-avatars.ts`
+- Create: `client/public/social-demo/img/post-1.webp`, `client/public/social-demo/img/post-2.webp` (from Gabriel's two photos)
+- Create: `client/public/social-demo/img/av-{en,nl,pt}-{1..8}.webp`
+- Modify: `client/public/social-demo/copy.js` (`STATIC_POSTS` captions and handles)
 
 **Interfaces:**
-- Consumes: `generateSocialImage(prompt, deps)` from Task 5 with `deps.dir` pointed at a temp folder.
-- Produces: 30 WebP files at the paths `copy.js` references (posts 1080 px, avatars 112 px).
+- Consumes: `generateSocialImage(prompt, deps, "low")` from Task 5 with `deps.dir` pointed at a temp folder; two photos supplied by Gabriel.
+- Produces: 26 WebP files at the paths `copy.js` references (posts 1080 px, avatars 112 px). The two feed photos are shared by all three languages; only their captions and handles differ per language.
 
-- [ ] **Step 1: Write the generator**
+- [ ] **Step 1: Get the two feed photos from Gabriel**
+
+Ask Gabriel for the two photos (one above the generated post, one below). Any format; he drops them in `client/public/social-demo/img/src/` (create the folder) or gives a path. Do not generate them. If they have not arrived, finish Steps 3 to 5 first and come back.
+
+- [ ] **Step 2: Convert them and write their captions**
+
+Run (adjust the input file names):
+```bash
+cwebp -quiet -q 82 -resize 1080 0 client/public/social-demo/img/src/<first> -o client/public/social-demo/img/post-1.webp
+cwebp -quiet -q 82 -resize 1080 0 client/public/social-demo/img/src/<second> -o client/public/social-demo/img/post-2.webp
+```
+Crop to square first if a photo is not square (`cwebp -crop x y w h` before `-resize`; the feed shows them 1:1 with `object-fit: cover`, so a mild off-square is fine). Look at both photos, then rewrite the six `STATIC_POSTS` entries in `copy.js` so each handle and caption fits what the photo actually shows: an everyday personal account native to that language (English, Dutch with "je"-tone, Brazilian Portuguese), one short caption, at most one emoji. Remove `img/src/` afterwards; the originals are not committed.
+
+- [ ] **Step 3: Write the avatar generator**
 
 ```ts
-// scripts/social-demo/generate-static-images.ts
-// Run once with: node --env-file=.env --import tsx scripts/social-demo/generate-static-images.ts
-// About $1.50 in image credits. Re-run only for files that are missing.
+// scripts/social-demo/generate-avatars.ts
+// Run once with: node --env-file=.env --import tsx scripts/social-demo/generate-avatars.ts
+// 24 low-quality images, roughly $0.30 in total. Re-run only fills in missing files.
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -2266,16 +2285,7 @@ import { execFileSync } from "node:child_process";
 import { generateSocialImage } from "../../server/demoSocial/image";
 
 const OUT = path.resolve("client/public/social-demo/img");
-const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "socstatic-"));
-
-const POSTS: Record<string, string> = {
-  "post-en-1": "Close-up of a home-baked sourdough loaf cut open on a floured wooden board, kitchen window light, English home",
-  "post-en-2": "A tidy home desk with a laptop, a mug of coffee and a small plant, soft Sunday morning light",
-  "post-nl-1": "Home-baked sourdough loaf cut open on a wooden board in a Dutch kitchen, grey daylight through the window",
-  "post-nl-2": "A bicycle resting by a quiet Dutch river path with willow trees, early morning",
-  "post-pt-1": "Fresh sourdough bread just out of the oven on a kitchen counter in a Brazilian apartment, warm light",
-  "post-pt-2": "A bicycle in Ibirapuera park in São Paulo on a sunny Sunday, trees and path",
-};
+const TMP = fs.mkdtempSync(path.join(os.tmpdir(), "socavatar-"));
 
 const FACES: Record<string, string[]> = {
   en: ["woman in her 30s, auburn hair", "man in his 40s, short beard", "man in his 50s, glasses", "woman in her 20s, curly dark hair", "man in his 30s, East Asian", "woman in her 40s, blonde", "man in his 60s, grey hair", "woman in her 30s, Black, braids"],
@@ -2283,41 +2293,41 @@ const FACES: Record<string, string[]> = {
   pt: ["Brazilian woman in her 20s, long dark hair", "Brazilian man in his 30s", "Brazilian man in his 40s, beard", "Brazilian woman in her 30s, curly hair", "Brazilian man in his 20s", "Brazilian woman in her 40s", "Brazilian man in his 50s", "Brazilian woman in her 20s, freckles"],
 };
 
-async function make(name: string, prompt: string, width: number) {
-  const target = path.join(OUT, `${name}.webp`);
-  if (fs.existsSync(target)) return console.log("skip", name);
-  const file = await generateSocialImage(prompt, {
-    fetch: globalThis.fetch,
-    exec: async (cmd, args) => { execFileSync(cmd, args); },
-    dir: TMP,
-    apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_AI_API_KEY,
-  });
-  execFileSync("cwebp", ["-quiet", "-q", "80", "-resize", String(width), "0", path.join(TMP, file), "-o", target]);
-  console.log("ok", name);
-}
-
 (async () => {
   fs.mkdirSync(OUT, { recursive: true });
-  for (const [name, prompt] of Object.entries(POSTS)) await make(name, prompt, 1080);
   for (const [lang, faces] of Object.entries(FACES)) {
     for (let i = 0; i < faces.length; i++) {
-      await make(`av-${lang}-${i + 1}`, `Casual smartphone profile photo, head and shoulders, ${faces[i]}, friendly, natural light, plain background`, 112);
+      const target = path.join(OUT, `av-${lang}-${i + 1}.webp`);
+      if (fs.existsSync(target)) { console.log("skip", target); continue; }
+      const file = await generateSocialImage(
+        `Casual smartphone profile photo, head and shoulders, ${faces[i]}, friendly, natural light, plain background`,
+        {
+          fetch: globalThis.fetch,
+          exec: async (cmd, args) => { execFileSync(cmd, args); },
+          dir: TMP,
+          apiKey: process.env.OPENAI_API_KEY || process.env.OPEN_AI_API_KEY,
+        },
+        "low",
+      );
+      execFileSync("cwebp", ["-quiet", "-q", "75", "-resize", "112", "0", path.join(TMP, file), "-o", target]);
+      console.log("ok", target);
     }
   }
 })();
 ```
 
-- [ ] **Step 2: Ask Gabriel before running** (a paid external call, about $1.50). On his OK, run it.
+- [ ] **Step 4: Run it** (small paid call, about $0.30; Gabriel approved generated low-res avatars on 2026-09-23)
 
-Expected: 30 `ok` lines; `ls client/public/social-demo/img | wc -l` prints 30; `du -sh client/public/social-demo/img` well under 2 MB.
+Run: `node --env-file=.env --import tsx scripts/social-demo/generate-avatars.ts`
+Expected: 24 `ok` lines; `ls client/public/social-demo/img/av-*.webp | wc -l` prints 24; `du -sh client/public/social-demo/img` well under 1 MB.
 
-- [ ] **Step 3: Look at them.** Open a few in the browser page; replace any uncanny face or text-bearing image by deleting the file and re-running (it skips existing files).
+- [ ] **Step 5: Look at them.** Open the DM view on the page; delete and re-run any face that looks wrong (the script skips files that exist).
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add scripts/social-demo/generate-static-images.ts client/public/social-demo/img/
-git commit -m "feat(social-demo): static feed posts and inbox avatars"
+git add scripts/social-demo/generate-avatars.ts client/public/social-demo/img/*.webp client/public/social-demo/copy.js
+git commit -m "feat(social-demo): feed photos and inbox avatars"
 ```
 
 ---
