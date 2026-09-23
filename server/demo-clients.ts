@@ -23,7 +23,7 @@
  * that is meant to be reusable across both.
  */
 import { db } from "./db";
-import { nicheVocabulary, type NicheText } from "@shared/schema";
+import { nicheVocabulary, type NicheText, type SocialPostByLang } from "@shared/schema";
 import { eq, ne, asc } from "drizzle-orm";
 import {
   applyDemoDefaults,
@@ -46,7 +46,7 @@ function isDemoLang(value: string): value is DemoLang {
 /** The fallback row. Never a selectable Client. */
 const DEFAULT_NICHE = "__default__";
 
-type ClientRow = typeof nicheVocabulary.$inferSelect;
+export type ClientRow = typeof nicheVocabulary.$inferSelect;
 
 /**
  * Read one language slot, falling back the way the rest of the app does:
@@ -503,6 +503,8 @@ export function demoClientToEditable(row: ClientRow) {
     // site, or uploaded by hand for a Client that never had one.
     screenshot: row.screenshotPath ?? null,
     updatedAt: row.updatedAt ?? null,
+    socialPost: (row.socialPost as SocialPostByLang | null) ?? null,
+    socialImage: row.socialImagePath || null,
     text,
     terms,
   };

@@ -866,7 +866,7 @@ export const SERVICE_DEMO_CAMPAIGN_IDS: number[] = (() => {
     .split(",")
     .map((p) => Number(p.trim()))
     .filter((n) => Number.isInteger(n) && n > 0);
-  return fromEnv.length ? Array.from(new Set([60, 67, 68, 69, ...fromEnv])) : [60, 67, 68, 69];
+  return fromEnv.length ? Array.from(new Set([60, 67, 68, 69, 70, ...fromEnv])) : [60, 67, 68, 69, 70];
 })();
 
 /**
