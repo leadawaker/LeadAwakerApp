@@ -1,6 +1,8 @@
 # Review Demo (Reputation service) : Requirements
 
-Status: design approved in chat 2026-09-23, spec awaiting review.
+Status: design approved in chat 2026-09-23. Planning changed seven details after reading the code
+(opener, customer name, demo review link, demo alerts, handoff timing, prompt languages, action
+names): see "Deviations from the spec" in `implementation-plan.md`, which wins where they differ.
 
 ## Goal
 
