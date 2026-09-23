@@ -930,6 +930,10 @@ export const leads = nocodb.table("Leads", {
   // and when the feedback ask was sent (idempotency gate).
   serviceCompletedAt: timestamp("service_completed_at", { withTimezone: true }),
   reviewRequestSentAt: timestamp("review_request_sent_at", { withTimezone: true }),
+  // Reputation conversation: the 1-5 rating the customer gave, and where the
+  // conversation landed (link_sent | callback_requested | declined).
+  reviewRating: integer("review_rating"),
+  reviewOutcome: text("review_outcome"),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),
