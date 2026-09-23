@@ -9,6 +9,7 @@ const NAME = "Reputation Demo";
 const FIRST_MESSAGE = JSON.stringify({
   en: "Hey {first_name}, it's {agent_name}{disclosure_clause}. Just checking in: are you the same {first_name} who recently had {service_name} done with us?",
   nl: "Hoi {first_name}, met {agent_name}{disclosure_clause}. Even checken: ben jij dezelfde {first_name} die onlangs {service_name} bij ons heeft laten doen?",
+  pt: "Oi {first_name}, aqui é {agent_name}{disclosure_clause}. Só pra confirmar: é você que fez {service_name} com a gente há pouco tempo?",
 });
 
 (async () => {

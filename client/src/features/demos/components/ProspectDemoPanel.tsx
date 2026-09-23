@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Copy, ExternalLink, Loader2, MessageCircle } from "lucide-react";
 import { createDemoLink, demoOpenUrl } from "../api/demoSessionsApi";
-import { SERVICES, tokenFromUrl, widgetDemoUrl, type ServiceDef } from "../services";
+import { SERVICES, reviewDemoUrl, tokenFromUrl, widgetDemoUrl, type ServiceDef } from "../services";
 import type { DemoLang } from "@/features/campaigns/api/demoClientsApi";
 
 /**
@@ -56,13 +56,15 @@ export function ProspectDemoPanel({ input }: { input: ProspectDemoInput }) {
       });
       const url = svc.widgetPage
         ? widgetDemoUrl(body.demoUrl)
-        : svc.voice
-          ? `${window.location.origin}/voice-demo?token=${tokenFromUrl(body.demoUrl)}`
-          : demoOpenUrl(body.demoUrl);
+        : svc.reviewPage
+          ? reviewDemoUrl(body.demoUrl)
+          : svc.voice
+            ? `${window.location.origin}/voice-demo?token=${tokenFromUrl(body.demoUrl)}`
+            : demoOpenUrl(body.demoUrl);
       setLinks((prev) => ({
         ...prev,
         // Voice has no WhatsApp side: it is a browser call, not a chat thread.
-        [svc.key]: { url, whatsapp: svc.voice ? undefined : body.whatsappUrl },
+        [svc.key]: { url, whatsapp: svc.voice || svc.reviewPage ? undefined : body.whatsappUrl },
       }));
     } catch (e) {
       setError((e as Error).message || "Failed");

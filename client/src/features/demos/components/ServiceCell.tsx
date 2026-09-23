@@ -155,7 +155,7 @@ export function ServiceCell({
         {svc.widgetPage && row.clientNiche && <WidgetColorSwatch niche={row.clientNiche} />}
         {/* Voice is a browser call, not a chat thread: it has no WhatsApp side
             at all, so the button is absent rather than disabled. */}
-        {!svc.voice && (
+        {!svc.voice && !svc.reviewPage && (
           <a
             href={session.whatsappUrl}
             target="_blank"

@@ -30,6 +30,10 @@ export interface ServiceDef {
    *  with the chat widget on top (/widget-demo/<token>, specs/website-widget).
    *  Server-rendered on the Pi, so it has no Vercel copy. */
   widgetPage?: boolean;
+  /** The review demo opens its own two-phone page (/review-demo?token=...,
+   *  specs/review-demo). Chat runs on the web-demo path, so the page works on
+   *  both the Pi and Vercel origins. */
+  reviewPage?: boolean;
 }
 
 export const SERVICES: ServiceDef[] = [
@@ -42,7 +46,7 @@ export const SERVICES: ServiceDef[] = [
   // Voice mints its persona on the Speed to Lead campaign (any service campaign
   // carries the same persona) and then opens the voice page with that token.
   { key: "voice", labelKey: "services.voice", icon: Phone, campaignId: 67, scenario: "inquired", voice: true },
-  { key: "reputation", labelKey: "services.reputation", icon: Star, campaignId: null, scenario: "inquired" },
+  { key: "reputation", labelKey: "services.reputation", icon: Star, campaignId: 69, scenario: "inquired", reviewPage: true },
   { key: "socials", labelKey: "services.socials", icon: Instagram, campaignId: null, scenario: "inquired" },
 ];
 
@@ -59,12 +63,26 @@ export function widgetDemoUrl(demoUrl: string): string {
   return `${window.location.origin}/widget-demo/${tokenFromUrl(demoUrl)}`;
 }
 
+/** The two-phone review demo for a minted link, on the given origin. */
+export function reviewDemoUrl(demoUrl: string, origin: string = window.location.origin): string {
+  return `${origin}/review-demo?token=${tokenFromUrl(demoUrl)}`;
+}
+
 /** The link to hand a prospect. Always the canonical public origin the link was
  *  minted with — never the CRM host it is being copied from. */
 export function serviceCopyUrl(svc: ServiceDef, session: DemoSession): string {
   // The widget page only exists on the Pi, never on the Vercel origin the chat
   // link was minted with, so it is always handed out from the CRM host.
   if (svc.widgetPage) return widgetDemoUrl(session.demoUrl);
+  if (svc.reviewPage) {
+    let origin = window.location.origin;
+    try {
+      origin = new URL(session.demoUrl).origin;
+    } catch {
+      /* keep the CRM origin */
+    }
+    return reviewDemoUrl(session.demoUrl, origin);
+  }
   if (!svc.voice) return session.demoUrl;
   let origin = "";
   try {
@@ -79,6 +97,7 @@ export function serviceCopyUrl(svc: ServiceDef, session: DemoSession): string {
  *  serves the build being edited. Same reasoning as demoOpenUrl. */
 export function serviceOpenUrl(svc: ServiceDef, session: DemoSession): string {
   if (svc.widgetPage) return widgetDemoUrl(session.demoUrl);
+  if (svc.reviewPage) return reviewDemoUrl(session.demoUrl);
   return svc.voice
     ? `${window.location.origin}/voice-demo?token=${tokenFromUrl(session.demoUrl)}`
     : demoOpenUrl(session.demoUrl);
@@ -99,5 +118,6 @@ export function serviceOf(session: DemoSession): string {
   if (session.campaignId === 60) return session.scenario === "deciding" ? "quote" : "dbr";
   if (session.campaignId === 67) return "speed";
   if (session.campaignId === 68) return "widget";
+  if (session.campaignId === 69) return "reputation";
   return "";
 }

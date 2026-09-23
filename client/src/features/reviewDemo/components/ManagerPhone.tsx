@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { Lock, PhoneCall, Sparkles, Star } from "lucide-react";
 import type { ReviewCopy } from "../copy";
@@ -18,6 +18,14 @@ export function ManagerPhone({ copy, company, firstName, events, time, dateLabel
   const [openDraft, setOpenDraft] = useState<string | null>(null);
   const [approved, setApproved] = useState(false);
   const name = firstName || "Jamie";
+
+  // Replay empties the events; the open draft sheet must go with them.
+  useEffect(() => {
+    if (events.length === 0) {
+      setOpenDraft(null);
+      setApproved(false);
+    }
+  }, [events.length]);
 
   return (
     <PhoneFrame time={time} className="bg-gradient-to-b from-[#26324a] via-[#1a2233] to-[#121826]">
