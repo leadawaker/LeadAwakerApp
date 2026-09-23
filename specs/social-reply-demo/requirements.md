@@ -39,8 +39,10 @@ same AI, booking flow and CRM inbox as every other service.
 4. **Speed to Lead engine, its own prompt.** The commenter is a warm lead who raised
    their hand on a specific offer, which is Speed to Lead's situation, not prompt 93's
    cold discovery. A new prompt is derived from prompt 108 and given the post as context.
-5. **Light theme, real Instagram look.** White background, Instagram's own light-mode
-   chrome and logo, not the dark look in the reference screenshots.
+5. **Light theme, Instagram-like look.** White background, Instagram's light-mode
+   layout and palette, not the dark look in the reference screenshots. No official
+   Instagram logo or icons (trademark): a script-font "Instagram" and generic icons,
+   as in the reference video.
 6. **Feed of three posts:** a hardcoded static post above, the generated post, a
    hardcoded static post below.
 7. **Decorative DM inbox** with other people's conversations, with photos.
@@ -163,9 +165,18 @@ tabs, placeholders, inbox, static captions) comes from a per-language table in t
 page's own code, following the landing-page/demo convention (this page is outside the
 React app, so react-i18next does not apply). Unknown language falls back to English.
 
-**C7. Branding.** Instagram's light-mode palette and the real Instagram logo and glyph
-icons, drawn as inline SVG. The page is standalone: `UI_STANDARDS.md` does not apply
-(same as the landing page and the widget demo page).
+**C7. Branding.** Instagram-like, not Instagram's own marks, as in the reference video:
+- The word "Instagram" set in a free script Google Font (Grand Hotel or similar), not
+  the official wordmark artwork.
+- No camera glyph logo anywhere, and no official Instagram icon artwork. Header and
+  bottom-bar icons are simple generic outline shapes (the reference uses plain rounded
+  squares). Post actions use generic heart, speech bubble, paper plane and bookmark
+  outlines, which are not Instagram-specific.
+- Instagram's light-mode palette (white ground, black text, grey secondary text, blue
+  links and Post button) and the gradient ring on avatars, since colours and layout
+  are not the protected marks.
+The page is standalone: `UI_STANDARDS.md` does not apply (same as the landing page and
+the widget demo page).
 
 ### D. Engine and prompt
 
@@ -213,10 +224,10 @@ icons, drawn as inline SVG. The page is standalone: `UI_STANDARDS.md` does not a
 
 ## Risks and notes
 
-- **Instagram trademark.** Using Instagram's logo and look on a page we host is a use of
-  Meta's marks. It is a private sales demo shown to prospects, not a public product, but
-  it must never claim to be Instagram or be indexed: the page is `noindex`, not linked
-  from the public site, and carries a small "Demo by Lead Awaker" mark.
+- **Instagram trademark.** Avoided by design (C7): no official logo or icon artwork,
+  only the name in a generic script font and a similar layout and palette. The page
+  still must never pass itself off as Instagram: it is `noindex`, not linked from the
+  public site, and carries a small "Demo by Lead Awaker" mark.
 - **Image cost and latency.** One image per Client (about $0.04 to $0.20 depending on
   quality) plus 10 to 60 seconds at first mint. Acceptable because it is once per
   Client, and the mint shows progress.
