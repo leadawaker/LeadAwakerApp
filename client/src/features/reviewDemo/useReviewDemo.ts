@@ -25,7 +25,9 @@ export function useReviewDemo(token: string) {
       setState(s);
       setError("");
       const last = s.messages[s.messages.length - 1];
-      if (last?.role === "ai") waiting.current = false;
+      // After the customer accepts the callback the lead is handed to a human
+      // (manual_takeover), so the AI will not answer again: stop the dots.
+      if (last?.role === "ai" || s.reputation?.outcome === "callback_requested") waiting.current = false;
       setPending((p) => p.filter((m) => !s.messages.some((x) => x.role === "visitor" && x.text === m.text)));
     } catch (e) {
       setError((e as Error).message);

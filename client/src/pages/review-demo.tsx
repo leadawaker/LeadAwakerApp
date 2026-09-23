@@ -69,7 +69,7 @@ export default function ReviewDemoPage() {
         </section>
       </div>
 
-      {(demo.reviewPosted || demo.state?.done) && (
+      {(demo.reviewPosted || demo.state?.done || demo.state?.reputation?.outcome) && (
         <div className="mt-8 flex justify-center">
           <button
             type="button"
