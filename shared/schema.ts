@@ -334,6 +334,18 @@ export type InsertAccountCommunicationProfile = z.infer<typeof insertAccountComm
  *  only that language filled, and every reader falls back (pt → en). */
 export type NicheText = { nl?: string; en?: string; pt?: string };
 
+export type SocialPostText = {
+  handle: string;
+  caption: string;
+  keyword: string;
+  cta_line: string;
+  dm_opener: string;
+  offer: string;
+  image_prompt: string;
+  likes: number;
+};
+export type SocialPostByLang = Partial<Record<"en" | "nl" | "pt", SocialPostText>>;
+
 export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   id: serial("id").primaryKey(),
   createdAt: timestamp("created_at", { withTimezone: true }),
@@ -435,6 +447,11 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   websiteUrl: text("website_url"),
   screenshotPath: text("screenshot_path"),
   screenshotAt: timestamp("screenshot_at", { withTimezone: true }),
+  // Instagram comment-to-DM sales demo (specs/social-reply-demo): a generated
+  // post per language (caption, keyword, offer, ...) and its image file, same
+  // uploads/site-shots/ convention as screenshotPath.
+  socialPost: jsonb("social_post").$type<SocialPostByLang | null>(),
+  socialImagePath: text("social_image_path"),
   // Widget demo launcher colour, set by hand on the Demos page. Null = use the
   // colour detected from the screenshot (server/brandColor.ts), else black.
   widgetColor: text("widget_color"),
