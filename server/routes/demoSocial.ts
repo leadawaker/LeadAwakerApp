@@ -1,10 +1,16 @@
 import express, { type Express, type Request, type Response } from "express";
 import path from "path";
+import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db, pool } from "../db";
 import { nicheVocabulary } from "@shared/schema";
 import { wrapAsync } from "./_helpers";
+import { requireAuth, requireAgency } from "../auth";
 import { pickPostImage, renderSocialDemoHtml } from "../socialDemoPage";
+import { getDemoClient, demoClientToEditable, demoClientToContext } from "../demo-clients";
+import { getClientSocialPost, saveClientSocialPost, startClientSocialImage } from "../demoSocial/clientStore";
+import { generateSocialPost } from "../demoSocial/generatePost";
+import { validateSocialPost, coerceSocialPost } from "../demoSocial/validate";
 
 const LEADS_TABLE = '"p2mxx34fvbf3ll6"."Leads"';
 const INTERACTIONS_TABLE = '"p2mxx34fvbf3ll6"."Interactions"';
@@ -76,5 +82,56 @@ export function registerDemoSocialRoutes(app: Express) {
       post: persona.social_post ?? null,
       imageUrl: pickPostImage({ socialImage, screenshot }),
     }));
+  }));
+
+  const langSchema = z.enum(["en", "nl", "pt"]);
+  const editSchema = z.object({
+    language: langSchema,
+    post: z.object({
+      caption: z.string().max(400),
+      keyword: z.string().max(20),
+      cta_line: z.string().max(300),
+      dm_opener: z.string().max(400),
+    }),
+  });
+
+  app.put("/api/demo/clients/:niche/social-post", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const parsed = editSchema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid body" });
+    const row = await getDemoClient(String(req.params.niche));
+    if (!row) return res.status(404).json({ message: "Client not found" });
+    const current = getClientSocialPost(row, parsed.data.language);
+    if (!current) return res.status(404).json({ message: "No post in this language yet" });
+    const merged = { ...current, ...parsed.data.post };
+    const problem = validateSocialPost(merged);
+    if (problem) return res.status(400).json({ message: problem });
+    await saveClientSocialPost(row.niche, parsed.data.language, coerceSocialPost(merged));
+    res.json({ client: demoClientToEditable((await getDemoClient(row.niche))!) });
+  }));
+
+  app.post("/api/demo/clients/:niche/social-post/regenerate", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const parsed = z.object({ language: langSchema, part: z.enum(["text", "image"]) }).safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ message: "Invalid body" });
+    const row = await getDemoClient(String(req.params.niche));
+    if (!row) return res.status(404).json({ message: "Client not found" });
+    const { language, part } = parsed.data;
+    if (part === "image") {
+      const post = getClientSocialPost(row, language);
+      if (!post) return res.status(404).json({ message: "No post in this language yet" });
+      startClientSocialImage(row.niche, post.image_prompt);
+      return res.status(202).json({ client: demoClientToEditable(row) });
+    }
+    const ctx = demoClientToContext(row, language, "inquired", undefined) ?? {};
+    const fresh = await generateSocialPost({
+      language,
+      companyName: String((ctx as any).company_name || ""),
+      serviceName: String((ctx as any).service_name || ""),
+      nicheLabel: String((ctx as any).niche_label || row.niche),
+      usp: String((ctx as any).usp || ""),
+      kb: String((ctx as any).kb || ""),
+      area: "",
+    });
+    await saveClientSocialPost(row.niche, language, fresh);
+    res.json({ client: demoClientToEditable((await getDemoClient(row.niche))!) });
   }));
 }

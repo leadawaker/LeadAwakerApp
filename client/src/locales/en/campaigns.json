@@ -841,6 +841,23 @@
       "remove": "Remove",
       "tooLarge": "That image is too large.",
       "failed": "Upload failed."
+    },
+    "social": {
+      "title": "Instagram post",
+      "hint": "The post the Instagram demo is built around. Written the first time a Socials link is minted in a language.",
+      "caption": "Caption",
+      "keyword": "Comment word",
+      "cta": "Comment line under the post",
+      "opener": "First DM",
+      "openerHelp": "Keep {agent_name} and {company_name} in the text.",
+      "none": "No Instagram post in this language yet.",
+      "save": "Save",
+      "regenerateText": "Rewrite text",
+      "writeNow": "Write it now",
+      "regenerateImage": "New image",
+      "noImage": "No image yet",
+      "imagePending": "Generating the image...",
+      "failed": "Something went wrong."
     }
   }
 }

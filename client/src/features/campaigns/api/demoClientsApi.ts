@@ -97,6 +97,9 @@ export interface EditableDemoClient {
   bookingModeCall: boolean;
   isDemoClient: boolean;
   updatedAt: string | null;
+  screenshot: string | null;
+  socialPost: Partial<Record<DemoLang, SocialPostFields>> | null;
+  socialImage: string | null;
   text: Record<ClientTextField, NicheText>;
   terms: Record<TermGroup, Record<DemoLang, string[]>>;
 }
@@ -111,7 +114,7 @@ export interface DemoClientPatch {
   emoji?: string | null;
 }
 
-const CLIENTS_KEY = ["/api/demo/clients"];
+export const CLIENTS_KEY = ["/api/demo/clients"];
 
 export function useDemoClients() {
   return useQuery<DemoClientSummary[]>({
@@ -161,6 +164,48 @@ export function useSetClientScreenshot(niche: string) {
       qc.invalidateQueries({ queryKey: [...CLIENTS_KEY, niche] });
       qc.invalidateQueries({ queryKey: ["demo-widget-colors"] });
     },
+  });
+}
+
+export interface SocialPostFields {
+  handle: string;
+  caption: string;
+  keyword: string;
+  cta_line: string;
+  dm_opener: string;
+  offer: string;
+  image_prompt: string;
+  likes: number;
+}
+
+export type SocialPostEdit = Pick<SocialPostFields, "caption" | "keyword" | "cta_line" | "dm_opener">;
+
+async function socialRequest(url: string, method: "PUT" | "POST", body: unknown) {
+  const res = await apiFetch(url, {
+    method,
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error((json as { message?: string }).message || "Request failed");
+  return json as { client: EditableDemoClient };
+}
+
+export function useSaveSocialPost(niche: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ language, post }: { language: DemoLang; post: SocialPostEdit }) =>
+      socialRequest(`/api/demo/clients/${encodeURIComponent(niche)}/social-post`, "PUT", { language, post }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...CLIENTS_KEY, niche] }),
+  });
+}
+
+export function useRegenerateSocialPost(niche: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ language, part }: { language: DemoLang; part: "text" | "image" }) =>
+      socialRequest(`/api/demo/clients/${encodeURIComponent(niche)}/social-post/regenerate`, "POST", { language, part }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [...CLIENTS_KEY, niche] }),
   });
 }
 

@@ -36,6 +36,7 @@ import {
 } from "../../api/demoClientsApi";
 import { CategorySelect } from "./CategorySelect";
 import { ClientScreenshot } from "./ClientScreenshot";
+import { SocialPostSection } from "./SocialPostSection";
 
 /** Long fields, in the order they read as a persona. `multiline` drives height. */
 const TEXT_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: number }> = [
@@ -339,6 +340,9 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
 
       {/* ── The site behind this Client's widget demo ── */}
       <ClientScreenshot niche={niche} screenshot={client?.screenshot ?? null} />
+
+      {/* ── The Instagram post the Socials demo is built around ── */}
+      <SocialPostSection niche={niche} socialPost={client?.socialPost ?? null} socialImage={client?.socialImage ?? null} />
 
       {/* ── Terms: the only genuinely per-language part ── */}
       <section className="neu-raised" style={{ padding: 22, borderRadius: "var(--r-card)" }}>

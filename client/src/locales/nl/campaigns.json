@@ -841,6 +841,23 @@
       "remove": "Verwijderen",
       "tooLarge": "Die afbeelding is te groot.",
       "failed": "Uploaden mislukt."
+    },
+    "social": {
+      "title": "Instagrampost",
+      "hint": "De post waar de Instagram-demo omheen is gebouwd. Geschreven zodra er voor het eerst een Socials-link in een taal wordt aangemaakt.",
+      "caption": "Bijschrift",
+      "keyword": "Reactiewoord",
+      "cta": "Reactieregel onder de post",
+      "opener": "Eerste DM",
+      "openerHelp": "Laat {agent_name} en {company_name} in de tekst staan.",
+      "none": "Nog geen Instagrampost in deze taal.",
+      "save": "Opslaan",
+      "regenerateText": "Tekst herschrijven",
+      "writeNow": "Nu schrijven",
+      "regenerateImage": "Nieuwe afbeelding",
+      "noImage": "Nog geen afbeelding",
+      "imagePending": "Afbeelding wordt gegenereerd...",
+      "failed": "Er ging iets mis."
     }
   }
 }

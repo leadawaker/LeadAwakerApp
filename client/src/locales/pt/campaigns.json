@@ -622,6 +622,23 @@
       "remove": "Remover",
       "tooLarge": "Essa imagem é muito grande.",
       "failed": "Falha no envio."
+    },
+    "social": {
+      "title": "Post do Instagram",
+      "hint": "O post em que a demonstração do Instagram é baseada. Escrito na primeira vez que um link de Socials é criado em um idioma.",
+      "caption": "Legenda",
+      "keyword": "Palavra do comentário",
+      "cta": "Linha do comentário abaixo do post",
+      "opener": "Primeira DM",
+      "openerHelp": "Mantenha {agent_name} e {company_name} no texto.",
+      "none": "Ainda não há post do Instagram neste idioma.",
+      "save": "Salvar",
+      "regenerateText": "Reescrever texto",
+      "writeNow": "Escrever agora",
+      "regenerateImage": "Nova imagem",
+      "noImage": "Ainda sem imagem",
+      "imagePending": "Gerando a imagem...",
+      "failed": "Algo deu errado."
     }
   }
 }
