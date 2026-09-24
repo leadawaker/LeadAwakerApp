@@ -56,8 +56,6 @@ function render() {
     bindFeed();
     return;
   }
-  const keepDraft = document.getElementById("msg");
-  if (keepDraft) draft = keepDraft.value;
   root.innerHTML = dmHtml({ lang, company: BOOT.company, handle: post ? post.handle : "", state, pending, recap, admin: !!state.admin, wide: wide(), showList });
   bindDm();
 }
