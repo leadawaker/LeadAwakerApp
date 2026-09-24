@@ -39,6 +39,25 @@ function str(v: unknown): string {
   return "";
 }
 
+/** One shape for `generateSocialPost`'s input, built from a Client row and its
+ *  NicheContext, shared by ensureClientSocialPost and the text-regenerate
+ *  route so the two paths cannot drift (kb fallback, area, niche label). */
+export function socialPostInput(
+  row: ClientRow,
+  lang: SocialLang,
+  ctx: Record<string, unknown>,
+): Parameters<typeof generateSocialPost>[0] {
+  return {
+    language: lang,
+    companyName: str(ctx.company_name),
+    serviceName: str(ctx.service_name),
+    nicheLabel: str(ctx.niche_label) || row.niche,
+    usp: str(ctx.usp),
+    kb: str(ctx.kb) || str(ctx.business_description),
+    area: str(ctx.area),
+  };
+}
+
 /** Reuse the Client's post for this language, or generate and save it. The
  *  image is started in the background whenever the Client has none. */
 export async function ensureClientSocialPost(
@@ -48,15 +67,7 @@ export async function ensureClientSocialPost(
 ): Promise<SocialPost> {
   let post = getClientSocialPost(row, lang);
   if (!post) {
-    post = await generateSocialPost({
-      language: lang,
-      companyName: str(ctx.company_name),
-      serviceName: str(ctx.service_name),
-      nicheLabel: str(ctx.niche_label) || row.niche,
-      usp: str(ctx.usp),
-      kb: str(ctx.kb) || str(ctx.business_description),
-      area: str(ctx.area),
-    });
+    post = await generateSocialPost(socialPostInput(row, lang, ctx));
     await saveClientSocialPost(row.niche, lang, post);
   }
   if (!row.socialImagePath) startClientSocialImage(row.niche, post.image_prompt);

@@ -7,8 +7,9 @@ import { nicheVocabulary } from "@shared/schema";
 import { wrapAsync } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
 import { pickPostImage, renderSocialDemoHtml } from "../socialDemoPage";
-import { getDemoClient, demoClientToEditable, demoClientToContext } from "../demo-clients";
-import { getClientSocialPost, saveClientSocialPost, startClientSocialImage } from "../demoSocial/clientStore";
+import { getDemoClient, demoClientToEditable, demoClientToContext, clientLanguages } from "../demo-clients";
+import { clientSupportsLanguage } from "./demo";
+import { getClientSocialPost, saveClientSocialPost, startClientSocialImage, socialPostInput } from "../demoSocial/clientStore";
 import { generateSocialPost } from "../demoSocial/generatePost";
 import { validateSocialPost, coerceSocialPost } from "../demoSocial/validate";
 
@@ -121,17 +122,24 @@ export function registerDemoSocialRoutes(app: Express) {
       startClientSocialImage(row.niche, post.image_prompt);
       return res.status(202).json({ client: demoClientToEditable(row) });
     }
-    const ctx = demoClientToContext(row, language, "inquired", undefined) ?? {};
-    const fresh = await generateSocialPost({
-      language,
-      companyName: String((ctx as any).company_name || ""),
-      serviceName: String((ctx as any).service_name || ""),
-      nicheLabel: String((ctx as any).niche_label || row.niche),
-      usp: String((ctx as any).usp || ""),
-      kb: String((ctx as any).kb || ""),
-      area: "",
-    });
+    if (!clientSupportsLanguage(row, language)) {
+      const have = clientLanguages(row).map((l) => l.toUpperCase()).join(", ");
+      return res.status(409).json({
+        message: `"${row.niche}" has no ${language.toUpperCase()} version. It only exists in ${have}.`,
+      });
+    }
+    const ctx = demoClientToContext(row, language, "inquired", undefined);
+    if (!ctx) {
+      return res.status(409).json({
+        message: `"${row.niche}" has no saved persona yet. Generate one for this niche instead.`,
+      });
+    }
+    const fresh = await generateSocialPost(socialPostInput(row, language, ctx));
     await saveClientSocialPost(row.niche, language, fresh);
+    // Same rule as ensureClientSocialPost: an image starts only when the
+    // Client has none yet, so rewriting the text on a Client that already
+    // has an image never triggers a second, unwanted paid regeneration.
+    if (!row.socialImagePath) startClientSocialImage(row.niche, fresh.image_prompt);
     res.json({ client: demoClientToEditable((await getDemoClient(row.niche))!) });
   }));
 }

@@ -114,7 +114,7 @@ export function ClientScreenshot({ niche, screenshot }: { niche: string; screens
           )}
         </div>
       </div>
-      {error && <p style={{ marginTop: 10, fontSize: 12, color: "var(--danger, #B3261E)" }}>{error}</p>}
+      {error && <p style={{ marginTop: 10, fontSize: 12, color: "hsl(var(--destructive))" }}>{error}</p>}
     </section>
   );
 }

@@ -124,7 +124,14 @@ export function SocialPostSection({
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {current && (
               <button type="button" className="la-btn la-btn--soft" disabled={!dirty || busy}
-                onClick={() => void run(() => save.mutateAsync({ language: lang, post: draft }))}>
+                onClick={() => void run(async () => {
+                  const { client } = await save.mutateAsync({ language: lang, post: draft });
+                  // The server normalizes some fields (keyword to uppercase
+                  // letters, trimmed text), so a refetch that leaves the draft
+                  // untouched would keep Save enabled on an already-saved post.
+                  const saved = client.socialPost?.[lang];
+                  if (saved) setDraft({ caption: saved.caption, keyword: saved.keyword, cta_line: saved.cta_line, dm_opener: saved.dm_opener });
+                })}>
                 {save.isPending ? <Loader2 size={13} className="animate-spin" /> : <Save size={13} />}
                 {t("clients.social.save", "Save")}
               </button>
@@ -142,7 +149,7 @@ export function SocialPostSection({
               </button>
             )}
           </div>
-          {error && <p style={{ marginTop: 10, fontSize: 12, color: "var(--danger, #B3261E)" }}>{error}</p>}
+          {error && <p style={{ marginTop: 10, fontSize: 12, color: "hsl(var(--destructive))" }}>{error}</p>}
         </div>
       </div>
     </section>

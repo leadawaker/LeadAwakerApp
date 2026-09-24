@@ -58,7 +58,7 @@ import {
  * so, the VIP command regenerates, the public page uses its own template — so
  * this returns the answer rather than a response.
  */
-function clientSupportsLanguage(
+export function clientSupportsLanguage(
   row: Parameters<typeof clientLanguages>[0],
   language: DemoLang,
 ): boolean {
