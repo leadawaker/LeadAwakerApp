@@ -1,0 +1,91 @@
+:root {
+  --ig-bg: #ffffff;
+  --ig-text: #000000;
+  --ig-muted: #737373;
+  --ig-line: #dbdbdb;
+  --ig-soft: #efefef;
+  --ig-blue: #0095f6;
+  --ig-me: #3797f0;
+  --ig-ring: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+}
+html, body { background: var(--ig-bg); color: var(--ig-text); margin: 0; min-height: 100dvh; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+#root { display: flex; flex-direction: column; min-height: 100dvh; }
+
+.ig-feed { width: 100%; max-width: 470px; margin: 0 auto; padding-bottom: 72px; }
+.ig-topbar { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: var(--ig-bg); border-bottom: 1px solid var(--ig-line); }
+.ig-wordmark { font-family: "Grand Hotel", cursive; font-size: 30px; line-height: 1; }
+.ig-topbar-icons { display: flex; gap: 14px; }
+.ig-scroll-pill { position: fixed; top: 64px; left: 50%; transform: translateX(-50%); z-index: 6; padding: 10px 18px; border-radius: 999px; color: #fff; font-weight: 600; background: var(--ig-ring); box-shadow: 0 6px 20px rgba(214, 41, 118, .35); transition: opacity .3s; }
+.ig-scroll-pill.is-gone { opacity: 0; pointer-events: none; }
+.ig-post { border-bottom: 1px solid var(--ig-line); padding-bottom: 12px; }
+.ig-phdr { display: flex; align-items: center; gap: 10px; padding: 10px 16px; }
+.ig-handle { font-weight: 600; font-size: 14px; display: flex; flex-direction: column; }
+.ig-handle small { font-weight: 400; color: var(--ig-muted); font-size: 12px; }
+.ig-more { margin-left: auto; color: var(--ig-muted); }
+.ig-avatar { width: 32px; height: 32px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-weight: 600; font-size: 13px; background: var(--ig-soft); flex: none; }
+.ig-avatar--ring { background: var(--ig-ring); color: #fff; }
+.ig-avatar--me { width: 28px; height: 28px; background: var(--ig-ring); }
+.ig-media { display: block; width: 100%; aspect-ratio: 1 / 1; object-fit: cover; background: var(--ig-soft); }
+.ig-media--placeholder { display: flex; align-items: center; justify-content: center; background: var(--ig-ring); color: #fff; font-weight: 700; font-size: 22px; }
+.ig-actions { display: flex; justify-content: space-between; padding: 8px 12px 4px; }
+.ig-actions span { display: flex; gap: 14px; }
+.ig-likes { font-weight: 600; font-size: 14px; padding: 0 16px; }
+.ig-caption, .ig-comment { font-size: 14px; margin: 6px 16px; line-height: 1.4; }
+.ig-cta { margin: 8px 16px; padding: 10px 12px; border-radius: 10px; background: #eef6ff; border: 1px solid #cfe5ff; font-size: 14px; font-weight: 500; }
+.ig-hint { margin: 4px 16px; color: #ed4956; font-size: 13px; }
+.ig-add-comment { color: var(--ig-muted); font-size: 14px; margin: 6px 16px; }
+.ig-comment-form { display: flex; align-items: center; gap: 10px; margin: 8px 16px 0; padding-top: 8px; border-top: 1px solid var(--ig-line); }
+.ig-comment-form input { flex: 1; min-width: 0; border: 0; outline: 0; font-size: 16px; background: transparent; }
+.ig-pbtn { border: 0; background: none; color: var(--ig-blue); font-weight: 600; font-size: 14px; }
+.ig-tabbar { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 470px; display: flex; justify-content: space-around; align-items: center; padding: 10px 0 calc(10px + env(safe-area-inset-bottom)); background: var(--ig-bg); border-top: 1px solid var(--ig-line); }
+.ig-demo-by { text-align: center; color: var(--ig-muted); font-size: 11px; padding: 16px 0; }
+.ig-toast { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 20; padding: 12px 16px; border: 0; border-radius: 14px; background: #fff; color: var(--ig-text); font-weight: 600; box-shadow: 0 8px 30px rgba(0, 0, 0, .18); animation: ig-drop .35s ease-out; max-width: calc(100vw - 32px); }
+@keyframes ig-drop { from { transform: translate(-50%, -30px); opacity: 0; } }
+
+.ig-dm { display: flex; height: 100dvh; min-height: 0; overflow: hidden; }
+.ig-inbox { width: 100%; overflow-y: auto; min-height: 0; border-right: 1px solid var(--ig-line); }
+.ig-dm.is-wide .ig-inbox { width: 350px; flex: none; }
+.ig-inbox-hdr { padding: 20px 20px 8px; font-size: 20px; }
+.ig-tabs { display: flex; gap: 20px; padding: 8px 20px; border-bottom: 1px solid var(--ig-line); font-size: 14px; color: var(--ig-muted); }
+.ig-tabs .is-on { color: var(--ig-text); font-weight: 600; }
+.ig-tabs .ig-req { margin-left: auto; color: var(--ig-blue); font-weight: 600; }
+.ig-inbox ul { list-style: none; margin: 0; padding: 0; }
+.ig-row { display: flex; align-items: center; gap: 12px; padding: 8px 20px; }
+.ig-row.is-active { background: var(--ig-soft); cursor: pointer; }
+.ig-row-av { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.ig-row-txt { display: flex; flex-direction: column; min-width: 0; font-size: 14px; }
+.ig-row-txt b { font-weight: 400; }
+.ig-row-txt b.is-unread { font-weight: 600; }
+.ig-row-txt small { color: var(--ig-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ig-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ig-blue); margin-left: auto; flex: none; }
+.ig-thread { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.ig-thread-hdr { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--ig-line); position: relative; }
+.ig-thread-name { display: flex; flex-direction: column; font-size: 15px; }
+.ig-thread-name small { color: var(--ig-muted); font-size: 12px; }
+.ig-back { border: 0; background: none; font-size: 28px; line-height: 1; padding: 0 4px; }
+.ig-tracker { padding: 8px 16px; border-bottom: 1px solid var(--ig-line); overflow-x: auto; }
+.ig-stream { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
+.ig-day { text-align: center; color: var(--ig-muted); font-size: 12px; margin: 8px 0 16px; }
+.ig-composer { display: flex; align-items: center; gap: 8px; margin: 12px 16px calc(12px + env(safe-area-inset-bottom)); padding: 6px 8px 6px 16px; border: 1px solid var(--ig-line); border-radius: 22px; }
+.ig-composer input { flex: 1; min-width: 0; border: 0; outline: 0; font-size: 16px; background: transparent; }
+.ig-composer button { border: 0; background: none; color: var(--ig-blue); }
+
+/* Bubble overrides for the .bub classes chat.js emits, scoped under .ig-dm so
+   the reused demo.css bubble styling (WhatsApp-tail, dark palette) never
+   leaks in, and this file never leaks into /demo (which does not load it). */
+.ig-dm .row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 10px; }
+.ig-dm .row.me { flex-direction: row-reverse; }
+.ig-dm .av { width: 28px; height: 28px; border-radius: 50%; overflow: hidden; flex: none; }
+.ig-dm .av img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ig-dm .av.is-human { display: flex; align-items: center; justify-content: center; background: var(--ig-soft); font-size: 11px; font-weight: 700; }
+.ig-dm .bub-wrap { display: flex; flex-direction: column; max-width: 78%; }
+.ig-dm .row.me .bub-wrap { align-items: flex-end; }
+.ig-dm .bub { padding: 10px 14px; border-radius: 22px; font-size: 15px; line-height: 1.4; word-break: break-word; }
+.ig-dm .bub::before, .ig-dm .bub::after { content: none !important; }
+.ig-dm .row.ai .bub { background: var(--ig-soft); color: var(--ig-text); border-bottom-left-radius: 6px; }
+.ig-dm .row.me .bub { background: var(--ig-me); color: #fff; border-bottom-right-radius: 6px; }
+.ig-dm .bub.typing { display: flex; gap: 4px; align-items: center; padding: 12px 16px; }
+.ig-dm .ts { font-size: 11px; color: var(--ig-muted); margin-top: 3px; padding: 0 4px; }
+.ig-dm .row-note { text-align: center; color: var(--ig-muted); font-size: 12px; margin: 10px 0; }
+.ig-dm .vplayer, .ig-dm .vtranscript { color: inherit; }

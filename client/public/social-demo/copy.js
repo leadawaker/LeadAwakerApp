@@ -1,0 +1,118 @@
+// client/public/social-demo/copy.js
+export const COPY = {
+  en: {
+    scrollHint: "Scroll down to start the demo",
+    sponsored: "Sponsored",
+    likes: "{n} likes",
+    addComment: "Add a comment...",
+    commentHint: "Type {kw} and tap Post",
+    post: "Post",
+    noMatch: "Comment {kw} to get the DM",
+    dmToast: "{handle} sent you a message",
+    direct: "Direct",
+    primary: "Primary",
+    general: "General",
+    requests: "Requests (1)",
+    activeNow: "Active now",
+    today: "Today",
+    message: "Message...",
+    back: "Back",
+    you: "you",
+    demoBy: "Demo by Lead Awaker",
+  },
+  nl: {
+    scrollHint: "Scroll naar beneden om de demo te starten",
+    sponsored: "Gesponsord",
+    likes: "{n} vind-ik-leuks",
+    addComment: "Voeg een reactie toe...",
+    commentHint: "Typ {kw} en tik op Plaatsen",
+    post: "Plaatsen",
+    noMatch: "Reageer {kw} om de DM te krijgen",
+    dmToast: "{handle} heeft je een bericht gestuurd",
+    direct: "Direct",
+    primary: "Primair",
+    general: "Algemeen",
+    requests: "Verzoeken (1)",
+    activeNow: "Nu actief",
+    today: "Vandaag",
+    message: "Bericht...",
+    back: "Terug",
+    you: "jij",
+    demoBy: "Demo door Lead Awaker",
+  },
+  pt: {
+    scrollHint: "Role para baixo para começar a demo",
+    sponsored: "Patrocinado",
+    likes: "{n} curtidas",
+    addComment: "Adicione um comentário...",
+    commentHint: "Digite {kw} e toque em Publicar",
+    post: "Publicar",
+    noMatch: "Comente {kw} para receber a DM",
+    dmToast: "{handle} enviou uma mensagem",
+    direct: "Direct",
+    primary: "Principal",
+    general: "Geral",
+    requests: "Solicitações (1)",
+    activeNow: "Online agora",
+    today: "Hoje",
+    message: "Mensagem...",
+    back: "Voltar",
+    you: "você",
+    demoBy: "Demo por Lead Awaker",
+  },
+};
+
+export const STATIC_POSTS = {
+  en: [
+    { handle: "mia.kitchen", avatarLetter: "M", image: "/social-demo-assets/img/post-1.webp", caption: "New sourdough crumb shot, we got there 🍞", likes: 327, sponsored: false },
+    { handle: "noah.notes", avatarLetter: "N", image: "/social-demo-assets/img/post-2.webp", caption: "Sunday desk reset. Coffee first, emails later.", likes: 189, sponsored: false },
+  ],
+  nl: [
+    { handle: "lotte.bakt", avatarLetter: "L", image: "/social-demo-assets/img/post-1.webp", caption: "Eindelijk een zuurdesem met mooie gaatjes 🍞", likes: 214, sponsored: false },
+    { handle: "daan.fietst", avatarLetter: "D", image: "/social-demo-assets/img/post-2.webp", caption: "Rondje langs de Vecht vanochtend. Niet verkeerd.", likes: 156, sponsored: false },
+  ],
+  pt: [
+    { handle: "ana.nacozinha", avatarLetter: "A", image: "/social-demo-assets/img/post-1.webp", caption: "Pão de fermentação natural saiu do forno agora 🍞", likes: 402, sponsored: false },
+    { handle: "lucas.pedala", avatarLetter: "L", image: "/social-demo-assets/img/post-2.webp", caption: "Pedal de domingo no Ibirapuera, que dia bonito.", likes: 233, sponsored: false },
+  ],
+};
+
+export const INBOX = {
+  en: [
+    { name: "Peggy Franklin", avatar: "/social-demo-assets/img/av-en-1.webp", snippet: "omg yes!! dinner friday? 🍝", time: "2h", unread: true },
+    { name: "Curtis Simmons", avatar: "/social-demo-assets/img/av-en-2.webp", snippet: "That game last night was insane", time: "5h", unread: true },
+    { name: "Edgar Pierce", avatar: "/social-demo-assets/img/av-en-3.webp", snippet: "I'll send you the address now", time: "11h", unread: false },
+    { name: "Maxine Diaz", avatar: "/social-demo-assets/img/av-en-4.webp", snippet: "Wait you moved to Melbourne?!", time: "1d", unread: true },
+    { name: "William Chapman", avatar: "/social-demo-assets/img/av-en-5.webp", snippet: "Haha yeah the trip was wild", time: "1d", unread: false },
+    { name: "Gail Simmons", avatar: "/social-demo-assets/img/av-en-6.webp", snippet: "The kids loved it!! Thanks so much", time: "2d", unread: true },
+    { name: "Willie Little", avatar: "/social-demo-assets/img/av-en-7.webp", snippet: "Running 15 min late sorry!", time: "2d", unread: false },
+    { name: "Nora Newman", avatar: "/social-demo-assets/img/av-en-8.webp", snippet: "Can you pick up milk on the way?", time: "3d", unread: false },
+  ],
+  nl: [
+    { name: "Sanne de Vries", avatar: "/social-demo-assets/img/av-nl-1.webp", snippet: "Jaaa! Vrijdag uit eten? 🍝", time: "2u", unread: true },
+    { name: "Thijs Bakker", avatar: "/social-demo-assets/img/av-nl-2.webp", snippet: "Die wedstrijd gisteren was echt bizar", time: "5u", unread: true },
+    { name: "Ruben Visser", avatar: "/social-demo-assets/img/av-nl-3.webp", snippet: "Ik stuur je zo het adres", time: "11u", unread: false },
+    { name: "Femke Jansen", avatar: "/social-demo-assets/img/av-nl-4.webp", snippet: "Wacht, woon je nu in Groningen?!", time: "1d", unread: true },
+    { name: "Bram Mulder", avatar: "/social-demo-assets/img/av-nl-5.webp", snippet: "Haha ja, die reis was echt top", time: "1d", unread: false },
+    { name: "Eva Smit", avatar: "/social-demo-assets/img/av-nl-6.webp", snippet: "De kids vonden het geweldig!! Dankje", time: "2d", unread: true },
+    { name: "Jesse de Boer", avatar: "/social-demo-assets/img/av-nl-7.webp", snippet: "Kwartiertje later, sorry!", time: "2d", unread: false },
+    { name: "Lieke Meijer", avatar: "/social-demo-assets/img/av-nl-8.webp", snippet: "Neem jij onderweg melk mee?", time: "3d", unread: false },
+  ],
+  pt: [
+    { name: "Juliana Souza", avatar: "/social-demo-assets/img/av-pt-1.webp", snippet: "Simm!! Jantar na sexta? 🍝", time: "2h", unread: true },
+    { name: "Rafael Oliveira", avatar: "/social-demo-assets/img/av-pt-2.webp", snippet: "Aquele jogo ontem foi surreal", time: "5h", unread: true },
+    { name: "Thiago Lima", avatar: "/social-demo-assets/img/av-pt-3.webp", snippet: "Já te mando o endereço", time: "11h", unread: false },
+    { name: "Camila Santos", avatar: "/social-demo-assets/img/av-pt-4.webp", snippet: "Pera, você mudou pra Floripa?!", time: "1d", unread: true },
+    { name: "Gustavo Pereira", avatar: "/social-demo-assets/img/av-pt-5.webp", snippet: "Haha sim, a viagem foi demais", time: "1d", unread: false },
+    { name: "Beatriz Costa", avatar: "/social-demo-assets/img/av-pt-6.webp", snippet: "As crianças amaram!! Muito obrigada", time: "2d", unread: true },
+    { name: "Felipe Rodrigues", avatar: "/social-demo-assets/img/av-pt-7.webp", snippet: "Vou atrasar uns 15 min, desculpa!", time: "2d", unread: false },
+    { name: "Larissa Almeida", avatar: "/social-demo-assets/img/av-pt-8.webp", snippet: "Você passa no mercado e pega leite?", time: "3d", unread: false },
+  ],
+};
+
+export function tr(lang, key, vars) {
+  const table = COPY[lang] || COPY.en;
+  let s = table[key] ?? COPY.en[key] ?? key;
+  for (const [k, v] of Object.entries(vars || {})) s = s.replace("{" + k + "}", String(v));
+  return s;
+}
