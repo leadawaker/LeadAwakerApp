@@ -21,6 +21,8 @@ export const COPY = {
     demoBy: "Demo by Lead Awaker",
     loading: "Loading...",
     dmOpenError: "Couldn't open the DM. Tap to try again.",
+    expiredTitle: "This demo link has expired",
+    expiredBody: "Demo links stay open for 7 days. Ask for a fresh one and we'll send it right over.",
   },
   nl: {
     scrollHint: "Scroll naar beneden om de demo te starten",
@@ -43,6 +45,8 @@ export const COPY = {
     demoBy: "Demo door Lead Awaker",
     loading: "Laden...",
     dmOpenError: "Kon de DM niet openen. Tik om het opnieuw te proberen.",
+    expiredTitle: "Deze demolink is verlopen",
+    expiredBody: "Demolinks blijven 7 dagen open. Vraag een nieuwe aan, dan sturen we die meteen.",
   },
   pt: {
     scrollHint: "Role para baixo para começar a demo",
@@ -65,6 +69,8 @@ export const COPY = {
     demoBy: "Demo por Lead Awaker",
     loading: "Carregando...",
     dmOpenError: "Não foi possível abrir a DM. Toque para tentar novamente.",
+    expiredTitle: "Este link de demo expirou",
+    expiredBody: "Os links de demo ficam abertos por 7 dias. Peça um novo e a gente envia na hora.",
   },
 };
 

@@ -101,4 +101,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 /* First paint of the DM view when the page loads straight into it
    (BOOT.started): a blank #root until the first GET resolves reads as
    broken, so a light placeholder holds the space instead. */
+.ig-expired { min-height: 60dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px 16px; }
+.ig-expired h1 { margin: 0 0 8px; font-size: 18px; font-weight: 600; }
+.ig-expired p { margin: 0; max-width: 320px; color: var(--ig-muted); font-size: 14px; line-height: 1.45; }
 .ig-dm-loading { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 100dvh; color: var(--ig-muted); font-size: 14px; }

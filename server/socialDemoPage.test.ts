@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pickPostImage, renderSocialDemoHtml } from "./socialDemoPage";
+import { isTokenExpired, pickPostImage, renderSocialDemoHtml, TOKEN_TTL_DAYS } from "./socialDemoPage";
 
 const post = { handle: "dak", caption: "</script><b>x</b>", keyword: "DAK", cta_line: "Reageer DAK", offer: "o", likes: 3 };
 
@@ -23,4 +23,19 @@ test("every module in the graph is versioned", () => {
   for (const target of Object.values(map.imports) as string[]) assert.match(target, /\?v=/);
   assert.ok(map.imports["/premium/demo/transport.js"]);
   assert.ok(map.imports["/social-demo-assets/main.js"]);
+});
+
+test("token expiry matches the engine's 7-day TTL", () => {
+  const now = Date.parse("2026-09-25T12:00:00Z");
+  assert.equal(TOKEN_TTL_DAYS, 7);
+  assert.equal(isTokenExpired(new Date(now - 6.9 * 86_400_000), now), false);
+  assert.equal(isTokenExpired(new Date(now - 7.1 * 86_400_000), now), true);
+  assert.equal(isTokenExpired(null, now), false);
+});
+
+test("the expired page carries the flag and no persona", () => {
+  const html = renderSocialDemoHtml({ token: "abcd1234", language: "pt", started: false, expired: true, company: "", agentName: "", post: null, imageUrl: "" });
+  const boot = JSON.parse(html.match(/window.__SOCIAL__ = (.*?);<\/script>/)![1]);
+  assert.equal(boot.expired, true);
+  assert.equal(boot.post, null);
 });

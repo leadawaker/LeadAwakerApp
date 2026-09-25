@@ -48,6 +48,14 @@
       "destination": "https://api.leadawaker.com/widget/:path*"
     },
     {
+      "source": "/social-demo/:token",
+      "destination": "https://api.leadawaker.com/social-demo/:token"
+    },
+    {
+      "source": "/social-demo-assets/:path*",
+      "destination": "https://api.leadawaker.com/social-demo-assets/:path*"
+    },
+    {
       "source": "/(.*)",
       "destination": "/app.html"
     }

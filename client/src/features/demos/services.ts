@@ -35,7 +35,8 @@ export interface ServiceDef {
    *  both the Pi and Vercel origins. */
   reviewPage?: boolean;
   /** The Instagram comment-to-DM demo opens its own page (/social-demo/<token>,
-   *  specs/social-reply-demo). Pi-only like the widget page. */
+   *  specs/social-reply-demo). Rendered by the Pi; the Vercel origin proxies
+   *  /social-demo/* and /social-demo-assets/* to it (vercel.json). */
   socialPage?: boolean;
 }
 

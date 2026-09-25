@@ -6,7 +6,7 @@ import { signature } from "/premium/demo/format.js";
 import * as admin from "/premium/demo/admin.js";
 import { setLang } from "/premium/demo/copy.js";
 import { matchesKeyword } from "./keyword.js";
-import { feedHtml } from "./feed.js";
+import { feedHtml, expiredHtml } from "./feed.js";
 import { dmHtml } from "./dm.js";
 import { tr } from "./copy.js";
 
@@ -16,7 +16,8 @@ setLang(lang);
 const root = document.getElementById("root");
 const post = BOOT.post;
 
-let view = BOOT.started ? "dm" : "feed";
+// "expired" is terminal: nothing ever calls the engine, which would 404.
+let view = BOOT.expired ? "expired" : BOOT.started ? "dm" : "feed";
 let comments = [];
 let hint = false;
 let state = null;
@@ -49,7 +50,7 @@ const transport = createTransport({
     if (s.stage) seenStage = s.stage;
     // A restart already returned to the feed; nothing about this poll
     // belongs there, and repainting it would wipe a half-typed comment.
-    if (view === "feed") return;
+    if (view === "feed" || view === "expired") return;
     const next = fullSignature(state, pending);
     if (next === lastSig) return;
     lastSig = next;
@@ -57,7 +58,7 @@ const transport = createTransport({
   },
   onRecap(r) {
     recap = r;
-    if (view === "feed") return;
+    if (view === "feed" || view === "expired") return;
     render({ grew: false });
   },
   onError() { /* keep the last good screen; the poll retries */ },
@@ -65,6 +66,13 @@ const transport = createTransport({
 
 admin.init({
   token: BOOT.token,
+  // "Generate new link" mints another Instagram demo and hands out this
+  // page's own URL for it, not the plain /demo/<token> one.
+  service: "socials",
+  pageUrl: (demoUrl) => {
+    const m = /\/demo\/([A-Za-z0-9]{4,64})/.exec(demoUrl || "");
+    return m ? `${window.location.origin}/social-demo/${m[1]}` : "";
+  },
   getState: () => state,
   reload: () => transport.pollSoon(150),
   // transport.restart() resolves false on a skip (already busy, no state
@@ -81,6 +89,7 @@ admin.init({
 
 function render(opts) {
   const grew = !!(opts && opts.grew);
+  if (view === "expired") { root.innerHTML = expiredHtml(lang); return; }
   if (view === "feed" || !state) {
     root.innerHTML = feedHtml({ lang, post, imageUrl: BOOT.imageUrl, company: BOOT.company, comments, hint });
     bindFeed();

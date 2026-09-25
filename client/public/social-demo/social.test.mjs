@@ -1,7 +1,7 @@
 // client/public/social-demo/social.test.mjs
 import { matchesKeyword } from "./keyword.js";
 import { COPY, STATIC_POSTS, INBOX } from "./copy.js";
-import { feedHtml } from "./feed.js";
+import { feedHtml, expiredHtml, esc } from "./feed.js";
 
 let failed = 0;
 function ok(label, cond) { console.log((cond ? "  ok  " : "  FAIL ") + label); if (!cond) failed++; }
@@ -35,6 +35,13 @@ ok("three posts", (html.match(/class="ig-post/g) || []).length === 3);
 ok("only one live comment input", (html.match(/id="ig-comment"/g) || []).length === 1);
 ok("placeholder image when none", html.includes("ig-media--placeholder"));
 ok("Dutch chrome", html.includes(COPY.nl.sponsored));
+
+console.log("expired");
+for (const l of ["en", "nl", "pt"]) {
+  const x = expiredHtml(l);
+  ok(`${l} expired page uses its own copy`, x.includes(esc(COPY[l].expiredTitle)) && x.includes(esc(COPY[l].expiredBody)));
+  ok(`${l} expired page has no comment box`, !x.includes("ig-comment"));
+}
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log("\nall passed");

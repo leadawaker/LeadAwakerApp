@@ -67,3 +67,15 @@ export function feedHtml(opts) {
     <div class="ig-demo-by">${esc(tr(opts.lang, "demoBy"))}</div>
   </div>`;
 }
+
+/** The page for a link past the engine's token lifetime: Instagram chrome, one message. */
+export function expiredHtml(lang) {
+  return `<div class="ig-feed">
+    <header class="ig-topbar"><span class="ig-wordmark">Instagram</span><span class="ig-topbar-icons">${svg("square")}${svg("square")}</span></header>
+    <div class="ig-expired" role="status">
+      <h1>${esc(tr(lang, "expiredTitle"))}</h1>
+      <p>${esc(tr(lang, "expiredBody"))}</p>
+    </div>
+    <div class="ig-demo-by">${esc(tr(lang, "demoBy"))}</div>
+  </div>`;
+}

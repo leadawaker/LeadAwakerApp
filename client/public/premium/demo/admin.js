@@ -25,7 +25,7 @@
 
 import { esc } from "./format.js";
 
-var ctx = null;         // { token, getState, reload, restart }
+var ctx = null;         // { token, getState, reload, restart, service?, pageUrl? }
 var el = null;          // the panel root, once built
 var open = false;
 var config = null;      // last known server config
@@ -48,6 +48,10 @@ var DISCLOSURES = [
 var SCENARIOS = [["inquired", "Never got a quote"], ["deciding", "Already has a quote"]];
 var MARKETS = [["", "Default"], ["uk", "UK (£)"], ["us", "US ($)"], ["nl", "NL (€)"]];
 
+// `service` and `pageUrl` are optional and only set by pages that are not the
+// plain /demo/<token> page (the Instagram demo passes "socials" and its own
+// /social-demo/<token> builder). Omitted, "Generate new link" behaves as it
+// always has.
 export function init(next) { ctx = next; }
 export function isOpen() { return open; }
 
@@ -251,6 +255,7 @@ function generate() {
   if (c.companyName) payload.companyName = c.companyName;
   if (c.aiDisclosure) payload.aiDisclosure = c.aiDisclosure;
   if (marketEl && marketEl.value) payload.market = marketEl.value;
+  if (ctx.service) payload.service = ctx.service;
 
   status("Generating…");
   req("/api/demo/create-link", {
@@ -267,11 +272,17 @@ function generate() {
       var warn = r.generated === false
         ? '<div class="ap-warn">Fell back to a generic persona — the niche model did not run.</div>'
         : "";
-      out.innerHTML =
-        warn +
-        linkRow("Browser", r.demoUrl) +
-        linkRow("WhatsApp", r.whatsappUrl) +
-        '<a class="ap-open" href="' + esc(r.demoUrl) + '" target="_blank" rel="noopener">Open it →</a>';
+      // A page with its own surface hands out that page, not /demo/<token>,
+      // and has no WhatsApp leg of its own.
+      var pageUrl = ctx.pageUrl ? ctx.pageUrl(r.demoUrl) : "";
+      out.innerHTML = pageUrl
+        ? warn +
+          linkRow("Browser", pageUrl) +
+          '<a class="ap-open" href="' + esc(pageUrl) + '" target="_blank" rel="noopener">Open it →</a>'
+        : warn +
+          linkRow("Browser", r.demoUrl) +
+          linkRow("WhatsApp", r.whatsappUrl) +
+          '<a class="ap-open" href="' + esc(r.demoUrl) + '" target="_blank" rel="noopener">Open it →</a>';
       out.removeAttribute("hidden");
       out.querySelectorAll("[data-copy]").forEach(function (b) {
         b.addEventListener("click", function () { copy(b.getAttribute("data-copy"), b); });

@@ -6,7 +6,7 @@ import { db, pool } from "../db";
 import { nicheVocabulary } from "@shared/schema";
 import { wrapAsync } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
-import { pickPostImage, renderSocialDemoHtml } from "../socialDemoPage";
+import { isTokenExpired, pickPostImage, renderSocialDemoHtml } from "../socialDemoPage";
 import { getDemoClient, demoClientToEditable, demoClientToContext, clientLanguages } from "../demo-clients";
 import { clientSupportsLanguage } from "./demo";
 import { getClientSocialPost, saveClientSocialPost, startClientSocialImage, socialPostInput } from "../demoSocial/clientStore";
@@ -18,8 +18,10 @@ const INTERACTIONS_TABLE = '"p2mxx34fvbf3ll6"."Interactions"';
 const LANGS = new Set(["en", "nl", "pt"]);
 
 async function loadPersona(token: string) {
+  // Newest first: the browser lead is cloned from the wa-demo one after it,
+  // so the newest row is the one the engine would still match, or neither is.
   const { rows } = await pool.query(
-    `SELECT demo_niche, language FROM ${LEADS_TABLE}
+    `SELECT demo_niche, language, created_at FROM ${LEADS_TABLE}
       WHERE channel_identifier IN ($1, $2) AND demo_niche IS NOT NULL
       ORDER BY created_at DESC NULLS LAST LIMIT 1`,
     [`web-demo:${token}`, `wa-demo:${token}`],
@@ -27,8 +29,16 @@ async function loadPersona(token: string) {
   let persona: Record<string, any> = {};
   try { persona = JSON.parse(String(rows[0]?.demo_niche || "{}")) || {}; } catch { /* none */ }
   const lang = String(rows[0]?.language || "en");
-  return { persona, language: (LANGS.has(lang) ? lang : "en") as "en" | "nl" | "pt", found: rows.length > 0 };
+  return {
+    persona,
+    language: (LANGS.has(lang) ? lang : "en") as "en" | "nl" | "pt",
+    found: rows.length > 0,
+    expired: rows.length > 0 && isTokenExpired(rows[0].created_at),
+  };
 }
+
+/** Test files sit next to the modules; they are not part of the page. */
+const TEST_FILE = /\.test\.[cm]?[jt]s$/;
 
 /** The thread has started once the prospect has sent a DM. The opener alone
  *  does not count: after a restart the engine re-sends it, and the page must
@@ -44,36 +54,50 @@ async function threadStarted(token: string): Promise<boolean> {
 }
 
 export function registerDemoSocialRoutes(app: Express) {
+  app.use("/social-demo-assets", (req, res, next) => {
+    if (TEST_FILE.test(req.path)) return res.status(404).end();
+    next();
+  });
   app.use("/social-demo-assets", express.static(path.resolve("client/public/social-demo"), {
     setHeaders: (res) => res.set("cache-control", "no-cache"),
   }));
 
   app.get("/social-demo/:token", wrapAsync(async (req: Request, res: Response) => {
     const token = String(req.params.token || "");
+    res.set("x-robots-tag", "noindex, nofollow");
     if (!/^[A-Za-z0-9]{4,64}$/.test(token)) return res.status(400).send("Invalid demo link.");
-    const { persona, language, found } = await loadPersona(token);
+    const { persona, language, found, expired } = await loadPersona(token);
     if (!found) return res.status(404).send("This demo link does not exist.");
+
+    res.set("content-type", "text/html; charset=utf-8");
+    res.set("cache-control", "no-store");
+    if (expired) {
+      // Nothing of the persona goes out: the page only needs the language.
+      return res.status(410).send(renderSocialDemoHtml({
+        token, language, started: false, expired: true, company: "", agentName: "", post: null, imageUrl: "",
+      }));
+    }
 
     // demoClientToContext writes both `raw` and `client_niche` to the same
     // Client key; the create-link handler only ever sets `client_niche`.
     // Read whichever one the persona actually carries.
     const clientKey = String(persona.client_niche || persona.raw || "");
 
-    let socialImage: string | null = null;
+    // The image snapshotted at mint wins, so a later image regeneration on the
+    // Client cannot change a link already sent. The live Client image is only
+    // the fallback for a link minted while the first image was still being made.
+    let socialImage: string | null = String(persona.social_image_path || "") || null;
     let screenshot: string | null = String(persona.screenshot || "") || null;
-    if (clientKey) {
+    if (clientKey && (!socialImage || !screenshot)) {
       const [client] = await db
         .select({ socialImagePath: nicheVocabulary.socialImagePath, screenshotPath: nicheVocabulary.screenshotPath })
         .from(nicheVocabulary)
         .where(eq(nicheVocabulary.niche, clientKey))
         .limit(1);
-      socialImage = client?.socialImagePath ?? null;
+      socialImage = socialImage || client?.socialImagePath || null;
       screenshot = screenshot || client?.screenshotPath || null;
     }
 
-    res.set("content-type", "text/html; charset=utf-8");
-    res.set("cache-control", "no-store");
-    res.set("x-robots-tag", "noindex, nofollow");
     res.send(renderSocialDemoHtml({
       token,
       language,

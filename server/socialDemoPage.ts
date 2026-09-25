@@ -4,10 +4,24 @@ export interface SocialBoot {
   token: string;
   language: "en" | "nl" | "pt";
   started: boolean;
+  /** Past the engine's token TTL: the page shows its expired state only. */
+  expired?: boolean;
   company: string;
   agentName: string;
   post: PublicSocialPost | null;
   imageUrl: string;
+}
+
+// The engine's token lifetime (TOKEN_TTL_DAYS in automations
+// src/webhooks/web_demo_routes.py): _find_lead and _find_wa_lead only match a
+// lead created within it. Past it every engine call 404s, so the page says so
+// up front instead of letting a comment open a DM that can never load.
+export const TOKEN_TTL_DAYS = 7;
+
+export function isTokenExpired(createdAt: Date | string | null | undefined, now = Date.now()): boolean {
+  if (!createdAt) return false;
+  const t = new Date(createdAt).getTime();
+  return Number.isFinite(t) && now - t > TOKEN_TTL_DAYS * 86_400_000;
 }
 
 const SHOT = /^[a-f0-9]{16}\.webp$/;
