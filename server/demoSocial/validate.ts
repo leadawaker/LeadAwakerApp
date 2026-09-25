@@ -20,8 +20,10 @@ export function validateSocialPost(data: unknown): string | null {
   if (!/^[A-Za-zÀ-ÿ]{3,10}$/.test(kw) || normalizeKeyword(kw).length < 3) return "keyword must be 3-10 letters";
   if (!normalizeKeyword(String(d.cta_line)).includes(normalizeKeyword(kw))) return "cta_line must contain the keyword";
   const opener = String(d.dm_opener);
-  if (!opener.includes("{agent_name}") || !opener.includes("{company_name}")) {
-    return "dm_opener must contain {agent_name} and {company_name}";
+  // {disclosure_clause} already carries the company (" from X" or ", the AI
+  // assistant at X"), so the company token must not sit in front of it.
+  if (!opener.includes("{agent_name}{disclosure_clause}") || opener.includes("{company_name}{disclosure_clause}")) {
+    return "dm_opener must contain {agent_name}{disclosure_clause}";
   }
   if (String(d.caption).length > 400) return "caption too long";
   return null;

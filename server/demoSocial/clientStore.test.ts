@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { upsertLangSlot } from "./clientStore";
 
 const post = (keyword: string) => ({
-  handle: "h", caption: "c", keyword, cta_line: `x ${keyword}`, dm_opener: "{agent_name} {company_name}",
+  handle: "h", caption: "c", keyword, cta_line: `x ${keyword}`, dm_opener: "{agent_name}{disclosure_clause}",
   offer: "o", image_prompt: "i", likes: 100,
 });
 

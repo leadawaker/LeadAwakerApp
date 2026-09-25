@@ -849,7 +849,7 @@
       "keyword": "Comment word",
       "cta": "Comment line under the post",
       "opener": "First DM",
-      "openerHelp": "Keep {agent_name} and {company_name} in the text.",
+      "openerHelp": "Keep {agent_name}{disclosure_clause} together in the text. It adds the company name.",
       "none": "No Instagram post in this language yet.",
       "save": "Save",
       "regenerateText": "Rewrite text",

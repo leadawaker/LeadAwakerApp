@@ -630,7 +630,7 @@
       "keyword": "Palavra do comentário",
       "cta": "Linha do comentário abaixo do post",
       "opener": "Primeira DM",
-      "openerHelp": "Mantenha {agent_name} e {company_name} no texto.",
+      "openerHelp": "Mantenha {agent_name}{disclosure_clause} juntos no texto. Isso adiciona o nome da empresa.",
       "none": "Ainda não há post do Instagram neste idioma.",
       "save": "Salvar",
       "regenerateText": "Reescrever texto",

@@ -22,7 +22,7 @@ test("prompt names the business, service and language", () => {
 test("prompt demands the opener tokens and a keyword in the CTA", () => {
   const { system } = buildSocialPostPrompt(input);
   assert.match(system, /\{agent_name\}/);
-  assert.match(system, /\{company_name\}/);
+  assert.match(system, /\{agent_name\}\{disclosure_clause\}/);
   assert.match(system, /cta_line/);
 });
 

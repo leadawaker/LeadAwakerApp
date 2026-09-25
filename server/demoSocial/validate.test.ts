@@ -7,7 +7,7 @@ const good = {
   caption: "Lekkage na de storm? Wij repareren daken in heel Utrecht.",
   keyword: "DAK",
   cta_line: "Reageer DAK en we sturen je een DM om een afspraak te plannen.",
-  dm_opener: "Hoi, bedankt voor je reactie! Met {agent_name} van {company_name}, hoe gaat het?",
+  dm_opener: "Hoi, bedankt voor je reactie! Met {agent_name}{disclosure_clause}, hoe gaat het?",
   offer: "dakreparatie na stormschade",
   image_prompt: "A roofer on a ladder fixing clay tiles on a Dutch terraced house, daylight",
   likes: 412,
@@ -33,6 +33,8 @@ test("cta_line must contain the keyword", () => {
 
 test("dm_opener must keep the agent and company tokens", () => {
   assert.match(validateSocialPost({ ...good, dm_opener: "Hoi, met Sarah van Dakwerk" }) ?? "", /dm_opener/);
+  // The clause already carries the company; a company token before it doubled it.
+  assert.match(validateSocialPost({ ...good, dm_opener: "Met {agent_name} van {company_name}{disclosure_clause}!" }) ?? "", /dm_opener/);
 });
 
 test("coerce clamps likes and normalizes keyword and handle", () => {

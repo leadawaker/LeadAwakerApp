@@ -849,7 +849,7 @@
       "keyword": "Reactiewoord",
       "cta": "Reactieregel onder de post",
       "opener": "Eerste DM",
-      "openerHelp": "Laat {agent_name} en {company_name} in de tekst staan.",
+      "openerHelp": "Laat {agent_name}{disclosure_clause} samen in de tekst staan. Dat voegt de bedrijfsnaam toe.",
       "none": "Nog geen Instagrampost in deze taal.",
       "save": "Opslaan",
       "regenerateText": "Tekst herschrijven",

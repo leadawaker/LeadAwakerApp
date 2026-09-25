@@ -57,7 +57,9 @@ Each run: comment the keyword, then 4-5 replies as a warm lead (interest confirm
 price question, "can you come Thursday" / local equivalent, slot confirmation). All 9 runs
 reached a booked outcome.
 
-### Finding A: Duplicate company name in the DM opener (consistent, 10/10 openers seen)
+### Finding A: Duplicate company name in the DM opener (consistent, 10/10 openers seen) - FIXED 2026-09-25
+
+**Fixed.** Cause: the post generator wrote `{agent_name} from {company_name}{disclosure_clause}`, but `{disclosure_clause}` already carries the company (" from X" or ", the AI assistant at X"). The generator now writes `{agent_name}{disclosure_clause}`, the validator rejects the doubled form, and `scripts/migrations/2026-09-social-opener-dedupe.js` rewrote the 7 stored Clients. A fresh roofing mint now opens "This is Sara from Van Dijk Roofing, hows your day going so far?". Links minted before the fix keep their frozen opener.
 
 Every opener rendered the company name **twice**, in every language tested. This is a
 template/rendering bug in how the persona's `agent_name`/`company_name` tokens are combined
@@ -164,11 +166,7 @@ confirms Finding A (duplicate company name) is specific to the social-reply open
 
 ## 6. Follow-ups for Gabriel
 
-1. **Fix the duplicate company name in the social-reply opener** (D2). Every opener in every
-   language repeats the company name (e.g. "Sara from X from X"). This is the most visible
-   quality issue found and should be fixed before sending links to real prospects. Likely in
-   the opener-rendering path specific to `social_reply` campaigns (persona `agent_name` +
-   `company_name` substitution combined with a literal "from {company}" in the template).
+1. ~~Fix the duplicate company name in the social-reply opener~~ Done 2026-09-25, see Finding A.
 2. **Force the social-post generator (B1) through the same "always Brazilian" constraint as
    prompt 108**, at least for PT personas whose underlying business context is itself
    European (Moniz de Sa is an Acores dealership). Currently only the live prompt-108 turns
