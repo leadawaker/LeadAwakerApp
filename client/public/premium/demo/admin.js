@@ -25,7 +25,7 @@
 
 import { esc } from "./format.js";
 
-var ctx = null;         // { token, getState, reload, restart, service?, pageUrl? }
+var ctx = null;         // { token, getState, reload, restart, service?, pageUrl?, hideScenario? }
 var el = null;          // the panel root, once built
 var open = false;
 var config = null;      // last known server config
@@ -122,10 +122,13 @@ function fieldsHtml() {
       '<select id="ap-disc">' + options(DISCLOSURES, c.aiDisclosure || "") + "</select></label>" +
     // Only an invited link may switch scenario (the engine 403s a public
     // session), so the control is disabled rather than offered and refused.
-    '<label class="ap-f"><span>Lead has a quote?</span>' +
-      '<select id="ap-scen"' + (invited() ? "" : " disabled") + ">" +
-      options(SCENARIOS, c.scenario || "inquired") + "</select></label>" +
-    (invited() ? "" : '<div class="ap-note">Scenario switching needs an invited link.</div>') +
+    // A page with no quote story (the Instagram demo: the lead just commented
+    // on a post) passes hideScenario and never offers the switch.
+    (ctx.hideScenario ? "" :
+      '<label class="ap-f"><span>Lead has a quote?</span>' +
+        '<select id="ap-scen"' + (invited() ? "" : " disabled") + ">" +
+        options(SCENARIOS, c.scenario || "inquired") + "</select></label>" +
+      (invited() ? "" : '<div class="ap-note">Scenario switching needs an invited link.</div>')) +
 
     '<div class="ap-sec">This session</div>' +
     '<div class="ap-row">' +

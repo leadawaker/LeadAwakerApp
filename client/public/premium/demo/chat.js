@@ -110,6 +110,10 @@ export function messagesHtml(s, pending, voice, opts) {
   var out = [];
   var v = voice || {};
   var avatarSrc = (opts && opts.avatarSrc) || avatarForAgent(s.agent);
+  // A page can hand in its own avatar markup (the Instagram demo shows the
+  // business's initials circle, not a person); default is the agent portrait.
+  var aiAv = (opts && opts.avatarHtml) ||
+    ('<div class="av"><img src="' + esc(avatarSrc) + '" alt="' + esc(initials(s.agent)) + '" /></div>');
   // A restart hands back a shorter thread; treat that as a fresh one so the
   // new opener animates in rather than being mistaken for an old bubble.
   if (s.messages.length < paintedCount) paintedCount = 0;
@@ -131,7 +135,7 @@ export function messagesHtml(s, pending, voice, opts) {
         (mine ? "" : (showAv || (msg.human && (!prev || !prev.human))
           ? (msg.human && msg.agentName
               ? '<div class="av is-human">' + esc(initials(msg.agentName)) + "</div>"
-              : '<div class="av"><img src="' + esc(avatarSrc) + '" alt="' + esc(initials(s.agent)) + '" /></div>')
+              : aiAv)
           : '<div class="av" style="visibility:hidden"></div>')) +
         '<div class="bub-wrap">' +
           '<div class="bub' + (isVoice ? " is-voice" : "") + fresh + '">' +
@@ -145,7 +149,7 @@ export function messagesHtml(s, pending, voice, opts) {
   if (pending) {
     out.push(
       '<div class="row ai">' +
-        '<div class="av"><img src="' + esc(avatarSrc) + '" alt="' + esc(initials(s.agent)) + '" /></div>' +
+        aiAv +
         '<div class="bub-wrap"><div class="bub typing' + (paintedPending ? "" : " is-new") +
           '"><i></i><i></i><i></i></div></div>' +
       "</div>"

@@ -1,8 +1,42 @@
 // client/public/social-demo/feed.js
-import { STATIC_POSTS, tr } from "./copy.js";
+import { STATIC_POSTS, INBOX, tr } from "./copy.js";
 
 export function esc(s) {
   return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+}
+
+// Legal-form suffixes carry no identity: "Acme Daken B.V." reads as "AD".
+const LEGAL = /^(b\.?v\.?|n\.?v\.?|v\.?o\.?f\.?|ltd\.?|llc|inc\.?|gmbh|lda\.?|ltda\.?|s\.?a\.?|me|eireli|&)$/i;
+
+/** The business's initials for its avatar circle: first letters of the first
+ *  two words ("Van Dijk Roofing" -> "VD"), or of a one-word CamelCase name's
+ *  capitals ("SolarMax" -> "SM"). */
+export function initials(name) {
+  const words = String(name || "").trim().split(/\s+/).filter((w) => w && !LEGAL.test(w));
+  if (!words.length) return "?";
+  if (words.length > 1) return (words[0][0] + words[1][0]).toUpperCase();
+  const caps = words[0].match(/[A-Z]/g);
+  return (caps && caps.length > 1 ? caps.slice(0, 2).join("") : words[0][0]).toUpperCase();
+}
+
+// Which inbox contacts wear the story ring. Fixed, so the list does not
+// reshuffle between renders.
+const STORY = [0, 1, 3, 5, 6];
+
+/** Contacts beside the feed (a story strip on a phone). Same people as the
+ *  DM inbox, so the page reads as one account. */
+function contactsHtml(lang) {
+  const rows = (INBOX[lang] || INBOX.en).map((r, i) => {
+    const handle = r.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ".");
+    return `<li class="ig-contact">
+      <span class="ig-contact-av${STORY.includes(i) ? " has-story" : ""}"><img src="${esc(r.avatar)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'" /></span>
+      <span class="ig-contact-txt"><b>${esc(handle)}</b><small>${esc(r.name)}</small></span>
+    </li>`;
+  }).join("");
+  return `<aside class="ig-contacts" aria-label="${esc(tr(lang, "contacts"))}">
+    <h2 class="ig-contacts-hdr">${esc(tr(lang, "contacts"))}</h2>
+    <ul>${rows}</ul>
+  </aside>`;
 }
 
 const ICON = {
@@ -38,7 +72,7 @@ function demoPost({ lang, post, imageUrl, company, comments, hint }) {
     : `<div class="ig-media ig-media--placeholder"><span>${esc(company || post.handle)}</span></div>`;
   const list = comments.map((c) => `<p class="ig-comment"><b>${esc(c.author)}</b> ${esc(c.text)}</p>`).join("");
   return `<article class="ig-post ig-post--demo" id="ig-demo-post">
-    <header class="ig-phdr"><span class="ig-avatar ig-avatar--ring">${esc((company || post.handle).slice(0, 1).toUpperCase())}</span>
+    <header class="ig-phdr"><span class="ig-avatar ig-avatar--ring">${esc(initials(company || post.handle))}</span>
       <span class="ig-handle">${esc(post.handle)}<small>${esc(tr(lang, "sponsored"))}</small></span><span class="ig-more">•••</span></header>
     ${media}
     ${actions()}
@@ -60,6 +94,7 @@ export function feedHtml(opts) {
   return `<div class="ig-feed">
     <header class="ig-topbar"><span class="ig-wordmark">Instagram</span><span class="ig-topbar-icons">${svg("square")}${svg("square")}</span></header>
     <div class="ig-scroll-pill" id="ig-scroll-pill">↓ ${esc(tr(opts.lang, "scrollHint"))}</div>
+    ${contactsHtml(opts.lang)}
     ${staticPost(opts.lang, before)}
     ${opts.post ? demoPost(opts) : ""}
     ${staticPost(opts.lang, after)}

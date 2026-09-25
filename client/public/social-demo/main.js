@@ -69,6 +69,8 @@ admin.init({
   // "Generate new link" mints another Instagram demo and hands out this
   // page's own URL for it, not the plain /demo/<token> one.
   service: "socials",
+  // The lead commented on a post: there is no quote story to switch to.
+  hideScenario: true,
   pageUrl: (demoUrl) => {
     const m = /\/demo\/([A-Za-z0-9]{4,64})/.exec(demoUrl || "");
     return m ? `${window.location.origin}/social-demo/${m[1]}` : "";
@@ -89,6 +91,9 @@ admin.init({
 
 function render(opts) {
   const grew = !!(opts && opts.grew);
+  // The feed and the expired page scroll the document; the DM view is a fixed
+  // 100dvh frame with its own scrolling stream.
+  document.body.classList.toggle("ig-scrolls", view === "feed" || view === "expired" || !state);
   if (view === "expired") { root.innerHTML = expiredHtml(lang); return; }
   if (view === "feed" || !state) {
     root.innerHTML = feedHtml({ lang, post, imageUrl: BOOT.imageUrl, company: BOOT.company, comments, hint });

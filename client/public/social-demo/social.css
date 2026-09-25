@@ -7,10 +7,59 @@
   --ig-blue: #0095f6;
   --ig-me: #3797f0;
   --ig-ring: linear-gradient(45deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5);
+  /* Sent-message gradient: pink at the top of the screen, indigo at the bottom. */
+  --ig-me-grad: linear-gradient(180deg, #e1306c 0%, #c13584 35%, #833ab4 70%, #5851db 100%);
+
+  /* demo.css reads the landing page's design tokens, which this page does not
+     load. Unset, they left the presenter panel (and anything else on --paper)
+     transparent, so they are pinned here to this page's own light palette. */
+  --bg: #ffffff;
+  --bg-2: #fafafa;
+  --paper: #ffffff;
+  --surface: #efefef;
+  --ink: #000000;
+  --ink-soft: #262626;
+  --mute: #737373;
+  --mute-2: #8e8e8e;
+  --line: #dbdbdb;
+  --wine: #5E2230;
+  --wine-soft: #7A2E3E;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 html, body { background: var(--ig-bg); color: var(--ig-text); margin: 0; min-height: 100dvh; }
 body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
 #root { display: flex; flex-direction: column; min-height: 100dvh; }
+/* demo.css pins body to 100dvh with overflow hidden (its chat stream is the
+   only scroller). The feed has to scroll the document instead, so while it is
+   on screen main.js sets .ig-scrolls and the lock comes off. */
+body.ig-scrolls { height: auto; overflow: visible; }
+body.ig-scrolls #root { flex: none; }
+
+/* Contacts: a story strip under the top bar on a phone, a list left of the
+   feed once there is room for it. */
+.ig-contacts { border-bottom: 1px solid var(--ig-line); }
+.ig-contacts-hdr { display: none; }
+.ig-contacts ul { list-style: none; margin: 0; padding: 12px 12px 10px; display: flex; gap: 14px; overflow-x: auto; scrollbar-width: none; }
+.ig-contacts ul::-webkit-scrollbar { display: none; }
+.ig-contact { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 66px; flex: none; }
+.ig-contact-av { width: 62px; height: 62px; border-radius: 50%; padding: 3px; flex: none; display: block; }
+.ig-contact-av.has-story { background: var(--ig-ring); }
+.ig-contact-av img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block; border: 2px solid var(--ig-bg); background: var(--ig-soft); }
+.ig-contact-txt { display: flex; flex-direction: column; min-width: 0; width: 100%; text-align: center; }
+.ig-contact-txt b { font-weight: 400; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ig-contact-txt small { display: none; }
+@media (min-width: 1100px) {
+  .ig-contacts { position: fixed; top: 72px; left: calc(50% - 235px - 300px); width: 260px; border-bottom: 0; }
+  .ig-contacts-hdr { display: block; margin: 0 0 8px; padding: 0 8px; font-size: 14px; font-weight: 600; color: var(--ig-muted); }
+  .ig-contacts ul { flex-direction: column; gap: 4px; padding: 0; overflow: visible; }
+  .ig-contact { flex-direction: row; width: auto; gap: 12px; padding: 6px 8px; border-radius: 10px; }
+  .ig-contact:hover { background: var(--ig-soft); }
+  .ig-contact-av { width: 48px; height: 48px; padding: 2px; }
+  .ig-contact-txt { text-align: left; }
+  .ig-contact-txt b { font-size: 14px; font-weight: 600; }
+  .ig-contact-txt small { display: block; color: var(--ig-muted); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+}
 
 .ig-feed { width: 100%; max-width: 470px; margin: 0 auto; padding-bottom: 72px; }
 .ig-topbar { position: sticky; top: 0; z-index: 5; display: flex; justify-content: space-between; align-items: center; padding: 10px 16px; background: var(--ig-bg); border-bottom: 1px solid var(--ig-line); }
@@ -55,6 +104,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 .ig-row { display: flex; align-items: center; gap: 12px; padding: 8px 20px; }
 .ig-row.is-active { background: var(--ig-soft); cursor: pointer; }
 .ig-row-av { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; background: var(--ig-soft); }
+.ig-row-av.ig-avatar--ring { background: var(--ig-ring); color: #fff; font-size: 18px; }
 .ig-row-txt { display: flex; flex-direction: column; min-width: 0; font-size: 14px; }
 .ig-row-txt b { font-weight: 400; }
 .ig-row-txt b.is-unread { font-weight: 600; }
@@ -65,7 +115,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 .ig-thread-name { display: flex; flex-direction: column; font-size: 15px; }
 .ig-thread-name small { color: var(--ig-muted); font-size: 12px; }
 .ig-back { border: 0; background: none; font-size: 28px; line-height: 1; padding: 0 4px; }
-.ig-tracker { padding: 8px 16px; border-bottom: 1px solid var(--ig-line); overflow-x: auto; }
+.ig-tracker { display: flex; justify-content: safe center; padding: 8px 16px; border-bottom: 1px solid var(--ig-line); overflow-x: auto; }
 .ig-stream { flex: 1; min-height: 0; overflow-y: auto; padding: 16px; }
 .ig-day { text-align: center; color: var(--ig-muted); font-size: 12px; margin: 8px 0 16px; }
 .ig-composer { display: flex; align-items: center; gap: 8px; margin: 12px 16px calc(12px + env(safe-area-inset-bottom)); padding: 6px 8px 6px 16px; border: 1px solid var(--ig-line); border-radius: 22px; }
@@ -85,7 +135,11 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 .ig-dm .bub { padding: 10px 14px; border-radius: 22px; font-size: 15px; line-height: 1.4; word-break: break-word; }
 .ig-dm .bub::before, .ig-dm .bub::after { content: none !important; }
 .ig-dm .row.ai .bub { background: var(--ig-soft); color: var(--ig-text); border-bottom-left-radius: 6px; }
-.ig-dm .row.me .bub { background: var(--ig-me); color: #fff; border-bottom-right-radius: 6px; }
+/* Fixed to the viewport like Instagram's own: a bubble's colour depends on
+   where it sits on screen (pink up top, indigo at the bottom). Browsers that
+   ignore `fixed` (iOS Safari) paint the gradient per bubble instead. */
+.ig-dm .row.me .bub { background: var(--ig-me); background: var(--ig-me-grad); background-attachment: fixed; color: #fff; border-bottom-right-radius: 6px; }
+.ig-dm .av.ig-av-biz { display: flex; align-items: center; justify-content: center; background: var(--ig-ring); color: #fff; font-size: 11px; font-weight: 700; }
 .ig-dm .bub.typing { display: flex; gap: 4px; align-items: center; padding: 12px 16px; }
 .ig-dm .ts { font-size: 11px; color: var(--ig-muted); margin-top: 3px; padding: 0 4px; }
 .ig-dm .row-note { text-align: center; color: var(--ig-muted); font-size: 12px; margin: 10px 0; }
