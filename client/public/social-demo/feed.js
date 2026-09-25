@@ -19,6 +19,15 @@ export function initials(name) {
   return (caps && caps.length > 1 ? caps.slice(0, 2).join("") : words[0][0]).toUpperCase();
 }
 
+/** The business's avatar: its logo when the Client has one switched on, else
+ *  the initials. The initials stay underneath, so a logo that fails to load
+ *  falls back to them instead of leaving an empty circle. */
+export function bizAvatarHtml(cls, name, logoUrl) {
+  const text = esc(initials(name));
+  if (!logoUrl) return `<span class="${cls}">${text}</span>`;
+  return `<span class="${cls} has-logo">${text}<img src="${esc(logoUrl)}" alt="" onerror="this.parentNode.classList.remove('has-logo');this.remove()" /></span>`;
+}
+
 // Which inbox contacts wear the story ring. Fixed, so the list does not
 // reshuffle between renders.
 const STORY = [0, 1, 3, 5, 6];
@@ -66,13 +75,13 @@ function staticPost(lang, p) {
   </article>`;
 }
 
-function demoPost({ lang, post, imageUrl, company, comments, hint }) {
+function demoPost({ lang, post, imageUrl, company, logoUrl, comments, hint }) {
   const media = imageUrl
     ? `<img class="ig-media" src="${esc(imageUrl)}" alt="" onerror="this.style.visibility='hidden'" />`
     : `<div class="ig-media ig-media--placeholder"><span>${esc(company || post.handle)}</span></div>`;
   const list = comments.map((c) => `<p class="ig-comment"><b>${esc(c.author)}</b> ${esc(c.text)}</p>`).join("");
   return `<article class="ig-post ig-post--demo" id="ig-demo-post">
-    <header class="ig-phdr"><span class="ig-avatar ig-avatar--ring">${esc(initials(company || post.handle))}</span>
+    <header class="ig-phdr">${bizAvatarHtml("ig-avatar ig-avatar--ring", company || post.handle, logoUrl)}
       <span class="ig-handle">${esc(post.handle)}<small>${esc(tr(lang, "sponsored"))}</small></span><span class="ig-more">•••</span></header>
     ${media}
     ${actions()}

@@ -455,6 +455,13 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   // Widget demo launcher colour, set by hand on the Demos page. Null = use the
   // colour detected from the screenshot (server/brandColor.ts), else black.
   widgetColor: text("widget_color"),
+  // The business's logo for the Instagram and Reputation demos, in place of the
+  // initials circle. Same uploads/site-shots/ convention as screenshotPath.
+  // logoSource is "site" (fetched from websiteUrl) or "upload" (Demos page);
+  // logoEnabled turns it off for every demo of this Client at once. Read live.
+  logoPath: text("logo_path"),
+  logoSource: text("logo_source"),
+  logoEnabled: boolean("logo_enabled").notNull().default(true),
   // Hand-written starter chips for this Client's demo widget, overriding the
   // ones derived from the term lists above. Same {label, text} shape as
   // Widget_Configs.quickReplies. Read live, not through the persona snapshot,

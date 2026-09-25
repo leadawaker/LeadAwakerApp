@@ -24,6 +24,7 @@ import { GenerationError } from "../demoGenerator/providers";
 import { mintVoiceDemoPass } from "../voice-demo-pass";
 import { getWebDemoConfig, getWebDemoNiche, updateWebDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
 import { captureSiteShot, shotExists, isPublicHttpUrl, normalizeUrl } from "../siteShot";
+import { refreshSiteLogo } from "../clientLogo";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { nicheVocabulary } from "@shared/schema";
@@ -362,11 +363,25 @@ export function registerDemoRoutes(app: Express): void {
         }
       }
 
+      // The logo for the Instagram and Reputation demos. Same rule as the
+      // screenshot: never fatal, the initials circle is the fallback.
+      let logo: string | null = null;
+      if (url && isPublicHttpUrl(url)) {
+        try {
+          const got = await refreshSiteLogo(nicheKey, url);
+          if (got.ok) logo = got.file;
+          else console.error("[demo-website] logo not found", got.error);
+        } catch (err) {
+          console.error("[demo-website] logo step failed", err);
+        }
+      }
+
       res.json({
         client: nicheKey,
         saved: saved.saved,
         provider_used: providerUsed,
         screenshot,
+        logo,
         company_name: ctx.company_name,
         niche_label: ctx.niche_label,
         kb_chars: (ctx.kb || "").length,

@@ -38,6 +38,7 @@ import { registerAutomationRoutes } from "./automation";
 import { registerWidgetRoutes } from "./widget";
 import { registerDemoSettingsRoutes } from "./demoSettings";
 import { registerDemoSocialRoutes } from "./demoSocial";
+import { registerDemoLogoRoutes } from "./demoLogos";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
@@ -87,6 +88,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerWidgetRoutes(app);
   registerDemoSettingsRoutes(app);
   registerDemoSocialRoutes(app);
+  registerDemoLogoRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)

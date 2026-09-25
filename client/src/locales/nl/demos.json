@@ -153,5 +153,20 @@
     "custom": "Eigen kleur",
     "detected": "Herkende kleur gebruiken",
     "default": "Terug naar zwart"
+  },
+  "clientLogo": {
+    "title": "Logo van de Client",
+    "hint": "Staat in plaats van de initialen in de Instagram- en Reputatie-demo's. Geldt voor alle demo's van deze Client.",
+    "preview": "Wat bezoekers zien",
+    "show": "Logo tonen",
+    "none": "Nog geen logo: de initialen worden getoond.",
+    "fromSite": "Van hun website gehaald.",
+    "fromUpload": "Handmatig geüpload.",
+    "fetch": "Ophalen van website",
+    "noWebsite": "Deze Client heeft geen website.",
+    "upload": "Logo uploaden",
+    "remove": "Verwijderen",
+    "tooLarge": "Die afbeelding is groter dan 3 MB.",
+    "unreadable": "Kon dat bestand niet lezen."
   }
 }

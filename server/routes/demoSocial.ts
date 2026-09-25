@@ -7,6 +7,7 @@ import { nicheVocabulary } from "@shared/schema";
 import { wrapAsync } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
 import { isTokenExpired, pickPostImage, renderSocialDemoHtml } from "../socialDemoPage";
+import { logoUrlFor } from "../clientLogo";
 import { getDemoClient, demoClientToEditable, demoClientToContext, clientLanguages } from "../demo-clients";
 import { clientSupportsLanguage } from "./demo";
 import { getClientSocialPost, saveClientSocialPost, startClientSocialImage, socialPostInput } from "../demoSocial/clientStore";
@@ -17,7 +18,7 @@ const LEADS_TABLE = '"p2mxx34fvbf3ll6"."Leads"';
 const INTERACTIONS_TABLE = '"p2mxx34fvbf3ll6"."Interactions"';
 const LANGS = new Set(["en", "nl", "pt"]);
 
-async function loadPersona(token: string) {
+export async function loadPersona(token: string) {
   // Newest first: the browser lead is cloned from the wa-demo one after it,
   // so the newest row is the one the engine would still match, or neither is.
   const { rows } = await pool.query(
@@ -88,14 +89,23 @@ export function registerDemoSocialRoutes(app: Express) {
     // the fallback for a link minted while the first image was still being made.
     let socialImage: string | null = String(persona.social_image_path || "") || null;
     let screenshot: string | null = String(persona.screenshot || "") || null;
-    if (clientKey && (!socialImage || !screenshot)) {
+    // The logo is the opposite: read live, so the Demos-table switch reaches
+    // every link of this Client, including ones already sent.
+    let logoUrl: string | null = null;
+    if (clientKey) {
       const [client] = await db
-        .select({ socialImagePath: nicheVocabulary.socialImagePath, screenshotPath: nicheVocabulary.screenshotPath })
+        .select({
+          socialImagePath: nicheVocabulary.socialImagePath,
+          screenshotPath: nicheVocabulary.screenshotPath,
+          logoPath: nicheVocabulary.logoPath,
+          logoEnabled: nicheVocabulary.logoEnabled,
+        })
         .from(nicheVocabulary)
         .where(eq(nicheVocabulary.niche, clientKey))
         .limit(1);
       socialImage = socialImage || client?.socialImagePath || null;
       screenshot = screenshot || client?.screenshotPath || null;
+      logoUrl = logoUrlFor(client);
     }
 
     res.send(renderSocialDemoHtml({
@@ -106,6 +116,7 @@ export function registerDemoSocialRoutes(app: Express) {
       agentName: String(persona.agent_name || ""),
       post: persona.social_post ?? null,
       imageUrl: pickPostImage({ socialImage, screenshot }),
+      logoUrl,
     }));
   }));
 

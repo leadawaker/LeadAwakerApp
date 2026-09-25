@@ -153,5 +153,20 @@
     "custom": "Custom colour",
     "detected": "Use detected colour",
     "default": "Back to black"
+  },
+  "clientLogo": {
+    "title": "Client logo",
+    "hint": "Shown instead of the initials in the Instagram and Reputation demos. Applies to every demo of this Client.",
+    "preview": "What visitors see",
+    "show": "Show logo",
+    "none": "No logo yet: the initials show.",
+    "fromSite": "Taken from their website.",
+    "fromUpload": "Uploaded by hand.",
+    "fetch": "Fetch from website",
+    "noWebsite": "This Client has no website on file.",
+    "upload": "Upload logo",
+    "remove": "Remove",
+    "tooLarge": "That image is over 3 MB.",
+    "unreadable": "Could not read that file."
   }
 }

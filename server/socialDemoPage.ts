@@ -1,3 +1,5 @@
+import { statSync } from "fs";
+import path from "path";
 import type { PublicSocialPost } from "./demoSocial/types";
 
 export interface SocialBoot {
@@ -10,6 +12,8 @@ export interface SocialBoot {
   agentName: string;
   post: PublicSocialPost | null;
   imageUrl: string;
+  /** The Client's logo (read live, may be switched off), else null: initials circle. */
+  logoUrl?: string | null;
 }
 
 // The engine's token lifetime (TOKEN_TTL_DAYS in automations
@@ -33,9 +37,9 @@ export function pickPostImage(opts: { socialImage: string | null | undefined; sc
   return "";
 }
 
-// Cloudflare caches static paths for hours: version the whole module graph,
-// including the reused /premium/demo modules the page imports.
-const ASSET_V = Date.now().toString(36);
+// Cloudflare caches static paths for hours (it overrides the no-cache header
+// with a 4h browser TTL): version the whole module graph, including the
+// reused /premium/demo modules the page imports, the entry script and the CSS.
 const MODULES = [
   "/social-demo-assets/main.js",
   "/social-demo-assets/feed.js",
@@ -53,9 +57,32 @@ const MODULES = [
   "/premium/demo/icons.js",
 ];
 
-function importMap(): string {
+const STYLES = ["/premium/demo/demo.css", "/social-demo-assets/social.css"];
+
+/** URL path -> file on disk, for the modification-time version below. */
+function diskPath(url: string): string {
+  return url.startsWith("/social-demo-assets/")
+    ? path.resolve("client/public/social-demo", url.slice("/social-demo-assets/".length))
+    : path.resolve("client/public", url.slice(1));
+}
+
+// Derived from the files' modification times rather than the process start, so
+// editing a static file alone (no server restart) still busts every cache.
+// Re-stat at most every 5s: a page view should not cost 16 stat calls.
+let versionCache = { at: 0, v: "" };
+export function assetVersion(now = Date.now()): string {
+  if (versionCache.v && now - versionCache.at < 5000) return versionCache.v;
+  let newest = 0;
+  for (const f of [...MODULES, ...STYLES]) {
+    try { newest = Math.max(newest, statSync(diskPath(f)).mtimeMs); } catch { /* missing: ignore */ }
+  }
+  versionCache = { at: now, v: Math.floor(newest || now).toString(36) };
+  return versionCache.v;
+}
+
+function importMap(v: string): string {
   const imports: Record<string, string> = {};
-  for (const m of MODULES) imports[m] = `${m}?v=${ASSET_V}`;
+  for (const m of MODULES) imports[m] = `${m}?v=${v}`;
   return JSON.stringify({ imports });
 }
 
@@ -65,6 +92,7 @@ function esc(s: string): string {
 
 export function renderSocialDemoHtml(boot: SocialBoot): string {
   const bootJson = JSON.stringify(boot).replace(/</g, "\\u003c");
+  const v = assetVersion();
   return `<!doctype html>
 <html lang="${esc(boot.language)}">
 <head>
@@ -75,14 +103,14 @@ export function renderSocialDemoHtml(boot: SocialBoot): string {
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Grand+Hotel&display=swap" rel="stylesheet" />
-<link rel="stylesheet" href="/premium/demo/demo.css?v=${ASSET_V}" />
-<link rel="stylesheet" href="/social-demo-assets/social.css?v=${ASSET_V}" />
-<script type="importmap">${importMap()}</script>
+<link rel="stylesheet" href="/premium/demo/demo.css?v=${v}" />
+<link rel="stylesheet" href="/social-demo-assets/social.css?v=${v}" />
+<script type="importmap">${importMap(v)}</script>
 <script>window.__SOCIAL__ = ${bootJson};</script>
 </head>
 <body>
 <div id="root"></div>
-<script type="module" src="/social-demo-assets/main.js"></script>
+<script type="module" src="/social-demo-assets/main.js?v=${v}"></script>
 </body>
 </html>`;
 }

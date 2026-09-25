@@ -1,7 +1,7 @@
 // client/public/social-demo/social.test.mjs
 import { matchesKeyword } from "./keyword.js";
 import { COPY, STATIC_POSTS, INBOX } from "./copy.js";
-import { feedHtml, expiredHtml, esc } from "./feed.js";
+import { feedHtml, expiredHtml, esc, initials, bizAvatarHtml } from "./feed.js";
 
 let failed = 0;
 function ok(label, cond) { console.log((cond ? "  ok  " : "  FAIL ") + label); if (!cond) failed++; }
@@ -42,6 +42,16 @@ for (const l of ["en", "nl", "pt"]) {
   ok(`${l} expired page uses its own copy`, x.includes(esc(COPY[l].expiredTitle)) && x.includes(esc(COPY[l].expiredBody)));
   ok(`${l} expired page has no comment box`, !x.includes("ig-comment"));
 }
+
+ok("initials: two words", initials("Van Dijk Roofing") === "VD");
+ok("initials: legal suffix skipped", initials("Acme Daken B.V.") === "AD");
+ok("initials: CamelCase one word", initials("SolarMax") === "SM");
+ok("initials: plain one word", initials("hayai") === "H");
+ok("biz avatar without a logo is initials only", !bizAvatarHtml("a", "Van Dijk", null).includes("<img"));
+const withLogo = bizAvatarHtml("a", "Van Dijk", "/api/site-shot/0123456789abcdef.webp");
+ok("biz avatar with a logo keeps initials underneath", withLogo.includes("has-logo") && withLogo.includes("VD") && withLogo.includes('src="/api/site-shot/0123456789abcdef.webp"'));
+ok("feed post uses the logo when given", feedHtml({ lang: "en", post, imageUrl: "", company: "Dakwerk", logoUrl: "/api/site-shot/0123456789abcdef.webp", comments: [], hint: false }).includes("has-logo"));
+ok("feed has the contacts list", feedHtml({ lang: "en", post, imageUrl: "", company: "Dakwerk", comments: [], hint: false }).includes("ig-contacts"));
 
 if (failed) { console.log(`\n${failed} failed`); process.exit(1); }
 console.log("\nall passed");

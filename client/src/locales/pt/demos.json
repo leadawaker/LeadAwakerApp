@@ -153,5 +153,20 @@
     "custom": "Cor personalizada",
     "detected": "Usar cor detectada",
     "default": "Voltar ao preto"
+  },
+  "clientLogo": {
+    "title": "Logo do Cliente",
+    "hint": "Aparece no lugar das iniciais nas demos de Instagram e Reputação. Vale para todas as demos deste Cliente.",
+    "preview": "O que os visitantes veem",
+    "show": "Mostrar logo",
+    "none": "Ainda sem logo: as iniciais aparecem.",
+    "fromSite": "Pego do site deles.",
+    "fromUpload": "Enviado manualmente.",
+    "fetch": "Buscar no site",
+    "noWebsite": "Este Cliente não tem site cadastrado.",
+    "upload": "Enviar logo",
+    "remove": "Remover",
+    "tooLarge": "Essa imagem passa de 3 MB.",
+    "unreadable": "Não foi possível ler esse arquivo."
   }
 }

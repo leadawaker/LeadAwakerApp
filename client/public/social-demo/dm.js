@@ -1,11 +1,11 @@
 // client/public/social-demo/dm.js
 import { INBOX, tr } from "./copy.js";
-import { esc, svg, initials } from "./feed.js";
+import { esc, svg, bizAvatarHtml } from "./feed.js";
 import { messagesHtml } from "/premium/demo/chat.js";
 import { trackerHtml, isDnc } from "/premium/demo/tracker.js";
 import { railInlineHtml } from "/premium/demo/recap.js";
 
-function inboxHtml({ lang, company, handle, lastText }) {
+function inboxHtml({ lang, company, handle, logoUrl, lastText }) {
   const rows = (INBOX[lang] || INBOX.en).map((r) => `<li class="ig-row">
       <img class="ig-row-av" src="${esc(r.avatar)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'" />
       <span class="ig-row-txt"><b class="${r.unread ? "is-unread" : ""}">${esc(r.name)}</b>
@@ -17,7 +17,7 @@ function inboxHtml({ lang, company, handle, lastText }) {
     <div class="ig-tabs"><span class="is-on">${esc(tr(lang, "primary"))}</span><span>${esc(tr(lang, "general"))}</span><span class="ig-req">${esc(tr(lang, "requests"))}</span></div>
     <ul>
       <li class="ig-row is-active" id="ig-open-thread">
-        <span class="ig-row-av ig-avatar--ring">${esc(initials(company || handle))}</span>
+        ${bizAvatarHtml("ig-row-av ig-avatar--ring", company || handle, logoUrl)}
         <span class="ig-row-txt"><b>${esc(company || handle)}</b><small>${esc(lastText || "")}</small></span>
       </li>
       ${rows}
@@ -25,15 +25,15 @@ function inboxHtml({ lang, company, handle, lastText }) {
   </aside>`;
 }
 
-function threadHtml({ lang, company, handle, state, pending, recap, admin, wide }) {
+function threadHtml({ lang, company, handle, logoUrl, state, pending, recap, admin, wide }) {
   // No quote card here: the lead just commented on a post, so there is no
   // earlier quote to show. The end-of-demo recap still renders.
   const railOpts = { done: state.done, recap, quote: null };
-  const avatarHtml = `<div class="av ig-av-biz">${esc(initials(company || handle))}</div>`;
+  const avatarHtml = bizAvatarHtml("av ig-av-biz", company || handle, logoUrl).replace(/^<span/, "<div").replace(/<\/span>$/, "</div>");
   return `<section class="ig-thread">
     <header class="ig-thread-hdr">
       ${wide ? "" : `<button class="ig-back" id="ig-back" aria-label="${esc(tr(lang, "back"))}">‹</button>`}
-      <span class="ig-avatar ig-avatar--ring">${esc(initials(company || handle))}</span>
+      <button type="button" class="ig-replay" id="ig-replay" aria-label="${esc(tr(lang, "replayTitle"))}">${bizAvatarHtml("ig-avatar ig-avatar--ring", company || handle, logoUrl)}</button>
       <span class="ig-thread-name"><b>${esc(company || handle)}</b><small>@${esc(handle)} · ${esc(tr(lang, "activeNow"))}</small></span>
       ${admin ? `<button class="admin-toggle" id="admin-toggle" aria-label="Presenter settings" aria-haspopup="dialog" aria-expanded="false">•••</button>` : ""}
     </header>

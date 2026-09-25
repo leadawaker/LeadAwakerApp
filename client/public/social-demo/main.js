@@ -80,14 +80,45 @@ admin.init({
   // transport.restart() resolves false on a skip (already busy, no state
   // yet) or a failed request; only a true return means a fresh conversation
   // actually landed, and only then does the page belong back on the feed.
-  restart: (scenario) => transport.restart(scenario).then((ok) => {
+  restart: (scenario) => restartToFeed(scenario),
+});
+
+function restartToFeed(scenario) {
+  return transport.restart(scenario).then((ok) => {
     if (!ok) return false;
     view = "feed"; comments = []; hint = false; recap = null; celebrated = false; lastSig = "";
     render();
     window.scrollTo(0, 0);
     return true;
-  }),
-});
+  });
+}
+
+/** Tapping the business avatar in the thread: confirm, then start over on the feed. */
+function confirmReplay() {
+  if (document.getElementById("ig-replay-sheet")) return;
+  const sheet = document.createElement("div");
+  sheet.id = "ig-replay-sheet";
+  sheet.className = "ig-sheet";
+  sheet.innerHTML = `<div class="ig-sheet-card" role="dialog" aria-modal="true" aria-labelledby="ig-sheet-title">
+      <h2 id="ig-sheet-title">${tr(lang, "replayTitle")}</h2>
+      <p>${tr(lang, "replayBody")}</p>
+      <button type="button" class="ig-sheet-yes">${tr(lang, "replayYes")}</button>
+      <button type="button" class="ig-sheet-no">${tr(lang, "replayNo")}</button>
+    </div>`;
+  const close = () => sheet.remove();
+  sheet.addEventListener("click", (e) => { if (e.target === sheet) close(); });
+  sheet.querySelector(".ig-sheet-no").addEventListener("click", close);
+  const yes = sheet.querySelector(".ig-sheet-yes");
+  yes.addEventListener("click", () => {
+    yes.disabled = true;
+    restartToFeed(null).then((ok) => {
+      close();
+      if (!ok) dmErrorToast();
+    });
+  });
+  document.body.appendChild(sheet);
+  yes.focus();
+}
 
 function render(opts) {
   const grew = !!(opts && opts.grew);
@@ -96,7 +127,7 @@ function render(opts) {
   document.body.classList.toggle("ig-scrolls", view === "feed" || view === "expired" || !state);
   if (view === "expired") { root.innerHTML = expiredHtml(lang); return; }
   if (view === "feed" || !state) {
-    root.innerHTML = feedHtml({ lang, post, imageUrl: BOOT.imageUrl, company: BOOT.company, comments, hint });
+    root.innerHTML = feedHtml({ lang, post, imageUrl: BOOT.imageUrl, company: BOOT.company, logoUrl: BOOT.logoUrl || null, comments, hint });
     bindFeed();
     return;
   }
@@ -106,7 +137,7 @@ function render(opts) {
   const hadFocus = !!(document.activeElement && document.activeElement.id === "msg");
   const prevStream = document.getElementById("stream");
   const atBottom = !prevStream || (prevStream.scrollHeight - prevStream.scrollTop - prevStream.clientHeight < 48);
-  root.innerHTML = dmHtml({ lang, company: BOOT.company, handle: post ? post.handle : "", state, pending, recap, admin: !!state.admin, wide: wide(), showList });
+  root.innerHTML = dmHtml({ lang, company: BOOT.company, logoUrl: BOOT.logoUrl || null, handle: post ? post.handle : "", state, pending, recap, admin: !!state.admin, wide: wide(), showList });
   bindDm({ restoreFocus: hadFocus, snap: grew || atBottom });
 }
 
@@ -188,6 +219,8 @@ function bindDm(opts) {
     draft = "";
     transport.send(text);
   });
+  const replay = document.getElementById("ig-replay");
+  if (replay) replay.addEventListener("click", confirmReplay);
   const back = document.getElementById("ig-back");
   if (back) back.addEventListener("click", () => { showList = true; render(); });
   const open = document.getElementById("ig-open-thread");
