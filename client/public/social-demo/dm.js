@@ -7,7 +7,7 @@ import { railInlineHtml } from "/premium/demo/recap.js";
 
 function inboxHtml({ lang, company, handle, lastText }) {
   const rows = (INBOX[lang] || INBOX.en).map((r) => `<li class="ig-row">
-      <img class="ig-row-av" src="${esc(r.avatar)}" alt="" loading="lazy" />
+      <img class="ig-row-av" src="${esc(r.avatar)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'" />
       <span class="ig-row-txt"><b class="${r.unread ? "is-unread" : ""}">${esc(r.name)}</b>
         <small>${esc(r.snippet)} · ${esc(r.time)}</small></span>
       ${r.unread ? '<span class="ig-dot"></span>' : ""}
@@ -37,6 +37,7 @@ function threadHtml({ lang, company, handle, state, pending, recap, admin, wide 
     <div class="ig-tracker">${trackerHtml(state.stage, isDnc(state))}</div>
     <div class="ig-stream stream" id="stream">
       <div class="ig-day">${esc(tr(lang, "today"))}</div>
+      ${!state.done ? railInlineHtml(railOpts, true) : ""}
       ${messagesHtml(state, pending, {}, {})}
       ${state.done ? railInlineHtml(railOpts) : ""}
     </div>

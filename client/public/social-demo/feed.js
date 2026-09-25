@@ -24,7 +24,7 @@ function staticPost(lang, p) {
   return `<article class="ig-post">
     <header class="ig-phdr"><span class="ig-avatar ig-avatar--letter">${esc(p.avatarLetter)}</span>
       <span class="ig-handle">${esc(p.handle)}</span><span class="ig-more">•••</span></header>
-    <img class="ig-media" src="${esc(p.image)}" alt="" loading="lazy" />
+    <img class="ig-media" src="${esc(p.image)}" alt="" loading="lazy" onerror="this.style.visibility='hidden'" />
     ${actions()}
     <div class="ig-likes">${esc(tr(lang, "likes", { n: p.likes.toLocaleString(lang) }))}</div>
     <p class="ig-caption"><b>${esc(p.handle)}</b> ${esc(p.caption)}</p>
@@ -34,7 +34,7 @@ function staticPost(lang, p) {
 
 function demoPost({ lang, post, imageUrl, company, comments, hint }) {
   const media = imageUrl
-    ? `<img class="ig-media" src="${esc(imageUrl)}" alt="" />`
+    ? `<img class="ig-media" src="${esc(imageUrl)}" alt="" onerror="this.style.visibility='hidden'" />`
     : `<div class="ig-media ig-media--placeholder"><span>${esc(company || post.handle)}</span></div>`;
   const list = comments.map((c) => `<p class="ig-comment"><b>${esc(c.author)}</b> ${esc(c.text)}</p>`).join("");
   return `<article class="ig-post ig-post--demo" id="ig-demo-post">

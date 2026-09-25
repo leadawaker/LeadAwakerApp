@@ -19,6 +19,8 @@ export const COPY = {
     back: "Back",
     you: "you",
     demoBy: "Demo by Lead Awaker",
+    loading: "Loading...",
+    dmOpenError: "Couldn't open the DM. Tap to try again.",
   },
   nl: {
     scrollHint: "Scroll naar beneden om de demo te starten",
@@ -39,6 +41,8 @@ export const COPY = {
     back: "Terug",
     you: "jij",
     demoBy: "Demo door Lead Awaker",
+    loading: "Laden...",
+    dmOpenError: "Kon de DM niet openen. Tik om het opnieuw te proberen.",
   },
   pt: {
     scrollHint: "Role para baixo para começar a demo",
@@ -59,6 +63,8 @@ export const COPY = {
     back: "Voltar",
     you: "você",
     demoBy: "Demo por Lead Awaker",
+    loading: "Carregando...",
+    dmOpenError: "Não foi possível abrir a DM. Toque para tentar novamente.",
   },
 };
 

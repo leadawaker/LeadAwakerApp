@@ -95,8 +95,12 @@ export function createTransport(opts) {
   // the real thing. main.js's own doRestart trusts the /restart response
   // directly, but that is not a contract this module can rely on generically,
   // so the extra GET stays: cheap, and correct either way.
+  // Resolves true only once a fresh conversation is really on screen, false
+  // on a skip (already busy, or no state to restart from) or a failure. A
+  // caller that flips its own view to "feed" on any resolution, success or
+  // not, would show a blank feed on a restart that never happened.
   function restart(scenario) {
-    if (busy || !state) return Promise.resolve();
+    if (busy || !state) return Promise.resolve(false);
     busy = true;
     pending = false;
     recapLoaded = false;
@@ -105,8 +109,8 @@ export function createTransport(opts) {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ scenario: scenario || null }),
-    }).then(() => api("")).then((s) => { busy = false; accept(s); schedule(nextDelay()); })
-      .catch((err) => { busy = false; opts.onError(err); });
+    }).then(() => api("")).then((s) => { busy = false; accept(s); schedule(nextDelay()); return true; })
+      .catch((err) => { busy = false; opts.onError(err); return false; });
   }
 
   return {

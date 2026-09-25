@@ -25,7 +25,7 @@ for (const l of ["nl", "pt"]) {
   ok(`${l} eight inbox rows`, INBOX[l].length === 8);
 }
 ok("pt is Brazilian (no 'equipa'/'contacto')", !/equipa|contacto|pequeno-almoço/.test(JSON.stringify([COPY.pt, STATIC_POSTS.pt, INBOX.pt])));
-ok("no em dashes in copy", !/—/.test(JSON.stringify([COPY, STATIC_POSTS, INBOX])));
+ok("no em dashes in copy", !/\u2014/.test(JSON.stringify([COPY, STATIC_POSTS, INBOX])));
 
 console.log("feed");
 const post = { handle: "dakwerk", caption: "<img src=x onerror=alert(1)>", keyword: "DAK", cta_line: "Reageer DAK", offer: "o", likes: 412 };

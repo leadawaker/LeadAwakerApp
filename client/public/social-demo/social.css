@@ -42,6 +42,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 .ig-demo-by { text-align: center; color: var(--ig-muted); font-size: 11px; padding: 16px 0; }
 .ig-toast { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 20; padding: 12px 16px; border: 0; border-radius: 14px; background: #fff; color: var(--ig-text); font-weight: 600; box-shadow: 0 8px 30px rgba(0, 0, 0, .18); animation: ig-drop .35s ease-out; max-width: calc(100vw - 32px); }
 @keyframes ig-drop { from { transform: translate(-50%, -30px); opacity: 0; } }
+.ig-toast--error { border: 1px solid #f3b9c1; color: #ed4956; }
 
 .ig-dm { display: flex; height: 100dvh; min-height: 0; overflow: hidden; }
 .ig-inbox { width: 100%; overflow-y: auto; min-height: 0; border-right: 1px solid var(--ig-line); }
@@ -53,7 +54,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 .ig-inbox ul { list-style: none; margin: 0; padding: 0; }
 .ig-row { display: flex; align-items: center; gap: 12px; padding: 8px 20px; }
 .ig-row.is-active { background: var(--ig-soft); cursor: pointer; }
-.ig-row-av { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; }
+.ig-row-av { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; flex: none; display: inline-flex; align-items: center; justify-content: center; font-weight: 700; background: var(--ig-soft); }
 .ig-row-txt { display: flex; flex-direction: column; min-width: 0; font-size: 14px; }
 .ig-row-txt b { font-weight: 400; }
 .ig-row-txt b.is-unread { font-weight: 600; }
@@ -89,3 +90,15 @@ body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helve
 .ig-dm .ts { font-size: 11px; color: var(--ig-muted); margin-top: 3px; padding: 0 4px; }
 .ig-dm .row-note { text-align: center; color: var(--ig-muted); font-size: 12px; margin: 10px 0; }
 .ig-dm .vplayer, .ig-dm .vtranscript { color: inherit; }
+
+/* Reused recap/quote card (demo.css's .recap-inline): demo.css only shows it
+   below its own 1080px breakpoint because desktop gets the separate `.recap`
+   aside there. This page has no aside, so the inline card is the only place
+   the quote/recap ever renders and must stay visible at every width. */
+.ig-dm .recap-inline { display: block; margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--ig-line); }
+.ig-dm .recap-inline.is-lead { margin-top: 0; margin-bottom: 12px; padding-top: 0; padding-bottom: 16px; border-top: none; border-bottom: 1px solid var(--ig-line); }
+
+/* First paint of the DM view when the page loads straight into it
+   (BOOT.started): a blank #root until the first GET resolves reads as
+   broken, so a light placeholder holds the space instead. */
+.ig-dm-loading { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 100dvh; color: var(--ig-muted); font-size: 14px; }

@@ -57,11 +57,30 @@ console.log("transport");
   await tr.send("   ");
   ok("blank send is ignored", srv.calls.filter((c) => c.url.endsWith("/message")).length === 1);
 
-  await tr.restart(null);
+  const restarted = await tr.restart(null);
+  ok("restart resolves true on success", restarted === true);
   ok("restart replaces state", tr.getState().messages[0].text === "Hi again");
 
   srv.setDone(); await tm.flush();
   ok("done schedules idle poll", tm.delays().includes(15000));
+}
+{
+  const tm = manualTimers();
+  const tr = createTransport({ token: "nostate", fetchImpl: async () => new Response("{}", { status: 200 }), ...tm, onState() {}, onRecap() {}, onError() {} });
+  const skipped = await tr.restart(null);
+  ok("restart resolves false with no state loaded", skipped === false);
+}
+{
+  const tm = manualTimers(); let errored = false;
+  const fetchImpl = async (url) => {
+    if (url.endsWith("/restart")) return new Response("{}", { status: 500 });
+    return new Response(JSON.stringify({ messages: [{ role: "ai", text: "Hi" }], stage: "new", done: false }), { status: 200 });
+  };
+  const tr = createTransport({ token: "fail1", fetchImpl, ...tm, onState() {}, onRecap() {}, onError: () => { errored = true; } });
+  await tr.load();
+  const failed = await tr.restart(null);
+  ok("restart resolves false on failure", failed === false);
+  ok("restart failure reaches onError", errored === true);
 }
 {
   let recapCalls = 0;
