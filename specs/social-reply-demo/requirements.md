@@ -1,6 +1,6 @@
 # Social Reply Demo (Instagram comment to DM): Requirements
 
-**Status:** design approved in chat 2026-09-23, spec written, not built.
+**Status:** built 2026-09-25, see action-required.md.
 **Owner:** Gabriel. **Related:** [specs/speed-to-lead](../speed-to-lead/), [specs/website-widget](../website-widget/), [specs/demo-surface-split](../demo-surface-split/), `project_speed_to_lead_demo_and_site_scrape_2026_09_01`.
 
 ## Why
