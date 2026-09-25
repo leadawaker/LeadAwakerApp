@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { normalizeKeyword, validateSocialPost, coerceSocialPost } from "./validate";
+import { normalizeKeyword, validateSocialPost, coerceSocialPost, toHandle } from "./validate";
 
 const good = {
   handle: "dakwerk.utrecht",
@@ -35,6 +35,17 @@ test("dm_opener must keep the agent and company tokens", () => {
   assert.match(validateSocialPost({ ...good, dm_opener: "Hoi, met Sarah van Dakwerk" }) ?? "", /dm_opener/);
   // The clause already carries the company; a company token before it doubled it.
   assert.match(validateSocialPost({ ...good, dm_opener: "Met {agent_name} van {company_name}{disclosure_clause}!" }) ?? "", /dm_opener/);
+});
+
+test("dm_opener rejects {company_name} anywhere, not only before the clause", () => {
+  assert.match(validateSocialPost({ ...good, dm_opener: "Hoi! Met {agent_name}{disclosure_clause}. Welkom bij {company_name}!" }) ?? "", /company_name/);
+  assert.match(validateSocialPost({ ...good, dm_opener: "{company_name}: met {agent_name}{disclosure_clause}" }) ?? "", /company_name/);
+});
+
+test("toHandle folds accents and keeps [a-z0-9._] up to 30", () => {
+  assert.equal(toHandle("Telhados São João"), "telhadossaojoao");
+  assert.equal(toHandle("Acme & Sons Roofing Co. Ltd International"), "acmesonsroofingco.ltdinternati");
+  assert.equal(toHandle("Acme & Sons Roofing Co. Ltd International").length, 30);
 });
 
 test("coerce clamps likes and normalizes keyword and handle", () => {

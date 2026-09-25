@@ -22,13 +22,13 @@ import {
 } from "../demo-session";
 import { GenerationError } from "../demoGenerator/providers";
 import { mintVoiceDemoPass } from "../voice-demo-pass";
-import { getWebDemoConfig, updateWebDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
+import { getWebDemoConfig, getWebDemoNiche, updateWebDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
 import { captureSiteShot, shotExists, isPublicHttpUrl, normalizeUrl } from "../siteShot";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { nicheVocabulary } from "@shared/schema";
-import { ensureClientSocialPost } from "../demoSocial/clientStore";
-import { socialContextFields } from "../demoSocial/context";
+import { socialSnapshotFields, isSocialBlob, clientCompanyNames, rehandleSnapshot } from "../demoSocial/snapshot";
+import { getClientSocialPost } from "../demoSocial/clientStore";
 import type { SocialLang } from "../demoSocial/types";
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
@@ -636,6 +636,18 @@ export function registerDemoRoutes(app: Express): void {
             message: `"${clientNiche}" has no saved persona yet. Generate one for this niche instead.`,
           });
         }
+        // Before the per-prospect overrides: the post may be generated and
+        // SAVED to the shared Client row, so it must be written from the
+        // Client's own company, never this prospect's. The override reaches
+        // this lead's copy only (as its handle), inside socialSnapshotFields.
+        if (service === "socials") {
+          try {
+            Object.assign(ctx, await socialSnapshotFields(row, language as SocialLang, { ...ctx }, companyName));
+          } catch (err) {
+            console.error("[social-demo] post generation failed", row.niche, (err as Error).message);
+            return res.status(502).json({ message: "Could not write the Instagram post. Try again." });
+          }
+        }
         if (companyName) ctx.company_name = companyName;
         if (aiDisclosure) ctx.ai_disclosure = aiDisclosure;
         // Which Client this link was minted from, so the presenter panel's
@@ -643,15 +655,6 @@ export function registerDemoRoutes(app: Express): void {
         // "Campaign default". Inert to the engine, which overlays an explicit
         // key list and ignores anything not on it.
         (ctx as Record<string, unknown>).client_niche = row.niche;
-        if (service === "socials") {
-          try {
-            const post = await ensureClientSocialPost(row, language as SocialLang, ctx);
-            Object.assign(ctx, socialContextFields(post));
-          } catch (err) {
-            console.error("[social-demo] post generation failed", row.niche, (err as Error).message);
-            return res.status(502).json({ message: "Could not write the Instagram post. Try again." });
-          }
-        }
         demoNiche = JSON.stringify(ctx);
         reused = row.niche;
       } else if (niche) {
@@ -958,6 +961,10 @@ export function registerDemoRoutes(app: Express): void {
       // any patch (a Client switch, a language change) that didn't happen to
       // repeat the scenario.
       const scenario = (scenarioInput ?? current.scenario) as DemoScenario;
+      // The Instagram demo's post, opener and source live in the blob, not in
+      // the Client's context, so a rebuild must re-add them (see below).
+      const currentBlob = await getWebDemoNiche(token);
+      const social = isSocialBlob(currentBlob);
 
       let replaceNiche: Record<string, unknown> | undefined;
       // Which saved Client to (re)build the persona from: an explicit switch,
@@ -979,15 +986,20 @@ export function registerDemoRoutes(app: Express): void {
           // Only a hard failure for an explicit switch; a stale or renamed
           // current.clientNiche on a language-only patch must not block a
           // language change the admin never asked to combine with a Client swap.
-          if (clientNiche) return res.status(404).json({ message: `No saved Client named "${clientNiche}".` });
+          // Except on the Instagram demo, where the post would stay in the old
+          // language under a lead that now reads in the new one.
+          if (clientNiche || social) return res.status(404).json({ message: `No saved Client named "${targetClientNiche}".` });
         } else if (!clientSupportsLanguage(row, lang)) {
-          if (clientNiche) {
+          // The Instagram demo fails a language-only patch too: its post and
+          // opener are per language, so "change the language, keep the
+          // persona" would leave a post the prospect cannot read.
+          if (clientNiche || social) {
             // Same two checks the mint path runs (see /api/demo/create-link).
             // Their messages name the fix, so they are surfaced verbatim
             // rather than flattened into a generic failure.
             const have = clientLanguages(row).map((l) => l.toUpperCase()).join(", ");
             return res.status(409).json({
-              message: `"${clientNiche}" has no ${lang.toUpperCase()} version — it only exists in ${have}. Add the ${lang.toUpperCase()} opener fields on the Clients tab, or switch this demo to ${have}.`,
+              message: `"${row.niche}" has no ${lang.toUpperCase()} version. It only exists in ${have}. Add the ${lang.toUpperCase()} opener fields on the Clients tab, or switch this demo to ${have}.`,
             });
           }
           // Language-only patch and the Client just doesn't have this
@@ -1007,13 +1019,45 @@ export function registerDemoRoutes(app: Express): void {
             // override typed into the panel earlier survives it. An explicit
             // clientNiche switch intentionally does NOT carry this over — a
             // different Client is a different business.
-            if (!clientNiche && current.companyName) ctx.company_name = current.companyName;
+            const carried = !clientNiche && current.companyName ? current.companyName : undefined;
+            if (social) {
+              // Exactly what create-link does, from the Client's own context
+              // (so a generated post never saves a prospect's company to the
+              // shared row). The company this lead ends up with decides the
+              // handle: an explicit one in this same patch wins, as it does in
+              // updateWebDemoConfig.
+              try {
+                const finalCompany = companyName !== undefined ? companyName : carried;
+                Object.assign(ctx, await socialSnapshotFields(row, lang as SocialLang, { ...ctx }, finalCompany));
+              } catch (err) {
+                console.error("[social-demo] post generation failed", row.niche, (err as Error).message);
+                return res.status(502).json({ message: "Could not write the Instagram post. Try again." });
+              }
+            }
+            if (carried) ctx.company_name = carried;
+            // Mint-time bookkeeping (which service, which prospect) is not
+            // part of the Client; keep it, or the next switch no longer knows
+            // this is an Instagram demo.
+            for (const k of ["service", "prospect_group"]) {
+              if (currentBlob[k] !== undefined) (ctx as Record<string, unknown>)[k] = currentBlob[k];
+            }
             replaceNiche = ctx as Record<string, unknown>;
           } else if (clientNiche) {
             return res.status(409).json({
               message: `"${clientNiche}" has no saved persona yet. Generate one for this niche instead.`,
             });
           }
+        }
+      }
+
+      // A company edit on the Instagram demo re-points the post's handle, so
+      // the feed never shows the Client's handle over the prospect's company.
+      if (!replaceNiche && social && companyName !== undefined && current.clientNiche) {
+        const row = await getDemoClient(current.clientNiche);
+        if (row) {
+          const lang = (language || current.language || "en") as SocialLang;
+          const clientHandle = getClientSocialPost(row, lang)?.handle ?? "";
+          replaceNiche = rehandleSnapshot(currentBlob, companyName, clientHandle, clientCompanyNames(row)) ?? undefined;
         }
       }
 

@@ -113,6 +113,13 @@ export async function getWebDemoConfig(token: string): Promise<DemoLeadConfig | 
   };
 }
 
+/** The browser demo's raw persona blob, for callers that must know more than
+ *  the panel's config (the Instagram demo's social keys). {} when unopened. */
+export async function getWebDemoNiche(token: string): Promise<Record<string, unknown>> {
+  const lead = await findWebDemoLead(token);
+  return parseDemoNiche(lead?.demoNiche);
+}
+
 /**
  * Apply the presenter panel's edits to the browser demo's lead.
  *

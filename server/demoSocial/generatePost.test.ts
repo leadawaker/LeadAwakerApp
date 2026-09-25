@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { buildSocialPostPrompt } from "./generatePost";
+import { buildSocialPostPrompt, openerNamesBusiness } from "./generatePost";
 
 const input = {
   language: "pt" as const,
@@ -30,4 +30,14 @@ test("image prompt is always requested in English with no text", () => {
   const { system } = buildSocialPostPrompt(input);
   assert.match(system, /image_prompt[^\n]*English/);
   assert.match(system, /no text/i);
+});
+
+test("prompt tells the model never to name the business in the opener", () => {
+  const { system } = buildSocialPostPrompt(input);
+  assert.match(system, /Never name the business yourself/);
+});
+
+test("an opener that spells out the company is rejected", () => {
+  assert.match(openerNamesBusiness({ dm_opener: "Oi, aqui é {agent_name}{disclosure_clause} da Telhados Silva" }, "Telhados Silva") ?? "", /name the business/);
+  assert.equal(openerNamesBusiness({ dm_opener: "Oi, aqui é {agent_name}{disclosure_clause}!" }, "Telhados Silva"), null);
 });

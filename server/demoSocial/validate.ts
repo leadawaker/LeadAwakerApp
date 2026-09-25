@@ -20,19 +20,31 @@ export function validateSocialPost(data: unknown): string | null {
   if (!/^[A-Za-zÀ-ÿ]{3,10}$/.test(kw) || normalizeKeyword(kw).length < 3) return "keyword must be 3-10 letters";
   if (!normalizeKeyword(String(d.cta_line)).includes(normalizeKeyword(kw))) return "cta_line must contain the keyword";
   const opener = String(d.dm_opener);
-  // {disclosure_clause} already carries the company (" from X" or ", the AI
-  // assistant at X"), so the company token must not sit in front of it.
-  if (!opener.includes("{agent_name}{disclosure_clause}") || opener.includes("{company_name}{disclosure_clause}")) {
+  if (!opener.includes("{agent_name}{disclosure_clause}")) {
     return "dm_opener must contain {agent_name}{disclosure_clause}";
   }
+  // {disclosure_clause} already carries the company (" from X" or ", the AI
+  // assistant at X"), so {company_name} anywhere in the opener names it twice.
+  if (opener.includes("{company_name}")) return "dm_opener must not contain {company_name}";
   if (String(d.caption).length > 400) return "caption too long";
   return null;
+}
+
+/** An Instagram-style username: lowercase, [a-z0-9._] only, max 30. Accents
+ *  are folded first so "Telhados São Paulo" keeps its letters. */
+export function toHandle(raw: string): string {
+  return String(raw || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9._]/g, "")
+    .slice(0, 30);
 }
 
 export function coerceSocialPost(data: any): SocialPost {
   const likes = Math.round(Number(data.likes));
   return {
-    handle: String(data.handle).toLowerCase().replace(/[^a-z0-9._]/g, "").slice(0, 30),
+    handle: toHandle(data.handle),
     caption: String(data.caption).trim(),
     keyword: normalizeKeyword(data.keyword),
     cta_line: String(data.cta_line).trim(),
