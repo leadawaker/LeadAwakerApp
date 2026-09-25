@@ -76,16 +76,16 @@ export const COPY = {
 
 export const STATIC_POSTS = {
   en: [
-    { handle: "mia.kitchen", avatarLetter: "M", image: "/social-demo-assets/img/post-1.webp", caption: "New sourdough crumb shot, we got there 🍞", likes: 327, sponsored: false },
-    { handle: "noah.notes", avatarLetter: "N", image: "/social-demo-assets/img/post-2.webp", caption: "Sunday desk reset. Coffee first, emails later.", likes: 189, sponsored: false },
+    { handle: "mia.kitchen", avatarLetter: "M", image: "/social-demo-assets/img/post-1.webp", caption: "Sunday sourdough, fresh out of the oven 🍞", likes: 327, sponsored: false },
+    { handle: "noah.rides", avatarLetter: "N", image: "/social-demo-assets/img/post-2.webp", caption: "Sunset ride along the beach. Worth every pedal.", likes: 189, sponsored: false },
   ],
   nl: [
-    { handle: "lotte.bakt", avatarLetter: "L", image: "/social-demo-assets/img/post-1.webp", caption: "Eindelijk een zuurdesem met mooie gaatjes 🍞", likes: 214, sponsored: false },
-    { handle: "daan.fietst", avatarLetter: "D", image: "/social-demo-assets/img/post-2.webp", caption: "Rondje langs de Vecht vanochtend. Niet verkeerd.", likes: 156, sponsored: false },
+    { handle: "lotte.bakt", avatarLetter: "L", image: "/social-demo-assets/img/post-1.webp", caption: "Zondagse zuurdesem, net uit de oven 🍞", likes: 214, sponsored: false },
+    { handle: "daan.fietst", avatarLetter: "D", image: "/social-demo-assets/img/post-2.webp", caption: "Rondje langs het strand bij zonsondergang. Niet verkeerd.", likes: 156, sponsored: false },
   ],
   pt: [
-    { handle: "ana.nacozinha", avatarLetter: "A", image: "/social-demo-assets/img/post-1.webp", caption: "Pão de fermentação natural saiu do forno agora 🍞", likes: 402, sponsored: false },
-    { handle: "lucas.pedala", avatarLetter: "L", image: "/social-demo-assets/img/post-2.webp", caption: "Pedal de domingo no Ibirapuera, que dia bonito.", likes: 233, sponsored: false },
+    { handle: "ana.nacozinha", avatarLetter: "A", image: "/social-demo-assets/img/post-1.webp", caption: "Pão de fermentação natural, acabou de sair do forno 🍞", likes: 402, sponsored: false },
+    { handle: "lucas.pedala", avatarLetter: "L", image: "/social-demo-assets/img/post-2.webp", caption: "Pedal na praia no pôr do sol, que fim de tarde.", likes: 233, sponsored: false },
   ],
 };
 
