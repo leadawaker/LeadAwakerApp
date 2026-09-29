@@ -14,6 +14,7 @@ export interface ReviewCopy {
   smsDivider: string;
   today: string;
   placeholder: string;
+  waPlaceholder: string;
   silent: string;
   managerLabel: (company: string) => string;
   alertTitle: (name: string, stars: number) => string;
@@ -46,6 +47,7 @@ const en: ReviewCopy = {
   smsDivider: "Text Message",
   today: "Today",
   placeholder: "Text Message",
+  waPlaceholder: "Message",
   silent: "Silent until a human is actually needed",
   managerLabel: (c) => `${c} · Manager`,
   alertTitle: (n, s) => `${n} rated ${s}/5: needs a call`,
@@ -57,7 +59,7 @@ const en: ReviewCopy = {
   draftFailed: "Could not draft a reply this time.",
   approve: "Approve",
   edit: "Edit",
-  approved: "Approved. It will be posted to Google.",
+  approved: "Reply approved",
   popupQuestion: "How was your experience?",
   popupPlaceholder: "Share details of your experience (optional)",
   popupPost: "Post review",
@@ -78,6 +80,7 @@ const nl: ReviewCopy = {
   smsDivider: "Sms-bericht",
   today: "Vandaag",
   placeholder: "Sms-bericht",
+  waPlaceholder: "Bericht",
   silent: "Stil tot er echt een mens nodig is",
   managerLabel: (c) => `${c} · Manager`,
   alertTitle: (n, s) => `${n} gaf een ${s}/5: wil gebeld worden`,
@@ -89,7 +92,7 @@ const nl: ReviewCopy = {
   draftFailed: "Het lukte niet om een reactie op te stellen.",
   approve: "Goedkeuren",
   edit: "Aanpassen",
-  approved: "Goedgekeurd. Hij wordt op Google geplaatst.",
+  approved: "Reactie goedgekeurd",
   popupQuestion: "Hoe was je ervaring?",
   popupPlaceholder: "Vertel over je ervaring (optioneel)",
   popupPost: "Review plaatsen",
@@ -110,6 +113,7 @@ const pt: ReviewCopy = {
   smsDivider: "Mensagem de texto",
   today: "Hoje",
   placeholder: "Mensagem de texto",
+  waPlaceholder: "Mensagem",
   silent: "Em silêncio até alguém realmente precisar",
   managerLabel: (c) => `${c} · Gerente`,
   alertTitle: (n, s) => `${n} deu ${s}/5: quer uma ligação`,
@@ -121,7 +125,7 @@ const pt: ReviewCopy = {
   draftFailed: "Não deu para escrever uma resposta agora.",
   approve: "Aprovar",
   edit: "Editar",
-  approved: "Aprovada. Vai ser publicada no Google.",
+  approved: "Resposta aprovada",
   popupQuestion: "Como foi sua experiência?",
   popupPlaceholder: "Conte como foi sua experiência (opcional)",
   popupPost: "Publicar avaliação",

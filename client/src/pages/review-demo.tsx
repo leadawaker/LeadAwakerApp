@@ -5,6 +5,7 @@ import { ManagerPhone } from "@/features/reviewDemo/components/ManagerPhone";
 import { ReviewPopup } from "@/features/reviewDemo/components/ReviewPopup";
 import { copyFor } from "@/features/reviewDemo/copy";
 import { useReviewDemo } from "@/features/reviewDemo/useReviewDemo";
+import { DemoLogoContext, useDemoLogo } from "@/features/reviewDemo/useDemoLogo";
 import type { Skin } from "@/features/reviewDemo/types";
 
 function useClock(locale: string) {
@@ -27,13 +28,15 @@ export default function ReviewDemoPage() {
   const [skin, setSkin] = useState<Skin>(params.get("ch") === "wa" ? "wa" : "sms");
   const [popupOpen, setPopupOpen] = useState(false);
   const demo = useReviewDemo(token);
+  const logoUrl = useDemoLogo(token);
   const lang = demo.state?.language || "en";
   const copy = copyFor(lang);
   const clock = useClock(LOCALES[lang.slice(0, 2)] || "en-GB");
   const company = demo.state?.company || "";
 
   return (
-    <div className="min-h-[100dvh] bg-[#07080b] px-4 py-10 text-white">
+    <DemoLogoContext.Provider value={logoUrl}>
+    <div className="flex min-h-[100dvh] flex-col justify-center bg-white px-4 py-10 text-[#111]">
       <div className="mx-auto flex max-w-[860px] flex-col items-center gap-12 md:flex-row md:items-start md:justify-center">
         <section className="flex flex-col items-center">
           <CustomerPhone
@@ -49,7 +52,7 @@ export default function ReviewDemoPage() {
           />
           <div className="mt-5 text-center">
             <div className="text-[13px] font-semibold uppercase tracking-[0.12em]">{copy.customerTitle}</div>
-            <div className="text-[12.5px] text-white/55">{copy.customerHint}</div>
+            <div className="text-[12.5px] text-black/55">{copy.customerHint}</div>
           </div>
         </section>
 
@@ -64,7 +67,7 @@ export default function ReviewDemoPage() {
           />
           <div className="mt-5 text-center">
             <div className="text-[13px] font-semibold uppercase tracking-[0.12em]">{copy.managerTitle}</div>
-            <div className="text-[12.5px] text-white/55">{copy.managerHint(company)}</div>
+            <div className="text-[12.5px] text-black/55">{copy.managerHint(company)}</div>
           </div>
         </section>
       </div>
@@ -75,7 +78,7 @@ export default function ReviewDemoPage() {
             type="button"
             onClick={() => void demo.replay()}
             disabled={demo.busy}
-            className="flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2.5 text-[14px] disabled:opacity-50"
+            className="flex items-center gap-2 rounded-full border border-black/15 bg-black/[0.04] px-5 py-2.5 text-[14px] disabled:opacity-50"
           >
             <RotateCcw className="h-4 w-4" />
             {copy.replay}
@@ -83,9 +86,10 @@ export default function ReviewDemoPage() {
         </div>
       )}
 
-      {demo.error && <div className="mt-6 text-center text-[13px] text-white/60">{token ? copy.offline : copy.expired}</div>}
+      {demo.error && <div className="mt-6 text-center text-[13px] text-black/60">{token ? copy.offline : copy.expired}</div>}
 
       <ReviewPopup copy={copy} company={company} open={popupOpen} onClose={() => setPopupOpen(false)} onPost={demo.postReview} />
     </div>
+    </DemoLogoContext.Provider>
   );
 }

@@ -9,7 +9,7 @@ export function MessageText({ text, onOpenReview }: { text: string; onOpenReview
         <span key={i}>
           {part}
           {i < parts.length - 1 && (
-            <button type="button" onClick={onOpenReview} className="break-all text-left text-[#4ea1ff] underline">
+            <button type="button" onClick={onOpenReview} className="break-all text-left text-[#007aff] underline">
               {DEMO_REVIEW_URL.replace("https://", "")}
             </button>
           )}
