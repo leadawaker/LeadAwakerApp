@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npx vite build && npx tsx script/build-premium.ts && cp dist/public/premium/index.html dist/public/index.html",
+  "buildCommand": "npx vite build && npx tsx script/build-premium.ts && cp dist/public/site/index.html dist/public/index.html",
   "outputDirectory": "dist/public",
   "framework": null,
   "rewrites": [
@@ -10,6 +10,10 @@
     {
       "source": "/login",
       "destination": "/login.html"
+    },
+    {
+      "source": "/reactivate",
+      "destination": "/premium/index.html"
     },
     {
       "source": "/home",

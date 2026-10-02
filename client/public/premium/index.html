@@ -137,20 +137,25 @@
 })();
 </script>
 
-<!-- LeadConnector chat widget: /solar only. Every other variant gets the
-     WhatsApp contact button instead (contact-button.jsx), until the
-     self-built widget replaces both. This repeats the /solar path check in
+<!-- Chat widget. /solar keeps the LeadConnector widget; every other variant
+     (/reactivate, /home) gets our own widget with Sara, the same key as the
+     homepage (client/public/site/). This repeats the /solar path check in
      plain JS rather than reading window.SITE_VARIANT, because config.jsx is
      a text/babel script and hasn't been transpiled yet at this point. -->
 <script>
 (function () {
   var q = new URLSearchParams(location.search).get('site');
   var isSolar = q ? q === 'solar' : /\/solar\/?$/.test(location.pathname);
-  if (!isSolar) return;
   var s = document.createElement('script');
-  s.src = 'https://widgets.leadconnectorhq.com/loader.js';
-  s.setAttribute('data-resources-url', 'https://widgets.leadconnectorhq.com/chat-widget/loader.js');
-  s.setAttribute('data-widget-id', '6a96f9f856bf87968255111a');
+  s.async = true;
+  if (isSolar) {
+    s.src = 'https://widgets.leadconnectorhq.com/loader.js';
+    s.setAttribute('data-resources-url', 'https://widgets.leadconnectorhq.com/chat-widget/loader.js');
+    s.setAttribute('data-widget-id', '6a96f9f856bf87968255111a');
+  } else {
+    s.src = 'https://api.leadawaker.com/widget/v1.js?v=2';
+    s.setAttribute('data-key', 'wk_pNUlirtOPVBVkViwqXgsZmFq');
+  }
   document.body.appendChild(s);
 })();
 </script>

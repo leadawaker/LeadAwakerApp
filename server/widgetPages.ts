@@ -395,6 +395,16 @@ export const LOADER_JS = String.raw`(function () {
   }
   btn.addEventListener("click", toggle);
 
+  // A small public handle so the host page can open the chat from its own
+  // buttons (e.g. "Ask Sara now"). The ready event lets those buttons stay
+  // hidden until the launcher actually exists.
+  window.LeadAwakerWidget = {
+    open: function () { if (!open) toggle(); },
+    close: function () { if (open) toggle(); },
+    toggle: toggle
+  };
+  try { window.dispatchEvent(new Event("leadawaker-widget-ready")); } catch (e) {}
+
   // The greeting teaser: once per browser session, a few seconds after load,
   // and not again once dismissed or opened. Built from /widget/meta so the
   // loader stays one static file with no per-key templating.

@@ -37,6 +37,10 @@ const STANDALONE_PAGES = [...LEGAL_PAGES, "demo.html"];
 // location.pathname, which a Vercel rewrite preserves, so /home and / are the
 // same index.html rendering two different products.
 const REWRITE_TARGETS = [
+  // The previous homepage (database reactivation), moved off / on 2026-10-02
+  // when client/public/site/ became the homepage. config.jsx renders any path
+  // it doesn't recognise as the 'main' variant, which is what this shows.
+  { source: "/reactivate", destination: "/premium/index.html" },
   { source: "/home", destination: "/premium/index.html" },
   { source: "/terms-of-service", destination: "/premium/terms.html" },
   { source: "/privacy-policy", destination: "/premium/privacy.html" },
@@ -322,6 +326,31 @@ async function writeVoiceDemoPage() {
   console.log("build-premium: wrote voice-demo.html with link-preview tags");
 }
 
+// The homepage is client/public/site/index.html (imported from the claude.ai
+// artifact by script/import-site-artifact.py), copied to dist/public/index.html
+// by vercel.json's buildCommand. Its images live in /site/img/; a missing one
+// shows as a blank hero or portrait, not as an error, so check them here.
+async function assertSitePage() {
+  const config = JSON.parse(await readFile(path.resolve("vercel.json"), "utf-8")) as { buildCommand?: string };
+  if (!config.buildCommand?.includes("cp dist/public/site/index.html dist/public/index.html")) {
+    throw new Error("build-premium: vercel.json's buildCommand no longer copies site/index.html to the root, so / would not serve the homepage");
+  }
+  const siteDir = path.resolve("dist/public/site");
+  const html = await readFile(path.join(siteDir, "index.html"), "utf-8");
+  const refs = [...new Set([...html.matchAll(/\/site\/(img\/[\w.-]+)/g)].map((m) => m[1]))];
+  for (const ref of refs) {
+    try {
+      await readFile(path.join(siteDir, ref));
+    } catch {
+      throw new Error(`build-premium: site/index.html references /site/${ref}, which is not in the build output`);
+    }
+  }
+  if (html.includes("__WIDGET_KEY__")) {
+    throw new Error("build-premium: site/index.html still has the widget key placeholder");
+  }
+  console.log(`build-premium: verified site/index.html and ${refs.length} images`);
+}
+
 async function main() {
   const indexPath = path.join(DIST_PREMIUM, "index.html");
   let html = await readFile(indexPath, "utf-8");
@@ -380,6 +409,7 @@ async function main() {
 
   await assertRewriteTargets();
   await assertDemoAssets();
+  await assertSitePage();
   await writeVoiceDemoPage();
 }
 

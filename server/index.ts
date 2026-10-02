@@ -113,12 +113,16 @@ app.use((req, res, next) => {
       res.type("html").send(html);
     });
   };
-  app.get("/", sendFile(premiumDir, "index.html"));
-  // Landing-page variants: /home is the home-improvement page, /solar is the
-  // dormant solar page (moved off root 2026-09-05), /uk /us /nl force a market
-  // on the solar page. config.jsx resolves all of these from location.pathname,
-  // so these must serve the same HTML rather than redirect. Mirrors vercel.json.
-  app.get(["/home", "/solar", "/uk", "/us", "/nl"], sendFile(premiumDir, "index.html"));
+  // The homepage is client/public/site/ (the AI receptionist page, imported
+  // from its claude.ai artifact by script/import-site-artifact.py). Its images
+  // are served from /site/img by the public-dir static handling.
+  app.get("/", sendFile(path.join(publicDir, "site"), "index.html"));
+  // Landing-page variants of the previous homepage: /reactivate is database
+  // reactivation (the old root, moved 2026-10-02), /home is the home-improvement
+  // page, /solar is the dormant solar page, /uk /us /nl force a market on the
+  // solar page. config.jsx resolves all of these from location.pathname, so
+  // these must serve the same HTML rather than redirect. Mirrors vercel.json.
+  app.get(["/reactivate", "/home", "/solar", "/uk", "/us", "/nl"], sendFile(premiumDir, "index.html"));
   // Browser demo. The token stays in the path (the page reads it from
   // location.pathname), so this serves the file rather than redirecting.
   // Mirrors the /demo/:token rewrite in vercel.json.

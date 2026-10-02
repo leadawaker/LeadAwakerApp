@@ -1,9 +1,8 @@
 // Floating WhatsApp contact button.
 //
-// Placeholder for the self-built AI widget. /solar runs the LeadConnector
-// chat widget (loaded from index.html), so this button renders everywhere
-// else instead — two chat affordances stacked in the same corner would
-// overlap. When the own widget lands, this is the component it replaces.
+// No longer rendered (2026-10-02): the self-built chat widget took its corner,
+// loaded from index.html. Kept because it defines window.WA_NUMBER, which
+// 10-cta-footer.jsx reads.
 
 const WA_NUMBER = "31684446349"; // Gabriel's Dutch mobile, +31 6 84446349
 // One source of truth: 10-cta-footer.jsx's PartnersCTA links to the same
