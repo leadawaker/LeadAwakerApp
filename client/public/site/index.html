@@ -1065,6 +1065,8 @@ footer img{height:24px;width:auto;display:block}
 .book-ctas{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .btn-ghost-light{background:transparent;color:#F7F1E6;box-shadow:inset 0 0 0 1.5px rgba(244,239,227,.55)}
 .btn-ghost-light:hover{background:rgba(244,239,227,.08);transform:translateY(-1px)}
+.nav-links a{white-space:nowrap}
+@media (max-width:1080px){.nav-links a[href="#phone"],.nav-links a[href="#website"],.nav-links a[href="#whatsapp"],.nav-links a[href="#calendar"]{display:none}}
 </style>
 </head>
 <body>
@@ -1079,6 +1081,7 @@ footer img{height:24px;width:auto;display:block}
         <a href="#calendar">Calendar</a>
         <a href="#how">How it works</a>
         <a href="/reactivate">Old leads</a>
+        <a class="js-login" href="/login">Log in</a>
         <a class="btn btn-wine js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Book a demo</a>
         <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mnav"><i></i></button>
       </div>
@@ -1092,6 +1095,7 @@ footer img{height:24px;width:auto;display:block}
       <a href="#faq">Questions</a>
       <span class="sep"></span>
       <a href="/reactivate">Database reactivation</a>
+      <a class="js-login" href="/login">Log in</a>
     </div>
   </nav>
 </div>
@@ -2017,6 +2021,15 @@ footer img{height:24px;width:auto;display:block}
 </script>
 
 <script>
+/* Same rule as the /reactivate page's nav (premium/01-nav.jsx): someone already
+   signed in to the CRM gets "Open app" straight into it instead of "Log in". */
+(function(){
+  var auth=false;try{auth=!!localStorage.getItem('leadawaker_auth')}catch(e){}
+  if(!auth)return;
+  [].forEach.call(document.querySelectorAll('.js-login'),function(a){a.textContent='Open app';a.href='/platform/campaigns'});
+})();
+</script>
+<script>
 (function(){
   var b=document.querySelector('.js-sara');
   if(!b)return;
@@ -2025,6 +2038,6 @@ footer img{height:24px;width:auto;display:block}
   b.addEventListener('click',function(){if(window.LeadAwakerWidget)window.LeadAwakerWidget.open()});
 })();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=2" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=3" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
 </body>
 </html>

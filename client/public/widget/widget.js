@@ -324,7 +324,7 @@ function doSend() {
   }).then(function () {
     busy = false;
     lastSig = "";
-    schedulePoll(1200);
+    schedulePoll(FAST_POLL);
   }).catch(function (err) {
     busy = false;
     pending = false;
@@ -412,7 +412,7 @@ function onRecDone(blob, mime, ms) {
   }).then(function () {
     busy = false;
     lastSig = "";
-    schedulePoll(1200);
+    schedulePoll(FAST_POLL);
   }).catch(function (err) {
     busy = false;
     pending = false;
@@ -429,6 +429,12 @@ memo.wirePlayback(function (id) {
 
 // ── poll ────────────────────────────────────────────────────────────────────
 
+// While a reply is on its way, and for a few seconds after one lands (the AI
+// often sends two messages back to back), poll fast so each one shows the
+// moment it exists. Otherwise idle slowly.
+var FAST_POLL = 700, burstUntil = 0;
+function nextPoll() { return pending || Date.now() < burstUntil ? FAST_POLL : 6000; }
+
 function schedulePoll(delay) {
   clearTimeout(pollTimer);
   pollTimer = setTimeout(poll, delay);
@@ -438,11 +444,11 @@ function poll() {
   if (busy) { schedulePoll(1500); return; }
   var pollEpoch = epoch;
   api(qs()).then(function (next) {
-    if (pollEpoch !== epoch) { schedulePoll(pending ? 1600 : 6000); return; }
+    if (pollEpoch !== epoch) { schedulePoll(nextPoll()); return; }
     var grew = state && next.messages.length > (state.messages || []).length;
     var fresh = grew ? next.messages.slice((state.messages || []).length).filter(function (m) { return m.role === "ai"; }).length : 0;
     if (confirming) fresh = 0;
-    if (grew) pending = false;
+    if (grew) { pending = false; burstUntil = Date.now() + 6000; }
     memo.adopt(state && state.messages, next);
     state = next;
     var sig = signature(next);
@@ -453,7 +459,7 @@ function poll() {
       // outside, which only the loader can do.
       if (fresh) parent.postMessage({ type: "la-widget-unread", count: fresh }, "*");
     }
-    schedulePoll(pending ? 1600 : 6000);
+    schedulePoll(nextPoll());
   }).catch(function () {
     schedulePoll(6000);
   });

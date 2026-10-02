@@ -89,6 +89,14 @@ export const LAUNCHER_CSS = `
 .la-core .la-i-x{opacity:0;transform:rotate(-90deg) scale(.6)}
 .la-root.is-open .la-core .la-i-chat{opacity:0;transform:rotate(90deg) scale(.6)}
 .la-root.is-open .la-core .la-i-x{opacity:1;transform:none}
+/* Every so often a light catches the rim: a bright arc masked to the ring that
+   sweeps once around and fades. Enough to draw the eye, rare enough to ignore. */
+.la-glint{position:absolute;inset:-1px;border-radius:50%;pointer-events:none;z-index:1;
+  background:conic-gradient(from 0deg,transparent 0 76%,rgba(255,255,255,.95) 86%,transparent 96%);
+  -webkit-mask:radial-gradient(circle,transparent 27px,#000 28px);mask:radial-gradient(circle,transparent 27px,#000 28px);
+  opacity:0;animation:la-glint 9s ease-in-out 4s infinite}
+@keyframes la-glint{0%,80%{opacity:0;transform:rotate(-40deg)}84%{opacity:1}95%{opacity:1}100%{opacity:0;transform:rotate(320deg)}}
+.la-root.is-open .la-glint{animation:none}
 .la-dot{position:absolute;top:-3px;right:-3px;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#ef4444;color:#fff;border:2px solid #fff;
   font:700 11px/16px -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif;text-align:center;display:none;z-index:3;
   animation:la-pop .35s cubic-bezier(.2,.8,.2,1)}
@@ -123,13 +131,13 @@ export const LAUNCHER_CSS = `
   .la-root.is-open .la-btn,.la-root.is-open .la-teaser{display:none}
 }
 @media (prefers-reduced-motion:reduce){
-  .la-btn::before,.la-btn::after{animation:none}
+  .la-btn::before,.la-btn::after,.la-glint{animation:none}
   .la-btn,.la-teaser,.la-core>span{transition:none}
   .la-panel.open{animation:none}
 }`;
 
 const BUTTON_INNER =
-  `<span class="la-core"><span class="la-i-chat">${ICON_CHAT}</span><span class="la-i-x">${ICON_X}</span></span><span class="la-dot"></span>`;
+  `<span class="la-core"><span class="la-i-chat">${ICON_CHAT}</span><span class="la-i-x">${ICON_X}</span></span><span class="la-glint"></span><span class="la-dot"></span>`;
 
 
 // Unread badge + ding, shared by the loader and the demo page. The ding is
@@ -154,6 +162,11 @@ const UNREAD_JS = String.raw`
       });
     }catch(e){}
   }
+  // Called from the launcher's click: creating/resuming the context inside a
+  // user gesture is what lets later dings actually play.
+  function primeAudio(){
+    try{var AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;actx=actx||new AC();if(actx.state==="suspended")actx.resume();}catch(e){}
+  }
   function showUnread(dotEl,n){
     unread+=Math.max(1,n|0);
     dotEl.textContent=unread>9?"9+":String(unread);
@@ -161,6 +174,27 @@ const UNREAD_JS = String.raw`
     ding();
   }
   function clearUnread(dotEl){unread=0;dotEl.style.display="none";}
+`;
+
+// When the greeting teaser appears, shared by the loader and the demo page: once
+// the visitor has scrolled a good chunk of the page (40% of it, capped at one
+// and a half screens, so a long page doesn't need a marathon). A page too short
+// to scroll that far gets it after 8 seconds instead. The caller's show() also
+// takes it away again after TEASER_MS.
+const TEASER_JS = String.raw`
+  var TEASER_MS=15000;
+  function armTeaser(show){
+    var done=false,fb=null;
+    function need(){
+      var de=document.documentElement,b=document.body;
+      var s=Math.max(de.scrollHeight,b?b.scrollHeight:0)-window.innerHeight;
+      return s<250?-1:Math.max(250,Math.min(s*.4,window.innerHeight*1.5));
+    }
+    function fire(){if(done)return;done=true;window.removeEventListener("scroll",onScroll);clearTimeout(fb);show();}
+    function onScroll(){var n=need();if(n>0&&(window.scrollY||window.pageYOffset||0)>=n)fire();}
+    window.addEventListener("scroll",onScroll,{passive:true});
+    setTimeout(function(){if(!done&&need()<0)fb=setTimeout(fire,8000);},1500);
+  }
 `;
 
 // Changes on every server restart (pm2 reloads on each file save), so the browser
@@ -282,6 +316,7 @@ ${o.shotUrl
 <script>
 (function(){
   ${UNREAD_JS}
+  ${TEASER_JS}
   var dot=document.querySelector(".la-dot");
   var root=document.getElementById("la-root"),panel=document.getElementById("la-panel"),btn=document.getElementById("la-btn"),
       teaser=document.getElementById("la-teaser"),tx=document.getElementById("la-tx");
@@ -292,17 +327,21 @@ ${o.shotUrl
     panel.classList.toggle("open",open);
     root.classList.toggle("is-open",open);
     teaser.classList.remove("show");
-    if(open)clearUnread(dot);
+    if(open){clearUnread(dot);primeAudio();}
   }
   btn.addEventListener("click",toggle);
   teaser.addEventListener("click",function(){if(!open)toggle();});
   tx.addEventListener("click",function(e){e.stopPropagation();teaser.classList.remove("show");});
-  // Shown on every load here (no once-per-session memory like the loader): the
+  // Armed on every load here (no once-per-session memory like the loader): the
   // prospect should see exactly what a first-time visitor to their site sees.
-  setTimeout(function(){if(!open)teaser.classList.add("show");},1200);
+  armTeaser(function(){
+    if(open)return;
+    teaser.classList.add("show");
+    setTimeout(function(){teaser.classList.remove("show");},TEASER_MS);
+  });
   window.addEventListener("message",function(e){
     if(e.data&&e.data.type==="la-widget-close"&&open)toggle();
-    if(e.data&&e.data.type==="la-widget-unread"&&!open)showUnread(dot,e.data.count);
+    if(e.data&&e.data.type==="la-widget-unread"){if(open)ding();else showUnread(dot,e.data.count);}
   });
 })();
 </script>
@@ -315,7 +354,7 @@ ${o.shotUrl
 // embedded as JSON strings so the loader and the demo page cannot drift apart.
 export const LOADER_JS = String.raw`(function () {
   "use strict";
-  ` + UNREAD_JS + String.raw`
+  ` + UNREAD_JS + TEASER_JS + String.raw`
   var LAUNCHER_CSS = ` + JSON.stringify(LAUNCHER_CSS) + String.raw`;
   var BUTTON_INNER = ` + JSON.stringify(BUTTON_INNER) + String.raw`;
   var ICON_X = ` + JSON.stringify(ICON_X) + String.raw`;
@@ -391,7 +430,7 @@ export const LOADER_JS = String.raw`(function () {
     frame.classList.toggle("open", open);
     root.classList.toggle("is-open", open);
     btn.setAttribute("aria-label", open ? "Close chat" : "Open chat");
-    if (open) { clearUnread(dot); hideTeaser(); }
+    if (open) { clearUnread(dot); hideTeaser(); primeAudio(); }
   }
   btn.addEventListener("click", toggle);
 
@@ -427,7 +466,11 @@ export const LOADER_JS = String.raw`(function () {
       x.addEventListener("click", function (e) { e.stopPropagation(); hideTeaser(); });
       teaser.appendChild(img); teaser.appendChild(body); teaser.appendChild(x);
       teaser.addEventListener("click", function () { if (!open) toggle(); });
-      setTimeout(function () { if (!open) teaser.classList.add("show"); }, 3500);
+      armTeaser(function () {
+        if (open) return;
+        teaser.classList.add("show");
+        setTimeout(function () { if (teaser.classList.contains("show")) hideTeaser(); }, TEASER_MS);
+      });
     }).catch(function () {});
   }
 
@@ -435,7 +478,7 @@ export const LOADER_JS = String.raw`(function () {
   window.addEventListener("message", function (e) {
     if (e.origin !== origin || !e.data || typeof e.data !== "object") return;
     if (e.data.type === "la-widget-close" && open) toggle();
-    if (e.data.type === "la-widget-unread" && !open) showUnread(dot, e.data.count);
+    if (e.data.type === "la-widget-unread") { if (open) ding(); else showUnread(dot, e.data.count); }
   });
 })();`;
 

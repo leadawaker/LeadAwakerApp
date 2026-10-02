@@ -52,12 +52,16 @@ HEAD = f"""<!doctype html>
 <meta name="twitter:card" content="summary">
 """
 
-# Styles for the booking block's second button. The block is wine, so the
-# button is an outline in the block's cream text colour.
+# Styles for the booking block's second button (the block is wine, so the
+# button is an outline in the block's cream text colour), and a nav that never
+# wraps: between 860px and 1080px the four in-page channel anchors step aside
+# (the mobile menu still has them) so Log in and Book a demo stay on one line.
 BOOK_CSS = """<style>
 .book-ctas{display:flex;flex-wrap:wrap;justify-content:center;gap:12px}
 .btn-ghost-light{background:transparent;color:#F7F1E6;box-shadow:inset 0 0 0 1.5px rgba(244,239,227,.55)}
 .btn-ghost-light:hover{background:rgba(244,239,227,.08);transform:translateY(-1px)}
+.nav-links a{white-space:nowrap}
+@media (max-width:1080px){.nav-links a[href="#phone"],.nav-links a[href="#website"],.nav-links a[href="#whatsapp"],.nav-links a[href="#calendar"]{display:none}}
 </style>
 """
 
@@ -65,6 +69,15 @@ BOOK_CSS = """<style>
 # mounted (it announces itself with leadawaker-widget-ready), so a blocked or
 # failed loader never leaves a dead button on the page.
 WIDGET_JS = f"""<script>
+/* Same rule as the /reactivate page's nav (premium/01-nav.jsx): someone already
+   signed in to the CRM gets "Open app" straight into it instead of "Log in". */
+(function(){{
+  var auth=false;try{{auth=!!localStorage.getItem('leadawaker_auth')}}catch(e){{}}
+  if(!auth)return;
+  [].forEach.call(document.querySelectorAll('.js-login'),function(a){{a.textContent='Open app';a.href='/platform/campaigns'}});
+}})();
+</script>
+<script>
 (function(){{
   var b=document.querySelector('.js-sara');
   if(!b)return;
@@ -73,7 +86,7 @@ WIDGET_JS = f"""<script>
   b.addEventListener('click',function(){{if(window.LeadAwakerWidget)window.LeadAwakerWidget.open()}});
 }})();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=2" data-key="{WIDGET_KEY}" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=3" data-key="{WIDGET_KEY}" async></script>
 """
 
 
@@ -124,6 +137,12 @@ def main() -> None:
     html = replace(html, '<div class="nav-shell">', BOOK_CSS + '</head>\n<body>\n<div class="nav-shell">')
 
     html = replace(html, '<a href="https://www.leadawaker.com/"', '<a href="/reactivate"', count=3)
+    # A way into the CRM: desktop nav (before the Book a demo button) and the
+    # mobile menu. /login is client/public/login.html (vercel.json rewrite).
+    html = replace(html, '<a href="/reactivate">Old leads</a>\n',
+                   '<a href="/reactivate">Old leads</a>\n        <a class="js-login" href="/login">Log in</a>\n')
+    html = replace(html, '<a href="/reactivate">Database reactivation</a>\n    </div>',
+                   '<a href="/reactivate">Database reactivation</a>\n      <a class="js-login" href="/login">Log in</a>\n    </div>')
     html = replace(html, 'href="https://leadawaker.com/terms"', 'href="/terms-of-service"')
     html = replace(html, 'href="https://leadawaker.com/privacy"', 'href="/privacy-policy"')
 
