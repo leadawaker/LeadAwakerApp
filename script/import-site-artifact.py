@@ -87,7 +87,7 @@ WIDGET_JS = f"""<script>
   b.addEventListener('click',function(){{if(window.LeadAwakerWidget)window.LeadAwakerWidget.open()}});
 }})();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=8" data-key="{WIDGET_KEY}" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=9" data-key="{WIDGET_KEY}" async></script>
 """
 
 
@@ -116,6 +116,8 @@ SARA_CSS = """
 .lo.lo-still .lo-eyes i{animation:none}
 .launch .lm{grid-area:1/1;position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;transition:opacity .3s}
 .launch .lm .lo{--lo-s:45px;-webkit-mask:none;mask:none}
+.lo-tint .launch::before{background:var(--lo-metal)}
+.lo-face-photo .launch .lm .lo{background:var(--lo-photo) center/cover no-repeat}
 .wav,.av3{background:none!important;color:transparent}
 .wav .lo{--lo-s:34px}.teaser .wav .lo{--lo-s:36px}.wav i{z-index:2}
 .av3 .lo{--lo-s:78px}
@@ -123,6 +125,24 @@ SARA_CSS = """
 .ai-sara .lo{--lo-s:34px}
 .orb{background:none!important}
 .orb .lo{--lo-s:150px;position:relative;z-index:1}
+"""
+
+
+# The page's orbs are drawn in default silver, then take the look set for the
+# widget in the CRM (style, shade, eyes, icon or photo) as soon as the loader
+# reports it, so changing her there changes her everywhere on the site.
+SARA_LOOK_JS = """<script>
+(function(){
+  function apply(l){
+    if(!l)return;var h=document.documentElement;
+    (l.cls||'').split(' ').forEach(function(c){if(c)h.classList.add(c)});
+    (l.vars||'').split(';').forEach(function(d){var i=d.indexOf(':');if(i>0)h.style.setProperty(d.slice(0,i).trim(),d.slice(i+1).trim())});
+    if(l.photo)h.style.setProperty('--lo-photo',"url('"+l.photo+"')");
+  }
+  if(window.LeadAwakerWidget&&window.LeadAwakerWidget.look)apply(window.LeadAwakerWidget.look);
+  window.addEventListener('leadawaker-widget-look',function(e){apply(e.detail)});
+})();
+</script>
 """
 
 
@@ -138,6 +158,8 @@ def sara_faces(html: str) -> str:
                    f'<i><span class="lm">{_orb()}</span>')
     # "Digital assistant", never "AI assistant": how Sara introduces herself.
     html = replace(html, 'AI assistant · Brightsmile Dental', 'Digital assistant · Brightsmile Dental')
+    loader = '<script src="https://api.leadawaker.com/widget/v1.js'
+    html = replace(html, loader, SARA_LOOK_JS + loader)
     return replace(html, "</head>", f'<style id="sara-orb">{_orb_css()}{SARA_CSS}</style>\n</head>')
 
 

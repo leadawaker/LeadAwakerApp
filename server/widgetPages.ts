@@ -505,7 +505,13 @@ export const LOADER_JS = String.raw`(function () {
         if (m.look.cls) m.look.cls.split(" ").forEach(function (c) { root.classList.add(c); });
         if (m.look.vars) root.style.cssText += ";" + m.look.vars;
         // The photo URL is relative to the API origin, not the page's.
-        if (m.look.photo) root.style.setProperty("--lo-photo", "url('" + (/^https?:/.test(m.look.photo) ? "" : origin) + m.look.photo + "')");
+        var photo = m.look.photo ? (/^https?:/.test(m.look.photo) ? "" : origin) + m.look.photo : null;
+        if (photo) root.style.setProperty("--lo-photo", "url('" + photo + "')");
+        // Handed to the host page too, so a site that draws the assistant
+        // elsewhere (leadawaker.com does) can wear the same face as the widget.
+        var look = { cls: m.look.cls || "", vars: m.look.vars || "", photo: photo };
+        window.LeadAwakerWidget.look = look;
+        try { window.dispatchEvent(new CustomEvent("leadawaker-widget-look", { detail: look })); } catch (e) {}
       }
       if (teased || !m.teaser) return;
       var face = document.createElement("span");

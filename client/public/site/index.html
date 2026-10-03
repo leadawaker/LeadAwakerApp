@@ -1060,9 +1060,10 @@ footer img{height:24px;width:auto;display:block}
 .lines{position:relative}
 /* channels on wine: "one receptionist, three front doors" and its three rows sit on their own full-width wine band */
 #channels{--on-wine:#F7F1E6;--on-wine-2:rgba(244,239,227,.84);--on-wine-3:rgba(244,239,227,.6);--on-wine-accent:#EBB9A8;
-  padding-block:clamp(72px,10vw,128px)!important;color:var(--on-wine);
-  background:radial-gradient(900px 600px at 85% 0%,rgba(138,58,76,.55),transparent 70%),radial-gradient(800px 600px at 0% 100%,rgba(30,8,14,.45),transparent 70%),linear-gradient(170deg,var(--wine-2),var(--wine-deep))}
-#channels+.band{padding-top:clamp(64px,9vw,112px)!important}
+  padding-block:clamp(64px,8vw,104px)!important;color:var(--on-wine);
+  --band-a:#A85A6E;--band-b:#8A3D52;
+  background:radial-gradient(900px 600px at 85% 0%,rgba(255,255,255,.14),transparent 70%),radial-gradient(800px 600px at 0% 100%,rgba(30,8,14,.22),transparent 70%),linear-gradient(170deg,var(--band-a),var(--band-b))}
+#channels .hub{margin-bottom:0!important}
 #channels .head h2{color:var(--on-wine)}
 #channels .head p{color:var(--on-wine-2)}
 #channels em.w{color:var(--on-wine-accent)}
@@ -1078,23 +1079,15 @@ footer img{height:24px;width:auto;display:block}
 #channels .av3::after{border-color:var(--on-wine)}
 #channels .hub-node{box-shadow:0 18px 36px -18px rgba(0,0,0,.5)}
 #channels .hub-node[aria-pressed="false"]{box-shadow:none}
-#channels .bignum{color:var(--on-wine);opacity:.07}
-#channels .pnum{color:var(--on-wine-accent)}
-#channels .ptext h3{color:var(--on-wine)}
-#channels .ptext .cost{color:var(--on-wine-2)}
-#channels .fix{background:rgba(0,0,0,.2);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06)}
-#channels .fix li{color:var(--on-wine-2)}
-#channels .fix li::before{border-color:#A9D0A0}
-#channels .offtag{background:rgba(255,255,255,.12);color:var(--on-wine-2)}
-#channels .vis,#channels .phone{box-shadow:0 34px 64px -28px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.15)}
-#channels .phone{box-shadow:0 34px 64px -28px rgba(0,0,0,.6),inset 0 0 0 2px #3A322A}
-#channels .vis-wrap>.seqsteps li{color:var(--on-wine-3)}
-#channels .vis-wrap>.seqsteps li::before{background:rgba(255,255,255,.16)}
-#channels .vis-wrap>.seqsteps li.on{color:var(--on-wine)}
-#channels .vis-wrap>.seqsteps li.on::before{background:var(--on-wine-accent)}
-#channels .replay{color:var(--on-wine-3)}
-#channels .replay:hover{color:var(--on-wine);background:rgba(255,255,255,.1)}
 #channels :focus-visible{outline-color:var(--on-wine)}
+
+/* colour picker for the wine band */
+.cpick{position:fixed;left:14px;bottom:14px;z-index:40;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;background:rgba(253,252,249,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 30px -10px rgba(40,25,10,.45);border:1px solid rgba(110,95,65,.16);font:600 11px/1 var(--sans);color:var(--mute)}
+.cpick button,.cpick label{width:24px;height:24px;border-radius:50%;border:2px solid #fff;padding:0;cursor:pointer;box-shadow:0 0 0 1px rgba(110,95,65,.3)}
+.cpick button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
+.cpick label{position:relative;overflow:hidden;background:conic-gradient(#d33,#db3,#3b5,#3bd,#93d,#d33)}
+.cpick input{position:absolute;inset:-6px;width:40px;height:40px;opacity:0;cursor:pointer}
+@media (max-width:560px){.cpick span{display:none}.cpick{left:10px;bottom:10px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
 </style>
 
@@ -1152,6 +1145,8 @@ footer img{height:24px;width:auto;display:block}
 .lo.lo-still .lo-eyes i{animation:none}
 .launch .lm{grid-area:1/1;position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;transition:opacity .3s}
 .launch .lm .lo{--lo-s:45px;-webkit-mask:none;mask:none}
+.lo-tint .launch::before{background:var(--lo-metal)}
+.lo-face-photo .launch .lm .lo{background:var(--lo-photo) center/cover no-repeat}
 .wav,.av3{background:none!important;color:transparent}
 .wav .lo{--lo-s:34px}.teaser .wav .lo{--lo-s:36px}.wav i{z-index:2}
 .av3 .lo{--lo-s:78px}
@@ -1332,7 +1327,11 @@ footer img{height:24px;width:auto;display:block}
           <button type="button" class="hub-node" data-ch="whatsapp" aria-pressed="true"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i><span><b>WhatsApp</b><small>Answers messages</small></span><em class="sw2"></em></button>
         </div>
       </div>
+    </div>
+  </section>
 
+  <section class="band" id="channel-rows" style="padding-top:clamp(64px,9vw,112px)">
+    <div class="wrap">
       <div class="problems">
         <!-- 01 phone -->
         <article class="prob ch" id="phone" data-ch="phone">
@@ -1442,6 +1441,31 @@ footer img{height:24px;width:auto;display:block}
     </div>
   </section>
 
+  <section class="band" id="rules" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <h2>You decide what she says</h2>
+        <p>She works from a detailed brief we build with you in your onboarding session.</p>
+      </div>
+      <div class="sv-list">
+        <figure class="sv sv-b">
+          <div class="sv-stage" data-sv="b" role="img" aria-label="Sara shown as a speaking orb, with the points of her brief appearing around her.">
+            <div class="sv-fig">
+              <span class="orb"><span class="orb-ring"></span><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span>
+              <span class="sv-name">Sara</span><span class="sv-sub">Phone · Website · WhatsApp</span>
+            </div>
+          </div>
+        </figure>
+      </div>
+      <div class="rules rules-row">
+        <div class="rule"><h3>Nobody waits on hold</h3><p>She picks up straight away, every time.</p></div>
+        <div class="rule"><h3>She doesn’t guess</h3><p>Not in her brief? She takes a message.</p></div>
+        <div class="rule"><h3>Unhappy callers go to you</h3><p>Complaints come straight to you.</p></div>
+        <div class="rule"><h3>You see everything</h3><p>Every conversation is saved in your LeadAwaker dashboard, with a recap.</p></div>
+      </div>
+    </div>
+  </section>
+
   <section class="band" id="calendar" style="padding-top:0">
     <div class="wrap">
       <article class="prob">
@@ -1504,31 +1528,6 @@ footer img{height:24px;width:auto;display:block}
           </div>
         </div>
       </article>
-    </div>
-  </section>
-
-  <section class="band" id="rules" style="padding-top:0">
-    <div class="wrap">
-      <div class="head">
-        <h2>You decide what she says</h2>
-        <p>She works from a detailed brief we build with you in your onboarding session.</p>
-      </div>
-      <div class="sv-list">
-        <figure class="sv sv-b">
-          <div class="sv-stage" data-sv="b" role="img" aria-label="Sara shown as a speaking orb, with the points of her brief appearing around her.">
-            <div class="sv-fig">
-              <span class="orb"><span class="orb-ring"></span><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span>
-              <span class="sv-name">Sara</span><span class="sv-sub">Phone · Website · WhatsApp</span>
-            </div>
-          </div>
-        </figure>
-      </div>
-      <div class="rules rules-row">
-        <div class="rule"><h3>Nobody waits on hold</h3><p>She picks up straight away, every time.</p></div>
-        <div class="rule"><h3>She doesn’t guess</h3><p>Not in her brief? She takes a message.</p></div>
-        <div class="rule"><h3>Unhappy callers go to you</h3><p>Complaints come straight to you.</p></div>
-        <div class="rule"><h3>You see everything</h3><p>Every conversation is saved in your LeadAwaker dashboard, with a recap.</p></div>
-      </div>
     </div>
   </section>
 
@@ -2112,6 +2111,25 @@ footer img{height:24px;width:auto;display:block}
 
 </script>
 
+<div class="cpick" id="cpick" role="group" aria-label="Section colour"><span>Colour</span>
+<button type="button" data-a="#A85A6E" data-b="#8A3D52" style="background:#A85A6E" aria-label="Light wine" title="Light wine"></button>
+<button type="button" data-a="#8E4358" data-b="#6E2638" style="background:#8E4358" aria-label="Wine" title="Wine"></button>
+<button type="button" data-a="#6E2638" data-b="#3E1520" style="background:#6E2638" aria-label="Deep wine" title="Deep wine"></button>
+<button type="button" data-a="#C58A97" data-b="#A5606F" style="background:#C58A97" aria-label="Dusty rose" title="Dusty rose"></button>
+<label title="Pick any colour"><input type="color" value="#A85A6E" aria-label="Custom colour"></label></div>
+<script>
+(function(){var box=document.getElementById('cpick'),sec=document.getElementById('channels');if(!box||!sec)return;
+var KEY='la-band-colour',btns=[].slice.call(box.querySelectorAll('button')),inp=box.querySelector('input');
+function hex2rgb(h){return[1,3,5].map(function(i){return parseInt(h.substr(i,2),16)})}
+function dark(h,f){return'#'+hex2rgb(h).map(function(v){return('0'+Math.round(v*f).toString(16)).slice(-2)}).join('')}
+function apply(a,b,save){sec.style.setProperty('--band-a',a);sec.style.setProperty('--band-b',b);
+ btns.forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.a===a))});
+ if(save){try{localStorage.setItem(KEY,JSON.stringify([a,b]))}catch(e){}}}
+btns.forEach(function(x){x.addEventListener('click',function(){apply(x.dataset.a,x.dataset.b,1)})});
+inp.addEventListener('input',function(){apply(inp.value,dark(inp.value,.78),1)});
+try{var v=JSON.parse(localStorage.getItem(KEY));if(v&&/^#[0-9a-f]{6}$/i.test(v[0])&&/^#[0-9a-f]{6}$/i.test(v[1]))apply(v[0],v[1]);else apply('#A85A6E','#8A3D52')}catch(e){apply('#A85A6E','#8A3D52')}
+})();
+</script>
 <script>
 /* Same rule as the /reactivate page's nav (premium/01-nav.jsx): someone already
    signed in to the CRM gets "Open app" straight into it instead of "Log in". */
@@ -2130,6 +2148,18 @@ footer img{height:24px;width:auto;display:block}
   b.addEventListener('click',function(){if(window.LeadAwakerWidget)window.LeadAwakerWidget.open()});
 })();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=8" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
+<script>
+(function(){
+  function apply(l){
+    if(!l)return;var h=document.documentElement;
+    (l.cls||'').split(' ').forEach(function(c){if(c)h.classList.add(c)});
+    (l.vars||'').split(';').forEach(function(d){var i=d.indexOf(':');if(i>0)h.style.setProperty(d.slice(0,i).trim(),d.slice(i+1).trim())});
+    if(l.photo)h.style.setProperty('--lo-photo',"url('"+l.photo+"')");
+  }
+  if(window.LeadAwakerWidget&&window.LeadAwakerWidget.look)apply(window.LeadAwakerWidget.look);
+  window.addEventListener('leadawaker-widget-look',function(e){apply(e.detail)});
+})();
+</script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=9" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
 </body>
 </html>
