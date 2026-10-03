@@ -13,7 +13,7 @@ Writes client/public/site/index.html plus client/public/site/img/*. What it does
     browser caches them and the HTML drops from ~800KB to a fraction of that
   - points the old-site links at /reactivate and the legal links at the real
     /terms-of-service and /privacy-policy routes
-  - adds the "Ask Sara" button to the booking block and the website widget
+  - adds the website widget
   - draws Sara as the widget's orb wherever the artifact shows her face
 
 Every replacement must match exactly once (or the stated count), so a changed
@@ -66,9 +66,7 @@ BOOK_CSS = """<style>
 </style>
 """
 
-# The widget loader, plus the "Ask Sara" button: hidden until the loader has
-# mounted (it announces itself with leadawaker-widget-ready), so a blocked or
-# failed loader never leaves a dead button on the page.
+# The widget loader, plus the "Open app" swap for signed-in visitors.
 WIDGET_JS = f"""<script>
 /* Same rule as the /reactivate page's nav (premium/01-nav.jsx): someone already
    signed in to the CRM gets "Open app" straight into it instead of "Log in". */
@@ -78,16 +76,7 @@ WIDGET_JS = f"""<script>
   [].forEach.call(document.querySelectorAll('.js-login'),function(a){{a.textContent='Open app';a.href='/platform/campaigns'}});
 }})();
 </script>
-<script>
-(function(){{
-  var b=document.querySelector('.js-sara');
-  if(!b)return;
-  function ready(){{b.hidden=false}}
-  if(window.LeadAwakerWidget)ready();else window.addEventListener('leadawaker-widget-ready',ready);
-  b.addEventListener('click',function(){{if(window.LeadAwakerWidget)window.LeadAwakerWidget.open()}});
-}})();
-</script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=10" data-key="{WIDGET_KEY}" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=13" data-key="{WIDGET_KEY}" async></script>
 """
 
 
@@ -116,8 +105,6 @@ SARA_CSS = """
 .lo.lo-still .lo-eyes i{animation:none}
 .launch .lm{grid-area:1/1;position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;transition:opacity .3s}
 .launch .lm .lo{--lo-s:45px;-webkit-mask:none;mask:none}
-.lo-tint .launch::before{background:var(--lo-metal)}
-.lo-face-photo .launch .lm .lo{background:var(--lo-photo) center/cover no-repeat}
 .wav,.av3{background:none!important;color:transparent}
 .wav .lo{--lo-s:34px}.teaser .wav .lo{--lo-s:36px}.wav i{z-index:2}
 .av3 .lo{--lo-s:78px}
@@ -137,32 +124,10 @@ SARA_CSS = """
 .orb .orb-ring{display:none}
 .orb::before,.orb::after{inset:-12px;border:2px solid rgba(255,220,225,.5);animation:halo 2.6s ease-out infinite}
 .orb::after{animation-delay:1.3s}
-/* The widget example's launcher wears the rim chosen in the CRM too. */
-.lo-rim-pulse .launch::before{animation:none;background:color-mix(in srgb,var(--lo-rim,#a1a1aa) 45%,#fff)}
-.lo-rim-pulse .launch::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--lo-rim,#a1a1aa);animation:halo 2.6s ease-out infinite}
-.lo-rim-band .launch::before{animation:none;background:var(--lo-rim,#a1a1aa)}
-.lo-rim-none .launch::before{display:none}
-.lo-rim-none .launch i{inset:0}
 .orb .lo{--lo-s:150px;position:relative;z-index:1}
 """
 
 
-# The page's orbs are drawn in default silver, then take the look set for the
-# widget in the CRM (style, shade, eyes, icon or photo) as soon as the loader
-# reports it, so changing her there changes her everywhere on the site.
-SARA_LOOK_JS = """<script>
-(function(){
-  function apply(l){
-    if(!l)return;var h=document.documentElement;
-    (l.cls||'').split(' ').forEach(function(c){if(c)h.classList.add(c)});
-    (l.vars||'').split(';').forEach(function(d){var i=d.indexOf(':');if(i>0)h.style.setProperty(d.slice(0,i).trim(),d.slice(i+1).trim())});
-    if(l.photo)h.style.setProperty('--lo-photo',"url('"+l.photo+"')");
-  }
-  if(window.LeadAwakerWidget&&window.LeadAwakerWidget.look)apply(window.LeadAwakerWidget.look);
-  window.addEventListener('leadawaker-widget-look',function(e){apply(e.detail)});
-})();
-</script>
-"""
 
 
 def sara_faces(html: str) -> str:
@@ -176,10 +141,6 @@ def sara_faces(html: str) -> str:
                    f'<span class="orb"><span class="orb-ring"></span>{_orb()}</span>')
     html = replace(html, '<i><svg class="lm" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',
                    f'<i><span class="lm">{_orb()}</span>')
-    # "Digital assistant", never "AI assistant": how Sara introduces herself.
-    html = replace(html, 'AI assistant · Brightsmile Dental', 'Digital assistant · Brightsmile Dental')
-    loader = '<script src="https://api.leadawaker.com/widget/v1.js'
-    html = replace(html, loader, SARA_LOOK_JS + loader)
     return replace(html, "</head>", f'<style id="sara-orb">{_orb_css()}{SARA_CSS}</style>\n</head>')
 
 
@@ -190,11 +151,11 @@ def sara_faces(html: str) -> str:
 # DRAFT COPY: the day counts, the testing claim and the A/B line are proposals
 # for Gabriel to confirm before the old section is removed.
 GOLIVE_HTML = """
-  <section class="glt" id="how-timeline" aria-labelledby="glt-h">
+  <section class="glt" id="how" aria-labelledby="glt-h">
     <div class="glt-pin">
       <div class="wrap"><div class="head glt-head">
         <span class="eyebrow">From kick-off to live</span>
-        <h2 id="glt-h">Live in <em class="w">7 days</em>, on your own number</h2>
+        <h2 id="glt-h">Live in <em class="w">2 weeks</em>, on your own number</h2>
         <p>What happens the moment you say yes. Nothing goes live until you have tested her yourself.</p>
       </div></div>
       <div class="glt-view">
@@ -202,19 +163,13 @@ GOLIVE_HTML = """
           <div class="glt-line"><i></i></div>
           <ol class="glt-steps">
             <li><span class="glt-n">01</span><small>Day 1</small><h3>Kick-off call</h3><p>Thirty minutes. How calls come in, what a good call sounds like, your prices, your calendar.</p></li>
-            <li><span class="glt-n">02</span><small>Day 2 to 3</small><h3>We build Sara</h3><p>Her brief, what she knows from your website, your booking rules, her voice. Written with you, in your words.</p></li>
-            <li><span class="glt-n">03</span><small>Day 4 to 5</small><h3>Quality tests</h3><p>We put her through test conversations: rushed callers, angry ones, price questions, off-topic chats. Every miss gets fixed.</p></li>
-            <li><span class="glt-n">04</span><small>Day 6</small><h3>You try to catch her out</h3><p>Ring her, message her, ask the awkward questions. She goes live only when you sign off.</p></li>
-            <li><span class="glt-n">05</span><small>Day 7</small><h3>Switch on</h3><p>Forward your calls, add the chat to your site, connect WhatsApp and your calendar. Your number stays yours.</p></li>
-            <li><span class="glt-n">06</span><small>Week 2 onwards</small><h3>She keeps getting better</h3><p>We read her conversations, A/B test her openings and replies, and send you a short report. Pause her any time.</p></li>
+            <li><span class="glt-n">02</span><small>Day 2 to 5</small><h3>We build Sara</h3><p>Her brief, what she knows from your website, your booking rules, her voice. Written with you, in your words.</p></li>
+            <li><span class="glt-n">03</span><small>Day 6 to 9</small><h3>Quality tests</h3><p>We put her through test conversations: rushed callers, angry ones, price questions, off-topic chats. Every miss gets fixed.</p></li>
+            <li><span class="glt-n">04</span><small>Day 10 to 12</small><h3>You try to catch her out</h3><p>Ring her, message her, ask the awkward questions. She goes live only when you sign off.</p></li>
+            <li><span class="glt-n">05</span><small>Day 14</small><h3>Switch on</h3><p>Forward your calls, add the chat to your site, connect WhatsApp and your calendar. Your number stays yours.</p></li>
+            <li><span class="glt-n">06</span><small>Week 3 onwards</small><h3>She keeps getting better</h3><p>We read her conversations, A/B test her openings and replies, and send you a short report. Pause her any time.</p></li>
           </ol>
         </div>
-      </div>
-      <div class="wrap glt-int">
-        <span>She works with</span>
-        <ul>
-          <li>Your phone number</li><li>Your website</li><li>WhatsApp</li><li>Google Calendar</li><li>Email alerts</li>
-        </ul>
       </div>
     </div>
   </section>
@@ -236,10 +191,6 @@ GOLIVE_CSS = """
 .glt-steps small{display:block;margin-top:18px;font:800 11.5px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--wine)}
 .glt-steps h3{margin:8px 0 6px;font:500 24px/1.2 var(--serif);color:var(--ink)}
 .glt-steps p{margin:0;font-size:15.5px;line-height:1.6;color:var(--mute)}
-.glt-int{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
-.glt-int>span{font:800 11.5px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--mute-2)}
-.glt-int ul{list-style:none;margin:0;padding:0;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.glt-int li{padding:8px 14px;border-radius:999px;background:var(--white);border:1px solid var(--line-2);font-size:14px;font-weight:600;color:var(--ink-soft)}
 @media (max-width:860px),(prefers-reduced-motion:reduce){
   .glt{height:auto;padding-block:clamp(64px,9vw,112px)}
   .glt-pin{position:static;height:auto;overflow:visible}
@@ -256,7 +207,7 @@ GOLIVE_CSS = """
 
 GOLIVE_JS = """<script>
 (function(){
-  var sec=document.getElementById('how-timeline');if(!sec)return;
+  var sec=document.getElementById('how');if(!sec)return;
   var track=sec.querySelector('.glt-track'),fill=sec.querySelector('.glt-line i'),steps=[].slice.call(sec.querySelectorAll('.glt-steps li'));
   var stacked=window.matchMedia('(max-width:860px),(prefers-reduced-motion:reduce)');
   function tick(){
@@ -343,9 +294,7 @@ def main() -> None:
     html = replace(html, 'href="https://leadawaker.com/privacy"', 'href="/privacy-policy"')
 
     pick = '<a class="btn btn-light" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Pick a time in the calendar</a>'
-    html = replace(html, pick,
-                   '<div class="book-ctas">' + pick +
-                   '<button class="btn btn-ghost-light js-sara" type="button" hidden>Not ready to book? Ask Sara now</button></div>')
+    html = replace(html, pick, '<div class="book-ctas">' + pick + '</div>')
     html = replace(html, "</body></html>", WIDGET_JS + "</body>\n</html>\n")
 
     html = sara_faces(html)

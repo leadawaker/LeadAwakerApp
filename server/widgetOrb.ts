@@ -44,7 +44,9 @@ export const ORB_CSS = `
 .lo-tinted .lo{background:var(--lo-c)}
 .lo-tinted .lo::before{background:conic-gradient(from 0deg,color-mix(in srgb,var(--lo-c) 35%,#fff),var(--lo-c) 20%,color-mix(in srgb,var(--lo-c) 55%,#000) 38%,
   color-mix(in srgb,var(--lo-c) 50%,#fff) 58%,var(--lo-c) 78%,color-mix(in srgb,var(--lo-c) 35%,#fff))}
-.lo-tinted .lo::after,.lo-solid .lo::after{background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.4),transparent 72%)}
+.lo-tinted .lo::after{background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.4),transparent 72%)}
+/* Solid: the top-left light, plus a smaller, fainter one bouncing back from the bottom right. */
+.lo-solid .lo::after{background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.4),transparent 72%),radial-gradient(34% 24% at 70% 84%,rgba(255,255,255,.22),transparent 72%)}
 .lo-solid .lo{background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--lo-c) 82%,#fff),var(--lo-c) 60%,color-mix(in srgb,var(--lo-c) 85%,#000))}
 .lo-solid .lo::before{display:none}
 .lo-ico{position:absolute;inset:0;z-index:1;display:none;align-items:center;justify-content:center;color:var(--lo-eye,#111114);transition:opacity .2s ease}
@@ -96,6 +98,8 @@ export function orbLook(
   // The launcher's rim (the ring around the button): the turning metal by
   // default, a soft outline with rings pulsing out of it, a plain colour band,
   // or nothing. Pulse and band share one colour.
+  // Unset means the white disk (the default since 2026-10-03): the orb a size
+  // smaller, sitting in a white disk the size of the button.
   const rim = o.rim === "pulse" || o.rim === "band" || o.rim === "none" ? o.rim : "metal";
   const rimColor = o.rimColor && HEX.test(o.rimColor) ? o.rimColor.toLowerCase() : "";
   // What the button casts on the page: a drop shadow, nothing, or a glow.

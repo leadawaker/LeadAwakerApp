@@ -334,7 +334,7 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 .hub-node{position:absolute;right:0;width:58%;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;border:1px solid rgba(110,95,65,.14);background:var(--white);box-shadow:var(--sh-float);
   cursor:pointer;text-align:left;font:inherit;color:var(--ink);transition:opacity .35s,transform .35s,box-shadow .35s}
 .hub-node:hover{transform:translateX(-2px)}
-.hub-node[data-ch="phone"]{top:4%}.hub-node[data-ch="website"]{top:37%}.hub-node[data-ch="whatsapp"]{top:70%}
+.hub-node[data-ch="phone"]{top:4%}.hub-node[data-ch="whatsapp"]{top:37%}.hub-node[data-ch="website"]{top:70%}
 .hub-node[aria-pressed="false"]{opacity:.55;box-shadow:none;background:var(--surface)}
 .hub-node span{flex:1;display:grid;gap:1px;min-width:0}
 .hub-node b{font-size:14.5px}.hub-node small{font-size:12px;color:var(--mute)}
@@ -1081,6 +1081,160 @@ footer img{height:24px;width:auto;display:block}
 #channels .hub-node[aria-pressed="false"]{box-shadow:none}
 #channels :focus-visible{outline-color:var(--on-wine)}
 
+
+/* the dental example: the real widget's look (grey ground, Sara's words beside her face, visitor bubbles in her colour), in the practice's blue */
+.dent{--lo-c:#8EC1E0;--lo-eye:#111114;--lo-rim:#8EC1E0;--dw-out:#8EC1E0;--dw-out-ink:#18181b;--sky-swirl:conic-gradient(from 0deg,#eef8fd,#8ec1e0 14%,#c9e7f4 28%,#4f97c4 42%,#e3f2fa 56%,#a9d6ec 68%,#6aaed6 82%,#eef8fd)}
+.site.dent .wav{width:26px;height:26px;font-size:12px;color:#111114;background:radial-gradient(circle at 35% 30%,#EEF8FD,#8EC1E0 55%,#4F97C4)}
+.site.dent .wav .lo{--lo-s:26px}
+.site.dent .lo{background:var(--lo-c)!important}
+.site.dent .lo-eyes{display:flex!important}.site.dent .lo-ico{display:none!important}
+.site.dent .lo::before{display:none!important}.site.dent .lo::after{display:block!important}
+.site.dent .lo{background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--lo-c) 82%,#fff),var(--lo-c) 60%,color-mix(in srgb,var(--lo-c) 85%,#000))!important}
+.site.dent .lo-eyes i{background:#111114!important}
+/* the widget default: a white disk with her a size smaller inside, glowing in her colour */
+.site.dent .launch{box-shadow:0 0 24px 4px color-mix(in srgb,var(--lo-c) 60%,transparent),0 10px 20px -10px rgba(0,0,0,.3)}
+.site.dent .launch::before{animation:none;background:#fff}
+.site.dent .launch i{inset:5px;background:var(--lo-c);color:#18181b}
+.site.dent .launch .lm .lo{--lo-s:40px}
+.teaser>div{display:grid;gap:1px}
+.dw{position:absolute;right:14px;top:14px;bottom:74px;width:min(300px,calc(100% - 28px));display:grid;grid-template-rows:auto minmax(0,1fr) auto auto;background:#f4f4f2;border-radius:18px;overflow:hidden;
+  box-shadow:0 24px 50px -18px rgba(20,20,30,.42),0 0 0 1px rgba(0,0,0,.05);font:13px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif;color:#09090b;
+  transform-origin:100% 100%;transition:opacity .3s,transform .4s cubic-bezier(.2,.8,.2,1)}
+.site:not(.open) .dw{opacity:0;transform:translateY(12px) scale(.9);pointer-events:none}
+.dw-h{display:flex;align-items:center;gap:6px;padding:10px 10px 10px 14px;border-bottom:1px solid rgba(0,0,0,.06)}
+.dw-h>div{flex:1;min-width:0;display:grid;line-height:1.25}
+.dw-h b{font-size:13.5px;font-weight:650;color:#09090b}
+.dw-h small{font-size:11px;color:#71717a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dw-act{flex:none;width:28px;height:28px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08);display:grid;place-items:center;color:#3f3f46}
+.dw-act svg{width:13px;height:13px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dw-body{padding:14px 12px 8px;display:flex;flex-direction:column;gap:10px;overflow-y:auto;scrollbar-width:none}
+.dw-body::-webkit-scrollbar{display:none}
+.dw-body>:first-child{margin-top:auto}
+.dw-body>[data-k]{opacity:0;transform:translateY(5px);transition:opacity .35s,transform .35s}
+.dw-body>[data-k].in{opacity:1;transform:none}
+.dw-body>[data-k]:not(.in){display:none}
+.dw-ai{display:flex;gap:8px;align-items:flex-start}
+.dw-ai p{margin:0;padding-top:2px;font-size:13px;line-height:1.5;color:#09090b}
+.dw-me{align-self:flex-end;max-width:80%;padding:7px 12px;border-radius:16px 16px 5px 16px;background:var(--dw-out);color:var(--dw-out-ink);line-height:1.45}
+.dw-vm{display:grid;gap:5px;width:80%}
+.dw-vm .vm-play{background:rgba(0,0,0,.1)}
+.dw-vm .vm-play::after{border-left-color:var(--dw-out-ink)}
+.dw-vm .vm-wave i{background:var(--dw-out-ink);opacity:.65}
+.dw-slots{display:flex;flex-wrap:wrap;gap:6px;padding-left:34px}
+.dw-slots span{padding:6px 11px;border-radius:999px;background:#fff;border:1px solid #e4e4e7;font-weight:600;font-size:11.5px;color:#09090b;transition:background .3s,color .3s,border-color .3s}
+.dw-slots span.pick{background:var(--dw-out);color:var(--dw-out-ink);border-color:var(--dw-out)}
+.dw-bk{margin-left:34px;border-radius:12px;background:#fff;padding:8px 11px;display:grid;gap:1px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:3px solid var(--dw-out)}
+.dw-bk small{font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#16a34a}
+.dw-bk b{font-size:12.5px;font-weight:650}
+.dw-chips{display:flex;flex-wrap:wrap;gap:6px;padding:0 12px 6px}
+.dw-chips:not(.in){display:none}
+.dw-chips span{padding:6px 11px;border-radius:999px;background:#fff;border:1px solid #e4e4e7;font-size:11.5px;color:#09090b;transition:background .2s,color .2s,transform .2s}
+.dw-chips span.press{background:var(--dw-out);color:var(--dw-out-ink);border-color:var(--dw-out);transform:scale(.95)}
+.dw-in{display:flex;align-items:center;gap:6px;padding:6px 10px 10px}
+.dw-clip{flex:none;width:32px;height:32px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08);display:grid;place-items:center;color:#3f3f46}
+.dw-clip svg,.dw-mic svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dw-field{flex:1;min-width:0;display:flex;align-items:center;gap:6px;background:#fff;border-radius:20px;padding:3px 3px 3px 12px;box-shadow:0 1px 3px rgba(0,0,0,.08);color:#a1a1aa;font-size:12px}
+.dw-field span{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dw-mic{flex:none;width:28px;height:28px;border-radius:50%;background:#18181b;color:#fff;display:grid;place-items:center}
+/* photos and voice notes, on both chat channels */
+.media{display:flex;flex-wrap:wrap;gap:8px}
+.media span{display:inline-flex;align-items:center;gap:8px;padding:8px 14px 8px 10px;border-radius:999px;background:var(--surface);box-shadow:var(--sh-crisp);font-size:14px;font-weight:600;color:var(--ink-soft)}
+.media svg{width:18px;height:18px;fill:none;stroke:var(--wine);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
+/* a fuller browser bar for the dental example */
+.b-ic{display:flex;gap:10px;align-items:center;color:#8a8f98}
+.b-ic svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.b-ic svg circle{fill:currentColor;stroke:none}
+.b-ic .b-fwd{opacity:.4}
+.url{display:flex;align-items:center;gap:6px}
+.url svg{flex:none;width:11px;height:11px;fill:none;stroke:#6b7280;stroke-width:2.2;stroke-linecap:round}
+.url span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+@media (max-width:520px){.b-ic .b-fwd,.b-ic .b-share{display:none}.b-ic{gap:8px}}
+/* her looks, under the website row: self-contained so the page's own orb look never reaches them */
+.looks{display:flex;align-items:center;gap:18px;margin-top:4px;padding:18px 20px;border-radius:14px;background:var(--surface);box-shadow:var(--sh-inset)}
+.look-copy{display:grid;gap:6px;min-width:0}
+.looks p{font-size:15.5px;color:var(--ink-soft)}.looks p b{color:var(--ink)}
+.look-now{font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--mute)}
+.look-now span{transition:opacity .6s}
+.look-orb{position:relative;flex:none;width:64px;height:64px;border-radius:50%;box-shadow:0 14px 24px -12px rgba(60,40,15,.55)}
+.look{position:absolute;inset:0;opacity:0;transition:opacity 2.4s ease}
+.look.on{opacity:1}
+.looks .lo{--lo-s:64px;position:relative;display:block;width:64px;height:64px;border-radius:50%;overflow:hidden;isolation:isolate;background:var(--ox-base)!important;
+  -webkit-mask:none!important;mask:none!important;box-shadow:inset 0 -4px 10px rgba(0,0,0,.18),inset 0 3px 7px rgba(255,255,255,.6)!important}
+.looks .lo::before{content:"";position:absolute;inset:-28%;z-index:-1;display:block!important;background:var(--ox-swirl)!important;filter:blur(7px);animation:spin 18s linear infinite}
+.looks .lo::after{content:"";position:absolute;inset:0;border-radius:50%;display:block!important;background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.55),transparent 72%)}
+.looks .lo-eyes{position:absolute;left:50%;top:47%;z-index:1;display:flex!important;gap:9px;transform:translate(-50%,-50%)}
+.looks .lo-eyes i{position:static;display:block;width:6px;height:15px;border:0;border-radius:999px;background:var(--ox-eye,#111114)!important}
+.looks .lo-ico{display:none!important}
+@media (max-width:520px){.looks{padding:16px}.look-orb,.looks .lo{width:56px;height:56px}}
+.ox-silver{--ox-base:#d4d4d8;--ox-swirl:conic-gradient(#fafafa,#9a9aa2 12%,#f4f4f5 24%,#5a5a62 36%,#e4e4e7 48%,#d9c2a3 56%,#fff 64%,#7a7a82 76%,#b9c4cf 86%,#fafafa)}
+.ox-gold{--ox-base:#d9b97a;--ox-swirl:conic-gradient(#fff4dc,#b8893a 12%,#f6e2b4 24%,#7a5420 36%,#ecd29a 48%,#c99a4a 58%,#fff8e8 66%,#8f6428 78%,#e2c48a 88%,#fff4dc)}
+.ox-sky{--ox-base:#8EC1E0;--ox-swirl:conic-gradient(#eef8fd,#8ec1e0 14%,#c9e7f4 28%,#4f97c4 42%,#e3f2fa 56%,#a9d6ec 68%,#6aaed6 82%,#eef8fd)}
+.ox-wine{--ox-base:#7A2E40;--ox-swirl:conic-gradient(#c98a98,#7a2e40 18%,#3e1520 36%,#b4677a 56%,#6e2638 76%,#c98a98)}
+.ox-sage{--ox-base:#7fa889;--ox-swirl:conic-gradient(#e3f0e5,#7fa889 16%,#4f7a5c 34%,#b9d6be 52%,#6f9a7a 70%,#cfe4d3 86%,#e3f0e5)}
+.ox-copper{--ox-base:#c98a62;--ox-swirl:conic-gradient(#fbe7d9,#b06a3e 12%,#f0c7a8 24%,#6e3a1e 36%,#e2a77f 48%,#c47a4c 58%,#fff1e6 66%,#8a4a26 78%,#dca07a 88%,#fbe7d9)}
+.ox-rose{--ox-base:#d9a8a0;--ox-swirl:conic-gradient(#fdeeea,#b97f76 12%,#f4d3cc 24%,#7d4a44 36%,#e8bdb4 48%,#c9958b 58%,#fff6f3 66%,#94605a 78%,#e2b3aa 88%,#fdeeea)}
+.ox-violet{--ox-base:#9b8fd6;--ox-swirl:conic-gradient(#efecfb,#9b8fd6 16%,#5b4fa8 34%,#cfc8f0 52%,#7f70c8 70%,#e0dbf7 86%,#efecfb)}
+
+/* "then she books it": one held stage, the caption changes instead of a text column */
+.bk-sec{background:var(--bg-2);padding-block:clamp(64px,9vw,112px)}
+.bk-scroll{position:relative}
+.bk-scroll.driven{height:calc(100vh + 2100px)}
+.bk-scroll.driven .bk-sticky{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);height:calc(100vh - 64px);height:calc(100svh - 64px);display:grid;align-content:center}
+.bk-sticky .wrap{display:grid;justify-items:center;gap:clamp(12px,2vh,20px)}
+.bk-head{margin:0 auto!important;gap:8px}
+.bk-head h2{font-size:clamp(30px,3.8vw,46px);line-height:1.1}
+.bk-stage{position:relative;width:100%;max-width:1080px;display:grid;grid-template-columns:minmax(0,.78fr) minmax(0,1.22fr);gap:clamp(16px,2.4vw,28px);align-items:stretch}
+.bk-photo{margin:0;border-radius:16px;overflow:hidden;position:relative;background:var(--bg-2);box-shadow:var(--sh-float);transition:opacity .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
+.bk-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:66% 40%;display:block}
+.bk-stage .wk{transition:opacity .5s,filter .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
+.bk-stage .wk-body{height:clamp(170px,34vh,330px)}
+.bk-stage .wk-toast{margin-top:10px}
+.bk-phone{position:absolute;left:50%;top:50%;width:min(560px,100%);transform:translate(-50%,-50%) translateY(40px);z-index:3;display:grid;justify-items:center;gap:16px;opacity:0;pointer-events:none;
+  transition:opacity .45s,transform .7s cubic-bezier(.2,.8,.2,1)}
+.bk-phone .ophone{box-shadow:0 40px 80px -30px rgba(30,15,5,.6),inset 0 0 0 2px #3A322A}
+.bk-sec[data-step="3"] .bk-phone{opacity:1;transform:translate(-50%,-50%);pointer-events:auto}
+/* the phone is shrunk with zoom, not scale, so the title above it keeps its real size and the block keeps its real height */
+.bk-phone .ophone{zoom:var(--ph-z,.56)}
+.bk-ucap{display:grid;gap:6px;text-align:center}
+.bk-ucap h3{font-family:var(--serif);font-size:clamp(22px,2.2vw,28px);line-height:1.2}
+.bk-ucap p{font-size:16px;color:var(--ink-soft)}
+.bk-sec[data-step="3"] .bk-stage .wk,.bk-sec[data-step="3"] .bk-photo{opacity:0;transform:scale(.96);pointer-events:none}
+.bk-sec[data-step="3"] .bk-caps{visibility:hidden}
+.bk-rail{list-style:none;margin:0;padding:5px;display:flex;gap:4px;border-radius:999px;background:var(--surface);box-shadow:var(--sh-inset);max-width:100%}
+.bk-rail button{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;cursor:pointer;padding:9px 14px;border-radius:999px;font:700 13px/1 var(--sans);color:var(--mute);white-space:nowrap;transition:background .35s,color .35s}
+.bk-rail li.done button{color:var(--ink-soft)}
+.bk-rail li.on button{background:var(--white);color:var(--ink);box-shadow:var(--sh-crisp)}
+.bk-rail .dot{width:9px;height:9px;opacity:.35;transition:opacity .35s}
+.bk-rail li.on .dot,.bk-rail li.done .dot{opacity:1}
+.dot.hot{background:#FF3B30}
+.bk-caps{display:grid;width:100%;max-width:640px;text-align:center}
+.bk-cap{grid-area:1/1;display:grid;gap:6px;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .5s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.bk-cap.on{opacity:1;transform:none;pointer-events:auto}
+.bk-cap h3{font-family:var(--serif);font-size:clamp(22px,2.2vw,28px);line-height:1.2}
+.bk-cap p{font-size:16px;color:var(--ink-soft)}
+.bk-sticky .cal-int{justify-content:center}
+.bk-sec+.band{padding-top:clamp(64px,9vw,112px)!important}
+@media (max-height:820px){.bk-sticky .cal-int{display:none}.bk-stage .wk .ln-key{display:none}}
+@media (max-width:860px){.bk-stage{grid-template-columns:minmax(0,1fr)}.bk-photo{display:none}}
+@media (max-width:760px){
+  .bk-phone{--ph-z:.4;top:46%}
+  .bk-head{transition:opacity .4s}
+  .bk-sec[data-step="3"] .bk-head{opacity:0}
+  .bk-ucap h3{font-size:21px}.bk-ucap p{font-size:14.5px}
+  .bk-head h2{font-size:28px}
+  .bk-stage .wk{padding:14px}
+  .bk-stage .wk-body{height:clamp(140px,24vh,220px)}
+  .bk-stage .wk-toast{display:none}
+  .bk-stage .lanes-top small{display:none}
+  .bk-cap h3{font-size:21px}
+  .bk-rail button{padding:8px 10px;font-size:11.5px;gap:5px}
+  .bk-rail .dot{display:none}
+  .bk-cap p{font-size:14.5px}
+  .bk-sticky .cal-int{display:none}
+  .bk-stage .wk .ln-key{display:none}
+}
+@media (max-width:400px){.bk-rail button{padding:8px 7px;font-size:10.5px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
 </style>
 
@@ -1115,7 +1269,9 @@ footer img{height:24px;width:auto;display:block}
 .lo-tinted .lo{background:var(--lo-c)}
 .lo-tinted .lo::before{background:conic-gradient(from 0deg,color-mix(in srgb,var(--lo-c) 35%,#fff),var(--lo-c) 20%,color-mix(in srgb,var(--lo-c) 55%,#000) 38%,
   color-mix(in srgb,var(--lo-c) 50%,#fff) 58%,var(--lo-c) 78%,color-mix(in srgb,var(--lo-c) 35%,#fff))}
-.lo-tinted .lo::after,.lo-solid .lo::after{background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.4),transparent 72%)}
+.lo-tinted .lo::after{background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.4),transparent 72%)}
+/* Solid: the top-left light, plus a smaller, fainter one bouncing back from the bottom right. */
+.lo-solid .lo::after{background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.4),transparent 72%),radial-gradient(34% 24% at 70% 84%,rgba(255,255,255,.22),transparent 72%)}
 .lo-solid .lo{background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--lo-c) 82%,#fff),var(--lo-c) 60%,color-mix(in srgb,var(--lo-c) 85%,#000))}
 .lo-solid .lo::before{display:none}
 .lo-ico{position:absolute;inset:0;z-index:1;display:none;align-items:center;justify-content:center;color:var(--lo-eye,#111114);transition:opacity .2s ease}
@@ -1138,8 +1294,6 @@ footer img{height:24px;width:auto;display:block}
 .lo.lo-still .lo-eyes i{animation:none}
 .launch .lm{grid-area:1/1;position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;transition:opacity .3s}
 .launch .lm .lo{--lo-s:45px;-webkit-mask:none;mask:none}
-.lo-tint .launch::before{background:var(--lo-metal)}
-.lo-face-photo .launch .lm .lo{background:var(--lo-photo) center/cover no-repeat}
 .wav,.av3{background:none!important;color:transparent}
 .wav .lo{--lo-s:34px}.teaser .wav .lo{--lo-s:36px}.wav i{z-index:2}
 .av3 .lo{--lo-s:78px}
@@ -1159,16 +1313,6 @@ footer img{height:24px;width:auto;display:block}
 .orb .orb-ring{display:none}
 .orb::before,.orb::after{inset:-12px;border:2px solid rgba(255,220,225,.5);animation:halo 2.6s ease-out infinite}
 .orb::after{animation-delay:1.3s}
-/* The widget example's launcher wears the rim chosen in the CRM too. */
-.lo-rim-pulse .launch::before{animation:none;background:color-mix(in srgb,var(--lo-rim,#a1a1aa) 45%,#fff)}
-.lo-rim-pulse .launch::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--lo-rim,#a1a1aa);animation:halo 2.6s ease-out infinite}
-.lo-rim-band .launch::before{animation:none;background:var(--lo-rim,#a1a1aa)}
-.lo-rim-none .launch::before{display:none}
-.lo-rim-none .launch i{inset:0}
-/* White disk (the widget default): the orb a size smaller in a white disk. */
-.lo-rim-disc .launch::before{animation:none;background:#fff}
-.lo-rim-disc .launch i{inset:5px}
-.lo-rim-disc .launch .lm .lo{--lo-s:40px}
 .orb .lo{--lo-s:150px;position:relative;z-index:1}
 </style>
 <style id="golive">
@@ -1187,10 +1331,6 @@ footer img{height:24px;width:auto;display:block}
 .glt-steps small{display:block;margin-top:18px;font:800 11.5px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--wine)}
 .glt-steps h3{margin:8px 0 6px;font:500 24px/1.2 var(--serif);color:var(--ink)}
 .glt-steps p{margin:0;font-size:15.5px;line-height:1.6;color:var(--mute)}
-.glt-int{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
-.glt-int>span{font:800 11.5px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--mute-2)}
-.glt-int ul{list-style:none;margin:0;padding:0;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
-.glt-int li{padding:8px 14px;border-radius:999px;background:var(--white);border:1px solid var(--line-2);font-size:14px;font-weight:600;color:var(--ink-soft)}
 @media (max-width:860px),(prefers-reduced-motion:reduce){
   .glt{height:auto;padding-block:clamp(64px,9vw,112px)}
   .glt-pin{position:static;height:auto;overflow:visible}
@@ -1211,8 +1351,8 @@ footer img{height:24px;width:auto;display:block}
       <a class="logo" href="#top"><img src="/site/img/836cc55c31a7.svg" alt="Lead Awaker"></a>
       <div class="nav-links">
         <a href="#phone">Phone</a>
-        <a href="#website">Website</a>
         <a href="#whatsapp">WhatsApp</a>
+        <a href="#website">Website</a>
         <a href="#calendar">Calendar</a>
         <a href="#how">How it works</a>
         <a href="/reactivate">Old leads</a>
@@ -1223,8 +1363,8 @@ footer img{height:24px;width:auto;display:block}
     </div>
     <div class="mnav" id="mnav" hidden>
       <a href="#phone">Phone</a>
-      <a href="#website">Website chat</a>
       <a href="#whatsapp">WhatsApp</a>
+      <a href="#website">Website chat</a>
       <a href="#calendar">Calendar booking</a>
       <a href="#how">How it works</a>
       <a href="#faq">Questions</a>
@@ -1359,18 +1499,18 @@ footer img{height:24px;width:auto;display:block}
       <div class="hub" id="hub">
         <div class="hub-copy">
           <h3>You choose where she answers</h3>
-          <p class="hub-sum" id="hub-sum">Sara answers your <b>phone, website chat and WhatsApp</b></p>
+          <p class="hub-sum" id="hub-sum">Sara answers your <b>phone, WhatsApp and website chat</b></p>
         </div>
         <div class="hub-map">
           <svg class="hub-lines" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
             <path data-ch="phone" class="on" d="M24 50 C 34 50, 34 16, 44 16"/>
-            <path data-ch="website" class="on" d="M24 50 C 34 50, 34 50, 44 50"/>
-            <path data-ch="whatsapp" class="on" d="M24 50 C 34 50, 34 83, 44 83"/>
+            <path data-ch="whatsapp" class="on" d="M24 50 C 34 50, 34 50, 44 50"/>
+            <path data-ch="website" class="on" d="M24 50 C 34 50, 34 83, 44 83"/>
           </svg>
           <div class="hub-emma"><span class="av3"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><b>Sara</b></div>
           <button type="button" class="hub-node" data-ch="phone" aria-pressed="true"><i class="ic c-phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></i><span><b>Phone</b><small>Answers your calls</small></span><em class="sw2"></em></button>
-          <button type="button" class="hub-node" data-ch="website" aria-pressed="true"><i class="ic c-web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z"/></svg></i><span><b>Website chat</b><small>Answers visitors</small></span><em class="sw2"></em></button>
           <button type="button" class="hub-node" data-ch="whatsapp" aria-pressed="true"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i><span><b>WhatsApp</b><small>Answers messages</small></span><em class="sw2"></em></button>
+          <button type="button" class="hub-node" data-ch="website" aria-pressed="true"><i class="ic c-web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z"/></svg></i><span><b>Website chat</b><small>Answers visitors</small></span><em class="sw2"></em></button>
         </div>
       </div>
     </div>
@@ -1407,62 +1547,13 @@ footer img{height:24px;width:auto;display:block}
           </div>
         </article>
 
-        <!-- 02 website -->
-        <article class="prob ch" id="website" data-ch="website">
-          <div class="ptext">
-            <span class="bignum" aria-hidden="true">02</span>
-            <span class="pnum"><i class="ic c-web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z"/></svg></i>On your website <span class="offtag">Switched off</span></span>
-            <h3>Late-night visitors become booked appointments</h3>
-            <p class="cost">She answers from your site and books a free slot.</p>
-            <ul class="fix">
-              <li>Answers from your site and your brief</li>
-              <li>Books free slots in your calendar</li>
-              <li>Hands over to you when needed</li>
-            </ul>
-          </div>
-          <div class="vis-wrap">
-            <div class="vis" style="padding:14px" role="img" aria-label="Illustration: a dental practice website at 23:04. The chat opens, the visitor taps Book an appointment, sends a voice note saying they are a new patient, and Sara books Saturday at 10:15.">
-              <div class="browser">
-                <div class="b-top"><div class="dots"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="url">brightsmiledental.com/new-patients</div></div>
-                <div class="site" id="wsite">
-                  <div class="sk"><b>New patients welcome</b><i style="width:90%"></i><i style="width:74%"></i><i style="width:82%"></i><div class="img"></div></div>
-                  <div class="teaser" id="w-teaser"><span class="wav"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><div><b>Sara</b><span>Hi there! Have a question? Chat with me here.</span></div><i class="tx"></i></div>
-                  <div class="widget" id="widget">
-                    <div class="w-h"><span class="wav"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span><i></i></span><div><b>Sara</b><span>Digital assistant · Brightsmile Dental</span></div><span class="w-x"></span></div>
-                    <div class="w-body" id="w-body">
-                      <div class="bb a" data-k="hi">Hi, I’m Sara from Brightsmile Dental. How can I help?</div>
-                      <div class="qr" data-k="qr"><span class="pk2">Book an appointment</span><span>Prices</span><span>Opening hours</span></div>
-                      <div class="bb u" data-k="u1">Book an appointment</div>
-                      <div class="bb a" data-k="a1">Happy to help. Are you a new or an existing patient?</div>
-                      <div class="bb u vm" data-k="vm"><span class="vm-row"><i class="vm-play"></i><span class="vm-wave"><i style="height:80%"></i><i style="height:60%"></i><i style="height:70%"></i><i style="height:35%"></i><i style="height:45%"></i><i style="height:30%"></i><i style="height:35%"></i><i style="height:100%"></i><i style="height:80%"></i><i style="height:80%"></i><i style="height:35%"></i><i style="height:35%"></i><i style="height:50%"></i><i style="height:60%"></i><i style="height:80%"></i><i style="height:60%"></i><i style="height:50%"></i><i style="height:30%"></i><i style="height:45%"></i><i style="height:60%"></i><i style="height:30%"></i><i style="height:100%"></i></span><small>0:06</small></span><em>“New patient. I haven’t seen a dentist in a while. Anything this weekend?”</em></div>
-                      <div class="bb a" data-k="a2">No problem at all. Your first visit is a check-up and a clean, about 45 minutes. Here are the next free times:</div>
-                      <div class="slots" data-k="slots"><span>Fri 17:30</span><span class="pk">Sat 10:15</span><span>Sat 11:45</span></div>
-                      <div class="bk" data-k="bk"><small>Booked</small><b>Sat 10:15 · New patient check-up</b></div>
-                    </div>
-                    <div class="w-in"><div><span>Type your message...</span><i class="send"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></i></div></div>
-                  </div>
-                  <span class="launch" id="w-launch"><i><span class="lm"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><svg class="lx" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></i></span>
-                  <span class="clock num">23:04 · practice closed</span>
-                </div>
-              </div>
-              <ol class="seqsteps" id="st-widget"><li>Opens the chat</li><li>Taps a button</li><li>Sends a voice note</li><li>Booked</li></ol>
-            </div>
-            <button class="replay" type="button" data-replay="widget">Play the chat again</button>
-          </div>
-        </article>
-
-        <!-- 03 whatsapp -->
+        <!-- 02 whatsapp -->
         <article class="prob ch" id="whatsapp" data-ch="whatsapp">
           <div class="ptext">
-            <span class="bignum" aria-hidden="true">03</span>
+            <span class="bignum" aria-hidden="true">02</span>
             <span class="pnum"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i>On WhatsApp <span class="offtag">Switched off</span></span>
             <h3>Replies where your customers already are</h3>
-            <p class="cost">Customers send a photo and a question. Sara replies and books them in.</p>
-            <ul class="fix">
-              <li>Replies in seconds</li>
-              <li>Reads the photos customers send</li>
-              <li>Books and sends reminders</li>
-            </ul>
+            <p class="cost">Customers send a photo, a voice note or a question. Sara replies and books them in.</p>
           </div>
           <div class="vis-wrap">
             <div class="phone" role="img" aria-label="Illustration: a WhatsApp chat with a plumber. A customer sends a photo of a radiator that stays cold at the top, the assistant explains it is a quick job and books a visit at the end of the day.">
@@ -1481,6 +1572,51 @@ footer img{height:24px;width:auto;display:block}
             </div>
             <ol class="seqsteps" id="st-wa" style="width:min(330px,100%);justify-self:center"><li>Sends a photo</li><li>Gets an answer</li><li>Chooses a slot</li><li>Booked</li></ol>
             <button class="replay" type="button" data-replay="wa">Play the chat again</button>
+          </div>
+        </article>
+
+        <!-- 03 website -->
+        <article class="prob ch" id="website" data-ch="website">
+          <div class="ptext">
+            <span class="bignum" aria-hidden="true">03</span>
+            <span class="pnum"><i class="ic c-web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z"/></svg></i>On your website <span class="offtag">Switched off</span></span>
+            <h3>Late-night visitors become booked appointments</h3>
+            <p class="cost">She answers from your site and books a free slot. Visitors can type, send a photo or leave a voice note.</p>
+            <div class="looks" id="looks">
+              <div class="look-orb" aria-hidden="true"><span class="look ox-silver" data-name="Silver" data-kind="Metal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-gold" data-name="Gold" data-kind="Metal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-copper" data-name="Copper" data-kind="Metal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-rose" data-name="Rose gold" data-kind="Metal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-sky" data-name="Sky" data-kind="Colour swirl"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-wine" data-name="Wine" data-kind="Colour swirl"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-sage" data-name="Sage" data-kind="Colour swirl"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-violet" data-name="Violet" data-kind="Colour swirl"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span></div>
+              <div class="look-copy">
+                <p><b>She wears your brand.</b> Pick her colour, her face and the button. Her chat bubbles follow.</p>
+                <small class="look-now"><span id="look-kind">Metal</span> · <span id="look-name">Silver</span></small>
+              </div>
+            </div>
+          </div>
+          <div class="vis-wrap">
+            <div class="vis" style="padding:14px" role="img" aria-label="Illustration: a dental practice website at 23:04 with Sara in the practice's blue. The chat opens, the visitor taps Book an appointment, sends a voice note saying they are a new patient, and Sara books Saturday at 10:15.">
+              <div class="browser">
+                <div class="b-top"><div class="dots"><i class="r"></i><i class="y"></i><i class="g"></i></div><span class="b-ic"><svg viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></svg><svg class="b-fwd" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></svg><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4L21 8"/><path d="M21 3v5h-5"/></svg></span><div class="url"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>brightsmiledental.com/new-patients</span></div><span class="b-ic"><svg class="b-share" viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><svg viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.2"/><circle cx="12" cy="12" r="1.2"/><circle cx="12" cy="19" r="1.2"/></svg></span></div>
+                <div class="site dent lo-solid" id="wsite">
+                  <div class="sk"><b>New patients welcome</b><i style="width:90%"></i><i style="width:74%"></i><i style="width:82%"></i><div class="img"></div></div>
+                  <div class="teaser" id="w-teaser"><div><b>Sara</b><span>Hi there! Have a question? Chat with me here.</span></div><i class="tx"></i></div>
+                  <div class="dw" id="widget">
+                    <div class="dw-h"><div><b>Sara</b><small>Digital assistant · Brightsmile Dental</small></div><span class="dw-act"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></span><span class="dw-act"><svg viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></span></div>
+                    <div class="dw-body" id="w-body">
+                      <div class="dw-ai" data-k="hi"><span class="wav"><span class="lo lo-still" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><p>Hi, I’m Sara from Brightsmile Dental. How can I help?</p></div>
+                      <div class="dw-me" data-k="u1">Book an appointment</div>
+                      <div class="dw-ai" data-k="a1"><span class="wav"><span class="lo lo-still" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><p>Happy to help. Are you a new or an existing patient?</p></div>
+                      <div class="dw-me dw-vm" data-k="vm"><span class="vm-row"><i class="vm-play"></i><span class="vm-wave"><i style="height:80%"></i><i style="height:60%"></i><i style="height:70%"></i><i style="height:35%"></i><i style="height:45%"></i><i style="height:30%"></i><i style="height:35%"></i><i style="height:100%"></i><i style="height:80%"></i><i style="height:80%"></i><i style="height:35%"></i><i style="height:35%"></i><i style="height:50%"></i><i style="height:60%"></i><i style="height:80%"></i><i style="height:60%"></i><i style="height:50%"></i><i style="height:30%"></i><i style="height:45%"></i><i style="height:60%"></i><i style="height:30%"></i><i style="height:100%"></i></span><small>0:06</small></span><em>“New patient. I haven’t seen a dentist in a while. Anything this weekend?”</em></div>
+                      <div class="dw-ai" data-k="a2"><span class="wav"><span class="lo lo-still" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><p>No problem at all. Your first visit is a check-up and a clean, about 45 minutes. Here are the next free times:</p></div>
+                      <div class="dw-slots" data-k="slots"><span>Fri 17:30</span><span class="pk">Sat 10:15</span><span>Sat 11:45</span></div>
+                      <div class="dw-bk" data-k="bk"><small>Booked</small><b>Sat 10:15 · New patient check-up</b></div>
+                    </div>
+                    <div class="dw-chips" data-k="qr"><span class="pk2">Book an appointment</span><span>Prices</span><span>Opening hours</span></div>
+                    <div class="dw-in"><i class="dw-clip"><svg viewBox="0 0 24 24"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l8.6-8.6a4 4 0 0 1 5.7 5.7l-8.6 8.6a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg></i><div class="dw-field"><span>Type your message...</span><i class="dw-mic"><svg viewBox="0 0 24 24"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v3"/></svg></i></div></div>
+                  </div>
+                  <span class="launch" id="w-launch"><i><span class="lm"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><svg class="lx" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></i></span>
+                  <span class="clock num">23:04 · practice closed</span>
+                </div>
+              </div>
+            </div>
+            <button class="replay" type="button" data-replay="widget">Play the chat again</button>
           </div>
         </article>
       </div>
@@ -1512,22 +1648,17 @@ footer img{height:24px;width:auto;display:block}
     </div>
   </section>
 
-  <section class="band" id="calendar" style="padding-top:0">
-    <div class="wrap">
-      <article class="prob">
-        <div class="ptext">
-          <span class="pnum"><i class="ic c-cal"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg></i>Straight into your calendar</span>
-          <h3>She books the appointment, not just a message</h3>
-          <p class="cost">On the phone, in chat or on WhatsApp: when a customer is ready, Sara finds a free slot and books it.</p>
-          <ul class="fix">
-            <li>Only offers times you’re actually free</li>
-            <li>Sends the customer a confirmation and a reminder</li>
-            <li>Rather ring them first? She books a callback instead</li>
-          </ul>
-          <div class="cal-int"><span>Works with</span><b>Google Calendar</b><b>Outlook</b><b>and more</b></div>
-        </div>
-        <div class="vis-wrap">
-          <div class="vis wk" id="wk" role="img" aria-label="Illustration: a dental practice's week. Sara books six appointments into the free slots, from phone calls, website chats and WhatsApp messages.">
+  <section class="band bk-sec" id="calendar">
+    <div class="bk-scroll" id="bk-scroll">
+      <div class="bk-sticky">
+        <div class="wrap">
+          <div class="head bk-head">
+            <span class="eyebrow">Straight into your calendar</span>
+            <h2>Then she <em class="w">books it</em></h2>
+          </div>
+          <div class="bk-stage" id="bk-stage">
+            <figure class="bk-photo"><img src="/site/img/e89805d5280e.webp" alt="A salon receptionist smiling at a customer across the front desk" loading="lazy"></figure>
+            <div class="vis wk" id="wk" role="img" aria-label="Illustration: a dental practice's week. Sara books six appointments into the free slots, from phone calls, website chats and WhatsApp messages.">
             <div class="lanes-top"><b>Brightsmile Dental · this week</b><small><span id="wk-count" class="num">6</span> booked by Sara</small></div>
             <div class="wk-head"><span></span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span></div>
             <div class="wk-body">
@@ -1537,27 +1668,9 @@ footer img{height:24px;width:auto;display:block}
             <div class="wk-toast" id="wk-toast"></div>
             <div class="ln-key"><span><i class="kd tel"></i>Phone</span><span><i class="kd web"></i>Website</span><span><i class="kd wa"></i>WhatsApp</span><span><i class="kd busy"></i>Already booked</span></div>
           </div>
-          <button class="replay" type="button" data-replay="wk">Fill the week again</button>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <section class="band" id="urgent" style="padding-top:0">
-    <div class="wrap">
-      <article class="prob">
-        <div class="ptext">
-          <span class="pnum">When it can’t wait</span>
-          <h3>Ready buyers ring your mobile</h3>
-          <p class="cost">A buyer ready to sign, a patient who wants today’s free slot. Sara rings you, briefs you in seconds, and puts them through when you press 1.</p>
-          <ul class="fix">
-            <li>You choose what rings through, and when</li>
-            <li>Press 1 to talk, 2 for a callback</li>
-            <li>No answer? She books them in instead</li>
-          </ul>
-        </div>
-        <div class="vis-wrap">
-          <div class="phone ophone" id="ophone">
+            <div class="bk-phone" id="urgent">
+            <div class="bk-ucap"><h3>When it can’t wait, she rings you</h3><p>A buyer ready to sign, or a client with an emergency? Sara calls your mobile, briefs you in seconds, and puts them through when you press 1.</p></div>
+            <div class="phone ophone" id="ophone">
             <div class="oscreen">
               <div class="os-top"><span class="os-lbl hot">Ready to buy</span><b>Sara · Northgate Motors</b><small>Calling your mobile · 10:14</small></div>
               <canvas class="siri" id="siri2" aria-hidden="true"></canvas>
@@ -1572,37 +1685,32 @@ footer img{height:24px;width:auto;display:block}
               </div>
             </div>
           </div>
+            </div>
+          </div>
+          <ol class="bk-rail" id="bk-rail">
+            <li><button type="button"><i class="dot tel"></i>Phone</button></li>
+            <li><button type="button"><i class="dot wa"></i>WhatsApp</button></li>
+            <li><button type="button"><i class="dot web"></i>Website chat</button></li>
+            <li><button type="button"><i class="dot hot"></i>Can’t wait</button></li>
+          </ol>
+          <div class="bk-caps" aria-live="polite">
+            <div class="bk-cap"><h3>A caller wants a slot</h3><p>Sara checks your calendar while you’re on the job and books a time you’re actually free.</p></div>
+            <div class="bk-cap"><h3>A WhatsApp turns into a visit</h3><p>Customers reply where they already are. Sara books them and sends the reminder.</p></div>
+            <div class="bk-cap"><h3>A late-night visitor picks a time</h3><p>Your website chat offers the next free slots. One tap and it’s in your week.</p></div>
+            <div class="bk-cap"><h3>When it can’t wait, she rings you</h3><p>A buyer ready to sign, or a client with an emergency? Sara calls your mobile, briefs you in seconds, and puts them through when you press 1.</p></div>
+          </div>
+          <div class="cal-int"><span>Works with</span><b>Google Calendar</b><b>Outlook</b><b>and more</b></div>
         </div>
-      </article>
-    </div>
-  </section>
-
-  <section class="band" id="how" style="padding-top:0">
-    <div class="wrap">
-      <div class="head">
-        <h2>Live without changing your number</h2>
-        <p>We set it up. Nothing goes live until you’ve tested it.</p>
-      </div>
-      <div class="steps-panel">
-        <figure class="portrait"><img src="/site/img/e89805d5280e.webp" alt="A salon receptionist smiling at a customer across the front desk" loading="lazy">
-          <div class="float f1"><span class="fdot"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span><div><b>Incoming call · new customer</b><span>Picked up by Sara after 2 rings</span></div></div>
-          <div class="float f2"><b>Appointment booked</b><span>Cut and colour, Saturday 10:00</span></div>
-        </figure>
-        <ol class="steps">
-          <li><h3>A 30-minute call</h3><span class="when">This week</span><p>Tell us how calls come in and what a good call sounds like.</p></li>
-          <li><h3>We build Sara, you test her</h3><span class="when">Before anything goes live</span><p>We write her brief with you in an onboarding session. Then ring her, message her, try to catch her out.</p></li>
-          <li><h3>Switch it on</h3><span class="when">Your number stays yours</span><p>Forward your calls, add the chat, connect WhatsApp and your calendar. Pause her any time.</p></li>
-        </ol>
       </div>
     </div>
   </section>
 
 
-  <section class="glt" id="how-timeline" aria-labelledby="glt-h">
+  <section class="glt" id="how" aria-labelledby="glt-h">
     <div class="glt-pin">
       <div class="wrap"><div class="head glt-head">
         <span class="eyebrow">From kick-off to live</span>
-        <h2 id="glt-h">Live in <em class="w">7 days</em>, on your own number</h2>
+        <h2 id="glt-h">Live in <em class="w">2 weeks</em>, on your own number</h2>
         <p>What happens the moment you say yes. Nothing goes live until you have tested her yourself.</p>
       </div></div>
       <div class="glt-view">
@@ -1610,19 +1718,13 @@ footer img{height:24px;width:auto;display:block}
           <div class="glt-line"><i></i></div>
           <ol class="glt-steps">
             <li><span class="glt-n">01</span><small>Day 1</small><h3>Kick-off call</h3><p>Thirty minutes. How calls come in, what a good call sounds like, your prices, your calendar.</p></li>
-            <li><span class="glt-n">02</span><small>Day 2 to 3</small><h3>We build Sara</h3><p>Her brief, what she knows from your website, your booking rules, her voice. Written with you, in your words.</p></li>
-            <li><span class="glt-n">03</span><small>Day 4 to 5</small><h3>Quality tests</h3><p>We put her through test conversations: rushed callers, angry ones, price questions, off-topic chats. Every miss gets fixed.</p></li>
-            <li><span class="glt-n">04</span><small>Day 6</small><h3>You try to catch her out</h3><p>Ring her, message her, ask the awkward questions. She goes live only when you sign off.</p></li>
-            <li><span class="glt-n">05</span><small>Day 7</small><h3>Switch on</h3><p>Forward your calls, add the chat to your site, connect WhatsApp and your calendar. Your number stays yours.</p></li>
-            <li><span class="glt-n">06</span><small>Week 2 onwards</small><h3>She keeps getting better</h3><p>We read her conversations, A/B test her openings and replies, and send you a short report. Pause her any time.</p></li>
+            <li><span class="glt-n">02</span><small>Day 2 to 5</small><h3>We build Sara</h3><p>Her brief, what she knows from your website, your booking rules, her voice. Written with you, in your words.</p></li>
+            <li><span class="glt-n">03</span><small>Day 6 to 9</small><h3>Quality tests</h3><p>We put her through test conversations: rushed callers, angry ones, price questions, off-topic chats. Every miss gets fixed.</p></li>
+            <li><span class="glt-n">04</span><small>Day 10 to 12</small><h3>You try to catch her out</h3><p>Ring her, message her, ask the awkward questions. She goes live only when you sign off.</p></li>
+            <li><span class="glt-n">05</span><small>Day 14</small><h3>Switch on</h3><p>Forward your calls, add the chat to your site, connect WhatsApp and your calendar. Your number stays yours.</p></li>
+            <li><span class="glt-n">06</span><small>Week 3 onwards</small><h3>She keeps getting better</h3><p>We read her conversations, A/B test her openings and replies, and send you a short report. Pause her any time.</p></li>
           </ol>
         </div>
-      </div>
-      <div class="wrap glt-int">
-        <span>She works with</span>
-        <ul>
-          <li>Your phone number</li><li>Your website</li><li>WhatsApp</li><li>Google Calendar</li><li>Email alerts</li>
-        </ul>
       </div>
     </div>
   </section>
@@ -1682,7 +1784,7 @@ footer img{height:24px;width:auto;display:block}
       <div class="book">
         <h2>Hear your receptionist before you decide</h2>
         <p>30 minutes. We’ll show you Sara on a real call, and tell you straight if she’s worth it.</p>
-        <div class="book-ctas"><a class="btn btn-light" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Pick a time in the calendar</a><button class="btn btn-ghost-light js-sara" type="button" hidden>Not ready to book? Ask Sara now</button></div>
+        <div class="book-ctas"><a class="btn btn-light" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Pick a time in the calendar</a></div>
         <div class="cal-wrap" id="cal-wrap" hidden><div id="cal-inline"></div></div>
       </div>
     </div>
@@ -2027,7 +2129,7 @@ footer img{height:24px;width:auto;display:block}
   }
   var widget=$('widget'),wa=$('wa');
   /* website chat: closed with a teaser, opens, a button tap, a voice note, then the booking. At rest it shows the end. */
-  var wsite=$('wsite'),wbody=$('w-body'),teaser=$('w-teaser'),wl=$('w-launch'),W={},wtm=[],wsteps=[].slice.call($('st-widget').children);
+  var wsite=$('wsite'),wbody=$('w-body'),teaser=$('w-teaser'),wl=$('w-launch'),W={},wtm=[],wsteps=[];
   [].forEach.call(widget.querySelectorAll('[data-k]'),function(e){W[e.dataset.k]=e});
   function wstep(n){wsteps.forEach(function(li,i){li.classList.toggle('on',i<=n)})}
   function wbottom(){if(wbody.scrollTo)wbody.scrollTo({top:wbody.scrollHeight,behavior:reduce?'auto':'smooth'});else wbody.scrollTop=wbody.scrollHeight}
@@ -2083,11 +2185,42 @@ footer img{height:24px;width:auto;display:block}
     function hh(h){return Math.floor(h)+':'+(h%1?('0'+Math.round(h%1*60)).slice(-2):'00')}
     function say(i){var n=NEW[i];toast.innerHTML='<i class="dot '+n.ch+'"></i><span><b>'+n.w+' booked '+DAYS[n.d]+' '+hh(n.s)+'</b> · '+n.t+', '+VIA[n.ch]+'</span>';
       toast.classList.remove('in');void toast.offsetWidth;toast.classList.add('in');cnt.textContent=i+1}
-    evs.forEach(function(e){e.classList.add('in')});say(NEW.length-1);
-    function play(){tm.forEach(clearTimeout);tm=[];evs.forEach(function(e){e.classList.remove('in')});cnt.textContent='0';toast.classList.remove('in');
-      evs.forEach(function(e,i){tm.push(setTimeout(function(){e.classList.add('in');say(i)},500+i*1300))})}
-    onView($('wk'),play,.45);
-    var rb=document.querySelector('[data-replay="wk"]');if(rb)rb.addEventListener('click',play);
+    /* the bookings drop in on their own loop while the calendar is on screen; scrolling only changes the caption */
+    var run=0,vis=false;
+    function cycle(){var my=++run;evs.forEach(function(e){e.classList.remove('in')});cnt.textContent=0;tm.forEach(clearTimeout);tm=[];
+      NEW.forEach(function(n,i){tm.push(setTimeout(function(){if(my!==run)return;evs[i].classList.add('in');say(i)},700+i*1300))});
+      tm.push(setTimeout(function(){if(my===run&&vis)cycle()},700+NEW.length*1300+3200))}
+    if(reduce){evs.forEach(function(e){e.classList.add('in')});cnt.textContent=NEW.length}
+    else if('IntersectionObserver' in window){new IntersectionObserver(function(es){var v=es[0].isIntersecting;if(v&&!vis){vis=true;cycle()}else if(!v){vis=false;run++;tm.forEach(clearTimeout)}},{threshold:.25}).observe($('wk'))}
+    else cycle();
+    $('wk').laShow=function(){};
+  })();
+
+
+  /* ---- "she wears your brand": one orb drifting through metal shades, then colour swirls ---- */
+  (function(){
+    var box=$('looks');if(!box)return;
+    var ls=[].slice.call(box.querySelectorAll('.look')),kind=$('look-kind'),name=$('look-name'),i=0;
+    function show(n){ls.forEach(function(l,j){l.classList.toggle('on',j===n)});kind.textContent=ls[n].dataset.kind;name.textContent=ls[n].dataset.name}
+    show(0);if(reduce)return;
+    setInterval(function(){i=(i+1)%ls.length;show(i)},3000);
+  })();
+  /* ---- "then she books it": while the section is held, scrolling walks phone, chat, WhatsApp, then the urgent call ---- */
+  (function(){
+    var wrapEl=$('bk-scroll'),stage=$('bk-stage');if(!wrapEl||!stage)return;
+    var sec=$('calendar'),items=[].slice.call(document.querySelectorAll('#bk-rail li')),caps=[].slice.call(document.querySelectorAll('.bk-cap')),cur=-1,N=4;
+    var driven=!reduce&&window.CSS&&CSS.supports&&CSS.supports('position','sticky');
+    if(driven)wrapEl.classList.add('driven');
+    function set(i){if(i===cur)return;cur=i;sec.dataset.step=i;
+      items.forEach(function(li,j){li.classList.toggle('on',j===i);li.classList.toggle('done',j<i)});
+      caps.forEach(function(c,j){c.classList.toggle('on',j===i)});
+      if($('wk').laShow)$('wk').laShow(i)}
+    function span(){var r=wrapEl.getBoundingClientRect();return{top:r.top+window.scrollY,run:wrapEl.offsetHeight-window.innerHeight}}
+    function fromScroll(){var sp=span(),p=(window.scrollY-sp.top)/Math.max(1,sp.run);set(Math.max(0,Math.min(N-1,Math.floor(p*N))))}
+    items.forEach(function(li,i){li.querySelector('button').addEventListener('click',function(){
+      if(driven){var sp=span();window.scrollTo({top:sp.top+sp.run*(i+.5)/N,behavior:'smooth'})}else set(i)})});
+    if(driven){var ticking=false;window.addEventListener('scroll',function(){if(!ticking){ticking=true;requestAnimationFrame(function(){ticking=false;fromScroll()})}},{passive:true});fromScroll()}
+    else set(0);
   })();
 
   /* ---- Sara's brief, three takes: points from her brief appear around her for a few seconds, then make room ---- */
@@ -2195,31 +2328,10 @@ footer img{height:24px;width:auto;display:block}
   [].forEach.call(document.querySelectorAll('.js-login'),function(a){a.textContent='Open app';a.href='/platform/campaigns'});
 })();
 </script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=13" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
 <script>
 (function(){
-  var b=document.querySelector('.js-sara');
-  if(!b)return;
-  function ready(){b.hidden=false}
-  if(window.LeadAwakerWidget)ready();else window.addEventListener('leadawaker-widget-ready',ready);
-  b.addEventListener('click',function(){if(window.LeadAwakerWidget)window.LeadAwakerWidget.open()});
-})();
-</script>
-<script>
-(function(){
-  function apply(l){
-    if(!l)return;var h=document.documentElement;
-    (l.cls||'').split(' ').forEach(function(c){if(c)h.classList.add(c)});
-    (l.vars||'').split(';').forEach(function(d){var i=d.indexOf(':');if(i>0)h.style.setProperty(d.slice(0,i).trim(),d.slice(i+1).trim())});
-    if(l.photo)h.style.setProperty('--lo-photo',"url('"+l.photo+"')");
-  }
-  if(window.LeadAwakerWidget&&window.LeadAwakerWidget.look)apply(window.LeadAwakerWidget.look);
-  window.addEventListener('leadawaker-widget-look',function(e){apply(e.detail)});
-})();
-</script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=10" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
-<script>
-(function(){
-  var sec=document.getElementById('how-timeline');if(!sec)return;
+  var sec=document.getElementById('how');if(!sec)return;
   var track=sec.querySelector('.glt-track'),fill=sec.querySelector('.glt-line i'),steps=[].slice.call(sec.querySelectorAll('.glt-steps li'));
   var stacked=window.matchMedia('(max-width:860px),(prefers-reduced-motion:reduce)');
   function tick(){

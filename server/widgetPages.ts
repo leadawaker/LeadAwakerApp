@@ -33,12 +33,15 @@ export interface FrameConfig {
   orbFace?: string | null;
   /** The face photo's URL on our own origin, when orbFace is 'photo'. */
   orbPhoto?: string | null;
-  /** The launcher's rim: 'metal' | 'pulse' | 'band' | 'none', and its colour. */
+  /** The launcher's rim: 'metal' (default) | 'pulse' | 'band' | 'none', and its colour. */
   orbRim?: string | null;
   orbRimColor?: string | null;
   /** What the launcher casts: 'shadow' | 'none' | 'glow', and its colour. */
   orbShadow?: string | null;
   orbShadowColor?: string | null;
+  /** The visitor's message bubbles. Null follows her colour (a colour orb),
+   *  or keeps the near-black default when she is metal. */
+  bubbleColor?: string | null;
 }
 
 export interface DemoFrame {
@@ -105,12 +108,18 @@ export const LAUNCHER_CSS = `
 /* Other rims. Pulse: a soft lighter outline with rings breathing out of it
    (the homepage's "one brief" look). Band: a still ring in one colour. None:
    the orb alone, edge to edge. The glint only belongs on metal. */
-.la-root.lo-rim-pulse .la-btn::before{background:color-mix(in srgb,var(--lo-rim,#a1a1aa) 45%,#fff);animation:none}
+/* Pulse is the colour band plus rings breathing out of it: same band, same orb size. */
+.la-root.lo-rim-pulse .la-btn::before{background:var(--lo-rim,#a1a1aa);animation:none}
+.la-root.lo-rim-pulse .la-core{inset:8px}
+.la-root.lo-rim-pulse .la-core .lo{--lo-s:44px}
 .la-root.lo-rim-pulse .la-btn::after{inset:-6px;background:none;filter:none;border:2px solid var(--lo-rim,#a1a1aa);opacity:.4;animation:la-pulse 2.6s ease-out infinite}
 .la-root.lo-rim-pulse .la-btn:hover::after{opacity:.4}
 @keyframes la-pulse{0%{transform:scale(1);opacity:.45}100%{transform:scale(1.35);opacity:0}}
 .la-root.lo-rim-band .la-btn::before{background:var(--lo-rim,#a1a1aa);animation:none}
 .la-root.lo-rim-band .la-btn::after{display:none}
+/* The orb is 20% smaller than the metal one (44px of the 60px button), so the band stays the button's size and gets thicker. */
+.la-root.lo-rim-band .la-core{inset:8px}
+.la-root.lo-rim-band .la-core .lo{--lo-s:44px}
 .la-root.lo-rim-none .la-btn::before,.la-root.lo-rim-none .la-btn::after{display:none}
 /* With no rim the core fills the button, so the orb grows with it (its size is
    fixed in px, so left alone it sat in the top-left corner over a grey core). */
@@ -309,6 +318,15 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
         shadow: opts.config.orbShadow, shadowColor: opts.config.orbShadowColor,
       }, inkFor)
     : orbLook({ style: accent ? "tinted" : "metal", color: accent }, inkFor);
+  // The visitor's bubbles: a colour picked for them, else her own colour when
+  // she wears one, else the neutral near-black. Text flips to whatever reads.
+  const pick = opts.mode === "live" ? opts.config.bubbleColor : null;
+  const ownColour = look.cls.includes("lo-tinted") || look.cls.includes("lo-solid");
+  const bubble = pick && /^#[0-9a-fA-F]{6}$/.test(pick) ? pick.toLowerCase() : ownColour ? accent : "";
+  const rootVars = [
+    accent ? `--w-accent:${accent};--w-accent-ink:${inkFor(accent)}` : "",
+    bubble ? `--w-bub:${bubble};--w-bub-ink:${inkFor(bubble)}` : "",
+  ].filter(Boolean).join(";");
   return `<!doctype html>
 <html lang="${escapeHtml(lang2(lang))}">
 <head>
@@ -318,7 +336,7 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
 <link rel="stylesheet" href="/premium/design-tokens.css?v=${ASSET_V}">
 <link rel="stylesheet" href="/premium/demo/demo.css?v=${ASSET_V}">
 <link rel="stylesheet" href="/widget/widget.css?v=${ASSET_V}">
-${accent ? `<style>:root{--w-accent:${accent};--w-accent-ink:${inkFor(accent)}}</style>` : ""}
+${rootVars ? `<style>:root{${rootVars}}</style>` : ""}
 <style>${ORB_CSS}</style>
 ${frameImportMap()}
 </head>

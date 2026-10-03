@@ -1893,6 +1893,7 @@ export const widgetConfigs = nocodb.table("Widget_Configs", {
   orbRimColor: text("orb_rim_color"),             // pulse/band colour, null = soft grey
   orbShadow: text("orb_shadow").default("shadow"), // launcher: 'shadow' | 'none' | 'glow'
   orbShadowColor: text("orb_shadow_color"),       // null = black shadow / grey glow
+  bubbleColor: text("bubble_color"),              // visitor bubbles: null = her colour (near-black when she is metal)
   launcherPosition: text("launcher_position").default("right"),  // 'right' | 'left'
   agentName: text("agent_name"),
   avatarUrl: text("avatar_url"),

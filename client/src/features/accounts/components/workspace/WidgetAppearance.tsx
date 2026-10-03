@@ -107,6 +107,9 @@ export function WidgetAppearance({ cfg, onPatch }: {
   const [rimColor, setRimColor] = useState(cfg.orbRimColor || "#a1a1aa");
   const shadow = (cfg.orbShadow || "shadow") as "shadow" | "none" | "glow";
   const [shadowColor, setShadowColor] = useState(cfg.orbShadowColor || (shadow === "glow" ? "#a1a1aa" : "#000000"));
+  // Null = the visitor's bubbles follow her colour (near-black when she is metal).
+  const bubbleOwn = !!cfg.bubbleColor && HEX.test(cfg.bubbleColor);
+  const [bubbleColor, setBubbleColor] = useState(cfg.bubbleColor || cfg.accentColor || "#18181b");
   const tint = cfg.orbTint && HEX.test(cfg.orbTint) ? cfg.orbTint.toLowerCase() : null;
   const hasPhoto = !!cfg.avatarUrl && cfg.avatarUrl.startsWith("data:image/");
   const [color, setColor] = useState(cfg.accentColor || "#6B2737");
@@ -136,6 +139,7 @@ export function WidgetAppearance({ cfg, onPatch }: {
   const pickTint = (hex: string) => { setCustomTint(hex); if (HEX.test(hex)) settle({ orbTint: hex }); };
   const pickRimColor = (hex: string) => { setRimColor(hex); if (HEX.test(hex)) settle({ orbRimColor: hex }); };
   const pickShadowColor = (hex: string) => { setShadowColor(hex); if (HEX.test(hex)) settle({ orbShadowColor: hex }); };
+  const pickBubbleColor = (hex: string) => { setBubbleColor(hex); if (HEX.test(hex)) settle({ bubbleColor: hex }); };
 
   const uploadPhoto = async (file: File) => {
     setPhotoError(false);
@@ -314,6 +318,31 @@ export function WidgetAppearance({ cfg, onPatch }: {
                 )}
               </div>
             </div>
+          </div>
+
+          <div style={col}>
+            {label("bubbles")}
+            <Segmented
+              value={bubbleOwn ? "own" : "auto"}
+              onChange={(v) => void save({ bubbleColor: v === "own" ? (HEX.test(bubbleColor) ? bubbleColor : "#18181b") : null })}
+              options={[
+                { value: "auto", label: t("websiteChat.bubblesAuto") },
+                { value: "own", label: t("websiteChat.bubblesOwn") },
+              ]}
+            />
+            {bubbleOwn ? (
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <input
+                  type="color"
+                  value={bubbleColor}
+                  onChange={(e) => pickBubbleColor(e.target.value)}
+                  style={{ width: 40, height: 32, padding: 0, border: "1px solid var(--line)", borderRadius: "var(--r-button)", background: "var(--card)", cursor: "pointer" }}
+                />
+                <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink-soft)" }}>{bubbleColor.toUpperCase()}</span>
+              </div>
+            ) : (
+              <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{t("websiteChat.bubblesAutoHint")}</span>
+            )}
           </div>
         </div>
       </div>

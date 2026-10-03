@@ -159,7 +159,9 @@
 /* The AI speaks in plain text beside its face, no bubble: the Kiki look. */
 .wdg .row.ai .bub { background: transparent; color: var(--w-ink); padding: 4px 0 0; border-radius: 0; box-shadow: none; }
 .wdg .row.ai .bub.typing { background: var(--w-card); padding: 10px 13px; border-radius: 14px; }
-.wdg .row.me .bub { background: var(--w-out); color: #fafafa; border-radius: 18px; border-bottom-right-radius: 6px; }
+/* The visitor's bubbles wear --w-bub (her colour, or one picked in the CRM) when
+   the server sets it, with --w-bub-ink as the text that reads on it. */
+.wdg .row.me .bub { background: var(--w-bub, var(--w-out)); color: var(--w-bub-ink, #fafafa); border-radius: 18px; border-bottom-right-radius: 6px; }
 .wdg .row.ai .ts { margin-top: 3px; }
 
 /* A photo the visitor sent. */
@@ -177,19 +179,24 @@
   margin: 5px 2px 0;
 }
 .wdg .bub .lnk { color: #2563eb; }
-.wdg .row.me .bub .lnk { color: #bfdbfe; }
+.wdg .row.me .bub .lnk { color: inherit; text-decoration: underline; }
 .wdg .typing i { background: var(--w-mute-2); }
 
 /* Voice players on the new grounds. */
 .wdg .vplay { background: var(--w-bg); border-color: var(--w-line); color: var(--w-ink); }
-.wdg .row.me .vplay { background: rgba(255,255,255,.14); border-color: rgba(255,255,255,.28); color: #fafafa; }
+.wdg .row.me .vplay {
+  background: color-mix(in srgb, var(--w-bub-ink, #fafafa) 14%, transparent);
+  border-color: color-mix(in srgb, var(--w-bub-ink, #fafafa) 28%, transparent);
+  color: var(--w-bub-ink, #fafafa);
+}
 .wdg .vtime { font-family: var(--w-sans); }
 .wdg .vpending {
   background: linear-gradient(90deg, rgba(0,0,0,.06), rgba(0,0,0,.16), rgba(0,0,0,.06));
   background-size: 200% 100%;
 }
 .wdg .row.me .vpending {
-  background: linear-gradient(90deg, rgba(255,255,255,.14), rgba(255,255,255,.4), rgba(255,255,255,.14));
+  --vp: var(--w-bub-ink, #fafafa);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--vp) 14%, transparent), color-mix(in srgb, var(--vp) 40%, transparent), color-mix(in srgb, var(--vp) 14%, transparent));
   background-size: 200% 100%;
 }
 

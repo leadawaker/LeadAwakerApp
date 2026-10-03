@@ -176,6 +176,7 @@ async function publicConfig(cfg: WidgetConfig): Promise<FrameConfig> {
     orbRimColor: cfg.orbRimColor || null,
     orbShadow: cfg.orbShadow || "shadow",
     orbShadowColor: cfg.orbShadowColor || null,
+    bubbleColor: cfg.bubbleColor || null,
     orbPhoto: cfg.orbFace === "photo" && cfg.avatarUrl ? faceUrl(cfg) : null,
     quickReplies: deriveQuickReplies({ language: cfg.language, override: cfg.quickReplies }),
     greeting: cfg.greeting || "",
@@ -580,6 +581,7 @@ export function registerWidgetRoutes(app: Express) {
     orbRimColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
     orbShadow: z.enum(["shadow", "none", "glow"]).optional(),
     orbShadowColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
+    bubbleColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
     launcherPosition: z.enum(["left", "right"]).optional(),
     agentName: z.string().max(80).optional(),
     // A path, or the CRM's uploaded face photo: a small (256px) image data URL.
