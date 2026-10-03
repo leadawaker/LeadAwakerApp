@@ -33,14 +33,19 @@ var CFG = BOOT.config || {};
 var DEMO = BOOT.mode === "demo";
 
 // The agent's face: the orb (styles in server/widgetOrb.ts, inlined into this
-// document). The same character on the welcome screen, the header and every AI
-// message, so the visitor is talking to one someone, not a row of initials.
+// document; markup mirrors orbHtml there). The same character on the welcome
+// screen and beside every AI message, so the visitor is talking to one
+// someone, not a row of initials.
 function orb(cls) {
-  return '<span class="lo' + (cls ? " " + cls : "") + '" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span></span>';
+  return '<span class="lo' + (cls ? " " + cls : "") + '" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span>' +
+    '<span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span>';
 }
 // Beside each message she just faces forward: a dozen blinking faces down the
 // thread would be a crowd, not a person.
 var AI_AVATAR = '<div class="av av-orb">' + orb("lo-still") + "</div>";
+// While she writes, the face beside the typing dots is alive, its metal
+// spinning faster (.lo-fast on the panel while a reply is pending).
+var TYPING_AVATAR = '<div class="av av-orb">' + orb() + "</div>";
 
 // Phones open the keyboard on focus, so the input is only focused for them when
 // they were already typing; a desktop gets it focused on open.
@@ -120,8 +125,8 @@ function roleLine() {
 function headerHtml(agent, bare) {
   return '<header class="wdg-hdr' + (bare ? " is-bare" : "") + '">' +
       (bare ? "<span></span>" :
+      // No face here: once the thread starts she is beside every message.
       '<div class="wdg-id">' +
-        orb("wdg-ph") +
         '<span class="wdg-who">' +
           '<span class="wdg-name">' + esc(agent || w("assistant")) + "</span>" +
           '<span class="wdg-role">' + esc(roleLine()) + "</span>" +
@@ -232,7 +237,7 @@ function paint() {
         ? welcomeHtml(agent)
         : '<div class="wdg-stream" id="stream">' +
             messagesHtml({ messages: msgs, agent: agent }, pending, memo.playerState(),
-              { avatarHtml: AI_AVATAR, imageSrc: imageSrc }) +
+              { avatarHtml: AI_AVATAR, typingAvatarHtml: TYPING_AVATAR, imageSrc: imageSrc }) +
           "</div>") +
       chipsHtml(msgs, done) +
       (notice ? '<div class="wdg-notice" role="alert">' + esc(notice) + "</div>" : "") +

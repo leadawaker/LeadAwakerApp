@@ -59,7 +59,6 @@
 }
 .wdg-hdr.is-bare { border-bottom-color: transparent; }
 .wdg-id { display: flex; align-items: center; gap: 11px; min-width: 0; }
-.wdg-hdr .lo.wdg-ph { --lo-s: 40px; }
 .wdg-who { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
 .wdg-name {
   font-weight: 650; font-size: 15px; color: var(--w-ink); letter-spacing: -0.01em;

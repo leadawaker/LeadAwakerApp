@@ -1887,6 +1887,8 @@ export const widgetConfigs = nocodb.table("Widget_Configs", {
   // 'solid' paints it flat. Eyes 'auto' pick whatever reads on the orb.
   orbStyle: text("orb_style").default("metal"),   // 'metal' | 'tinted' | 'solid'
   orbEyes: text("orb_eyes").default("auto"),      // 'auto' | 'black' | 'white'
+  orbTint: text("orb_tint"),                       // metal only: '#hex' for gold/copper/..., null = silver
+  orbFace: text("orb_face").default("eyes"),      // 'eyes' | 'icon' | 'photo' (photo = avatarUrl)
   launcherPosition: text("launcher_position").default("right"),  // 'right' | 'left'
   agentName: text("agent_name"),
   avatarUrl: text("avatar_url"),

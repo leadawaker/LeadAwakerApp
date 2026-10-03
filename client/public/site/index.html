@@ -1105,6 +1105,61 @@ footer img{height:24px;width:auto;display:block}
 .nav-links a{white-space:nowrap}
 @media (max-width:1080px){.nav-links a[href="#phone"],.nav-links a[href="#website"],.nav-links a[href="#whatsapp"],.nav-links a[href="#calendar"]{display:none}}
 </style>
+<style id="sara-orb">
+.lo{--lo-s:40px;position:relative;display:inline-block;width:var(--lo-s);height:var(--lo-s);border-radius:50%;flex:0 0 auto;
+  overflow:hidden;isolation:isolate;background:#d4d4d8;vertical-align:middle;
+  -webkit-mask:radial-gradient(circle closest-side,#000 84%,transparent 100%);mask:radial-gradient(circle closest-side,#000 84%,transparent 100%);
+  box-shadow:inset 0 calc(var(--lo-s)*-.07) calc(var(--lo-s)*.16) rgba(0,0,0,.2),inset 0 calc(var(--lo-s)*.05) calc(var(--lo-s)*.1) rgba(255,255,255,.75)}
+.lo::before{content:"";position:absolute;inset:-28%;z-index:-1;
+  background:conic-gradient(from 0deg,#fafafa,#9a9aa2 12%,#f4f4f5 24%,#5a5a62 36%,#e4e4e7 48%,#d9c2a3 56%,#fff 64%,#7a7a82 76%,#b9c4cf 86%,#fafafa);
+  filter:blur(calc(var(--lo-s)*.12));animation:lo-swirl 48s linear infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
+.lo::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
+  background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.8),transparent 72%)}
+.lo-eyes{position:absolute;left:50%;top:47%;z-index:1;display:flex;gap:calc(var(--lo-s)*.15);
+  transform:translate(-50%,-50%);animation:lo-look 12s ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms);transition:opacity .2s ease}
+.lo-eyes i{display:block;width:calc(var(--lo-s)*.095);height:calc(var(--lo-s)*.23);border-radius:999px;
+  background:var(--lo-eye,#111114);animation:lo-blink 5.4s ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
+.lo-fast .lo::before{animation-duration:7s}
+.lo-tint{--lo-metal:conic-gradient(from 0deg,color-mix(in srgb,var(--lo-tint) 22%,#fff),color-mix(in srgb,var(--lo-tint) 72%,#4a4a4a) 12%,
+  color-mix(in srgb,var(--lo-tint) 30%,#fff) 24%,color-mix(in srgb,var(--lo-tint) 70%,#1c1c1c) 36%,color-mix(in srgb,var(--lo-tint) 45%,#eee) 48%,
+  var(--lo-tint) 56%,color-mix(in srgb,var(--lo-tint) 12%,#fff) 64%,color-mix(in srgb,var(--lo-tint) 72%,#333) 76%,color-mix(in srgb,var(--lo-tint) 48%,#ddd) 86%,
+  color-mix(in srgb,var(--lo-tint) 22%,#fff))}
+.lo-tint .lo{background:color-mix(in srgb,var(--lo-tint) 55%,#d4d4d8)}
+.lo-tint .lo::before{background:var(--lo-metal)}
+.lo-tinted .lo{background:var(--lo-c)}
+.lo-tinted .lo::before{background:conic-gradient(from 0deg,color-mix(in srgb,var(--lo-c) 35%,#fff),var(--lo-c) 20%,color-mix(in srgb,var(--lo-c) 55%,#000) 38%,
+  color-mix(in srgb,var(--lo-c) 50%,#fff) 58%,var(--lo-c) 78%,color-mix(in srgb,var(--lo-c) 35%,#fff))}
+.lo-tinted .lo::after,.lo-solid .lo::after{background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.4),transparent 72%)}
+.lo-solid .lo{background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--lo-c) 82%,#fff),var(--lo-c) 60%,color-mix(in srgb,var(--lo-c) 85%,#000))}
+.lo-solid .lo::before{display:none}
+.lo-ico{position:absolute;inset:0;z-index:1;display:none;align-items:center;justify-content:center;color:var(--lo-eye,#111114);transition:opacity .2s ease}
+.lo-ico svg{width:46%;height:46%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.lo-face-icon .lo-eyes{display:none}
+.lo-face-icon .lo-ico{display:flex}
+.lo-face-photo .lo{background:var(--lo-photo) center/cover no-repeat,#d4d4d8;box-shadow:none;-webkit-mask:none;mask:none}
+.lo-face-photo .lo::before,.lo-face-photo .lo::after,.lo-face-photo .lo-eyes{display:none}
+.lo.lo-still::before,.lo.lo-still .lo-eyes,.lo.lo-still .lo-eyes i{animation:none}
+@keyframes lo-swirl{to{transform:rotate(360deg)}}
+@keyframes lo-blink{0%,92%,100%{transform:scaleY(1)}94.5%{transform:scaleY(.1)}97%{transform:scaleY(1)}}
+@keyframes lo-look{0%,16%{transform:translate(-50%,-50%)}22%,36%{transform:translate(-80%,-52%)}42%,54%{transform:translate(-50%,-50%)}
+  60%,72%{transform:translate(-22%,-62%)}78%,100%{transform:translate(-50%,-50%)}}
+@media (prefers-reduced-motion:reduce){.lo::before,.lo-eyes,.lo-eyes i{animation:none}}
+
+/* The page styles bare <i> inside .wav, .launch and .ai-sara (status dot,
+   launcher core, talking bars); her eyes are <i> too, so they are put back. */
+.lo .lo-eyes i{position:static;inset:auto;display:block;width:calc(var(--lo-s)*.095);height:calc(var(--lo-s)*.23);border:0;border-radius:999px;
+  box-shadow:none;background:var(--lo-eye,#111114);animation:lo-blink 5.4s ease-in-out infinite}
+.lo.lo-still .lo-eyes i{animation:none}
+.launch .lm{grid-area:1/1;position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;transition:opacity .3s}
+.launch .lm .lo{--lo-s:45px;-webkit-mask:none;mask:none}
+.wav,.av3{background:none!important;color:transparent}
+.wav .lo{--lo-s:34px}.teaser .wav .lo{--lo-s:36px}.wav i{z-index:2}
+.av3 .lo{--lo-s:78px}
+@media (max-width:480px){.av3 .lo{--lo-s:60px}}
+.ai-sara .lo{--lo-s:34px}
+.orb{background:none!important}
+.orb .lo{--lo-s:150px;position:relative;z-index:1}
+</style>
 </head>
 <body>
 <div class="nav-shell">
@@ -1180,7 +1235,7 @@ footer img{height:24px;width:auto;display:block}
                 </div>
               </div>
               <p class="idle-cap">Press play to hear Sara take a call from a buyer, after the showroom has closed.</p>
-              <div class="cbar"><span class="wav">S<i></i></span><div><b>Sara · Northgate Motors</b><small class="num" id="cb-t">0:00</small></div><span class="cb-bars"><i></i><i></i><i></i><i></i></span><button class="playbtn cb-btn" id="cb-play" type="button" aria-label="Pause the call">
+              <div class="cbar"><span class="wav"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span><i></i></span><div><b>Sara · Northgate Motors</b><small class="num" id="cb-t">0:00</small></div><span class="cb-bars"><i></i><i></i><i></i><i></i></span><button class="playbtn cb-btn" id="cb-play" type="button" aria-label="Pause the call">
                       <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
                       <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.2"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2"/></svg>
                     </button></div>
@@ -1235,7 +1290,7 @@ footer img{height:24px;width:auto;display:block}
       <div class="head"><span class="eyebrow">A missed call rarely rings twice</span><h2>Four ways to answer the phone</h2><p>Plenty of callers don’t leave a message. They ring the next business on the list.</p></div>
       <div class="cmp-list">
         <figure class="cmp-opt">
-          <div class="score sb sab hide" role="table" aria-label="Comparison of four ways to handle calls, with what the caller hears"><div class="sc-row sc-head" role="row"><span role="columnheader"></span><span role="columnheader"><span class="sci ai-you"><i></i><b>3</b></span><b>You</b></span><span role="columnheader"><span class="sci ai-vm"><i></i><i></i></span><b>Voicemail</b></span><span role="columnheader"><span class="sci ai-svc"><svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2.5" y="13" width="4" height="6" rx="1.5"/><rect x="17.5" y="13" width="4" height="6" rx="1.5"/><path d="M19.5 19c0 1.5-2 2.5-5 2.5"/></svg><b class="num">4:32</b></span><b>A service</b></span><span role="columnheader" class="em"><span class="sci ai-sara"><i></i><i></i><i></i><i></i><i></i></span><b>Sara</b></span></div><div class="sc-row" role="row"><span role="rowheader">Answers every call</span><span class="m p" role="cell"><span>Sometimes</span><small>Rings out while you work</small></span><span class="m n" role="cell"><span>No</span><small>“Leave a message”</small></span><span class="m y" role="cell"><span>Yes</span><small>“How can I help?”</small></span><span class="m y em" role="cell"><span>Yes</span><small>“Northgate, Sara speaking”</small></span></div><div class="sc-row" role="row"><span role="rowheader">Knows your business</span><span class="m y" role="cell"><span>Yes</span><small>You know it all</small></span><span class="m n" role="cell"><span>No</span><small>Says nothing</small></span><span class="m n" role="cell"><span>No</span><small>“I’ll pass it on”</small></span><span class="m y em" role="cell"><span>Yes</span><small>“The Corolla? Still here”</small></span></div><div class="sc-row" role="row"><span role="rowheader">Books into your calendar</span><span class="m y" role="cell"><span>Yes</span><small>“Let me call you back”</small></span><span class="m n" role="cell"><span>No</span><small>Nobody books</small></span><span class="m p" role="cell"><span>Message</span><small>“Someone will call you”</small></span><span class="m y em" role="cell"><span>Yes</span><small>“Saturday 10:30, booked”</small></span></div><div class="sc-row" role="row"><span role="rowheader">Answers chat and WhatsApp</span><span class="m p" role="cell"><span>Sometimes</span><small>When you see it</small></span><span class="m n" role="cell"><span>No</span><small>Phone only</small></span><span class="m n" role="cell"><span>No</span><small>Phone only</small></span><span class="m y em" role="cell"><span>Yes</span><small>In seconds</small></span></div><div class="sc-row" role="row"><span role="rowheader">Leaves you free to work</span><span class="m n" role="cell"><span>No</span><small>You stop what you’re doing</small></span><span class="m y" role="cell"><span>Yes</span><small>But you lose them</small></span><span class="m y" role="cell"><span>Yes</span><small>For a fee per minute</small></span><span class="m y em" role="cell"><span>Yes</span><small>You get a recap</small></span></div><div class="sc-row sc-cost" role="row"><span role="rowheader">Costs you</span><span role="cell">Your time</span><span role="cell">Customers</span><span role="cell">Per minute</span><span role="cell" class="em">Fixed fee</span></div></div>
+          <div class="score sb sab hide" role="table" aria-label="Comparison of four ways to handle calls, with what the caller hears"><div class="sc-row sc-head" role="row"><span role="columnheader"></span><span role="columnheader"><span class="sci ai-you"><i></i><b>3</b></span><b>You</b></span><span role="columnheader"><span class="sci ai-vm"><i></i><i></i></span><b>Voicemail</b></span><span role="columnheader"><span class="sci ai-svc"><svg viewBox="0 0 24 24"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2.5" y="13" width="4" height="6" rx="1.5"/><rect x="17.5" y="13" width="4" height="6" rx="1.5"/><path d="M19.5 19c0 1.5-2 2.5-5 2.5"/></svg><b class="num">4:32</b></span><b>A service</b></span><span role="columnheader" class="em"><span class="sci ai-sara"><span class="lo lo-still" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><b>Sara</b></span></div><div class="sc-row" role="row"><span role="rowheader">Answers every call</span><span class="m p" role="cell"><span>Sometimes</span><small>Rings out while you work</small></span><span class="m n" role="cell"><span>No</span><small>“Leave a message”</small></span><span class="m y" role="cell"><span>Yes</span><small>“How can I help?”</small></span><span class="m y em" role="cell"><span>Yes</span><small>“Northgate, Sara speaking”</small></span></div><div class="sc-row" role="row"><span role="rowheader">Knows your business</span><span class="m y" role="cell"><span>Yes</span><small>You know it all</small></span><span class="m n" role="cell"><span>No</span><small>Says nothing</small></span><span class="m n" role="cell"><span>No</span><small>“I’ll pass it on”</small></span><span class="m y em" role="cell"><span>Yes</span><small>“The Corolla? Still here”</small></span></div><div class="sc-row" role="row"><span role="rowheader">Books into your calendar</span><span class="m y" role="cell"><span>Yes</span><small>“Let me call you back”</small></span><span class="m n" role="cell"><span>No</span><small>Nobody books</small></span><span class="m p" role="cell"><span>Message</span><small>“Someone will call you”</small></span><span class="m y em" role="cell"><span>Yes</span><small>“Saturday 10:30, booked”</small></span></div><div class="sc-row" role="row"><span role="rowheader">Answers chat and WhatsApp</span><span class="m p" role="cell"><span>Sometimes</span><small>When you see it</small></span><span class="m n" role="cell"><span>No</span><small>Phone only</small></span><span class="m n" role="cell"><span>No</span><small>Phone only</small></span><span class="m y em" role="cell"><span>Yes</span><small>In seconds</small></span></div><div class="sc-row" role="row"><span role="rowheader">Leaves you free to work</span><span class="m n" role="cell"><span>No</span><small>You stop what you’re doing</small></span><span class="m y" role="cell"><span>Yes</span><small>But you lose them</small></span><span class="m y" role="cell"><span>Yes</span><small>For a fee per minute</small></span><span class="m y em" role="cell"><span>Yes</span><small>You get a recap</small></span></div><div class="sc-row sc-cost" role="row"><span role="rowheader">Costs you</span><span role="cell">Your time</span><span role="cell">Customers</span><span role="cell">Per minute</span><span role="cell" class="em">Fixed fee</span></div></div>
           <button class="btn btn-neu sab-tog" type="button" aria-expanded="false">Show what the caller hears</button>
         </figure>
       </div>
@@ -1271,7 +1326,7 @@ footer img{height:24px;width:auto;display:block}
             <path data-ch="website" class="on" d="M24 50 C 34 50, 34 50, 44 50"/>
             <path data-ch="whatsapp" class="on" d="M24 50 C 34 50, 34 83, 44 83"/>
           </svg>
-          <div class="hub-emma"><span class="av3">S</span><b>Sara</b><small>one brief</small></div>
+          <div class="hub-emma"><span class="av3"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><b>Sara</b><small>one brief</small></div>
           <button type="button" class="hub-node" data-ch="phone" aria-pressed="true"><i class="ic c-phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></i><span><b>Phone</b><small>Answers your calls</small></span><em class="sw2"></em></button>
           <button type="button" class="hub-node" data-ch="website" aria-pressed="true"><i class="ic c-web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z"/></svg></i><span><b>Website chat</b><small>Answers visitors</small></span><em class="sw2"></em></button>
           <button type="button" class="hub-node" data-ch="whatsapp" aria-pressed="true"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i><span><b>WhatsApp</b><small>Answers messages</small></span><em class="sw2"></em></button>
@@ -1326,9 +1381,9 @@ footer img{height:24px;width:auto;display:block}
                 <div class="b-top"><div class="dots"><i class="r"></i><i class="y"></i><i class="g"></i></div><div class="url">brightsmiledental.com/new-patients</div></div>
                 <div class="site" id="wsite">
                   <div class="sk"><b>New patients welcome</b><i style="width:90%"></i><i style="width:74%"></i><i style="width:82%"></i><div class="img"></div></div>
-                  <div class="teaser" id="w-teaser"><span class="wav">S</span><div><b>Sara</b><span>Hi there! Have a question? Chat with me here.</span></div><i class="tx"></i></div>
+                  <div class="teaser" id="w-teaser"><span class="wav"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><div><b>Sara</b><span>Hi there! Have a question? Chat with me here.</span></div><i class="tx"></i></div>
                   <div class="widget" id="widget">
-                    <div class="w-h"><span class="wav">S<i></i></span><div><b>Sara</b><span>AI assistant · Brightsmile Dental</span></div><span class="w-x"></span></div>
+                    <div class="w-h"><span class="wav"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span><i></i></span><div><b>Sara</b><span>Digital assistant · Brightsmile Dental</span></div><span class="w-x"></span></div>
                     <div class="w-body" id="w-body">
                       <div class="bb a" data-k="hi">Hi, I’m Sara from Brightsmile Dental. How can I help?</div>
                       <div class="qr" data-k="qr"><span class="pk2">Book an appointment</span><span>Prices</span><span>Opening hours</span></div>
@@ -1341,7 +1396,7 @@ footer img{height:24px;width:auto;display:block}
                     </div>
                     <div class="w-in"><div><span>Type your message...</span><i class="send"><svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg></i></div></div>
                   </div>
-                  <span class="launch" id="w-launch"><i><svg class="lm" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg><svg class="lx" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></i></span>
+                  <span class="launch" id="w-launch"><i><span class="lm"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><svg class="lx" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></i></span>
                   <span class="clock num">23:04 · practice closed</span>
                 </div>
               </div>
@@ -1462,7 +1517,7 @@ footer img{height:24px;width:auto;display:block}
         <figure class="sv sv-b">
           <div class="sv-stage" data-sv="b" role="img" aria-label="Sara shown as a speaking orb, with the points of her brief appearing around her.">
             <div class="sv-fig">
-              <span class="orb"><span class="orb-ring"></span><span class="bars"><i></i><i></i><i></i><i></i><i></i></span></span>
+              <span class="orb"><span class="orb-ring"></span><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span>
               <span class="sv-name">Sara</span><span class="sv-sub">Phone · Website · WhatsApp</span>
             </div>
           </div>
@@ -2075,6 +2130,6 @@ footer img{height:24px;width:auto;display:block}
   b.addEventListener('click',function(){if(window.LeadAwakerWidget)window.LeadAwakerWidget.open()});
 })();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=7" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=8" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
 </body>
 </html>

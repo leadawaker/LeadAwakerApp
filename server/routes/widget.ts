@@ -12,7 +12,7 @@
 // client's site. It is an identifier, never a secret. What actually protects the
 // account is the domain allowlist plus the per-visitor and per-day caps.
 import express, { type Express, type Request, type Response } from "express";
-import { randomBytes } from "crypto";
+import { randomBytes, createHash } from "crypto";
 import path from "path";
 import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -155,6 +155,14 @@ async function consumeDailyMessage(cfg: WidgetConfig): Promise<boolean> {
 // Only presentational fields. Never the account id, campaign id or caps.
 // The company is the account's name: the same business the campaign's prompt
 // speaks for, shown beside the agent so a visitor knows whose assistant it is.
+// The face photo is stored on the row (a small data URL from the CRM's upload,
+// or a plain path), and always served from our own route: one URL shape for
+// the frame and the loader, versioned by content so a new photo busts caches.
+function faceUrl(cfg: WidgetConfig): string {
+  const v = createHash("sha1").update(cfg.avatarUrl || "").digest("hex").slice(0, 10);
+  return `/widget/face?key=${encodeURIComponent(cfg.publicKey)}&v=${v}`;
+}
+
 async function publicConfig(cfg: WidgetConfig): Promise<FrameConfig> {
   const [acct] = await db.select({ name: accounts.name }).from(accounts).where(eq(accounts.id, cfg.accountsId)).limit(1);
   return {
@@ -162,6 +170,9 @@ async function publicConfig(cfg: WidgetConfig): Promise<FrameConfig> {
     accent: cfg.accentColor || null,
     orbStyle: cfg.orbStyle || "metal",
     orbEyes: cfg.orbEyes || "auto",
+    orbTint: cfg.orbTint || null,
+    orbFace: cfg.orbFace || "eyes",
+    orbPhoto: cfg.orbFace === "photo" && cfg.avatarUrl ? faceUrl(cfg) : null,
     quickReplies: deriveQuickReplies({ language: cfg.language, override: cfg.quickReplies }),
     greeting: cfg.greeting || "",
     agentName: cfg.agentName || "",
@@ -315,6 +326,22 @@ export function registerWidgetRoutes(app: Express) {
     res.set("content-security-policy", `frame-ancestors 'self' ${sources.join(" ")}`);
     res.set("cache-control", "no-store");
     res.send(renderFrameHtml({ mode: "live", config: await publicConfig(cfg) }));
+  }));
+
+  // ── 2a. The face photo ─────────────────────────────────────────────────────
+  // Public like the loader: it is an image the widget shows on the client's
+  // page anyway. Versioned URLs (see faceUrl), so it can be cached hard.
+  app.get("/widget/face", wrapAsync(async (req: Request, res: Response) => {
+    const cfg = await loadKey(String(req.query.key || ""));
+    const src = cfg?.enabled ? String(cfg.avatarUrl || "") : "";
+    const m = /^data:(image\/(?:webp|png|jpeg));base64,([A-Za-z0-9+/=]+)$/.exec(src);
+    if (m) {
+      res.set("content-type", m[1]);
+      res.set("cache-control", "public, max-age=31536000, immutable");
+      return res.send(Buffer.from(m[2], "base64"));
+    }
+    if (src.startsWith("/")) return res.redirect(302, src);
+    res.status(404).end();
   }));
 
   // ── 2b. Teaser data for the loader ─────────────────────────────────────────
@@ -532,9 +559,14 @@ export function registerWidgetRoutes(app: Express) {
     accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
     orbStyle: z.enum(["metal", "tinted", "solid"]).optional(),
     orbEyes: z.enum(["auto", "black", "white"]).optional(),
+    orbTint: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
+    orbFace: z.enum(["eyes", "icon", "photo"]).optional(),
     launcherPosition: z.enum(["left", "right"]).optional(),
     agentName: z.string().max(80).optional(),
-    avatarUrl: z.string().max(500).optional(),
+    // A path, or the CRM's uploaded face photo: a small (256px) image data URL.
+    avatarUrl: z.string().max(400_000)
+      .refine((v) => !v.startsWith("data:") || /^data:image\/(webp|png|jpeg);base64,[A-Za-z0-9+/=]+$/.test(v), "Unsupported image")
+      .optional(),
     language: z.string().max(5).optional(),
     maxTurnsPerVisitor: z.number().int().min(1).max(200).optional(),
     maxMessagesPerDay: z.number().int().min(1).max(100000).optional(),

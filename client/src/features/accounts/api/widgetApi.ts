@@ -15,6 +15,8 @@ export interface WidgetConfigRow {
   accentColor: string | null;
   orbStyle: string | null;
   orbEyes: string | null;
+  orbTint: string | null;
+  orbFace: string | null;
   launcherPosition: string | null;
   agentName: string | null;
   avatarUrl: string | null;

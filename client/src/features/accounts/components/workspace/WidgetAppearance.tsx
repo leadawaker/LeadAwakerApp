@@ -42,6 +42,59 @@ function Segmented<T extends string>({ value, options, onChange, disabled }: {
   );
 }
 
+// Metal in other shades. Silver is the untinted default (null).
+const SHADES: { key: string; hex: string | null }[] = [
+  { key: "silver", hex: null },
+  { key: "gold", hex: "#c9a24a" },
+  { key: "copper", hex: "#b87333" },
+  { key: "roseGold", hex: "#c48b84" },
+  { key: "bronze", hex: "#8c6a3f" },
+];
+
+const HEX = /^#[0-9a-fA-F]{6}$/;
+
+// A face photo, centre-cropped to a 256px square: small enough to live on the
+// widget row as a data URL and to load instantly on a client's page.
+function squarePhoto(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const side = Math.min(img.naturalWidth, img.naturalHeight);
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 256;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) { URL.revokeObjectURL(url); reject(new Error("canvas")); return; }
+      ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, 256, 256);
+      URL.revokeObjectURL(url);
+      const webp = canvas.toDataURL("image/webp", 0.86);
+      // Safari cannot encode WebP and quietly hands back a PNG; JPEG is smaller.
+      resolve(webp.startsWith("data:image/webp") ? webp : canvas.toDataURL("image/jpeg", 0.88));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("unreadable")); };
+    img.src = url;
+  });
+}
+
+function Swatch({ hex, label, on, onClick }: { hex: string | null; label: string; on: boolean; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      aria-pressed={on}
+      onClick={onClick}
+      style={{
+        width: 30, height: 30, borderRadius: "50%", cursor: "pointer", padding: 0,
+        border: on ? "2px solid var(--ink)" : "1px solid var(--line)",
+        background: hex
+          ? `conic-gradient(from 20deg, color-mix(in srgb, ${hex} 25%, #fff), ${hex} 30%, color-mix(in srgb, ${hex} 70%, #222) 55%, color-mix(in srgb, ${hex} 30%, #fff) 80%, color-mix(in srgb, ${hex} 25%, #fff))`
+          : "conic-gradient(from 20deg, #fafafa, #a1a1aa 30%, #52525b 55%, #e4e4e7 80%, #fafafa)",
+      }}
+    />
+  );
+}
+
 export function WidgetAppearance({ cfg, onPatch }: {
   cfg: WidgetConfigRow;
   onPatch: (body: Partial<WidgetConfigRow>) => Promise<void>;
@@ -49,14 +102,20 @@ export function WidgetAppearance({ cfg, onPatch }: {
   const { t } = useTranslation("accounts");
   const style = (cfg.orbStyle || "metal") as "metal" | "tinted" | "solid";
   const eyes = (cfg.orbEyes || "auto") as "auto" | "black" | "white";
+  const face = (cfg.orbFace || "eyes") as "eyes" | "icon" | "photo";
+  const tint = cfg.orbTint && HEX.test(cfg.orbTint) ? cfg.orbTint.toLowerCase() : null;
+  const hasPhoto = !!cfg.avatarUrl && cfg.avatarUrl.startsWith("data:image/");
   const [color, setColor] = useState(cfg.accentColor || "#6B2737");
+  const [customTint, setCustomTint] = useState(tint || "#9a7b4f");
+  const [photoError, setPhotoError] = useState(false);
   // Bumped after every saved change: the preview is the real frame, and the
   // frame reads its look once, when it loads.
   const [previewRev, setPreviewRev] = useState(0);
-  const colorTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const fileRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => { setColor(cfg.accentColor || "#6B2737"); }, [cfg.accentColor]);
-  useEffect(() => () => { if (colorTimer.current) clearTimeout(colorTimer.current); }, []);
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
 
   const save = async (body: Partial<WidgetConfigRow>) => {
     await onPatch(body);
@@ -65,13 +124,26 @@ export function WidgetAppearance({ cfg, onPatch }: {
 
   // The native picker fires on every drag step; only the colour it settles on
   // is worth a save and a preview reload.
-  const pickColor = (hex: string) => {
-    setColor(hex);
-    if (colorTimer.current) clearTimeout(colorTimer.current);
-    colorTimer.current = setTimeout(() => {
-      if (/^#[0-9a-fA-F]{6}$/.test(hex)) void save({ accentColor: hex });
-    }, 450);
+  const settle = (body: Partial<WidgetConfigRow>) => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => void save(body), 450);
   };
+  const pickColor = (hex: string) => { setColor(hex); if (HEX.test(hex)) settle({ accentColor: hex }); };
+  const pickTint = (hex: string) => { setCustomTint(hex); if (HEX.test(hex)) settle({ orbTint: hex }); };
+
+  const uploadPhoto = async (file: File) => {
+    setPhotoError(false);
+    try {
+      const dataUrl = await squarePhoto(file);
+      await save({ avatarUrl: dataUrl, orbFace: "photo" });
+    } catch {
+      setPhotoError(true);
+    }
+  };
+
+  const presetTint = SHADES.some((sh) => sh.hex === tint);
+  const label = (k: string) => <span style={MONO}>{t(`websiteChat.${k}`)}</span>;
+  const col = { display: "flex", flexDirection: "column", gap: 6 } as const;
 
   return (
     <div>
@@ -85,46 +157,98 @@ export function WidgetAppearance({ cfg, onPatch }: {
           style={{ display: "block", flex: "1 1 300px", maxWidth: 390, height: 520, border: "1px solid var(--line)", borderRadius: 20, background: "var(--card)" }}
         />
         <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 16 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={MONO}>{t("websiteChat.orbStyle")}</span>
+          <div style={col}>
+            {label("orbFace")}
             <Segmented
-              value={style}
-              onChange={(v) => void save({ orbStyle: v })}
+              value={face}
+              onChange={(v) => (v === "photo" && !hasPhoto ? fileRef.current?.click() : void save({ orbFace: v }))}
               options={[
-                { value: "metal", label: t("websiteChat.orbMetal") },
-                { value: "tinted", label: t("websiteChat.orbTinted") },
-                { value: "solid", label: t("websiteChat.orbSolid") },
+                { value: "eyes", label: t("websiteChat.faceEyes") },
+                { value: "icon", label: t("websiteChat.faceIcon") },
+                { value: "photo", label: t("websiteChat.facePhoto") },
               ]}
             />
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={MONO}>{t("websiteChat.orbColor")}</span>
-            <div style={{ display: "flex", alignItems: "center", gap: 10, opacity: style === "metal" ? 0.5 : 1 }}>
-              <input
-                type="color"
-                value={color}
-                disabled={style === "metal"}
-                onChange={(e) => pickColor(e.target.value)}
-                style={{ width: 40, height: 32, padding: 0, border: "1px solid var(--line)", borderRadius: "var(--r-button)", background: "var(--card)", cursor: style === "metal" ? "default" : "pointer" }}
-              />
-              <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink-soft)" }}>{color.toUpperCase()}</span>
-            </div>
-            {style === "metal" && <span style={{ fontSize: 11, color: "var(--mute-2)" }}>{t("websiteChat.orbColorHint")}</span>}
-          </div>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-            <span style={MONO}>{t("websiteChat.orbEyes")}</span>
-            <Segmented
-              value={eyes}
-              onChange={(v) => void save({ orbEyes: v })}
-              options={[
-                { value: "auto", label: t("websiteChat.eyesAuto") },
-                { value: "black", label: t("websiteChat.eyesBlack") },
-                { value: "white", label: t("websiteChat.eyesWhite") },
-              ]}
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={(e) => { const f = e.target.files?.[0]; e.target.value = ""; if (f) void uploadPhoto(f); }}
             />
+            {face === "photo" && (
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                {hasPhoto && <img src={cfg.avatarUrl || ""} alt="" style={{ width: 36, height: 36, borderRadius: "50%", objectFit: "cover" }} />}
+                <button type="button" className="la-btn" onClick={() => fileRef.current?.click()}>
+                  {t(hasPhoto ? "websiteChat.photoReplace" : "websiteChat.photoUpload")}
+                </button>
+              </div>
+            )}
+            {photoError && <span style={{ fontSize: 11, color: "var(--danger, #B3261E)" }}>{t("websiteChat.photoFailed")}</span>}
           </div>
+
+          {face !== "photo" && (
+            <>
+              <div style={col}>
+                {label("orbStyle")}
+                <Segmented
+                  value={style}
+                  onChange={(v) => void save({ orbStyle: v })}
+                  options={[
+                    { value: "metal", label: t("websiteChat.orbMetal") },
+                    { value: "tinted", label: t("websiteChat.orbTinted") },
+                    { value: "solid", label: t("websiteChat.orbSolid") },
+                  ]}
+                />
+              </div>
+
+              {style === "metal" ? (
+                <div style={col}>
+                  {label("orbShade")}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    {SHADES.map((sh) => (
+                      <Swatch key={sh.key} hex={sh.hex} label={t(`websiteChat.shade_${sh.key}`)} on={tint === sh.hex}
+                        onClick={() => void save({ orbTint: sh.hex })} />
+                    ))}
+                    <label title={t("websiteChat.shade_custom")} style={{ position: "relative", display: "inline-flex" }}>
+                      <Swatch hex={customTint} label={t("websiteChat.shade_custom")} on={!!tint && !presetTint} onClick={() => {}} />
+                      <input
+                        type="color"
+                        value={customTint}
+                        onChange={(e) => pickTint(e.target.value)}
+                        style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
+                      />
+                    </label>
+                  </div>
+                </div>
+              ) : (
+                <div style={col}>
+                  {label("orbColor")}
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <input
+                      type="color"
+                      value={color}
+                      onChange={(e) => pickColor(e.target.value)}
+                      style={{ width: 40, height: 32, padding: 0, border: "1px solid var(--line)", borderRadius: "var(--r-button)", background: "var(--card)", cursor: "pointer" }}
+                    />
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink-soft)" }}>{color.toUpperCase()}</span>
+                  </div>
+                </div>
+              )}
+
+              <div style={col}>
+                {label(face === "icon" ? "orbIconColor" : "orbEyes")}
+                <Segmented
+                  value={eyes}
+                  onChange={(v) => void save({ orbEyes: v })}
+                  options={[
+                    { value: "auto", label: t("websiteChat.eyesAuto") },
+                    { value: "black", label: t("websiteChat.eyesBlack") },
+                    { value: "white", label: t("websiteChat.eyesWhite") },
+                  ]}
+                />
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

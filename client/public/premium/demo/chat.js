@@ -162,7 +162,9 @@ export function messagesHtml(s, pending, voice, opts) {
   if (pending) {
     out.push(
       '<div class="row ai">' +
-        aiAv +
+        // A page may give the "typing" row its own avatar (the widget's orb
+        // comes alive while she writes, then sits still beside the message).
+        ((opts && opts.typingAvatarHtml) || aiAv) +
         '<div class="bub-wrap"><div class="bub typing' + (paintedPending ? "" : " is-new") +
           '"><i></i><i></i><i></i></div></div>' +
       "</div>"

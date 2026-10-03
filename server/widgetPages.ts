@@ -9,7 +9,7 @@
 // pin it inside a container instead of the viewport.
 
 import { inkFor } from "./brandColor";
-import { ORB_CSS, orbHtml, orbLook } from "./widgetOrb";
+import { ORB_CSS, orbHtml, orbLook, photoVar } from "./widgetOrb";
 
 export interface FrameConfig {
   key: string;
@@ -27,6 +27,12 @@ export interface FrameConfig {
   /** The orb face: 'metal' | 'tinted' | 'solid' (colour = accent), eyes 'auto' | 'black' | 'white'. */
   orbStyle?: string | null;
   orbEyes?: string | null;
+  /** Metal only: a shade for the metal (gold, copper...); null keeps silver. */
+  orbTint?: string | null;
+  /** 'eyes' | 'icon' | 'photo'. */
+  orbFace?: string | null;
+  /** The face photo's URL on our own origin, when orbFace is 'photo'. */
+  orbPhoto?: string | null;
 }
 
 export interface DemoFrame {
@@ -84,7 +90,12 @@ export const LAUNCHER_CSS = `
    orb. The ring, teaser and chat stay neutral whatever the orb wears. */
 .la-core{position:absolute;inset:2.5px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--lo-eye,#18181b);background:var(--lo-c,#d4d4d8)}
 .la-core .lo{--lo-s:55px;position:absolute;inset:0;-webkit-mask:none;mask:none}
-.la-root.is-open .la-core .lo-eyes{opacity:0}
+.la-root.is-open .la-core .lo-eyes,.la-root.is-open .la-core .lo-ico{opacity:0}
+/* Metal in another shade: the chrome ring takes the same shade as the orb. */
+.la-root.lo-tint .la-btn::before,.la-root.lo-tint .la-btn::after{background:var(--lo-metal)}
+/* Over a photo the close glyph needs its own contrast. */
+.la-root.lo-face-photo .la-core{color:#fff}
+.la-root.is-open.lo-face-photo .la-core .lo{filter:brightness(.55)}
 .la-core .la-i-x{position:absolute;display:flex;z-index:2;opacity:0;transform:rotate(-90deg) scale(.6);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
 .la-core svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .la-root.is-open .la-core .la-i-x{opacity:1;transform:none}
@@ -264,7 +275,10 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
   // A live widget wears its configured orb; a demo swirls the colour the demo
   // page tinted its launcher with, so the chat matches the button it opened from.
   const look = opts.mode === "live"
-    ? orbLook({ style: opts.config.orbStyle, color: accent, eyes: opts.config.orbEyes }, inkFor)
+    ? orbLook({
+        style: opts.config.orbStyle, color: accent, eyes: opts.config.orbEyes,
+        tint: opts.config.orbTint, face: opts.config.orbFace, photo: opts.config.orbPhoto,
+      }, inkFor)
     : orbLook({ style: accent ? "tinted" : "metal", color: accent }, inkFor);
   return `<!doctype html>
 <html lang="${escapeHtml(lang2(lang))}">
@@ -279,7 +293,7 @@ ${accent ? `<style>:root{--w-accent:${accent};--w-accent-ink:${inkFor(accent)}}<
 <style>${ORB_CSS}</style>
 ${frameImportMap()}
 </head>
-<body class="wdg-body${look.cls ? " " + look.cls : ""}" style="${look.vars}">
+<body class="wdg-body${look.cls ? " " + look.cls : ""}" style="${escapeHtml(look.vars + photoVar(look.photo))}">
 <div id="root"></div>
 <script>window.__WIDGET__ = ${JSON.stringify(boot).replace(/</g, "\\u003c")};</script>
 <script type="module" src="/widget/widget.js?v=${ASSET_V}"></script>
@@ -488,8 +502,10 @@ export const LOADER_JS = String.raw`(function () {
     fetch(origin + "/widget/meta?key=" + encodeURIComponent(key)).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
       if (!m) return;
       if (m.look) {
-        if (m.look.cls) root.classList.add(m.look.cls);
+        if (m.look.cls) m.look.cls.split(" ").forEach(function (c) { root.classList.add(c); });
         if (m.look.vars) root.style.cssText += ";" + m.look.vars;
+        // The photo URL is relative to the API origin, not the page's.
+        if (m.look.photo) root.style.setProperty("--lo-photo", "url('" + (/^https?:/.test(m.look.photo) ? "" : origin) + m.look.photo + "')");
       }
       if (teased || !m.teaser) return;
       var face = document.createElement("span");
@@ -528,6 +544,9 @@ export function teaserMeta(cfg: FrameConfig) {
   const l = lang2(cfg.language);
   return {
     agentName: cfg.agentName, avatar: cfg.avatar, teaser: TEASER[l], closeLabel: CLOSE_LABEL[l],
-    look: orbLook({ style: cfg.orbStyle, color: cfg.accent, eyes: cfg.orbEyes }, inkFor),
+    look: orbLook({
+      style: cfg.orbStyle, color: cfg.accent, eyes: cfg.orbEyes,
+      tint: cfg.orbTint, face: cfg.orbFace, photo: cfg.orbPhoto,
+    }, inkFor),
   };
 }

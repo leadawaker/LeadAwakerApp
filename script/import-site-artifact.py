@@ -14,6 +14,7 @@ Writes client/public/site/index.html plus client/public/site/img/*. What it does
   - points the old-site links at /reactivate and the legal links at the real
     /terms-of-service and /privacy-policy routes
   - adds the "Ask Sara" button to the booking block and the website widget
+  - draws Sara as the widget's orb wherever the artifact shows her face
 
 Every replacement must match exactly once (or the stated count), so a changed
 artifact fails loudly instead of shipping a half-converted page.
@@ -86,8 +87,58 @@ WIDGET_JS = f"""<script>
   b.addEventListener('click',function(){{if(window.LeadAwakerWidget)window.LeadAwakerWidget.open()}});
 }})();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=7" data-key="{WIDGET_KEY}" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=8" data-key="{WIDGET_KEY}" async></script>
 """
+
+
+# Sara's face, the same orb the real widget wears (server/widgetOrb.ts is the
+# one source: its stylesheet is read from there, so the page and the widget
+# cannot drift). The artifact draws her as a letter "S" or speaking bars in four
+# places; each becomes the orb, in the widget's own silver metal.
+def _orb_css() -> str:
+    src = (ROOT / "server/widgetOrb.ts").read_text(encoding="utf-8")
+    m = re.search(r"export const ORB_CSS = `(.*?)`;", src, re.S)
+    if not m:
+        sys.exit("import-site-artifact: ORB_CSS not found in server/widgetOrb.ts")
+    return m.group(1)
+
+
+def _orb(cls: str = "") -> str:
+    return (f'<span class="lo{" " + cls if cls else ""}" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span>'
+            '<span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span>')
+
+
+SARA_CSS = """
+/* The page styles bare <i> inside .wav, .launch and .ai-sara (status dot,
+   launcher core, talking bars); her eyes are <i> too, so they are put back. */
+.lo .lo-eyes i{position:static;inset:auto;display:block;width:calc(var(--lo-s)*.095);height:calc(var(--lo-s)*.23);border:0;border-radius:999px;
+  box-shadow:none;background:var(--lo-eye,#111114);animation:lo-blink 5.4s ease-in-out infinite}
+.lo.lo-still .lo-eyes i{animation:none}
+.launch .lm{grid-area:1/1;position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;transition:opacity .3s}
+.launch .lm .lo{--lo-s:45px;-webkit-mask:none;mask:none}
+.wav,.av3{background:none!important;color:transparent}
+.wav .lo{--lo-s:34px}.teaser .wav .lo{--lo-s:36px}.wav i{z-index:2}
+.av3 .lo{--lo-s:78px}
+@media (max-width:480px){.av3 .lo{--lo-s:60px}}
+.ai-sara .lo{--lo-s:34px}
+.orb{background:none!important}
+.orb .lo{--lo-s:150px;position:relative;z-index:1}
+"""
+
+
+def sara_faces(html: str) -> str:
+    html = replace(html, '<span class="wav">S<i></i></span>', f'<span class="wav">{_orb()}<i></i></span>', count=2)
+    html = replace(html, '<span class="wav">S</span>', f'<span class="wav">{_orb()}</span>')
+    html = replace(html, '<span class="av3">S</span>', f'<span class="av3">{_orb()}</span>')
+    html = replace(html, '<span class="sci ai-sara"><i></i><i></i><i></i><i></i><i></i></span>',
+                   f'<span class="sci ai-sara">{_orb("lo-still")}</span>')
+    html = replace(html, '<span class="orb"><span class="orb-ring"></span><span class="bars"><i></i><i></i><i></i><i></i><i></i></span></span>',
+                   f'<span class="orb"><span class="orb-ring"></span>{_orb()}</span>')
+    html = replace(html, '<i><svg class="lm" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',
+                   f'<i><span class="lm">{_orb()}</span>')
+    # "Digital assistant", never "AI assistant": how Sara introduces herself.
+    html = replace(html, 'AI assistant · Brightsmile Dental', 'Digital assistant · Brightsmile Dental')
+    return replace(html, "</head>", f'<style id="sara-orb">{_orb_css()}{SARA_CSS}</style>\n</head>')
 
 
 def replace(html: str, old: str, new: str, count: int = 1) -> str:
@@ -152,6 +203,7 @@ def main() -> None:
                    '<button class="btn btn-ghost-light js-sara" type="button" hidden>Not ready to book? Ask Sara now</button></div>')
     html = replace(html, "</body></html>", WIDGET_JS + "</body>\n</html>\n")
 
+    html = sara_faces(html)
     html = extract_images(html)
     out = OUT_DIR / "index.html"
     out.write_text(html, encoding="utf-8")
