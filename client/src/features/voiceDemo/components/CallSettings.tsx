@@ -1,5 +1,6 @@
 import { Settings2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Switch } from "@/components/ui/switch";
 import { DEMO_COMPANY } from "../door";
 import type { LiveOptions, LiveSetup, VoiceLocale } from "../types";
 import { demoCallerNumber } from "../demoNumber";
@@ -25,12 +26,17 @@ export function CallSettings({
   simple,
   copy,
   onSetup,
+  ambience,
+  onAmbience,
 }: {
   setup: LiveSetup;
   options: LiveOptions | null;
   simple: boolean;
   copy: DemoCopy;
   onSetup: (next: Partial<LiveSetup>) => void;
+  /** The office sound under the call. Shown on prospect links too. */
+  ambience: boolean;
+  onAmbience: (next: boolean) => void;
 }) {
   const locales = options?.locales ?? [];
   const current = locales.find((l) => l.id === setup.locale);
@@ -113,6 +119,14 @@ export function CallSettings({
               <option key={v.id} value={v.id}>{v.id} — {v.label}</option>
             ))}
           </select>
+        </div>
+
+        <div>
+          <label htmlFor="vd-ambience" className="flex cursor-pointer items-center justify-between gap-3 text-sm">
+            {copy.ambienceLabel}
+            <Switch id="vd-ambience" checked={ambience} onCheckedChange={onAmbience} />
+          </label>
+          <p className="mt-1.5 text-xs text-muted-foreground">{copy.ambienceHint}</p>
         </div>
       </PopoverContent>
     </Popover>

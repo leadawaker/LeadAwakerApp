@@ -18,6 +18,7 @@ import {
   VOICE_DEMO_UNLOCK_KEY,
 } from "@/features/voiceDemo/door";
 import { ENGINE_BASE_URL, useLiveCall } from "@/features/voiceDemo/useLiveCall";
+import { useAmbiencePref, useOfficeAmbience } from "@/features/voiceDemo/useOfficeAmbience";
 import type { LiveSetup, VoiceLang, VoiceLocale } from "@/features/voiceDemo/types";
 import { copyFor, dateLocaleOf } from "@/features/voiceDemo/copy";
 
@@ -119,6 +120,13 @@ export default function VoiceDemoPage() {
   const preset = useRef(readSetupFromUrl()).current;
   const simple = useRef(isDemoLink()).current;
   const showSettings = useRef(isAppHost()).current;
+
+  const [ambience, setAmbience] = useAmbiencePref();
+  useOfficeAmbience({
+    playing: ambience && call.state === "live",
+    streaming: call.orbState === "streaming",
+    pulse: call.turns,
+  });
 
   const [unlocked, setUnlocked] = useState(() => isValidVoicePassword(storedVoicePassword()));
 
@@ -327,6 +335,8 @@ export default function VoiceDemoPage() {
                         simple={simple}
                         copy={copy}
                         onSetup={updateSetup}
+                        ambience={ambience}
+                        onAmbience={setAmbience}
                       />
                     ) : undefined
                   }
