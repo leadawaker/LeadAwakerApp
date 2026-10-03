@@ -114,13 +114,12 @@ export const LAUNCHER_CSS = `
 @keyframes la-spin{to{transform:rotate(360deg)}}
 
 .la-teaser{position:var(--la-pos,fixed);bottom:calc(var(--la-gap) + 74px);right:var(--la-gap);width:216px;max-width:calc(100vw - 40px);
-  display:flex;gap:9px;align-items:flex-start;padding:11px 28px 11px 11px;border-radius:16px;cursor:pointer;
+  display:block;padding:11px 30px 11px 14px;border-radius:16px;cursor:pointer;
   background:#fff;color:#18181b;font-size:13px;line-height:1.4;text-align:left;
   box-shadow:0 18px 40px -12px rgba(0,0,0,.3),0 0 0 1px rgba(0,0,0,.06);
   opacity:0;transform:translateY(10px) scale(.98);transform-origin:bottom right;pointer-events:none;
   transition:opacity .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
 .la-teaser.show{opacity:1;transform:none;pointer-events:auto}
-.la-teaser .lo{--lo-s:34px}
 .la-teaser b{display:block;font-size:12.5px;font-weight:600;color:#09090b;margin-bottom:1px}
 .la-teaser span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#3f3f46}
 .la-tx{position:absolute;top:7px;right:7px;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:transparent;color:#a1a1aa;cursor:pointer;
@@ -148,7 +147,6 @@ export const LAUNCHER_CSS = `
 
 const BUTTON_INNER =
   `<span class="la-core">${orbHtml()}<span class="la-i-x">${ICON_X}</span></span><span class="la-glint"></span><span class="la-dot"></span>`;
-const TEASER_ORB = orbHtml();
 
 
 // Unread badge + ding, shared by the loader and the demo page. The ding is
@@ -344,7 +342,6 @@ ${o.shotUrl
 <div class="la-root${tint}" id="la-root">
   <iframe class="la-panel" id="la-panel" title="Chat" allow="microphone"></iframe>
   <div class="la-teaser" id="la-teaser" role="button" tabindex="0">
-    ${TEASER_ORB}
     <div>${o.agentName ? `<b>${escapeHtml(o.agentName)}</b>` : ""}<span>${escapeHtml(TEASER[l])}</span></div>
     <button class="la-tx" id="la-tx" type="button" aria-label="${escapeHtml(CLOSE_LABEL[l])}">${ICON_X}</button>
   </div>
@@ -397,7 +394,6 @@ export const LOADER_JS = String.raw`(function () {
   ` + UNREAD_JS + TEASER_JS + FIT_JS + String.raw`
   var LAUNCHER_CSS = ` + JSON.stringify(LAUNCHER_CSS) + String.raw`;
   var BUTTON_INNER = ` + JSON.stringify(BUTTON_INNER) + String.raw`;
-  var TEASER_ORB = ` + JSON.stringify(TEASER_ORB) + String.raw`;
   var ICON_X = ` + JSON.stringify(ICON_X) + String.raw`;
   // The script tag that loaded us carries the key and (optionally) overrides.
   var self = document.currentScript || (function () {
@@ -514,15 +510,13 @@ export const LOADER_JS = String.raw`(function () {
         try { window.dispatchEvent(new CustomEvent("leadawaker-widget-look", { detail: look })); } catch (e) {}
       }
       if (teased || !m.teaser) return;
-      var face = document.createElement("span");
-      face.innerHTML = TEASER_ORB;
       var body = document.createElement("div");
       if (m.agentName) { var b = document.createElement("b"); b.textContent = m.agentName; body.appendChild(b); }
       var s = document.createElement("span"); s.textContent = m.teaser; body.appendChild(s);
       var x = document.createElement("button");
       x.className = "la-tx"; x.type = "button"; x.setAttribute("aria-label", m.closeLabel || "Close"); x.innerHTML = ICON_X;
       x.addEventListener("click", function (e) { e.stopPropagation(); hideTeaser(); });
-      teaser.appendChild(face.firstChild); teaser.appendChild(body); teaser.appendChild(x);
+      teaser.appendChild(body); teaser.appendChild(x);
       teaser.addEventListener("click", function () { if (!open) toggle(); });
       armTeaser(function () {
         if (open) return;
