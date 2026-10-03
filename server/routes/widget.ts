@@ -33,12 +33,15 @@ const LEADS_TABLE = '"p2mxx34fvbf3ll6"."Leads"';
 
 // Same shape as the demo proxy's allowlist. Without it this is an open proxy
 // into every engine route for anyone who can guess a path.
-const WIDGET_SUFFIXES = new Set(["", "message", "voice", "audio", "restart"]);
+const WIDGET_SUFFIXES = new Set(["", "message", "voice", "audio", "image", "restart"]);
 
 // express.json() is mounted globally at 20mb, which is right for CRM uploads and
 // far too generous for a public endpoint. Same ceiling the demo voice route uses.
 const MAX_VOICE_BYTES = 1_500_000;
 const MAX_TEXT_CHARS = 2000;
+// A photo is shrunk in the browser (longest side 1280px, JPEG) before it is sent,
+// which lands well under this. The cap is for anything that skipped that step.
+const MAX_IMAGE_BYTES = 2_000_000;
 
 const KEY_RE = /^wk_[A-Za-z0-9]{24}$/;
 // Generated in the browser, so it is untrusted input and gets a strict shape.
@@ -309,7 +312,8 @@ export function registerWidgetRoutes(app: Express) {
     res.set("content-type", "text/html; charset=utf-8");
     res.set("content-security-policy", `frame-ancestors 'self' ${sources.join(" ")}`);
     res.set("cache-control", "no-store");
-    res.send(renderFrameHtml({ mode: "live", config: await publicConfig(cfg) }));
+    const orb = req.query.orb === "brand" ? "brand" : "metal";
+    res.send(renderFrameHtml({ mode: "live", config: { ...(await publicConfig(cfg)), orb } }));
   }));
 
   // ── 2b. Teaser data for the loader ─────────────────────────────────────────
@@ -364,7 +368,7 @@ export function registerWidgetRoutes(app: Express) {
 
     // Only a real turn costs money, so only a real turn counts against the IP
     // and spends the daily budget (after every cheap check has passed).
-    const billable = req.method === "POST" && (segment === "message" || segment === "voice");
+    const billable = req.method === "POST" && (segment === "message" || segment === "voice" || segment === "image");
     if (billable) {
       const ip = String(req.ip || req.socket.remoteAddress || "unknown");
       if (!checkIpRate(ip)) {
@@ -376,6 +380,9 @@ export function registerWidgetRoutes(app: Express) {
         if (text.length > MAX_TEXT_CHARS) {
           return res.status(413).json({ code: "too_long", message: "That message is too long." });
         }
+      }
+      if (segment === "image" && String(req.body?.text || "").length > MAX_TEXT_CHARS) {
+        return res.status(413).json({ code: "too_long", message: "That message is too long." });
       }
     }
 
@@ -396,6 +403,9 @@ export function registerWidgetRoutes(app: Express) {
     if (segment === "voice" && Buffer.byteLength(body ?? "") > MAX_VOICE_BYTES) {
       return res.status(413).json({ code: "audio_too_large", message: "That recording is too long." });
     }
+    if (segment === "image" && Buffer.byteLength(body ?? "") > MAX_IMAGE_BYTES) {
+      return res.status(413).json({ code: "image_too_large", message: "That photo is too large." });
+    }
     if (billable && !(await consumeDailyMessage(cfg))) {
       return res.status(429).json({ code: "daily_cap", message: "This chat has reached today's limit." });
     }
@@ -411,7 +421,7 @@ export function registerWidgetRoutes(app: Express) {
       params.set("language", cfg.language || "en");
       params.set("max_turns", String(cfg.maxTurnsPerVisitor ?? 30));
     }
-    if (segment === "audio") {
+    if (req.method === "GET" && (segment === "audio" || segment === "image")) {
       const id = Number(req.query.id);
       if (!Number.isSafeInteger(id) || id <= 0) {
         return res.status(400).json({ code: "bad_id", message: "Unknown message." });

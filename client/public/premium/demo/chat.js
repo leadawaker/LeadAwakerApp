@@ -90,6 +90,18 @@ function voiceBubbleHtml(msg, voice) {
         : '<div class="vtranscript is-none">' + esc(t("voiceNoTranscript")) + "</div>");
 }
 
+// A photo the visitor sent, with their caption under it. The page that can
+// fetch photos hands in `opts.imageSrc(msg)`; until it has one (or on a page
+// that cannot fetch them at all) a quiet placeholder holds the photo's place.
+var IMAGE_SVG = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.1-3.1a2 2 0 0 0-2.8 0L6 21"/></svg>';
+function imageBubbleHtml(msg, opts) {
+  var src = opts && opts.imageSrc ? opts.imageSrc(msg) : "";
+  return (src
+      ? '<img class="bimg" src="' + esc(src) + '" alt="" />'
+      : '<span class="bimg is-empty">' + IMAGE_SVG + "</span>") +
+    (msg.text ? '<div class="bcap">' + linkify(esc(msg.text)) + "</div>" : "");
+}
+
 // The message thread. `pending` is passed in rather than read from a shared
 // global so this renders from its arguments alone.
 var paintedCount = 0;
@@ -124,6 +136,7 @@ export function messagesHtml(s, pending, voice, opts) {
     var showAv = !mine && (!prev || prev.role !== "ai");
     var fresh = i >= paintedCount ? " is-new" : "";
     var isVoice = msg.kind === "voice";
+    var isImage = msg.kind === "image";
     // A colleague has taken over. Announced once, at the message where it
     // happens, so the visitor knows who they are talking to now; after that
     // the name rides on each of that person's bubbles.
@@ -138,8 +151,8 @@ export function messagesHtml(s, pending, voice, opts) {
               : aiAv)
           : '<div class="av" style="visibility:hidden"></div>')) +
         '<div class="bub-wrap">' +
-          '<div class="bub' + (isVoice ? " is-voice" : "") + fresh + '">' +
-            (isVoice ? voiceBubbleHtml(msg, v) : linkify(esc(msg.text))) +
+          '<div class="bub' + (isVoice ? " is-voice" : "") + (isImage ? " is-image" : "") + fresh + '">' +
+            (isVoice ? voiceBubbleHtml(msg, v) : isImage ? imageBubbleHtml(msg, opts) : linkify(esc(msg.text))) +
           "</div>" +
           '<div class="ts">' + esc(clock(msg.at)) + "</div>" +
         "</div>" +

@@ -9,6 +9,7 @@
 // pin it inside a container instead of the viewport.
 
 import { inkFor } from "./brandColor";
+import { ORB_CSS, orbHtml } from "./widgetOrb";
 
 export interface FrameConfig {
   key: string;
@@ -23,6 +24,8 @@ export interface FrameConfig {
   avatar: string;
   language: string;
   maxTurns: number;
+  /** "brand" when the embed opted into a brand-coloured orb (data-orb). */
+  orb?: "brand" | "metal";
 }
 
 export interface DemoFrame {
@@ -40,9 +43,9 @@ export interface DemoFrame {
 // invitation, not the greeting: the greeting is the chat's first message, and
 // repeating it outside the panel would say the same thing twice.
 const TEASER: Record<string, string> = {
-  en: "Hi there! Have a question? Chat with me here.",
-  nl: "Hoi! Heb je een vraag? Chat hier met me.",
-  pt: "Oi! Tem alguma dúvida? Fale comigo por aqui.",
+  en: "Need some help? Ask me here.",
+  nl: "Hulp nodig? Vraag het me hier.",
+  pt: "Precisa de ajuda? Fale comigo aqui.",
 };
 const OPEN_LABEL: Record<string, string> = { en: "Open chat", nl: "Chat openen", pt: "Abrir chat" };
 const CLOSE_LABEL: Record<string, string> = { en: "Close", nl: "Sluiten", pt: "Fechar" };
@@ -53,12 +56,11 @@ function lang2(l: string): string {
 }
 
 // ── Launcher ─────────────────────────────────────────────────────────────────
-// Black core inside a slowly turning chrome ring: the ring is a conic gradient
-// of greys with one warm and one cool fleck, rotated, which is what reads as
-// liquid metal catching light. Pure CSS on purpose: this runs on a client's
-// page, where a WebGL shader for a 60px button would be a cost they never
-// agreed to.
-const ICON_CHAT = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>';
+// Sara's orb face (widgetOrb.ts) inside a slowly turning chrome ring: the ring
+// is a conic gradient of greys with one warm and one cool fleck, rotated, which
+// is what reads as liquid metal catching light. Pure CSS on purpose: this runs
+// on a client's page, where a WebGL shader for a 60px button would be a cost
+// they never agreed to.
 const ICON_X = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 
 export const LAUNCHER_CSS = `
@@ -76,18 +78,16 @@ export const LAUNCHER_CSS = `
 .la-btn:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 22px 40px -12px rgba(0,0,0,.6),0 6px 14px -4px rgba(0,0,0,.35)}
 .la-btn:hover::after{opacity:.55}
 .la-btn:focus-visible{outline:2px solid #a1a1aa;outline-offset:3px}
-.la-core{position:absolute;inset:2.5px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#e4e4e7;
-  background:radial-gradient(120% 95% at 50% 0%,#303035 0%,#0d0d0f 55%,#000 100%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.2),inset 0 -8px 14px rgba(0,0,0,.65)}
-/* A brand colour tints only the button's core; the chrome ring, teaser and chat
-   stay neutral so any colour still reads as the same premium object. */
-.la-root.has-c .la-core{color:var(--la-ink);
-  background:radial-gradient(120% 95% at 50% 0%,color-mix(in srgb,var(--la-c) 70%,#fff) 0%,var(--la-c) 52%,color-mix(in srgb,var(--la-c) 62%,#000) 100%)}
-.la-core::before{content:"";position:absolute;inset:0;border-radius:50%;background:linear-gradient(180deg,rgba(255,255,255,.13),transparent 46%)}
-.la-core>span{position:absolute;display:flex;transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
-.la-core svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.la-core .la-i-x{opacity:0;transform:rotate(-90deg) scale(.6)}
-.la-root.is-open .la-core .la-i-chat{opacity:0;transform:rotate(90deg) scale(.6)}
+/* The core IS Sara: the orb face fills the chrome ring. Open, her eyes give way
+   to the close glyph. A brand colour (the side option) turns the orb that
+   colour; the ring, teaser and chat stay neutral either way. */
+.la-core{position:absolute;inset:2.5px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#18181b;background:#d4d4d8}
+.la-root.has-c{--lo-c:var(--la-c);--lo-eye-c:var(--la-ink)}
+.la-root.has-c .la-core{color:var(--la-ink)}
+.la-core .lo{--lo-s:55px;position:absolute;inset:0}
+.la-root.is-open .la-core .lo-eyes{opacity:0}
+.la-core .la-i-x{position:absolute;display:flex;z-index:2;opacity:0;transform:rotate(-90deg) scale(.6);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
+.la-core svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .la-root.is-open .la-core .la-i-x{opacity:1;transform:none}
 /* Every so often a light catches the rim: a bright arc masked to the ring that
    sweeps once around and fades. Enough to draw the eye, rare enough to ignore. */
@@ -103,15 +103,15 @@ export const LAUNCHER_CSS = `
 @keyframes la-pop{from{transform:scale(.4)}to{transform:none}}
 @keyframes la-spin{to{transform:rotate(360deg)}}
 
-.la-teaser{position:var(--la-pos,fixed);bottom:calc(var(--la-gap) + 74px);right:var(--la-gap);width:290px;max-width:calc(100vw - 40px);
-  display:flex;gap:11px;align-items:flex-start;padding:13px 34px 13px 13px;border-radius:18px;cursor:pointer;
-  background:#fff;color:#18181b;font-size:14px;line-height:1.45;text-align:left;
+.la-teaser{position:var(--la-pos,fixed);bottom:calc(var(--la-gap) + 74px);right:var(--la-gap);width:216px;max-width:calc(100vw - 40px);
+  display:flex;gap:9px;align-items:flex-start;padding:11px 28px 11px 11px;border-radius:16px;cursor:pointer;
+  background:#fff;color:#18181b;font-size:13px;line-height:1.4;text-align:left;
   box-shadow:0 18px 40px -12px rgba(0,0,0,.3),0 0 0 1px rgba(0,0,0,.06);
   opacity:0;transform:translateY(10px) scale(.98);transform-origin:bottom right;pointer-events:none;
   transition:opacity .3s ease,transform .35s cubic-bezier(.2,.8,.2,1)}
 .la-teaser.show{opacity:1;transform:none;pointer-events:auto}
-.la-teaser img{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:0 0 auto;background:#f4f4f5}
-.la-teaser b{display:block;font-size:13px;font-weight:600;color:#09090b;margin-bottom:1px}
+.la-teaser .lo{--lo-s:34px}
+.la-teaser b{display:block;font-size:12.5px;font-weight:600;color:#09090b;margin-bottom:1px}
 .la-teaser span{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;color:#3f3f46}
 .la-tx{position:absolute;top:7px;right:7px;width:24px;height:24px;padding:0;border:0;border-radius:50%;background:transparent;color:#a1a1aa;cursor:pointer;
   display:flex;align-items:center;justify-content:center}
@@ -132,12 +132,13 @@ export const LAUNCHER_CSS = `
 }
 @media (prefers-reduced-motion:reduce){
   .la-btn::before,.la-btn::after,.la-glint{animation:none}
-  .la-btn,.la-teaser,.la-core>span{transition:none}
+  .la-btn,.la-teaser,.la-core .la-i-x{transition:none}
   .la-panel.open{animation:none}
-}`;
+}` + ORB_CSS;
 
 const BUTTON_INNER =
-  `<span class="la-core"><span class="la-i-chat">${ICON_CHAT}</span><span class="la-i-x">${ICON_X}</span></span><span class="la-glint"></span><span class="la-dot"></span>`;
+  `<span class="la-core">${orbHtml()}<span class="la-i-x">${ICON_X}</span></span><span class="la-glint"></span><span class="la-dot"></span>`;
+const TEASER_ORB = orbHtml();
 
 
 // Unread badge + ding, shared by the loader and the demo page. The ding is
@@ -177,23 +178,40 @@ const UNREAD_JS = String.raw`
 `;
 
 // When the greeting teaser appears, shared by the loader and the demo page: once
-// the visitor has scrolled a good chunk of the page (40% of it, capped at one
-// and a half screens, so a long page doesn't need a marathon). A page too short
-// to scroll that far gets it after 8 seconds instead. The caller's show() also
-// takes it away again after TEASER_MS.
+// the visitor is 60% of the way down the page, which on the Lead Awaker
+// homepage is just past the WhatsApp section: someone who got that far has seen
+// what it does. A page too short to scroll that far gets it after 8 seconds
+// instead. The caller's show() also takes it away again after TEASER_MS.
 const TEASER_JS = String.raw`
-  var TEASER_MS=15000;
+  var TEASER_MS=8000;
   function armTeaser(show){
     var done=false,fb=null;
     function need(){
       var de=document.documentElement,b=document.body;
       var s=Math.max(de.scrollHeight,b?b.scrollHeight:0)-window.innerHeight;
-      return s<250?-1:Math.max(250,Math.min(s*.4,window.innerHeight*1.5));
+      return s<250?-1:Math.max(250,s*.6);
     }
     function fire(){if(done)return;done=true;window.removeEventListener("scroll",onScroll);clearTimeout(fb);show();}
     function onScroll(){var n=need();if(n>0&&(window.scrollY||window.pageYOffset||0)>=n)fire();}
     window.addEventListener("scroll",onScroll,{passive:true});
     setTimeout(function(){if(!done&&need()<0)fb=setTimeout(fire,8000);},1500);
+  }
+`;
+
+// On a phone the open panel fills the screen, but Android's keyboard shrinks only
+// the visual viewport: the panel stays full height and the browser scrolls the
+// page to reveal the input, pushing the chat header off the top. While open on a
+// phone, the panel is pinned to the visual viewport instead, so the header stays
+// put and the composer sits right above the keyboard.
+const FIT_JS = String.raw`
+  function armFit(panel,isOpen){
+    var vv=window.visualViewport;
+    function fit(){
+      if(!vv||!isOpen()||window.innerWidth>520){panel.style.top=panel.style.height=panel.style.bottom="";return;}
+      panel.style.top=vv.offsetTop+"px";panel.style.height=vv.height+"px";panel.style.bottom="auto";
+    }
+    if(vv){vv.addEventListener("resize",fit);vv.addEventListener("scroll",fit);}
+    return fit;
   }
 `;
 
@@ -244,6 +262,10 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
   const lang = opts.mode === "live" ? opts.config.language : opts.demo.language;
   const raw = opts.mode === "live" ? opts.config.accent : opts.demo.accent;
   const accent = raw && /^#[0-9a-fA-F]{6}$/.test(raw) ? raw.toLowerCase() : "";
+  // The orb wears the brand colour only when the launcher does: on a live widget
+  // that is the loader's data-orb="brand" opt-in, on a demo it is the colour the
+  // demo page tinted its launcher with.
+  const brand = !!accent && (opts.mode === "demo" || opts.config.orb === "brand");
   return `<!doctype html>
 <html lang="${escapeHtml(lang2(lang))}">
 <head>
@@ -254,9 +276,10 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
 <link rel="stylesheet" href="/premium/demo/demo.css?v=${ASSET_V}">
 <link rel="stylesheet" href="/widget/widget.css?v=${ASSET_V}">
 ${accent ? `<style>:root{--w-accent:${accent};--w-accent-ink:${inkFor(accent)}}</style>` : ""}
+<style>${ORB_CSS}</style>
 ${frameImportMap()}
 </head>
-<body class="wdg-body">
+<body class="wdg-body${brand ? " lo-brand" : ""}">
 <div id="root"></div>
 <script>window.__WIDGET__ = ${JSON.stringify(boot).replace(/</g, "\\u003c")};</script>
 <script type="module" src="/widget/widget.js?v=${ASSET_V}"></script>
@@ -278,7 +301,7 @@ export function renderDemoPageHtml(o: {
 }): string {
   const l = lang2(o.language);
   const tint = o.color && /^#[0-9a-f]{6}$/i.test(o.color)
-    ? ` has-c" style="--la-c:${o.color};--la-ink:${inkFor(o.color)}`
+    ? ` has-c lo-brand" style="--la-c:${o.color};--la-ink:${inkFor(o.color)}`
     : "";
   // The prospect's homepage IS the page: full width, scrolling like their real
   // site, with the launcher fixed to the viewport corner exactly where it would
@@ -307,7 +330,7 @@ ${o.shotUrl
 <div class="la-root${tint}" id="la-root">
   <iframe class="la-panel" id="la-panel" title="Chat" allow="microphone"></iframe>
   <div class="la-teaser" id="la-teaser" role="button" tabindex="0">
-    <img src="${escapeHtml(o.avatar)}" alt="" />
+    ${TEASER_ORB}
     <div>${o.agentName ? `<b>${escapeHtml(o.agentName)}</b>` : ""}<span>${escapeHtml(TEASER[l])}</span></div>
     <button class="la-tx" id="la-tx" type="button" aria-label="${escapeHtml(CLOSE_LABEL[l])}">${ICON_X}</button>
   </div>
@@ -317,16 +340,19 @@ ${o.shotUrl
 (function(){
   ${UNREAD_JS}
   ${TEASER_JS}
+  ${FIT_JS}
   var dot=document.querySelector(".la-dot");
   var root=document.getElementById("la-root"),panel=document.getElementById("la-panel"),btn=document.getElementById("la-btn"),
       teaser=document.getElementById("la-teaser"),tx=document.getElementById("la-tx");
   var loaded=false,open=false;
+  var fit=armFit(panel,function(){return open;});
   function toggle(){
     open=!open;
     if(open&&!loaded){panel.src="/widget/frame?token=${encodeURIComponent(o.token)}${o.color ? `&c=${encodeURIComponent(o.color)}` : ""}";loaded=true;}
     panel.classList.toggle("open",open);
     root.classList.toggle("is-open",open);
     teaser.classList.remove("show");
+    fit();
     if(open){clearUnread(dot);primeAudio();}
   }
   btn.addEventListener("click",toggle);
@@ -341,7 +367,7 @@ ${o.shotUrl
   });
   window.addEventListener("message",function(e){
     if(e.data&&e.data.type==="la-widget-close"&&open)toggle();
-    if(e.data&&e.data.type==="la-widget-unread"){if(open)ding();else showUnread(dot,e.data.count);}
+    if(e.data&&e.data.type==="la-widget-unread"&&!open)showUnread(dot,e.data.count);
   });
 })();
 </script>
@@ -354,9 +380,10 @@ ${o.shotUrl
 // embedded as JSON strings so the loader and the demo page cannot drift apart.
 export const LOADER_JS = String.raw`(function () {
   "use strict";
-  ` + UNREAD_JS + TEASER_JS + String.raw`
+  ` + UNREAD_JS + TEASER_JS + FIT_JS + String.raw`
   var LAUNCHER_CSS = ` + JSON.stringify(LAUNCHER_CSS) + String.raw`;
   var BUTTON_INNER = ` + JSON.stringify(BUTTON_INNER) + String.raw`;
+  var TEASER_ORB = ` + JSON.stringify(TEASER_ORB) + String.raw`;
   var ICON_X = ` + JSON.stringify(ICON_X) + String.raw`;
   // The script tag that loaded us carries the key and (optionally) overrides.
   var self = document.currentScript || (function () {
@@ -369,6 +396,8 @@ export const LOADER_JS = String.raw`(function () {
   if (!key) return;
   var origin = new URL(self.src, location.href).origin;
   var left = self.getAttribute("data-position") === "left";
+  // The orb is liquid metal unless the embed asks for the client's own colour.
+  var wantBrand = self.getAttribute("data-orb") === "brand", brand = false;
   if (window.__leadawakerWidget) return;        // never mount twice
   window.__leadawakerWidget = true;
 
@@ -421,15 +450,17 @@ export const LOADER_JS = String.raw`(function () {
   var dot = btn.querySelector(".la-dot");
 
   var loaded = false, open = false;
+  var fit = armFit(frame, function () { return open; });
   function toggle() {
     open = !open;
     if (open && !loaded) {
-      frame.src = origin + "/widget/frame?key=" + encodeURIComponent(key) + "#v=" + encodeURIComponent(vid);
+      frame.src = origin + "/widget/frame?key=" + encodeURIComponent(key) + (brand ? "&orb=brand" : "") + "#v=" + encodeURIComponent(vid);
       loaded = true;
     }
     frame.classList.toggle("open", open);
     root.classList.toggle("is-open", open);
     btn.setAttribute("aria-label", open ? "Close chat" : "Open chat");
+    fit();
     if (open) { clearUnread(dot); hideTeaser(); primeAudio(); }
   }
   btn.addEventListener("click", toggle);
@@ -453,18 +484,25 @@ export const LOADER_JS = String.raw`(function () {
   }
   var teased = false;
   try { teased = sessionStorage.getItem("la_widget_teased") === "1"; } catch (e) {}
-  if (!teased && window.fetch) {
+  if ((wantBrand || !teased) && window.fetch) {
     fetch(origin + "/widget/meta?key=" + encodeURIComponent(key)).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
-      if (!m || !m.teaser) return;
-      var img = document.createElement("img");
-      img.src = /^https?:\/\//.test(m.avatar) ? m.avatar : origin + m.avatar; img.alt = "";
+      if (!m) return;
+      if (wantBrand && /^#[0-9a-fA-F]{6}$/.test(m.accent || "")) {
+        brand = true;
+        root.classList.add("has-c", "lo-brand");
+        root.style.setProperty("--la-c", m.accent);
+        root.style.setProperty("--la-ink", m.ink || "#fff");
+      }
+      if (teased || !m.teaser) return;
+      var face = document.createElement("span");
+      face.innerHTML = TEASER_ORB;
       var body = document.createElement("div");
       if (m.agentName) { var b = document.createElement("b"); b.textContent = m.agentName; body.appendChild(b); }
       var s = document.createElement("span"); s.textContent = m.teaser; body.appendChild(s);
       var x = document.createElement("button");
       x.className = "la-tx"; x.type = "button"; x.setAttribute("aria-label", m.closeLabel || "Close"); x.innerHTML = ICON_X;
       x.addEventListener("click", function (e) { e.stopPropagation(); hideTeaser(); });
-      teaser.appendChild(img); teaser.appendChild(body); teaser.appendChild(x);
+      teaser.appendChild(face.firstChild); teaser.appendChild(body); teaser.appendChild(x);
       teaser.addEventListener("click", function () { if (!open) toggle(); });
       armTeaser(function () {
         if (open) return;
@@ -478,7 +516,9 @@ export const LOADER_JS = String.raw`(function () {
   window.addEventListener("message", function (e) {
     if (e.origin !== origin || !e.data || typeof e.data !== "object") return;
     if (e.data.type === "la-widget-close" && open) toggle();
-    if (e.data.type === "la-widget-unread") { if (open) ding(); else showUnread(dot, e.data.count); }
+    // Only a closed panel dings: with the chat open, the reply on screen is the
+    // notification, and a sound on top of every message is just noise.
+    if (e.data.type === "la-widget-unread" && !open) showUnread(dot, e.data.count);
   });
 })();`;
 
@@ -488,5 +528,9 @@ export const LOADER_JS = String.raw`(function () {
  *  Cloudflare. */
 export function teaserMeta(cfg: FrameConfig) {
   const l = lang2(cfg.language);
-  return { agentName: cfg.agentName, avatar: cfg.avatar, teaser: TEASER[l], closeLabel: CLOSE_LABEL[l] };
+  const accent = cfg.accent && /^#[0-9a-fA-F]{6}$/.test(cfg.accent) ? cfg.accent : null;
+  return {
+    agentName: cfg.agentName, avatar: cfg.avatar, teaser: TEASER[l], closeLabel: CLOSE_LABEL[l],
+    accent, ink: accent ? inkFor(accent) : null,
+  };
 }

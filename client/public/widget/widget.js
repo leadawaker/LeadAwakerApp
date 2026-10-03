@@ -26,12 +26,23 @@ var voice = memo.voice;
 var X_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 var SEND_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 
+var CLIP_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l8.6-8.6a4 4 0 0 1 5.7 5.7l-8.6 8.6a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>';
+
 var BOOT = window.__WIDGET__ || {};
 var CFG = BOOT.config || {};
 var DEMO = BOOT.mode === "demo";
-// The agent's photo. The same one on the header and every AI bubble, so the
-// visitor is talking to one person, not a row of initials.
-var AVATAR = CFG.avatar || "/avatars/receptionist.webp";
+
+// The agent's face: the orb (styles in server/widgetOrb.ts, inlined into this
+// document). The same character on the welcome screen, the header and every AI
+// message, so the visitor is talking to one someone, not a row of initials.
+function orb(cls) {
+  return '<span class="lo' + (cls ? " " + cls : "") + '" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span></span>';
+}
+var AI_AVATAR = '<div class="av av-orb">' + orb() + "</div>";
+
+// Phones open the keyboard on focus, so the input is only focused for them when
+// they were already typing; a desktop gets it focused on open.
+var FINE_POINTER = window.matchMedia && window.matchMedia("(hover: hover) and (pointer: fine)").matches;
 
 // The visitor id is handed over in the URL fragment by the loader. A fragment,
 // not a query string: it never reaches the server log, and the server does not
@@ -61,6 +72,8 @@ var starting = false;
 // The restart confirmation has replaced the composer. A restart throws the
 // thread away, so it is never one stray tap.
 var confirming = false;
+// A one-line problem shown above the composer (a photo that would not send).
+var notice = "";
 
 var LANG = (CFG.language || browserLang() || "en").toLowerCase();
 setLang(LANG);
@@ -93,21 +106,27 @@ function qs(extra) {
 
 // ── render ──────────────────────────────────────────────────────────────────
 
-function headerHtml(agent) {
-  // "AI assistant · Company": what she is, and whose. The company is the one the
-  // prompt speaks for (the account on a live widget, the persona in a demo).
+// "AI assistant · Company": what she is, and whose. The company is the one the
+// prompt speaks for (the account on a live widget, the persona in a demo).
+function roleLine() {
   var company = CFG.companyName || (state && state.company) || "";
-  var role = w("role") + (company ? " · " + company : "");
-  return '<header class="wdg-hdr">' +
+  return w("role") + (company ? " · " + company : "");
+}
+
+// On the welcome screen the header carries only the controls: the big orb
+// below already says who this is.
+function headerHtml(agent, bare) {
+  return '<header class="wdg-hdr' + (bare ? " is-bare" : "") + '">' +
+      (bare ? "<span></span>" :
       '<div class="wdg-id">' +
-        '<span class="wdg-ph"><img src="' + esc(AVATAR) + '" alt="" /><i class="wdg-dot"></i></span>' +
+        orb("wdg-ph") +
         '<span class="wdg-who">' +
           '<span class="wdg-name">' + esc(agent || w("assistant")) + "</span>" +
-          '<span class="wdg-role">' + esc(role) + "</span>" +
+          '<span class="wdg-role">' + esc(roleLine()) + "</span>" +
         "</span>" +
-      "</div>" +
+      "</div>") +
       '<div class="wdg-acts">' +
-        (canRestart()
+        (!bare && canRestart()
           ? '<button class="wdg-act wdg-restart" type="button" aria-label="' + esc(w("restart")) +
             '" title="' + esc(w("restart")) + '">' + icon("rotate-ccw", 16) + "</button>"
           : "") +
@@ -170,7 +189,11 @@ function composerHtml(done) {
   }
   var mic = micMode();
   var label = mic ? t("voiceRecord") : w("send");
-  return '<div class="wdg-field">' +
+  // Photos go through the live widget's own endpoint; the demo surface has none.
+  var clip = DEMO ? "" :
+    '<button class="wdg-clip" type="button" aria-label="' + esc(w("attach")) + '" title="' + esc(w("attach")) + '"' +
+      (busy || pending ? " disabled" : "") + ">" + CLIP_SVG + "</button>";
+  return clip + '<div class="wdg-field">' +
       '<textarea class="wdg-input" rows="1" placeholder="' + esc(w("placeholder")) + '"></textarea>' +
       '<button class="wdg-send" type="button" data-mode="' + (mic ? "mic" : "send") + '" aria-label="' + esc(label) + '"' +
         (busy ? " disabled" : "") + ">" + (mic ? icon("mic", 16) : SEND_SVG) + "</button>" +
@@ -195,17 +218,39 @@ function paint() {
     : (greeting ? [{ id: "greeting", role: "ai", text: greeting, at: null }] : []);
 
   var done = !!(state && state.done);
+  var hadFocus = !!(document.activeElement && document.activeElement.classList.contains("wdg-input"));
+  var welcome = isWelcome(msgs, done);
   root.innerHTML =
-    '<div class="wdg">' +
-      headerHtml(agent) +
-      '<div class="wdg-stream" id="stream">' +
-        messagesHtml({ messages: msgs, agent: agent }, pending, memo.playerState(), { avatarSrc: AVATAR }) +
-      "</div>" +
+    '<div class="wdg' + (welcome ? " is-welcome" : "") + '">' +
+      headerHtml(agent, welcome) +
+      (welcome
+        ? welcomeHtml(agent, greeting)
+        : '<div class="wdg-stream" id="stream">' +
+            messagesHtml({ messages: msgs, agent: agent }, pending, memo.playerState(),
+              { avatarHtml: AI_AVATAR, imageSrc: imageSrc }) +
+          "</div>") +
       chipsHtml(msgs, done) +
+      (notice ? '<div class="wdg-notice" role="alert">' + esc(notice) + "</div>" : "") +
       '<div class="wdg-composer">' + composerHtml(done) + "</div>" +
     "</div>";
-  wire();
+  wire(hadFocus || FINE_POINTER);
   scrollToEnd();
+}
+
+// Until the visitor has said anything, the panel is a welcome screen rather
+// than a thread holding one greeting bubble.
+function isWelcome(msgs, done) {
+  if (done || pending || msgs.length > 1) return false;
+  return !msgs.length || msgs[0].role === "ai";
+}
+
+function welcomeHtml(agent, greeting) {
+  return '<div class="wdg-welcome">' +
+      '<div class="wdg-hero">' + orb("wdg-hero-orb") + '<span class="wdg-hero-shadow"></span></div>' +
+      '<h1 class="wdg-hi">' + esc(agent ? w("hi").replace("{name}", agent) : w("hiAnon")) +
+        '<span class="wdg-hi-sub">' + esc(roleLine()) + "</span></h1>" +
+      (greeting ? '<p class="wdg-greet">' + esc(greeting) + "</p>" : "") +
+    "</div>";
 }
 
 function scrollToEnd() {
@@ -226,7 +271,7 @@ function setSendMode() {
   btn.innerHTML = mic ? icon("mic", 16) : SEND_SVG;
 }
 
-function wire() {
+function wire(focus) {
   var input = root.querySelector(".wdg-input");
   if (input) {
     input.value = draft;
@@ -235,8 +280,10 @@ function wire() {
     input.addEventListener("keydown", function (e) {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); doSend(); }
     });
-    input.focus();
+    if (focus) input.focus();
   }
+  var clip = root.querySelector(".wdg-clip");
+  if (clip) clip.addEventListener("click", function () { if (!busy && !pending) picker.click(); });
   var send = root.querySelector(".wdg-send[data-mode]");
   if (send) send.addEventListener("click", function () {
     if (send.getAttribute("data-mode") === "mic") beginRecording();
@@ -307,6 +354,7 @@ function failSend(err) {
 function doSend() {
   var text = (draft || "").trim();
   if (!text || busy) return;
+  notice = "";
   busy = true;
   pending = true;
   epoch++;
@@ -427,6 +475,122 @@ memo.wirePlayback(function (id) {
   return api("/audio" + qs("id=" + encodeURIComponent(id)));
 });
 
+// ── photos ──────────────────────────────────────────────────────────────────
+// The paperclip. A photo is shrunk here (longest side 1280px, JPEG) before it
+// leaves the phone: a camera original is 3 to 8MB, the vision model reads 1280px
+// just as well, and the proxy refuses anything near the original's size.
+
+var picker = document.createElement("input");
+picker.type = "file";
+picker.accept = "image/*";
+picker.hidden = true;
+document.body.appendChild(picker);
+picker.addEventListener("change", function () {
+  var file = picker.files && picker.files[0];
+  picker.value = "";
+  if (file) sendPhoto(file);
+});
+
+var photoCache = {};      // server message id -> data URL
+var photoLoading = {};
+var heldPhotos = [];      // sent from this tab, waiting for their server row
+var unconfirmed = null;   // the optimistic bubble, kept until that row exists
+
+function imageSrc(msg) {
+  if (msg.localSrc) return msg.localSrc;
+  if (photoCache[msg.id]) return photoCache[msg.id];
+  if (msg.hasImage && !DEMO && !photoLoading[msg.id]) {
+    photoLoading[msg.id] = true;
+    api("/image" + qs("id=" + encodeURIComponent(msg.id))).then(function (r) {
+      photoCache[msg.id] = r.dataUrl;
+      render();
+    }).catch(function () {});
+  }
+  return "";
+}
+
+// The vision model takes a few seconds to describe the photo, and the server
+// row only exists after that. Until then the visitor's own bubble stays on
+// screen; once the row lands, the photo they sent is pinned to it so it never
+// has to be downloaded again.
+function adoptPhotos(prevMessages, next) {
+  if (!next || !next.messages) return;
+  var known = {};
+  (prevMessages || []).forEach(function (m) { known[m.id] = true; });
+  var arrived = false;
+  for (var i = 0; i < next.messages.length; i++) {
+    var m = next.messages[i];
+    if (m.kind !== "image" || m.role !== "visitor" || known[m.id] || photoCache[m.id]) continue;
+    if (heldPhotos.length) photoCache[m.id] = heldPhotos.shift();
+    arrived = true;
+  }
+  if (arrived) unconfirmed = null;
+  if (unconfirmed) next.messages = next.messages.concat([unconfirmed]);
+}
+
+function shrinkPhoto(file) {
+  return new Promise(function (resolve, reject) {
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function () {
+      var scale = Math.min(1, 1280 / Math.max(img.naturalWidth, img.naturalHeight));
+      var canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(img.naturalWidth * scale));
+      canvas.height = Math.max(1, Math.round(img.naturalHeight * scale));
+      var ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";   // a transparent PNG would otherwise turn black
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      URL.revokeObjectURL(url);
+      var q = 0.85, data = canvas.toDataURL("image/jpeg", q);
+      while (data.length > 1300000 && q > 0.4) { q -= 0.15; data = canvas.toDataURL("image/jpeg", q); }
+      resolve(data);
+    };
+    img.onerror = function () { URL.revokeObjectURL(url); reject(new Error("unreadable")); };
+    img.src = url;
+  });
+}
+
+function sendPhoto(file) {
+  if (busy || pending || recording || (state && state.done)) return;
+  if (!/^image\//.test(file.type || "")) { notice = w("photoFailed"); render(); return; }
+  busy = true;
+  notice = "";
+  var caption = (draft || "").trim();
+  var localId = "local-img-" + Date.now();
+  shrinkPhoto(file).then(function (dataUrl) {
+    epoch++;
+    draft = "";
+    unconfirmed = { id: localId, role: "visitor", kind: "image", localSrc: dataUrl, text: caption, at: new Date().toISOString() };
+    heldPhotos.push(dataUrl);
+    var local = localThread();
+    local.push(unconfirmed);
+    state = Object.assign({}, state || {}, { messages: local });
+    pending = true;
+    render();
+    return api("/image", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(withContext({ image: dataUrl, text: caption })),
+    });
+  }).then(function () {
+    busy = false;
+    lastSig = "";
+    schedulePoll(FAST_POLL);
+  }).catch(function (err) {
+    busy = false;
+    pending = false;
+    if (unconfirmed && unconfirmed.id === localId) {
+      heldPhotos.pop();
+      unconfirmed = null;
+    }
+    if (state && state.messages) state.messages = state.messages.filter(function (m) { return m.id !== localId; });
+    failSend(err || {});
+    if (!fatal) { notice = w("photoFailed"); draft = caption; }
+    render();
+  });
+}
+
 // ── poll ────────────────────────────────────────────────────────────────────
 
 // While a reply is on its way, and for a few seconds after one lands (the AI
@@ -450,6 +614,7 @@ function poll() {
     if (confirming) fresh = 0;
     if (grew) { pending = false; burstUntil = Date.now() + 6000; }
     memo.adopt(state && state.messages, next);
+    adoptPhotos(state && state.messages, next);
     state = next;
     var sig = signature(next);
     if (sig !== lastSig) {

@@ -15,6 +15,10 @@ var COPY = {
     restartAsk: "Start a new conversation? This one stays in our records.",
     restartYes: "Restart",
     cancel: "Cancel",
+    hi: "Hi, I'm {name}",
+    hiAnon: "Hi there",
+    attach: "Add a photo",
+    photoFailed: "That photo could not be sent. Try another one.",
   },
   nl: {
     assistant: "Assistent",
@@ -28,6 +32,10 @@ var COPY = {
     restartAsk: "Een nieuw gesprek beginnen? Dit gesprek blijft bewaard.",
     restartYes: "Opnieuw starten",
     cancel: "Annuleren",
+    hi: "Hoi, ik ben {name}",
+    hiAnon: "Hoi",
+    attach: "Foto toevoegen",
+    photoFailed: "Die foto kon niet worden verstuurd. Probeer een andere.",
   },
   pt: {
     assistant: "Assistente",
@@ -41,6 +49,10 @@ var COPY = {
     restartAsk: "Começar uma nova conversa? Esta fica salva no histórico.",
     restartYes: "Reiniciar",
     cancel: "Cancelar",
+    hi: "Oi, eu sou {name}",
+    hiAnon: "Oi",
+    attach: "Adicionar foto",
+    photoFailed: "Não foi possível enviar essa foto. Tente outra.",
   },
 };
 

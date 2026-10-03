@@ -86,7 +86,7 @@ WIDGET_JS = f"""<script>
   b.addEventListener('click',function(){{if(window.LeadAwakerWidget)window.LeadAwakerWidget.open()}});
 }})();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=3" data-key="{WIDGET_KEY}" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=6" data-key="{WIDGET_KEY}" async></script>
 """
 
 

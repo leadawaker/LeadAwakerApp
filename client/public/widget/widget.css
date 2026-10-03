@@ -1,17 +1,21 @@
 /* The widget frame's own look. demo.css is loaded first for the message-thread
    markup it styles (.row/.bub/.av/.ts, typing dots, voice players); this file
-   restyles all of it into a neutral chat (white ground, grey incoming, near-
-   black outgoing) and drops the demo page's bone-and-wine chrome. Everything
-   is scoped under .wdg / .wdg-body, so the demo page itself is untouched.
+   restyles all of it into a calm, Kiki-like chat (soft grey ground, the AI's
+   words as plain text beside its orb face, near-black outgoing bubbles, a
+   white pill composer) and drops the demo page's bone-and-wine chrome.
+   Everything is scoped under .wdg / .wdg-body, so the demo page itself is
+   untouched.
 
    Neutral on purpose, with no per-client accent: it has to sit on any website
-   without clashing, and black/white/grey never does.
+   without clashing, and black/white/grey never does. The one exception is the
+   orb, which may opt into the brand colour (.lo-brand, set by the server).
 
    Safe to lean on demo.css's global reset here: this document is inside an
    iframe, so nothing it declares can reach the client's page. */
 
 .wdg-body {
-  --w-bg: #ffffff;
+  --w-bg: #f4f4f2;
+  --w-card: #ffffff;
   --w-ink: #09090b;
   --w-ink-2: #3f3f46;
   --w-mute: #71717a;
@@ -30,6 +34,7 @@
 /* design-tokens.css paints the landing page's warm light onto body::before and
    ::after; inside a client's widget that reads as a beige wash. */
 .wdg-body::before, .wdg-body::after { display: none; }
+.lo-brand { --lo-c: var(--w-accent); --lo-eye-c: var(--w-accent-ink); }
 
 #root { height: 100%; }
 
@@ -48,22 +53,13 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: 14px 14px 14px 16px;
-  border-bottom: 1px solid var(--w-line);
+  padding: 12px 12px 12px 16px;
+  border-bottom: 1px solid rgba(0,0,0,.06);
   background: var(--w-bg);
 }
+.wdg-hdr.is-bare { border-bottom-color: transparent; }
 .wdg-id { display: flex; align-items: center; gap: 11px; min-width: 0; }
-.wdg-ph { position: relative; width: 42px; height: 42px; flex: 0 0 auto; }
-.wdg-ph img {
-  width: 100%; height: 100%; border-radius: 50%; object-fit: cover; display: block;
-  background: var(--w-in);
-}
-/* "Someone is actually there": the one piece of status a visitor reads. */
-.wdg-dot {
-  position: absolute; right: 0; bottom: 1px;
-  width: 11px; height: 11px; border-radius: 50%;
-  background: var(--w-ok); border: 2px solid var(--w-bg);
-}
+.wdg-hdr .lo.wdg-ph { --lo-s: 40px; }
 .wdg-who { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
 .wdg-name {
   font-weight: 650; font-size: 15px; color: var(--w-ink); letter-spacing: -0.01em;
@@ -77,11 +73,38 @@
 .wdg-act {
   appearance: none; flex: 0 0 auto;
   width: 36px; height: 36px; border-radius: 10px;
-  border: 1px solid var(--w-line); background: var(--w-bg); color: var(--w-ink-2);
+  border: 0; border-radius: 50%; background: var(--w-card); color: var(--w-ink-2);
+  box-shadow: 0 1px 2px rgba(0,0,0,.06);
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: background-color 150ms ease, color 150ms ease;
 }
-.wdg-act:hover { background: var(--w-in); color: var(--w-ink); }
+.wdg-act:hover { background: #fafafa; color: var(--w-ink); }
+
+/* ── welcome ────────────────────────────────────────────────────────── */
+/* Before the first message: the orb, big, floating over its own shadow, and
+   who she is in large type. The greeting sits under it as plain words. */
+.wdg-welcome {
+  flex: 1 1 auto; min-height: 0; overflow-y: auto;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 8px 26px 18px;
+}
+.wdg-hero { position: relative; width: 104px; height: 128px; margin-bottom: 14px; }
+.wdg-hero .lo.wdg-hero-orb {
+  --lo-s: 104px; position: absolute; top: 0; left: 0;
+  animation: wdg-float 5s ease-in-out infinite;
+}
+.wdg-hero-shadow {
+  position: absolute; left: 22px; right: 22px; bottom: 2px; height: 10px; border-radius: 50%;
+  background: rgba(0,0,0,.14); filter: blur(5px);
+  animation: wdg-shadow 5s ease-in-out infinite;
+}
+@keyframes wdg-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes wdg-shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.82); opacity: .7; } }
+.wdg-hi {
+  margin: 0; font-size: 28px; line-height: 1.15; font-weight: 650; letter-spacing: -0.02em; color: var(--w-ink);
+}
+.wdg-hi-sub { display: block; margin-top: 4px; font-size: 21px; color: var(--w-mute-2); font-weight: 600; }
+.wdg-greet { margin: 14px 0 0; font-size: 15px; line-height: 1.55; color: var(--w-ink-2); }
 .wdg-act svg { width: 16px; height: 16px; }
 
 /* Restart confirmation: it takes the composer's place rather than floating over
@@ -123,16 +146,33 @@
 
 .wdg .row { gap: 8px; align-items: flex-start; }
 .wdg .row .av {
-  width: 30px; height: 30px; margin: 0; background: var(--w-in);
+  width: 28px; height: 28px; margin: 0; background: transparent;
 }
+.wdg .row .av-orb { overflow: visible; }
+.wdg .row .av-orb .lo { --lo-s: 28px; }
 .wdg .bub-wrap { max-width: 80%; }
+.wdg .row.ai .bub-wrap { max-width: calc(100% - 36px); }
 .wdg .bub {
   font-family: var(--w-sans);
   font-size: 14px; line-height: 1.5;
   padding: 9px 13px; border-radius: 12px;
 }
-.wdg .row.ai .bub { background: var(--w-in); color: var(--w-ink); border-bottom-left-radius: 12px; }
-.wdg .row.me .bub { background: var(--w-out); color: #fafafa; border-bottom-right-radius: 12px; }
+/* The AI speaks in plain text beside its face, no bubble: the Kiki look. */
+.wdg .row.ai .bub { background: transparent; color: var(--w-ink); padding: 4px 0 0; border-radius: 0; box-shadow: none; }
+.wdg .row.ai .bub.typing { background: var(--w-card); padding: 10px 13px; border-radius: 14px; }
+.wdg .row.me .bub { background: var(--w-out); color: #fafafa; border-radius: 18px; border-bottom-right-radius: 6px; }
+.wdg .row.ai .ts { margin-top: 3px; }
+
+/* A photo the visitor sent. */
+.wdg .bub.is-image { padding: 4px; }
+.wdg .bimg {
+  display: block; max-width: 220px; max-height: 260px; width: auto; border-radius: 14px; object-fit: cover;
+}
+.wdg .bimg.is-empty {
+  width: 180px; height: 130px; display: flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.12); color: rgba(255,255,255,.6);
+}
+.wdg .bcap { padding: 6px 9px 4px; }
 .wdg .ts {
   font-family: var(--w-sans); font-size: 11px; color: var(--w-mute);
   margin: 5px 2px 0;
@@ -162,7 +202,7 @@
 }
 .wdg-chip {
   border: 1px solid var(--w-line); border-radius: 999px;
-  padding: 7px 13px; background: var(--w-bg); color: var(--w-ink);
+  padding: 7px 13px; background: var(--w-card); color: var(--w-ink);
   font: inherit; font-size: 13px; line-height: 1.2; cursor: pointer;
   transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
 }
@@ -173,16 +213,18 @@
 .wdg-composer {
   flex: 0 0 auto;
   display: flex;
-  padding: 12px 14px 14px;
-  border-top: 1px solid var(--w-line);
+  align-items: flex-end;
+  gap: 8px;
+  padding: 10px 12px 14px;
   background: var(--w-bg);
 }
 .wdg-field, .wdg-rec {
   flex: 1 1 auto; min-width: 0;
   display: flex; align-items: flex-end; gap: 8px;
-  border: 1px solid var(--w-line); border-radius: 14px;
-  padding: 5px 5px 5px 14px;
-  background: var(--w-bg);
+  border: 1px solid transparent; border-radius: 23px;
+  padding: 4px 4px 4px 16px;
+  background: var(--w-card);
+  box-shadow: 0 1px 3px rgba(0,0,0,.07);
   transition: border-color 150ms ease, box-shadow 150ms ease;
 }
 .wdg-field:focus-within { border-color: #a1a1aa; box-shadow: 0 0 0 3px rgba(24,24,27,.06); }
@@ -194,9 +236,24 @@
   scrollbar-width: none;
 }
 .wdg-input::placeholder { color: var(--w-mute-2); }
+/* The paperclip: a round white button beside the pill, like Kiki's. */
+.wdg-clip {
+  flex: 0 0 auto;
+  width: 46px; height: 46px; border: 0; border-radius: 50%;
+  background: var(--w-card); color: var(--w-ink-2);
+  box-shadow: 0 1px 3px rgba(0,0,0,.07);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background-color 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+.wdg-clip:hover:not(:disabled) { color: var(--w-ink); background: #fafafa; }
+.wdg-clip:disabled { opacity: .45; cursor: default; }
+.wdg-notice {
+  flex: 0 0 auto; margin: 0 14px 2px; padding: 8px 12px; border-radius: 12px;
+  background: #fef2f2; color: #b91c1c; font-size: 13px; line-height: 1.4;
+}
 .wdg-send {
   flex: 0 0 auto;
-  width: 36px; height: 36px; border: 0; border-radius: 10px;
+  width: 36px; height: 36px; border: 0; border-radius: 50%;
   background: var(--w-out); color: #fafafa;
   cursor: pointer; display: flex; align-items: center; justify-content: center;
   transition: background-color 150ms ease, transform 150ms ease, opacity 150ms ease;
@@ -208,7 +265,7 @@
 /* Recording: the bar replaces the field, discard and send at opposite ends. */
 .wdg-rec { align-items: center; padding-left: 5px; }
 .wdg-rec-x {
-  width: 36px; height: 36px; flex: 0 0 auto; border: 0; border-radius: 10px;
+  width: 36px; height: 36px; flex: 0 0 auto; border: 0; border-radius: 50%;
   background: transparent; color: var(--w-mute); cursor: pointer;
   display: flex; align-items: center; justify-content: center;
   transition: color 150ms ease, background-color 150ms ease;
