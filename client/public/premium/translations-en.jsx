@@ -147,7 +147,7 @@ window.TRANSLATIONS.en = {
         avatar: "/premium/assets/abdulla-dilimi-avatar.webp",
         quote: "We already use a great system, so the tech isn't the issue. Gabriel re-engaged leads we'd completely lost touch with, and it never felt automated, just natural conversations.",
         name: "Abdulla Dilimi",
-        role: "Growth Specialist",
+        role: "Growth Specialist, HubSpot",
       },
       {
         avatar: "/premium/assets/diederik-vandelaarschot-avatar.webp",

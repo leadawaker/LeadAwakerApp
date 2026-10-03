@@ -595,6 +595,17 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 .bio{display:grid;gap:12px;padding-top:18px;border-top:1px solid var(--line)}
 .bio p{font-size:13.5px;line-height:1.8;color:var(--mute)}
 
+/* testimonials: people who have worked with Gabriel, about how he builds (no results claims) */
+.quotes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;max-width:1040px;margin:0 auto}
+@media (max-width:760px){.quotes{grid-template-columns:minmax(0,1fr)}}
+.quote{margin:0;display:grid;grid-template-rows:auto 1fr auto;gap:20px;padding:clamp(24px,3vw,34px);border-radius:16px;background:var(--surface);box-shadow:var(--sh-crisp)}
+.quote::before{content:"\201C";font-family:var(--serif);font-size:64px;line-height:.6;height:28px;color:var(--wine)}
+.quote blockquote{margin:0;font-size:16.5px;line-height:1.7;color:var(--ink-soft)}
+.quote figcaption{display:flex;align-items:center;gap:14px;padding-top:18px;border-top:1px solid var(--line)}
+.quote img{width:56px;height:56px;border-radius:50%;object-fit:cover;flex:none;border:1px solid var(--line)}
+.quote b{display:block;font-size:14.5px;color:var(--ink)}
+.quote small{display:block;font-size:13px;color:var(--mute)}
+
 /* faq */
 .faq{max-width:820px;margin:0 auto;display:grid;gap:14px}
 .faq details{background:var(--surface);border-radius:10px;box-shadow:var(--sh-crisp);padding-inline:24px}
@@ -1707,7 +1718,8 @@ footer img{height:24px;width:auto;display:block}
       </div>
     </div>
   </section>
-\n  <section class="band" id="about" style="padding-top:0">
+
+  <section class="band" id="about" style="padding-top:0">
     <div class="wrap">
       <div class="team">
         <div class="team-h">
@@ -1740,6 +1752,22 @@ footer img{height:24px;width:auto;display:block}
     </div>
   </section>
 
+  <section class="band" id="testimonials" style="padding-top:0">
+    <div class="wrap">
+      <div class="head"><span class="eyebrow">In their words</span><h2>What it’s like to <em class="w">build with Gabriel</em></h2></div>
+      <div class="quotes">
+        <figure class="quote">
+          <blockquote><p>I work with sales software every day, so I don’t impress easily. What stands out with Gabriel is how he builds: he tests everything himself, rings his own receptionist until nothing sounds off, and only then lets a customer hear it.</p></blockquote>
+          <figcaption><img src="/site/img/abdulla-dilimi.webp" alt="Abdulla Dilimi" width="56" height="56" loading="lazy"><div><b>Abdulla Dilimi</b><small>Growth Specialist, HubSpot</small></div></figcaption>
+        </figure>
+        <figure class="quote">
+          <blockquote><p>Gabriel doesn’t hand you a tool and disappear. He asked how we actually talk to our customers, built around that, and kept adjusting the details. It felt like working with a builder who cares how every sentence sounds.</p></blockquote>
+          <figcaption><img src="/site/img/diederik-vandelaarschot.webp" alt="Diederik van de Laarschot" width="56" height="56" loading="lazy"><div><b>Diederik van de Laarschot</b><small>Co-Founder, FusionCraft</small></div></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
   <section class="band" id="faq" style="padding-top:0">
     <div class="wrap">
       <div class="head"><h2>Questions before you book</h2></div>
@@ -1757,7 +1785,7 @@ footer img{height:24px;width:auto;display:block}
     </div>
   </section>
 
-  <section class="band" id="book" style="padding-top:0">
+  <section class="band" id="book" style="padding-top:clamp(28px,4vw,48px)">
     <div class="orbit-cta" id="orbit-cta" aria-hidden="true"></div>
     <div class="wrap">
       <div class="book">

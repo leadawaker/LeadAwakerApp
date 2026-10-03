@@ -146,7 +146,7 @@ window.TRANSLATIONS.pt = {
         avatar: "/premium/assets/abdulla-dilimi-avatar.webp",
         quote: "Já usamos um sistema muito bom, então a tecnologia não é o problema. O Gabriel reativou leads que tínhamos perdido completamente de vista, e nunca pareceu automatizado, foram conversas naturais.",
         name: "Abdulla Dilimi",
-        role: "Growth Specialist",
+        role: "Growth Specialist, HubSpot",
       },
       {
         avatar: "/premium/assets/diederik-vandelaarschot-avatar.webp",

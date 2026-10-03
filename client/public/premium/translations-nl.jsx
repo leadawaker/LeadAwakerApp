@@ -146,7 +146,7 @@ window.TRANSLATIONS.nl = {
         avatar: "/premium/assets/abdulla-dilimi-avatar.webp",
         quote: "We gebruiken al een goed systeem, de techniek is niet het probleem. Gabriel haalde leads terug die we volledig uit het oog hadden verloren, en het voelde nooit geautomatiseerd, gewoon natuurlijke gesprekken.",
         name: "Abdulla Dilimi",
-        role: "Growth Specialist",
+        role: "Growth Specialist, HubSpot",
       },
       {
         avatar: "/premium/assets/diederik-vandelaarschot-avatar.webp",
