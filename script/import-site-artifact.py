@@ -123,7 +123,18 @@ SARA_CSS = """
 .av3 .lo{--lo-s:78px}
 @media (max-width:480px){.av3 .lo{--lo-s:60px}}
 .ai-sara .lo{--lo-s:34px}
-.orb{background:none!important}
+.orb{background:none!important;box-shadow:0 0 0 12px rgba(255,220,225,.13),0 0 70px rgba(214,120,140,.3)}
+/* "You decide what she says": the same breathing rings as "one brief", not the
+   rainbow ring the artifact draws. */
+.orb .orb-ring{display:none}
+.orb::before,.orb::after{inset:-12px;border:2px solid rgba(255,220,225,.5);animation:halo 2.6s ease-out infinite}
+.orb::after{animation-delay:1.3s}
+/* The widget example's launcher wears the rim chosen in the CRM too. */
+.lo-rim-pulse .launch::before{animation:none;background:color-mix(in srgb,var(--lo-rim,#a1a1aa) 45%,#fff)}
+.lo-rim-pulse .launch::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid var(--lo-rim,#a1a1aa);animation:halo 2.6s ease-out infinite}
+.lo-rim-band .launch::before{animation:none;background:var(--lo-rim,#a1a1aa)}
+.lo-rim-none .launch::before{display:none}
+.lo-rim-none .launch i{inset:0}
 .orb .lo{--lo-s:150px;position:relative;z-index:1}
 """
 

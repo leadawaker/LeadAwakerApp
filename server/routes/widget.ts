@@ -22,7 +22,7 @@ import { deriveQuickReplies, parseOverride, type QuickReply } from "../widgetQui
 import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
 import { captureSiteShot, shotExists, shotFileName, isPublicHttpUrl, SHOT_DIR } from "../siteShot";
-import { renderFrameHtml, renderDemoPageHtml, LOADER_JS, teaserMeta, type FrameConfig } from "../widgetPages";
+import { renderFrameHtml, renderDemoPageHtml, renderLauncherPreviewHtml, LOADER_JS, teaserMeta, type FrameConfig } from "../widgetPages";
 import { widgetDemoAvatarUrl, widgetColorFor, DEFAULT_WIDGET_AVATAR } from "./demoSettings";
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
@@ -172,6 +172,8 @@ async function publicConfig(cfg: WidgetConfig): Promise<FrameConfig> {
     orbEyes: cfg.orbEyes || "auto",
     orbTint: cfg.orbTint || null,
     orbFace: cfg.orbFace || "eyes",
+    orbRim: cfg.orbRim || "metal",
+    orbRimColor: cfg.orbRimColor || null,
     orbPhoto: cfg.orbFace === "photo" && cfg.avatarUrl ? faceUrl(cfg) : null,
     quickReplies: deriveQuickReplies({ language: cfg.language, override: cfg.quickReplies }),
     greeting: cfg.greeting || "",
@@ -342,6 +344,17 @@ export function registerWidgetRoutes(app: Express) {
     }
     if (src.startsWith("/")) return res.redirect(302, src);
     res.status(404).end();
+  }));
+
+  // ── 2c. The launcher on its own, for the CRM's appearance preview ─────────
+  // Agency-only: it exists so a rim or shade can be judged before it ships.
+  app.get("/widget/launcher-preview", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
+    const cfg = await loadKey(String(req.query.key || ""));
+    if (!cfg) return res.status(404).end();
+    const pub = await publicConfig(cfg);
+    res.set("content-type", "text/html; charset=utf-8");
+    res.set("cache-control", "no-store");
+    res.send(renderLauncherPreviewHtml(pub, pub.orbPhoto ?? null));
   }));
 
   // ── 2b. Teaser data for the loader ─────────────────────────────────────────
@@ -561,6 +574,8 @@ export function registerWidgetRoutes(app: Express) {
     orbEyes: z.enum(["auto", "black", "white"]).optional(),
     orbTint: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
     orbFace: z.enum(["eyes", "icon", "photo"]).optional(),
+    orbRim: z.enum(["metal", "pulse", "band", "none"]).optional(),
+    orbRimColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
     launcherPosition: z.enum(["left", "right"]).optional(),
     agentName: z.string().max(80).optional(),
     // A path, or the CRM's uploaded face photo: a small (256px) image data URL.

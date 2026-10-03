@@ -103,6 +103,8 @@ export function WidgetAppearance({ cfg, onPatch }: {
   const style = (cfg.orbStyle || "metal") as "metal" | "tinted" | "solid";
   const eyes = (cfg.orbEyes || "auto") as "auto" | "black" | "white";
   const face = (cfg.orbFace || "eyes") as "eyes" | "icon" | "photo";
+  const rim = (cfg.orbRim || "metal") as "metal" | "pulse" | "band" | "none";
+  const [rimColor, setRimColor] = useState(cfg.orbRimColor || "#a1a1aa");
   const tint = cfg.orbTint && HEX.test(cfg.orbTint) ? cfg.orbTint.toLowerCase() : null;
   const hasPhoto = !!cfg.avatarUrl && cfg.avatarUrl.startsWith("data:image/");
   const [color, setColor] = useState(cfg.accentColor || "#6B2737");
@@ -130,6 +132,7 @@ export function WidgetAppearance({ cfg, onPatch }: {
   };
   const pickColor = (hex: string) => { setColor(hex); if (HEX.test(hex)) settle({ accentColor: hex }); };
   const pickTint = (hex: string) => { setCustomTint(hex); if (HEX.test(hex)) settle({ orbTint: hex }); };
+  const pickRimColor = (hex: string) => { setRimColor(hex); if (HEX.test(hex)) settle({ orbRimColor: hex }); };
 
   const uploadPhoto = async (file: File) => {
     setPhotoError(false);
@@ -249,6 +252,43 @@ export function WidgetAppearance({ cfg, onPatch }: {
               </div>
             </>
           )}
+
+          <div style={col}>
+            {label("orbRim")}
+            <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
+              {/* The launcher itself, live: the chat preview beside it never
+                  shows the button, and the rim only exists there. */}
+              <iframe
+                key={`launch-${previewRev}`}
+                title={t("websiteChat.orbRim")}
+                src={`/widget/launcher-preview?key=${encodeURIComponent(cfg.publicKey)}`}
+                style={{ width: 112, height: 112, border: "1px solid var(--line)", borderRadius: 16, background: "var(--card)", flexShrink: 0 }}
+              />
+              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <Segmented
+                  value={rim}
+                  onChange={(v) => void save({ orbRim: v })}
+                  options={[
+                    { value: "metal", label: t("websiteChat.rimMetal") },
+                    { value: "pulse", label: t("websiteChat.rimPulse") },
+                    { value: "band", label: t("websiteChat.rimBand") },
+                    { value: "none", label: t("websiteChat.rimNone") },
+                  ]}
+                />
+                {(rim === "pulse" || rim === "band") && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <input
+                      type="color"
+                      value={rimColor}
+                      onChange={(e) => pickRimColor(e.target.value)}
+                      style={{ width: 40, height: 32, padding: 0, border: "1px solid var(--line)", borderRadius: "var(--r-button)", background: "var(--card)", cursor: "pointer" }}
+                    />
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink-soft)" }}>{rimColor.toUpperCase()}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

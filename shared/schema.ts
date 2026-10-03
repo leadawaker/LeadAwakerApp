@@ -1889,6 +1889,8 @@ export const widgetConfigs = nocodb.table("Widget_Configs", {
   orbEyes: text("orb_eyes").default("auto"),      // 'auto' | 'black' | 'white'
   orbTint: text("orb_tint"),                       // metal only: '#hex' for gold/copper/..., null = silver
   orbFace: text("orb_face").default("eyes"),      // 'eyes' | 'icon' | 'photo' (photo = avatarUrl)
+  orbRim: text("orb_rim").default("metal"),       // launcher rim: 'metal' | 'pulse' | 'band' | 'none'
+  orbRimColor: text("orb_rim_color"),             // pulse/band colour, null = soft grey
   launcherPosition: text("launcher_position").default("right"),  // 'right' | 'left'
   agentName: text("agent_name"),
   avatarUrl: text("avatar_url"),

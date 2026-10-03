@@ -81,7 +81,10 @@ const HEX = /^#[0-9a-fA-F]{6}$/;
  * whatever origin the caller is on.
  */
 export function orbLook(
-  o: { style?: string | null; color?: string | null; eyes?: string | null; tint?: string | null; face?: string | null; photo?: string | null },
+  o: {
+    style?: string | null; color?: string | null; eyes?: string | null; tint?: string | null;
+    face?: string | null; photo?: string | null; rim?: string | null; rimColor?: string | null;
+  },
   ink: (hex: string) => string,
 ): { cls: string; vars: string; photo: string | null } {
   const color = o.color && HEX.test(o.color) ? o.color.toLowerCase() : "";
@@ -89,16 +92,23 @@ export function orbLook(
   const tint = style === "metal" && o.tint && HEX.test(o.tint) ? o.tint.toLowerCase() : "";
   const photo = o.face === "photo" && o.photo ? o.photo : null;
   const face = photo ? "photo" : o.face === "icon" ? "icon" : "eyes";
+  // The launcher's rim (the ring around the button): the turning metal by
+  // default, a soft outline with rings pulsing out of it, a plain colour band,
+  // or nothing. Pulse and band share one colour.
+  const rim = o.rim === "pulse" || o.rim === "band" || o.rim === "none" ? o.rim : "metal";
+  const rimColor = o.rimColor && HEX.test(o.rimColor) ? o.rimColor.toLowerCase() : "";
   const eyes = o.eyes === "black" || o.eyes === "white"
     ? EYE[o.eyes]
     : style === "metal" ? EYE.black : ink(color) === "#ffffff" ? EYE.white : EYE.black;
   const cls = [
     style === "metal" ? (tint ? "lo-tint" : "") : `lo-${style}`,
     face === "eyes" ? "" : `lo-face-${face}`,
+    rim === "metal" ? "" : `lo-rim-${rim}`,
   ].filter(Boolean).join(" ");
   const vars = [`--lo-eye:${eyes}`];
   if (style !== "metal") vars.push(`--lo-c:${color}`);
   if (tint) vars.push(`--lo-tint:${tint}`);
+  if (rimColor && (rim === "pulse" || rim === "band")) vars.push(`--lo-rim:${rimColor}`);
   return { cls, vars: vars.join(";"), photo };
 }
 

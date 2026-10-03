@@ -33,6 +33,9 @@ export interface FrameConfig {
   orbFace?: string | null;
   /** The face photo's URL on our own origin, when orbFace is 'photo'. */
   orbPhoto?: string | null;
+  /** The launcher's rim: 'metal' | 'pulse' | 'band' | 'none', and its colour. */
+  orbRim?: string | null;
+  orbRimColor?: string | null;
 }
 
 export interface DemoFrame {
@@ -96,6 +99,19 @@ export const LAUNCHER_CSS = `
 /* Over a photo the close glyph needs its own contrast. */
 .la-root.lo-face-photo .la-core{color:#fff}
 .la-root.is-open.lo-face-photo .la-core .lo{filter:brightness(.55)}
+/* Other rims. Pulse: a soft lighter outline with rings breathing out of it
+   (the homepage's "one brief" look). Band: a still ring in one colour. None:
+   the orb alone, edge to edge. The glint only belongs on metal. */
+.la-root.lo-rim-pulse .la-btn::before{background:color-mix(in srgb,var(--lo-rim,#a1a1aa) 45%,#fff);animation:none}
+.la-root.lo-rim-pulse .la-btn::after{inset:-6px;background:none;filter:none;border:2px solid var(--lo-rim,#a1a1aa);opacity:.4;animation:la-pulse 2.6s ease-out infinite}
+.la-root.lo-rim-pulse .la-btn:hover::after{opacity:.4}
+@keyframes la-pulse{0%{transform:scale(1);opacity:.45}100%{transform:scale(1.35);opacity:0}}
+.la-root.lo-rim-band .la-btn::before{background:var(--lo-rim,#a1a1aa);animation:none}
+.la-root.lo-rim-band .la-btn::after{display:none}
+.la-root.lo-rim-none .la-btn::before,.la-root.lo-rim-none .la-btn::after{display:none}
+.la-root.lo-rim-none .la-core{inset:0}
+.la-root.lo-rim-pulse .la-glint,.la-root.lo-rim-band .la-glint,.la-root.lo-rim-none .la-glint{display:none}
+.la-root.is-open.lo-rim-pulse .la-btn::after{animation:none;opacity:0}
 .la-core .la-i-x{position:absolute;display:flex;z-index:2;opacity:0;transform:rotate(-90deg) scale(.6);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
 .la-core svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .la-root.is-open .la-core .la-i-x{opacity:1;transform:none}
@@ -140,7 +156,7 @@ export const LAUNCHER_CSS = `
   .la-root.is-open .la-btn,.la-root.is-open .la-teaser{display:none}
 }
 @media (prefers-reduced-motion:reduce){
-  .la-btn::before,.la-btn::after,.la-glint{animation:none}
+  .la-btn::before,.la-btn::after,.la-glint,.la-root.lo-rim-pulse .la-btn::after{animation:none}
   .la-btn,.la-teaser,.la-core .la-i-x{transition:none}
   .la-panel.open{animation:none}
 }` + ORB_CSS;
@@ -276,6 +292,7 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
     ? orbLook({
         style: opts.config.orbStyle, color: accent, eyes: opts.config.orbEyes,
         tint: opts.config.orbTint, face: opts.config.orbFace, photo: opts.config.orbPhoto,
+        rim: opts.config.orbRim, rimColor: opts.config.orbRimColor,
       }, inkFor)
     : orbLook({ style: accent ? "tinted" : "metal", color: accent }, inkFor);
   return `<!doctype html>
@@ -540,6 +557,20 @@ export const LOADER_JS = String.raw`(function () {
  *  avatar path stays relative: the loader resolves it against the API origin it
  *  already knows, which is more reliable than guessing the scheme here behind
  *  Cloudflare. */
+/** The launcher alone, for the CRM's appearance controls: the real button and
+ *  stylesheet, wearing the widget's look, on a plain ground. */
+export function renderLauncherPreviewHtml(cfg: FrameConfig, photo: string | null): string {
+  const look = orbLook({
+    style: cfg.orbStyle, color: cfg.accent, eyes: cfg.orbEyes,
+    tint: cfg.orbTint, face: cfg.orbFace, photo, rim: cfg.orbRim, rimColor: cfg.orbRimColor,
+  }, inkFor);
+  return `<!doctype html><html><head><meta charset="utf-8"><style>${LAUNCHER_CSS}
+html,body{margin:0;height:100%;background:transparent}
+.la-root{--la-pos:absolute;--la-gap:0px;position:absolute;left:50%;top:50%;width:60px;height:60px;transform:translate(-50%,-50%)}
+</style></head><body><div class="la-root${look.cls ? " " + look.cls : ""}" style="${escapeHtml(look.vars + photoVar(look.photo))}">
+<button class="la-btn" type="button" tabindex="-1">${BUTTON_INNER}</button></div></body></html>`;
+}
+
 export function teaserMeta(cfg: FrameConfig) {
   const l = lang2(cfg.language);
   return {
@@ -547,6 +578,7 @@ export function teaserMeta(cfg: FrameConfig) {
     look: orbLook({
       style: cfg.orbStyle, color: cfg.accent, eyes: cfg.orbEyes,
       tint: cfg.orbTint, face: cfg.orbFace, photo: cfg.orbPhoto,
+      rim: cfg.orbRim, rimColor: cfg.orbRimColor,
     }, inkFor),
   };
 }

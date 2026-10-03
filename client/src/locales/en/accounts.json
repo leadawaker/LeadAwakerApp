@@ -662,7 +662,12 @@
     "shade_roseGold": "Rose gold",
     "shade_bronze": "Bronze",
     "shade_custom": "Any colour",
-    "orbIconColor": "Icon colour"
+    "orbIconColor": "Icon colour",
+    "orbRim": "Button rim",
+    "rimMetal": "Metal",
+    "rimPulse": "Pulse",
+    "rimBand": "Colour band",
+    "rimNone": "None"
   },
   "inboundWhatsApp": {
     "title": "WhatsApp from new contacts",

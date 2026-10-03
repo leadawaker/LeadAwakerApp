@@ -662,7 +662,12 @@
     "shade_roseGold": "Roségoud",
     "shade_bronze": "Brons",
     "shade_custom": "Elke kleur",
-    "orbIconColor": "Kleur icoon"
+    "orbIconColor": "Kleur icoon",
+    "orbRim": "Rand van de knop",
+    "rimMetal": "Metaal",
+    "rimPulse": "Puls",
+    "rimBand": "Kleurband",
+    "rimNone": "Geen"
   },
   "inboundWhatsApp": {
     "title": "WhatsApp van nieuwe contacten",

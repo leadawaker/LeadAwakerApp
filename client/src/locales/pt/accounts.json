@@ -613,7 +613,12 @@
     "shade_roseGold": "Ouro rosé",
     "shade_bronze": "Bronze",
     "shade_custom": "Qualquer cor",
-    "orbIconColor": "Cor do ícone"
+    "orbIconColor": "Cor do ícone",
+    "orbRim": "Borda do botão",
+    "rimMetal": "Metal",
+    "rimPulse": "Pulso",
+    "rimBand": "Faixa de cor",
+    "rimNone": "Nenhuma"
   },
   "inboundWhatsApp": {
     "title": "WhatsApp de novos contatos",

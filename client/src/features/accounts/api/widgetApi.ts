@@ -17,6 +17,8 @@ export interface WidgetConfigRow {
   orbEyes: string | null;
   orbTint: string | null;
   orbFace: string | null;
+  orbRim: string | null;
+  orbRimColor: string | null;
   launcherPosition: string | null;
   agentName: string | null;
   avatarUrl: string | null;
