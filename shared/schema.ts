@@ -1883,6 +1883,10 @@ export const widgetConfigs = nocodb.table("Widget_Configs", {
   allowedDomains: jsonb("allowed_domains").$type<string[]>().default([]),
   greeting: text("greeting"),
   accentColor: text("accent_color").default("#6B2737"),
+  // The assistant's orb face. 'metal' ignores accentColor; 'tinted' swirls it,
+  // 'solid' paints it flat. Eyes 'auto' pick whatever reads on the orb.
+  orbStyle: text("orb_style").default("metal"),   // 'metal' | 'tinted' | 'solid'
+  orbEyes: text("orb_eyes").default("auto"),      // 'auto' | 'black' | 'white'
   launcherPosition: text("launcher_position").default("right"),  // 'right' | 'left'
   agentName: text("agent_name"),
   avatarUrl: text("avatar_url"),

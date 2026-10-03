@@ -38,7 +38,9 @@ var DEMO = BOOT.mode === "demo";
 function orb(cls) {
   return '<span class="lo' + (cls ? " " + cls : "") + '" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span></span>';
 }
-var AI_AVATAR = '<div class="av av-orb">' + orb() + "</div>";
+// Beside each message she just faces forward: a dozen blinking faces down the
+// thread would be a crowd, not a person.
+var AI_AVATAR = '<div class="av av-orb">' + orb("lo-still") + "</div>";
 
 // Phones open the keyboard on focus, so the input is only focused for them when
 // they were already typing; a desktop gets it focused on open.
@@ -220,11 +222,14 @@ function paint() {
   var done = !!(state && state.done);
   var hadFocus = !!(document.activeElement && document.activeElement.classList.contains("wdg-input"));
   var welcome = isWelcome(msgs, done);
+  // Rebuilt orbs resume their animations where the old ones were (see --lo-e
+  // in server/widgetOrb.ts) instead of every repaint restarting them.
+  document.documentElement.style.setProperty("--lo-e", String(Math.round(performance.now())));
   root.innerHTML =
-    '<div class="wdg' + (welcome ? " is-welcome" : "") + '">' +
+    '<div class="wdg' + (welcome ? " is-welcome" : "") + (pending ? " lo-fast" : "") + '">' +
       headerHtml(agent, welcome) +
       (welcome
-        ? welcomeHtml(agent, greeting)
+        ? welcomeHtml(agent)
         : '<div class="wdg-stream" id="stream">' +
             messagesHtml({ messages: msgs, agent: agent }, pending, memo.playerState(),
               { avatarHtml: AI_AVATAR, imageSrc: imageSrc }) +
@@ -244,12 +249,13 @@ function isWelcome(msgs, done) {
   return !msgs.length || msgs[0].role === "ai";
 }
 
-function welcomeHtml(agent, greeting) {
+// The greeting is not repeated here: "Hi, I am Sara, your digital assistant"
+// already says it. It still opens the thread once the visitor writes.
+function welcomeHtml(agent) {
   return '<div class="wdg-welcome">' +
       '<div class="wdg-hero">' + orb("wdg-hero-orb") + '<span class="wdg-hero-shadow"></span></div>' +
       '<h1 class="wdg-hi">' + esc(agent ? w("hi").replace("{name}", agent) : w("hiAnon")) +
-        '<span class="wdg-hi-sub">' + esc(roleLine()) + "</span></h1>" +
-      (greeting ? '<p class="wdg-greet">' + esc(greeting) + "</p>" : "") +
+        '<span class="wdg-hi-sub">' + esc(w("yourAssistant")) + "</span></h1>" +
     "</div>";
 }
 

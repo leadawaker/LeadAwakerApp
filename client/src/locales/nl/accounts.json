@@ -618,7 +618,7 @@
   },
   "websiteChat": {
     "title": "Websitechat",
-    "subtitle": "Een AI-assistent op de eigen website van de klant.",
+    "subtitle": "Een digitale assistent op de eigen website van de klant.",
     "none": "Nog geen widget op dit account.",
     "create": "Widget aanmaken",
     "enabled": "Widget ingeschakeld",
@@ -637,7 +637,18 @@
     "snippetHint": "Plak dit één keer, vlak voor </body> op elke pagina.",
     "preview": "Voorbeeld",
     "usage": "{{used}} van {{cap}} berichten vandaag",
-    "delete": "Deze widget verwijderen"
+    "delete": "Deze widget verwijderen",
+    "appearance": "Haar uiterlijk",
+    "orbStyle": "Stijl",
+    "orbMetal": "Metaal",
+    "orbTinted": "Kleurwerveling",
+    "orbSolid": "Effen kleur",
+    "orbColor": "Kleur",
+    "orbColorHint": "Metaal heeft een eigen kleur. Kies een kleurstijl om deze te gebruiken.",
+    "orbEyes": "Ogen",
+    "eyesAuto": "Automatisch",
+    "eyesBlack": "Zwart",
+    "eyesWhite": "Wit"
   },
   "inboundWhatsApp": {
     "title": "WhatsApp van nieuwe contacten",

@@ -618,7 +618,7 @@
   },
   "websiteChat": {
     "title": "Website chat",
-    "subtitle": "An AI assistant on the client's own website.",
+    "subtitle": "A digital assistant on the client's own website.",
     "none": "No widget on this account yet.",
     "create": "Create widget",
     "enabled": "Widget enabled",
@@ -637,7 +637,18 @@
     "snippetHint": "Paste this once, just before </body> on every page.",
     "preview": "Preview",
     "usage": "{{used}} of {{cap}} messages today",
-    "delete": "Delete this widget"
+    "delete": "Delete this widget",
+    "appearance": "Her look",
+    "orbStyle": "Style",
+    "orbMetal": "Metal",
+    "orbTinted": "Colour swirl",
+    "orbSolid": "Solid colour",
+    "orbColor": "Colour",
+    "orbColorHint": "Metal has its own colour. Pick a colour style to use this.",
+    "orbEyes": "Eyes",
+    "eyesAuto": "Auto",
+    "eyesBlack": "Black",
+    "eyesWhite": "White"
   },
   "inboundWhatsApp": {
     "title": "WhatsApp from new contacts",

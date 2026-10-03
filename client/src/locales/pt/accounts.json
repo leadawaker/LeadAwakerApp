@@ -569,7 +569,7 @@
   },
   "websiteChat": {
     "title": "Chat do site",
-    "subtitle": "Um assistente de IA no site do próprio cliente.",
+    "subtitle": "Um assistente digital no site do próprio cliente.",
     "none": "Ainda não há widget nesta conta.",
     "create": "Criar widget",
     "enabled": "Widget ativado",
@@ -588,7 +588,18 @@
     "snippetHint": "Cole uma vez, logo antes de </body> em todas as páginas.",
     "preview": "Prévia",
     "usage": "{{used}} de {{cap}} mensagens hoje",
-    "delete": "Excluir este widget"
+    "delete": "Excluir este widget",
+    "appearance": "A aparência dela",
+    "orbStyle": "Estilo",
+    "orbMetal": "Metal",
+    "orbTinted": "Cor em movimento",
+    "orbSolid": "Cor sólida",
+    "orbColor": "Cor",
+    "orbColorHint": "O metal tem cor própria. Escolha um estilo com cor para usar esta.",
+    "orbEyes": "Olhos",
+    "eyesAuto": "Automático",
+    "eyesBlack": "Pretos",
+    "eyesWhite": "Brancos"
   },
   "inboundWhatsApp": {
     "title": "WhatsApp de novos contatos",

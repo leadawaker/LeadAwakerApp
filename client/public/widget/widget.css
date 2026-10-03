@@ -85,16 +85,17 @@
    who she is in large type. The greeting sits under it as plain words. */
 .wdg-welcome {
   flex: 1 1 auto; min-height: 0; overflow-y: auto;
-  display: flex; flex-direction: column; justify-content: center;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  text-align: center;
   padding: 8px 26px 18px;
 }
-.wdg-hero { position: relative; width: 104px; height: 128px; margin-bottom: 14px; }
+.wdg-hero { position: relative; width: 112px; height: 136px; margin-bottom: 14px; }
 .wdg-hero .lo.wdg-hero-orb {
-  --lo-s: 104px; position: absolute; top: 0; left: 0;
+  --lo-s: 112px; position: absolute; top: 0; left: 0;
   animation: wdg-float 5s ease-in-out infinite;
 }
 .wdg-hero-shadow {
-  position: absolute; left: 22px; right: 22px; bottom: 2px; height: 10px; border-radius: 50%;
+  position: absolute; left: 24px; right: 24px; bottom: 2px; height: 10px; border-radius: 50%;
   background: rgba(0,0,0,.14); filter: blur(5px);
   animation: wdg-shadow 5s ease-in-out infinite;
 }
@@ -104,7 +105,6 @@
   margin: 0; font-size: 28px; line-height: 1.15; font-weight: 650; letter-spacing: -0.02em; color: var(--w-ink);
 }
 .wdg-hi-sub { display: block; margin-top: 4px; font-size: 21px; color: var(--w-mute-2); font-weight: 600; }
-.wdg-greet { margin: 14px 0 0; font-size: 15px; line-height: 1.55; color: var(--w-ink-2); }
 .wdg-act svg { width: 16px; height: 16px; }
 
 /* Restart confirmation: it takes the composer's place rather than floating over

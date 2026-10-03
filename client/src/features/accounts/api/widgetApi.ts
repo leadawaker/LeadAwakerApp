@@ -12,6 +12,9 @@ export interface WidgetConfigRow {
   enabled: boolean | null;
   allowedDomains: string[] | null;
   greeting: string | null;
+  accentColor: string | null;
+  orbStyle: string | null;
+  orbEyes: string | null;
   launcherPosition: string | null;
   agentName: string | null;
   avatarUrl: string | null;

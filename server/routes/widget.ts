@@ -160,6 +160,8 @@ async function publicConfig(cfg: WidgetConfig): Promise<FrameConfig> {
   return {
     key: cfg.publicKey,
     accent: cfg.accentColor || null,
+    orbStyle: cfg.orbStyle || "metal",
+    orbEyes: cfg.orbEyes || "auto",
     quickReplies: deriveQuickReplies({ language: cfg.language, override: cfg.quickReplies }),
     greeting: cfg.greeting || "",
     agentName: cfg.agentName || "",
@@ -312,8 +314,7 @@ export function registerWidgetRoutes(app: Express) {
     res.set("content-type", "text/html; charset=utf-8");
     res.set("content-security-policy", `frame-ancestors 'self' ${sources.join(" ")}`);
     res.set("cache-control", "no-store");
-    const orb = req.query.orb === "brand" ? "brand" : "metal";
-    res.send(renderFrameHtml({ mode: "live", config: { ...(await publicConfig(cfg)), orb } }));
+    res.send(renderFrameHtml({ mode: "live", config: await publicConfig(cfg) }));
   }));
 
   // ── 2b. Teaser data for the loader ─────────────────────────────────────────
@@ -528,6 +529,9 @@ export function registerWidgetRoutes(app: Express) {
     enabled: z.boolean().optional(),
     allowedDomains: z.array(z.string().max(253)).max(20).optional(),
     greeting: z.string().max(400).optional(),
+    accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+    orbStyle: z.enum(["metal", "tinted", "solid"]).optional(),
+    orbEyes: z.enum(["auto", "black", "white"]).optional(),
     launcherPosition: z.enum(["left", "right"]).optional(),
     agentName: z.string().max(80).optional(),
     avatarUrl: z.string().max(500).optional(),

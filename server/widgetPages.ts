@@ -9,7 +9,7 @@
 // pin it inside a container instead of the viewport.
 
 import { inkFor } from "./brandColor";
-import { ORB_CSS, orbHtml } from "./widgetOrb";
+import { ORB_CSS, orbHtml, orbLook } from "./widgetOrb";
 
 export interface FrameConfig {
   key: string;
@@ -24,8 +24,9 @@ export interface FrameConfig {
   avatar: string;
   language: string;
   maxTurns: number;
-  /** "brand" when the embed opted into a brand-coloured orb (data-orb). */
-  orb?: "brand" | "metal";
+  /** The orb face: 'metal' | 'tinted' | 'solid' (colour = accent), eyes 'auto' | 'black' | 'white'. */
+  orbStyle?: string | null;
+  orbEyes?: string | null;
 }
 
 export interface DemoFrame {
@@ -78,13 +79,11 @@ export const LAUNCHER_CSS = `
 .la-btn:hover{transform:translateY(-2px) scale(1.04);box-shadow:0 22px 40px -12px rgba(0,0,0,.6),0 6px 14px -4px rgba(0,0,0,.35)}
 .la-btn:hover::after{opacity:.55}
 .la-btn:focus-visible{outline:2px solid #a1a1aa;outline-offset:3px}
-/* The core IS Sara: the orb face fills the chrome ring. Open, her eyes give way
-   to the close glyph. A brand colour (the side option) turns the orb that
-   colour; the ring, teaser and chat stay neutral either way. */
-.la-core{position:absolute;inset:2.5px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;color:#18181b;background:#d4d4d8}
-.la-root.has-c{--lo-c:var(--la-c);--lo-eye-c:var(--la-ink)}
-.la-root.has-c .la-core{color:var(--la-ink)}
-.la-core .lo{--lo-s:55px;position:absolute;inset:0}
+/* The core IS the assistant: the orb face fills the chrome ring. Open, her eyes
+   give way to the close glyph, drawn in the eyes' colour so it reads on any
+   orb. The ring, teaser and chat stay neutral whatever the orb wears. */
+.la-core{position:absolute;inset:2.5px;border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;color:var(--lo-eye,#18181b);background:var(--lo-c,#d4d4d8)}
+.la-core .lo{--lo-s:55px;position:absolute;inset:0;-webkit-mask:none;mask:none}
 .la-root.is-open .la-core .lo-eyes{opacity:0}
 .la-core .la-i-x{position:absolute;display:flex;z-index:2;opacity:0;transform:rotate(-90deg) scale(.6);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
 .la-core svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -262,10 +261,11 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
   const lang = opts.mode === "live" ? opts.config.language : opts.demo.language;
   const raw = opts.mode === "live" ? opts.config.accent : opts.demo.accent;
   const accent = raw && /^#[0-9a-fA-F]{6}$/.test(raw) ? raw.toLowerCase() : "";
-  // The orb wears the brand colour only when the launcher does: on a live widget
-  // that is the loader's data-orb="brand" opt-in, on a demo it is the colour the
-  // demo page tinted its launcher with.
-  const brand = !!accent && (opts.mode === "demo" || opts.config.orb === "brand");
+  // A live widget wears its configured orb; a demo swirls the colour the demo
+  // page tinted its launcher with, so the chat matches the button it opened from.
+  const look = opts.mode === "live"
+    ? orbLook({ style: opts.config.orbStyle, color: accent, eyes: opts.config.orbEyes }, inkFor)
+    : orbLook({ style: accent ? "tinted" : "metal", color: accent }, inkFor);
   return `<!doctype html>
 <html lang="${escapeHtml(lang2(lang))}">
 <head>
@@ -279,7 +279,7 @@ ${accent ? `<style>:root{--w-accent:${accent};--w-accent-ink:${inkFor(accent)}}<
 <style>${ORB_CSS}</style>
 ${frameImportMap()}
 </head>
-<body class="wdg-body${brand ? " lo-brand" : ""}">
+<body class="wdg-body${look.cls ? " " + look.cls : ""}" style="${look.vars}">
 <div id="root"></div>
 <script>window.__WIDGET__ = ${JSON.stringify(boot).replace(/</g, "\\u003c")};</script>
 <script type="module" src="/widget/widget.js?v=${ASSET_V}"></script>
@@ -300,9 +300,9 @@ export function renderDemoPageHtml(o: {
   color: string | null;
 }): string {
   const l = lang2(o.language);
-  const tint = o.color && /^#[0-9a-f]{6}$/i.test(o.color)
-    ? ` has-c lo-brand" style="--la-c:${o.color};--la-ink:${inkFor(o.color)}`
-    : "";
+  const color = o.color && /^#[0-9a-f]{6}$/i.test(o.color) ? o.color : null;
+  const look = orbLook({ style: color ? "tinted" : "metal", color }, inkFor);
+  const tint = `${look.cls ? " " + look.cls : ""}" style="${look.vars}`;
   // The prospect's homepage IS the page: full width, scrolling like their real
   // site, with the launcher fixed to the viewport corner exactly where it would
   // sit on it. No browser mock-up or caption around it; anything we add is
@@ -396,8 +396,6 @@ export const LOADER_JS = String.raw`(function () {
   if (!key) return;
   var origin = new URL(self.src, location.href).origin;
   var left = self.getAttribute("data-position") === "left";
-  // The orb is liquid metal unless the embed asks for the client's own colour.
-  var wantBrand = self.getAttribute("data-orb") === "brand", brand = false;
   if (window.__leadawakerWidget) return;        // never mount twice
   window.__leadawakerWidget = true;
 
@@ -454,7 +452,7 @@ export const LOADER_JS = String.raw`(function () {
   function toggle() {
     open = !open;
     if (open && !loaded) {
-      frame.src = origin + "/widget/frame?key=" + encodeURIComponent(key) + (brand ? "&orb=brand" : "") + "#v=" + encodeURIComponent(vid);
+      frame.src = origin + "/widget/frame?key=" + encodeURIComponent(key) + "#v=" + encodeURIComponent(vid);
       loaded = true;
     }
     frame.classList.toggle("open", open);
@@ -484,14 +482,14 @@ export const LOADER_JS = String.raw`(function () {
   }
   var teased = false;
   try { teased = sessionStorage.getItem("la_widget_teased") === "1"; } catch (e) {}
-  if ((wantBrand || !teased) && window.fetch) {
+  // Fetched on every load, teaser or not: it also carries the orb's look, which
+  // is set in the CRM rather than in this script tag.
+  if (window.fetch) {
     fetch(origin + "/widget/meta?key=" + encodeURIComponent(key)).then(function (r) { return r.ok ? r.json() : null; }).then(function (m) {
       if (!m) return;
-      if (wantBrand && /^#[0-9a-fA-F]{6}$/.test(m.accent || "")) {
-        brand = true;
-        root.classList.add("has-c", "lo-brand");
-        root.style.setProperty("--la-c", m.accent);
-        root.style.setProperty("--la-ink", m.ink || "#fff");
+      if (m.look) {
+        if (m.look.cls) root.classList.add(m.look.cls);
+        if (m.look.vars) root.style.cssText += ";" + m.look.vars;
       }
       if (teased || !m.teaser) return;
       var face = document.createElement("span");
@@ -528,9 +526,8 @@ export const LOADER_JS = String.raw`(function () {
  *  Cloudflare. */
 export function teaserMeta(cfg: FrameConfig) {
   const l = lang2(cfg.language);
-  const accent = cfg.accent && /^#[0-9a-fA-F]{6}$/.test(cfg.accent) ? cfg.accent : null;
   return {
     agentName: cfg.agentName, avatar: cfg.avatar, teaser: TEASER[l], closeLabel: CLOSE_LABEL[l],
-    accent, ink: accent ? inkFor(accent) : null,
+    look: orbLook({ style: cfg.orbStyle, color: cfg.accent, eyes: cfg.orbEyes }, inkFor),
   };
 }

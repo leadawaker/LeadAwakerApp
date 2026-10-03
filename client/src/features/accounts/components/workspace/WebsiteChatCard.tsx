@@ -13,6 +13,7 @@ import {
   fetchWidgetConfigs, createWidgetConfig, updateWidgetConfig, deleteWidgetConfig,
   widgetSnippet, type WidgetConfigRow,
 } from "../../api/widgetApi";
+import { WidgetAppearance } from "./WidgetAppearance";
 
 const MONO = {
   fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em",
@@ -235,18 +236,11 @@ export function WebsiteChatCard({ accountId }: { accountId: number }) {
                 <span style={{ fontSize: 11, color: "var(--mute-2)" }}>{t("websiteChat.snippetHint")}</span>
               </div>
 
-              {/* Preview: the real widget, on the real key, in an iframe. It is
-                  the same document a visitor gets, so a broken config shows up
-                  here rather than on the client's homepage. */}
-              <div>
-                <span style={MONO}>{t("websiteChat.preview")}</span>
-                <iframe
-                  title={t("websiteChat.preview")}
-                  src={`/widget/frame?key=${encodeURIComponent(cfg.publicKey)}#v=preview0000preview00`}
-                  allow="microphone"
-                  style={{ display: "block", marginTop: 6, width: "100%", maxWidth: 390, height: 520, border: "1px solid var(--line)", borderRadius: 20, background: "var(--card)" }}
-                />
-              </div>
+              {/* Preview: the real widget, on the real key, in an iframe, with
+                  the assistant's look edited right beside it. It is the same
+                  document a visitor gets, so a broken config shows up here
+                  rather than on the client's homepage. */}
+              <WidgetAppearance cfg={cfg} onPatch={patch} />
 
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
                 <span style={{ fontSize: 11, color: "var(--mute-2)" }}>
