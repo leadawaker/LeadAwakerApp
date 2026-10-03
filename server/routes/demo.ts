@@ -13,18 +13,16 @@ import {
   buildWhatsAppLink,
   buildDemoPageLink,
   generateNicheContext,
-  generateNicheContextStrict,
   listDemoServiceCampaigns,
   buildFallbackNicheContext,
   buildSolarNicheContext,
   type DemoScenario,
-  type NicheContext,
 } from "../demo-session";
-import { GenerationError } from "../demoGenerator/providers";
 import { mintVoiceDemoPass } from "../voice-demo-pass";
 import { getWebDemoConfig, getWebDemoNiche, updateWebDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
 import { captureSiteShot, shotExists, isPublicHttpUrl, normalizeUrl } from "../siteShot";
 import { refreshSiteLogo } from "../clientLogo";
+import { buildClientFromSite, languageFromDomain } from "../demoWebsiteClient";
 import { db } from "../db";
 import { eq } from "drizzle-orm";
 import { nicheVocabulary } from "@shared/schema";
@@ -267,74 +265,46 @@ export function registerDemoRoutes(app: Express): void {
         return res.status(400).json({ message: "Give a website URL or paste the business details." });
       }
 
-      const engineBase = process.env.ENGINE_URL || "http://localhost:8100";
-      let scraped: Record<string, any> | null = null;
-      try {
-        const resp = await fetch(`${engineBase}/api/site-kb`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "X-Internal-Key": process.env.INTERNAL_API_KEY || "",
-          },
-          body: JSON.stringify(text ? { text, language } : { url, language }),
-          // A cold site with six subpages can take a while; the model call is
-          // on top of that. Below any sensible proxy timeout, above the p95.
-          signal: AbortSignal.timeout(120_000),
-        });
-        if (resp.ok) scraped = (await resp.json()) as Record<string, any>;
-        else console.error("[demo-website] engine returned", resp.status, await resp.text());
-      } catch (err) {
-        console.error("[demo-website] scrape call failed", err);
-      }
+      // The form's language is always built. A country domain also builds that
+      // country's language, so a .nl prospect scanned with the form on English
+      // still gets a Dutch side to mint against (and .br a Portuguese one).
+      const domainLang = url ? languageFromDomain(url) : null;
+      const languages: DemoLang[] = [language as DemoLang];
+      if (domainLang && domainLang !== language) languages.push(domainLang);
 
-      if (!scraped || scraped.scrape_failed || !scraped.kb) {
-        return res.status(422).json({
-          message: text
-            ? "Could not build a Client from that text. Add a few more details about the business and try again."
-            : "Could not read that website. It may block bots or be JavaScript-only. Paste the business details into the notes box instead.",
-        });
-      }
+      // Both passes run at once: each is a full scrape + generation, and done
+      // one after the other the extra language would double the wait.
+      const results = await Promise.all(
+        languages.map((lang) =>
+          buildClientFromSite({
+            url, text, language: lang, niche, scenario: scenario as DemoScenario,
+            // `market` only means something for English; nl and pt resolve their own.
+            market: lang === "en" ? market : undefined,
+            provider, claudeModel,
+          }),
+        ),
+      );
 
-      // The niche the generator is asked to theme. The site's own label beats a
-      // guess from the domain, and an explicit one from the caller beats both.
-      const nicheKey = (niche || scraped.company_name || "").trim();
-      const nicheForGeneration = (scraped.niche_label || niche || scraped.company_name || "").trim();
-      if (!nicheKey) {
-        return res.status(422).json({ message: "Could not determine a name for this Client. Pass `niche` explicitly." });
-      }
-
-      // No template fallback here: a failed generation used to save the generic
-      // template as if it were the Client (65 and 67 were saved that way).
-      // Now it fails loudly and saves nothing, and the page offers a retry.
-      let ctx: NicheContext;
-      let providerUsed: string;
-      try {
-        ({ ctx, providerUsed } = await generateNicheContextStrict(
-          nicheForGeneration, language, scenario as DemoScenario, market, { provider, claudeModel },
-        ));
-      } catch (err) {
-        return res.status(502).json({
-          message: (err as Error).message,
-          stage: err instanceof GenerationError ? err.stage : "generate",
-          retryable: true,
-        });
-      }
-
-      // Facts from the site override the generated stand-ins. Empty scrape
-      // fields deliberately leave the generated value in place.
-      const overlay: Array<[keyof typeof ctx, string]> = [
-        ["company_name", scraped.company_name],
-        ["kb", scraped.kb],
-        ["business_description", scraped.business_description],
-        ["service_name", scraped.service_name],
-        ["usp", scraped.usp],
-        ["niche_label", scraped.niche_label],
-      ];
-      for (const [field, value] of overlay) {
-        if (typeof value === "string" && value.trim()) (ctx as Record<string, unknown>)[field] = value.trim();
-      }
+      const primary = results[0];
+      if (!primary.ok) return res.status(primary.status).json(primary.body);
+      const { scraped, ctx, providerUsed, nicheKey } = primary;
 
       const saved = await saveDemoClient(nicheKey, language as DemoLang, ctx);
+      // Saved after the primary, never alongside it: saveDemoClient reads the
+      // row and merges this language's slots in, so two at once would race.
+      // Keyed on the primary's name, so both languages land on one Client.
+      // A failed extra language is logged, not fatal: the form's language
+      // is what was asked for.
+      const builtLanguages: DemoLang[] = [language as DemoLang];
+      for (let i = 1; i < results.length; i++) {
+        const r = results[i];
+        if (r.ok) {
+          await saveDemoClient(nicheKey, languages[i], r.ctx);
+          builtLanguages.push(languages[i]);
+        } else {
+          console.error(`[demo-website] ${languages[i]} pass failed`, r.status, r.body.message);
+        }
+      }
 
       // The homepage screenshot for the widget demo (specs/website-widget).
       // Awaited rather than fired and forgotten: the scrape above already took
@@ -389,6 +359,7 @@ export function registerDemoRoutes(app: Express): void {
         pages_scraped: scraped.pages_scraped ?? [],
         city: scraped.city || "",
         phone: scraped.phone || "",
+        languages: builtLanguages,
       });
     }),
   );

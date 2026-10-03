@@ -88,6 +88,7 @@
     "websiteScrape": "Escanear site",
     "websiteScanning": "Escaneando...",
     "websiteDone": "\"{{client}}\" criado a partir de {{pages}} páginas. Selecionado abaixo.",
+    "websiteLanguages": "Idiomas: {{langs}}.",
     "websiteFailed": "Não foi possível ler o site. Crie o Client manualmente.",
     "websiteHint": "Lê o site deles e cria um Client com os serviços, horários e região reais.",
     "notes": "Ou cole os dados do negócio",

@@ -88,6 +88,7 @@
     "websiteScrape": "Scan site",
     "websiteScanning": "Scanning...",
     "websiteDone": "Built \"{{client}}\" from {{pages}} pages. Selected below.",
+    "websiteLanguages": "Languages: {{langs}}.",
     "websiteFailed": "Could not read that site. Create the Client manually.",
     "websiteHint": "Reads their site and builds a Client with their real services, hours and area.",
     "notes": "Or paste the business details",

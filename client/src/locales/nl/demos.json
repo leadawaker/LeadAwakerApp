@@ -88,6 +88,7 @@
     "websiteScrape": "Scan site",
     "websiteScanning": "Bezig...",
     "websiteDone": "\"{{client}}\" gebouwd uit {{pages}} pagina's. Hieronder geselecteerd.",
+    "websiteLanguages": "Talen: {{langs}}.",
     "websiteFailed": "Kon die site niet lezen. Maak de Client handmatig aan.",
     "websiteHint": "Leest hun site en bouwt een Client met hun echte diensten, openingstijden en werkgebied.",
     "notes": "Of plak de bedrijfsgegevens",

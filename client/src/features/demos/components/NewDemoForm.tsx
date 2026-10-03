@@ -91,6 +91,10 @@ export function NewDemoForm() {
       setNiche("");
       setScanNote(
         t("new.websiteDone", { client: body.client, pages: (body.pages_scraped ?? []).length }) +
+          // A country domain (.nl, .br) also builds that language's side.
+          ((body.languages ?? []).length > 1
+            ? ` ${t("new.websiteLanguages", { langs: (body.languages as string[]).map((l) => l.toUpperCase()).join(" + ") })}`
+            : "") +
           (providerLabel(body.provider_used) ? ` ${t("new.via", { provider: providerLabel(body.provider_used) })}` : ""),
       );
     } catch {
