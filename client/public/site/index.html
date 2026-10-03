@@ -1061,7 +1061,7 @@ footer img{height:24px;width:auto;display:block}
 /* channels on wine: "one receptionist, three front doors" and its three rows sit on their own full-width wine band */
 #channels{--on-wine:#F7F1E6;--on-wine-2:rgba(244,239,227,.84);--on-wine-3:rgba(244,239,227,.6);--on-wine-accent:#EBB9A8;
   padding-block:clamp(64px,8vw,104px)!important;color:var(--on-wine);
-  --band-a:#A85A6E;--band-b:#8A3D52;
+  --band-a:#6E2638;--band-b:#3E1520;
   background:radial-gradient(900px 600px at 85% 0%,rgba(255,255,255,.14),transparent 70%),radial-gradient(800px 600px at 0% 100%,rgba(30,8,14,.22),transparent 70%),linear-gradient(170deg,var(--band-a),var(--band-b))}
 #channels .hub{margin-bottom:0!important}
 #channels .head h2{color:var(--on-wine)}
@@ -1081,13 +1081,54 @@ footer img{height:24px;width:auto;display:block}
 #channels .hub-node[aria-pressed="false"]{box-shadow:none}
 #channels :focus-visible{outline-color:var(--on-wine)}
 
-/* colour picker for the wine band */
-.cpick{position:fixed;left:14px;bottom:14px;z-index:40;display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;background:rgba(253,252,249,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:0 10px 30px -10px rgba(40,25,10,.45);border:1px solid rgba(110,95,65,.16);font:600 11px/1 var(--sans);color:var(--mute)}
-.cpick button,.cpick label{width:24px;height:24px;border-radius:50%;border:2px solid #fff;padding:0;cursor:pointer;box-shadow:0 0 0 1px rgba(110,95,65,.3)}
-.cpick button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--ink)}
-.cpick label{position:relative;overflow:hidden;background:conic-gradient(#d33,#db3,#3b5,#3bd,#93d,#d33)}
-.cpick input{position:absolute;inset:-6px;width:40px;height:40px;opacity:0;cursor:pointer}
-@media (max-width:560px){.cpick span{display:none}.cpick{left:10px;bottom:10px}}
+
+/* "then she books it": one held stage, the caption changes instead of a text column */
+.bk-sec{background:var(--bg-2);padding-block:clamp(64px,9vw,112px)}
+.bk-scroll{position:relative}
+.bk-scroll.driven{height:calc(100vh + 2100px)}
+.bk-scroll.driven .bk-sticky{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);height:calc(100vh - 64px);height:calc(100svh - 64px);display:grid;align-content:center}
+.bk-sticky .wrap{display:grid;justify-items:center;gap:clamp(12px,2vh,20px)}
+.bk-head{margin:0 auto!important;gap:8px}
+.bk-head h2{font-size:clamp(30px,3.8vw,46px);line-height:1.1}
+.bk-stage{position:relative;width:100%;max-width:760px}
+.bk-stage .wk{transition:opacity .5s,filter .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
+.bk-stage .wk-body{height:clamp(170px,34vh,330px)}
+.bk-stage .wk-toast{margin-top:10px}
+.bk-phone{position:absolute;right:50%;margin-right:-170px;bottom:-24px;z-index:3;transform-origin:50% 100%;transform:translateY(40px) scale(.72);opacity:0;pointer-events:none;
+  transition:opacity .45s,transform .7s cubic-bezier(.2,.8,.2,1)}
+.bk-phone .ophone{box-shadow:0 40px 80px -30px rgba(30,15,5,.6),inset 0 0 0 2px #3A322A}
+.bk-sec[data-step="3"] .bk-phone{opacity:1;transform:translateY(0) scale(var(--ph-s,.78));pointer-events:auto}
+.bk-sec[data-step="3"] .bk-stage .wk{opacity:.45;filter:saturate(.4) blur(1px);transform:scale(.98)}
+.bk-rail{list-style:none;margin:0;padding:5px;display:flex;gap:4px;border-radius:999px;background:var(--surface);box-shadow:var(--sh-inset);max-width:100%}
+.bk-rail button{display:inline-flex;align-items:center;gap:8px;border:0;background:transparent;cursor:pointer;padding:9px 14px;border-radius:999px;font:700 13px/1 var(--sans);color:var(--mute);white-space:nowrap;transition:background .35s,color .35s}
+.bk-rail li.done button{color:var(--ink-soft)}
+.bk-rail li.on button{background:var(--white);color:var(--ink);box-shadow:var(--sh-crisp)}
+.bk-rail .dot{width:9px;height:9px;opacity:.35;transition:opacity .35s}
+.bk-rail li.on .dot,.bk-rail li.done .dot{opacity:1}
+.dot.hot{background:#FF3B30}
+.bk-caps{display:grid;width:100%;max-width:640px;text-align:center}
+.bk-cap{grid-area:1/1;display:grid;gap:6px;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .5s cubic-bezier(.2,.8,.2,1);pointer-events:none}
+.bk-cap.on{opacity:1;transform:none;pointer-events:auto}
+.bk-cap h3{font-family:var(--serif);font-size:clamp(22px,2.2vw,28px);line-height:1.2}
+.bk-cap p{font-size:16px;color:var(--ink-soft)}
+.bk-sticky .cal-int{justify-content:center}
+.bk-sec+.band{padding-top:clamp(64px,9vw,112px)!important}
+@media (max-height:820px){.bk-sticky .cal-int{display:none}.bk-stage .wk .ln-key{display:none}}
+@media (max-width:760px){
+  .bk-phone{bottom:-14px;--ph-s:.54}
+  .bk-head h2{font-size:28px}
+  .bk-stage .wk{padding:14px}
+  .bk-stage .wk-body{height:clamp(140px,24vh,220px)}
+  .bk-stage .wk-toast{display:none}
+  .bk-stage .lanes-top small{display:none}
+  .bk-cap h3{font-size:21px}
+  .bk-rail button{padding:8px 10px;font-size:11.5px;gap:5px}
+  .bk-rail .dot{display:none}
+  .bk-cap p{font-size:14.5px}
+  .bk-sticky .cal-int{display:none}
+  .bk-stage .wk .ln-key{display:none}
+}
+@media (max-width:400px){.bk-rail button{padding:8px 7px;font-size:10.5px}}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
 </style>
 
@@ -1306,13 +1347,11 @@ footer img{height:24px;width:auto;display:block}
     <div class="wrap">
       <div class="head">
         <h2>One receptionist, <em class="w">three front doors</em></h2>
-        <p>Switch Sara on wherever you want her.</p>
       </div>
 
       <div class="hub" id="hub">
         <div class="hub-copy">
           <h3>You choose where she answers</h3>
-          <p>Start with the phone. Add chat or WhatsApp whenever you like.</p>
           <p class="hub-sum" id="hub-sum">Sara answers your <b>phone, website chat and WhatsApp</b></p>
         </div>
         <div class="hub-map">
@@ -1321,7 +1360,7 @@ footer img{height:24px;width:auto;display:block}
             <path data-ch="website" class="on" d="M24 50 C 34 50, 34 50, 44 50"/>
             <path data-ch="whatsapp" class="on" d="M24 50 C 34 50, 34 83, 44 83"/>
           </svg>
-          <div class="hub-emma"><span class="av3"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><b>Sara</b><small>one brief</small></div>
+          <div class="hub-emma"><span class="av3"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><b>Sara</b></div>
           <button type="button" class="hub-node" data-ch="phone" aria-pressed="true"><i class="ic c-phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></i><span><b>Phone</b><small>Answers your calls</small></span><em class="sw2"></em></button>
           <button type="button" class="hub-node" data-ch="website" aria-pressed="true"><i class="ic c-web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z"/></svg></i><span><b>Website chat</b><small>Answers visitors</small></span><em class="sw2"></em></button>
           <button type="button" class="hub-node" data-ch="whatsapp" aria-pressed="true"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i><span><b>WhatsApp</b><small>Answers messages</small></span><em class="sw2"></em></button>
@@ -1466,22 +1505,16 @@ footer img{height:24px;width:auto;display:block}
     </div>
   </section>
 
-  <section class="band" id="calendar" style="padding-top:0">
-    <div class="wrap">
-      <article class="prob">
-        <div class="ptext">
-          <span class="pnum"><i class="ic c-cal"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M9 15l2 2 4-4"/></svg></i>Straight into your calendar</span>
-          <h3>She books the appointment, not just a message</h3>
-          <p class="cost">On the phone, in chat or on WhatsApp: when a customer is ready, Sara finds a free slot and books it.</p>
-          <ul class="fix">
-            <li>Only offers times you’re actually free</li>
-            <li>Sends the customer a confirmation and a reminder</li>
-            <li>Rather ring them first? She books a callback instead</li>
-          </ul>
-          <div class="cal-int"><span>Works with</span><b>Google Calendar</b><b>Outlook</b><b>and more</b></div>
-        </div>
-        <div class="vis-wrap">
-          <div class="vis wk" id="wk" role="img" aria-label="Illustration: a dental practice's week. Sara books six appointments into the free slots, from phone calls, website chats and WhatsApp messages.">
+  <section class="band bk-sec" id="calendar">
+    <div class="bk-scroll" id="bk-scroll">
+      <div class="bk-sticky">
+        <div class="wrap">
+          <div class="head bk-head">
+            <span class="eyebrow">Straight into your calendar</span>
+            <h2>Then she <em class="w">books it</em></h2>
+          </div>
+          <div class="bk-stage" id="bk-stage">
+            <div class="vis wk" id="wk" role="img" aria-label="Illustration: a dental practice's week. Sara books six appointments into the free slots, from phone calls, website chats and WhatsApp messages.">
             <div class="lanes-top"><b>Brightsmile Dental · this week</b><small><span id="wk-count" class="num">6</span> booked by Sara</small></div>
             <div class="wk-head"><span></span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span></div>
             <div class="wk-body">
@@ -1491,27 +1524,8 @@ footer img{height:24px;width:auto;display:block}
             <div class="wk-toast" id="wk-toast"></div>
             <div class="ln-key"><span><i class="kd tel"></i>Phone</span><span><i class="kd web"></i>Website</span><span><i class="kd wa"></i>WhatsApp</span><span><i class="kd busy"></i>Already booked</span></div>
           </div>
-          <button class="replay" type="button" data-replay="wk">Fill the week again</button>
-        </div>
-      </article>
-    </div>
-  </section>
-
-  <section class="band" id="urgent" style="padding-top:0">
-    <div class="wrap">
-      <article class="prob">
-        <div class="ptext">
-          <span class="pnum">When it can’t wait</span>
-          <h3>Ready buyers ring your mobile</h3>
-          <p class="cost">A buyer ready to sign, a patient who wants today’s free slot. Sara rings you, briefs you in seconds, and puts them through when you press 1.</p>
-          <ul class="fix">
-            <li>You choose what rings through, and when</li>
-            <li>Press 1 to talk, 2 for a callback</li>
-            <li>No answer? She books them in instead</li>
-          </ul>
-        </div>
-        <div class="vis-wrap">
-          <div class="phone ophone" id="ophone">
+            <div class="bk-phone" id="urgent">
+            <div class="phone ophone" id="ophone">
             <div class="oscreen">
               <div class="os-top"><span class="os-lbl hot">Ready to buy</span><b>Sara · Northgate Motors</b><small>Calling your mobile · 10:14</small></div>
               <canvas class="siri" id="siri2" aria-hidden="true"></canvas>
@@ -1526,8 +1540,23 @@ footer img{height:24px;width:auto;display:block}
               </div>
             </div>
           </div>
+            </div>
+          </div>
+          <ol class="bk-rail" id="bk-rail">
+            <li><button type="button"><i class="dot tel"></i>Phone</button></li>
+            <li><button type="button"><i class="dot web"></i>Website chat</button></li>
+            <li><button type="button"><i class="dot wa"></i>WhatsApp</button></li>
+            <li><button type="button"><i class="dot hot"></i>Can’t wait</button></li>
+          </ol>
+          <div class="bk-caps" aria-live="polite">
+            <div class="bk-cap"><h3>A caller wants a slot</h3><p>Sara checks your calendar while you’re on the job and books a time you’re actually free.</p></div>
+            <div class="bk-cap"><h3>A late-night visitor picks a time</h3><p>Your website chat offers the next free slots. One tap and it’s in your week.</p></div>
+            <div class="bk-cap"><h3>A WhatsApp turns into a visit</h3><p>Customers reply where they already are. Sara books them and sends the reminder.</p></div>
+            <div class="bk-cap"><h3>When it can’t wait, she rings you</h3><p>A buyer ready to sign? Sara calls your mobile, briefs you in seconds, and puts them through when you press 1.</p></div>
+          </div>
+          <div class="cal-int"><span>Works with</span><b>Google Calendar</b><b>Outlook</b><b>and more</b></div>
         </div>
-      </article>
+      </div>
     </div>
   </section>
 
@@ -2008,11 +2037,31 @@ footer img{height:24px;width:auto;display:block}
     function hh(h){return Math.floor(h)+':'+(h%1?('0'+Math.round(h%1*60)).slice(-2):'00')}
     function say(i){var n=NEW[i];toast.innerHTML='<i class="dot '+n.ch+'"></i><span><b>'+n.w+' booked '+DAYS[n.d]+' '+hh(n.s)+'</b> · '+n.t+', '+VIA[n.ch]+'</span>';
       toast.classList.remove('in');void toast.offsetWidth;toast.classList.add('in');cnt.textContent=i+1}
-    evs.forEach(function(e){e.classList.add('in')});say(NEW.length-1);
-    function play(){tm.forEach(clearTimeout);tm=[];evs.forEach(function(e){e.classList.remove('in')});cnt.textContent='0';toast.classList.remove('in');
-      evs.forEach(function(e,i){tm.push(setTimeout(function(){e.classList.add('in');say(i)},500+i*1300))})}
-    onView($('wk'),play,.45);
-    var rb=document.querySelector('[data-replay="wk"]');if(rb)rb.addEventListener('click',play);
+    /* step k shows the bookings from the first k+1 channels; step 3 is "can't wait" and keeps them all */
+    var ORDER=['tel','web','wa'],shown=-1;
+    $('wk').laShow=function(k){var upto=Math.min(k,2);if(upto===shown)return;tm.forEach(clearTimeout);tm=[];
+      var on=0,fresh=[];NEW.forEach(function(n,i){var vis=ORDER.indexOf(n.ch)<=upto;if(vis){on++;if(!evs[i].classList.contains('in'))fresh.push(i)}else evs[i].classList.remove('in')});
+      cnt.textContent=on;fresh.forEach(function(i,j){tm.push(setTimeout(function(){evs[i].classList.add('in');say(i);cnt.textContent=on},120+j*380))});
+      if(!fresh.length){var last=-1;NEW.forEach(function(n,i){if(ORDER.indexOf(n.ch)===upto)last=i});if(last>=0)say(last);cnt.textContent=on}
+      shown=upto};
+  })();
+
+  /* ---- "then she books it": while the section is held, scrolling walks phone, chat, WhatsApp, then the urgent call ---- */
+  (function(){
+    var wrapEl=$('bk-scroll'),stage=$('bk-stage');if(!wrapEl||!stage)return;
+    var sec=$('calendar'),items=[].slice.call(document.querySelectorAll('#bk-rail li')),caps=[].slice.call(document.querySelectorAll('.bk-cap')),cur=-1,N=4;
+    var driven=!reduce&&window.CSS&&CSS.supports&&CSS.supports('position','sticky');
+    if(driven)wrapEl.classList.add('driven');
+    function set(i){if(i===cur)return;cur=i;sec.dataset.step=i;
+      items.forEach(function(li,j){li.classList.toggle('on',j===i);li.classList.toggle('done',j<i)});
+      caps.forEach(function(c,j){c.classList.toggle('on',j===i)});
+      if($('wk').laShow)$('wk').laShow(i)}
+    function span(){var r=wrapEl.getBoundingClientRect();return{top:r.top+window.scrollY,run:wrapEl.offsetHeight-window.innerHeight}}
+    function fromScroll(){var sp=span(),p=(window.scrollY-sp.top)/Math.max(1,sp.run);set(Math.max(0,Math.min(N-1,Math.floor(p*N))))}
+    items.forEach(function(li,i){li.querySelector('button').addEventListener('click',function(){
+      if(driven){var sp=span();window.scrollTo({top:sp.top+sp.run*(i+.5)/N,behavior:'smooth'})}else set(i)})});
+    if(driven){var ticking=false;window.addEventListener('scroll',function(){if(!ticking){ticking=true;requestAnimationFrame(function(){ticking=false;fromScroll()})}},{passive:true});fromScroll()}
+    else set(0);
   })();
 
   /* ---- Sara's brief, three takes: points from her brief appear around her for a few seconds, then make room ---- */
@@ -2111,25 +2160,6 @@ footer img{height:24px;width:auto;display:block}
 
 </script>
 
-<div class="cpick" id="cpick" role="group" aria-label="Section colour"><span>Colour</span>
-<button type="button" data-a="#A85A6E" data-b="#8A3D52" style="background:#A85A6E" aria-label="Light wine" title="Light wine"></button>
-<button type="button" data-a="#8E4358" data-b="#6E2638" style="background:#8E4358" aria-label="Wine" title="Wine"></button>
-<button type="button" data-a="#6E2638" data-b="#3E1520" style="background:#6E2638" aria-label="Deep wine" title="Deep wine"></button>
-<button type="button" data-a="#C58A97" data-b="#A5606F" style="background:#C58A97" aria-label="Dusty rose" title="Dusty rose"></button>
-<label title="Pick any colour"><input type="color" value="#A85A6E" aria-label="Custom colour"></label></div>
-<script>
-(function(){var box=document.getElementById('cpick'),sec=document.getElementById('channels');if(!box||!sec)return;
-var KEY='la-band-colour',btns=[].slice.call(box.querySelectorAll('button')),inp=box.querySelector('input');
-function hex2rgb(h){return[1,3,5].map(function(i){return parseInt(h.substr(i,2),16)})}
-function dark(h,f){return'#'+hex2rgb(h).map(function(v){return('0'+Math.round(v*f).toString(16)).slice(-2)}).join('')}
-function apply(a,b,save){sec.style.setProperty('--band-a',a);sec.style.setProperty('--band-b',b);
- btns.forEach(function(x){x.setAttribute('aria-pressed',String(x.dataset.a===a))});
- if(save){try{localStorage.setItem(KEY,JSON.stringify([a,b]))}catch(e){}}}
-btns.forEach(function(x){x.addEventListener('click',function(){apply(x.dataset.a,x.dataset.b,1)})});
-inp.addEventListener('input',function(){apply(inp.value,dark(inp.value,.78),1)});
-try{var v=JSON.parse(localStorage.getItem(KEY));if(v&&/^#[0-9a-f]{6}$/i.test(v[0])&&/^#[0-9a-f]{6}$/i.test(v[1]))apply(v[0],v[1]);else apply('#A85A6E','#8A3D52')}catch(e){apply('#A85A6E','#8A3D52')}
-})();
-</script>
 <script>
 /* Same rule as the /reactivate page's nav (premium/01-nav.jsx): someone already
    signed in to the CRM gets "Open app" straight into it instead of "Log in". */
