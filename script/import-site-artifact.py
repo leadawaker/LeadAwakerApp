@@ -183,6 +183,109 @@ def sara_faces(html: str) -> str:
     return replace(html, "</head>", f'<style id="sara-orb">{_orb_css()}{SARA_CSS}</style>\n</head>')
 
 
+# A second take on "Live without changing your number", placed right under the
+# original so the two can be compared on the live page: a dated timeline (kick-off
+# to live, then what happens after) that pins while you scroll sideways through
+# it, with the line filling in wine as you go. Phones get it stacked vertically.
+# DRAFT COPY: the day counts, the testing claim and the A/B line are proposals
+# for Gabriel to confirm before the old section is removed.
+GOLIVE_HTML = """
+  <section class="glt" id="how-timeline" aria-labelledby="glt-h">
+    <div class="glt-pin">
+      <div class="wrap"><div class="head glt-head">
+        <span class="eyebrow">From kick-off to live</span>
+        <h2 id="glt-h">Live in <em class="w">7 days</em>, on your own number</h2>
+        <p>What happens the moment you say yes. Nothing goes live until you have tested her yourself.</p>
+      </div></div>
+      <div class="glt-view">
+        <div class="glt-track">
+          <div class="glt-line"><i></i></div>
+          <ol class="glt-steps">
+            <li><span class="glt-n">01</span><small>Day 1</small><h3>Kick-off call</h3><p>Thirty minutes. How calls come in, what a good call sounds like, your prices, your calendar.</p></li>
+            <li><span class="glt-n">02</span><small>Day 2 to 3</small><h3>We build Sara</h3><p>Her brief, what she knows from your website, your booking rules, her voice. Written with you, in your words.</p></li>
+            <li><span class="glt-n">03</span><small>Day 4 to 5</small><h3>Quality tests</h3><p>We put her through test conversations: rushed callers, angry ones, price questions, off-topic chats. Every miss gets fixed.</p></li>
+            <li><span class="glt-n">04</span><small>Day 6</small><h3>You try to catch her out</h3><p>Ring her, message her, ask the awkward questions. She goes live only when you sign off.</p></li>
+            <li><span class="glt-n">05</span><small>Day 7</small><h3>Switch on</h3><p>Forward your calls, add the chat to your site, connect WhatsApp and your calendar. Your number stays yours.</p></li>
+            <li><span class="glt-n">06</span><small>Week 2 onwards</small><h3>She keeps getting better</h3><p>We read her conversations, A/B test her openings and replies, and send you a short report. Pause her any time.</p></li>
+          </ol>
+        </div>
+      </div>
+      <div class="wrap glt-int">
+        <span>She works with</span>
+        <ul>
+          <li>Your phone number</li><li>Your website</li><li>WhatsApp</li><li>Google Calendar</li><li>Email alerts</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+"""
+
+GOLIVE_CSS = """
+.glt{position:relative;height:300vh;background:var(--paper)}
+.glt-pin{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;gap:clamp(24px,4vh,44px);overflow:hidden}
+.glt-head{margin-bottom:0}
+.glt-view{overflow:hidden}
+.glt-track{position:relative;width:max-content;padding:0 max(24px,calc((100vw - 1180px)/2));will-change:transform}
+.glt-line{position:absolute;left:max(24px,calc((100vw - 1180px)/2));right:max(24px,calc((100vw - 1180px)/2));top:36px;height:2px;background:var(--line)}
+.glt-line i{position:absolute;inset:0 auto 0 0;width:0;background:var(--wine);transition:width .1s linear}
+.glt-steps{list-style:none;margin:0;padding:0;display:flex;gap:56px}
+.glt-steps li{width:340px;flex:none}
+.glt-n{position:relative;z-index:1;display:grid;place-items:center;width:74px;height:74px;border-radius:50%;background:var(--white);border:2px solid var(--line);
+  font:700 20px/1 var(--sans);color:var(--mute-2);transition:background .35s,color .35s,border-color .35s,box-shadow .35s}
+.glt-steps li.on .glt-n{background:var(--wine);border-color:var(--wine);color:var(--cream);box-shadow:0 0 0 8px var(--wine-tint)}
+.glt-steps small{display:block;margin-top:18px;font:800 11.5px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--wine)}
+.glt-steps h3{margin:8px 0 6px;font:500 24px/1.2 var(--serif);color:var(--ink)}
+.glt-steps p{margin:0;font-size:15.5px;line-height:1.6;color:var(--mute)}
+.glt-int{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.glt-int>span{font:800 11.5px/1 var(--sans);letter-spacing:.09em;text-transform:uppercase;color:var(--mute-2)}
+.glt-int ul{list-style:none;margin:0;padding:0;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.glt-int li{padding:8px 14px;border-radius:999px;background:var(--white);border:1px solid var(--line-2);font-size:14px;font-weight:600;color:var(--ink-soft)}
+@media (max-width:860px),(prefers-reduced-motion:reduce){
+  .glt{height:auto;padding-block:clamp(64px,9vw,112px)}
+  .glt-pin{position:static;height:auto;overflow:visible}
+  .glt-track{width:auto;padding:0 20px;transform:none!important}
+  .glt-line{left:56px;right:auto;top:0;bottom:0;width:2px;height:auto}
+  .glt-line i{inset:0 0 auto 0;width:auto!important;height:var(--glt-p,0%)}
+  .glt-steps{flex-direction:column;gap:30px}
+  .glt-steps li{width:auto;display:grid;grid-template-columns:74px 1fr;column-gap:18px}
+  .glt-steps li>*:not(.glt-n){grid-column:2}
+  .glt-n{grid-row:1/span 3}
+  .glt-steps small{margin-top:8px}
+}
+"""
+
+GOLIVE_JS = """<script>
+(function(){
+  var sec=document.getElementById('how-timeline');if(!sec)return;
+  var track=sec.querySelector('.glt-track'),fill=sec.querySelector('.glt-line i'),steps=[].slice.call(sec.querySelectorAll('.glt-steps li'));
+  var stacked=window.matchMedia('(max-width:860px),(prefers-reduced-motion:reduce)');
+  function tick(){
+    var r=sec.getBoundingClientRect(),vh=window.innerHeight,p;
+    if(stacked.matches){
+      p=Math.min(1,Math.max(0,(vh*.6-r.top)/r.height));
+      sec.style.setProperty('--glt-p',(p*100)+'%');
+      steps.forEach(function(li){li.classList.toggle('on',li.getBoundingClientRect().top<vh*.6)});
+      return;
+    }
+    p=Math.min(1,Math.max(0,-r.top/(r.height-vh)));
+    var max=Math.max(0,track.scrollWidth-window.innerWidth);
+    track.style.transform='translateX('+(-p*max)+'px)';
+    fill.style.width=(p*100)+'%';
+    var lit=Math.round(p*(steps.length-1));
+    steps.forEach(function(li,i){li.classList.toggle('on',i<=lit)});
+  }
+  window.addEventListener('scroll',tick,{passive:true});window.addEventListener('resize',tick);tick();
+})();
+</script>
+"""
+
+
+def golive_timeline(html: str) -> str:
+    html = replace(html, '  <section class="band" id="about"', GOLIVE_HTML + '\\n  <section class="band" id="about"')
+    html = replace(html, "</head>", f'<style id="golive">{GOLIVE_CSS}</style>\\n</head>')
+    return replace(html, "</body>", GOLIVE_JS + "</body>")
+
+
 def replace(html: str, old: str, new: str, count: int = 1) -> str:
     found = html.count(old)
     if found != count:
@@ -246,6 +349,7 @@ def main() -> None:
     html = replace(html, "</body></html>", WIDGET_JS + "</body>\n</html>\n")
 
     html = sara_faces(html)
+    html = golive_timeline(html)
     html = extract_images(html)
     out = OUT_DIR / "index.html"
     out.write_text(html, encoding="utf-8")
