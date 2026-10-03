@@ -513,6 +513,9 @@ export const LOADER_JS = String.raw`(function () {
     if (open && !loaded) {
       frame.src = origin + "/widget/frame?key=" + encodeURIComponent(key) + "#v=" + encodeURIComponent(vid);
       loaded = true;
+    } else if (open) {
+      // The frame replays its welcome intro (it already played it on its first load).
+      try { frame.contentWindow.postMessage({ type: "la-widget-open" }, origin); } catch (e) {}
     }
     frame.classList.toggle("open", open);
     root.classList.toggle("is-open", open);

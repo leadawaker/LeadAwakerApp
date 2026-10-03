@@ -26,7 +26,8 @@ var voice = memo.voice;
 var X_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>';
 var SEND_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>';
 
-var CLIP_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l8.6-8.6a4 4 0 0 1 5.7 5.7l-8.6 8.6a2 2 0 0 1-2.8-2.8l8.5-8.5"/></svg>';
+// Lucide "image-plus": the widget takes photos, so the button says so.
+var CLIP_SVG = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 5h6"/><path d="M19 2v6"/><path d="M21 11.5V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7.5"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/><circle cx="9" cy="9" r="2"/></svg>';
 
 var BOOT = window.__WIDGET__ || {};
 var CFG = BOOT.config || {};
@@ -230,6 +231,9 @@ function paint() {
   // Rebuilt orbs resume their animations where the old ones were (see --lo-e
   // in server/widgetOrb.ts) instead of every repaint restarting them.
   document.documentElement.style.setProperty("--lo-e", String(Math.round(performance.now())));
+  // Same trick for the welcome intro (fade in, then a smile): time since the
+  // panel was opened, so a repaint mid-intro does not replay it.
+  document.documentElement.style.setProperty("--wi", String(Math.round(performance.now() - introAt)));
   root.innerHTML =
     '<div class="wdg' + (welcome ? " is-welcome" : "") + (pending ? " lo-fast" : "") + '">' +
       headerHtml(agent, welcome) +
@@ -344,6 +348,15 @@ function autoGrow(el) {
 }
 
 function render() { if (!recording) paint(); }
+
+// When the welcome intro started: the frame loads on the first open, and the
+// loader says so on every later open.
+var introAt = performance.now();
+window.addEventListener("message", function (e) {
+  if (e.source !== parent || !e.data || e.data.type !== "la-widget-open") return;
+  introAt = performance.now();
+  if (root.querySelector(".is-welcome")) render();
+});
 
 // ── send + poll ─────────────────────────────────────────────────────────────
 

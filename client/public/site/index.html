@@ -470,9 +470,16 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 @media (max-width:520px){.site .sk{max-width:100%}.site .sk .img{display:none}}
 
 /* v3 WhatsApp */
-.phone{justify-self:center;width:min(330px,100%);border-radius:36px;padding:10px;background:#1B1714;box-shadow:var(--sh-float),inset 0 0 0 2px #3A322A}
-.screen{border-radius:28px;overflow:hidden;background:var(--wa-bg);display:grid;grid-template-rows:auto 1fr auto;height:620px;font-size:12.8px;color:var(--wa-ink)}
-.wa-h{display:flex;align-items:center;gap:10px;padding:26px 12px 10px;background:#fff;border-bottom:1px solid #E9EDEF}
+.phone{position:relative;justify-self:center;width:min(330px,100%);border-radius:46px;padding:9px;background:linear-gradient(145deg,#2B2622,#0E0C0B 40%,#1C1916);
+  box-shadow:0 34px 54px -26px rgba(30,15,5,.6),0 0 0 1px rgba(0,0,0,.5),inset 0 0 0 1.5px rgba(255,255,255,.12)}
+.phone::before{content:"";position:absolute;left:-3px;top:22%;width:3px;height:58px;border-radius:3px 0 0 3px;background:#26211D;box-shadow:0 70px 0 #26211D}
+.phone::after{content:"";position:absolute;right:-3px;top:30%;width:3px;height:84px;border-radius:0 3px 3px 0;background:#26211D}
+.ph-status{position:absolute;top:7px;left:10px;right:10px;z-index:3}
+.screen{position:relative}.oscreen{position:relative}
+.screen .ph-status{color:var(--wa-ink)}.screen .ph-status .sig,.screen .ph-status .bat{filter:invert(1)}
+.screen .home-bar{background:rgba(0,0,0,.3);bottom:6px}
+.screen{border-radius:38px;overflow:hidden;background:var(--wa-bg);display:grid;grid-template-rows:auto 1fr auto;height:620px;font-size:12.8px;color:var(--wa-ink)}
+.wa-h{display:flex;align-items:center;gap:10px;padding:40px 14px 10px;background:#fff;border-bottom:1px solid #E9EDEF}
 .wa-h .back{width:9px;height:9px;border-left:2px solid var(--wa-ink);border-bottom:2px solid var(--wa-ink);transform:rotate(45deg);margin-left:4px}
 .wa-h .av{width:32px;height:32px;background:linear-gradient(135deg,#3B4E63,#1F2C3A)}
 .wa-h b{display:block;font-size:13.5px}
@@ -486,14 +493,14 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 .wm sub{display:block;text-align:right;font-size:10px;color:var(--wa-mute);margin-top:1px;bottom:0}
 .wm .ticks{color:#53BDEB;letter-spacing:-2px;margin-left:3px}
 .photo{width:200px;max-width:100%;height:100px;border-radius:6px;margin-bottom:4px;position:relative;overflow:hidden;background:#E9DFD0}
-.photo svg{display:block;width:100%;height:100%}
+.photo img{display:block;width:100%;height:100%;object-fit:cover}
 
 .typing{justify-self:start;background:#fff;border-radius:8px;padding:8px 11px;display:flex;gap:3px;box-shadow:0 1px .5px rgba(11,20,26,.13);opacity:0;transition:opacity .25s}
 .typing.in{opacity:1}
 .typing i{width:6px;height:6px;border-radius:50%;background:#A6B1B7;animation:dot 1s infinite}
 .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
 @keyframes dot{50%{transform:translateY(-3px);opacity:.5}}
-.wa-in{display:flex;gap:8px;align-items:center;padding:8px 10px 16px}
+.wa-in{display:flex;gap:8px;align-items:center;padding:8px 12px 22px}
 .wa-in span{flex:1;min-width:0;display:flex;align-items:center;gap:8px;background:#fff;border-radius:999px;padding:8px 12px;color:var(--wa-mute)}
 .wa-in span svg{flex:none;width:19px;height:19px;fill:none;stroke:#8696A0;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 .wa-in span svg.r{margin-left:auto}
@@ -508,7 +515,7 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 
 /* urgent: the owner's phone taking the AI's call */
 .ophone{width:min(340px,100%)}
-.oscreen{border-radius:28px;background:#050505;color:#fff;height:600px;display:grid;grid-template-rows:auto 120px auto 1fr auto;gap:14px;padding:40px 20px 22px;text-align:center}
+.oscreen{border-radius:38px;background:#050505;color:#fff;height:600px;display:grid;grid-template-rows:auto 120px auto 1fr auto;gap:14px;padding:40px 20px 22px;text-align:center}
 .os-top{display:grid;gap:4px;justify-items:center}
 .os-lbl{padding:4px 10px;border-radius:999px;background:rgba(255,59,48,.18);color:#FF7A70;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
 .os-top b{font-size:22px;font-weight:600;margin-top:4px}
@@ -771,6 +778,13 @@ footer img{height:24px;width:auto;display:block}
 .say-who b{display:block;font:500 21px/1.1 var(--serif)}.say-who small{display:block;font-size:12.5px;color:var(--mute)}
 .say{font:400 clamp(21px,2.6vw,30px)/1.3 var(--serif);color:var(--ink);background:#fff;padding:18px 24px;border-radius:4px 22px 22px 22px;box-shadow:var(--sh-float);min-height:2.8em;width:100%}
 .say::after{content:"";display:inline-block;width:2px;height:.9em;margin-left:3px;background:var(--wine);vertical-align:-3px;animation:blink .8s steps(1) infinite}
+/* experiment: the brief turning around her like a ferris wheel, cut off by the card */
+.fw-stage{height:460px}
+.fw-card{position:absolute;left:0;top:0;z-index:2;display:grid;gap:2px;padding:9px 14px;border-radius:12px;background:#FFFDF8;color:var(--ink);font-size:14px;white-space:nowrap;
+  box-shadow:0 18px 30px -18px rgba(0,0,0,.6);will-change:transform}
+.fw-card small{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--wine)}
+.fw-stage .sv-fig{z-index:3}
+@media (max-width:620px){.fw-stage{height:480px}.fw-card{font-size:12.5px;padding:7px 10px}}
 .rules-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 28px;max-width:1000px;margin:clamp(36px,5vw,56px) auto 0}
 .rules-row .rule,.rules-row .rule:first-child{border-top:1px solid var(--line);padding:18px 0 0}
 @media (max-width:860px){.rules-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
@@ -1179,7 +1193,7 @@ footer img{height:24px;width:auto;display:block}
 /* "then she books it": one held stage, the caption changes instead of a text column */
 .bk-sec{background:var(--bg-2);padding-block:clamp(64px,9vw,112px)}
 .bk-scroll{position:relative}
-.bk-scroll.driven{height:calc(100vh + 1600px)}
+.bk-scroll.driven{height:calc(100vh + 900px)}
 .bk-scroll.driven .bk-sticky{position:sticky;top:calc(env(safe-area-inset-top,0px) + 64px);height:calc(100vh - 64px);height:calc(100svh - 64px);display:grid;align-content:center}
 .bk-sticky .wrap{display:grid;justify-items:center;gap:clamp(12px,2vh,20px);width:100%;max-width:1440px;box-sizing:border-box}
 .bk-heads{display:grid;width:100%;max-width:820px;align-items:end}
@@ -1187,8 +1201,8 @@ footer img{height:24px;width:auto;display:block}
 .bk-head h2{font-size:clamp(30px,3.8vw,46px);line-height:1.1}
 .bk-head p{font-size:17px}
 .bk-head.urg{opacity:0;transform:translateY(10px);pointer-events:none}
-.bk-sec[data-step="2"] .bk-head.cal{opacity:0;transform:translateY(-10px);pointer-events:none}
-.bk-sec[data-step="2"] .bk-head.urg{opacity:1;transform:none;pointer-events:auto}
+.bk-sec[data-step="1"] .bk-head.cal{opacity:0;transform:translateY(-10px);pointer-events:none}
+.bk-sec[data-step="1"] .bk-head.urg{opacity:1;transform:none;pointer-events:auto}
 .bk-stage{position:relative;width:100%;max-width:1360px;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(16px,2.4vw,28px);align-items:stretch}
 .bk-photo{margin:0;border-radius:16px;overflow:hidden;position:relative;background:var(--bg-2);box-shadow:var(--sh-float);transition:opacity .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
 .bk-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:66% 40%;display:block}
@@ -1197,17 +1211,12 @@ footer img{height:24px;width:auto;display:block}
 .bk-stage .wk-toast{margin-top:10px}
 .bk-phone{position:absolute;left:50%;top:0;width:min(560px,100%);transform:translate(-50%,40px);z-index:3;display:grid;justify-items:center;gap:16px;opacity:0;pointer-events:none;
   transition:opacity .45s,transform .7s cubic-bezier(.2,.8,.2,1)}
-.bk-phone .ophone{box-shadow:0 40px 80px -30px rgba(30,15,5,.6),inset 0 0 0 2px #3A322A}
-.bk-sec[data-step="2"] .bk-phone{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.bk-phone .ophone{box-shadow:0 40px 80px -30px rgba(30,15,5,.6),0 0 0 1px rgba(0,0,0,.5),inset 0 0 0 1.5px rgba(255,255,255,.12)}
+.bk-sec[data-step="1"] .bk-phone{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 /* the phone is shrunk with zoom, not scale, so its block keeps its real height; the script fits it to the room below the title */
 .bk-phone .ophone{zoom:var(--ph-z,.8)}
-.bk-sec[data-step="2"] .bk-stage .wk,.bk-sec[data-step="2"] .bk-photo{opacity:0;transform:scale(.96);pointer-events:none}
-.bk-sec[data-step="2"] .bk-caps,.bk-sec[data-step="2"] .bk-sticky .cal-int{visibility:hidden}
-.bk-caps{display:grid;width:100%;max-width:640px;text-align:center}
-.bk-cap{grid-area:1/1;display:grid;gap:6px;opacity:0;transform:translateY(10px);transition:opacity .4s,transform .5s cubic-bezier(.2,.8,.2,1);pointer-events:none}
-.bk-cap.on{opacity:1;transform:none;pointer-events:auto}
-.bk-cap h3{font-family:var(--serif);font-size:clamp(22px,2.2vw,28px);line-height:1.2}
-.bk-cap p{font-size:16px;color:var(--ink-soft)}
+.bk-sec[data-step="1"] .bk-stage .wk,.bk-sec[data-step="1"] .bk-photo{opacity:0;transform:scale(.96);pointer-events:none}
+.bk-sec[data-step="1"] .bk-sticky .cal-int{visibility:hidden}
 .bk-sticky .cal-int{justify-content:center}
 .bk-sec+.band{padding-top:clamp(64px,9vw,112px)!important}
 @media (max-height:820px){.bk-sticky .cal-int{display:none}.bk-stage .wk .ln-key{display:none}}
@@ -1219,8 +1228,6 @@ footer img{height:24px;width:auto;display:block}
   .bk-stage .wk-body{height:clamp(140px,24vh,220px)}
   .bk-stage .wk-toast{display:none}
   .bk-stage .lanes-top small{display:none}
-  .bk-cap h3{font-size:21px}
-  .bk-cap p{font-size:14.5px}
   .bk-sticky .cal-int{display:none}
   .bk-stage .wk .ln-key{display:none}
 }
@@ -1303,6 +1310,8 @@ footer img{height:24px;width:auto;display:block}
 .orb::before,.orb::after{inset:-12px;border:2px solid rgba(255,220,225,.5);animation:halo 2.6s ease-out infinite}
 .orb::after{animation-delay:1.3s}
 .orb .lo{--lo-s:150px;position:relative;z-index:1}
+/* phones draw the ring at 112px: the face shrinks with it instead of spilling out of it */
+@media (max-width:620px){.orb .lo{--lo-s:112px}}
 </style>
 <style id="golive">
 .glt{position:relative;height:300vh;background:var(--paper)}
@@ -1541,15 +1550,15 @@ footer img{height:24px;width:auto;display:block}
           <div class="ptext">
             <span class="bignum" aria-hidden="true">02</span>
             <span class="pnum"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i>On WhatsApp <span class="offtag">Switched off</span></span>
-            <h3>Replies where your customers already are</h3>
+            <h3>Immediate replies where your customers already are</h3>
             <p class="cost">Customers send a photo, a voice note or a question. Sara replies and books them in.</p>
           </div>
           <div class="vis-wrap">
             <div class="phone" role="img" aria-label="Illustration: a WhatsApp chat with a plumber. A customer sends a photo of a radiator that stays cold at the top, the assistant explains it is a quick job and books a visit at the end of the day.">
-              <div class="screen">
+              <div class="screen"><div class="dev-status ph-status" aria-hidden="true"><span class="num">08:01</span><i class="island"></i><span class="dev-ic"><i class="sig"></i><i class="bat"></i></span></div><i class="home-bar" aria-hidden="true"></i>
                 <div class="wa-h"><span class="back"></span><span class="av wa-logo"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.2 5.2l-5 5a1.4 1.4 0 0 0 2 2l5-5a4 4 0 0 0 5.2-5.2l-2.3 2.3-1.9-.1-.1-1.9z"/></svg></span><div><b>Hartley Plumbing</b><span>Business account</span></div><span class="wa-act" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="2.5" y="6.5" width="13" height="11" rx="2.5"/><path d="M15.5 10.5l6-3.5v10l-6-3.5z"/></svg><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span></div>
                 <div class="wa-body" id="wa">
-                  <div class="wm me"><div class="photo"><svg viewBox="10 44 170 92" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><linearGradient id="wl" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E9DFD0"/><stop offset="1" stop-color="#CDBFAA"/></linearGradient><linearGradient id="fl" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9C7650"/><stop offset="1" stop-color="#6E5236"/></linearGradient><linearGradient id="rc" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#DCDDDB"/><stop offset=".45" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9CAC7"/></linearGradient><linearGradient id="wn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F8FBFD"/><stop offset="1" stop-color="#DCE8EF"/></linearGradient><radialGradient id="lt" cx=".5" cy=".2" r=".8"><stop offset="0" stop-color="#fff" stop-opacity=".45"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect width="190" height="140" fill="url(#wl)"/><rect x="44" y="6" width="102" height="58" rx="2" fill="#F3EEE6"/><rect x="49" y="10" width="44" height="50" fill="url(#wn)"/><rect x="97" y="10" width="44" height="50" fill="url(#wn)"/><rect x="40" y="62" width="110" height="5" rx="1" fill="#F5F1EA"/><rect x="40" y="67" width="110" height="2" fill="#000" opacity=".08"/><rect x="0" y="122" width="190" height="18" fill="url(#fl)"/><rect x="0" y="118" width="190" height="5" fill="#F2EDE5"/><ellipse cx="94" cy="121" rx="70" ry="3" fill="#000" opacity=".18"/><rect x="30" y="74" width="128" height="6" rx="3" fill="#E4E4E1"/><rect x="30" y="114" width="128" height="6" rx="3" fill="#D6D6D3"/><rect x="34" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="45" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="56" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="67" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="78" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="89" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="100" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="111" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="122" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="133" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="144" y="78" width="9" height="40" rx="4.5" fill="url(#rc)"/><rect x="18" y="104" width="13" height="5" rx="2" fill="#C8CCCF"/><rect x="21" y="96" width="7" height="10" rx="2" fill="#E8EAEC"/><rect x="20" y="93" width="9" height="4" rx="1.5" fill="#B9BEC2"/><rect x="22" y="109" width="5" height="13" fill="#C8CCCF"/><rect x="160" y="104" width="10" height="5" rx="2" fill="#C8CCCF"/><rect x="163" y="109" width="5" height="13" fill="#C8CCCF"/><rect width="190" height="140" fill="url(#lt)"/></svg></div>Hi, this radiator stays cold at the top. Not urgent, but could someone take a look?<sub>07:58 <span class="ticks">✓✓</span></sub></div>
+                  <div class="wm me"><div class="photo"><img src="/site/img/5ec2ad821c3f.webp" alt=""></div>Hi, this radiator stays cold at the top. Not urgent, but could someone take a look?<sub>07:58 <span class="ticks">✓✓</span></sub></div>
                   <div class="wm biz">Thanks for the photo. It probably just needs bleeding. Mike can check it at the end of his day.<sub>07:58</sub></div>
                   <div class="wm biz">Does today at 17:30 or tomorrow at 17:00 suit you?<sub>07:58</sub></div>
                   <div class="wm me">Today works<sub>08:01 <span class="ticks">✓✓</span></sub></div>
@@ -1637,6 +1646,31 @@ footer img{height:24px;width:auto;display:block}
     </div>
   </section>
 
+  <section class="band" id="rules-wheel" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <h2>You decide what she says</h2>
+        <p>She works from a detailed brief we build with you in your onboarding session.</p>
+      </div>
+      <div class="sv-list">
+        <figure class="sv sv-b">
+          <div class="sv-stage fw-stage" id="fw" role="img" aria-label="Sara shown as a speaking orb, with the points of her brief turning slowly around her.">
+            <div class="sv-fig">
+              <span class="orb"><span class="orb-ring"></span><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span>
+              <span class="sv-name">Sara</span><span class="sv-sub">Phone · Website · WhatsApp</span>
+            </div>
+          </div>
+        </figure>
+      </div>
+      <div class="rules rules-row">
+        <div class="rule"><h3>Nobody waits on hold</h3><p>She picks up straight away, every time.</p></div>
+        <div class="rule"><h3>She doesn’t guess</h3><p>Not in her brief? She takes a message.</p></div>
+        <div class="rule"><h3>Unhappy callers go to you</h3><p>Complaints come straight to you.</p></div>
+        <div class="rule"><h3>You see everything</h3><p>Every conversation is saved in your LeadAwaker dashboard, with a recap.</p></div>
+      </div>
+    </div>
+  </section>
+
   <section class="band bk-sec" id="calendar">
     <div class="bk-scroll" id="bk-scroll">
       <div class="bk-sticky">
@@ -1665,7 +1699,7 @@ footer img{height:24px;width:auto;display:block}
           </div>
             <div class="bk-phone" id="urgent">
             <div class="phone ophone" id="ophone">
-            <div class="oscreen">
+            <div class="oscreen"><div class="dev-status ph-status" aria-hidden="true"><span class="num">10:14</span><i class="island"></i><span class="dev-ic"><i class="sig"></i><i class="bat"></i></span></div><i class="home-bar" aria-hidden="true"></i>
               <div class="os-top"><span class="os-lbl hot">Ready to buy</span><b>Sara · Northgate Motors</b><small>Calling your mobile · 10:14</small></div>
               <canvas class="siri" id="siri2" aria-hidden="true"></canvas>
               <p class="os-say" id="os-say"></p>
@@ -1680,10 +1714,6 @@ footer img{height:24px;width:auto;display:block}
             </div>
           </div>
             </div>
-          </div>
-          <div class="bk-caps" aria-live="polite">
-            <div class="bk-cap"><h3>A caller wants a slot</h3><p>Sara checks your calendar while you’re on the job and books a time you’re actually free.</p></div>
-            <div class="bk-cap"><h3>A WhatsApp turns into a visit</h3><p>Customers reply where they already are. Sara books them and sends the reminder.</p></div>
           </div>
           <div class="cal-int"><span>Works with</span><b>Google Calendar</b><b>Outlook</b><b>and more</b></div>
         </div>
@@ -2190,10 +2220,10 @@ footer img{height:24px;width:auto;display:block}
     show(0);if(reduce)return;
     setInterval(function(){i=(i+1)%ls.length;show(i)},3000);
   })();
-  /* ---- "then she books it": while the section is held, scrolling walks phone, WhatsApp, then the urgent call ---- */
+  /* ---- "then she books it": while the section is held, scrolling moves from the calendar to the urgent call ---- */
   (function(){
     var wrapEl=$('bk-scroll'),stage=$('bk-stage');if(!wrapEl||!stage)return;
-    var sec=$('calendar'),caps=[].slice.call(document.querySelectorAll('.bk-cap')),ph=$('ophone'),cur=-1,N=3;
+    var sec=$('calendar'),ph=$('ophone'),cur=-1,N=2;
     /* the urgent phone gets all the height left between the top of the stage and the bottom of the screen */
     function fitPhone(){if(!ph)return;var z0=parseFloat(getComputedStyle(ph).zoom)||1,h=ph.getBoundingClientRect().height/z0;if(!h)return;
       var bottom=driven?sec.querySelector('.bk-sticky').getBoundingClientRect().bottom:window.innerHeight;
@@ -2201,7 +2231,6 @@ footer img{height:24px;width:auto;display:block}
     var driven=!reduce&&window.CSS&&CSS.supports&&CSS.supports('position','sticky');
     if(driven)wrapEl.classList.add('driven');
     function set(i){if(i===cur)return;cur=i;sec.dataset.step=i;
-      caps.forEach(function(c,j){c.classList.toggle('on',j===i)});
       if(i===N-1)fitPhone()}
     function span(){var r=wrapEl.getBoundingClientRect();return{top:r.top+window.scrollY,run:wrapEl.offsetHeight-window.innerHeight}}
     function fromScroll(){var sp=span(),p=(window.scrollY-sp.top)/Math.max(1,sp.run);set(Math.max(0,Math.min(N-1,Math.floor(p*N))))}
@@ -2210,6 +2239,26 @@ footer img{height:24px;width:auto;display:block}
     else set(0);
   })();
 
+  /* ---- experiment: her brief on a slow ferris wheel around her; the cards stay upright and the wine card crops them ---- */
+  (function(){
+    var stage=$('fw');if(!stage)return;
+    var ITEMS=[['Name','Sara'],['Works at','Northgate Motors'],['Voice','Warm and calm'],['Knows','All 48 cars in stock'],['Books','Test drives'],['Answers','Opening hours'],
+      ['Books','Trade-in valuations'],['Answers','Financing questions'],['Rings Tom','Buyers ready to sign'],['Never','Makes up a price'],['Says','“Tom talks price in person.”'],['Sends','A recap to Tom']];
+    var cards=ITEMS.map(function(it){var e=document.createElement('span');e.className='fw-card';e.innerHTML='<small>'+it[0]+'</small>'+it[1];stage.appendChild(e);return e});
+    var W,H,rx,ry,n,sz=[],t0=performance.now(),off=0,vis=false,raf=0,TURN=90000;
+    function measure(){W=stage.clientWidth;H=stage.clientHeight;var narrow=W<620;n=narrow?8:12;
+      rx=narrow?W*.52:Math.min(W*.4,440);ry=H*(narrow?.5:.56);
+      cards.forEach(function(c,i){c.style.display=i<n?'':'none';sz[i]=[c.offsetWidth,c.offsetHeight]})}
+    function draw(now){var a0=off+(now-t0)/TURN*Math.PI*2;
+      for(var i=0;i<n;i++){var a=a0+i/n*Math.PI*2;
+        cards[i].style.transform='translate('+(W/2+Math.cos(a)*rx-sz[i][0]/2).toFixed(1)+'px,'+(H/2+Math.sin(a)*ry-sz[i][1]/2).toFixed(1)+'px)'}}
+    function loop(now){draw(now);if(vis)raf=requestAnimationFrame(loop)}
+    measure();draw(t0);
+    window.addEventListener('resize',function(){measure();draw(performance.now())});
+    if(reduce||!('IntersectionObserver' in window))return;
+    new IntersectionObserver(function(es){var v=es[0].isIntersecting;
+      if(v&&!vis){vis=true;raf=requestAnimationFrame(loop)}else if(!v&&vis){vis=false;cancelAnimationFrame(raf)}},{threshold:0}).observe(stage);
+  })();
   /* ---- Sara's brief, three takes: points from her brief appear around her for a few seconds, then make room ---- */
   (function(){
     var ITEMS=[['Name','Sara'],['Works at','Northgate Motors'],['Voice','Warm and calm'],['Knows','All 48 cars in stock'],['Books','Test drives'],['Answers','Opening hours'],
@@ -2315,7 +2364,7 @@ footer img{height:24px;width:auto;display:block}
   [].forEach.call(document.querySelectorAll('.js-login'),function(a){a.textContent='Open app';a.href='/platform/campaigns'});
 })();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=13" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=14" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
 <script>
 (function(){
   var sec=document.getElementById('how');if(!sec)return;

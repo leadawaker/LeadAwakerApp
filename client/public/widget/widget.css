@@ -100,6 +100,27 @@
 }
 @keyframes wdg-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
 @keyframes wdg-shadow { 0%, 100% { transform: scaleX(1); opacity: 1; } 50% { transform: scaleX(.82); opacity: .7; } }
+/* The intro, each time the panel opens on the welcome screen: she fades in,
+   the words follow, then she smiles for a moment. --wi (ms since the panel
+   opened, set by widget.js on every repaint) keeps a repaint from replaying it. */
+.wdg-hero { animation: wdg-in .8s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--wi, 100000) * -1ms); }
+.wdg-hi { animation: wdg-hi-in .9s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc((var(--wi, 100000) - 250) * -1ms); }
+@keyframes wdg-in { from { opacity: 0; transform: scale(.72); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+@keyframes wdg-hi-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+/* The smile: each eye widens, shortens and loses its lower half to an arc. */
+@property --lo-sm { syntax: "<number>"; inherits: false; initial-value: 0; }
+.wdg-hero .lo-eyes i {
+  -webkit-mask: radial-gradient(ellipse calc(var(--lo-sm) * 58%) calc(var(--lo-sm) * 72%) at 50% 100%, transparent 96%, #000 100%);
+  mask: radial-gradient(ellipse calc(var(--lo-sm) * 58%) calc(var(--lo-sm) * 72%) at 50% 100%, transparent 96%, #000 100%);
+  animation: lo-blink 5.4s ease-in-out infinite, wdg-smile 3.4s ease-in-out both;
+  animation-delay: calc(var(--lo-e, 0) * -1ms), calc(var(--wi, 100000) * -1ms);
+}
+@keyframes wdg-smile {
+  0%, 26% { --lo-sm: 0; width: calc(var(--lo-s) * .095); height: calc(var(--lo-s) * .23); }
+  36%, 76% { --lo-sm: 1; width: calc(var(--lo-s) * .16); height: calc(var(--lo-s) * .14); }
+  88%, 100% { --lo-sm: 0; width: calc(var(--lo-s) * .095); height: calc(var(--lo-s) * .23); }
+}
+@media (prefers-reduced-motion: reduce) { .wdg-hero, .wdg-hi, .wdg-hero .lo-eyes i { animation: none; } }
 .wdg-hi {
   margin: 0; font-size: 28px; line-height: 1.15; font-weight: 650; letter-spacing: -0.02em; color: var(--w-ink);
 }
@@ -242,10 +263,10 @@
   scrollbar-width: none;
 }
 .wdg-input::placeholder { color: var(--w-mute-2); }
-/* The paperclip: a round white button beside the pill, like Kiki's. */
+/* The photo button: a rounded square beside the pill. */
 .wdg-clip {
   flex: 0 0 auto;
-  width: 46px; height: 46px; border: 0; border-radius: 50%;
+  width: 46px; height: 46px; border: 0; border-radius: 15px;
   background: var(--w-card); color: var(--w-ink-2);
   box-shadow: 0 1px 3px rgba(0,0,0,.07);
   cursor: pointer; display: flex; align-items: center; justify-content: center;

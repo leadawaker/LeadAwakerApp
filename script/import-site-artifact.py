@@ -76,7 +76,7 @@ WIDGET_JS = f"""<script>
   [].forEach.call(document.querySelectorAll('.js-login'),function(a){{a.textContent='Open app';a.href='/platform/campaigns'}});
 }})();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=13" data-key="{WIDGET_KEY}" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=14" data-key="{WIDGET_KEY}" async></script>
 """
 
 
@@ -125,6 +125,8 @@ SARA_CSS = """
 .orb::before,.orb::after{inset:-12px;border:2px solid rgba(255,220,225,.5);animation:halo 2.6s ease-out infinite}
 .orb::after{animation-delay:1.3s}
 .orb .lo{--lo-s:150px;position:relative;z-index:1}
+/* phones draw the ring at 112px: the face shrinks with it instead of spilling out of it */
+@media (max-width:620px){.orb .lo{--lo-s:112px}}
 """
 
 
@@ -138,7 +140,7 @@ def sara_faces(html: str) -> str:
     html = replace(html, '<span class="sci ai-sara"><i></i><i></i><i></i><i></i><i></i></span>',
                    f'<span class="sci ai-sara">{_orb()}</span>')
     html = replace(html, '<span class="orb"><span class="orb-ring"></span><span class="bars"><i></i><i></i><i></i><i></i><i></i></span></span>',
-                   f'<span class="orb"><span class="orb-ring"></span>{_orb()}</span>')
+                   f'<span class="orb"><span class="orb-ring"></span>{_orb()}</span>', count=2)
     html = replace(html, '<i><svg class="lm" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',
                    f'<i><span class="lm">{_orb()}</span>')
     return replace(html, "</head>", f'<style id="sara-orb">{_orb_css()}{SARA_CSS}</style>\n</head>')
