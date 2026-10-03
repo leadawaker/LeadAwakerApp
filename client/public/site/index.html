@@ -353,46 +353,16 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 .offtag{display:none;font:800 11px/1 var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--mute);background:var(--bg-2);padding:5px 9px;border-radius:999px}
 .prob.ch.off .offtag{display:inline-block}
 
-/* phone: two lanes, one day. Calls fall to the owner when he's free and to Sara when he isn't */
 .lanes-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:14px}
 .lanes-top b{font-size:14.5px;color:var(--ink-soft)}
 .lanes-top small{font-size:12px;color:var(--mute);font-weight:600}
-.ln-grid{display:grid;grid-template-columns:52px minmax(0,1fr);gap:8px 10px;align-items:center}
-.ln-lbl{font-size:12px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
-.ln-lbl.em{color:var(--wine)}
-.lane{position:relative;height:40px;border-radius:10px;background:var(--bg);overflow:visible}
-.lane-emma{background:var(--wine-tint)}
-.seg{position:absolute;top:0;bottom:0;border-radius:6px}
-.seg.job{background:repeating-linear-gradient(135deg,rgba(110,95,65,.16) 0 5px,transparent 5px 10px)}
-.seg.closed{background:repeating-linear-gradient(135deg,rgba(94,34,48,.2) 0 5px,transparent 5px 10px)}
-.seg b{position:absolute;left:6px;top:50%;transform:translateY(-50%);font-size:10.5px;font-weight:700;color:var(--mute);white-space:nowrap;overflow:hidden;max-width:calc(100% - 8px)}
-.axis{position:relative;height:16px}
-.axis span{position:absolute;transform:translateX(-50%);font-size:10.5px;font-weight:600;color:var(--mute-2)}
-.cdot{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;border:3px solid var(--white);padding:0;cursor:pointer;z-index:2;
-  transition:transform .35s cubic-bezier(.3,1.6,.5,1),opacity .3s,box-shadow .3s}
-.cdot.dan{background:var(--mute-2)}.cdot.emma{background:var(--wine)}
-.cdot.pre{transform:scale(0);opacity:0}
-.cdot.sel{box-shadow:0 0 0 4px rgba(94,34,48,.22);transform:scale(1.15)}
-.cdot.dan.sel{box-shadow:0 0 0 4px rgba(148,138,119,.3)}
-.playhead{position:absolute;top:-6px;bottom:-6px;width:2px;background:var(--ink);border-radius:2px;z-index:3;opacity:0;pointer-events:none}
-.playhead.on{opacity:.55}
 .ln-key{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:11.5px;color:var(--mute);font-weight:600;margin:12px 0 16px}
 .ln-key span{display:inline-flex;align-items:center;gap:6px}
 .ln-key i{width:16px;height:10px;border-radius:3px;background:var(--bg)}
-.ln-key .k-job{background:repeating-linear-gradient(135deg,rgba(110,95,65,.3) 0 3px,var(--bg) 3px 6px)}
-.ln-key .k-closed{background:repeating-linear-gradient(135deg,rgba(94,34,48,.35) 0 3px,var(--bg) 3px 6px)}
-.cc2{border-radius:14px;border:1px solid var(--line-2);background:#FFFDF8;padding:14px 16px;display:grid;gap:10px;min-height:188px;align-content:start}
-.cc2-h{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.cc2-h time{font:800 18px/1 var(--sans)}
-.cc2-h b{font-size:14px}
-.cc2-h b.emma{color:var(--wine)}
-.cc2-h span{font-size:12.5px;color:var(--mute)}
 .bub{max-width:88%;padding:8px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;animation:pop .4s cubic-bezier(.3,1.4,.5,1) both}
 .bub.c{background:var(--bg);color:var(--ink-soft);border-top-left-radius:4px}
 .bub.e{justify-self:end;background:var(--wine-tint);color:var(--ink);border-top-right-radius:4px}
-.cc2 .chip{justify-self:start;animation:pop .4s .15s cubic-bezier(.3,1.4,.5,1) both}
 @keyframes pop{from{opacity:0;transform:translateY(6px) scale(.97)}to{opacity:1;transform:none}}
-.lanes-sum{margin-top:12px;font-size:12.5px;color:var(--mute);font-weight:600;text-align:center}
 
 /* the order of events under each chat demo */
 .seqsteps{list-style:none;margin:16px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;counter-reset:q}
@@ -555,7 +525,6 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 .fdot{flex:none;width:30px;height:30px;border-radius:50%;background:var(--wine);position:relative}
 .fdot::after{content:"";position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--wine);opacity:.4;animation:halo 2.4s ease-out infinite}
 .fdot::before{content:"";position:absolute;left:10px;top:9px;width:10px;height:12px;border:2px solid #fff;border-radius:3px}
-.ln-grid{position:relative}
 @media (max-width:600px){.float{font-size:11px;padding:8px 10px}.float b{font-size:11.5px}.float.f1 span:not(.fdot){display:none}.float.f2{display:none}.fdot{width:24px;height:24px}.fdot::before{left:7px;top:6px}}
 /* photo band: one real person, one line, one notification */
 .pband{position:relative;margin:0;border-radius:24px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);background:var(--paper);box-shadow:0 30px 60px -34px rgba(60,40,15,.4);border:1px solid rgba(255,255,255,.7)}
@@ -778,13 +747,14 @@ footer img{height:24px;width:auto;display:block}
 .say-who b{display:block;font:500 21px/1.1 var(--serif)}.say-who small{display:block;font-size:12.5px;color:var(--mute)}
 .say{font:400 clamp(21px,2.6vw,30px)/1.3 var(--serif);color:var(--ink);background:#fff;padding:18px 24px;border-radius:4px 22px 22px 22px;box-shadow:var(--sh-float);min-height:2.8em;width:100%}
 .say::after{content:"";display:inline-block;width:2px;height:.9em;margin-left:3px;background:var(--wine);vertical-align:-3px;animation:blink .8s steps(1) infinite}
-/* experiment: the brief turning around her like a ferris wheel, cut off by the card */
-.fw-stage{height:460px}
-.fw-card{position:absolute;left:0;top:0;z-index:2;display:grid;gap:2px;padding:9px 14px;border-radius:12px;background:#FFFDF8;color:var(--ink);font-size:14px;white-space:nowrap;
-  box-shadow:0 18px 30px -18px rgba(0,0,0,.6);will-change:transform}
-.fw-card small{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--wine)}
-.fw-stage .sv-fig{z-index:3}
-@media (max-width:620px){.fw-stage{height:480px}.fw-card{font-size:12.5px;padding:7px 10px}}
+/* "You decide what she says": the brief orbits her on a tilted ring, coming towards you at the bottom and going behind her at the top */
+.o3-stage{height:460px}
+.o3-card{position:absolute;left:0;top:0;display:grid;gap:2px;padding:9px 14px;border-radius:12px;background:#FFFDF8;color:var(--ink);font-size:14px;white-space:nowrap;
+  box-shadow:0 18px 30px -18px rgba(0,0,0,.6);transform-origin:50% 50%;will-change:transform,opacity,filter}
+.o3-card small{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--wine)}
+.o3-stage .sv-fig{z-index:3}
+.o3-stage .sv-name,.o3-stage .sv-sub{display:none}
+@media (max-width:620px){.o3-card{font-size:11.5px;padding:6px 9px}.o3-card small{font-size:9px}}
 .rules-row{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 28px;max-width:1000px;margin:clamp(36px,5vw,56px) auto 0}
 .rules-row .rule,.rules-row .rule:first-child{border-top:1px solid var(--line);padding:18px 0 0}
 @media (max-width:860px){.rules-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}}
@@ -1039,15 +1009,6 @@ footer img{height:24px;width:auto;display:block}
   transform:translate(-50%,-46%) scale(.96);transition:opacity .4s,transform .5s cubic-bezier(.2,.8,.2,1)}
 .tell.dash-on .tell-l{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}
 .tell.dash-on .tell-r{opacity:.25;filter:blur(2px);transition:opacity .4s,filter .4s}
-/* the visitor's own lane, in blue */
-.lane-dan{background:#EAF1FD}
-.cdot.dan{background:#3B82F6}.cdot.dan.sel{box-shadow:0 0 0 4px rgba(59,130,246,.25)}
-.ln-lbl.you{color:#2563EB}
-.cc2-h b.dan{color:#2563EB}
-.ln-key .k-free{background:#EAF1FD;box-shadow:inset 0 0 0 1px rgba(59,130,246,.35)}
-.lane-dan .seg.job{background:repeating-linear-gradient(135deg,rgba(59,130,246,.18) 0 5px,transparent 5px 10px)}
-.lane-dan .seg b{color:#3A5A8C}
-.ln-key .k-job{background:repeating-linear-gradient(135deg,rgba(59,130,246,.35) 0 3px,#EAF1FD 3px 6px)}
 /* hero v12: a compact LeadAwaker card lands on the phone */
 .tell .tell-l{display:none}
 .tell-r{position:relative}
@@ -1341,6 +1302,36 @@ footer img{height:24px;width:auto;display:block}
   .glt-n{grid-row:1/span 3}
   .glt-steps small{margin-top:8px}
 }
+</style>
+<style id="phone-day">
+/* "On the phone": the lock screen runs through a Tuesday, busy blocks in red, free in green */
+.dev.lp{width:250px;margin:0 auto}
+.dev-screen.lp-s{display:flex;flex-direction:column;gap:0;padding:12px 12px 26px}
+.lp-clock{display:grid;margin-top:14px}
+.lp-clock small{font-size:12.5px;color:rgba(255,255,255,.7);font-weight:600}
+.lp-clock b{font-size:50px;font-weight:300;line-height:1.05;letter-spacing:-.02em}
+.lp-st{align-self:center;display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;
+  background:rgba(255,255,255,.1);color:#fff;transition:background .3s}
+.lp-st::before{content:"";width:7px;height:7px;border-radius:50%;background:#34C759}
+.lp-st.busy{background:rgba(181,84,63,.35)}.lp-st.busy::before{background:#FF7A66}
+.lp-day{display:flex;align-items:center;gap:6px;margin:12px 4px 10px;font-size:9.5px;font-weight:700;color:rgba(255,255,255,.5)}
+.lp-bar{position:relative;flex:1;height:8px;border-radius:4px;background:rgba(95,170,115,.55)}
+.lp-bar .b{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(135deg,rgba(214,104,92,.7) 0 3px,rgba(170,74,64,.7) 3px 6px)}
+.lp-bar .b.end{border-radius:0 4px 4px 0}
+.lp-bar .cd{position:absolute;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:#fff;box-shadow:0 0 0 1.5px rgba(10,8,6,.85);transform:scale(0);transition:transform .35s cubic-bezier(.3,1.6,.5,1)}
+.lp-bar .cd.in{transform:none}
+.lp-mk{position:absolute;top:-3px;width:2px;height:14px;margin-left:-1.5px;border-radius:2px;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.7);z-index:1}
+.lp-stack{display:flex;flex-direction:column;gap:6px;overflow:hidden;flex:1;min-height:0;-webkit-mask-image:linear-gradient(#000 38%,transparent 96%);mask-image:linear-gradient(#000 38%,transparent 96%)}
+.lsn{text-align:left;border-radius:14px;padding:8px 10px 9px;background:rgba(250,248,244,.92);color:var(--ink);animation:lsn-in .5s cubic-bezier(.2,.8,.2,1) both;flex:none}
+.lsn-t{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--mute);font-weight:700}
+.lsn-t time{margin-left:auto;font-weight:600}
+.lsn p{margin:3px 0 0;font-size:12px;line-height:1.35;color:var(--ink-soft)}
+.lsn p b{color:var(--green)}
+.lsn .ph-i{width:18px;height:18px;border-radius:5px;background:#34C759;display:grid;place-items:center;flex:none}
+.lsn .ph-i svg{width:11px;height:11px;fill:#fff}
+.lsn.y{background:rgba(250,248,244,.55)}
+.lsn.sum{background:var(--wine);color:var(--cream);font-size:12px;font-weight:700;text-align:center;padding:10px}
+@keyframes lsn-in{from{opacity:0;transform:translateY(-12px) scale(.96)}to{opacity:1;transform:none}}
 </style>\n</head>
 <body>
 <div class="nav-shell">
@@ -1531,17 +1522,14 @@ footer img{height:24px;width:auto;display:block}
             </ul>
           </div>
           <div class="vis-wrap">
-            <div class="vis" id="lanes">
-              <div class="lanes-top"><b>A Tuesday at Northgate Motors</b><small>Tap a call</small></div>
-              <div class="ln-grid">
-                <span class="ln-lbl you">You</span><div class="lane lane-dan" id="lane-dan"></div>
-                <span class="ln-lbl em">Sara</span><div class="lane lane-emma" id="lane-emma"></div>
-                <span></span><div class="axis" id="axis"></div>
-              </div>
-              <div class="ln-key"><span><i class="k-free"></i>You’re free</span><span><i class="k-job"></i>With customers</span><span><i class="k-closed"></i>Showroom closed</span></div>
-              <div class="cc2" id="cc2" aria-live="polite"></div>
-              <p class="lanes-sum" id="lanes-sum"></p>
-            </div>
+            <div class="dev lp" id="lp" role="img" aria-label="A phone lock screen running through a Tuesday from 06:00 to 23:00. While the owner is busy with test drives, customers or a closed showroom, Sara answers the calls and books test drives, viewings and valuations."><div class="dev-screen lp-s">
+                  <div class="dev-status"><span></span><i class="island"></i><span class="dev-ic"><i class="sig"></i><i class="bat"></i></span></div>
+                  <div class="lp-clock"><small>Tuesday</small><b class="num" id="lp-time">23:00</b></div>
+                  <span class="lp-st" id="lp-st">Showroom closed</span>
+                  <div class="lp-day"><span>06</span><div class="lp-bar" id="lp-bar"><i class="lp-mk" id="lp-mk"></i></div><span>23</span></div>
+                  <div class="lp-stack" id="lp-stack"></div>
+                  <i class="home-bar"></i>
+                </div></div>
           </div>
         </article>
 
@@ -1629,32 +1617,7 @@ footer img{height:24px;width:auto;display:block}
       </div>
       <div class="sv-list">
         <figure class="sv sv-b">
-          <div class="sv-stage" data-sv="b" role="img" aria-label="Sara shown as a speaking orb, with the points of her brief appearing around her.">
-            <div class="sv-fig">
-              <span class="orb"><span class="orb-ring"></span><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span>
-              <span class="sv-name">Sara</span><span class="sv-sub">Phone · Website · WhatsApp</span>
-            </div>
-          </div>
-        </figure>
-      </div>
-      <div class="rules rules-row">
-        <div class="rule"><h3>Nobody waits on hold</h3><p>She picks up straight away, every time.</p></div>
-        <div class="rule"><h3>She doesn’t guess</h3><p>Not in her brief? She takes a message.</p></div>
-        <div class="rule"><h3>Unhappy callers go to you</h3><p>Complaints come straight to you.</p></div>
-        <div class="rule"><h3>You see everything</h3><p>Every conversation is saved in your LeadAwaker dashboard, with a recap.</p></div>
-      </div>
-    </div>
-  </section>
-
-  <section class="band" id="rules-wheel" style="padding-top:0">
-    <div class="wrap">
-      <div class="head">
-        <h2>You decide what she says</h2>
-        <p>She works from a detailed brief we build with you in your onboarding session.</p>
-      </div>
-      <div class="sv-list">
-        <figure class="sv sv-b">
-          <div class="sv-stage fw-stage" id="fw" role="img" aria-label="Sara shown as a speaking orb, with the points of her brief turning slowly around her.">
+          <div class="sv-stage o3-stage" id="o3" role="img" aria-label="Sara shown as a speaking orb, with the points of her brief circling around her, coming towards you and moving away behind her.">
             <div class="sv-fig">
               <span class="orb"><span class="orb-ring"></span><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span>
               <span class="sv-name">Sara</span><span class="sv-sub">Phone · Website · WhatsApp</span>
@@ -2095,37 +2058,43 @@ footer img{height:24px;width:auto;display:block}
     sync();
   })();
 
-  /* ---- phone: a Tuesday in two lanes ---- */
-  (function(){
-    var dan=$('lane-dan'),em=$('lane-emma'),axis=$('axis'),card=$('cc2'),sumEl=$('lanes-sum');if(!dan)return;
-    var S=7,E=23;function x(h){return((h-S)/(E-S)*100)+'%'}
-    [[9,12.25,'job','Test drives'],[13.5,17.5,'job','With customers'],[18,23,'closed','Showroom closed']].forEach(function(s){var d=document.createElement('span');d.className='seg '+s[2];d.style.left=x(s[0]);d.style.width=((s[1]-s[0])/(E-S)*100)+'%';d.innerHTML='<b>'+s[3]+'</b>';dan.appendChild(d)});
-    [7,11,15,19,23].forEach(function(h){var t=document.createElement('span');t.style.left=x(h);t.textContent=('0'+h).slice(-2)+':00';axis.appendChild(t)});
-    var CALLS=[
-      {t:'08:10',h:8.17,who:'dan',why:'You were free',q:'Are you open on Sunday?',chip:['You answered','n']},
-      {t:'09:40',h:9.67,who:'emma',why:'You were on a test drive',q:'Is the white Sportage still for sale?',a:'It is. Would you like to see it? Thursday at 16:00 is free.',chip:['Viewing · Thu 16:00','g']},
-      {t:'11:15',h:11.25,who:'emma',why:'You were on a test drive',q:'Do you offer financing?',a:'We do. Tom goes through the options when you visit. Shall I book you in?',chip:['Visit · Fri 11:00','g']},
-      {t:'12:40',h:12.67,who:'dan',why:'You were on your lunch break',q:'Just confirming my car’s service on Friday.',chip:['You answered','n']},
-      {t:'15:20',h:15.33,who:'emma',why:'You were with a customer',q:'Can you value my car for a trade-in?',a:'Yes, it takes about 20 minutes. Does Saturday at 9:30 work?',chip:['Valuation · Sat 9:30','g']},
-      {t:'19:42',h:19.7,who:'emma',why:'The showroom was closed',q:'Is the grey Corolla hybrid still available?',a:'It is. Saturday at 10:30 is free for a test drive. Shall I book it?',chip:['Test drive · Sat 10:30','g']},
-      {t:'21:30',h:21.5,who:'emma',why:'The showroom was closed',q:'What time do you open tomorrow?',a:'From 9:00. Would you like me to save you a time?',chip:['Answered from the brief','w']}
-    ];
-    var dots=CALLS.map(function(c,i){var b=document.createElement('button');b.type='button';b.className='cdot '+c.who;b.style.left=x(c.h);
-      b.setAttribute('aria-label',c.t+', '+(c.who==='dan'?'You':'Sara')+' picked up');b.addEventListener('click',function(){stop();sel(i)});(c.who==='dan'?dan:em).appendChild(b);return b});
-    var ph=document.createElement('span');ph.className='playhead';$('lanes').querySelector('.ln-grid').appendChild(ph);
-    var nd=CALLS.filter(function(c){return c.who==='dan'}).length;sumEl.textContent='You: '+nd+' calls. Sara: '+(CALLS.length-nd)+', four appointments booked.';
-    function sel(i){var c=CALLS[i];dots.forEach(function(d,j){d.classList.toggle('sel',j===i)});
-      card.innerHTML='<div class="cc2-h"><time class="num">'+c.t+'</time><b class="'+c.who+'">'+(c.who==='dan'?'You picked up':'Sara picked up')+'</b><span>'+c.why+'</span></div>'+
-        '<div class="bub c">'+c.q+'</div>'+(c.a?'<div class="bub e">'+c.a+'</div>':'')+'<span class="chip '+c.chip[1]+'">'+c.chip[0]+'</span>'}
-    var raf=0,t0=0,DUR=14000,lastShown=-1;
-    function place(){var g=$('lanes').querySelector('.ln-grid'),l=dan.getBoundingClientRect(),gr=g.getBoundingClientRect();return{left:l.left-gr.left,width:l.width,top:dan.offsetTop,height:em.offsetTop+em.offsetHeight-dan.offsetTop}}
-    function stop(){cancelAnimationFrame(raf);raf=0;ph.classList.remove('on');dots.forEach(function(d){d.classList.remove('pre')})}
-    function run(){stop();var p=place();ph.style.top=(p.top-6)+'px';ph.style.height=(p.height+12)+'px';ph.classList.add('on');
-      dots.forEach(function(d){d.classList.add('pre')});lastShown=-1;t0=performance.now();
-      (function f(now){var k=Math.min(1,(now-t0)/DUR),h=S+(E-S)*k;ph.style.left=(p.left+p.width*k)+'px';
-        CALLS.forEach(function(c,i){if(c.h<=h&&dots[i].classList.contains('pre')){dots[i].classList.remove('pre');lastShown=i;sel(i)}});
-        if(k<1)raf=requestAnimationFrame(f);else{raf=0;ph.classList.remove('on');sel(5)}})(t0)}
-    sel(5);onView($('lanes'),run,.5);
+  /* ---- phone: the lock screen runs through a Tuesday ---- */
+  function whileSeen(el,start,th){if(!el||reduce||!('IntersectionObserver' in window))return;var on=false;
+    new IntersectionObserver(function(es){var v=es[0].isIntersecting;if(v&&!on)start();on=v;el.dataset.seen=v?'1':''},{threshold:th||.4}).observe(el)}
+  var DAY_BUSY=[[9,12.25,'On a test drive'],[13.5,17.5,'With a customer'],[18,23,'Showroom closed']];
+  function busyAt(h){for(var i=0;i<DAY_BUSY.length;i++)if(h>=DAY_BUSY[i][0]&&h<DAY_BUSY[i][1])return DAY_BUSY[i][2];return ''}
+  var DAY_CALLS=[
+    {t:'08:10',h:8.17,sara:0},
+    {t:'09:40',h:9.67,sara:1,out:'Booked a viewing · Thu 16:00'},
+    {t:'11:15',h:11.25,sara:1,out:'Booked a visit · Fri 11:00'},
+    {t:'12:40',h:12.67,sara:0},
+    {t:'15:20',h:15.33,sara:1,out:'Booked a valuation · Sat 9:30'},
+    {t:'19:42',h:19.7,sara:1,out:'Booked a test drive · Sat 10:30'},
+    {t:'21:30',h:21.5,sara:1,out:'Answered: open from 9:00',nb:1}
+  ];
+  function hhmm(h){var m=Math.floor((h%1)*60/5)*5;return('0'+Math.floor(h)).slice(-2)+':'+('0'+m).slice(-2)}
+
+  /* C: the lock screen runs through the day */
+  (function(){var stack=$('lp-stack');if(!stack)return;
+    var bar=$('lp-bar'),mk=$('lp-mk'),tEl=$('lp-time'),st=$('lp-st'),S=6,E=23,DUR=15000,raf=0,MAX=6;
+    function x(h){return((h-S)/(E-S)*100)+'%'}
+    DAY_BUSY.forEach(function(b){var i=document.createElement('i');i.className='b'+(b[1]>=E?' end':'');i.style.left=x(b[0]);i.style.width=((b[1]-b[0])/(E-S)*100)+'%';bar.insertBefore(i,mk)});
+    var cds=DAY_CALLS.map(function(c){var d=document.createElement('i');d.className='cd';d.style.left=x(c.h);bar.insertBefore(d,mk);return d});
+    var PH='<span class="ph-i"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></span>',
+        ORB='<span class="lo" style="--lo-s:18px"><span class="lo-eyes"><i></i><i></i></span></span>';
+    function note(c){var d=document.createElement('div');
+      if(c.sum){d.className='lsn sum';d.textContent=c.sum}
+      else if(c.sara){d.className='lsn s';d.innerHTML='<div class="lsn-t">'+ORB+'Sara<time>'+c.t+'</time></div><p>'+(c.nb?c.out:'<b>Booked</b> '+c.out.replace('Booked ',''))+'</p>'}
+      else{d.className='lsn y';d.innerHTML='<div class="lsn-t">'+PH+'Phone<time>'+c.t+'</time></div><p>You answered</p>'}
+      stack.insertBefore(d,stack.firstChild);while(stack.children.length>MAX)stack.removeChild(stack.lastChild)}
+    function setT(h){tEl.textContent=hhmm(h);mk.style.left=x(h);var b=busyAt(h);st.textContent=b||'Free';st.classList.toggle('busy',!!b)}
+    var SUM={sum:'Sara today: 5 calls, 4 booked'};
+    function rest(){stack.innerHTML='';DAY_CALLS.forEach(note);note(SUM);cds.forEach(function(d){d.classList.add('in')});setT(E-.001);tEl.textContent='23:00'}
+    function run(){cancelAnimationFrame(raf);stack.innerHTML='';cds.forEach(function(d){d.classList.remove('in')});var t0=performance.now(),seen=0;
+      (function f(now){var k=Math.min(1,(now-t0)/DUR),h=S+(E-S)*k;setT(Math.min(h,E-.001));
+        while(seen<DAY_CALLS.length&&DAY_CALLS[seen].h<=h){cds[seen].classList.add('in');note(DAY_CALLS[seen++])}
+        if(k<1)raf=requestAnimationFrame(f);else{tEl.textContent='23:00';note(SUM);setTimeout(function(){if($('lp').dataset.seen)run()},4500)}})(t0)}
+    rest();whileSeen($('lp'),run);
   })();
 
   /* ---- chat demos: complete at rest, replayed once when scrolled into view, with the steps underneath ---- */
@@ -2239,51 +2208,30 @@ footer img{height:24px;width:auto;display:block}
     else set(0);
   })();
 
-  /* ---- experiment: her brief on a slow ferris wheel around her; the cards stay upright and the wine card crops them ---- */
+  /* ---- "You decide what she says": her brief on a tilted ring; front cards grow and pass in front of her, back cards shrink, blur and pass behind ---- */
   (function(){
-    var stage=$('fw');if(!stage)return;
+    var stage=$('o3');if(!stage)return;
     var ITEMS=[['Name','Sara'],['Works at','Northgate Motors'],['Voice','Warm and calm'],['Knows','All 48 cars in stock'],['Books','Test drives'],['Answers','Opening hours'],
       ['Books','Trade-in valuations'],['Answers','Financing questions'],['Rings Tom','Buyers ready to sign'],['Never','Makes up a price'],['Says','“Tom talks price in person.”'],['Sends','A recap to Tom']];
-    var cards=ITEMS.map(function(it){var e=document.createElement('span');e.className='fw-card';e.innerHTML='<small>'+it[0]+'</small>'+it[1];stage.appendChild(e);return e});
-    var W,H,rx,ry,n,sz=[],t0=performance.now(),off=0,vis=false,raf=0,TURN=90000;
-    function measure(){W=stage.clientWidth;H=stage.clientHeight;var narrow=W<620;n=narrow?8:12;
-      rx=narrow?W*.52:Math.min(W*.4,440);ry=H*(narrow?.5:.56);
-      cards.forEach(function(c,i){c.style.display=i<n?'':'none';sz[i]=[c.offsetWidth,c.offsetHeight]})}
-    function draw(now){var a0=off+(now-t0)/TURN*Math.PI*2;
-      for(var i=0;i<n;i++){var a=a0+i/n*Math.PI*2;
-        cards[i].style.transform='translate('+(W/2+Math.cos(a)*rx-sz[i][0]/2).toFixed(1)+'px,'+(H/2+Math.sin(a)*ry-sz[i][1]/2).toFixed(1)+'px)'}}
+    var cards=ITEMS.map(function(it){var e=document.createElement('span');e.className='o3-card';e.innerHTML='<small>'+it[0]+'</small>'+it[1];stage.appendChild(e);return e});
+    var orb=stage.querySelector('.orb'),W,cx,cy,rx,ry,n,sz=[],t0=performance.now(),vis=false,raf=0,TURN=48000;
+    function measure(){W=stage.clientWidth;var narrow=W<620,sr=stage.getBoundingClientRect(),or=orb.getBoundingClientRect();n=narrow?6:9;
+      cx=or.left-sr.left+or.width/2;cy=or.top-sr.top+or.height/2;
+      rx=narrow?W*.4:Math.min(W*.37,370);ry=rx*(narrow?.6:.34);
+      cards.forEach(function(c,i){c.style.display=i<n?'':'none';c.style.transform='none';sz[i]=[c.offsetWidth,c.offsetHeight]})}
+    function draw(now){var a0=(now-t0)/TURN*Math.PI*2;
+      for(var i=0;i<n;i++){var a=a0+i/n*Math.PI*2,z=Math.sin(a),c=cards[i],
+          x=cx+Math.cos(a)*rx-sz[i][0]/2,y=cy+z*ry-sz[i][1]/2,k=.95+.3*z;
+        c.style.transform='translate('+x.toFixed(1)+'px,'+y.toFixed(1)+'px) scale('+k.toFixed(3)+')';
+        c.style.opacity=(.4+.6*(z+1)/2).toFixed(3);
+        c.style.filter=z<0?'blur('+(-z*1.6).toFixed(2)+'px)':'none';
+        c.style.zIndex=z>0?String(4+Math.round(z*10)):String(1+Math.round((z+1)*1))}}
     function loop(now){draw(now);if(vis)raf=requestAnimationFrame(loop)}
     measure();draw(t0);
     window.addEventListener('resize',function(){measure();draw(performance.now())});
     if(reduce||!('IntersectionObserver' in window))return;
     new IntersectionObserver(function(es){var v=es[0].isIntersecting;
       if(v&&!vis){vis=true;raf=requestAnimationFrame(loop)}else if(!v&&vis){vis=false;cancelAnimationFrame(raf)}},{threshold:0}).observe(stage);
-  })();
-  /* ---- Sara's brief, three takes: points from her brief appear around her for a few seconds, then make room ---- */
-  (function(){
-    var ITEMS=[['Name','Sara'],['Works at','Northgate Motors'],['Voice','Warm and calm'],['Knows','All 48 cars in stock'],['Books','Test drives'],['Answers','Opening hours'],
-      ['Books','Trade-in valuations'],['Answers','Financing questions'],['Rings Tom','Buyers ready to sign'],['Never','Makes up a price'],['Says','“Tom talks price in person.”'],['Sends','A recap to Tom']];
-    var SAYS=['Saturday at 10:30 is free. Shall I book it?','Tom values trade-ins on the spot.','We’re open until 18:00 today.','The grey Corolla is still available.','I’ll text you the confirmation now.'];
-    var AB={wide:[['l',5,9],['r',5,7],['l',3,43],['r',3,45],['l',7,78],['r',7,80]],narrow:[['l',3,3],['r',3,12],['l',3,79],['r',3,88]]};
-    var SLOTS={a:AB,b:AB,c:{wide:[['l',6,76],['l',37,83],['r',6,76]],narrow:[['l',4,72],['r',4,84]]}};
-    [].forEach.call(document.querySelectorAll('[data-sv]'),function(stage,si){
-      var kind=stage.dataset.sv,chips=[],k=si*4,i=0,timer=0;
-      function narrow(){return stage.clientWidth<620}
-      var was=narrow();
-      function fill(c){var it=ITEMS[k++%ITEMS.length];c.innerHTML='<small>'+it[0]+'</small>'+it[1]}
-      function build(){chips.forEach(function(c){c.remove()});
-        chips=(narrow()?SLOTS[kind].narrow:SLOTS[kind].wide).map(function(s){var e=document.createElement('span');e.className='svc';e.style[s[0]==='l'?'left':'right']=s[1]+'%';e.style.top=s[2]+'%';stage.appendChild(e);fill(e);return e})}
-      build();
-      chips.forEach(function(c,j){setTimeout(function(){c.classList.add('in')},reduce?0:400+j*550)});
-      if(reduce)return;
-      function tick(){var c=chips[i++%chips.length];c.classList.remove('in');setTimeout(function(){fill(c);c.classList.add('in')},800)}
-      function start(){if(!timer)timer=setInterval(tick,1700)}function stop(){clearInterval(timer);timer=0}
-      if('IntersectionObserver' in window)new IntersectionObserver(function(e){e[0].isIntersecting?start():stop()}).observe(stage);else start();
-      window.addEventListener('resize',function(){if(narrow()!==was){was=narrow();build();chips.forEach(function(c){c.classList.add('in')})}});
-    });
-    var say=$('sv-say');if(!say||reduce)return;
-    var n=0;
-    (function next(){var s=SAYS[n++%SAYS.length],j=0;say.textContent='';var iv=setInterval(function(){say.textContent=s.slice(0,++j);if(j>=s.length){clearInterval(iv);setTimeout(next,2400)}},38)})();
   })();
 
   /* ---- big numbers rise in when they scroll into view (already visible at rest) ---- */
