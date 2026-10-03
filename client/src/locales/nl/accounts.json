@@ -667,7 +667,14 @@
     "rimMetal": "Metaal",
     "rimPulse": "Puls",
     "rimBand": "Kleurband",
-    "rimNone": "Geen"
+    "rimNone": "Geen",
+    "shadowDrop": "Schaduw",
+    "shadowGlow": "Gloed",
+    "shadowNone": "Geen schaduw",
+    "shadowColor": "Kleur schaduw",
+    "glowColor": "Kleur gloed",
+    "rimColor": "Kleur rand",
+    "orbShadow": "Schaduw"
   },
   "inboundWhatsApp": {
     "title": "WhatsApp van nieuwe contacten",

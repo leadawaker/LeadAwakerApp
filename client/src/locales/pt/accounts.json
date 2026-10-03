@@ -618,7 +618,14 @@
     "rimMetal": "Metal",
     "rimPulse": "Pulso",
     "rimBand": "Faixa de cor",
-    "rimNone": "Nenhuma"
+    "rimNone": "Nenhuma",
+    "shadowDrop": "Sombra",
+    "shadowGlow": "Brilho",
+    "shadowNone": "Sem sombra",
+    "shadowColor": "Cor da sombra",
+    "glowColor": "Cor do brilho",
+    "rimColor": "Cor da borda",
+    "orbShadow": "Sombra"
   },
   "inboundWhatsApp": {
     "title": "WhatsApp de novos contatos",

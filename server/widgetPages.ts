@@ -36,6 +36,9 @@ export interface FrameConfig {
   /** The launcher's rim: 'metal' | 'pulse' | 'band' | 'none', and its colour. */
   orbRim?: string | null;
   orbRimColor?: string | null;
+  /** What the launcher casts: 'shadow' | 'none' | 'glow', and its colour. */
+  orbShadow?: string | null;
+  orbShadowColor?: string | null;
 }
 
 export interface DemoFrame {
@@ -109,7 +112,17 @@ export const LAUNCHER_CSS = `
 .la-root.lo-rim-band .la-btn::before{background:var(--lo-rim,#a1a1aa);animation:none}
 .la-root.lo-rim-band .la-btn::after{display:none}
 .la-root.lo-rim-none .la-btn::before,.la-root.lo-rim-none .la-btn::after{display:none}
-.la-root.lo-rim-none .la-core{inset:0}
+/* With no rim the core fills the button, so the orb grows with it (its size is
+   fixed in px, so left alone it sat in the top-left corner over a grey core). */
+.la-root.lo-rim-none .la-core{inset:0;background:transparent}
+.la-root.lo-rim-none .la-core .lo{--lo-s:60px}
+/* What the button casts on the page. The colour tints the shadow (default
+   black) or the glow (default soft grey). */
+.la-root .la-btn{box-shadow:0 16px 32px -10px color-mix(in srgb,var(--lo-sh,#000) 55%,transparent),0 4px 10px -3px color-mix(in srgb,var(--lo-sh,#000) 35%,transparent)}
+.la-root .la-btn:hover{box-shadow:0 22px 40px -12px color-mix(in srgb,var(--lo-sh,#000) 60%,transparent),0 6px 14px -4px color-mix(in srgb,var(--lo-sh,#000) 35%,transparent)}
+.la-root.lo-sh-none .la-btn,.la-root.lo-sh-none .la-btn:hover{box-shadow:none}
+.la-root.lo-sh-glow .la-btn{box-shadow:0 0 22px 3px color-mix(in srgb,var(--lo-sh,#a1a1aa) 70%,transparent)}
+.la-root.lo-sh-glow .la-btn:hover{box-shadow:0 0 30px 6px color-mix(in srgb,var(--lo-sh,#a1a1aa) 75%,transparent)}
 .la-root.lo-rim-pulse .la-glint,.la-root.lo-rim-band .la-glint,.la-root.lo-rim-none .la-glint{display:none}
 .la-root.is-open.lo-rim-pulse .la-btn::after{animation:none;opacity:0}
 .la-core .la-i-x{position:absolute;display:flex;z-index:2;opacity:0;transform:rotate(-90deg) scale(.6);transition:transform .28s cubic-bezier(.2,.8,.2,1),opacity .2s ease}
@@ -293,6 +306,7 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
         style: opts.config.orbStyle, color: accent, eyes: opts.config.orbEyes,
         tint: opts.config.orbTint, face: opts.config.orbFace, photo: opts.config.orbPhoto,
         rim: opts.config.orbRim, rimColor: opts.config.orbRimColor,
+        shadow: opts.config.orbShadow, shadowColor: opts.config.orbShadowColor,
       }, inkFor)
     : orbLook({ style: accent ? "tinted" : "metal", color: accent }, inkFor);
   return `<!doctype html>
@@ -563,6 +577,7 @@ export function renderLauncherPreviewHtml(cfg: FrameConfig, photo: string | null
   const look = orbLook({
     style: cfg.orbStyle, color: cfg.accent, eyes: cfg.orbEyes,
     tint: cfg.orbTint, face: cfg.orbFace, photo, rim: cfg.orbRim, rimColor: cfg.orbRimColor,
+    shadow: cfg.orbShadow, shadowColor: cfg.orbShadowColor,
   }, inkFor);
   return `<!doctype html><html><head><meta charset="utf-8"><style>${LAUNCHER_CSS}
 html,body{margin:0;height:100%;background:transparent}
@@ -579,6 +594,7 @@ export function teaserMeta(cfg: FrameConfig) {
       style: cfg.orbStyle, color: cfg.accent, eyes: cfg.orbEyes,
       tint: cfg.orbTint, face: cfg.orbFace, photo: cfg.orbPhoto,
       rim: cfg.orbRim, rimColor: cfg.orbRimColor,
+      shadow: cfg.orbShadow, shadowColor: cfg.orbShadowColor,
     }, inkFor),
   };
 }

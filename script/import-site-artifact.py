@@ -123,6 +123,14 @@ SARA_CSS = """
 .av3 .lo{--lo-s:78px}
 @media (max-width:480px){.av3 .lo{--lo-s:60px}}
 .ai-sara .lo{--lo-s:34px}
+/* In the comparison table she is alive, inside the same soft outline and
+   breathing rings as "one brief" and "You decide what she says". */
+.ai-sara{position:relative}
+.ai-sara::before,.ai-sara::after{content:"";position:absolute;left:50%;top:50%;width:34px;height:34px;border-radius:50%;pointer-events:none}
+.ai-sara::before{transform:translate(-50%,-50%);box-shadow:0 0 0 6px rgba(255,220,225,.16),0 0 22px rgba(214,120,140,.35)}
+.ai-sara::after{border:1.5px solid rgba(255,220,225,.55);animation:sara-halo 2.6s ease-out infinite}
+@keyframes sara-halo{0%{transform:translate(-50%,-50%) scale(1.15);opacity:.55}100%{transform:translate(-50%,-50%) scale(1.75);opacity:0}}
+@media (prefers-reduced-motion:reduce){.ai-sara::after{animation:none;opacity:0}}
 .orb{background:none!important;box-shadow:0 0 0 12px rgba(255,220,225,.13),0 0 70px rgba(214,120,140,.3)}
 /* "You decide what she says": the same breathing rings as "one brief", not the
    rainbow ring the artifact draws. */
@@ -158,11 +166,12 @@ SARA_LOOK_JS = """<script>
 
 
 def sara_faces(html: str) -> str:
-    html = replace(html, '<span class="wav">S<i></i></span>', f'<span class="wav">{_orb()}<i></i></span>', count=2)
-    html = replace(html, '<span class="wav">S</span>', f'<span class="wav">{_orb()}</span>')
+    html = replace(html, '<span class="wav">S<i></i></span>', f'<span class="wav">{_orb()}<i></i></span>')
+    # Her face beside each of her messages in the website widget example.
+    html = replace(html, '<span class="wav">S</span>', f'<span class="wav">{_orb("lo-still")}</span>', count=3)
     html = replace(html, '<span class="av3">S</span>', f'<span class="av3">{_orb()}</span>')
     html = replace(html, '<span class="sci ai-sara"><i></i><i></i><i></i><i></i><i></i></span>',
-                   f'<span class="sci ai-sara">{_orb("lo-still")}</span>')
+                   f'<span class="sci ai-sara">{_orb()}</span>')
     html = replace(html, '<span class="orb"><span class="orb-ring"></span><span class="bars"><i></i><i></i><i></i><i></i><i></i></span></span>',
                    f'<span class="orb"><span class="orb-ring"></span>{_orb()}</span>')
     html = replace(html, '<i><svg class="lm" viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>',

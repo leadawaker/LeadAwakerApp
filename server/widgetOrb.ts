@@ -84,6 +84,7 @@ export function orbLook(
   o: {
     style?: string | null; color?: string | null; eyes?: string | null; tint?: string | null;
     face?: string | null; photo?: string | null; rim?: string | null; rimColor?: string | null;
+    shadow?: string | null; shadowColor?: string | null;
   },
   ink: (hex: string) => string,
 ): { cls: string; vars: string; photo: string | null } {
@@ -97,6 +98,9 @@ export function orbLook(
   // or nothing. Pulse and band share one colour.
   const rim = o.rim === "pulse" || o.rim === "band" || o.rim === "none" ? o.rim : "metal";
   const rimColor = o.rimColor && HEX.test(o.rimColor) ? o.rimColor.toLowerCase() : "";
+  // What the button casts on the page: a drop shadow, nothing, or a glow.
+  const shadow = o.shadow === "none" || o.shadow === "glow" ? o.shadow : "shadow";
+  const shadowColor = o.shadowColor && HEX.test(o.shadowColor) ? o.shadowColor.toLowerCase() : "";
   const eyes = o.eyes === "black" || o.eyes === "white"
     ? EYE[o.eyes]
     : style === "metal" ? EYE.black : ink(color) === "#ffffff" ? EYE.white : EYE.black;
@@ -104,11 +108,13 @@ export function orbLook(
     style === "metal" ? (tint ? "lo-tint" : "") : `lo-${style}`,
     face === "eyes" ? "" : `lo-face-${face}`,
     rim === "metal" ? "" : `lo-rim-${rim}`,
+    shadow === "shadow" ? "" : `lo-sh-${shadow}`,
   ].filter(Boolean).join(" ");
   const vars = [`--lo-eye:${eyes}`];
   if (style !== "metal") vars.push(`--lo-c:${color}`);
   if (tint) vars.push(`--lo-tint:${tint}`);
   if (rimColor && (rim === "pulse" || rim === "band")) vars.push(`--lo-rim:${rimColor}`);
+  if (shadowColor && shadow !== "none") vars.push(`--lo-sh:${shadowColor}`);
   return { cls, vars: vars.join(";"), photo };
 }
 

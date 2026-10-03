@@ -667,7 +667,14 @@
     "rimMetal": "Metal",
     "rimPulse": "Pulse",
     "rimBand": "Colour band",
-    "rimNone": "None"
+    "rimNone": "None",
+    "shadowDrop": "Shadow",
+    "shadowGlow": "Glow",
+    "shadowNone": "No shadow",
+    "shadowColor": "Shadow colour",
+    "glowColor": "Glow colour",
+    "rimColor": "Rim colour",
+    "orbShadow": "Shadow"
   },
   "inboundWhatsApp": {
     "title": "WhatsApp from new contacts",

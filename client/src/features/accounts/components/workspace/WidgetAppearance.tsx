@@ -105,6 +105,8 @@ export function WidgetAppearance({ cfg, onPatch }: {
   const face = (cfg.orbFace || "eyes") as "eyes" | "icon" | "photo";
   const rim = (cfg.orbRim || "metal") as "metal" | "pulse" | "band" | "none";
   const [rimColor, setRimColor] = useState(cfg.orbRimColor || "#a1a1aa");
+  const shadow = (cfg.orbShadow || "shadow") as "shadow" | "none" | "glow";
+  const [shadowColor, setShadowColor] = useState(cfg.orbShadowColor || (shadow === "glow" ? "#a1a1aa" : "#000000"));
   const tint = cfg.orbTint && HEX.test(cfg.orbTint) ? cfg.orbTint.toLowerCase() : null;
   const hasPhoto = !!cfg.avatarUrl && cfg.avatarUrl.startsWith("data:image/");
   const [color, setColor] = useState(cfg.accentColor || "#6B2737");
@@ -133,6 +135,7 @@ export function WidgetAppearance({ cfg, onPatch }: {
   const pickColor = (hex: string) => { setColor(hex); if (HEX.test(hex)) settle({ accentColor: hex }); };
   const pickTint = (hex: string) => { setCustomTint(hex); if (HEX.test(hex)) settle({ orbTint: hex }); };
   const pickRimColor = (hex: string) => { setRimColor(hex); if (HEX.test(hex)) settle({ orbRimColor: hex }); };
+  const pickShadowColor = (hex: string) => { setShadowColor(hex); if (HEX.test(hex)) settle({ orbShadowColor: hex }); };
 
   const uploadPhoto = async (file: File) => {
     setPhotoError(false);
@@ -277,6 +280,7 @@ export function WidgetAppearance({ cfg, onPatch }: {
                 />
                 {(rim === "pulse" || rim === "band") && (
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={MONO}>{t("websiteChat.rimColor")}</span>
                     <input
                       type="color"
                       value={rimColor}
@@ -284,6 +288,28 @@ export function WidgetAppearance({ cfg, onPatch }: {
                       style={{ width: 40, height: 32, padding: 0, border: "1px solid var(--line)", borderRadius: "var(--r-button)", background: "var(--card)", cursor: "pointer" }}
                     />
                     <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink-soft)" }}>{rimColor.toUpperCase()}</span>
+                  </div>
+                )}
+                <span style={{ ...MONO, marginTop: 4 }}>{t("websiteChat.orbShadow")}</span>
+                <Segmented
+                  value={shadow}
+                  onChange={(v) => void save({ orbShadow: v })}
+                  options={[
+                    { value: "shadow", label: t("websiteChat.shadowDrop") },
+                    { value: "glow", label: t("websiteChat.shadowGlow") },
+                    { value: "none", label: t("websiteChat.shadowNone") },
+                  ]}
+                />
+                {shadow !== "none" && (
+                  <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                    <span style={MONO}>{t(shadow === "glow" ? "websiteChat.glowColor" : "websiteChat.shadowColor")}</span>
+                    <input
+                      type="color"
+                      value={shadowColor}
+                      onChange={(e) => pickShadowColor(e.target.value)}
+                      style={{ width: 40, height: 32, padding: 0, border: "1px solid var(--line)", borderRadius: "var(--r-button)", background: "var(--card)", cursor: "pointer" }}
+                    />
+                    <span style={{ fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink-soft)" }}>{shadowColor.toUpperCase()}</span>
                   </div>
                 )}
               </div>
