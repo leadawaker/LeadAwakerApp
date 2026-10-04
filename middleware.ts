@@ -4,8 +4,10 @@
 // preview tailored to the prospect's own numbers.
 // Also handles language-specific OG tags for /pt and /nl paths.
 
+// /pt is not matched: it is the Brazilian homepage (vercel.json rewrites it to
+// /site/pt.html), and serving /index.html here would replace it with English.
 export const config = {
-  matcher: ["/", "/pt", "/nl"],
+  matcher: ["/", "/nl"],
 };
 
 // Mirror of the 3 scenarios baked into RevenueCalculator.tsx. We use the
