@@ -117,6 +117,9 @@ app.use((req, res, next) => {
   // from its claude.ai artifact by script/import-site-artifact.py). Its images
   // are served from /site/img by the public-dir static handling.
   app.get("/", sendFile(path.join(publicDir, "site"), "index.html"));
+  // Brazilian Portuguese homepage, generated from index.html by
+  // script/build-site-pt.py. Mirrors the /pt rewrite in vercel.json.
+  app.get("/pt", sendFile(path.join(publicDir, "site"), "pt.html"));
   // Landing-page variants of the previous homepage: /reactivate is database
   // reactivation (the old root, moved 2026-10-02), /home is the home-improvement
   // page, /solar is the dormant solar page, /uk /us /nl force a market on the

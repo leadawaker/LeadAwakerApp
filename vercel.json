@@ -12,6 +12,10 @@
       "destination": "/login.html"
     },
     {
+      "source": "/pt",
+      "destination": "/site/pt.html"
+    },
+    {
       "source": "/reactivate",
       "destination": "/premium/index.html"
     },
