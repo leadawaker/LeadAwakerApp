@@ -16,6 +16,10 @@
       "destination": "/site/pt.html"
     },
     {
+      "source": "/nl",
+      "destination": "/site/nl.html"
+    },
+    {
       "source": "/reactivate",
       "destination": "/premium/index.html"
     },
@@ -28,7 +32,7 @@
       "destination": "/premium/index.html"
     },
     {
-      "source": "/(uk|us|nl)",
+      "source": "/(uk|us)",
       "destination": "/premium/index.html"
     },
     {

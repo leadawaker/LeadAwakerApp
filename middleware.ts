@@ -4,10 +4,11 @@
 // preview tailored to the prospect's own numbers.
 // Also handles language-specific OG tags for /pt and /nl paths.
 
-// /pt is not matched: it is the Brazilian homepage (vercel.json rewrites it to
-// /site/pt.html), and serving /index.html here would replace it with English.
+// Only "/" is matched: /pt and /nl are the translated homepages (vercel.json
+// rewrites them to /site/*.html), and serving /index.html for them here would
+// replace them with English.
 export const config = {
-  matcher: ["/", "/nl"],
+  matcher: ["/"],
 };
 
 // Mirror of the 3 scenarios baked into RevenueCalculator.tsx. We use the
@@ -93,38 +94,12 @@ export default async function middleware(request: Request): Promise<Response> {
   const hasCalcParams =
     params.has("leads") || params.has("deal") || params.has("cost");
 
+  // A plain visit gets the homepage untouched: its own <head> already has the
+  // right title and share preview (the old reactivation OG copy below is only
+  // for calculator share links).
   if (!hasCalcParams) {
-    const baseOg = translations[lang];
     const res = await fetch(new URL("/index.html", url.origin), request);
-    const html = injectCurrency(await res.text(), resolveCurrency(request), resolveMarket(request));
-
-    const updated = html
-      .replace(
-        /<meta property="og:title"[^>]*>/,
-        `<meta property="og:title" content="${baseOg.title}" />`
-      )
-      .replace(
-        /<meta property="og:description"[^>]*>/,
-        `<meta property="og:description" content="${baseOg.description}" />`
-      )
-      .replace(
-        /<meta property="og:image"[^>]*>/,
-        `<meta property="og:image" content="${baseOg.image}" />`
-      )
-      .replace(
-        /<meta name="twitter:title"[^>]*>/,
-        `<meta name="twitter:title" content="${baseOg.title}" />`
-      )
-      .replace(
-        /<meta name="twitter:description"[^>]*>/,
-        `<meta name="twitter:description" content="${baseOg.description}" />`
-      )
-      .replace(
-        /<meta name="twitter:image"[^>]*>/,
-        `<meta name="twitter:image" content="${baseOg.image}" />`
-      );
-
-    return new Response(updated, {
+    return new Response(await res.text(), {
       status: res.status,
       headers: {
         "content-type": "text/html; charset=utf-8",

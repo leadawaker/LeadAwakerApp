@@ -117,15 +117,16 @@ app.use((req, res, next) => {
   // from its claude.ai artifact by script/import-site-artifact.py). Its images
   // are served from /site/img by the public-dir static handling.
   app.get("/", sendFile(path.join(publicDir, "site"), "index.html"));
-  // Brazilian Portuguese homepage, generated from index.html by
-  // script/build-site-pt.py. Mirrors the /pt rewrite in vercel.json.
+  // The Brazilian Portuguese and Dutch homepages, generated from index.html by
+  // script/build-site-pt.py and build-site-nl.py. Mirror vercel.json.
   app.get("/pt", sendFile(path.join(publicDir, "site"), "pt.html"));
+  app.get("/nl", sendFile(path.join(publicDir, "site"), "nl.html"));
   // Landing-page variants of the previous homepage: /reactivate is database
   // reactivation (the old root, moved 2026-10-02), /home is the home-improvement
-  // page, /solar is the dormant solar page, /uk /us /nl force a market on the
-  // solar page. config.jsx resolves all of these from location.pathname, so
+  // page, /solar is the dormant solar page, /uk /us force a market on the
+  // solar page (NL is its default market; /nl is now the Dutch homepage). config.jsx resolves all of these from location.pathname, so
   // these must serve the same HTML rather than redirect. Mirrors vercel.json.
-  app.get(["/reactivate", "/home", "/solar", "/uk", "/us", "/nl"], sendFile(premiumDir, "index.html"));
+  app.get(["/reactivate", "/home", "/solar", "/uk", "/us"], sendFile(premiumDir, "index.html"));
   // Browser demo. The token stays in the path (the page reads it from
   // location.pathname), so this serves the file rather than redirecting.
   // Mirrors the /demo/:token rewrite in vercel.json.

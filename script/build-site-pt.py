@@ -19,46 +19,28 @@ business name it says, Northgate Motors). Gabriel is recording a Portuguese one.
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-SRC = ROOT / "client/public/site/index.html"
-OUT = ROOT / "client/public/site/pt.html"
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from site_lang import ANY, build, common_pairs  # noqa: E402
 
 # Widget_Configs row 7: same Sara and look as row 6, language pt, PT greeting.
 WIDGET_KEY_EN = "wk_pNUlirtOPVBVkViwqXgsZmFq"
 WIDGET_KEY_PT = "wk_VKSKYDAiDuIESZroCXxAHfvv"
 
-ANY = 0  # count: replace every occurrence, at least one
-
 # (english, portuguese) or (english, portuguese, count)
-PAIRS = [
+PAIRS = common_pairs("pt", "/pt") + [
     # ── head ──
     ('<html lang="en">', '<html lang="pt-BR">'),
     ("Lead Awaker: the AI receptionist that picks up when you can't",
      "Lead Awaker: a recepcionista com IA que atende quando você não pode", 2),
     ("Sara answers your phone, website chat and WhatsApp day and night, and books customers straight into your calendar.",
      "A Sara atende seu telefone, o WhatsApp e o chat do site, de dia e de noite, e já marca o cliente direto na sua agenda.", 2),
-    ('<link rel="canonical" href="https://www.leadawaker.com/">', '<link rel="canonical" href="https://www.leadawaker.com/pt">'),
-    ('<meta property="og:url" content="https://www.leadawaker.com/">', '<meta property="og:url" content="https://www.leadawaker.com/pt">\n<meta property="og:locale" content="pt_BR">'),
-    # The redirect only belongs on the English page.
-    ("""<script id="lang-redirect">
-/* Portuguese browsers land on the Brazilian page (/pt), the same rule the
-   /reactivate page follows. Picking EN or PT in the nav is remembered. */
-(function(){var p='';try{p=localStorage.getItem('la_site_lang')||''}catch(e){}
-  if(p==='en')return;
-  if(p==='pt'||/^pt/i.test(navigator.language||''))location.replace('/pt'+location.search+location.hash)})();
-</script>
-""", ""),
+    ('<meta property="og:url" content="https://www.leadawaker.com/pt">', '<meta property="og:url" content="https://www.leadawaker.com/pt">\n<meta property="og:locale" content="pt_BR">'),
 
     # ── nav ──
-    ('<a class="lang-sw" href="/pt" hreflang="pt-BR" lang="pt-BR" title="Português">PT</a>',
-     '<a class="lang-sw" href="/" hreflang="en" lang="en" title="English">EN</a>'),
-    ('<a class="lang-sw" href="/pt" hreflang="pt-BR" lang="pt-BR">Português</a>',
-     '<a class="lang-sw" href="/" hreflang="en" lang="en">English</a>'),
     ('<nav class="nav" aria-label="Main">', '<nav class="nav" aria-label="Principal">'),
     ('<a href="#phone">Phone</a>', '<a href="#phone">Telefone</a>', 2),
     ('<a href="#website">Website</a>', '<a href="#website">Site</a>'),
-    ('<a href="#calendar">Calendar</a>', '<a href="#calendar">Agenda</a>'),
-    ('<a href="#how">How it works</a>', '<a href="#how">Como funciona</a>', 2),
+    ('<a href="#how">How it works</a>', '<a href="#how">Como funciona</a>'),
     ('<a href="/reactivate">Old leads</a>', '<a href="/reactivate">Reativação</a>'),
     ('href="/login">Log in</a>', 'href="/login">Entrar</a>', 2),
     ('rel="noopener">Book a demo</a>', 'rel="noopener">Agendar demo</a>'),
@@ -307,7 +289,7 @@ PAIRS = [
 
     # ── about ──
     ('<span class="eyebrow">Who you’ll work with</span>', '<span class="eyebrow">Quem vai trabalhar com você</span>'),
-    ('<h2><span>Systems</span><span>meet</span><em class="w">sales.</em></h2>', '<h2><span>Sistemas inteligentes</span><span>encontram</span><em class="w">vendas.</em></h2>'),
+    ('<h2><span>Systems</span><span>meet</span><em class="w">sales.</em></h2>', '<h2 class="h-long"><span>Sistemas inteligentes</span><span>encontram</span><em class="w">vendas.</em></h2>'),
     ('<p>One of us builds the systems. The other knows how to sell.</p>', '<p>Um vem da tecnologia, o outro vem de vendas.</p>'),
     ('<div>Founder<span>Systems &amp; Automation</span></div>', '<div>Fundador<span>Sistemas &amp; Automação</span></div>'),
     ('<p>12+ years building digital systems, for small businesses and for Warner Bros. and Sega. Today he builds AI that answers, follows up and books.</p>',
@@ -412,25 +394,5 @@ PAIRS = [
 ]
 
 
-def main() -> None:
-    html = SRC.read_text(encoding="utf-8")
-    problems = []
-    for pair in PAIRS:
-        en, pt = pair[0], pair[1]
-        want = pair[2] if len(pair) > 2 else 1
-        found = html.count(en)
-        if (want == ANY and found == 0) or (want != ANY and found != want):
-            problems.append(f"expected {'1+' if want == ANY else want}, found {found}: {en[:90]!r}")
-            continue
-        html = html.replace(en, pt)
-    if problems:
-        print("English page changed; update these pairs in script/build-site-pt.py:", file=sys.stderr)
-        for p in problems:
-            print("  - " + p, file=sys.stderr)
-        sys.exit(1)
-    OUT.write_text(html, encoding="utf-8")
-    print(f"wrote {OUT.relative_to(ROOT)} ({len(html):,} bytes, {len(PAIRS)} replacements)")
-
-
 if __name__ == "__main__":
-    main()
+    build("pt.html", PAIRS)
