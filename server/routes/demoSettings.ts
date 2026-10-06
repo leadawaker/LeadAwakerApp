@@ -218,6 +218,9 @@ export function registerDemoSettingsRoutes(app: Express) {
     // so "Olá" and "ola" are the same word at the door.
     passwords: z.array(z.string().trim().min(1).max(60)).max(10).optional(),
     maxCallMinutes: z.number().int().min(1).max(30).optional(),
+    // How loud the office bed is on the phone's ambience route. Read by the
+    // engine at the start of each call (telnyx_bridge.py).
+    phoneAmbienceLevel: z.enum(["low", "medium", "high"]).optional(),
   });
 
   app.put("/api/demo-settings/voice", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
@@ -234,6 +237,38 @@ export function registerDemoSettingsRoutes(app: Express) {
     }
     await writeSettings("voice", next);
     res.json({ settings: next });
+  }));
+
+  /**
+   * Which route the demo phone number is on: direct to OpenAI, or through the
+   * Telnyx conference that plays an office bed under her voice. The engine
+   * owns the Telnyx calls; this only relays, so the switch shows what Telnyx
+   * actually has rather than what was last clicked.
+   */
+  const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
+  const engineRoute = async (method: "GET" | "PUT", body?: unknown) => {
+    const resp = await fetch(`${ENGINE_BASE}/voice/phone/route`, {
+      method,
+      headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
+      body: body ? JSON.stringify(body) : undefined,
+      signal: AbortSignal.timeout(20_000),
+    });
+    const data = await resp.json().catch(() => ({}));
+    return { ok: resp.ok, status: resp.status, data };
+  };
+
+  app.get("/api/demo-settings/voice/phone-route", requireAuth, requireAgency, wrapAsync(async (_req: Request, res: Response) => {
+    const r = await engineRoute("GET");
+    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not read the phone route." });
+    res.json(r.data);
+  }));
+
+  app.put("/api/demo-settings/voice/phone-route", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
+    const parsed = z.object({ ambience: z.boolean() }).safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const r = await engineRoute("PUT", parsed.data);
+    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not switch the phone route." });
+    res.json(r.data);
   }));
 
   /**

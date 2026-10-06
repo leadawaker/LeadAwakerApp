@@ -145,7 +145,20 @@
       "limitTitle": "Gesprekslimiet (minuten)",
       "limitHint": "Hoe lang een demogesprek mag duren voordat het zichzelf beëindigt.",
       "save": "Opslaan",
-      "cancel": "Annuleren"
+      "cancel": "Annuleren",
+      "phone": {
+        "title": "Kantoorgeluid op de telefoonlijn",
+        "hint": "Speelt een rustig kantoor onder haar stem op {{number}}. Aan: gesprekken lopen via een Telnyx-conferentie (ongeveer $0,007 per minuut extra). Uit: gesprekken gaan rechtstreeks naar OpenAI, zoals voorheen.",
+        "onState": "Aan: bellers horen het kantoor. Geldt vanaf het volgende gesprek.",
+        "offState": "Uit: gesprekken gaan rechtstreeks naar OpenAI, zonder achtergrondgeluid.",
+        "levelTitle": "Volume kantoor",
+        "levelHint": "Hoe hard het kantoor onder haar stem klinkt. Geldt vanaf het volgende gesprek.",
+        "level": {
+          "low": "Zacht",
+          "medium": "Gemiddeld",
+          "high": "Hard"
+        }
+      }
     }
   },
   "widgetColor": {

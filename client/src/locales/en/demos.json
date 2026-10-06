@@ -145,7 +145,20 @@
       "limitTitle": "Call limit (minutes)",
       "limitHint": "How long one demo call may run before it ends itself.",
       "save": "Save",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "phone": {
+        "title": "Office sound on the phone line",
+        "hint": "Plays a quiet office under her voice on {{number}}. On: calls go through a Telnyx conference (about $0.007 a minute more). Off: calls go straight to OpenAI, as before.",
+        "onState": "On: callers hear the office. Takes effect on the next call.",
+        "offState": "Off: calls go straight to OpenAI, with no room sound.",
+        "levelTitle": "Office volume",
+        "levelHint": "How loud the office is under her voice. Reaches the next call.",
+        "level": {
+          "low": "Soft",
+          "medium": "Medium",
+          "high": "Loud"
+        }
+      }
     }
   },
   "widgetColor": {

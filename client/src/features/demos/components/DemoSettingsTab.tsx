@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2, RotateCcw, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SERVICES } from "../services";
+import { PhoneAmbienceSettings } from "./PhoneAmbienceSettings";
 import {
   apiAsset,
   useDemoSettings,
@@ -285,7 +286,10 @@ export function DemoSettingsTab() {
         {service === "widget" ? (
           <WidgetSettings />
         ) : service === "voice" ? (
-          <VoiceSettings />
+          <>
+            <VoiceSettings />
+            <PhoneAmbienceSettings />
+          </>
         ) : (
           <span style={{ fontSize: 13, color: "var(--mute-2)" }}>{t("settings.empty")}</span>
         )}

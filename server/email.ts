@@ -25,7 +25,51 @@ const transporter = nodemailer.createTransport({
   },
 });
 
-const FROM = process.env.SMTP_FROM || "Lead Awaker <admin@leadawaker.com>";
+const SMTP_FROM = process.env.SMTP_FROM || "Lead Awaker <admin@leadawaker.com>";
+
+/** Resend is used only when EMAIL_PROVIDER=resend AND a key is set. Until the
+ *  sending domain is verified in Resend it can only mail the account owner, so
+ *  the default stays SMTP. */
+const useResend = () => process.env.EMAIL_PROVIDER === "resend" && !!process.env.RESEND_API_KEY;
+const emailConfigured = () => useResend() || !!(process.env.SMTP_USER && process.env.SMTP_PASS);
+
+interface Outgoing {
+  to: string;
+  subject: string;
+  text: string;
+  html?: string;
+  inlineLogo?: boolean;
+}
+
+async function deliver(msg: Outgoing): Promise<void> {
+  const logo = msg.inlineLogo && logoBuffer ? logoBuffer : null;
+  if (useResend()) {
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || "Lead Awaker <onboarding@resend.dev>",
+        to: [msg.to],
+        subject: msg.subject,
+        text: msg.text,
+        html: msg.html,
+        attachments: logo
+          ? [{ filename: "logo.png", content: logo.toString("base64"), content_type: "image/png", content_id: LOGO_CID }]
+          : undefined,
+      }),
+    });
+    if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
+    return;
+  }
+  await transporter.sendMail({
+    from: SMTP_FROM,
+    to: msg.to,
+    subject: msg.subject,
+    text: msg.text,
+    html: msg.html,
+    attachments: logo ? [{ filename: "logo.png", content: logo, contentType: "image/png", cid: LOGO_CID }] : [],
+  });
+}
 
 type Lang = "en" | "pt" | "nl";
 
@@ -76,6 +120,10 @@ const TRANSLATIONS: Record<Lang, Translations> = {
 
 /** Call once at server startup to verify SMTP credentials are working. */
 export async function verifySmtp(): Promise<void> {
+  if (useResend()) {
+    console.log(`[email] Resend enabled — sending as ${process.env.RESEND_FROM || "onboarding@resend.dev"}`);
+    return;
+  }
   if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
     console.warn("[email] SMTP_USER/SMTP_PASS not set — email sending disabled.");
     return;
@@ -90,7 +138,7 @@ export async function verifySmtp(): Promise<void> {
 }
 
 export async function sendRawEmail(opts: { to: string; subject: string; text: string; html?: string }): Promise<void> {
-  await transporter.sendMail({ from: FROM, ...opts });
+  await deliver(opts);
 }
 
 export async function sendInviteEmail(params: {
@@ -101,24 +149,18 @@ export async function sendInviteEmail(params: {
   lang?: Lang;
 }): Promise<void> {
   const t = TRANSLATIONS[params.lang ?? "en"];
-  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.log(`[email] SMTP not configured — skipping send.`);
+  if (!emailConfigured()) {
+    console.log(`[email] Email not configured — skipping send.`);
     console.log(`[email] Would send invite to: ${params.to}`);
     console.log(`[email] Link: ${params.inviteLink}`);
     return;
   }
-  await transporter.sendMail({
-    from: FROM,
+  await deliver({
     to: params.to,
     subject: t.subject,
     html: buildInviteHtml(params, t),
     text: buildInviteText(params, t),
-    attachments: logoBuffer ? [{
-      filename: "logo.png",
-      content: logoBuffer,
-      contentType: "image/png",
-      cid: LOGO_CID,
-    }] : [],
+    inlineLogo: true,
   });
 }
 

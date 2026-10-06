@@ -145,7 +145,20 @@
       "limitTitle": "Limite da ligação (minutos)",
       "limitHint": "Quanto tempo uma ligação de demonstração pode durar antes de encerrar sozinha.",
       "save": "Salvar",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "phone": {
+        "title": "Som de escritório na linha telefônica",
+        "hint": "Toca um escritório tranquilo por baixo da voz dela em {{number}}. Ligado: as chamadas passam por uma conferência da Telnyx (cerca de US$ 0,007 a mais por minuto). Desligado: as chamadas vão direto para a OpenAI, como antes.",
+        "onState": "Ligado: quem liga ouve o escritório. Vale a partir da próxima chamada.",
+        "offState": "Desligado: as chamadas vão direto para a OpenAI, sem som ambiente.",
+        "levelTitle": "Volume do escritório",
+        "levelHint": "O volume do escritório por baixo da voz dela. Vale a partir da próxima chamada.",
+        "level": {
+          "low": "Baixo",
+          "medium": "Médio",
+          "high": "Alto"
+        }
+      }
     }
   },
   "widgetColor": {

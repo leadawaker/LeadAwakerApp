@@ -52,6 +52,36 @@ export interface VoiceDemoSettings {
   defaultVoices?: Record<string, string>;
   passwords?: string[];
   maxCallMinutes?: number;
+  phoneAmbienceLevel?: "low" | "medium" | "high";
+}
+
+/** The demo phone number's route at Telnyx (engine telnyx_bridge.get_route). */
+export interface PhoneRoute {
+  number: string;
+  ambience: boolean;
+}
+
+const ROUTE_KEY = ["demo-phone-route"];
+
+export function usePhoneRoute() {
+  return useQuery({
+    queryKey: ROUTE_KEY,
+    queryFn: async () => json<PhoneRoute>(await apiFetch("/api/demo-settings/voice/phone-route")),
+  });
+}
+
+/** Moves the number at Telnyx right away: no Save button. */
+export function useSetPhoneRoute() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (ambience: boolean) =>
+      json<PhoneRoute>(await apiFetch("/api/demo-settings/voice/phone-route", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ambience }),
+      })),
+    onSuccess: (next) => qc.setQueryData(ROUTE_KEY, next),
+  });
 }
 
 /** The locales and voices the engine actually offers, for the pickers. */
