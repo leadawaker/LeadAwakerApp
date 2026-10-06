@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ENGINE_BASE_URL } from "@/features/voiceDemo/engine";
+import { apiFetch } from "@/lib/apiUtils";
 
 /** A stretch of speech on one side of the call, in seconds. */
 export interface Segment { start: number; end: number }
@@ -63,20 +63,21 @@ function remember(id: string, audio: CallAudio) {
  * Downloads the call's stereo recording (caller left, AI right) once, hands the
  * player a local URL and works out who spoke when from each channel. If the
  * browser cannot analyse the file it is still playable, just without the
- * speaker lines.
+ * speaker lines. The audio comes through Express, which checks that this user
+ * may see the call; a call without a session has no recording to ask for.
  */
-export function useCallAudio(sessionId: string | null): CallAudio {
+export function useCallAudio(callId: string | null, sessionId: string | null): CallAudio {
   const [state, setState] = useState<CallAudio>(EMPTY);
 
   useEffect(() => {
-    if (!sessionId) { setState(MISSING); return; }
-    const cached = cache.get(sessionId);
-    if (cached) { remember(sessionId, cached); setState(cached); return; }
+    if (!callId || !sessionId) { setState(MISSING); return; }
+    const cached = cache.get(callId);
+    if (cached) { remember(callId, cached); setState(cached); return; }
     const ctl = new AbortController();
     setState(EMPTY);
     (async () => {
       try {
-        const res = await fetch(`${ENGINE_BASE_URL}/voice/live/recording/${encodeURIComponent(sessionId)}`, { signal: ctl.signal });
+        const res = await apiFetch(`/api/voice-calls/${encodeURIComponent(callId)}/recording`, { signal: ctl.signal });
         if (!res.ok) throw new Error(String(res.status));
         const buf = await res.arrayBuffer();
         // The Blob copies the bytes, so the buffer can go straight to the decoder.
@@ -95,14 +96,14 @@ export function useCallAudio(sessionId: string | null): CallAudio {
           };
         } catch { /* playable without the speaker lines */ }
         if (ctl.signal.aborted) { URL.revokeObjectURL(url); return; }
-        remember(sessionId, ready);
+        remember(callId, ready);
         setState(ready);
       } catch {
         if (!ctl.signal.aborted) setState(MISSING);
       }
     })();
     return () => ctl.abort();
-  }, [sessionId]);
+  }, [callId, sessionId]);
 
   return state;
 }

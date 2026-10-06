@@ -21,7 +21,7 @@ function recordingMissingKey(startedAt: string): string {
 
 export function CallConversation({ call }: { call: VoiceCallDetail }) {
   const { t } = useTranslation("voiceCalls");
-  const audio = useCallAudio(call.sessionId);
+  const audio = useCallAudio(call.callId, call.sessionId);
   const audioRef = useRef<HTMLAudioElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);

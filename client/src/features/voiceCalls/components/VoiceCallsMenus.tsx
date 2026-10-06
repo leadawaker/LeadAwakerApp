@@ -5,8 +5,9 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { VOICE_OUTCOMES } from "../api/voiceCallsApi";
 import { GROUPS, SORTS, type ListOptions } from "../listOptions";
-import { statusColors, VOICE_CALL_STATUSES, type VoiceCallStatus } from "../status";
+import { OUTCOME_LABEL_KEY, outcomeColors, statusColors, VOICE_CALL_STATUSES, type VoiceCallStatus } from "../status";
 
 const MENU = "glass-strong border-none";
 const ITEM = "flex items-center gap-2 text-[12px]";
@@ -37,11 +38,26 @@ export function VoiceCallsMenus({ options, setOptions, languages }: {
 }) {
   const { t } = useTranslation("voiceCalls");
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
-  const filtered = options.statuses.length > 0 || options.languages.length > 0;
+  const filtered = options.outcomes.length > 0 || options.statuses.length > 0 || options.languages.length > 0;
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
       <MenuButton icon={<Filter className="h-4 w-4 shrink-0" />} label={t("menus.filter")} dot={filtered} width="w-52">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className={ITEM}>
+            <span className="flex-1">{t("menus.outcome")}</span>
+            {options.outcomes.length > 0 && <span className="text-[10px] tabular-nums font-semibold" style={{ color: "var(--wine)" }}>{options.outcomes.length}</span>}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className={`w-48 ${MENU}`}>
+            {VOICE_OUTCOMES.map((o) => (
+              <DropdownMenuItem key={o} className={ITEM} onClick={(e) => { e.preventDefault(); setOptions({ outcomes: toggle(options.outcomes, o) }); }}>
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: outcomeColors(o).bg, boxShadow: `inset 0 0 0 1px ${outcomeColors(o).text}` }} />
+                <span className="flex-1">{t(`outcomes.${OUTCOME_LABEL_KEY[o]}`)}</span>
+                <Tick on={options.outcomes.includes(o)} />
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
         <DropdownMenuSub>
           <DropdownMenuSubTrigger className={ITEM}>
             <span className="flex-1">{t("menus.status")}</span>
@@ -76,7 +92,7 @@ export function VoiceCallsMenus({ options, setOptions, languages }: {
         {filtered && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-[12px] text-muted-foreground" onClick={() => setOptions({ statuses: [], languages: [] })}>
+            <DropdownMenuItem className="text-[12px] text-muted-foreground" onClick={() => setOptions({ outcomes: [], statuses: [], languages: [] })}>
               {t("menus.clearFilters")}
             </DropdownMenuItem>
           </>

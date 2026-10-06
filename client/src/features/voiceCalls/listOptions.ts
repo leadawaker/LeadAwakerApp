@@ -1,9 +1,8 @@
 import type { TFunction } from "i18next";
-import type { VoiceCallListItem } from "./api/voiceCallsApi";
+import type { VoiceCallListItem, VoiceOutcome } from "./api/voiceCallsApi";
 import { isToday } from "./format";
-import { callStatus, VOICE_CALL_STATUSES, type VoiceCallStatus } from "./status";
+import { callStatus, normalizeOutcome, VOICE_CALL_STATUSES, type VoiceCallStatus } from "./status";
 
-export type VoiceCallView = "all" | "booked" | "notBooked";
 export type VoiceCallSort = "recent" | "oldest" | "longest" | "shortest" | "name";
 export type VoiceCallGroup = "date" | "status" | "language" | "none";
 
@@ -11,18 +10,18 @@ export const SORTS: VoiceCallSort[] = ["recent", "oldest", "longest", "shortest"
 export const GROUPS: VoiceCallGroup[] = ["date", "status", "language", "none"];
 
 export interface ListOptions {
-  view: VoiceCallView;
   query: string;
+  /** Empty means every outcome. */
+  outcomes: VoiceOutcome[];
   statuses: VoiceCallStatus[];
   languages: string[];
   sort: VoiceCallSort;
   group: VoiceCallGroup;
 }
 
-export function filterCalls(calls: VoiceCallListItem[], opts: Pick<ListOptions, "view" | "query" | "statuses" | "languages">): VoiceCallListItem[] {
+export function filterCalls(calls: VoiceCallListItem[], opts: Pick<ListOptions, "query" | "outcomes" | "statuses" | "languages">): VoiceCallListItem[] {
   let list = calls;
-  if (opts.view === "booked") list = list.filter((c) => c.bookedSlot);
-  if (opts.view === "notBooked") list = list.filter((c) => !c.bookedSlot);
+  if (opts.outcomes.length) list = list.filter((c) => opts.outcomes.includes(normalizeOutcome(c.outcome)));
   if (opts.statuses.length) list = list.filter((c) => opts.statuses.includes(callStatus(c)));
   if (opts.languages.length) list = list.filter((c) => opts.languages.includes(c.language ?? ""));
   const q = opts.query.trim().toLowerCase();
@@ -30,10 +29,18 @@ export function filterCalls(calls: VoiceCallListItem[], opts: Pick<ListOptions, 
     const qDigits = q.replace(/\D/g, "");
     list = list.filter((c) =>
       (c.callerName ?? "").toLowerCase().includes(q) ||
-      (c.outcome ?? "").toLowerCase().includes(q) ||
+      (c.conclusion ?? "").toLowerCase().includes(q) ||
+      (c.personaCompany ?? "").toLowerCase().includes(q) ||
+      (c.personaNiche ?? "").toLowerCase().includes(q) ||
+      (c.accountName ?? "").toLowerCase().includes(q) ||
       (!!qDigits && (c.callerNumber ?? "").replace(/\D/g, "").includes(qDigits)));
   }
   return list;
+}
+
+/** Demo rows are titled by persona, Live rows by caller. */
+function sortName(c: VoiceCallListItem): string {
+  return (c.scope === "demo" ? c.personaCompany : null) ?? c.callerName ?? c.callerNumber ?? "~";
 }
 
 export function sortCalls(calls: VoiceCallListItem[], sort: VoiceCallSort): VoiceCallListItem[] {
@@ -44,7 +51,7 @@ export function sortCalls(calls: VoiceCallListItem[], sort: VoiceCallSort): Voic
     case "oldest": return out.sort((a, b) => time(a) - time(b));
     case "longest": return out.sort((a, b) => len(b) - len(a));
     case "shortest": return out.sort((a, b) => len(a) - len(b));
-    case "name": return out.sort((a, b) => (a.callerName ?? a.callerNumber ?? "~").localeCompare(b.callerName ?? b.callerNumber ?? "~"));
+    case "name": return out.sort((a, b) => sortName(a).localeCompare(sortName(b)));
     default: return out.sort((a, b) => time(b) - time(a));
   }
 }

@@ -83,6 +83,7 @@
     "group": "Agrupar",
     "status": "Status",
     "language": "Idioma",
+    "outcome": "Resultado",
     "clearFilters": "Limpar filtros"
   },
   "sort": {
@@ -99,5 +100,42 @@
     "none": "Sem agrupamento"
   },
   "unknownLanguage": "Desconhecido",
-  "playbackFailed": "Não foi possível reproduzir esta gravação. Tente baixá-la."
+  "playbackFailed": "Não foi possível reproduzir esta gravação. Tente baixá-la.",
+  "tabs": {
+    "live": "Ao vivo",
+    "demo": "Demo",
+    "aria": "Origem das chamadas"
+  },
+  "stats": {
+    "demosWeek": "Demos esta semana",
+    "callsWeek": "Chamadas esta semana",
+    "bookedRate": "Taxa de agendamento",
+    "avgLength": "Duração média da chamada",
+    "last7Days": "Últimos 7 dias",
+    "noValue": "–"
+  },
+  "outcomes": {
+    "booked": "Agendado",
+    "callback": "Retorno",
+    "transferred": "Transferida",
+    "hungUp": "Desligou",
+    "other": "Conversa"
+  },
+  "presenting": {
+    "label": "Apresentando",
+    "on": "Identidades ocultas",
+    "off": "Identidades visíveis",
+    "tooltip": "Oculta nomes e números de quem ligou. O texto da transcrição e o áudio não são ocultados."
+  },
+  "persona": {
+    "universal": "Demo universal"
+  },
+  "emptyLive": {
+    "title": "Nenhuma chamada ainda",
+    "hint": "As chamadas da sua linha de voz aparecem aqui."
+  },
+  "accountFilter": {
+    "all": "Todas as contas",
+    "label": "Conta"
+  }
 }

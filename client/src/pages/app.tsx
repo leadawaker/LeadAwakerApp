@@ -7,6 +7,7 @@ import { PageEntityProvider } from "@/contexts/PageEntityContext";
 import { AgentChatWidget } from "@/features/ai-agents/components/AgentChatWidget";
 import { Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
+import { useVoiceCapabilities } from "@/features/voiceCalls/api/voiceCallsApi";
 
 // Route-level code splitting: each page is its own lazy chunk so the initial
 // CRM bundle stays small. Named exports are unwrapped to { default }.
@@ -75,6 +76,18 @@ function OwnerOnly({ children, prefix }: { children: ReactElement; prefix: strin
     return <Redirect to={`${prefix}/campaigns`} />;
   }
   return children;
+}
+
+/**
+ * Route guard for Voice calls. The server decides who may see what (Owner: Live
+ * and Demo, a client with a voice line: Live, everyone else: nothing), so this
+ * only follows /api/voice-calls/capabilities. Nobody with neither goes to Campaigns.
+ */
+function VoiceCallsGuard({ prefix }: { prefix: string }) {
+  const { data, isLoading } = useVoiceCapabilities();
+  if (isLoading) return <PageLoader />;
+  if (!data || (!data.live && !data.demo)) return <Redirect to={`${prefix}/campaigns`} />;
+  return <VoiceCallsPage />;
 }
 
 /**
@@ -207,9 +220,9 @@ export default function AppArea() {
           <Route path="/platform/demos">
             <OwnerOnly prefix="/platform"><DemosPage /></OwnerOnly>
           </Route>
-          {/* Owner-only: every row is a prospect who tried the voice demo. */}
+          {/* Owner: Live + Demo tabs. Clients with a voice line: their own Live calls. */}
           <Route path="/platform/voice-calls">
-            <OwnerOnly prefix="/platform"><VoiceCallsPage /></OwnerOnly>
+            <VoiceCallsGuard prefix="/platform" />
           </Route>
           <Route path="/platform/prompt-library">
             <AgencyOnly prefix="/platform"><PromptsPage /></AgencyOnly>

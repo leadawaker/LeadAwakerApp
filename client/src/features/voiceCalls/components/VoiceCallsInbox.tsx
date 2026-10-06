@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AudioLines } from "lucide-react";
 import { MonoLabel } from "@/features/voice/components/atoms";
-import type { VoiceCallListItem } from "../api/voiceCallsApi";
+import type { VoiceCallListItem, VoiceScope } from "../api/voiceCallsApi";
 import { filterCalls, groupCalls, sortCalls, type ListOptions } from "../listOptions";
 import { VoiceCallListCard } from "./VoiceCallListCard";
 import { VoiceCallDetail } from "./VoiceCallDetail";
@@ -30,11 +30,13 @@ interface Props {
   isLoading: boolean;
   error: unknown;
   options: ListOptions;
+  scope: VoiceScope;
+  masked: boolean;
   selection: string | null;
   setSelection: (id: string | null) => void;
 }
 
-export function VoiceCallsInbox({ calls, isLoading, error, options, selection, setSelection }: Props) {
+export function VoiceCallsInbox({ calls, isLoading, error, options, scope, masked, selection, setSelection }: Props) {
   const { t } = useTranslation("voiceCalls");
   const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 1600);
   useEffect(() => {
@@ -58,7 +60,14 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, selection, s
   ) : calls.length === 0 ? (
     <Centered>
       <AudioLines size={28} />
-      <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--mute)", maxWidth: 240 }}>{t("empty")}</p>
+      {scope === "live" ? (
+        <>
+          <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: 18, color: "var(--ink)" }}>{t("emptyLive.title")}</p>
+          <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--mute)", maxWidth: 240 }}>{t("emptyLive.hint")}</p>
+        </>
+      ) : (
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--mute)", maxWidth: 240 }}>{t("empty")}</p>
+      )}
     </Centered>
   ) : items.length === 0 ? (
     <Centered><MonoLabel>{t("nothingHere")}</MonoLabel></Centered>
@@ -68,7 +77,7 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, selection, s
         {sec.label && <GroupHeader label={sec.label} count={sec.items.length} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
           {sec.items.map((c) => (
-            <VoiceCallListCard key={c.callId} call={c} active={selection === c.callId} onClick={() => setSelection(c.callId)} />
+            <VoiceCallListCard key={c.callId} call={c} masked={masked} active={selection === c.callId} onClick={() => setSelection(c.callId)} />
           ))}
         </div>
       </div>
@@ -96,9 +105,9 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, selection, s
         </button>
       )}
       {selection ? (
-        <VoiceCallDetail callId={selection} />
+        <VoiceCallDetail callId={selection} masked={masked} />
       ) : (
-        <Centered><AudioLines size={28} /><MonoLabel>{t("selectCall")}</MonoLabel></Centered>
+        <Centered><AudioLines size={28} />{calls.length > 0 && <MonoLabel>{t("selectCall")}</MonoLabel>}</Centered>
       )}
     </div>
   );

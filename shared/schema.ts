@@ -300,7 +300,8 @@ export const accountCommunicationProfile = nocodb.table("Account_Communication_P
   differentiator: text("differentiator"),    // why customers choose them (newline-separated USP lines)
   // Receptionist onboarding (specs/receptionist-onboarding): which services the
   // client takes, and the per-service answers (handoff, voice, whatsapp, stock).
-  // Stored only; the engine does not read `setup` yet.
+  // The phone receptionist reads voice, handoff.ringWhen, greeting, pronunciation and
+  // afterHours at call start (specs/voice-setup-slots). The rest is stored only.
   services: jsonb("services").$type<string[]>(),
   setup: jsonb("setup").$type<Record<string, unknown>>(),
   // Wizard progress.
@@ -848,6 +849,15 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
   summary: jsonb("summary").$type<VoiceCallSummary>(),
   bookedSlot: text("booked_slot"),
   bookedIso: timestamp("booked_iso", { withTimezone: true }),
+  // Added by migrate_add_voice_numbers.py (phone door); declared here so Drizzle knows them.
+  dialedNumber: text("dialed_number"),
+  callerNumber: text("caller_number"),
+  voiceNumbersId: integer("voice_numbers_id"),
+  // Added by migrate_add_voice_call_persona_outcome.py; the engine stamps them.
+  personaCompany: text("persona_company"),
+  personaNiche: text("persona_niche"),
+  /** booked | callback | transferred | hung_up | other. Null on rows older than the stamp. */
+  outcome: text("outcome"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => [

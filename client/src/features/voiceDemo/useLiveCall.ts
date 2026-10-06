@@ -261,6 +261,7 @@ export function useLiveCall() {
           phone: callerRef.current || "web",
           language: languageRef.current,
           timezone: browserTimezone(),
+          session_id: sessionIdRef.current,
           event,
         }),
       });
@@ -730,6 +731,8 @@ export function useLiveCall() {
             caller_number: setup.callerNumber,
             voice: setup.voice || null,
             token: new URLSearchParams(window.location.search).get("token") || null,
+            // Staff only: ?line=<Voice_Numbers id> answers as that client's phone line.
+            line: Number(new URLSearchParams(window.location.search).get("line")) || null,
             timezone: browserTimezone(),
             sdp: pc.localDescription?.sdp,
           }),

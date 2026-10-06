@@ -83,6 +83,7 @@
     "group": "Group",
     "status": "Status",
     "language": "Language",
+    "outcome": "Outcome",
     "clearFilters": "Clear filters"
   },
   "sort": {
@@ -99,5 +100,42 @@
     "none": "No grouping"
   },
   "unknownLanguage": "Unknown",
-  "playbackFailed": "This recording could not be played. Try downloading it instead."
+  "playbackFailed": "This recording could not be played. Try downloading it instead.",
+  "tabs": {
+    "live": "Live",
+    "demo": "Demo",
+    "aria": "Call source"
+  },
+  "stats": {
+    "demosWeek": "Demos this week",
+    "callsWeek": "Calls this week",
+    "bookedRate": "Booked rate",
+    "avgLength": "Average call length",
+    "last7Days": "Last 7 days",
+    "noValue": "–"
+  },
+  "outcomes": {
+    "booked": "Booked",
+    "callback": "Callback",
+    "transferred": "Transferred",
+    "hungUp": "Hung up",
+    "other": "Conversation"
+  },
+  "presenting": {
+    "label": "Presenting",
+    "on": "Identities hidden",
+    "off": "Identities shown",
+    "tooltip": "Hides caller names and numbers. Transcript text and audio are not hidden."
+  },
+  "persona": {
+    "universal": "Universal demo"
+  },
+  "emptyLive": {
+    "title": "No calls yet",
+    "hint": "Calls on your voice line appear here."
+  },
+  "accountFilter": {
+    "all": "All accounts",
+    "label": "Account"
+  }
 }

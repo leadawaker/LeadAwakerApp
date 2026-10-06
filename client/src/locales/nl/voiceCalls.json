@@ -83,6 +83,7 @@
     "group": "Groeperen",
     "status": "Status",
     "language": "Taal",
+    "outcome": "Uitkomst",
     "clearFilters": "Filters wissen"
   },
   "sort": {
@@ -99,5 +100,42 @@
     "none": "Niet groeperen"
   },
   "unknownLanguage": "Onbekend",
-  "playbackFailed": "Deze opname kon niet worden afgespeeld. Probeer hem te downloaden."
+  "playbackFailed": "Deze opname kon niet worden afgespeeld. Probeer hem te downloaden.",
+  "tabs": {
+    "live": "Live",
+    "demo": "Demo",
+    "aria": "Gesprekbron"
+  },
+  "stats": {
+    "demosWeek": "Demo's deze week",
+    "callsWeek": "Gesprekken deze week",
+    "bookedRate": "Boekingspercentage",
+    "avgLength": "Gemiddelde gespreksduur",
+    "last7Days": "Laatste 7 dagen",
+    "noValue": "–"
+  },
+  "outcomes": {
+    "booked": "Geboekt",
+    "callback": "Terugbellen",
+    "transferred": "Doorverbonden",
+    "hungUp": "Opgehangen",
+    "other": "Gesprek"
+  },
+  "presenting": {
+    "label": "Presenteren",
+    "on": "Identiteiten verborgen",
+    "off": "Identiteiten zichtbaar",
+    "tooltip": "Verbergt namen en nummers van bellers. Transcripttekst en audio blijven zichtbaar."
+  },
+  "persona": {
+    "universal": "Universele demo"
+  },
+  "emptyLive": {
+    "title": "Nog geen gesprekken",
+    "hint": "Gesprekken op je spraaklijn verschijnen hier."
+  },
+  "accountFilter": {
+    "all": "Alle accounts",
+    "label": "Account"
+  }
 }

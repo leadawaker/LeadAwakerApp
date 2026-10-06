@@ -46,6 +46,7 @@ import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
 import { useVoiceRecorderState, toggleVoiceRecording, MAX_RECORDING_SECONDS } from "@/lib/voiceRecorder";
 import { useToast } from "@/hooks/use-toast";
+import { useVoiceCapabilities } from "@/features/voiceCalls/api/voiceCallsApi";
 
 const NAV_LANGUAGES = [
   { code: "en", label: "English", flag: "🇬🇧" },
@@ -263,6 +264,8 @@ export function RightSidebar({
   }, [location]);
 
   const prefix = "/platform";
+  // Hidden until the server says this user has a voice line (or is the Owner).
+  const { data: voiceCaps } = useVoiceCapabilities();
 
   const navItems: {
     href: string;
@@ -275,9 +278,11 @@ export function RightSidebar({
     agencyViewOnly?: boolean;
     ownerOnly?: boolean;
     outreachOnly?: boolean;
+    /** Shown only when /api/voice-calls/capabilities says this user has Live or Demo. */
+    voiceCallsOnly?: boolean;
   }[] = [
     { href: `${prefix}/campaigns`, label: t("sidebar.campaigns"), labelKey: "Campaigns", icon: Megaphone, testId: "nav-reactivation" },
-    { href: `${prefix}/voice-calls`, label: t("sidebar.voiceCalls"), labelKey: "Voice calls", icon: AudioLines, testId: "nav-voice-calls", ownerOnly: true },
+    { href: `${prefix}/voice-calls`, label: t("sidebar.voiceCalls"), labelKey: "Voice calls", icon: AudioLines, testId: "nav-voice-calls", voiceCallsOnly: true },
     // Agency = full chat ("Chats"); clients = summary-only view ("Interactions"). No gate needed.
     { href: `${prefix}/chat`, label: isAgencyUser ? t("sidebar.chats") : t("sidebar.interactions"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
     { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
@@ -332,6 +337,7 @@ export function RightSidebar({
   // Filter nav items based on user role and current view context
   const visibleNavItems = navItems.filter((it) => {
     if (it.ownerOnly && !isOwner) return false;
+    if (it.voiceCallsOnly && !(voiceCaps?.live || voiceCaps?.demo)) return false;
     if (it.outreachOnly && !showOutreachPages) return false;
     if (it.adminOnly && !isAgencyUser) return false;
     if (it.agencyOnly && !isAgencyUser) return false;

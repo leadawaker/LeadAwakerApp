@@ -1,74 +1,90 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Search } from "lucide-react";
+import { AudioLines } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
-import { useVoiceCalls } from "../api/voiceCallsApi";
+import { useVoiceCalls, useVoiceCapabilities, type VoiceCapabilities, type VoiceScope } from "../api/voiceCallsApi";
+import type { AccountOption } from "../components/AccountFilter";
+import { StatsStrip } from "../components/StatsStrip";
 import { VoiceCallsInbox } from "../components/VoiceCallsInbox";
-import { VoiceCallsMenus } from "../components/VoiceCallsMenus";
-import { filterCalls, type ListOptions, type VoiceCallView } from "../listOptions";
+import { VoiceCallsTopbar } from "../components/VoiceCallsTopbar";
+import type { ListOptions } from "../listOptions";
+import { readPref, writePref } from "../localPref";
+import { usePresenting } from "../usePresenting";
 
-const VIEWS: VoiceCallView[] = ["all", "booked", "notBooked"];
+const SCOPE_KEY = "la.voiceCalls.scope";
 
-function VoiceCallsContent() {
-  const { t } = useTranslation("voiceCalls");
-  const { data: calls = [], isLoading, error } = useVoiceCalls();
+function initialScope(): VoiceScope | null {
+  const saved = readPref(SCOPE_KEY);
+  return saved === "live" || saved === "demo" ? saved : null;
+}
+
+function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }) {
+  // The server decides: only an Owner (not impersonating) gets `demo`.
+  const isOwner = capabilities.demo;
+  const [savedScope, setSavedScope] = useState<VoiceScope | null>(initialScope);
+  const scope: VoiceScope = isOwner ? savedScope ?? "demo" : "live";
+  const [accountPick, setAccountPick] = useState<number | undefined>(undefined);
+  const accountId = scope === "live" ? accountPick : undefined;
+  const { masked, toggle } = usePresenting(isOwner);
+
+  const { data: calls = [], isLoading, error } = useVoiceCalls(scope, accountId);
   const [selection, setSelection] = useState<string | null>(null);
-  const [options, setOptionsState] = useState<ListOptions>({ view: "all", query: "", statuses: [], languages: [], sort: "recent", group: "date" });
+  const [options, setOptionsState] = useState<ListOptions>({ query: "", outcomes: [], statuses: [], languages: [], sort: "recent", group: "date" });
   const setOptions = (patch: Partial<ListOptions>) => setOptionsState((o) => ({ ...o, ...patch }));
-  const { view, query } = options;
-  const setView = (v: VoiceCallView) => setOptions({ view: v });
-  const setQuery = (q: string) => setOptions({ query: q });
   const languages = useMemo(() => Array.from(new Set(calls.map((c) => c.language ?? ""))).sort(), [calls]);
+
+  // Accounts seen so far, so the chip keeps listing every client after one is picked.
+  const [known, setKnown] = useState<Map<number, string>>(new Map());
+  useEffect(() => {
+    const named = calls.filter((c) => c.accountName);
+    if (named.every((c) => known.get(c.accountId) === c.accountName)) return;
+    setKnown((prev) => {
+      const next = new Map(prev);
+      named.forEach((c) => next.set(c.accountId, c.accountName as string));
+      return next;
+    });
+  }, [calls, known]);
+  const accounts: AccountOption[] = useMemo(
+    () => Array.from(known, ([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name)),
+    [known],
+  );
+
+  const changeScope = (s: VoiceScope) => {
+    setSavedScope(s);
+    writePref(SCOPE_KEY, s);
+    setSelection(null);
+  };
+  const changeAccount = (id: number | undefined) => {
+    setAccountPick(id);
+    setSelection(null);
+  };
 
   return (
     <div className="la-page" style={{ display: "flex", flexDirection: "column" }}>
-      {/* Topbar */}
-      <div className="la-page-header" style={{ gap: 12, padding: "0 17px", overflowX: "auto" }}>
-        <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em", flexShrink: 0 }}>
-          {t("title")}
-        </span>
+      <VoiceCallsTopbar
+        scope={scope}
+        isOwner={isOwner}
+        onScope={changeScope}
+        options={options}
+        setOptions={setOptions}
+        languages={languages}
+        accounts={accounts}
+        accountId={accountId}
+        onAccount={changeAccount}
+        masked={masked}
+        onTogglePresenting={toggle}
+      />
 
-        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
-          {VIEWS.map((key) => {
-            const on = view === key;
-            const count = filterCalls(calls, { ...options, view: key, query: "" }).length;
-            return (
-              <button
-                key={key}
-                onClick={() => setView(key)}
-                style={{ display: "inline-flex", alignItems: "center", gap: 6, cursor: "pointer", border: "none", padding: "6px 11px", borderRadius: "var(--r-pill)", transition: "all 120ms", fontFamily: "var(--sans)", fontSize: 12, fontWeight: on ? 700 : 500, background: on ? "var(--card)" : "transparent", color: on ? "var(--wine)" : "var(--mute)", boxShadow: on ? "var(--sh-raised-crisp)" : "none", whiteSpace: "nowrap" }}
-              >
-                {t(`views.${key}`)}
-                <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, minWidth: 16, height: 16, padding: "0 5px", borderRadius: "var(--r-pill)", display: "inline-flex", alignItems: "center", justifyContent: "center", background: on ? "var(--wine-tint)" : "var(--bg)", boxShadow: on ? "none" : "var(--sh-inset-crisp)", color: on ? "var(--wine)" : "var(--mute)" }}>
-                  {count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+      <StatsStrip scope={scope} accountId={accountId} />
 
-        <div style={{ flex: 1 }} />
-
-        <div className="hidden md:flex" style={{ alignItems: "center", gap: 6, background: "var(--bg)", borderRadius: "var(--r-surface)", boxShadow: "var(--sh-inset-crisp)", padding: "7px 12px", width: 200, flexShrink: 0 }}>
-          <Search size={13} style={{ color: "var(--mute-2)", flexShrink: 0 }} />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t("search")}
-            style={{ border: "none", outline: "none", background: "transparent", fontSize: 12.5, color: "var(--ink)", flex: 1, fontFamily: "var(--sans)", minWidth: 0 }}
-          />
-        </div>
-
-        <VoiceCallsMenus options={options} setOptions={setOptions} languages={languages} />
-      </div>
-
-      {/* Body */}
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <VoiceCallsInbox
           calls={calls}
           isLoading={isLoading}
           error={error}
           options={options}
+          scope={scope}
+          masked={masked}
           selection={selection}
           setSelection={setSelection}
         />
@@ -77,10 +93,28 @@ function VoiceCallsContent() {
   );
 }
 
+/** Waits for capabilities so nothing renders unmasked (or in the wrong tab) first. */
+function VoiceCallsGate() {
+  const { t } = useTranslation("voiceCalls");
+  const { data, isLoading, error } = useVoiceCapabilities();
+  if (isLoading) return <div className="la-page" aria-busy="true" />;
+  if (error || !data || (!data.live && !data.demo)) {
+    return (
+      <div className="la-page" style={{ display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, color: "var(--mute-2)", padding: 40, textAlign: "center" }}>
+        <AudioLines size={28} />
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--mute)" }}>
+          {error ? t("loadError") : t("emptyLive.hint")}
+        </p>
+      </div>
+    );
+  }
+  return <VoiceCallsContent capabilities={data} />;
+}
+
 export function VoiceCallsPage() {
   return (
     <CrmShell>
-      <VoiceCallsContent />
+      <VoiceCallsGate />
     </CrmShell>
   );
 }
