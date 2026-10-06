@@ -2,6 +2,10 @@
 // One merged, ordered list: style answers write to the profile table, fact
 // answers and the Q&A grids (objections, FAQ) write to the Knowledge Base.
 // Keys only — labels live in the `communicationProfile` i18n namespace.
+import {
+  SERVICES, SERVICES_STEP, STOCK_STEP, HANDOFF_STEPS, SERVICE_STEPS, EMPTY_SETUP,
+  type ReceptionistSetup,
+} from "./setupConstants";
 
 export const AI_STYLE = ["personal", "project", "business"] as const;
 export const STATUS_QUESTION = ["traject", "project", "besluitvorming"] as const;
@@ -63,7 +67,9 @@ export function recommendStatus(aiStyle: string | null): string {
 // The wizard keeps one-question-per-screen but groups steps into named sections
 // so the facilitator can say "now we're on part 3 of 4". Labels live in i18n
 // (`sections.<key>`).
-export type SectionKey = "tone" | "identity" | "availability" | "sales" | "facts" | "booking";
+export type SectionKey =
+  | "services" | "tone" | "identity" | "availability" | "sales" | "facts" | "booking"
+  | "handoff" | "voice" | "widget" | "whatsapp";
 export const SECTIONS: SectionKey[] = ["tone", "identity", "availability", "booking", "sales", "facts"];
 
 // ── Merged step list ─────────────────────────────────────────────────────────
@@ -88,6 +94,23 @@ export const STEPS: StepDef[] = [
   { key: "differentiator", kind: "style", section: "facts" },  // USP arguments: after FAQ, before sensitive topics
   { key: "sensitiveTopics", kind: "fact", section: "facts" },  // → KB "policies"
 ];
+
+// The wizard's real step list: services first, then the shared core above
+// (unchanged), then handoff, then one section per ticked channel. The services
+// step is always index 0, so changing the ticks never moves the current step.
+export function buildSteps(services: readonly string[]): StepDef[] {
+  const steps: StepDef[] = [SERVICES_STEP, ...STEPS, STOCK_STEP, ...HANDOFF_STEPS];
+  for (const s of SERVICES) {
+    if (services.includes(s)) steps.push(...(SERVICE_STEPS[s] ?? []));
+  }
+  return steps;
+}
+
+export function buildSections(steps: StepDef[]): SectionKey[] {
+  const out: SectionKey[] = [];
+  for (const s of steps) if (!out.includes(s.section)) out.push(s.section);
+  return out;
+}
 
 export type StyleField =
   | "openingStyle" | "formality" | "perception"
@@ -128,6 +151,8 @@ export interface ProfileAnswers {
   avatarGender: string | null;   // "male" | "female" — gender of the assistant portrait (for custom names)
   differentiator: string;        // why customers choose them (sales argument)
   bookingUrl: string;            // calendar / booking link the AI sends to leads
+  services: string[];            // receptionist services the client takes (setupConstants SERVICES)
+  setup: ReceptionistSetup;      // handoff / voice / whatsapp / stock answers
 }
 
 export const EMPTY_ANSWERS: ProfileAnswers = {
@@ -143,6 +168,8 @@ export const EMPTY_ANSWERS: ProfileAnswers = {
   avatarGender: null,
   differentiator: "",
   bookingUrl: "",
+  services: [],
+  setup: EMPTY_SETUP,
 };
 
 // ── Recommended defaults + badge map ─────────────────────────────────────────

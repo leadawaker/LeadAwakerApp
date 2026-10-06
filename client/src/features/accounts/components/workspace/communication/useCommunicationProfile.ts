@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/apiUtils";
 import { EMPTY_ANSWERS, type ProfileAnswers } from "./profileConstants";
+import { normalizeServices, normalizeSetup } from "./setupConstants";
 
 export type ProfileStatus = "draft" | "in_progress" | "completed";
 
@@ -29,6 +30,8 @@ function fromApi(raw: any): CommunicationProfile {
       avatarGender: raw.avatar_gender ?? null,
       differentiator: raw.differentiator ?? "",
       bookingUrl: raw.booking_url ?? "",
+      services: normalizeServices(raw.services),
+      setup: normalizeSetup(raw.setup),
     },
   };
 }
@@ -47,6 +50,8 @@ function toApi(answers: ProfileAnswers, status: ProfileStatus) {
     avatar_gender: answers.avatarGender || null,
     differentiator: answers.differentiator || null,
     booking_url: answers.bookingUrl || null,
+    services: answers.services,
+    setup: answers.setup,
     status,
   };
 }

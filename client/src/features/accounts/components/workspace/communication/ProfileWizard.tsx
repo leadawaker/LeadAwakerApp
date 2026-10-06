@@ -1,19 +1,23 @@
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Check, Plus, X } from "lucide-react";
 import {
-  STEPS, STEPS_WITH_EXAMPLES, addressFor, EMPTY_ANSWERS, QA_MIN_ROWS,
+  buildSteps, buildSections, STEPS_WITH_EXAMPLES, addressFor, EMPTY_ANSWERS, QA_MIN_ROWS,
   AI_STYLE, FORMALITY_LEVELS, PERCEPTION, PERCEPTION_MAX,
   AGENT_NAMES, AGENT_GENDER, AVATAR_CHOICES, AGENT_AVATAR_URL, effectiveGender, QA_CATEGORY,
-  FACTS_WITH_NOPE, SECTIONS, isRecommended,
+  FACTS_WITH_NOPE, isRecommended,
   type ProfileAnswers, type StyleField, type PreferredWordGroup, type FactValues, type QARow,
 } from "./profileConstants";
 import type { QAGrids } from "./useOnboardingFacts";
 import { useNicheWords } from "./useNicheWords";
 import { WhatsAppPreview } from "./WhatsAppPreview";
+import { OptionCard, Chip, RecommendedBadge, inputStyle } from "./wizardAtoms";
+import { ServiceStep } from "./ServiceSteps";
 import { USP_OPTIONS, asCampaignLang } from "@/features/campaigns/components/settings/fieldLocale";
 import { MeetingTypeCard } from "../MeetingTypeCard";
 import { AvailabilityCard } from "../AvailabilityCard";
+import type { AccountRow, AccountDetail } from "../types";
+import type { ReceptionistSetup } from "./setupConstants";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -24,63 +28,6 @@ const WIZARD_NICHE_OPTIONS = [
   "Solar Panels", "HVAC", "Roofing", "Landscaping", "Windows & Doors",
   "Painting", "Pest Control", "Pool Installation", "Moving Services",
 ];
-
-function OptionCard({ selected, onClick, children, badge }: { selected: boolean; onClick: () => void; children: ReactNode; badge?: ReactNode }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={selected ? "neu-raised" : "neu-inset-crisp"}
-      style={{
-        textAlign: "left", width: "100%", padding: "13px 15px", borderRadius: "var(--r-button)",
-        cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 11, position: "relative",
-        border: selected ? "1px solid var(--wine)" : "1px solid transparent",
-        background: selected ? "var(--wine-tint)" : "var(--bg)", transition: "background 120ms",
-      }}
-    >
-      <span style={{
-        width: 16, height: 16, marginTop: 1, borderRadius: "50%", flexShrink: 0,
-        display: "flex", alignItems: "center", justifyContent: "center",
-        background: selected ? "var(--wine)" : "transparent", boxShadow: selected ? "none" : "var(--sh-inset-crisp)",
-        color: "var(--paper)",
-      }}>{selected && <Check size={11} strokeWidth={3} />}</span>
-      <span style={{ flex: 1, minWidth: 0 }}>{children}</span>
-      {badge}
-    </button>
-  );
-}
-
-function Chip({ selected, disabled, onClick, label }: { selected: boolean; disabled?: boolean; onClick: () => void; label: string }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled && !selected}
-      style={{
-        padding: "8px 14px", borderRadius: "var(--r-pill)", fontSize: 13.5, cursor: disabled && !selected ? "not-allowed" : "pointer",
-        border: selected ? "1px solid var(--wine)" : "1px solid transparent",
-        background: selected ? "var(--wine-tint)" : "var(--bg)",
-        color: selected ? "var(--wine)" : disabled ? "var(--mute-2)" : "var(--ink-soft)",
-        boxShadow: selected ? "none" : "var(--sh-inset-crisp)", fontWeight: selected ? 600 : 400,
-        opacity: disabled && !selected ? 0.5 : 1, transition: "background 120ms",
-      }}
-    >{label}</button>
-  );
-}
-
-function RecommendedBadge({ label }: { label: string }) {
-  return (
-    <span style={{
-      fontFamily: "var(--mono)", fontSize: 8.5, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase",
-      color: "var(--wine)", background: "var(--wine-tint)", padding: "3px 8px", borderRadius: "var(--r-pill)", whiteSpace: "nowrap",
-    }}>{label}</span>
-  );
-}
-
-const inputStyle = {
-  width: "100%", padding: "9px 13px", borderRadius: "var(--r-button)", fontSize: 14,
-  border: "none", background: "var(--bg)", color: "var(--ink-soft)",
-} as const;
 
 function padRows(rows?: QARow[]): QARow[] {
   const out = [...(rows ?? [])];
@@ -103,9 +50,15 @@ interface Props {
   onFinish: (answers: ProfileAnswers, facts: FactValues, grids: QAGrids) => void;
   onClose?: (answers: ProfileAnswers, facts: FactValues, grids: QAGrids) => void;
   bodyMaxHeight?: number;
+  // The account row + detail + PATCH callback, for the steps that embed the
+  // Integrations cards (WhatsApp signup, inbound campaign). Optional: without
+  // them those steps point to the Integrations tab instead.
+  account?: AccountRow;
+  detail?: AccountDetail;
+  onSaveAccount?: (field: string, value: string) => Promise<void>;
 }
 
-export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, initialStep, saving, niche, accountName, accountLogoUrl, showPreview, prefillWords, onFinish, onClose, bodyMaxHeight }: Props) {
+export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, initialStep, saving, niche, accountName, accountLogoUrl, showPreview, prefillWords, onFinish, onClose, bodyMaxHeight, account, detail, onSaveAccount }: Props) {
   const { t, i18n } = useTranslation("communicationProfile");
   const [step, setStep] = useState(initialStep ?? 0);
   const [a, setA] = useState<ProfileAnswers>(initial ?? { ...EMPTY_ANSWERS });
@@ -137,15 +90,20 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
     });
   }, [prefillWords, nicheWords.groups]);
 
-  const total = STEPS.length;
-  const def = STEPS[step];
-  const isLast = step === total - 1;
+  // The ticked services decide which sections exist (setupConstants).
+  const steps = useMemo(() => buildSteps(a.services), [a.services]);
+  const sections = useMemo(() => buildSections(steps), [steps]);
+  const total = steps.length;
+  const def = steps[Math.min(step, total - 1)];
+  const isLast = step >= total - 1;
 
   // Section (chapter) progress for the header + segmented bar.
   const currentSection = def.section;
-  const sectionIndex = SECTIONS.indexOf(currentSection);
-  const posInSection = STEPS.slice(0, step + 1).filter((s) => s.section === currentSection).length;
+  const sectionIndex = sections.indexOf(currentSection);
+  const posInSection = steps.slice(0, step + 1).filter((s) => s.section === currentSection).length;
   const set = (patch: Partial<ProfileAnswers>) => setA((prev) => ({ ...prev, ...patch }));
+  const setSetup = <K extends keyof ReceptionistSetup>(part: K, patch: Partial<ReceptionistSetup[K]>) =>
+    setA((prev) => ({ ...prev, setup: { ...prev.setup, [part]: { ...prev.setup[part], ...patch } } }));
 
   // Progressive WhatsApp preview: reveal balloons as the call advances rather than
   // showing the whole sample up front. By the start of part 2 (identity) all 5 show.
@@ -492,7 +450,7 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 3 }}>
             <div className="eyebrow eyebrow-sm" style={{ color: "var(--wine)" }}>{t(`sections.${currentSection}`)}</div>
-            <div className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>{sectionIndex + 1}/{SECTIONS.length}</div>
+            <div className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>{sectionIndex + 1}/{sections.length}</div>
           </div>
           <div className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>
             {t("wizard.stepLabel", { current: step + 1, total })}
@@ -511,8 +469,8 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
         )}
       </div>
       <div style={{ display: "flex", gap: 5 }}>
-        {SECTIONS.map((sec, i) => {
-          const count = STEPS.filter((s) => s.section === sec).length;
+        {sections.map((sec, i) => {
+          const count = steps.filter((s) => s.section === sec).length;
           const fill = i < sectionIndex ? 1 : i === sectionIndex ? posInSection / count : 0;
           return (
             <div key={sec} style={{ flex: 1, height: 4, borderRadius: 999, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", overflow: "hidden" }}>
@@ -540,6 +498,19 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
         )}
         {def.kind === "custom" && def.key === "availabilityHours" && accountId && (
           <AvailabilityCard accountId={accountId} />
+        )}
+        {def.kind === "custom" && (
+          <ServiceStep
+            stepKey={def.key}
+            services={a.services}
+            onServicesChange={(services) => set({ services })}
+            setup={a.setup}
+            onSetupChange={setSetup}
+            accountId={accountId}
+            account={account}
+            detail={detail}
+            onSaveAccount={onSaveAccount}
+          />
         )}
       </div>
 

@@ -4,9 +4,11 @@ import {
   Sparkles, SlidersHorizontal, Eye, Quote, Bot, MessageSquareWarning, Handshake,
   Banknote, Wallet, Truck, ShieldCheck, HelpCircle, Award, AlertTriangle,
   CheckCircle2, XCircle, CalendarClock, Phone,
+  LayoutGrid, Boxes, UserRound, BellRing, PhoneForwarded, AudioLines, SpellCheck, Moon,
+  Globe, MessageCircle, Link2,
 } from "lucide-react";
 import {
-  STEPS, formalityKey,
+  buildSteps, formalityKey,
   type ProfileAnswers, type PreferredWordGroup, type FactValues, type SectionKey,
 } from "./profileConstants";
 import type { QAGrids } from "./useOnboardingFacts";
@@ -23,6 +25,8 @@ export interface BookingSnapshot {
   end: string | null;
   durationMinutes: number | null;
   noticeHours: number | null;
+  whatsappSenderStatus: string | null;
+  widgetDomains: string[] | null;
 }
 
 const STEP_ICON: Record<string, LucideIcon> = {
@@ -42,6 +46,17 @@ const STEP_ICON: Record<string, LucideIcon> = {
   faq: HelpCircle,
   differentiator: Award,
   sensitiveTopics: AlertTriangle,
+  services: LayoutGrid,
+  stockFeed: Boxes,
+  handoffContact: UserRound,
+  handoffRules: BellRing,
+  voiceForwarding: PhoneForwarded,
+  voiceSound: AudioLines,
+  voicePronunciation: SpellCheck,
+  voiceAfterHours: Moon,
+  widgetSetup: Globe,
+  whatsappNumber: MessageCircle,
+  whatsappConnect: Link2,
 };
 
 // Reuses the existing pipeline "stage" palette (already theme-safe in light + dark
@@ -63,14 +78,25 @@ const STEP_COLOR: Record<string, string> = {
   faq: "var(--stage-new)",
   differentiator: "var(--stage-closed)",
   sensitiveTopics: "var(--stage-lost)",
+  services: "var(--stage-closed)",
+  stockFeed: "var(--stage-multi)",
+  handoffContact: "var(--stage-qualified)",
+  handoffRules: "var(--stage-booked)",
+  voiceForwarding: "var(--stage-contacted)",
+  voiceSound: "var(--stage-responded)",
+  voicePronunciation: "var(--stage-new)",
+  voiceAfterHours: "var(--stage-multi)",
+  widgetSetup: "var(--stage-new)",
+  whatsappNumber: "var(--stage-booked)",
+  whatsappConnect: "var(--stage-qualified)",
 };
 
 // Left column = (tone+identity merged, shown under the "tone" header) + sales.
 // Right column = facts. Each inner array is a group of sections rendered under
 // one shared header (the first section's i18n label).
 const SECTION_COLUMNS: SectionKey[][][] = [
-  [["tone", "identity"], ["availability", "booking"], ["sales"]],
-  [["facts"]],
+  [["services"], ["tone", "identity"], ["availability", "booking"], ["sales"], ["handoff"]],
+  [["facts"], ["voice"], ["widget"], ["whatsapp"]],
 ];
 
 // Mon...Sun display order, same as the wizard's AvailabilityCard day toggles.
@@ -141,12 +167,53 @@ export function ProfileSummary({ answers, facts, grids, booking, onEditStep }: {
         return booking.callingNumber ? `${label} · ${booking.callingNumber}` : label;
       }
       default:
+        return setupValue(key);
+    }
+  }
+
+  // Receptionist sections (setupConstants). Builds one readable line per step.
+  function setupValue(key: string): string {
+    const { handoff, voice, whatsapp, stock } = answers.setup;
+    const q = (path: string) => t(`questions.${key}.${path}`);
+    const join = (parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" · ") || notSet;
+    switch (key) {
+      case "services":
+        return answers.services.length ? answers.services.map((s) => q(`options.${s}.label`)).join(", ") : notSet;
+      case "stockFeed":
+        return stock.feedUrl.trim() || notSet;
+      case "handoffContact":
+        return join([handoff.name.trim(), handoff.number.trim()]);
+      case "handoffRules":
+        if (!handoff.ringWhen) return notSet;
+        return join([q(`options.${handoff.ringWhen}.label`), handoff.recap ? `${q("recapLabel")} ${handoff.recapTime}` : null]);
+      case "voiceForwarding":
+        if (!voice.lines.length) return notSet;
+        return join([
+          voice.lines.map((l) => q(`lines.${l}`)).join(" + "),
+          voice.forwardWhen.map((w) => q(`when.${w}`)).join(", "),
+        ]);
+      case "voiceSound":
+        if (!voice.voice && !voice.locale && !voice.greeting.trim()) return notSet;
+        return join([voice.voice && cap(voice.voice), voice.locale && q(`locales.${voice.locale}`), voice.greeting.trim() && `"${voice.greeting.trim()}"`]);
+      case "voicePronunciation": {
+        const rows = voice.pronunciation.filter((r) => r.word.trim());
+        return rows.length ? rows.map((r) => r.word.trim()).join(", ") : notSet;
+      }
+      case "voiceAfterHours":
+        return voice.afterHours ? q(`options.${voice.afterHours}.label`) : notSet;
+      case "widgetSetup":
+        return booking?.widgetDomains?.length ? booking.widgetDomains.join(", ") : notSet;
+      case "whatsappNumber":
+        return whatsapp.numberChoice ? q(`options.${whatsapp.numberChoice}.label`) : notSet;
+      case "whatsappConnect":
+        return booking?.whatsappSenderStatus || notSet;
+      default:
         return notSet;
     }
   }
 
   // Steps with their original index (used to open the wizard at the right step).
-  const indexed = STEPS.map((s, i) => ({ s, i }));
+  const indexed = buildSteps(answers.services).map((s, i) => ({ s, i }));
 
   const completedCount = indexed.filter(({ s }) => value(s.key, s.kind) !== notSet).length;
   const totalCount = indexed.length;

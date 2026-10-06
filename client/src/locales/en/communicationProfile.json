@@ -46,7 +46,12 @@
     "availability": "Availability",
     "sales": "Sales arguments",
     "facts": "Facts & policy",
-    "booking": "Booking setup"
+    "booking": "Booking setup",
+    "services": "Services",
+    "handoff": "Handoff",
+    "voice": "Phone receptionist",
+    "widget": "Website chat",
+    "whatsapp": "WhatsApp"
   },
   "questions": {
     "meetingType": {
@@ -86,21 +91,42 @@
     "statusQuestion": {
       "label": "Which status question fits you best?",
       "options": {
-        "traject": { "label": "Journey", "example": "Waar staan jullie momenteel in het traject?" },
-        "project": { "label": "Project", "example": "Hoe kijken jullie momenteel naar het project?" },
-        "besluitvorming": { "label": "Decision-making", "example": "Waar staan jullie momenteel in jullie besluitvorming?" }
+        "traject": {
+          "label": "Journey",
+          "example": "Waar staan jullie momenteel in het traject?"
+        },
+        "project": {
+          "label": "Project",
+          "example": "Hoe kijken jullie momenteel naar het project?"
+        },
+        "besluitvorming": {
+          "label": "Decision-making",
+          "example": "Waar staan jullie momenteel in jullie besluitvorming?"
+        }
       }
     },
     "perception": {
       "label": "How do you want to come across? Choose up to 3.",
       "short": "Perception",
       "options": {
-        "persoonlijk": { "label": "Personal" },
-        "deskundig": { "label": "Expert" },
-        "betrokken": { "label": "Involved" },
-        "exclusief": { "label": "Exclusive" },
-        "hoogwaardig": { "label": "High-end" },
-        "toegankelijk": { "label": "Approachable" }
+        "persoonlijk": {
+          "label": "Personal"
+        },
+        "deskundig": {
+          "label": "Expert"
+        },
+        "betrokken": {
+          "label": "Involved"
+        },
+        "exclusief": {
+          "label": "Exclusive"
+        },
+        "hoogwaardig": {
+          "label": "High-end"
+        },
+        "toegankelijk": {
+          "label": "Approachable"
+        }
       }
     },
     "preferredWords": {
@@ -118,9 +144,18 @@
       "label": "How formal may the communication be?",
       "short": "Formality",
       "levels": {
-        "informal": { "label": "Informal (je)", "example": "Hé Jan! Hoe staat het met jullie keukenplannen?" },
-        "neutral": { "label": "Neutral (je)", "example": "Hoi Jan, ik wilde even bij je informeren hoe het ervoor staat." },
-        "formal": { "label": "Formal (u)", "example": "Goedendag, ik neem contact met u op over uw aanvraag." }
+        "informal": {
+          "label": "Informal (je)",
+          "example": "Hé Jan! Hoe staat het met jullie keukenplannen?"
+        },
+        "neutral": {
+          "label": "Neutral (je)",
+          "example": "Hoi Jan, ik wilde even bij je informeren hoe het ervoor staat."
+        },
+        "formal": {
+          "label": "Formal (u)",
+          "example": "Goedendag, ik neem contact met u op over uw aanvraag."
+        }
       }
     },
     "differentiator": {
@@ -159,25 +194,236 @@
       "toggleGender": "Switch between male and female avatar",
       "avatarLabel": "Profile picture",
       "avatar": {
-        "logo": { "label": "Company logo", "help": "Use the showroom's logo as the profile picture." },
-        "avatar": { "label": "Assistant avatar", "help": "Use a portrait image of the assistant." },
-        "avatarLogo": { "label": "Avatar with logo badge", "help": "Assistant portrait with the company logo in the bottom corner." }
+        "logo": {
+          "label": "Company logo",
+          "help": "Use the showroom's logo as the profile picture."
+        },
+        "avatar": {
+          "label": "Assistant avatar",
+          "help": "Use a portrait image of the assistant."
+        },
+        "avatarLogo": {
+          "label": "Avatar with logo badge",
+          "help": "Assistant portrait with the company logo in the bottom corner."
+        }
       },
       "options": {
-        "thomas": { "label": "Thomas" },
-        "mark": { "label": "Mark" },
-        "sophie": { "label": "Sophie" },
-        "lisa": { "label": "Lisa" }
+        "thomas": {
+          "label": "Thomas"
+        },
+        "mark": {
+          "label": "Mark"
+        },
+        "sophie": {
+          "label": "Sophie"
+        },
+        "lisa": {
+          "label": "Lisa"
+        }
       }
+    },
+    "services": {
+      "label": "Which services does the client take?",
+      "short": "Services",
+      "help": "Tick everything that applies. Each service adds its own short section at the end. The questions every channel shares are asked once.",
+      "options": {
+        "voice": {
+          "label": "Phone receptionist",
+          "help": "The assistant answers calls the client misses, books viewings or appointments and puts serious buyers through."
+        },
+        "widget": {
+          "label": "Website chat",
+          "help": "A chat bubble on the client's website that answers visitors and books appointments."
+        },
+        "whatsapp": {
+          "label": "WhatsApp assistant",
+          "help": "The assistant answers everyone who messages the client's WhatsApp number."
+        },
+        "dbr": {
+          "label": "Lead reactivation",
+          "help": "WhatsApp campaigns that bring old leads from the client's list back into conversation."
+        }
+      }
+    },
+    "stockFeed": {
+      "label": "Is there a live list of products or stock?",
+      "short": "Stock feed",
+      "help": "If the website shows current stock (cars, homes, products), paste the page or feed link here so the assistant always quotes what is really available. Skip this if there is none.",
+      "urlLabel": "Feed or stock page link",
+      "urlPlaceholder": "https://www.example.nl/aanbod/feed/",
+      "notesLabel": "Notes",
+      "notesPlaceholder": "e.g. prices are on the stock page, the feed updates hourly"
+    },
+    "handoffContact": {
+      "label": "Who should the assistant reach when a person is needed?",
+      "short": "Handoff contact",
+      "help": "Calls are put through to this number, and alerts about serious buyers go here.",
+      "nameLabel": "Name",
+      "namePlaceholder": "e.g. Thijs",
+      "numberLabel": "Mobile number"
+    },
+    "handoffRules": {
+      "label": "When may the assistant ring you live?",
+      "short": "Handoff rules",
+      "ringLabel": "Live calls for serious buyers",
+      "options": {
+        "anytime": {
+          "label": "Any time",
+          "help": "A serious buyer is always worth a call, also in the evening or at the weekend."
+        },
+        "hours": {
+          "label": "During opening hours",
+          "help": "Live during opening hours. Outside them the assistant takes a message or books a callback."
+        },
+        "never": {
+          "label": "Never, take a message",
+          "help": "The assistant never rings. You get a message and call back yourself."
+        }
+      },
+      "recapLabel": "Daily recap",
+      "recapHelp": "A short WhatsApp summary of the day: who called or messaged, about what, and what needs you.",
+      "recapOn": "Yes",
+      "recapOff": "No",
+      "recapTime": "Recap time"
+    },
+    "voiceForwarding": {
+      "label": "Which calls go to the assistant?",
+      "short": "Call forwarding",
+      "help": "The client keeps answering their own phone. Calls they miss are forwarded to the assistant's number.",
+      "linesLabel": "Which line",
+      "lines": {
+        "landline": "Company line",
+        "mobile": "Mobile"
+      },
+      "landlineNumber": "Company number",
+      "landlineProvider": "Provider",
+      "landlineProviderPlaceholder": "e.g. KPN, Voys, Ziggo",
+      "landlineHelp": "A business line is forwarded in the provider's portal or app (\"forward when not answered\"), so have the login ready. A classic landline can use codes on the phone itself.",
+      "mobileNumber": "Mobile number",
+      "whenLabel": "Forward when",
+      "when": {
+        "noAnswer": "No answer",
+        "busy": "Busy",
+        "unreachable": "Unreachable",
+        "always": "Always"
+      },
+      "codesLabel": "Dial these on the mobile",
+      "aiNumber": "AI-number",
+      "cancelHint": "To undo a forward, dial ## followed by the same number and # (e.g. ##61#)."
+    },
+    "voiceSound": {
+      "label": "How should the assistant sound?",
+      "short": "Voice & greeting",
+      "voiceLabel": "Voice",
+      "voices": {
+        "marin": "Natural, warm. Best tested for Dutch.",
+        "gleam": "Natural, bright and upbeat.",
+        "willow": "Natural, soft Irish tone.",
+        "bossa": "Natural, Brazilian Portuguese."
+      },
+      "localeLabel": "Language",
+      "locales": {
+        "nl": "Dutch",
+        "en-GB": "English (UK)",
+        "en-US": "English (US)",
+        "pt-BR": "Portuguese (BR)"
+      },
+      "greetingLabel": "Greeting",
+      "greetingHelp": "The first sentence callers hear. Keep it short and say it is a digital assistant.",
+      "greetingPlaceholder": "e.g. Good afternoon, Robben Rosmalen, you're speaking with Sanne, the digital assistant. How can I help?"
+    },
+    "voicePronunciation": {
+      "label": "Words the assistant must pronounce correctly",
+      "short": "Pronunciation",
+      "help": "Brand names, models, names and street names. Write how they sound, the way you would spell it out to someone.",
+      "wordPlaceholder": "Word, e.g. Porsche",
+      "sayAsPlaceholder": "Say it as, e.g. Por-sjuh",
+      "add": "Add word",
+      "remove": "Remove"
+    },
+    "voiceAfterHours": {
+      "label": "What happens with calls outside opening hours?",
+      "short": "After hours",
+      "help": "Opening hours come from the availability step.",
+      "options": {
+        "message": {
+          "label": "Take a message",
+          "help": "The assistant notes who called and why, and the client calls back."
+        },
+        "callback": {
+          "label": "Book a callback",
+          "help": "The assistant books a time in the agenda for the client to call back."
+        },
+        "ringHot": {
+          "label": "Ring for serious buyers",
+          "help": "Normal calls get a message. A caller ready to buy is put through anyway."
+        }
+      }
+    },
+    "widgetSetup": {
+      "label": "Set up the website chat",
+      "short": "Website chat",
+      "help": "Create the key, fill in the website's domain and pick the look. Send the snippet to whoever manages the website."
+    },
+    "whatsappNumber": {
+      "label": "Which number does the WhatsApp assistant use?",
+      "short": "WhatsApp number",
+      "options": {
+        "new": {
+          "label": "A new number just for the assistant",
+          "help": "The client's own WhatsApp stays untouched. The website's WhatsApp button points to the new number."
+        },
+        "existing": {
+          "label": "The client's existing number",
+          "help": "Customers keep the number they know. Only works with the WhatsApp Business app, and every message to that number reaches the assistant. Not available yet."
+        }
+      },
+      "appLabel": "Which WhatsApp does the client use today?",
+      "app": {
+        "business": "WhatsApp Business",
+        "personal": "Regular WhatsApp",
+        "unknown": "Not sure"
+      }
+    },
+    "whatsappConnect": {
+      "label": "Connect WhatsApp",
+      "short": "WhatsApp connection",
+      "help": "Set up the number, then the client logs in with Facebook to register the WhatsApp sender. Pick the inbound campaign so first-time senders get an answer.",
+      "noAccount": "Open the Integrations tab to connect WhatsApp."
     }
   },
   "facts": {
     "placeholder": "Type the answer here…",
-    "negotiation": { "label": "Room for negotiation", "short": "Negotiation", "help": "Is there usually room for negotiation? Can the assistant hint that the price may be flexible, and how far can it go?", "negative": "We don't have room to negotiate on price." },
-    "financing": { "label": "Financing", "short": "Financing", "help": "Do you offer financing? Through whom, and what should the assistant say about it?", "negative": "We don't offer financing." },
-    "installments": { "label": "Installments", "short": "Installments", "help": "Can customers pay in installments? What terms (number of instalments, deposit)?", "negative": "We don't offer installment payments." },
-    "deliveryTime": { "label": "Delivery time", "short": "Delivery time", "help": "Do you have a standard delivery time? Is it stated in the quote? If yes, the assistant refers to the quote; if not, what can it tell the customer?", "negative": "We don't have a standard delivery time. It depends on the project." },
-    "guarantees": { "label": "Guarantees & warranty", "short": "Guarantees", "help": "What guarantees or warranties do you offer? Anything the assistant can mention to build trust?", "negative": "We don't offer any specific guarantees beyond the legal minimum." },
+    "negotiation": {
+      "label": "Room for negotiation",
+      "short": "Negotiation",
+      "help": "Is there usually room for negotiation? Can the assistant hint that the price may be flexible, and how far can it go?",
+      "negative": "We don't have room to negotiate on price."
+    },
+    "financing": {
+      "label": "Financing",
+      "short": "Financing",
+      "help": "Do you offer financing? Through whom, and what should the assistant say about it?",
+      "negative": "We don't offer financing."
+    },
+    "installments": {
+      "label": "Installments",
+      "short": "Installments",
+      "help": "Can customers pay in installments? What terms (number of instalments, deposit)?",
+      "negative": "We don't offer installment payments."
+    },
+    "deliveryTime": {
+      "label": "Delivery time",
+      "short": "Delivery time",
+      "help": "Do you have a standard delivery time? Is it stated in the quote? If yes, the assistant refers to the quote; if not, what can it tell the customer?",
+      "negative": "We don't have a standard delivery time. It depends on the project."
+    },
+    "guarantees": {
+      "label": "Guarantees & warranty",
+      "short": "Guarantees",
+      "help": "What guarantees or warranties do you offer? Anything the assistant can mention to build trust?",
+      "negative": "We don't offer any specific guarantees beyond the legal minimum."
+    },
     "sensitiveTopics": {
       "label": "Sensitive topics",
       "short": "Sensitive topics",
@@ -218,5 +464,10 @@
         "formal": "Uiteraard. Kan ik {{you}} meer informatie verstrekken om tot een {{decision}} te komen?"
       }
     }
+  },
+  "callNotes": {
+    "title": "Call notes",
+    "hint": "Private. Saved as you type, never added to the knowledge base.",
+    "placeholder": "Write down what the client says during the call..."
   }
 }

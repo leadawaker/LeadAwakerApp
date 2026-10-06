@@ -49,7 +49,14 @@ const VISITOR_RE = /^[A-Za-z0-9]{8,40}$/;
 
 /** Mint a public widget key. Prefixed so it is recognisable in a page source. */
 function generateWidgetKey(): string {
-  return `wk_${randomBytes(18).toString("base64url").replace(/[^A-Za-z0-9]/g, "").slice(0, 24)}`;
+  // base64url's "-" and "_" are stripped, which shortens the string; 18 bytes
+  // left only 24 characters BEFORE stripping, so roughly half the keys came out
+  // too short for KEY_RE and every request on them was refused. Draw more bytes
+  // and retry in the rare case there are still not 24 left.
+  for (;;) {
+    const body = randomBytes(36).toString("base64url").replace(/[^A-Za-z0-9]/g, "").slice(0, 24);
+    if (body.length === 24) return `wk_${body}`;
+  }
 }
 
 // ── Domain allowlist ─────────────────────────────────────────────────────────

@@ -49,20 +49,41 @@
     "statusQuestion": {
       "label": "Qual pergunta de status combina melhor com vocês?",
       "options": {
-        "traject": { "label": "Trajetória", "example": "Waar staan jullie momenteel in het traject?" },
-        "project": { "label": "Projeto", "example": "Hoe kijken jullie momenteel naar het project?" },
-        "besluitvorming": { "label": "Tomada de decisão", "example": "Waar staan jullie momenteel in jullie besluitvorming?" }
+        "traject": {
+          "label": "Trajetória",
+          "example": "Waar staan jullie momenteel in het traject?"
+        },
+        "project": {
+          "label": "Projeto",
+          "example": "Hoe kijken jullie momenteel naar het project?"
+        },
+        "besluitvorming": {
+          "label": "Tomada de decisão",
+          "example": "Waar staan jullie momenteel in jullie besluitvorming?"
+        }
       }
     },
     "perception": {
       "label": "Como vocês querem ser percebidos? Escolha até 3.",
       "options": {
-        "persoonlijk": { "label": "Pessoal" },
-        "deskundig": { "label": "Especialista" },
-        "betrokken": { "label": "Engajado" },
-        "exclusief": { "label": "Exclusivo" },
-        "hoogwaardig": { "label": "Premium" },
-        "toegankelijk": { "label": "Acessível" }
+        "persoonlijk": {
+          "label": "Pessoal"
+        },
+        "deskundig": {
+          "label": "Especialista"
+        },
+        "betrokken": {
+          "label": "Engajado"
+        },
+        "exclusief": {
+          "label": "Exclusivo"
+        },
+        "hoogwaardig": {
+          "label": "Premium"
+        },
+        "toegankelijk": {
+          "label": "Acessível"
+        }
       }
     },
     "preferredWords": {
@@ -78,9 +99,18 @@
     "formality": {
       "label": "Quão formal a comunicação pode ser?",
       "levels": {
-        "informal": { "label": "Informal (je)", "example": "Hé Jan! Hoe staat het met jullie keukenplannen?" },
-        "neutral": { "label": "Neutra (je)", "example": "Hoi Jan, ik wilde even bij je informeren hoe het ervoor staat." },
-        "formal": { "label": "Formal (u)", "example": "Goedendag, ik neem contact met u op over uw aanvraag." }
+        "informal": {
+          "label": "Informal (je)",
+          "example": "Hé Jan! Hoe staat het met jullie keukenplannen?"
+        },
+        "neutral": {
+          "label": "Neutra (je)",
+          "example": "Hoi Jan, ik wilde even bij je informeren hoe het ervoor staat."
+        },
+        "formal": {
+          "label": "Formal (u)",
+          "example": "Goedendag, ik neem contact met u op over uw aanvraag."
+        }
       }
     },
     "objections": {
@@ -107,25 +137,231 @@
       "customPlaceholder": "Ou digite outro nome…",
       "avatarLabel": "Foto de perfil",
       "avatar": {
-        "logo": { "label": "Logo da empresa", "help": "Usar o logo do showroom como foto de perfil." },
-        "avatar": { "label": "Avatar do assistente", "help": "Usar uma foto de retrato do assistente." },
-        "avatarLogo": { "label": "Avatar com logo", "help": "Retrato do assistente com o logo da empresa no canto inferior." }
+        "logo": {
+          "label": "Logo da empresa",
+          "help": "Usar o logo do showroom como foto de perfil."
+        },
+        "avatar": {
+          "label": "Avatar do assistente",
+          "help": "Usar uma foto de retrato do assistente."
+        },
+        "avatarLogo": {
+          "label": "Avatar com logo",
+          "help": "Retrato do assistente com o logo da empresa no canto inferior."
+        }
       },
       "options": {
-        "thomas": { "label": "Thomas" },
-        "mark": { "label": "Mark" },
-        "sophie": { "label": "Sophie" },
-        "lisa": { "label": "Lisa" }
+        "thomas": {
+          "label": "Thomas"
+        },
+        "mark": {
+          "label": "Mark"
+        },
+        "sophie": {
+          "label": "Sophie"
+        },
+        "lisa": {
+          "label": "Lisa"
+        }
       }
+    },
+    "services": {
+      "label": "Quais serviços o cliente contrata?",
+      "short": "Serviços",
+      "help": "Marque tudo o que se aplica. Cada serviço adiciona uma seção curta no final. As perguntas comuns a todos os canais são feitas uma vez só.",
+      "options": {
+        "voice": {
+          "label": "Atendente por telefone",
+          "help": "A assistente atende as ligações que o cliente perde, agenda visitas ou horários e transfere compradores sérios."
+        },
+        "widget": {
+          "label": "Chat do site",
+          "help": "Um balão de chat no site do cliente que responde visitantes e agenda horários."
+        },
+        "whatsapp": {
+          "label": "Assistente de WhatsApp",
+          "help": "A assistente responde todos que mandam mensagem para o WhatsApp do cliente."
+        },
+        "dbr": {
+          "label": "Reativação de leads",
+          "help": "Campanhas de WhatsApp que trazem leads antigos da lista do cliente de volta à conversa."
+        }
+      }
+    },
+    "stockFeed": {
+      "label": "Existe uma lista atualizada de produtos ou estoque?",
+      "short": "Feed de estoque",
+      "help": "Se o site mostra o estoque atual (carros, imóveis, produtos), cole aqui o link da página ou do feed para a assistente sempre citar o que está disponível de verdade. Pule se não houver.",
+      "urlLabel": "Link do feed ou da página de estoque",
+      "urlPlaceholder": "https://www.exemplo.com.br/estoque/feed/",
+      "notesLabel": "Observações",
+      "notesPlaceholder": "ex.: os preços estão na página de estoque, o feed atualiza a cada hora"
+    },
+    "handoffContact": {
+      "label": "Quem a assistente deve chamar quando precisar de uma pessoa?",
+      "short": "Contato",
+      "help": "As ligações são transferidas para este número e os alertas de compradores sérios chegam aqui.",
+      "nameLabel": "Nome",
+      "namePlaceholder": "ex.: Thijs",
+      "numberLabel": "Celular"
+    },
+    "handoffRules": {
+      "label": "Quando a assistente pode te ligar ao vivo?",
+      "short": "Regras de transferência",
+      "ringLabel": "Ligação ao vivo para compradores sérios",
+      "options": {
+        "anytime": {
+          "label": "A qualquer hora",
+          "help": "Um comprador sério sempre vale uma ligação, também à noite ou no fim de semana."
+        },
+        "hours": {
+          "label": "No horário de atendimento",
+          "help": "Ao vivo dentro do horário. Fora dele, a assistente anota um recado ou agenda um retorno."
+        },
+        "never": {
+          "label": "Nunca, anote um recado",
+          "help": "A assistente nunca liga. Você recebe um recado e retorna você mesmo."
+        }
+      },
+      "recapLabel": "Resumo diário",
+      "recapHelp": "Um resumo curto do dia no WhatsApp: quem ligou ou mandou mensagem, sobre o quê, e o que precisa de você.",
+      "recapOn": "Sim",
+      "recapOff": "Não",
+      "recapTime": "Horário do resumo"
+    },
+    "voiceForwarding": {
+      "label": "Quais ligações vão para a assistente?",
+      "short": "Desvio de chamadas",
+      "help": "O cliente continua atendendo o próprio telefone. As ligações que ele perde são desviadas para o número da assistente.",
+      "linesLabel": "Qual linha",
+      "lines": {
+        "landline": "Telefone da empresa",
+        "mobile": "Celular"
+      },
+      "landlineNumber": "Número da empresa",
+      "landlineProvider": "Operadora",
+      "landlineProviderPlaceholder": "ex.: Vivo, Claro, TIM",
+      "landlineHelp": "Uma linha empresarial é desviada no portal ou app da operadora (\"desviar quando não atender\"), então tenha o login em mãos. Uma linha fixa comum pode usar códigos no próprio aparelho.",
+      "mobileNumber": "Celular",
+      "whenLabel": "Desviar quando",
+      "when": {
+        "noAnswer": "Não atender",
+        "busy": "Ocupado",
+        "unreachable": "Fora de área",
+        "always": "Sempre"
+      },
+      "codesLabel": "Digite isto no celular",
+      "aiNumber": "número-IA",
+      "cancelHint": "Para desfazer um desvio, digite ## com o mesmo número e # (ex.: ##61#)."
+    },
+    "voiceSound": {
+      "label": "Como a assistente deve soar?",
+      "short": "Voz e saudação",
+      "voiceLabel": "Voz",
+      "voices": {
+        "marin": "Natural, calorosa. A mais testada em holandês.",
+        "gleam": "Natural, clara e animada.",
+        "willow": "Natural, tom irlandês suave.",
+        "bossa": "Natural, português brasileiro."
+      },
+      "localeLabel": "Idioma",
+      "locales": {
+        "nl": "Holandês",
+        "en-GB": "Inglês (Reino Unido)",
+        "en-US": "Inglês (EUA)",
+        "pt-BR": "Português (BR)"
+      },
+      "greetingLabel": "Saudação",
+      "greetingHelp": "A primeira frase que quem liga ouve. Seja breve e diga que é uma assistente digital.",
+      "greetingPlaceholder": "ex.: Boa tarde, Robben Rosmalen, aqui é a Sanne, a assistente digital. Como posso ajudar?"
+    },
+    "voicePronunciation": {
+      "label": "Palavras que a assistente precisa pronunciar certo",
+      "short": "Pronúncia",
+      "help": "Marcas, modelos, nomes e ruas. Escreva como soa, do jeito que você soletraria para alguém.",
+      "wordPlaceholder": "Palavra, ex.: Porsche",
+      "sayAsPlaceholder": "Falar como, ex.: Pór-che",
+      "add": "Adicionar palavra",
+      "remove": "Remover"
+    },
+    "voiceAfterHours": {
+      "label": "O que acontece com ligações fora do horário?",
+      "short": "Fora do horário",
+      "help": "O horário de atendimento vem da etapa Disponibilidade.",
+      "options": {
+        "message": {
+          "label": "Anotar recado",
+          "help": "A assistente anota quem ligou e por quê, e o cliente retorna."
+        },
+        "callback": {
+          "label": "Agendar retorno",
+          "help": "A assistente marca um horário na agenda para o cliente retornar."
+        },
+        "ringHot": {
+          "label": "Ligar para compradores sérios",
+          "help": "Ligações comuns viram recado. Quem está pronto para comprar é transferido mesmo assim."
+        }
+      }
+    },
+    "widgetSetup": {
+      "label": "Configurar o chat do site",
+      "short": "Chat do site",
+      "help": "Crie a chave, preencha o domínio do site e escolha o visual. Envie o código para quem cuida do site."
+    },
+    "whatsappNumber": {
+      "label": "Qual número a assistente de WhatsApp usa?",
+      "short": "Número de WhatsApp",
+      "options": {
+        "new": {
+          "label": "Um número novo só para a assistente",
+          "help": "O WhatsApp do cliente fica intocado. O botão de WhatsApp do site passa a apontar para o número novo."
+        },
+        "existing": {
+          "label": "O número atual do cliente",
+          "help": "Os clientes continuam com o número que já conhecem. Só funciona com o WhatsApp Business, e toda mensagem para esse número chega à assistente. Ainda não disponível."
+        }
+      },
+      "appLabel": "Qual WhatsApp o cliente usa hoje?",
+      "app": {
+        "business": "WhatsApp Business",
+        "personal": "WhatsApp comum",
+        "unknown": "Não sei"
+      }
+    },
+    "whatsappConnect": {
+      "label": "Conectar o WhatsApp",
+      "short": "Conexão do WhatsApp",
+      "help": "Prepare o número, depois o cliente entra com o Facebook para registrar o remetente de WhatsApp. Escolha a campanha de entrada para que novos contatos recebam resposta.",
+      "noAccount": "Abra a aba Integrações para conectar o WhatsApp."
     }
   },
   "facts": {
     "placeholder": "Digite a resposta aqui…",
-    "negotiation": { "label": "Margem para negociação", "help": "Costuma haver margem para negociação? O assistente pode sugerir que o preço é flexível, e até onde pode ir?", "negative": "Não temos margem para negociar o preço." },
-    "financing": { "label": "Financiamento", "help": "Vocês oferecem financiamento? Por meio de quem, e o que o assistente deve dizer sobre isso?", "negative": "Não oferecemos financiamento." },
-    "installments": { "label": "Parcelamento", "help": "Os clientes podem pagar parcelado? Quais condições (número de parcelas, entrada)?", "negative": "Não oferecemos pagamento parcelado." },
-    "deliveryTime": { "label": "Prazo de entrega", "help": "Vocês têm um prazo de entrega padrão? Ele consta no orçamento? Se sim, o assistente remete ao orçamento; se não, o que ele pode dizer ao cliente?", "negative": "Não temos um prazo de entrega padrão — depende do projeto." },
-    "guarantees": { "label": "Garantias", "help": "Quais garantias vocês oferecem? Algo que o assistente possa mencionar para gerar confiança?", "negative": "Não oferecemos garantias específicas além do mínimo legal." },
+    "negotiation": {
+      "label": "Margem para negociação",
+      "help": "Costuma haver margem para negociação? O assistente pode sugerir que o preço é flexível, e até onde pode ir?",
+      "negative": "Não temos margem para negociar o preço."
+    },
+    "financing": {
+      "label": "Financiamento",
+      "help": "Vocês oferecem financiamento? Por meio de quem, e o que o assistente deve dizer sobre isso?",
+      "negative": "Não oferecemos financiamento."
+    },
+    "installments": {
+      "label": "Parcelamento",
+      "help": "Os clientes podem pagar parcelado? Quais condições (número de parcelas, entrada)?",
+      "negative": "Não oferecemos pagamento parcelado."
+    },
+    "deliveryTime": {
+      "label": "Prazo de entrega",
+      "help": "Vocês têm um prazo de entrega padrão? Ele consta no orçamento? Se sim, o assistente remete ao orçamento; se não, o que ele pode dizer ao cliente?",
+      "negative": "Não temos um prazo de entrega padrão — depende do projeto."
+    },
+    "guarantees": {
+      "label": "Garantias",
+      "help": "Quais garantias vocês oferecem? Algo que o assistente possa mencionar para gerar confiança?",
+      "negative": "Não oferecemos garantias específicas além do mínimo legal."
+    },
     "sensitiveTopics": {
       "label": "Temas sensíveis",
       "help": "Há temas que a IA deve evitar ou tratar com cuidado? Por exemplo: comparações de preço com concorrentes, produtos que vocês não oferecem mais, ou situações que possam gerar uma conversa difícil."
@@ -140,5 +376,23 @@
       "project": "Oi {{firstName}}, aqui é {{agentName}}. Passando para checar — como está o seu {{project}}?",
       "business": "Olá {{firstName}}, {{agentName}} aqui. Retorno rápido sobre o seu {{project}}. Ainda está considerando avançar?"
     }
+  },
+  "sections": {
+    "tone": "Identidade e estilo",
+    "identity": "Palavras e identidade",
+    "availability": "Disponibilidade",
+    "sales": "Argumentos de venda",
+    "facts": "Fatos e políticas",
+    "booking": "Agendamento",
+    "services": "Serviços",
+    "handoff": "Transferência",
+    "voice": "Atendente por telefone",
+    "widget": "Chat do site",
+    "whatsapp": "WhatsApp"
+  },
+  "callNotes": {
+    "title": "Anotações da conversa",
+    "hint": "Privado. Salvo enquanto você digita e nunca entra na base de conhecimento.",
+    "placeholder": "Anote o que o cliente diz durante a conversa..."
   }
 }

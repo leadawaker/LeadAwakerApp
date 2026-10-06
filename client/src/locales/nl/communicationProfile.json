@@ -46,7 +46,12 @@
     "availability": "Beschikbaarheid",
     "sales": "Verkoopargumenten",
     "facts": "Feiten & beleid",
-    "booking": "Afspraken instellen"
+    "booking": "Afspraken instellen",
+    "services": "Diensten",
+    "handoff": "Doorverbinden",
+    "voice": "Telefoonassistent",
+    "widget": "Websitechat",
+    "whatsapp": "WhatsApp"
   },
   "questions": {
     "meetingType": {
@@ -86,21 +91,42 @@
     "statusQuestion": {
       "label": "Welke statusvraag past het beste bij jullie?",
       "options": {
-        "traject": { "label": "Traject", "example": "Waar staan jullie momenteel in het traject?" },
-        "project": { "label": "Project", "example": "Hoe kijken jullie momenteel naar het project?" },
-        "besluitvorming": { "label": "Besluitvorming", "example": "Waar staan jullie momenteel in jullie besluitvorming?" }
+        "traject": {
+          "label": "Traject",
+          "example": "Waar staan jullie momenteel in het traject?"
+        },
+        "project": {
+          "label": "Project",
+          "example": "Hoe kijken jullie momenteel naar het project?"
+        },
+        "besluitvorming": {
+          "label": "Besluitvorming",
+          "example": "Waar staan jullie momenteel in jullie besluitvorming?"
+        }
       }
     },
     "perception": {
       "label": "Hoe willen jullie overkomen? Kies maximaal 3.",
       "short": "Perceptie",
       "options": {
-        "persoonlijk": { "label": "Persoonlijk" },
-        "deskundig": { "label": "Deskundig" },
-        "betrokken": { "label": "Betrokken" },
-        "exclusief": { "label": "Exclusief" },
-        "hoogwaardig": { "label": "Hoogwaardig" },
-        "toegankelijk": { "label": "Toegankelijk" }
+        "persoonlijk": {
+          "label": "Persoonlijk"
+        },
+        "deskundig": {
+          "label": "Deskundig"
+        },
+        "betrokken": {
+          "label": "Betrokken"
+        },
+        "exclusief": {
+          "label": "Exclusief"
+        },
+        "hoogwaardig": {
+          "label": "Hoogwaardig"
+        },
+        "toegankelijk": {
+          "label": "Toegankelijk"
+        }
       }
     },
     "preferredWords": {
@@ -118,9 +144,18 @@
       "label": "Hoe formeel mag de communicatie zijn?",
       "short": "Formaliteit",
       "levels": {
-        "informal": { "label": "Informeel (je)", "example": "Hé Jan! Hoe staat het met jullie keukenplannen?" },
-        "neutral": { "label": "Neutraal (je)", "example": "Hoi Jan, ik wilde even bij je informeren hoe het ervoor staat." },
-        "formal": { "label": "Formeel (u)", "example": "Goedendag, ik neem contact met u op over uw aanvraag." }
+        "informal": {
+          "label": "Informeel (je)",
+          "example": "Hé Jan! Hoe staat het met jullie keukenplannen?"
+        },
+        "neutral": {
+          "label": "Neutraal (je)",
+          "example": "Hoi Jan, ik wilde even bij je informeren hoe het ervoor staat."
+        },
+        "formal": {
+          "label": "Formeel (u)",
+          "example": "Goedendag, ik neem contact met u op over uw aanvraag."
+        }
       }
     },
     "differentiator": {
@@ -159,25 +194,236 @@
       "toggleGender": "Wissel tussen mannelijke en vrouwelijke avatar",
       "avatarLabel": "Profielfoto",
       "avatar": {
-        "logo": { "label": "Bedrijfslogo", "help": "Gebruik het logo van de showroom als profielfoto." },
-        "avatar": { "label": "Assistent-avatar", "help": "Gebruik een portretfoto van de assistent." },
-        "avatarLogo": { "label": "Avatar met logo", "help": "Portret van de assistent met het bedrijfslogo in de onderhoek." }
+        "logo": {
+          "label": "Bedrijfslogo",
+          "help": "Gebruik het logo van de showroom als profielfoto."
+        },
+        "avatar": {
+          "label": "Assistent-avatar",
+          "help": "Gebruik een portretfoto van de assistent."
+        },
+        "avatarLogo": {
+          "label": "Avatar met logo",
+          "help": "Portret van de assistent met het bedrijfslogo in de onderhoek."
+        }
       },
       "options": {
-        "thomas": { "label": "Thomas" },
-        "mark": { "label": "Mark" },
-        "sophie": { "label": "Sophie" },
-        "lisa": { "label": "Lisa" }
+        "thomas": {
+          "label": "Thomas"
+        },
+        "mark": {
+          "label": "Mark"
+        },
+        "sophie": {
+          "label": "Sophie"
+        },
+        "lisa": {
+          "label": "Lisa"
+        }
       }
+    },
+    "services": {
+      "label": "Welke diensten neemt de klant af?",
+      "short": "Diensten",
+      "help": "Vink alles aan wat van toepassing is. Elke dienst voegt aan het eind een eigen kort onderdeel toe. Vragen die voor elk kanaal gelden, stellen we maar één keer.",
+      "options": {
+        "voice": {
+          "label": "Telefoonassistent",
+          "help": "De assistent neemt gemiste oproepen aan, plant bezichtigingen of afspraken en verbindt serieuze kopers door."
+        },
+        "widget": {
+          "label": "Websitechat",
+          "help": "Een chatbubbel op de website van de klant die bezoekers antwoordt en afspraken plant."
+        },
+        "whatsapp": {
+          "label": "WhatsApp-assistent",
+          "help": "De assistent beantwoordt iedereen die het WhatsApp-nummer van de klant een bericht stuurt."
+        },
+        "dbr": {
+          "label": "Leads reactiveren",
+          "help": "WhatsApp-campagnes die oude leads uit de lijst van de klant weer in gesprek brengen."
+        }
+      }
+    },
+    "stockFeed": {
+      "label": "Is er een actuele lijst met aanbod of voorraad?",
+      "short": "Voorraadfeed",
+      "help": "Toont de website actuele voorraad (auto's, woningen, producten)? Plak hier de link naar de pagina of feed, dan noemt de assistent altijd wat er echt is. Sla over als die er niet is.",
+      "urlLabel": "Link naar feed of aanbodpagina",
+      "urlPlaceholder": "https://www.voorbeeld.nl/aanbod/feed/",
+      "notesLabel": "Notities",
+      "notesPlaceholder": "bijv. prijzen staan op de aanbodpagina, de feed ververst elk uur"
+    },
+    "handoffContact": {
+      "label": "Wie moet de assistent bereiken als er een mens nodig is?",
+      "short": "Contactpersoon",
+      "help": "Gesprekken worden naar dit nummer doorverbonden en meldingen over serieuze kopers komen hier binnen.",
+      "nameLabel": "Naam",
+      "namePlaceholder": "bijv. Thijs",
+      "numberLabel": "Mobiel nummer"
+    },
+    "handoffRules": {
+      "label": "Wanneer mag de assistent je live bellen?",
+      "short": "Doorverbindregels",
+      "ringLabel": "Live bellen bij serieuze kopers",
+      "options": {
+        "anytime": {
+          "label": "Altijd",
+          "help": "Een serieuze koper is altijd een telefoontje waard, ook 's avonds of in het weekend."
+        },
+        "hours": {
+          "label": "Tijdens openingstijden",
+          "help": "Live binnen openingstijden. Daarbuiten noteert de assistent een bericht of plant een terugbelafspraak."
+        },
+        "never": {
+          "label": "Nooit, noteer een bericht",
+          "help": "De assistent belt nooit. Je krijgt een bericht en belt zelf terug."
+        }
+      },
+      "recapLabel": "Dagoverzicht",
+      "recapHelp": "Een kort WhatsApp-overzicht van de dag: wie belde of appte, waarover, en wat er op jou wacht.",
+      "recapOn": "Ja",
+      "recapOff": "Nee",
+      "recapTime": "Tijd van het overzicht"
+    },
+    "voiceForwarding": {
+      "label": "Welke gesprekken gaan naar de assistent?",
+      "short": "Doorschakelen",
+      "help": "De klant blijft zelf opnemen. Gesprekken die hij mist, worden doorgeschakeld naar het nummer van de assistent.",
+      "linesLabel": "Welke lijn",
+      "lines": {
+        "landline": "Bedrijfsnummer",
+        "mobile": "Mobiel"
+      },
+      "landlineNumber": "Bedrijfsnummer",
+      "landlineProvider": "Provider",
+      "landlineProviderPlaceholder": "bijv. KPN, Voys, Ziggo",
+      "landlineHelp": "Een zakelijke lijn schakel je door in het portaal of de app van de provider (\"doorschakelen bij geen gehoor\"), dus houd de inlog bij de hand. Een klassieke vaste lijn kan met codes op het toestel zelf.",
+      "mobileNumber": "Mobiel nummer",
+      "whenLabel": "Doorschakelen bij",
+      "when": {
+        "noAnswer": "Geen gehoor",
+        "busy": "In gesprek",
+        "unreachable": "Onbereikbaar",
+        "always": "Altijd"
+      },
+      "codesLabel": "Toets dit in op de mobiel",
+      "aiNumber": "AI-nummer",
+      "cancelHint": "Doorschakelen ongedaan maken: toets ## met hetzelfde nummer en # (bijv. ##61#)."
+    },
+    "voiceSound": {
+      "label": "Hoe moet de assistent klinken?",
+      "short": "Stem & begroeting",
+      "voiceLabel": "Stem",
+      "voices": {
+        "marin": "Natuurlijk, warm. Het best getest voor Nederlands.",
+        "gleam": "Natuurlijk, helder en vrolijk.",
+        "willow": "Natuurlijk, zachte Ierse toon.",
+        "bossa": "Natuurlijk, Braziliaans Portugees."
+      },
+      "localeLabel": "Taal",
+      "locales": {
+        "nl": "Nederlands",
+        "en-GB": "Engels (VK)",
+        "en-US": "Engels (VS)",
+        "pt-BR": "Portugees (BR)"
+      },
+      "greetingLabel": "Begroeting",
+      "greetingHelp": "De eerste zin die bellers horen. Houd het kort en zeg dat het een digitale assistent is.",
+      "greetingPlaceholder": "bijv. Goedemiddag, Robben Rosmalen, u spreekt met Sanne, de digitale assistent. Waarmee kan ik u helpen?"
+    },
+    "voicePronunciation": {
+      "label": "Woorden die de assistent goed moet uitspreken",
+      "short": "Uitspraak",
+      "help": "Merken, modellen, namen en straatnamen. Schrijf op hoe het klinkt, zoals je het aan iemand zou voorspellen.",
+      "wordPlaceholder": "Woord, bijv. Porsche",
+      "sayAsPlaceholder": "Uitspreken als, bijv. Por-sjuh",
+      "add": "Woord toevoegen",
+      "remove": "Verwijderen"
+    },
+    "voiceAfterHours": {
+      "label": "Wat gebeurt er met gesprekken buiten openingstijden?",
+      "short": "Buiten openingstijden",
+      "help": "De openingstijden komen uit de stap Beschikbaarheid.",
+      "options": {
+        "message": {
+          "label": "Bericht noteren",
+          "help": "De assistent noteert wie er belde en waarom, en de klant belt terug."
+        },
+        "callback": {
+          "label": "Terugbelafspraak plannen",
+          "help": "De assistent plant een moment in de agenda waarop de klant terugbelt."
+        },
+        "ringHot": {
+          "label": "Bellen bij serieuze kopers",
+          "help": "Gewone gesprekken krijgen een bericht. Een beller die wil kopen, wordt toch doorverbonden."
+        }
+      }
+    },
+    "widgetSetup": {
+      "label": "De websitechat instellen",
+      "short": "Websitechat",
+      "help": "Maak de sleutel aan, vul het domein van de website in en kies het uiterlijk. Stuur de code naar wie de website beheert."
+    },
+    "whatsappNumber": {
+      "label": "Welk nummer gebruikt de WhatsApp-assistent?",
+      "short": "WhatsApp-nummer",
+      "options": {
+        "new": {
+          "label": "Een nieuw nummer, alleen voor de assistent",
+          "help": "De eigen WhatsApp van de klant blijft onaangeroerd. De WhatsApp-knop op de website wijst naar het nieuwe nummer."
+        },
+        "existing": {
+          "label": "Het bestaande nummer van de klant",
+          "help": "Klanten houden het nummer dat ze kennen. Werkt alleen met de WhatsApp Business-app, en elk bericht naar dat nummer komt bij de assistent. Nog niet beschikbaar."
+        }
+      },
+      "appLabel": "Welke WhatsApp gebruikt de klant nu?",
+      "app": {
+        "business": "WhatsApp Business",
+        "personal": "Gewone WhatsApp",
+        "unknown": "Weet ik niet"
+      }
+    },
+    "whatsappConnect": {
+      "label": "WhatsApp koppelen",
+      "short": "WhatsApp-koppeling",
+      "help": "Zet het nummer klaar, daarna logt de klant in met Facebook om de WhatsApp-afzender te registreren. Kies de inkomende campagne, zodat nieuwe afzenders antwoord krijgen.",
+      "noAccount": "Open het tabblad Integraties om WhatsApp te koppelen."
     }
   },
   "facts": {
     "placeholder": "Typ hier het antwoord…",
-    "negotiation": { "label": "Onderhandelingsruimte", "short": "Onderhandelingsruimte", "help": "Is er meestal ruimte om te onderhandelen? Mag de assistent hinten dat de prijs flexibel kan zijn, en hoe ver kan dat gaan?", "negative": "We hebben geen ruimte om te onderhandelen over de prijs." },
-    "financing": { "label": "Financiering", "short": "Financiering", "help": "Bieden jullie financiering aan? Via wie, en wat moet de assistent erover zeggen?", "negative": "We bieden geen financiering aan." },
-    "installments": { "label": "Termijnbetaling", "short": "Termijnbetaling", "help": "Kunnen klanten in termijnen betalen? Welke voorwaarden (aantal termijnen, aanbetaling)?", "negative": "We bieden geen termijnbetalingen aan." },
-    "deliveryTime": { "label": "Levertijd", "short": "Levertijd", "help": "Hebben jullie een standaard levertijd? Staat die in de offerte? Zo ja, dan verwijst de assistent naar de offerte; zo nee, wat kan de assistent dan tegen de klant zeggen?", "negative": "We hebben geen vaste levertijd. Dat hangt af van het project." },
-    "guarantees": { "label": "Garanties", "short": "Garanties", "help": "Welke garanties bieden jullie? Iets dat de assistent kan noemen om vertrouwen op te bouwen?", "negative": "We bieden geen specifieke garanties buiten het wettelijke minimum." },
+    "negotiation": {
+      "label": "Onderhandelingsruimte",
+      "short": "Onderhandelingsruimte",
+      "help": "Is er meestal ruimte om te onderhandelen? Mag de assistent hinten dat de prijs flexibel kan zijn, en hoe ver kan dat gaan?",
+      "negative": "We hebben geen ruimte om te onderhandelen over de prijs."
+    },
+    "financing": {
+      "label": "Financiering",
+      "short": "Financiering",
+      "help": "Bieden jullie financiering aan? Via wie, en wat moet de assistent erover zeggen?",
+      "negative": "We bieden geen financiering aan."
+    },
+    "installments": {
+      "label": "Termijnbetaling",
+      "short": "Termijnbetaling",
+      "help": "Kunnen klanten in termijnen betalen? Welke voorwaarden (aantal termijnen, aanbetaling)?",
+      "negative": "We bieden geen termijnbetalingen aan."
+    },
+    "deliveryTime": {
+      "label": "Levertijd",
+      "short": "Levertijd",
+      "help": "Hebben jullie een standaard levertijd? Staat die in de offerte? Zo ja, dan verwijst de assistent naar de offerte; zo nee, wat kan de assistent dan tegen de klant zeggen?",
+      "negative": "We hebben geen vaste levertijd. Dat hangt af van het project."
+    },
+    "guarantees": {
+      "label": "Garanties",
+      "short": "Garanties",
+      "help": "Welke garanties bieden jullie? Iets dat de assistent kan noemen om vertrouwen op te bouwen?",
+      "negative": "We bieden geen specifieke garanties buiten het wettelijke minimum."
+    },
     "sensitiveTopics": {
       "label": "Gevoelige onderwerpen",
       "short": "Gevoelige onderwerpen",
@@ -218,5 +464,10 @@
         "formal": "Uiteraard. Kan ik {{you}} meer informatie verstrekken om tot een {{decision}} te komen?"
       }
     }
+  },
+  "callNotes": {
+    "title": "Gespreksnotities",
+    "hint": "Prive. Wordt tijdens het typen opgeslagen en komt nooit in de kennisbank.",
+    "placeholder": "Noteer wat de klant tijdens het gesprek zegt..."
   }
 }

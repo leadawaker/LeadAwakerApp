@@ -7,6 +7,7 @@ import { InvoicesPanel } from "./InvoicesPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { KBPanel } from "./knowledge/KBPanel";
 import { CommunicationProfilePanel } from "./communication/CommunicationProfilePanel";
+import { CallNotes } from "./communication/CallNotes";
 import type { AccountRow, AccountDetail, WorkspaceTab, CampaignRowData, ContractRowData, TeamMemberData } from "./types";
 
 interface OverviewData {
@@ -67,8 +68,9 @@ export function TabContent({ tab, isMobile, data, readOnly = false }: {
   );
   if (tab === "communication") return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
-      <CommunicationProfilePanel accountId={data.accountId} niche={data.account.business_niche} accountName={data.account.name} accountLogoUrl={data.account.logo_url} readOnly={readOnly} onWizardActiveChange={setCommWizardActive} />
+      <CommunicationProfilePanel accountId={data.accountId} niche={data.account.business_niche} accountName={data.account.name} accountLogoUrl={data.account.logo_url} readOnly={readOnly} onWizardActiveChange={setCommWizardActive} account={data.account} detail={data.d} onSaveAccount={data.onSave} />
       {!readOnly && !commWizardActive && <KBPanel accountId={data.accountId} collapsible defaultCollapsed titleOverride="Company Intel" insetCrisp />}
+      {!readOnly && <CallNotes account={data.account} onSave={data.onSave} />}
     </div>
   );
   return null;

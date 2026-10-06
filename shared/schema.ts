@@ -298,6 +298,11 @@ export const accountCommunicationProfile = nocodb.table("Account_Communication_P
   perception: jsonb("perception").$type<string[]>(),
   bookingUrl: text("booking_url"),           // calendar / booking link the AI sends to leads
   differentiator: text("differentiator"),    // why customers choose them (newline-separated USP lines)
+  // Receptionist onboarding (specs/receptionist-onboarding): which services the
+  // client takes, and the per-service answers (handoff, voice, whatsapp, stock).
+  // Stored only; the engine does not read `setup` yet.
+  services: jsonb("services").$type<string[]>(),
+  setup: jsonb("setup").$type<Record<string, unknown>>(),
   // Wizard progress.
   status: text("status"),                    // draft | in_progress | completed
   completedAt: timestamp("completed_at", { withTimezone: true }),
@@ -314,6 +319,8 @@ export const insertAccountCommunicationProfileSchema = createInsertSchema(accoun
     decisionTerm: z.string().optional(),
   }).nullish(),
   completedAt: z.coerce.date().nullish(),
+  services: z.array(z.enum(["voice", "widget", "whatsapp", "dbr"])).nullish(),
+  setup: z.record(z.string(), z.unknown()).nullish(),
 }).omit({
   id: true,
   createdAt: true,

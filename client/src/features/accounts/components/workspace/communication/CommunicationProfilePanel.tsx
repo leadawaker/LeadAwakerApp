@@ -2,14 +2,16 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessagesSquare, CheckCircle2, Pencil } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
+import { fetchWidgetConfigs } from "@/features/accounts/api/widgetApi";
 import { Panel } from "../atoms";
 import { useCommunicationProfile } from "./useCommunicationProfile";
 import { useOnboardingFacts, type QAGrids } from "./useOnboardingFacts";
 import { ProfileWizard } from "./ProfileWizard";
 import { ProfileSummary, type BookingSnapshot } from "./ProfileSummary";
 import { EMPTY_ANSWERS, recommendStatus, recommendedDefaults, type ProfileAnswers, type FactValues } from "./profileConstants";
+import type { AccountRow, AccountDetail } from "../types";
 
-export function CommunicationProfilePanel({ accountId, niche, accountName, accountLogoUrl, fill = true, fillHeight = false, readOnly = false, onWizardActiveChange }: { accountId: number; niche?: string | null; accountName?: string; accountLogoUrl?: string | null; fill?: boolean; fillHeight?: boolean; readOnly?: boolean; onWizardActiveChange?: (active: boolean) => void }) {
+export function CommunicationProfilePanel({ accountId, niche, accountName, accountLogoUrl, fill = true, fillHeight = false, readOnly = false, onWizardActiveChange, account, detail, onSaveAccount }: { accountId: number; niche?: string | null; accountName?: string; accountLogoUrl?: string | null; fill?: boolean; fillHeight?: boolean; readOnly?: boolean; onWizardActiveChange?: (active: boolean) => void; account?: AccountRow; detail?: AccountDetail; onSaveAccount?: (field: string, value: string) => Promise<void> }) {
   const { t } = useTranslation("communicationProfile");
   const { profile, loading, saving, save } = useCommunicationProfile(accountId);
   const { values: factValues, grids, loading: factsLoading, saveAll } = useOnboardingFacts(accountId);
@@ -27,9 +29,13 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
   useEffect(() => {
     if (!showSummary) return;
     let cancelled = false;
-    apiFetch(`/api/accounts/${accountId}`)
-      .then((res) => (res.ok ? res.json() : null))
-      .then((data) => {
+    // The widget's allowlisted domains feed the summary's website-chat row
+    // (empty = the key is not live anywhere yet).
+    Promise.all([
+      apiFetch(`/api/accounts/${accountId}`).then((res) => (res.ok ? res.json() : null)),
+      fetchWidgetConfigs(accountId).catch(() => null),
+    ])
+      .then(([data, widgets]) => {
         if (cancelled || !data) return;
         setBooking({
           meetingType: data.meeting_type ?? null,
@@ -39,6 +45,8 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
           end: data.business_hours_end ?? null,
           durationMinutes: data.default_call_duration_minutes ?? null,
           noticeHours: data.min_booking_notice_hours ?? null,
+          whatsappSenderStatus: data.whatsapp_sender_status ?? null,
+          widgetDomains: widgets?.configs[0]?.allowedDomains ?? null,
         });
       })
       .catch(() => {});
@@ -122,6 +130,9 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
           onFinish={handleFinish}
           onClose={handleClose}
           bodyMaxHeight={(fill || fillHeight) ? undefined : 460}
+          account={account}
+          detail={detail}
+          onSaveAccount={onSaveAccount}
         />
       )}
     </Panel>
