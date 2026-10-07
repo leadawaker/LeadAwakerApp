@@ -3,7 +3,7 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { requireAuth, requireAgency } from "../auth";
 import { handleZodError, wrapAsync } from "./_helpers";
-import { AFTER_HOURS, VOICE_LOCALES, VoiceLineError } from "../storage/voiceLines";
+import { AFTER_HOURS, TRANSFER_WAITING, VOICE_LOCALES, VoiceLineError } from "../storage/voiceLines";
 
 // Account Workspace "Voice" tab (specs/voice-tab). Reads are open to the
 // account's own users; writes are agency-only.
@@ -23,6 +23,7 @@ const putBodySchema = z.object({
   locale: z.enum(VOICE_LOCALES).nullable().optional(),
   transferNumber: clearableE164.optional(),
   transferName: z.string().trim().max(100).nullable().optional(),
+  transferWaiting: z.enum(TRANSFER_WAITING).optional(),
   greeting: z.string().max(500).optional(),
   pronunciation: z.array(z.object({
     word: z.string().max(80),

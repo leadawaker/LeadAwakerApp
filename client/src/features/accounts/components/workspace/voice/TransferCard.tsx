@@ -2,13 +2,17 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PhoneForwarded } from "lucide-react";
 import { VoiceCardShell, FieldLabel, ReadOnlyValue, SaveRow, helpStyle, inputStyle, useDraft } from "./voiceAtoms";
-import { E164, normalizePhone, type VoiceLine, type VoiceLinePatch } from "./voiceApi";
+import { Chip } from "../communication/wizardAtoms";
+import { E164, TRANSFER_WAITING, normalizePhone, type VoiceLine, type VoiceLinePatch } from "./voiceApi";
 
 export function TransferCard({ line, canEdit, saving, onSave }: {
   line: VoiceLine; canEdit: boolean; saving: boolean; onSave: (patch: VoiceLinePatch) => Promise<boolean>;
 }) {
   const { t } = useTranslation("voiceTab");
-  const server = useMemo(() => ({ number: line.transferNumber ?? "", name: line.transferName ?? "" }), [line]);
+  const server = useMemo(
+    () => ({ number: line.transferNumber ?? "", name: line.transferName ?? "", waiting: line.transferWaiting ?? "sara" }),
+    [line],
+  );
   const { draft, setDraft, dirty, reset } = useDraft(server);
   const [error, setError] = useState<string | null>(null);
 
@@ -16,7 +20,7 @@ export function TransferCard({ line, canEdit, saving, onSave }: {
     setError(null);
     const number = normalizePhone(draft.number);
     if (number && !E164.test(number)) { setError(t("transfer.invalid")); return; }
-    const ok = await onSave({ transferNumber: number || null, transferName: draft.name.trim() || null });
+    const ok = await onSave({ transferNumber: number || null, transferName: draft.name.trim() || null, transferWaiting: draft.waiting });
     if (!ok) setError(t("common.saveFailed"));
   };
 
@@ -51,6 +55,17 @@ export function TransferCard({ line, canEdit, saving, onSave }: {
             />
           ) : <ReadOnlyValue value={draft.name} />}
         </div>
+      </div>
+      <div style={{ marginTop: 16 }}>
+        <FieldLabel>{t("transfer.waiting.label")}</FieldLabel>
+        {canEdit ? (
+          <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
+            {TRANSFER_WAITING.map((k) => (
+              <Chip key={k} selected={draft.waiting === k} onClick={() => setDraft((d) => ({ ...d, waiting: k }))} label={t(`transfer.waiting.${k}`)} />
+            ))}
+          </div>
+        ) : <ReadOnlyValue value={t(`transfer.waiting.${draft.waiting}`)} />}
+        <p style={{ ...helpStyle, margin: "8px 0 0" }}>{t("transfer.waiting.help")}</p>
       </div>
       {canEdit && <SaveRow dirty={dirty} saving={saving} error={error} onSave={submit} onReset={() => { setError(null); reset(); }} />}
     </VoiceCardShell>

@@ -24,6 +24,10 @@ export interface VoicePersona {
   isLive: boolean;
 }
 
+/** What a caller hears while a screened transfer rings the owner. */
+export const TRANSFER_WAITING = ["sara", "hold"] as const;
+export type TransferWaiting = (typeof TRANSFER_WAITING)[number];
+
 export interface VoiceLine {
   accountId: number;
   number: VoiceNumber | null;
@@ -34,6 +38,7 @@ export interface VoiceLine {
   locale: string | null;
   transferNumber: string | null;
   transferName: string | null;
+  transferWaiting: TransferWaiting;
   greeting: string | null;
   pronunciation: PronunciationRow[] | null;
   afterHours: AfterHoursMode | null;
@@ -54,6 +59,7 @@ export interface VoiceLinePatch {
   locale?: string | null;
   transferNumber?: string | null;
   transferName?: string | null;
+  transferWaiting?: TransferWaiting;
   greeting?: string | null;
   pronunciation?: PronunciationRow[];
   afterHours?: AfterHoursMode | null;

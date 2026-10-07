@@ -76,7 +76,13 @@
     "number": "Doorschakelnummer",
     "name": "Doorverbinden naar",
     "namePlaceholder": "bijv. Robben",
-    "invalid": "Gebruik het internationale formaat, bijvoorbeeld +31612345678."
+    "invalid": "Gebruik het internationale formaat, bijvoorbeeld +31612345678.",
+    "waiting": {
+      "label": "Terwijl we je bellen",
+      "sara": "De assistent houdt ze gezelschap",
+      "hold": "Wachtmuziek",
+      "help": "Voordat je wordt doorverbonden hoor je een korte samenvatting over de beller: druk 1 om het gesprek aan te nemen, of 2 en de assistent plant een terugbelafspraak. Ondertussen blijft de beller met de assistent praten of hoort wachtmuziek."
+    }
   },
   "extra": {
     "title": "Extra instructies",

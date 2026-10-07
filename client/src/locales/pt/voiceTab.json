@@ -76,7 +76,13 @@
     "number": "Número de transferência",
     "name": "Transferir para",
     "namePlaceholder": "ex.: Robben",
-    "invalid": "Use o formato internacional, por exemplo +5511912345678."
+    "invalid": "Use o formato internacional, por exemplo +5511912345678.",
+    "waiting": {
+      "label": "Enquanto ligamos para você",
+      "sara": "A assistente faz companhia",
+      "hold": "Música de espera",
+      "help": "Antes de ser conectado, você ouve um breve resumo sobre quem está ligando: pressione 1 para atender, ou 2 e a assistente agenda um retorno. Enquanto isso, a pessoa continua conversando com a assistente ou ouve música de espera."
+    }
   },
   "extra": {
     "title": "Instruções extras",

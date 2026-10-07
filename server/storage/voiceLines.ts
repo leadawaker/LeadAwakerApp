@@ -24,6 +24,8 @@ import {
 
 export const VOICE_LOCALES = ["nl", "en-GB", "en-US", "pt-BR"] as const;
 export const AFTER_HOURS = ["message", "callback", "ringHot"] as const;
+/** What a caller hears while a screened transfer rings the owner. */
+export const TRANSFER_WAITING = ["sara", "hold"] as const;
 
 export interface PronunciationRow { word: string; sayAs: string }
 
@@ -37,6 +39,7 @@ export interface VoiceLine {
   locale: string | null;
   transferNumber: string | null;
   transferName: string | null;
+  transferWaiting: (typeof TRANSFER_WAITING)[number];
   greeting: string;
   pronunciation: PronunciationRow[];
   afterHours: (typeof AFTER_HOURS)[number] | null;
@@ -61,6 +64,7 @@ export interface VoiceLinePatch {
   locale?: string | null;
   transferNumber?: string | null;
   transferName?: string | null;
+  transferWaiting?: (typeof TRANSFER_WAITING)[number];
   greeting?: string;
   pronunciation?: PronunciationRow[];
   afterHours?: (typeof AFTER_HOURS)[number] | null;
@@ -173,6 +177,7 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     locale,
     transferNumber,
     transferName: text(handoff.name) || null,
+    transferWaiting: text(handoff.waiting) === "hold" ? "hold" : "sara",
     greeting: typeof voiceSetup.greeting === "string" ? voiceSetup.greeting : "",
     pronunciation,
     afterHours,
@@ -273,6 +278,7 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   if (patch.extraInstructions !== undefined) setVoice("extraInstructions", patch.extraInstructions);
   if (patch.transferNumber !== undefined) setHandoff("number", patch.transferNumber ?? "");
   if (patch.transferName !== undefined) setHandoff("name", patch.transferName ?? "");
+  if (patch.transferWaiting !== undefined) setHandoff("waiting", patch.transferWaiting);
 
   const set: Partial<typeof accountCommunicationProfile.$inferInsert> = {};
   // Same exclusivity as the wizard: a preset clears the custom name and back.

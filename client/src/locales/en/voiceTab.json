@@ -76,7 +76,13 @@
     "number": "Transfer number",
     "name": "Transfer to",
     "namePlaceholder": "e.g. Robben",
-    "invalid": "Use international format, for example +31612345678."
+    "invalid": "Use international format, for example +31612345678.",
+    "waiting": {
+      "label": "While we ring you",
+      "sara": "The assistant keeps them company",
+      "hold": "Hold music",
+      "help": "Before you are connected you hear a short brief about the caller: press 1 to take the call, or 2 and the assistant books a callback. Meanwhile the caller either keeps chatting with the assistant or hears hold music."
+    }
   },
   "extra": {
     "title": "Extra instructions",
