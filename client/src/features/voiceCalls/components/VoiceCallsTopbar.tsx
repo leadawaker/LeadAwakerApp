@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { VoiceScope } from "../api/voiceCallsApi";
+import { VIEWS, type VoiceView } from "../callers";
 import type { ListOptions } from "../listOptions";
 import { AccountFilter, type AccountOption } from "./AccountFilter";
 import { PresentingToggle } from "./PresentingToggle";
@@ -14,6 +15,9 @@ interface Props {
   /** Owner only: shows the Live | Demo tabs, the account chip and the Presenting toggle. */
   isOwner: boolean;
   onScope: (s: VoiceScope) => void;
+  /** Calls or Callers: shown to everyone with access. */
+  view: VoiceView;
+  onView: (v: VoiceView) => void;
   options: ListOptions;
   setOptions: (patch: Partial<ListOptions>) => void;
   languages: string[];
@@ -24,7 +28,7 @@ interface Props {
   onTogglePresenting: () => void;
 }
 
-export function VoiceCallsTopbar({ scope, isOwner, onScope, options, setOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
+export function VoiceCallsTopbar({ scope, isOwner, onScope, view, onView, options, setOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
   const { t } = useTranslation("voiceCalls");
   return (
     <div className="la-page-header" style={{ gap: 12, padding: "0 17px", overflowX: "auto" }}>
@@ -50,6 +54,22 @@ export function VoiceCallsTopbar({ scope, isOwner, onScope, options, setOptions,
         </div>
       )}
 
+      <div className="la-seg shrink-0" role="tablist" aria-label={t("callers.view.aria")}>
+        {VIEWS.map((v) => (
+          <button
+            key={v}
+            role="tab"
+            aria-selected={view === v}
+            data-testid={`voice-view-${v}`}
+            className={cn("la-seg-btn", view === v && "on")}
+            style={{ padding: "8px 14px", fontSize: 11, letterSpacing: "0.13em" }}
+            onClick={() => onView(v)}
+          >
+            {t(`callers.view.${v}`)}
+          </button>
+        ))}
+      </div>
+
       <div style={{ flex: 1 }} />
 
       <div className="hidden md:flex" style={{ alignItems: "center", gap: 6, background: "var(--bg)", borderRadius: "var(--r-surface)", boxShadow: "var(--sh-inset-crisp)", padding: "7px 12px", width: 200, flexShrink: 0 }}>
@@ -57,8 +77,8 @@ export function VoiceCallsTopbar({ scope, isOwner, onScope, options, setOptions,
         <input
           value={options.query}
           onChange={(e) => setOptions({ query: e.target.value })}
-          placeholder={t("search")}
-          aria-label={t("search")}
+          placeholder={view === "callers" ? t("callers.search") : t("search")}
+          aria-label={view === "callers" ? t("callers.search") : t("search")}
           style={{ border: "none", outline: "none", background: "transparent", fontSize: 12.5, color: "var(--ink)", flex: 1, fontFamily: "var(--sans)", minWidth: 0 }}
         />
       </div>
@@ -67,7 +87,7 @@ export function VoiceCallsTopbar({ scope, isOwner, onScope, options, setOptions,
         <AccountFilter accounts={accounts} value={accountId} onChange={onAccount} />
       )}
 
-      <VoiceCallsMenus options={options} setOptions={setOptions} languages={languages} />
+      {view === "calls" && <VoiceCallsMenus options={options} setOptions={setOptions} languages={languages} />}
 
       {isOwner && <PresentingToggle masked={masked} onToggle={onTogglePresenting} />}
     </div>

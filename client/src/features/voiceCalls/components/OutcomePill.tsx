@@ -4,7 +4,7 @@ import type { VoiceOutcome } from "../api/voiceCallsApi";
 import { normalizeOutcome, OUTCOME_LABEL_KEY, outcomeColors } from "../status";
 
 /** "Thu 14:30" from the booked timestamp, else whatever text the call stored. */
-function slotLabel(bookedIso: string | null | undefined, bookedSlot: string | null | undefined, locale: string): string | null {
+export function slotLabel(bookedIso: string | null | undefined, bookedSlot: string | null | undefined, locale: string): string | null {
   if (bookedIso) {
     const d = new Date(bookedIso);
     if (!Number.isNaN(d.getTime())) {

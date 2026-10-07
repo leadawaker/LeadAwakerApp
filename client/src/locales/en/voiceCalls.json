@@ -137,5 +137,36 @@
   "accountFilter": {
     "all": "All accounts",
     "label": "Account"
+  },
+  "callers": {
+    "view": {
+      "calls": "Calls",
+      "callers": "Callers",
+      "aria": "View"
+    },
+    "callCount_one": "{{count}} call",
+    "callCount_other": "{{count}} calls",
+    "lead": "Lead",
+    "booked": "Booked",
+    "callBack": "Call back",
+    "whatsapp": "WhatsApp",
+    "callAnyway": "Call anyway",
+    "warnDnd": "This person asked not to be contacted.",
+    "warnOutOfHours": "It is outside business hours for this account right now.",
+    "noNumber": "No phone number on file",
+    "calledBackBy": "Called back by {{name}}, {{when}}",
+    "hubspot": {
+      "push": "Push to HubSpot",
+      "pushing": "Pushing",
+      "inHubspot": "In HubSpot",
+      "update": "Update HubSpot",
+      "failed": "Failed, retry",
+      "open": "Open the contact in HubSpot"
+    },
+    "calls": "Calls",
+    "empty": "Select a caller to see their calls.",
+    "back": "Back to callers",
+    "dismiss": "Dismiss",
+    "search": "Search callers…"
   }
 }

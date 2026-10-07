@@ -105,7 +105,7 @@ interface ItemExtras {
   accountName: string | null;
 }
 
-function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
+export function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
   const end = row.endedAt ?? (x.lastTurn ? new Date(x.lastTurn) : null);
   const durationSeconds = end
     ? Math.max(0, Math.round((end.getTime() - row.startedAt.getTime()) / 1000))
@@ -147,12 +147,12 @@ function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
 }
 
 /** Live ALWAYS excludes demo calls, whoever asks. */
-function scopeWhere(scope: VoiceScope, accountId: number | null): SQL {
+export function scopeWhere(scope: VoiceScope, accountId: number | null): SQL {
   const base = scope === "demo" ? sql`${isDemoSql}` : sql`NOT ${isDemoSql}`;
   return accountId === null ? base : sql`${base} AND ${voiceCalls.accountsId} = ${accountId}`;
 }
 
-function itemColumns(includeAccountName: boolean) {
+export function itemColumns(includeAccountName: boolean) {
   return {
     call: voiceCalls,
     lastTurn: lastTurnAt,

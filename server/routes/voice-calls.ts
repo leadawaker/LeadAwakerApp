@@ -4,6 +4,7 @@ import { storage } from "../storage";
 import { requireAuth, scopeToAccount } from "../auth";
 import { wrapAsync } from "./_helpers";
 import { decideScope, resolveVoiceAccess, type VoiceAccess } from "./voiceCallsAccess";
+import { registerVoiceCallersRoutes } from "./voiceCallers";
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 const guards = [requireAuth, scopeToAccount];
@@ -90,6 +91,9 @@ export function registerVoiceCallsRoutes(app: Express): void {
     });
     res.json({ calls });
   }));
+
+  // Before "/:callId", or "callers" would be read as a call id.
+  registerVoiceCallersRoutes(app, guards, accessOf);
 
   app.get("/api/voice-calls/:callId/recording", ...guards, wrapAsync(proxyRecording));
 

@@ -1016,6 +1016,9 @@ export const leadsTags = nocodb.table("Leads_Tags", {
   accountName: text("account_name"),
   tagName: text("tag_name"),
 }, (t) => [
+  // HubSpot contact pushed from the Voice calls Callers view, so a re-push
+  // updates the same contact (scripts/migrate-leads-hubspot-contact-id.mjs).
+  hubspotContactId: text("hubspot_contact_id"),
   index("leads_tags_leads_id_idx").on(t.leadsId),
   index("leads_tags_tags_id_idx").on(t.tagsId),
 ]);

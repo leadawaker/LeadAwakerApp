@@ -137,5 +137,36 @@
   "accountFilter": {
     "all": "Todas as contas",
     "label": "Conta"
+  },
+  "callers": {
+    "view": {
+      "calls": "Ligações",
+      "callers": "Quem ligou",
+      "aria": "Visualização"
+    },
+    "callCount_one": "{{count}} ligação",
+    "callCount_other": "{{count}} ligações",
+    "lead": "Lead",
+    "booked": "Agendado",
+    "callBack": "Retornar ligação",
+    "whatsapp": "WhatsApp",
+    "callAnyway": "Ligar mesmo assim",
+    "warnDnd": "Esta pessoa pediu para não ser contatada.",
+    "warnOutOfHours": "Agora está fora do horário de atendimento desta conta.",
+    "noNumber": "Nenhum telefone cadastrado",
+    "calledBackBy": "Retornado por {{name}}, {{when}}",
+    "hubspot": {
+      "push": "Enviar para o HubSpot",
+      "pushing": "Enviando",
+      "inHubspot": "No HubSpot",
+      "update": "Atualizar no HubSpot",
+      "failed": "Falhou, tentar de novo",
+      "open": "Abrir o contato no HubSpot"
+    },
+    "calls": "Ligações",
+    "empty": "Selecione uma pessoa para ver as ligações.",
+    "back": "Voltar para a lista",
+    "dismiss": "Fechar",
+    "search": "Buscar pessoas…"
   }
 }

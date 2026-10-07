@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 
 export type VoiceOutcome = "booked" | "callback" | "transferred" | "hung_up" | "other";
@@ -131,5 +131,93 @@ export function useVoiceCall(callId: string | null) {
       if (!call || call.summary) return false;
       return Date.now() - new Date(call.startedAt).getTime() < STILL_LIVE_MS ? 15_000 : false;
     },
+  });
+}
+
+/** Mirrors VoiceCaller in server/storage/voiceCallers.ts: one row per person Sara spoke to. */
+export interface VoiceCaller {
+  /** "lead:<id>" or "num:<number>". */
+  key: string;
+  leadsId: number | null;
+  name: string | null;
+  /** Null when no number is on file ("web" callers). */
+  phone: string | null;
+  /** Owner only, else null. */
+  email: string | null;
+  callCount: number;
+  lastCallAt: string;
+  lastCallId: string;
+  latestOutcome: VoiceOutcome;
+  bestOutcome: VoiceOutcome;
+  bookedSlot: string | null;
+  bookedIso: string | null;
+  /** Latest call's persona, Demo only. */
+  personaCompany: string | null;
+  leadStatus: string | null;
+  dnd: boolean;
+  outOfHours: boolean;
+  /** Owner only, else null. */
+  hubspotContactId: string | null;
+  lastCalledBackAt: string | null;
+  lastCalledBackBy: string | null;
+  accountId: number;
+  /** Only populated for agency users. */
+  accountName: string | null;
+}
+
+export type CallBackChannel = "phone" | "whatsapp";
+export interface CallBackResult { lastCalledBackAt: string | null; lastCalledBackBy: string | null }
+export interface HubspotPushResult { contactId: string; url: string; noteCreated: boolean }
+
+const CALLERS_KEY = "/api/voice-calls/callers";
+
+export function hubspotContactUrl(contactId: string): string {
+  return `https://app-eu1.hubspot.com/contacts/148429886/record/0-1/${encodeURIComponent(contactId)}`;
+}
+
+export function useVoiceCallers(scope: VoiceScope, accountId?: number, enabled = true) {
+  return useQuery<VoiceCaller[]>({
+    queryKey: [CALLERS_KEY, scope, accountId ?? null],
+    enabled,
+    queryFn: async () => {
+      const qs = new URLSearchParams({ scope });
+      if (accountId != null) qs.set("accountId", String(accountId));
+      const res = await apiFetch(`${CALLERS_KEY}?${qs}`);
+      if (!res.ok) throw new Error("Failed to load voice callers");
+      return (await res.json()).callers ?? [];
+    },
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+}
+
+async function postJson<T>(url: string, body: unknown): Promise<T> {
+  const res = await apiFetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.message || `${res.status}`);
+  }
+  return res.json();
+}
+
+/** Logs a human call back on the lead (an internal Interaction, never a message to the lead). */
+export function useCallBack() {
+  const qc = useQueryClient();
+  return useMutation<CallBackResult, Error, { leadsId: number; channel: CallBackChannel }>({
+    mutationFn: ({ leadsId, channel }) => postJson(`${CALLERS_KEY}/${leadsId}/call-back`, { channel }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [CALLERS_KEY] }),
+  });
+}
+
+/** Owner only: creates or updates the caller's HubSpot contact. */
+export function usePushToHubspot() {
+  const qc = useQueryClient();
+  return useMutation<HubspotPushResult, Error, { leadsId: number }>({
+    mutationFn: ({ leadsId }) => postJson(`${CALLERS_KEY}/${leadsId}/hubspot`, {}),
+    onSuccess: () => qc.invalidateQueries({ queryKey: [CALLERS_KEY] }),
   });
 }

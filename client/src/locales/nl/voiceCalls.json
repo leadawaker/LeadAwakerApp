@@ -137,5 +137,36 @@
   "accountFilter": {
     "all": "Alle accounts",
     "label": "Account"
+  },
+  "callers": {
+    "view": {
+      "calls": "Gesprekken",
+      "callers": "Bellers",
+      "aria": "Weergave"
+    },
+    "callCount_one": "{{count}} gesprek",
+    "callCount_other": "{{count}} gesprekken",
+    "lead": "Lead",
+    "booked": "Geboekt",
+    "callBack": "Terugbellen",
+    "whatsapp": "WhatsApp",
+    "callAnyway": "Toch bellen",
+    "warnDnd": "Deze persoon wil niet benaderd worden.",
+    "warnOutOfHours": "Het is nu buiten de openingstijden van dit account.",
+    "noNumber": "Geen telefoonnummer bekend",
+    "calledBackBy": "Teruggebeld door {{name}}, {{when}}",
+    "hubspot": {
+      "push": "Naar HubSpot",
+      "pushing": "Bezig met versturen",
+      "inHubspot": "In HubSpot",
+      "update": "HubSpot bijwerken",
+      "failed": "Mislukt, opnieuw",
+      "open": "Contact openen in HubSpot"
+    },
+    "calls": "Gesprekken",
+    "empty": "Kies een beller om de gesprekken te zien.",
+    "back": "Terug naar bellers",
+    "dismiss": "Sluiten",
+    "search": "Zoek bellers…"
   }
 }

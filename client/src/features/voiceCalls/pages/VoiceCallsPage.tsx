@@ -2,8 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AudioLines } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
-import { useVoiceCalls, useVoiceCapabilities, type VoiceCapabilities, type VoiceScope } from "../api/voiceCallsApi";
+import { useVoiceCallers, useVoiceCalls, useVoiceCapabilities, type VoiceCapabilities, type VoiceScope } from "../api/voiceCallsApi";
+import { VIEW_KEY, type VoiceView } from "../callers";
 import type { AccountOption } from "../components/AccountFilter";
+import { CallersInbox } from "../components/CallersInbox";
 import { StatsStrip } from "../components/StatsStrip";
 import { VoiceCallsInbox } from "../components/VoiceCallsInbox";
 import { VoiceCallsTopbar } from "../components/VoiceCallsTopbar";
@@ -18,6 +20,10 @@ function initialScope(): VoiceScope | null {
   return saved === "live" || saved === "demo" ? saved : null;
 }
 
+function initialView(): VoiceView {
+  return readPref(VIEW_KEY) === "callers" ? "callers" : "calls";
+}
+
 function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }) {
   // The server decides: only an Owner (not impersonating) gets `demo`.
   const isOwner = capabilities.demo;
@@ -29,6 +35,9 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
 
   const { data: calls = [], isLoading, error } = useVoiceCalls(scope, accountId);
   const [selection, setSelection] = useState<string | null>(null);
+  const [view, setView] = useState<VoiceView>(initialView);
+  const callersQuery = useVoiceCallers(scope, accountId, view === "callers");
+  const [callerSelection, setCallerSelection] = useState<string | null>(null);
   const [options, setOptionsState] = useState<ListOptions>({ query: "", outcomes: [], statuses: [], languages: [], sort: "recent", group: "date" });
   const setOptions = (patch: Partial<ListOptions>) => setOptionsState((o) => ({ ...o, ...patch }));
   const languages = useMemo(() => Array.from(new Set(calls.map((c) => c.language ?? ""))).sort(), [calls]);
@@ -53,10 +62,16 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
     setSavedScope(s);
     writePref(SCOPE_KEY, s);
     setSelection(null);
+    setCallerSelection(null);
+  };
+  const changeView = (v: VoiceView) => {
+    setView(v);
+    writePref(VIEW_KEY, v);
   };
   const changeAccount = (id: number | undefined) => {
     setAccountPick(id);
     setSelection(null);
+    setCallerSelection(null);
   };
 
   return (
@@ -65,6 +80,8 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
         scope={scope}
         isOwner={isOwner}
         onScope={changeScope}
+        view={view}
+        onView={changeView}
         options={options}
         setOptions={setOptions}
         languages={languages}
@@ -78,16 +95,31 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
       <StatsStrip scope={scope} accountId={accountId} />
 
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        <VoiceCallsInbox
-          calls={calls}
-          isLoading={isLoading}
-          error={error}
-          options={options}
-          scope={scope}
-          masked={masked}
-          selection={selection}
-          setSelection={setSelection}
-        />
+        {view === "callers" ? (
+          <CallersInbox
+            callers={callersQuery.data ?? []}
+            calls={calls}
+            isLoading={callersQuery.isLoading}
+            error={callersQuery.error}
+            query={options.query}
+            scope={scope}
+            masked={masked}
+            isOwner={isOwner}
+            selection={callerSelection}
+            setSelection={setCallerSelection}
+          />
+        ) : (
+          <VoiceCallsInbox
+            calls={calls}
+            isLoading={isLoading}
+            error={error}
+            options={options}
+            scope={scope}
+            masked={masked}
+            selection={selection}
+            setSelection={setSelection}
+          />
+        )}
       </div>
     </div>
   );
