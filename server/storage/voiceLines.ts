@@ -213,7 +213,8 @@ function assertAttachable(row: VoiceNumber, accountId: number) {
   if (row.accountsId != null && row.accountsId !== accountId) {
     throw new VoiceLineError(409, "That number is already assigned to another account.");
   }
-  if (row.costOwner === "agency") {
+  // The agency account (id 1) may hold its own demo line, so Sara is editable in its Voice tab.
+  if (row.costOwner === "agency" && accountId !== 1) {
     throw new VoiceLineError(409, "That is an agency line and cannot be assigned to a client.");
   }
 }
