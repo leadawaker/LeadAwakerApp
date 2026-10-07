@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Phone, Loader2, Unlink } from "lucide-react";
 import { VoiceCardShell, FieldLabel, helpStyle, inputStyle } from "./voiceAtoms";
 import { useUnassignedNumbers } from "./useVoiceLine";
+import { GoLiveControl } from "./GoLiveControl";
 import { E164, normalizePhone, type NumberStatus, type VoiceLine, type VoiceLinePatch } from "./voiceApi";
 
 const STATUS_TONE: Record<NumberStatus, { bg: string; fg: string }> = {
@@ -70,6 +71,7 @@ export function NumberCard({ line, canEdit, saving, onSave }: {
             </button>
           )}
         </div>
+        {canEdit && <GoLiveControl line={line} saving={saving} onSave={onSave} />}
       </div>
 
       {canEdit && (

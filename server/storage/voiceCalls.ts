@@ -11,6 +11,7 @@ import {
   lastTurnAt,
   leadPhoneOf,
   leadStatusOf,
+  testAccountIdSql,
 } from "./voiceCallsSql";
 
 export type { VoiceOutcome };
@@ -148,7 +149,8 @@ export function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
 
 /** Live ALWAYS excludes demo calls, whoever asks. */
 export function scopeWhere(scope: VoiceScope, accountId: number | null): SQL {
-  const base = scope === "demo" ? sql`${isDemoSql}` : sql`NOT ${isDemoSql}`;
+  // Test calls are listed on the tested client's Voice tab instead.
+  const base = scope === "demo" ? sql`${isDemoSql} AND ${testAccountIdSql} IS NULL` : sql`NOT ${isDemoSql}`;
   return accountId === null ? base : sql`${base} AND ${voiceCalls.accountsId} = ${accountId}`;
 }
 
@@ -178,6 +180,17 @@ export const voiceCallsStorage = {
       .orderBy(desc(voiceCalls.startedAt))
       .limit(opts.limit)
       .offset(opts.offset);
+    return rows.map((r) => toItem(r.call, r));
+  },
+
+  /** Browser test calls of one client's line, newest first (Voice tab). */
+  async listTestCalls(accountId: number, limit = 10): Promise<VoiceCallListItem[]> {
+    const rows = await db
+      .select(itemColumns(false))
+      .from(voiceCalls)
+      .where(sql`${testAccountIdSql} = ${accountId}`)
+      .orderBy(desc(voiceCalls.startedAt))
+      .limit(limit);
     return rows.map((r) => toItem(r.call, r));
   },
 

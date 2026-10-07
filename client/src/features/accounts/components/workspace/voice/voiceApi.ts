@@ -2,6 +2,7 @@
 // contract in specs/voice-tab/implementation-plan.md. camelCase on the wire.
 import { apiFetch } from "@/lib/apiUtils";
 import type { PronunciationRow } from "../communication/setupConstants";
+import type { VoiceCallListItem } from "@/features/voiceCalls/api/voiceCallsApi";
 
 export type NumberStatus = "not_set" | "pending" | "live";
 export type AfterHoursMode = "message" | "callback" | "ringHot";
@@ -57,6 +58,8 @@ export interface VoiceLinePatch {
   pronunciation?: PronunciationRow[];
   afterHours?: AfterHoursMode | null;
   extraInstructions?: string;
+  /** Switch the attached number on (real callers reach her) or off. */
+  live?: boolean;
 }
 
 export interface VoiceStats {
@@ -84,6 +87,7 @@ export const normalizePhone = (v: string) => v.replace(/[\s().-]/g, "");
 export const voiceLineKey = (accountId: number) => ["/api/accounts", accountId, "voice"] as const;
 export const voiceStatsKey = (accountId: number, month: string) => ["/api/accounts", accountId, "voice-stats", month] as const;
 export const UNASSIGNED_KEY = ["/api/voice-numbers/unassigned"] as const;
+export const testCallsKey = (accountId: number) => ["/api/accounts", accountId, "voice", "test-calls"] as const;
 
 async function readError(res: Response, fallback: string): Promise<Error> {
   const body = await res.json().catch(() => ({}));
@@ -115,5 +119,11 @@ export async function fetchVoiceStats(accountId: number, month: string): Promise
 export async function fetchUnassignedNumbers(): Promise<UnassignedNumber[]> {
   const res = await apiFetch("/api/voice-numbers/unassigned");
   if (!res.ok) throw await readError(res, "Failed to load numbers");
+  return res.json();
+}
+
+export async function fetchTestCalls(accountId: number): Promise<VoiceCallListItem[]> {
+  const res = await apiFetch(`/api/accounts/${accountId}/voice/test-calls`);
+  if (!res.ok) throw await readError(res, "Failed to load test calls");
   return res.json();
 }

@@ -95,7 +95,7 @@
     "title": "Try her out",
     "help": "Talk to her in your browser, exactly as a caller on this line would hear her: this client's persona, voice, greeting, hours and setup. No phone needed.",
     "call": "Test in browser",
-    "filedNote": "Opens in a new tab. Test calls are filed under the demo account, not this client's stats.",
+    "filedNote": "Opens in a new tab. Test calls show below, not in this client's stats or CRM.",
     "needsPersona": "Create the live persona first.",
     "promptTitle": "What she is told",
     "promptFailed": "Could not load the prompt.",
@@ -108,6 +108,19 @@
       "greeting": "The instruction she gets when the call opens.",
       "layer": "Her voice prompt: tone, address form, pronunciation and how a phone call goes.",
       "backend": "The backend that answers for her: business facts, knowledge, hours, after-hours and booking rules."
-    }
+    },
+    "recentTitle": "Recent test calls",
+    "recentEmpty": "No test calls yet. Press Test in browser to make one.",
+    "callFailed": "This call could not be loaded."
+  },
+  "live": {
+    "goLive": "Go live",
+    "readyHelp": "Everything is ready. Going live lets real callers on this number reach her.",
+    "confirmHelp": "Calls to {{number}} will be answered by the assistant from now on. Make sure the number is pointed at the voice connection in Telnyx.",
+    "confirm": "Yes, go live",
+    "cancel": "Cancel",
+    "isLive": "Live: calls to {{number}} are answered by the assistant.",
+    "takeOffline": "Take offline",
+    "notReady": "Can go live once these are done: {{items}}."
   }
 }

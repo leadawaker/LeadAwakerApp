@@ -11,6 +11,7 @@ import { Headphones, Loader2, PhoneCall } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { VoiceCardShell, FieldLabel, helpStyle } from "./voiceAtoms";
 import type { VoiceLine } from "./voiceApi";
+import { TestCallsList } from "./TestCallsList";
 
 type Kind = "greeting" | "layer" | "backend";
 const KINDS: Kind[] = ["greeting", "layer", "backend"];
@@ -76,6 +77,8 @@ export function TestCard({ line }: { line: VoiceLine }) {
           {canTest ? t("test.filedNote") : t("test.needsPersona")}
         </span>
       </div>
+
+      {canTest && <TestCallsList accountId={line.accountId} />}
 
       {canTest && (
         <div style={{ marginTop: 20 }}>

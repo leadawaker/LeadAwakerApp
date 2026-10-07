@@ -57,6 +57,12 @@ Agency-only card under the dashboard (`TestCard.tsx`):
 - **Test in browser** opens `/voice-demo?account=<id>&company=…&locale=…&start=1` in a new tab. The engine's browser door (`/voice/live/session`, field `account`, staff only via the CRM-minted admin pass) answers exactly as the account's line: its `Voice_Numbers` row (real number first), else its live persona, so a client can be tried before a number is attached. Test calls file under the demo account (1), not the client's stats.
 - **What she is told**: the greeting instruction, the voice layer and the backend prompt, rendered by the engine's `/voice/prompt-preview` with `account_id` and no text (the saved prompts), via `POST /api/voice-prompts/preview` with `accountId`. Same builder as a call, so it cannot drift. It shows the phone version (transfer section included when a transfer number is set).
 
+- **Recent test calls** (BUILT 2026-10-07): a test call stays in the demo account (its lead, transcript and any booking never touch the client's CRM or calendar). The engine tags it `Voice_Calls.test_account_id` (session id → account, `persona_registry`), the card lists the last 10 with transcript, recording and recap, and the Demo tab leaves them out.
+
+### Go live (BUILT 2026-10-07)
+
+The Number card's "Go live" sets the attached real number's `enabled = true` after a confirm step that names the number; "Take offline" sets it false. `PUT /api/accounts/:id/voice { live }` refuses going live (409) unless every readiness item is green on the state saved in the same transaction. Pointing the number at the voice connection in Telnyx stays manual.
+
 ### Persona generation
 
 For a live persona the tab sets `company_name_template`, `description_template` (from `Accounts.business_description`), `usp` (from the profile differentiator), `service_name` and `niche_label` (from `business_niche`) in the account's voice locale slot with an `en` fallback. `kb_template` is left empty for live personas because the engine reads `Account_Knowledge_Base` directly.

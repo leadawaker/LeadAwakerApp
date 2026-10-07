@@ -30,6 +30,7 @@ const putBodySchema = z.object({
   })).max(50).optional(),
   afterHours: z.enum(AFTER_HOURS).nullable().optional(),
   extraInstructions: z.string().max(1000, "Extra instructions are limited to 1000 characters").optional(),
+  live: z.boolean().optional(),
 }).refine((b) => !(b.numberId !== undefined && b.phoneNumber !== undefined), {
   message: "Send either numberId or phoneNumber, not both",
   path: ["numberId"],
@@ -83,6 +84,13 @@ export function registerVoiceLineRoutes(app: Express): void {
       return res.status(400).json({ message: "month must be YYYY-MM" });
     }
     res.json(await storage.getAccountVoiceStats(accountId, month));
+  }));
+
+  // Agency only: a test call lives in the demo account, whose leads a client must not see.
+  app.get("/api/accounts/:id/voice/test-calls", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
+    res.json(await storage.listTestCalls(accountId));
   }));
 
   app.get("/api/voice-numbers/unassigned", requireAgency, wrapAsync(async (_req, res) => {

@@ -65,6 +65,8 @@ export interface VoiceLinePatch {
   pronunciation?: PronunciationRow[];
   afterHours?: (typeof AFTER_HOURS)[number] | null;
   extraInstructions?: string;
+  /** Switch the attached number on (answers real calls) or off. On needs every readiness item. */
+  live?: boolean;
 }
 
 /** A failure the route maps to an HTTP status. */
@@ -297,6 +299,22 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   }
 }
 
+/**
+ * Going live is the one switch that lets real callers reach her, so it is
+ * checked here and not only in the UI: every readiness item must be green, on
+ * the state this same transaction just saved. Going offline is always allowed.
+ */
+async function applyLive(tx: Tx, accountId: number, live: boolean) {
+  const st = await loadState(tx, accountId);
+  if (!st?.number) throw new VoiceLineError(409, "Attach a phone number first.");
+  if (live) {
+    const missing = toVoiceLine(accountId, st).readiness.items.filter((i) => !i.ok).map((i) => i.key);
+    if (missing.length) throw new VoiceLineError(409, `Not ready to go live: ${missing.join(", ")} missing.`);
+  }
+  await tx.update(voiceNumbers).set({ enabled: live, updatedAt: new Date() })
+    .where(eq(voiceNumbers.id, st.number.id));
+}
+
 async function saveVoiceLine(accountId: number, patch: VoiceLinePatch): Promise<VoiceLine | null> {
   const found = await db.transaction(async (tx) => {
     const [account] = await tx.select().from(accounts).where(eq(accounts.id, accountId));
@@ -331,6 +349,7 @@ async function saveVoiceLine(accountId: number, patch: VoiceLinePatch): Promise<
       mirror.clientNiche = persona.niche;
     }
     await tx.update(voiceNumbers).set(mirror).where(eq(voiceNumbers.accountsId, accountId));
+    if (patch.live !== undefined) await applyLive(tx, accountId, patch.live);
     return true;
   });
   return found ? getVoiceLine(accountId) : null;

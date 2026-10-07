@@ -29,6 +29,14 @@ export const isDemoSql = sql<boolean>`(
   OR (${voiceCalls.voiceNumbersId} IS NULL AND ${voiceCalls.campaignsId} IS NULL)
 )`;
 
+/**
+ * A staff test of a client's line (Voice tab "Test in browser"). It lives in
+ * the demo account but belongs to that client's Voice tab, not the Demo tab.
+ * The column is engine-owned (scripts/migrate_add_voice_call_test_account.py)
+ * and not in the Drizzle table, hence raw.
+ */
+export const testAccountIdSql = sql<number | null>`${voiceCalls}."test_account_id"`;
+
 // A call closed by wrap-up has ended_at. A tab closed first leaves it null, so
 // fall back to the call's last transcript turn.
 export const lastTurnAt = sql<string | null>`(

@@ -95,7 +95,7 @@
     "title": "Teste a assistente",
     "help": "Fale com ela no navegador, exatamente como quem liga para esta linha a ouviria: persona, voz, saudação, horários e configuração deste cliente. Sem telefone.",
     "call": "Testar no navegador",
-    "filedNote": "Abre em uma nova aba. Ligações de teste ficam na conta de demonstração, fora das estatísticas deste cliente.",
+    "filedNote": "Abre em uma nova aba. As ligações de teste aparecem abaixo, fora das estatísticas e do CRM deste cliente.",
     "needsPersona": "Crie a persona ao vivo primeiro.",
     "promptTitle": "O que ela recebe",
     "promptFailed": "Não foi possível carregar o prompt.",
@@ -108,6 +108,19 @@
       "greeting": "A instrução que ela recebe quando a ligação começa.",
       "layer": "O prompt de voz: tom, forma de tratamento, pronúncia e como uma ligação acontece.",
       "backend": "O backend que responde por ela: dados do negócio, conhecimento, horários, fora do horário e regras de agendamento."
-    }
+    },
+    "recentTitle": "Ligações de teste recentes",
+    "recentEmpty": "Nenhuma ligação de teste ainda. Clique em Testar no navegador para fazer uma.",
+    "callFailed": "Não foi possível carregar esta ligação."
+  },
+  "live": {
+    "goLive": "Ativar",
+    "readyHelp": "Tudo pronto. Ao ativar, quem ligar para este número fala com ela.",
+    "confirmHelp": "As ligações para {{number}} serão atendidas pela assistente a partir de agora. Confira se o número aponta para a conexão de voz na Telnyx.",
+    "confirm": "Sim, ativar",
+    "cancel": "Cancelar",
+    "isLive": "Ativa: as ligações para {{number}} são atendidas pela assistente.",
+    "takeOffline": "Desativar",
+    "notReady": "Pode ser ativada quando isto estiver pronto: {{items}}."
   }
 }

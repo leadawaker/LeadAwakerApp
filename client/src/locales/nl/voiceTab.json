@@ -95,7 +95,7 @@
     "title": "Probeer haar uit",
     "help": "Praat met haar in je browser, precies zoals een beller op deze lijn haar hoort: de persona, stem, begroeting, openingstijden en instellingen van deze klant. Geen telefoon nodig.",
     "call": "Test in browser",
-    "filedNote": "Opent in een nieuw tabblad. Testgesprekken komen bij het demo-account, niet in de cijfers van deze klant.",
+    "filedNote": "Opent in een nieuw tabblad. Testgesprekken staan hieronder, niet in de cijfers of het CRM van deze klant.",
     "needsPersona": "Maak eerst de live persona aan.",
     "promptTitle": "Wat ze te horen krijgt",
     "promptFailed": "De prompt kon niet worden geladen.",
@@ -108,6 +108,19 @@
       "greeting": "De instructie die ze krijgt als het gesprek begint.",
       "layer": "Haar stemprompt: toon, aanspreekvorm, uitspraak en hoe een telefoongesprek verloopt.",
       "backend": "De backend die voor haar antwoordt: bedrijfsgegevens, kennis, openingstijden, buiten kantoortijd en afspraakregels."
-    }
+    },
+    "recentTitle": "Recente testgesprekken",
+    "recentEmpty": "Nog geen testgesprekken. Klik op Test in browser om er een te doen.",
+    "callFailed": "Dit gesprek kon niet worden geladen."
+  },
+  "live": {
+    "goLive": "Live zetten",
+    "readyHelp": "Alles staat klaar. Live zetten betekent dat echte bellers op dit nummer haar krijgen.",
+    "confirmHelp": "Gesprekken naar {{number}} worden vanaf nu door de assistent aangenomen. Zorg dat het nummer in Telnyx naar de spraakverbinding wijst.",
+    "confirm": "Ja, zet live",
+    "cancel": "Annuleren",
+    "isLive": "Live: gesprekken naar {{number}} worden door de assistent aangenomen.",
+    "takeOffline": "Offline halen",
+    "notReady": "Kan live zodra dit klaar is: {{items}}."
   }
 }
