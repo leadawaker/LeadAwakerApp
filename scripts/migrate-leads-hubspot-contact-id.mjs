@@ -1,4 +1,6 @@
-// Adds Leads.hubspot_contact_id (Voice calls Callers view, Push to HubSpot).
+// Adds Leads.hubspot_contact_id and hubspot_pushed_at (Voice calls Callers view,
+// Push to HubSpot: the id makes a re-push update, the time limits its note to
+// calls since the last push).
 // Idempotent. Run: node --env-file=.env scripts/migrate-leads-hubspot-contact-id.mjs
 import pg from "pg";
 
@@ -8,11 +10,14 @@ try {
   await client.query(
     `ALTER TABLE p2mxx34fvbf3ll6."Leads" ADD COLUMN IF NOT EXISTS hubspot_contact_id text`,
   );
-  const { rows } = await client.query(
-    `SELECT data_type FROM information_schema.columns
-     WHERE table_schema = 'p2mxx34fvbf3ll6' AND table_name = 'Leads' AND column_name = 'hubspot_contact_id'`,
+  await client.query(
+    `ALTER TABLE p2mxx34fvbf3ll6."Leads" ADD COLUMN IF NOT EXISTS hubspot_pushed_at timestamptz`,
   );
-  console.log("Leads.hubspot_contact_id:", rows[0]?.data_type ?? "MISSING");
+  const { rows } = await client.query(
+    `SELECT column_name FROM information_schema.columns
+     WHERE table_schema = 'p2mxx34fvbf3ll6' AND table_name = 'Leads' AND column_name IN ('hubspot_contact_id', 'hubspot_pushed_at')`,
+  );
+  console.log("Leads hubspot columns:", rows.length === 2 ? "ok" : "MISSING");
 } finally {
   await client.end();
 }

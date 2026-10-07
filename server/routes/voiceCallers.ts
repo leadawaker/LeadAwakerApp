@@ -21,6 +21,13 @@ function leadIdParam(req: Request): number | null {
   return Number.isSafeInteger(n) && n > 0 ? n : null;
 }
 
+/** "Jan de Vries" gives Jan / de Vries; one word is a first name only. */
+function splitName(name: string | null): { first_name: string | null; last_name: string | null } {
+  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return { first_name: null, last_name: null };
+  return { first_name: words[0], last_name: words.slice(1).join(" ") || null };
+}
+
 function engineError(body: unknown, status: number): string {
   if (body && typeof body === "object" && "detail" in body) {
     const d = (body as { detail: unknown }).detail;
@@ -87,7 +94,11 @@ export function registerVoiceCallersRoutes(
     const lead = await storage.getCallerLead(leadsId, { accountId: null, allowDemo: true });
     if (!lead) return res.status(404).json({ message: "Caller not found" });
 
-    const recapLines = lead.calls.slice(0, RECAP_CALLS).map((c) => {
+    // A re-push notes only the calls made since the last push, so pushing twice
+    // does not stack identical notes; no new calls means no note.
+    const pushedAt = lead.hubspotPushedAt?.getTime() ?? null;
+    const newCalls = pushedAt === null ? lead.calls : lead.calls.filter((c) => new Date(c.startedAt).getTime() > pushedAt);
+    const recapLines = newCalls.slice(0, RECAP_CALLS).map((c) => {
       const line = `${c.startedAt.slice(0, 10)}: ${OUTCOME_LABEL[c.outcome]}`;
       return c.conclusion ? `${line}: ${c.conclusion}` : line;
     });
@@ -101,10 +112,10 @@ export function registerVoiceCallersRoutes(
         headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
         body: JSON.stringify({
           contact_id: lead.hubspotContactId,
-          first_name: lead.firstName,
-          last_name: lead.lastName,
+          // The caller's real name (never the number the demo stores as first name).
+          ...splitName(lead.name),
           email: lead.email,
-          phone: lead.phone, // as stored: the engine's phone search is an exact match
+          phone: lead.phone, // E.164 when the stored form allows it
           company_name: companyName,
           recap_lines: recapLines,
         }),

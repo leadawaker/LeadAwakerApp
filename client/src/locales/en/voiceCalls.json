@@ -125,7 +125,7 @@
     "label": "Presenting",
     "on": "Identities hidden",
     "off": "Identities shown",
-    "tooltip": "Hides caller names and numbers. Transcript text and audio are not hidden."
+    "tooltip": "Hides caller names and numbers, also in the transcript. The audio is not hidden."
   },
   "persona": {
     "universal": "Universal demo"

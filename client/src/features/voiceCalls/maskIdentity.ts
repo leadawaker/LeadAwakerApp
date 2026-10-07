@@ -36,7 +36,42 @@ export function maskNumber(raw: string | null | undefined): string | null {
 export function maskName(raw: string | null | undefined): string | null {
   const words = (raw ?? "").trim().split(/\s+/).filter(Boolean);
   if (words.length === 0) return null;
-  if (words.length === 1) return words[0];
+  // One word is the whole identity ("Gabriel"): keep only its initial.
+  if (words.length === 1) return `${words[0].charAt(0).toUpperCase()}.`;
   const last = words[words.length - 1];
   return `${words[0]} ${last.charAt(0).toUpperCase()}.`;
+}
+
+/** A run of digits long enough to be a phone number, with its usual separators. */
+const SPOKEN_NUMBER = /\+?\d[\d\s().-]{6,}\d/g;
+const MIN_SPOKEN_DIGITS = 8;
+/** Shorter name words ("de", "van") are too common to replace in running text. */
+const MIN_NAME_WORD = 3;
+
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function wholeWord(word: string): RegExp {
+  return new RegExp(`(?<![\\p{L}\\p{N}])${escapeRegExp(word)}(?![\\p{L}\\p{N}])`, "giu");
+}
+
+/**
+ * Transcript text in Presenting mode: the caller's known name and any phone
+ * number they read out are masked the same way as the header. Audio is not.
+ */
+export function maskSpoken(text: string, name: string | null | undefined): string {
+  let out = text.replace(SPOKEN_NUMBER, (m) =>
+    m.replace(/\D/g, "").length >= MIN_SPOKEN_DIGITS ? maskNumber(m) ?? m : m);
+  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!words.length) return out;
+  const masked = maskName(name) as string;
+  out = out.replace(wholeWord(words.join(" ")), masked);
+  // The first name stays visible for a multi-word name (as in maskName).
+  const hidden = words.length === 1 ? words : words.slice(1);
+  for (const w of hidden) {
+    if (w.length < MIN_NAME_WORD) continue;
+    out = out.replace(wholeWord(w), `${w.charAt(0).toUpperCase()}.`);
+  }
+  return out;
 }

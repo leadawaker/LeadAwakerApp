@@ -125,7 +125,7 @@
     "label": "Apresentando",
     "on": "Identidades ocultas",
     "off": "Identidades visíveis",
-    "tooltip": "Oculta nomes e números de quem ligou. O texto da transcrição e o áudio não são ocultados."
+    "tooltip": "Oculta nomes e números de quem ligou, também na transcrição. O áudio não é ocultado."
   },
   "persona": {
     "universal": "Demo universal"

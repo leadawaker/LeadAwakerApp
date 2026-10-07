@@ -1019,6 +1019,8 @@ export const leads = nocodb.table("Leads", {
   // HubSpot contact pushed from the Voice calls Callers view, so a re-push
   // updates the same contact (scripts/migrate-leads-hubspot-contact-id.mjs).
   hubspotContactId: text("hubspot_contact_id"),
+  // When the lead was last pushed: a re-push only notes calls after it.
+  hubspotPushedAt: timestamp("hubspot_pushed_at", { withTimezone: true }),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),

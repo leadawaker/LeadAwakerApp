@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AudioLines, Building2 } from "lucide-react";
 import { MonoLabel } from "@/features/voice/components/atoms";
 import { useVoiceCall, type VoiceCallDetail as Detail } from "../api/voiceCallsApi";
 import { formatDateTime, formatDuration } from "../format";
 import { callStatus } from "../status";
+import { maskSpoken } from "../maskIdentity";
 import { CallAvatar, callerIni, callerTitle, maskCaller } from "./bits";
 import { CallConversation } from "./CallConversation";
 import { CallRecap } from "./CallRecap";
@@ -65,10 +66,27 @@ function DetailHeader({ call, narrow }: { call: Detail; narrow: boolean }) {
   );
 }
 
+/** Presenting mode for the whole call: header via maskCaller, plus the name and
+ * numbers the caller says in the transcript and recap notes. Audio stays as is. */
+function maskDetail(call: Detail, masked: boolean): Detail {
+  if (!masked) return call;
+  const name = call.callerName;
+  const spoken = (text: string | null) => (text ? maskSpoken(text, name) : text);
+  return {
+    ...maskCaller(call, true),
+    turns: call.turns.map((turn) => ({ ...turn, content: spoken(turn.content) })),
+    summary: call.summary && {
+      ...call.summary,
+      name: maskCaller(call, true).callerName,
+      items: call.summary.items.map((item) => ({ ...item, interest: spoken(item.interest), notes: spoken(item.notes) })),
+    },
+  };
+}
+
 export function VoiceCallDetail({ callId, masked }: { callId: string; masked: boolean }) {
   const { t } = useTranslation("voiceCalls");
   const { data: rawCall, isLoading } = useVoiceCall(callId);
-  const call = rawCall ? maskCaller(rawCall, masked) : rawCall;
+  const call = useMemo(() => (rawCall ? maskDetail(rawCall, masked) : rawCall), [rawCall, masked]);
   const narrow = useNarrow();
 
   if (isLoading) return null;

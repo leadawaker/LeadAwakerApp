@@ -125,7 +125,7 @@
     "label": "Presenteren",
     "on": "Identiteiten verborgen",
     "off": "Identiteiten zichtbaar",
-    "tooltip": "Verbergt namen en nummers van bellers. Transcripttekst en audio blijven zichtbaar."
+    "tooltip": "Verbergt namen en nummers van bellers, ook in het transcript. De audio blijft hoorbaar."
   },
   "persona": {
     "universal": "Universele demo"

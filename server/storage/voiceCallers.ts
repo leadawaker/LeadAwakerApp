@@ -3,6 +3,7 @@ import { db } from "../db";
 import { accounts, interactions, leads, voiceCalls } from "@shared/schema";
 import type { VoiceOutcome } from "@shared/voiceOutcome";
 import { itemColumns, scopeWhere, toItem, type VoiceCallListItem, type VoiceScope } from "./voiceCalls";
+import { toE164 } from "@shared/phoneE164";
 import { bestOutcome, isDnd, isOutOfHours } from "./voiceCallersLogic";
 
 /** One row per person Sara spoke to (spec "API contract"). */
@@ -34,11 +35,12 @@ export interface CallerLead {
   leadsId: number;
   /** The account the action is logged under: the lead's, else its calls'. */
   accountId: number;
-  firstName: string | null;
-  lastName: string | null;
+  /** Lead name, else the name given on the latest call that has one. */
+  name: string | null;
   phone: string | null;
   email: string | null;
   hubspotContactId: string | null;
+  hubspotPushedAt: Date | null;
   /** The calls of this lead the user may see, newest first. */
   calls: VoiceCallListItem[];
 }
@@ -61,12 +63,19 @@ const leadColumns = {
   dncReason: leads.dncReason,
   conversionStatus: leads.conversionStatus,
   hubspotContactId: leads.hubspotContactId,
+  hubspotPushedAt: leads.hubspotPushedAt,
 };
 type LeadRow = { [K in keyof typeof leadColumns]: unknown } & { id: number | null };
 
 /** The demo stores the placeholder "web" as phone: that is not a number. */
 function realPhone(v: unknown): string | null {
   return typeof v === "string" && v.trim() !== "" && v.trim() !== "web" ? v : null;
+}
+
+/** E.164 when the stored form allows it ("06-..." becomes "+316..."), else as stored. */
+function dialPhone(v: unknown): string | null {
+  const phone = realPhone(v);
+  return phone ? toE164(phone) ?? phone : null;
 }
 
 /**
@@ -170,7 +179,7 @@ export const voiceCallersStorage = {
         key: g.key,
         leadsId: g.leadsId,
         name: (lead && fullName(lead.firstName, lead.lastName)) ?? summaryName,
-        phone: (lead && realPhone(lead.phone)) ?? realPhone(callNumber),
+        phone: (lead && dialPhone(lead.phone)) ?? dialPhone(callNumber),
         email: opts.isOwner && lead && typeof lead.email === "string" && lead.email ? lead.email : null,
         callCount: g.calls.length,
         lastCallAt: latest.startedAt,
@@ -218,15 +227,16 @@ export const voiceCallersStorage = {
     const leadAccount = typeof lead.accountsId === "number" ? lead.accountsId : null;
     // A locked user acts under their own account, whatever the lead row says.
     const accountId = opts.accountId ?? leadAccount ?? visible[0].call.accountsId;
+    const calls = visible.map((r) => toItem(r.call, r));
     return {
       leadsId,
       accountId,
-      firstName: lead.firstName ?? null,
-      lastName: lead.lastName ?? null,
-      phone: realPhone(lead.phone),
+      name: fullName(lead.firstName, lead.lastName) ?? calls.find((c) => c.callerName)?.callerName ?? null,
+      phone: dialPhone(lead.phone),
       email: typeof lead.email === "string" && lead.email ? lead.email : null,
       hubspotContactId: lead.hubspotContactId ?? null,
-      calls: visible.map((r) => toItem(r.call, r)),
+      hubspotPushedAt: lead.hubspotPushedAt instanceof Date ? lead.hubspotPushedAt : null,
+      calls,
     };
   },
 
@@ -263,7 +273,7 @@ export const voiceCallersStorage = {
   async setLeadHubspotContactId(leadsId: number, contactId: string): Promise<void> {
     await db
       .update(leads)
-      .set({ hubspotContactId: contactId, updatedAt: new Date() } as Partial<typeof leads.$inferInsert>)
+      .set({ hubspotContactId: contactId, hubspotPushedAt: new Date(), updatedAt: new Date() } as Partial<typeof leads.$inferInsert>)
       .where(eq(leads.id, leadsId));
   },
 };
