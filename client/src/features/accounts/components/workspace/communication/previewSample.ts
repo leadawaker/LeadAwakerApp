@@ -6,6 +6,7 @@ const PERCEPTION_GROUP: Record<string, string> = {
   persoonlijk: "warm",
   betrokken: "warm",
   toegankelijk: "warm",
+  speels: "warm",
   deskundig: "expert",
   hoogwaardig: "expert",
   exclusief: "exclusive",

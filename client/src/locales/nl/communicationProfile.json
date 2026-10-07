@@ -126,6 +126,9 @@
         },
         "toegankelijk": {
           "label": "Toegankelijk"
+        },
+        "speels": {
+          "label": "Speels"
         }
       }
     },
