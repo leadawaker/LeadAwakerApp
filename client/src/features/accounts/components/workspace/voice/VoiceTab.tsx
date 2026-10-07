@@ -11,6 +11,7 @@ import { AgentVoiceCard } from "./AgentVoiceCard";
 import { TransferCard } from "./TransferCard";
 import { ExtraInstructionsCard } from "./ExtraInstructionsCard";
 import { HoursCard, KnowledgeCard } from "./ReuseCards";
+import { TestCard } from "./TestCard";
 
 export function VoiceTab({ accountId, readOnly = false }: { accountId: number; readOnly?: boolean }) {
   const { t } = useTranslation("voiceTab");
@@ -39,6 +40,7 @@ export function VoiceTab({ accountId, readOnly = false }: { accountId: number; r
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }} data-testid="voice-tab">
       <ReadinessChecklist line={line} />
       <VoiceStatsRow accountId={accountId} />
+      {canEdit && <TestCard line={line} />}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 380px), 1fr))", gap: 22, alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
           <NumberCard {...card} />

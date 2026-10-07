@@ -90,5 +90,24 @@
     "title": "Knowledge base",
     "count_one": "{{count}} entry the assistant can use on calls.",
     "count_other": "{{count}} entries the assistant can use on calls."
+  },
+  "test": {
+    "title": "Try her out",
+    "help": "Talk to her in your browser, exactly as a caller on this line would hear her: this client's persona, voice, greeting, hours and setup. No phone needed.",
+    "call": "Test in browser",
+    "filedNote": "Opens in a new tab. Test calls are filed under the demo account, not this client's stats.",
+    "needsPersona": "Create the live persona first.",
+    "promptTitle": "What she is told",
+    "promptFailed": "Could not load the prompt.",
+    "kind": {
+      "greeting": "Greeting",
+      "layer": "How she speaks",
+      "backend": "What she knows and does"
+    },
+    "kindHelp": {
+      "greeting": "The instruction she gets when the call opens.",
+      "layer": "Her voice prompt: tone, address form, pronunciation and how a phone call goes.",
+      "backend": "The backend that answers for her: business facts, knowledge, hours, after-hours and booking rules."
+    }
   }
 }

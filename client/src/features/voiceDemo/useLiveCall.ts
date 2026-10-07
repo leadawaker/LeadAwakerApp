@@ -731,8 +731,10 @@ export function useLiveCall() {
             caller_number: setup.callerNumber,
             voice: setup.voice || null,
             token: new URLSearchParams(window.location.search).get("token") || null,
-            // Staff only: ?line=<Voice_Numbers id> answers as that client's phone line.
+            // Staff only: ?line=<Voice_Numbers id> or ?account=<Accounts id> (the
+            // Voice tab's Test button) answers as that client's phone line.
             line: Number(new URLSearchParams(window.location.search).get("line")) || null,
+            account: Number(new URLSearchParams(window.location.search).get("account")) || null,
             timezone: browserTimezone(),
             sdp: pc.localDescription?.sdp,
           }),

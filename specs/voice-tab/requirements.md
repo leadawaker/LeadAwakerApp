@@ -50,6 +50,13 @@ Mirrors are written in one server transaction by the tab's save. The tab is the 
 - **Persona card:** shows the linked live persona. "Create live persona" builds it from the account; the persona text fields are generated from account data (see below), not hand-edited.
 - **Extra instructions card:** plain textarea, character counter, agency-only edit in v1.
 
+### Try her out (added 2026-10-07, BUILT)
+
+Agency-only card under the dashboard (`TestCard.tsx`):
+
+- **Test in browser** opens `/voice-demo?account=<id>&company=…&locale=…&start=1` in a new tab. The engine's browser door (`/voice/live/session`, field `account`, staff only via the CRM-minted admin pass) answers exactly as the account's line: its `Voice_Numbers` row (real number first), else its live persona, so a client can be tried before a number is attached. Test calls file under the demo account (1), not the client's stats.
+- **What she is told**: the greeting instruction, the voice layer and the backend prompt, rendered by the engine's `/voice/prompt-preview` with `account_id` and no text (the saved prompts), via `POST /api/voice-prompts/preview` with `accountId`. Same builder as a call, so it cannot drift. It shows the phone version (transfer section included when a transfer number is set).
+
 ### Persona generation
 
 For a live persona the tab sets `company_name_template`, `description_template` (from `Accounts.business_description`), `usp` (from the profile differentiator), `service_name` and `niche_label` (from `business_niche`) in the account's voice locale slot with an `en` fallback. `kb_template` is left empty for live personas because the engine reads `Account_Knowledge_Base` directly.

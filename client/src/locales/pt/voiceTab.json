@@ -90,5 +90,24 @@
     "title": "Base de conhecimento",
     "count_one": "{{count}} entrada que o assistente pode usar nas chamadas.",
     "count_other": "{{count}} entradas que o assistente pode usar nas chamadas."
+  },
+  "test": {
+    "title": "Teste a assistente",
+    "help": "Fale com ela no navegador, exatamente como quem liga para esta linha a ouviria: persona, voz, saudação, horários e configuração deste cliente. Sem telefone.",
+    "call": "Testar no navegador",
+    "filedNote": "Abre em uma nova aba. Ligações de teste ficam na conta de demonstração, fora das estatísticas deste cliente.",
+    "needsPersona": "Crie a persona ao vivo primeiro.",
+    "promptTitle": "O que ela recebe",
+    "promptFailed": "Não foi possível carregar o prompt.",
+    "kind": {
+      "greeting": "Saudação",
+      "layer": "Como ela fala",
+      "backend": "O que ela sabe e faz"
+    },
+    "kindHelp": {
+      "greeting": "A instrução que ela recebe quando a ligação começa.",
+      "layer": "O prompt de voz: tom, forma de tratamento, pronúncia e como uma ligação acontece.",
+      "backend": "O backend que responde por ela: dados do negócio, conhecimento, horários, fora do horário e regras de agendamento."
+    }
   }
 }

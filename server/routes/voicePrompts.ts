@@ -12,9 +12,12 @@ const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 
 const previewSchema = z.object({
   kind: z.enum(["layer", "greeting", "backend"]),
-  text: z.string().max(60_000),
-  locale: z.string().max(10),
+  // "" renders the saved prompt (the Voice tab's "What she is told").
+  text: z.string().max(60_000).default(""),
+  locale: z.string().max(10).default("en-GB"),
   niche: z.string().max(200).nullable().optional(),
+  // Instead of niche: that account's line, in its own locale.
+  accountId: z.number().int().positive().optional(),
 });
 
 export function registerVoicePromptRoutes(app: Express) {
@@ -24,7 +27,7 @@ export function registerVoicePromptRoutes(app: Express) {
     const resp = await fetch(`${ENGINE_BASE}/voice/prompt-preview`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
-      body: JSON.stringify(parsed.data),
+      body: JSON.stringify({ ...parsed.data, accountId: undefined, account_id: parsed.data.accountId }),
       signal: AbortSignal.timeout(15_000),
     });
     const data = await resp.json().catch(() => ({}));

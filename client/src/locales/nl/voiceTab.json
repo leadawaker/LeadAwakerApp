@@ -90,5 +90,24 @@
     "title": "Kennisbank",
     "count_one": "{{count}} onderdeel dat de assistent in gesprekken kan gebruiken.",
     "count_other": "{{count}} onderdelen die de assistent in gesprekken kan gebruiken."
+  },
+  "test": {
+    "title": "Probeer haar uit",
+    "help": "Praat met haar in je browser, precies zoals een beller op deze lijn haar hoort: de persona, stem, begroeting, openingstijden en instellingen van deze klant. Geen telefoon nodig.",
+    "call": "Test in browser",
+    "filedNote": "Opent in een nieuw tabblad. Testgesprekken komen bij het demo-account, niet in de cijfers van deze klant.",
+    "needsPersona": "Maak eerst de live persona aan.",
+    "promptTitle": "Wat ze te horen krijgt",
+    "promptFailed": "De prompt kon niet worden geladen.",
+    "kind": {
+      "greeting": "Begroeting",
+      "layer": "Hoe ze praat",
+      "backend": "Wat ze weet en doet"
+    },
+    "kindHelp": {
+      "greeting": "De instructie die ze krijgt als het gesprek begint.",
+      "layer": "Haar stemprompt: toon, aanspreekvorm, uitspraak en hoe een telefoongesprek verloopt.",
+      "backend": "De backend die voor haar antwoordt: bedrijfsgegevens, kennis, openingstijden, buiten kantoortijd en afspraakregels."
+    }
   }
 }

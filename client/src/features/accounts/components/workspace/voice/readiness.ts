@@ -2,7 +2,7 @@
 // scrolls/focuses that card. Readiness itself is computed server-side.
 import type { ReadinessKey } from "./voiceApi";
 
-export type VoiceCard = "number" | "persona" | "knowledge" | "agent" | "transfer" | "hours" | "extra";
+export type VoiceCard = "number" | "persona" | "knowledge" | "agent" | "transfer" | "hours" | "extra" | "test";
 
 /** The card that fixes each readiness item (voice + agent name share the Agent card). */
 export const READINESS_CARD: Record<ReadinessKey, VoiceCard> = {
