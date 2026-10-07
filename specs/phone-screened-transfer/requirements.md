@@ -1,6 +1,6 @@
 # Phone door: screened transfer
 
-Status: FINAL design, approved in chat 2026-10-07. Awaiting written-spec review.
+Status: BUILT 2026-10-07 (night). Demo number on the conference route; verified with 9 automated probe calls.
 Engine: `/home/gabriel/automations`. CRM: this repo.
 
 ## Goal
@@ -152,3 +152,21 @@ The plan picks a royalty-free source.
 
 Screening on the direct route, ringing several people in turn, recording after the owner takes
 over, answering-machine detection, per-client hold music uploads.
+
+## Build notes (2026-10-07)
+
+- Phase 1 gate: 9 automated probe calls on the conference route (`scripts/voice_probe.py` in the
+  engine), every greeting heard right at answer, setup 3.5 to 5.7 s after the incoming call
+  (caller hears ringing). The earlier failures did not reproduce. Telnyx `skip_packet_count` on
+  the AI leg turned out not to be a loss metric (silence and mute count as skips: 8 to 10% on
+  plain calls, 33% on a call where Sara was muted on hold), so no codec change was made
+  (`AI_CODECS` stays `OPUS,PCMA,PCMU`). Audio smoothness still needs a human ear.
+- Setup now builds the conference around the OpenAI leg while the caller is being answered.
+- The waiting toggle lives on the Voice tab Transfer card (where the transfer number is edited),
+  not in the onboarding wizard.
+- Hold mode waits until Sara has finished her "one moment" sentence before holding the caller;
+  the first live run cut her off.
+- A `reason` that only restates the transfer ("asked to speak with Gabriel") is left out of the
+  brief.
+- Probe calls: every path verified live (1, 2, silent owner, no answer, hold + 1, hold + silent,
+  caller hangs up while the owner rings). Test data deleted afterwards.
