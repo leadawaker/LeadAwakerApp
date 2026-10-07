@@ -419,7 +419,8 @@
       "overview": "Overview",
       "integrations": "Integrations",
       "knowledge": "Company Intel",
-      "communication": "Communication"
+      "communication": "Communication",
+      "voice": "Voice"
     },
     "createAccount": "Create account",
     "compactPanel": "Compact panel",

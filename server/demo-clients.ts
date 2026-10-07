@@ -201,6 +201,10 @@ export interface DemoClientSummary {
   languages: DemoLang[];
   /** False for the curated niche packs, which the tab lists but cannot delete. */
   isDemoClient: boolean;
+  /** A live voice client's persona (Account > Voice tab): shown read-only here. */
+  isLive: boolean;
+  /** The owning Account for a live persona, else null. */
+  accountsId: number | null;
   updatedAt: Date | null;
 }
 
@@ -230,9 +234,21 @@ export async function listDemoClients(): Promise<DemoClientSummary[]> {
       emoji: r.emoji ?? null,
       languages,
       isDemoClient: r.isDemoClient ?? false,
+      isLive: r.isLive ?? false,
+      accountsId: r.accountsId ?? null,
       updatedAt: r.updatedAt ?? null,
     };
   });
+}
+
+/** Message for the 409 a demo edit/delete/duplicate gets on a live voice persona. */
+export const LIVE_CLIENT_MESSAGE =
+  "That persona belongs to a live voice client and is managed in Account > Voice. It cannot be edited, deleted or duplicated from the Demos page.";
+
+/** True when the niche is a live voice client's persona (read-only on the Demos page). */
+export async function isLiveClient(niche: string): Promise<boolean> {
+  const row = await getDemoClient(niche);
+  return row?.isLive === true;
 }
 
 /** One Client by niche key. */
@@ -499,6 +515,8 @@ export function demoClientToEditable(row: ClientRow) {
     niche: row.niche,
     bookingModeCall: row.bookingModeCall ?? false,
     isDemoClient: row.isDemoClient ?? false,
+    isLive: row.isLive ?? false,
+    accountsId: row.accountsId ?? null,
     // The homepage image behind this Client's widget demo: scraped from their
     // site, or uploaded by hand for a Client that never had one.
     screenshot: row.screenshotPath ?? null,

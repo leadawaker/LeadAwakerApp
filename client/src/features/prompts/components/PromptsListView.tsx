@@ -371,6 +371,8 @@ interface PromptsListViewProps {
   onSortByChange: (s: PromptSortOption) => void;
   groupBy: PromptGroupOption;
   onGroupByChange: (g: PromptGroupOption) => void;
+  typeFilter: "all" | "voice";
+  onTypeFilterChange: (v: "all" | "voice") => void;
   statusFilter: string;
   onStatusFilterChange: (s: string) => void;
   modelFilter: string;
@@ -404,6 +406,8 @@ export function PromptsListView({
   onSortByChange,
   groupBy,
   onGroupByChange,
+  typeFilter,
+  onTypeFilterChange,
   statusFilter,
   onStatusFilterChange,
   modelFilter,
@@ -1037,6 +1041,16 @@ export function PromptsListView({
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-52 max-h-80 overflow-y-auto">
+              {/* Type section: voice-agent prompts (use_case voice_*) vs everything else */}
+              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("labels.type")}</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {(["all", "voice"] as const).map((opt) => (
+                <DropdownMenuItem key={opt} className="text-[12px] flex items-center justify-between" onClick={(e) => { e.preventDefault(); onTypeFilterChange(opt); }}>
+                  {opt === "all" ? t("toolbar.allTypes") : t("toolbar.voiceAgents")}
+                  {typeFilter === opt && <Check className="h-3 w-3 text-brand-indigo" />}
+                </DropdownMenuItem>
+              ))}
+              <DropdownMenuSeparator />
               <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("labels.status")}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               {STATUS_OPTIONS.map((opt) => (

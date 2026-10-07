@@ -1,0 +1,94 @@
+{
+  "common": {
+    "save": "Save",
+    "discard": "Discard",
+    "saveFailed": "Could not save. Try again.",
+    "loadFailed": "The voice line could not be loaded."
+  },
+  "readiness": {
+    "title": "Ready to take calls?",
+    "intro": "Everything the phone assistant needs before a real caller is put through.",
+    "ok": "Ready",
+    "missingFix": "Missing, fix",
+    "optional": "Optional, add",
+    "ready": "Ready for calls",
+    "missingCount_one": "{{count}} item missing",
+    "missingCount_other": "{{count}} items missing",
+    "items": {
+      "number": "Phone number attached",
+      "persona": "Live persona linked",
+      "kb": "Knowledge base filled in",
+      "voice": "Voice and language chosen",
+      "agent": "Assistant name set",
+      "transfer": "Transfer number set",
+      "hours": "Opening hours set",
+      "extra": "Extra instructions"
+    }
+  },
+  "stats": {
+    "title": "Calls this month",
+    "month": "Month",
+    "calls": "Calls",
+    "bookings": "Bookings",
+    "transfers": "Transfers",
+    "transfersFailed_one": "{{count}} failed transfer",
+    "transfersFailed_other": "{{count}} failed transfers",
+    "minutes": "Minutes",
+    "empty": "No calls yet this month."
+  },
+  "number": {
+    "title": "Phone number",
+    "help": "The number callers dial, or forward to. Numbers are ordered separately, then attached here.",
+    "status": {
+      "not_set": "Not set",
+      "pending": "Pending review",
+      "live": "Live"
+    },
+    "current": "Attached number",
+    "detach": "Detach",
+    "pickLabel": "Pick an unassigned number",
+    "pickPlaceholder": "Choose a number",
+    "noneFree": "No unassigned numbers",
+    "typeLabel": "Or type a number (international format)",
+    "attach": "Attach number",
+    "invalid": "Use international format, for example +31851234567."
+  },
+  "persona": {
+    "title": "Live persona",
+    "help": "The business text the assistant speaks from. It is generated from the account, not edited by hand.",
+    "company": "Company",
+    "description": "Description",
+    "usp": "What sets them apart",
+    "generatedNote": "Update the account details or the communication profile to change this text.",
+    "emptyTitle": "No live persona yet",
+    "emptyHelp": "Create one from this account's company details so the assistant can answer as the business.",
+    "create": "Create live persona"
+  },
+  "agent": {
+    "title": "Assistant voice",
+    "help": "How the assistant introduces itself and sounds on the phone.",
+    "name": "Assistant name",
+    "pronunciation": "Pronunciation"
+  },
+  "transfer": {
+    "title": "Transfer",
+    "help": "Who the assistant puts a caller through to when a human is needed.",
+    "number": "Transfer number",
+    "name": "Transfer to",
+    "namePlaceholder": "e.g. Robben",
+    "invalid": "Use international format, for example +31612345678."
+  },
+  "extra": {
+    "title": "Extra instructions",
+    "help": "Optional. Business facts that add to the assistant's core behavior but never override it, such as opening-day quirks or a delivery rule.",
+    "placeholder": "e.g. Test drives are by appointment only. We close on the first Monday of the month."
+  },
+  "hours": {
+    "title": "Opening hours"
+  },
+  "knowledge": {
+    "title": "Knowledge base",
+    "count_one": "{{count}} entry the assistant can use on calls.",
+    "count_other": "{{count}} entries the assistant can use on calls."
+  }
+}

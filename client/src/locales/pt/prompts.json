@@ -22,7 +22,9 @@
     "allStatuses": "Todos os Status",
     "allModels": "Todos os Modelos",
     "allCampaigns": "Todas as Campanhas",
-    "allAccounts": "Todas as Contas"
+    "allAccounts": "Todas as Contas",
+    "allTypes": "Todos os tipos",
+    "voiceAgents": "Agentes de voz"
   },
   "views": {
     "list": "Lista",
@@ -37,7 +39,8 @@
     "noModel": "Sem Modelo",
     "noCampaign": "Sem Campanha",
     "account": "Conta",
-    "noAccount": "Agency Bots"
+    "noAccount": "Agency Bots",
+    "type": "Tipo"
   },
   "form": {
     "createTitle": "Criar Prompt",
@@ -253,5 +256,18 @@
       "cancel": "Cancelar"
     },
     "addWord": "Adicionar palavra"
+  },
+  "voicePreview": {
+    "client": "Cliente",
+    "noClient": "Sem cliente (genérico)",
+    "failed": "Não foi possível gerar a pré-visualização.",
+    "chars_one": "{{count}} caractere",
+    "chars_other": "{{count}} caracteres",
+    "phoneLine": "Como na linha telefônica {{number}}, com a configuração e a transferência dessa linha.",
+    "kind": {
+      "layer": "Camada de voz",
+      "greeting": "Saudação",
+      "backend": "Backend"
+    }
   }
 }

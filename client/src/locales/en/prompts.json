@@ -22,7 +22,9 @@
     "allStatuses": "All Statuses",
     "allModels": "All Models",
     "allCampaigns": "All Campaigns",
-    "allAccounts": "All Accounts"
+    "allAccounts": "All Accounts",
+    "allTypes": "All types",
+    "voiceAgents": "Voice agents"
   },
   "views": {
     "list": "List",
@@ -37,7 +39,8 @@
     "noModel": "No Model",
     "noCampaign": "No Campaign",
     "account": "Account",
-    "noAccount": "Agency Bots"
+    "noAccount": "Agency Bots",
+    "type": "Type"
   },
   "form": {
     "createTitle": "Create Prompt",
@@ -276,6 +279,19 @@
       "badExamples": "Bad examples",
       "objectionExamples": "Objection & commitment phrasings",
       "scenarioExamples": "Scenario playbook"
+    }
+  },
+  "voicePreview": {
+    "client": "Client",
+    "noClient": "No client (generic)",
+    "failed": "Could not render the preview.",
+    "chars_one": "{{count}} character",
+    "chars_other": "{{count}} characters",
+    "phoneLine": "As on the phone line {{number}}, with that line's setup and transfer.",
+    "kind": {
+      "layer": "Voice layer",
+      "greeting": "Greeting",
+      "backend": "Backend"
     }
   }
 }

@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Filter, Check, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
   PanelLeft, PanelLeftClose, MoreHorizontal, Trash2,
-  Building2, Link2, MessagesSquare,
+  Building2, Link2, MessagesSquare, Phone,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -18,11 +18,12 @@ import type { ListPanelState } from "@/hooks/useListPanelState";
 import type { WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
-const TABS: WorkspaceTab[] = ["overview", "integrations", "communication"];
+const TABS: WorkspaceTab[] = ["overview", "integrations", "communication", "voice"];
 const TAB_ICONS: Record<WorkspaceTab, ReactNode> = {
   overview: <Building2 size={13} />,
   integrations: <Link2 size={13} />,
   communication: <MessagesSquare size={13} />,
+  voice: <Phone size={13} />,
 };
 const SORT_OPTIONS: AccountSortBy[] = ["recent", "name_asc", "name_desc"];
 

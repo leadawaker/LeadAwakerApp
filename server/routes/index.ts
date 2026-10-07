@@ -32,11 +32,13 @@ import { registerEmailSenderRoutes } from "./emailSender";
 import { registerMissedCallRoutes } from "./missedCall";
 import { registerDemoRoutes } from "./demo";
 import { registerVoiceCallsRoutes } from "./voice-calls";
+import { registerVoiceLineRoutes } from "./voice-line";
 import { registerTwilioVoiceRoutes } from "./twilio-voice";
 import { registerUserSettingsRoutes } from "./user-settings";
 import { registerAutomationRoutes } from "./automation";
 import { registerWidgetRoutes } from "./widget";
 import { registerDemoSettingsRoutes } from "./demoSettings";
+import { registerVoicePromptRoutes } from "./voicePrompts";
 import { registerDemoSocialRoutes } from "./demoSocial";
 import { registerDemoLogoRoutes } from "./demoLogos";
 
@@ -82,11 +84,13 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerMissedCallRoutes(app);
   registerDemoRoutes(app);
   registerVoiceCallsRoutes(app);
+  registerVoiceLineRoutes(app);
   registerTwilioVoiceRoutes(app);
   registerUserSettingsRoutes(app);
   registerAutomationRoutes(app);
   registerWidgetRoutes(app);
   registerDemoSettingsRoutes(app);
+  registerVoicePromptRoutes(app);
   registerDemoSocialRoutes(app);
   registerDemoLogoRoutes(app);
 

@@ -8,6 +8,7 @@ import { IntegrationsPanel } from "./IntegrationsPanel";
 import { KBPanel } from "./knowledge/KBPanel";
 import { CommunicationProfilePanel } from "./communication/CommunicationProfilePanel";
 import { CallNotes } from "./communication/CallNotes";
+import { VoiceTab } from "./voice/VoiceTab";
 import type { AccountRow, AccountDetail, WorkspaceTab, CampaignRowData, ContractRowData, TeamMemberData } from "./types";
 
 interface OverviewData {
@@ -73,6 +74,7 @@ export function TabContent({ tab, isMobile, data, readOnly = false }: {
       {!readOnly && <CallNotes account={data.account} onSave={data.onSave} />}
     </div>
   );
+  if (tab === "voice") return <VoiceTab accountId={data.accountId} readOnly={readOnly} />;
   return null;
 }
 

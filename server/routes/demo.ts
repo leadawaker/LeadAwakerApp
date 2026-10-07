@@ -42,6 +42,8 @@ import {
   updateDemoClient,
   deleteDemoClient,
   duplicateDemoClient,
+  isLiveClient,
+  LIVE_CLIENT_MESSAGE,
   type DemoLang,
 } from "../demo-clients";
 
@@ -390,6 +392,7 @@ export function registerDemoRoutes(app: Express): void {
     wrapAsync(async (req, res) => {
       const parsed = clientPatchSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
+      if (await isLiveClient(String(req.params.niche))) return res.status(409).json({ message: LIVE_CLIENT_MESSAGE });
       const ok = await updateDemoClient(String(req.params.niche), parsed.data as never);
       if (!ok) return res.status(404).json({ message: "No such Client." });
       const row = await getDemoClient(String(req.params.niche));
@@ -401,6 +404,7 @@ export function registerDemoRoutes(app: Express): void {
     "/api/demo/clients/:niche",
     requireAgency,
     wrapAsync(async (req, res) => {
+      if (await isLiveClient(String(req.params.niche))) return res.status(409).json({ message: LIVE_CLIENT_MESSAGE });
       const result = await deleteDemoClient(String(req.params.niche));
       if (result === "missing") return res.status(404).json({ message: "No such Client." });
       if (result === "curated") {
@@ -423,6 +427,7 @@ export function registerDemoRoutes(app: Express): void {
     wrapAsync(async (req, res) => {
       const parsed = duplicateSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
+      if (await isLiveClient(String(req.params.niche))) return res.status(409).json({ message: LIVE_CLIENT_MESSAGE });
       const result = await duplicateDemoClient(String(req.params.niche), parsed.data.newNiche);
       if (!result.ok) {
         if (result.reason === "missing") return res.status(404).json({ message: "No such Client." });

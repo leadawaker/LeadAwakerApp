@@ -22,7 +22,9 @@
     "allStatuses": "Alle Statussen",
     "allModels": "Alle Modellen",
     "allCampaigns": "Alle Campagnes",
-    "allAccounts": "Alle Accounts"
+    "allAccounts": "Alle Accounts",
+    "allTypes": "Alle types",
+    "voiceAgents": "Spraakagenten"
   },
   "views": {
     "list": "Lijst",
@@ -37,7 +39,8 @@
     "noModel": "Geen Model",
     "noCampaign": "Geen Campagne",
     "account": "Account",
-    "noAccount": "Agency Bots"
+    "noAccount": "Agency Bots",
+    "type": "Type"
   },
   "form": {
     "createTitle": "Prompt Aanmaken",
@@ -276,6 +279,19 @@
       "badExamples": "Slechte voorbeelden",
       "objectionExamples": "Bezwaar- en commitmentformuleringen",
       "scenarioExamples": "Scenario-draaiboek"
+    }
+  },
+  "voicePreview": {
+    "client": "Klant",
+    "noClient": "Geen klant (algemeen)",
+    "failed": "De voorvertoning kon niet worden gemaakt.",
+    "chars_one": "{{count}} teken",
+    "chars_other": "{{count}} tekens",
+    "phoneLine": "Zoals op de telefoonlijn {{number}}, met de instellingen en doorverbinding van die lijn.",
+    "kind": {
+      "layer": "Spraaklaag",
+      "greeting": "Begroeting",
+      "backend": "Backend"
     }
   }
 }

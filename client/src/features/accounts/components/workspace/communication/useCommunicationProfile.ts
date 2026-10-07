@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/apiUtils";
 import { EMPTY_ANSWERS, type ProfileAnswers } from "./profileConstants";
 import { normalizeServices, normalizeSetup } from "./setupConstants";
+import { writeThroughVoice } from "./voiceWriteThrough";
 
 export type ProfileStatus = "draft" | "in_progress" | "completed";
 
@@ -80,7 +81,12 @@ export function useCommunicationProfile(accountId: number) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(toApi(answers, status)),
       });
-      if (res.ok) setProfile(fromApi(await res.json()));
+      if (res.ok) {
+        setProfile(fromApi(await res.json()));
+        // Mirror the voice and handoff answers into the Account > Voice tab.
+        // Not awaited and never throws: the wizard must not wait on or fail from it.
+        void writeThroughVoice(accountId, answers);
+      }
       return res.ok;
     } catch {
       return false;

@@ -778,6 +778,13 @@
     "searchPlaceholder": "Search Clients...",
     "loading": "Loading...",
     "vocabOnly": "WORDS ONLY",
+    "live": {
+      "badge": "LIVE",
+      "title": "Live client persona (read-only)",
+      "note": "This persona answers real calls for a client, so it is managed in Account > Voice. Demo edits cannot change it.",
+      "open": "Open Account > Voice",
+      "menuNote": "Live personas cannot be duplicated or deleted here."
+    },
     "noMatches": "No Clients match that search.",
     "emptyLibrary": "No Clients saved yet. Mint a demo link for a prospect and the persona lands here automatically.",
     "back": "Back",

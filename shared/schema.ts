@@ -475,6 +475,13 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   // Widget_Configs.quickReplies. Read live, not through the persona snapshot,
   // so an edit reaches demo links that were already sent.
   quickReplies: jsonb("quick_replies").$type<{ label: string; text: string }[] | null>(),
+  // Live voice client (specs/voice-tab): a persona owned by one Account and
+  // edited only from that Account's Voice tab. The Demos page lists it
+  // read-only (isLive) so a demo edit cannot change a live client. One live
+  // persona per account (partial unique index uq_niche_vocabulary_accounts_id,
+  // created by the engine migration, not declared here).
+  accountsId: integer("accounts_id"),
+  isLive: boolean("is_live").notNull().default(false),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
@@ -858,6 +865,8 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
   personaNiche: text("persona_niche"),
   /** booked | callback | transferred | hung_up | other. Null on rows older than the stamp. */
   outcome: text("outcome"),
+  // 'none' | 'transferred' | 'failed' (engine migration migrate_voice_tab.py).
+  transferOutcome: text("transfer_outcome").notNull().default("none"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
@@ -866,6 +875,38 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
 ]);
 
 export type VoiceCall = typeof voiceCalls.$inferSelect;
+
+// ─── Voice_Numbers ─────────────────────────────────────────────────────────────
+// One row per phone number the voice receptionist answers. Created and owned by
+// the Python engine (scripts/migrate_add_voice_numbers.py); the Account Voice tab
+// attaches rows to an account and mirrors agent_name/voice/locale/transfer_number
+// onto them (specs/voice-tab). created_at/updated_at are timestamp WITHOUT time
+// zone, as the engine created them.
+export const voiceNumbers = nocodb.table("Voice_Numbers", {
+  id: serial("id").primaryKey(),
+  phoneNumber: text("phone_number").notNull(),
+  label: text("label"),
+  accountsId: integer("accounts_id"),
+  campaignsId: integer("campaigns_id"),
+  // Niche_Vocabulary.niche. NULL = demo line. Fallback when personaId is null.
+  clientNiche: text("client_niche"),
+  locale: text("locale").notNull().default("nl"),
+  agentName: text("agent_name"),
+  voice: text("voice"),
+  aiDisclosure: text("ai_disclosure").notNull().default("on"),
+  transferNumber: text("transfer_number"),
+  enabled: boolean("enabled").notNull().default(true),
+  costOwner: text("cost_owner").notNull().default("client"),
+  telnyxPhoneNumberId: text("telnyx_phone_number_id"),
+  telnyxRequirementGroupId: text("telnyx_requirement_group_id"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  // Niche_Vocabulary.id of the live persona (migrate_voice_tab.py).
+  personaId: integer("persona_id"),
+});
+
+export type VoiceNumber = typeof voiceNumbers.$inferSelect;
 
 // ─── Leads ───────────────────────────────────────────────────────────────
 
@@ -975,6 +1016,9 @@ export const leads = nocodb.table("Leads", {
   // conversation landed (link_sent | callback_requested | declined).
   reviewRating: integer("review_rating"),
   reviewOutcome: text("review_outcome"),
+  // HubSpot contact pushed from the Voice calls Callers view, so a re-push
+  // updates the same contact (scripts/migrate-leads-hubspot-contact-id.mjs).
+  hubspotContactId: text("hubspot_contact_id"),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),
@@ -1016,9 +1060,6 @@ export const leadsTags = nocodb.table("Leads_Tags", {
   accountName: text("account_name"),
   tagName: text("tag_name"),
 }, (t) => [
-  // HubSpot contact pushed from the Voice calls Callers view, so a re-push
-  // updates the same contact (scripts/migrate-leads-hubspot-contact-id.mjs).
-  hubspotContactId: text("hubspot_contact_id"),
   index("leads_tags_leads_id_idx").on(t.leadsId),
   index("leads_tags_tags_id_idx").on(t.tagsId),
 ]);

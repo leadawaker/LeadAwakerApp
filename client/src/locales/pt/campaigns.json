@@ -609,6 +609,13 @@
     }
   },
   "clients": {
+    "live": {
+      "badge": "AO VIVO",
+      "title": "Persona de cliente ao vivo (somente leitura)",
+      "note": "Esta persona atende chamadas reais de um cliente, por isso é gerenciada em Conta > Voz. Edições de demonstração não conseguem alterá-la.",
+      "open": "Abrir Conta > Voz",
+      "menuNote": "Personas ao vivo não podem ser duplicadas nem excluídas aqui."
+    },
     "fields": {
       "quoteSubject": "Do que era o orçamento",
       "quoteWhen": "Quando o orçamento foi enviado"

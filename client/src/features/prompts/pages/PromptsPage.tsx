@@ -63,6 +63,8 @@ export default function PromptsPage() {
   /* ── Search & filters ───────────────────────────────────────────────────── */
   const [q, setQ] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  // "voice": only the voice agents' prompts (use_case voice_*: voice layer, greetings, backend).
+  const [typeFilter, setTypeFilter] = useState<"all" | "voice">("all");
   const [modelFilter, setModelFilter] = useState<string>("all");
   const [campaignFilter, setCampaignFilter] = useState<string>("");
   const [accountFilter, setAccountFilter] = useState<string>("");
@@ -269,6 +271,7 @@ export default function PromptsPage() {
   const rows = useMemo(() => {
     let filtered = promptLibraryData.filter((p: any) => {
       if (q && !(p.name || "").toLowerCase().includes(q.toLowerCase())) return false;
+      if (typeFilter === "voice" && !String(p.useCase || p.use_case || "").startsWith("voice_")) return false;
       if (statusFilter !== "all") {
         const pStatus = (p.status || "").toLowerCase().trim();
         if (pStatus !== statusFilter) return false;
@@ -314,7 +317,7 @@ export default function PromptsPage() {
     });
 
     return filtered;
-  }, [promptLibraryData, q, statusFilter, modelFilter, campaignFilter, accountFilter, sortBy]);
+  }, [promptLibraryData, q, typeFilter, statusFilter, modelFilter, campaignFilter, accountFilter, sortBy]);
 
   /* ── Derived: grouped rows ───────────────────────────────────────────────── */
   const groupedRows = useMemo(() => {
@@ -346,14 +349,16 @@ export default function PromptsPage() {
   }, [rows, groupBy, groupDirection, campaignMap, accountMap]);
 
   /* ── Filter state helpers ───────────────────────────────────────────────── */
-  const isFilterActive = statusFilter !== "all" || modelFilter !== "all" || !!campaignFilter || !!accountFilter;
+  const isFilterActive = typeFilter !== "all" || statusFilter !== "all" || modelFilter !== "all" || !!campaignFilter || !!accountFilter;
   const activeFilterCount =
+    (typeFilter !== "all" ? 1 : 0) +
     (statusFilter !== "all" ? 1 : 0) +
     (modelFilter !== "all" ? 1 : 0) +
     (campaignFilter ? 1 : 0) +
     (accountFilter ? 1 : 0);
 
   const clearAllFilters = useCallback(() => {
+    setTypeFilter("all");
     setStatusFilter("all");
     setModelFilter("all");
     setCampaignFilter("");
@@ -676,6 +681,8 @@ export default function PromptsPage() {
               onSortByChange={setSortBy}
               groupBy={groupBy}
               onGroupByChange={setGroupBy}
+              typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
               statusFilter={statusFilter}
               onStatusFilterChange={setStatusFilter}
               modelFilter={modelFilter}
@@ -716,7 +723,9 @@ export default function PromptsPage() {
                 <PromptsToolbar
                   searchQuery={q}
                   onSearchQueryChange={setQ}
-                  statusFilter={statusFilter}
+                  typeFilter={typeFilter}
+              onTypeFilterChange={setTypeFilter}
+              statusFilter={statusFilter}
                   onStatusFilterChange={setStatusFilter}
                   modelFilter={modelFilter}
                   onModelFilterChange={setModelFilter}

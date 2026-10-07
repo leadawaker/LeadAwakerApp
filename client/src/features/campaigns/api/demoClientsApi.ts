@@ -82,6 +82,10 @@ export interface DemoClientSummary {
   languages: DemoLang[];
   /** False for the curated niche packs: listed and editable, never deletable. */
   isDemoClient: boolean;
+  /** A live client's persona (specs/voice-tab): read-only here, managed in Account > Voice. */
+  isLive?: boolean;
+  /** The account a live persona belongs to. */
+  accountsId?: number | null;
   updatedAt: string | null;
   /** Filename of the widget demo's backdrop, or null. Served by /api/site-shot/. */
   screenshot: string | null;
@@ -96,6 +100,9 @@ export interface EditableDemoClient {
   emoji: string | null;
   bookingModeCall: boolean;
   isDemoClient: boolean;
+  /** See DemoClientSummary.isLive. */
+  isLive?: boolean;
+  accountsId?: number | null;
   updatedAt: string | null;
   screenshot: string | null;
   socialPost: Partial<Record<DemoLang, SocialPostFields>> | null;

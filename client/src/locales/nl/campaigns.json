@@ -778,6 +778,13 @@
     "searchPlaceholder": "Zoek klanten...",
     "loading": "Laden...",
     "vocabOnly": "ALLEEN WOORDEN",
+    "live": {
+      "badge": "LIVE",
+      "title": "Live klantpersona (alleen lezen)",
+      "note": "Deze persona beantwoordt echte gesprekken voor een klant en wordt daarom beheerd in Account > Spraak. Demo-wijzigingen kunnen haar niet aanpassen.",
+      "open": "Open Account > Spraak",
+      "menuNote": "Live persona's kunnen hier niet worden gedupliceerd of verwijderd."
+    },
     "noMatches": "Geen klanten gevonden voor die zoekopdracht.",
     "emptyLibrary": "Nog geen klanten bewaard. Maak een demolink voor een prospect aan en de persona komt hier vanzelf terecht.",
     "back": "Terug",

@@ -37,6 +37,7 @@ import {
 import { CategorySelect } from "./CategorySelect";
 import { ClientScreenshot } from "./ClientScreenshot";
 import { SocialPostSection } from "./SocialPostSection";
+import { LiveClientView } from "./LiveClientView";
 
 /** Long fields, in the order they read as a persona. `multiline` drives height. */
 const TEXT_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: number }> = [
@@ -297,6 +298,11 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
       </div>
     );
   }
+
+  // A live client's persona is managed in Account > Voice, never edited here.
+  // Rendered after every hook above so the early return cannot change hook order.
+  // The server also refuses PATCH/DELETE/duplicate on a live persona (409).
+  if (client.isLive) return <LiveClientView client={client} onBack={onBack} />;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22, paddingBottom: 40 }}>

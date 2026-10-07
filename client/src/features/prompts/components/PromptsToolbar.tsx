@@ -66,6 +66,8 @@ interface PromptsToolbarProps {
   onSearchQueryChange: (q: string) => void;
   searchOpen?: boolean;
   onSearchOpenChange?: (v: boolean) => void;
+  typeFilter: "all" | "voice";
+  onTypeFilterChange: (v: "all" | "voice") => void;
   statusFilter: string;
   onStatusFilterChange: (s: string) => void;
   modelFilter: string;
@@ -102,6 +104,8 @@ export function PromptsToolbar({
   onSearchQueryChange,
   searchOpen,
   onSearchOpenChange,
+  typeFilter,
+  onTypeFilterChange,
   statusFilter,
   onStatusFilterChange,
   modelFilter,
@@ -163,6 +167,16 @@ export function PromptsToolbar({
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
+          {/* Type section: voice-agent prompts (use_case voice_*) vs everything else */}
+          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("labels.type")}</DropdownMenuLabel>
+          <DropdownMenuSeparator />
+          {(["all", "voice"] as const).map((opt) => (
+            <DropdownMenuItem key={opt} className="text-[12px] flex items-center justify-between" onClick={(e) => { e.preventDefault(); onTypeFilterChange(opt); }}>
+              {opt === "all" ? t("toolbar.allTypes") : t("toolbar.voiceAgents")}
+              {typeFilter === opt && <Check className="h-3 w-3 text-brand-indigo" />}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
           {/* Status section */}
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
             {t("labels.status")}

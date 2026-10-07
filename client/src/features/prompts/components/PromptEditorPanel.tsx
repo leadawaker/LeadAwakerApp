@@ -6,6 +6,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { KNOWN_VARIABLE_SET } from "./PromptVariableAutocomplete";
 import { PromptCodeEditor, type PromptCodeEditorHandle } from "./PromptCodeEditor";
+import { VoicePreviewPane, voicePromptTarget } from "./VoicePreviewPane";
 import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
@@ -776,8 +777,14 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
             </div>
           </div>
 
-          {/* Preview panel */}
-          {previewOpen && (
+          {/* Preview panel. Voice agents' prompts are rendered by the engine
+              for a chosen Client instead (VoicePreviewPane). */}
+          {previewOpen && voicePromptTarget(form.useCase) && (
+            <div style={{ flex: 1, minHeight: 0, overflow: "hidden", borderRadius: 8 }}>
+              <VoicePreviewPane useCase={form.useCase} text={promptTextValRef.current ?? ""} font={previewFont} />
+            </div>
+          )}
+          {previewOpen && !voicePromptTarget(form.useCase) && (
             <div style={{
               flex: 1, minHeight: 0, overflow: "hidden",
               display: "flex", flexDirection: "column",

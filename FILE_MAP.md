@@ -153,6 +153,9 @@ The marketing site (leadawaker.com landing) is static files in `client/public/pr
 | AccountDetailsDialog | `components/AccountDetailsDialog.tsx` | Edit panel |
 | useAccountsData | `hooks/useAccountsData.ts` | |
 | accountsApi | `api/accountsApi.ts` | |
+| **Voice tab** | `components/workspace/voice/` | Account workspace "Voice" tab for live voice-receptionist clients (specs/voice-tab). `VoiceTab` composes `ReadinessChecklist` (server `readiness.items`, `readiness.ts` maps item → card + focus), `VoiceStatsRow` (4 StatCards + month select), `NumberCard`, `PersonaCard`, `AgentVoiceCard` (reuses wizard `setupConstants` + `communicationProfile` labels), `TransferCard`, `ExtraInstructionsCard` (1000 char cap), and `ReuseCards` (`AvailabilityCard` hours + `KBPanel`). Data: `voiceApi.ts` (types + fetchers + E.164 helpers), `useVoiceLine.ts`, `useVoiceStats.ts`. Agency edits, clients read-only. i18n `voiceTab` namespace |
+| voiceWriteThrough | `components/workspace/communication/voiceWriteThrough.ts` | Wizard save also PUTs `/api/accounts/:id/voice` (fire-and-forget, never blocks the wizard) |
+| LiveClientView | `features/campaigns/components/clients/LiveClientView.tsx` | Read-only view of a live persona (`isLive`) in the Clients library, links to Account > Voice (`?tab=voice`) |
 
 ---
 

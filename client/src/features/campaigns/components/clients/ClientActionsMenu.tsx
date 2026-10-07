@@ -27,7 +27,9 @@ export function ClientActionsMenu({
   // Curated niche packs are listed and editable but not deletable: real
   // campaigns read their word lists. Duplicating one is still fine (it always
   // creates a NEW, deletable row) — only Delete is gated.
-  const canDelete = client?.isDemoClient ?? false;
+  // A live persona (specs/voice-tab) is read-only here: no duplicate, no delete.
+  const isLive = client?.isLive ?? false;
+  const canDelete = (client?.isDemoClient ?? false) && !isLive;
 
   const reset = () => {
     setStep("menu");
@@ -81,16 +83,21 @@ export function ClientActionsMenu({
         <PopoverContent align="end" className="w-72 p-3">
           {step === "menu" && (
             <div className="space-y-1">
-              <button
-                onClick={() => {
-                  setNewNiche(`${niche} copy`);
-                  setStep("duplicate");
-                }}
-                className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] hover:bg-muted/50 transition-colors"
-              >
-                <Copy className="h-3.5 w-3.5 shrink-0" />
-                {t("clients.duplicate", "Duplicate")}
-              </button>
+              {!isLive && (
+                <button
+                  onClick={() => {
+                    setNewNiche(`${niche} copy`);
+                    setStep("duplicate");
+                  }}
+                  className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] hover:bg-muted/50 transition-colors"
+                >
+                  <Copy className="h-3.5 w-3.5 shrink-0" />
+                  {t("clients.duplicate", "Duplicate")}
+                </button>
+              )}
+              {isLive && (
+                <p className="px-2.5 py-2 text-[12px] text-muted-foreground">{t("clients.live.menuNote")}</p>
+              )}
               {canDelete && (
                 <button
                   onClick={() => {

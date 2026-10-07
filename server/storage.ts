@@ -22,6 +22,8 @@ import { miscStorage } from "./storage/misc";
 import { openerTemplatesStorage } from "./storage/openerTemplates";
 import { voiceCallsStorage } from "./storage/voiceCalls";
 import { voiceCallersStorage } from "./storage/voiceCallers";
+import { voiceLinesStorage } from "./storage/voiceLines";
+import { voiceStatsStorage } from "./storage/voiceStats";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -84,5 +86,7 @@ export const storage = {
   ...miscStorage,
   ...openerTemplatesStorage,
   ...voiceCallsStorage,
-};
   ...voiceCallersStorage,
+  ...voiceLinesStorage,
+  ...voiceStatsStorage,
+};

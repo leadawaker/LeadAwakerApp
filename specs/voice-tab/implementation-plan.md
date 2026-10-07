@@ -79,6 +79,8 @@ Five phases: data model, server, engine, client, Robben adoption. Phases 1 to 3 
 
 ## Phase 3: Engine
 
+> Status 2026-10-06: greeting, pronunciation, hours, after-hours and tone were built by `specs/voice-setup-slots/` (engine commit ec9a6d6), which also lets setup win over Voice_Numbers for locale, voice and agent name. Still open here: persona by `persona_id`, Account KB on client lines, the extra-instructions line, and writing `transfer_outcome` (the engine already stamps `Voice_Calls.outcome = 'transferred'`, which the Transfers tile also counts).
+
 ### Tasks
 - [ ] Read `/home/gabriel/automations/CLAUDE.md` first.
 - [ ] `tools/db/voice_numbers.py`: resolve persona by `persona_id`, fall back to `client_niche`.

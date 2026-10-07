@@ -180,7 +180,23 @@ function ClientCard({ client, onOpen }: { client: DemoClientSummary; onOpen: () 
       >
         {formatClientTitle(client)}
       </div>
-      <div style={{ display: "flex", gap: 5, marginTop: 2 }}>
+      <div style={{ display: "flex", gap: 5, marginTop: 2, flexWrap: "wrap" }}>
+        {client.isLive && (
+          <span
+            style={{
+              fontFamily: "Geist Mono, ui-monospace, monospace",
+              fontSize: 9.5,
+              letterSpacing: "0.1em",
+              fontWeight: 700,
+              color: "var(--good)",
+              background: "var(--good-tint)",
+              borderRadius: 999,
+              padding: "2px 7px",
+            }}
+          >
+            {t("clients.live.badge")}
+          </span>
+        )}
         {client.languages.length === 0 ? (
           <span
             style={{

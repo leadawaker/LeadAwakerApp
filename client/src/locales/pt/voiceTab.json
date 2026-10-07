@@ -1,0 +1,94 @@
+{
+  "common": {
+    "save": "Salvar",
+    "discard": "Descartar",
+    "saveFailed": "Não foi possível salvar. Tente novamente.",
+    "loadFailed": "Não foi possível carregar a linha de voz."
+  },
+  "readiness": {
+    "title": "Pronto para atender chamadas?",
+    "intro": "Tudo o que o assistente de telefone precisa antes de receber uma ligação de verdade.",
+    "ok": "Pronto",
+    "missingFix": "Faltando, corrigir",
+    "optional": "Opcional, adicionar",
+    "ready": "Pronto para chamadas",
+    "missingCount_one": "{{count}} item faltando",
+    "missingCount_other": "{{count}} itens faltando",
+    "items": {
+      "number": "Número de telefone vinculado",
+      "persona": "Persona ao vivo vinculada",
+      "kb": "Base de conhecimento preenchida",
+      "voice": "Voz e idioma escolhidos",
+      "agent": "Nome do assistente definido",
+      "transfer": "Número de transferência definido",
+      "hours": "Horário de funcionamento definido",
+      "extra": "Instruções extras"
+    }
+  },
+  "stats": {
+    "title": "Chamadas neste mês",
+    "month": "Mês",
+    "calls": "Chamadas",
+    "bookings": "Agendamentos",
+    "transfers": "Transferências",
+    "transfersFailed_one": "{{count}} transferência com falha",
+    "transfersFailed_other": "{{count}} transferências com falha",
+    "minutes": "Minutos",
+    "empty": "Ainda não há chamadas neste mês."
+  },
+  "number": {
+    "title": "Número de telefone",
+    "help": "O número que as pessoas discam, ou para o qual a linha é encaminhada. Os números são pedidos à parte e vinculados aqui.",
+    "status": {
+      "not_set": "Não definido",
+      "pending": "Em análise",
+      "live": "Ativo"
+    },
+    "current": "Número vinculado",
+    "detach": "Desvincular",
+    "pickLabel": "Escolha um número livre",
+    "pickPlaceholder": "Escolha um número",
+    "noneFree": "Nenhum número livre",
+    "typeLabel": "Ou digite um número (formato internacional)",
+    "attach": "Vincular número",
+    "invalid": "Use o formato internacional, por exemplo +5511912345678."
+  },
+  "persona": {
+    "title": "Persona ao vivo",
+    "help": "O texto da empresa com o qual o assistente fala. Ele é gerado a partir da conta, não editado à mão.",
+    "company": "Empresa",
+    "description": "Descrição",
+    "usp": "Diferencial",
+    "generatedNote": "Altere os dados da conta ou o perfil de comunicação para mudar este texto.",
+    "emptyTitle": "Ainda não há persona ao vivo",
+    "emptyHelp": "Crie uma a partir dos dados da empresa desta conta para que o assistente responda em nome do negócio.",
+    "create": "Criar persona ao vivo"
+  },
+  "agent": {
+    "title": "Voz do assistente",
+    "help": "Como o assistente se apresenta e soa ao telefone.",
+    "name": "Nome do assistente",
+    "pronunciation": "Pronúncia"
+  },
+  "transfer": {
+    "title": "Transferência",
+    "help": "Para quem o assistente transfere a ligação quando é preciso falar com uma pessoa.",
+    "number": "Número de transferência",
+    "name": "Transferir para",
+    "namePlaceholder": "ex.: Robben",
+    "invalid": "Use o formato internacional, por exemplo +5511912345678."
+  },
+  "extra": {
+    "title": "Instruções extras",
+    "help": "Opcional. Fatos do negócio que complementam o comportamento principal do assistente, mas nunca o substituem, como um dia de funcionamento diferente ou uma regra de entrega.",
+    "placeholder": "ex.: Test drives somente com hora marcada. Fechamos na primeira segunda-feira do mês."
+  },
+  "hours": {
+    "title": "Horário de funcionamento"
+  },
+  "knowledge": {
+    "title": "Base de conhecimento",
+    "count_one": "{{count}} entrada que o assistente pode usar nas chamadas.",
+    "count_other": "{{count}} entradas que o assistente pode usar nas chamadas."
+  }
+}

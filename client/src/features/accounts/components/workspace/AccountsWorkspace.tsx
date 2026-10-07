@@ -21,7 +21,7 @@ import type { NewAccountForm } from "../AccountCreateDialog";
 import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "communication"];
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "communication", "voice"];
 
 interface Props {
   accounts: AccountRow[];
@@ -95,6 +95,18 @@ export function AccountsWorkspace(p: Props) {
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
   }, []);
 
+  // Deep link: /platform/accounts?tab=voice opens that tab (used by the Demos
+  // page's "managed in Account > Voice" link). Stripped once applied.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const wanted = params.get("tab") as WorkspaceTab | null;
+    if (!wanted || !ACCOUNT_TABS.includes(wanted)) return;
+    setTab(wanted);
+    params.delete("tab");
+    const qs = params.toString();
+    window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
+  }, []);
+
   // Publish entity data for the AI chat context.
   const publishEntity = usePublishEntityData();
   useEffect(() => {
@@ -122,13 +134,13 @@ export function AccountsWorkspace(p: Props) {
 
   // ── Shared mobile detail blocks (used by the client page + the agency sheet) ──
   const mobileTabSeg = (
-    <div className="la-seg la-seg--fill">
+    <div className="la-seg la-seg--fill" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
       {ACCOUNT_TABS.map((k) => (
         <button
           key={k}
           onClick={() => setTab(k)}
           className={`la-seg-btn${tab === k ? " on" : ""}`}
-          style={{ padding: "9px 0", fontSize: 11, letterSpacing: "0.08em" }}
+          style={{ padding: "9px 10px", fontSize: 11, letterSpacing: "0.08em", whiteSpace: "nowrap", flex: "1 0 auto" }}
           data-testid={`account-tab-${k}`}
         >
           {t(`workspace.tabs.${k}`)}

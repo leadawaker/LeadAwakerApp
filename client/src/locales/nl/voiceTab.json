@@ -1,0 +1,94 @@
+{
+  "common": {
+    "save": "Opslaan",
+    "discard": "Verwerpen",
+    "saveFailed": "Opslaan is niet gelukt. Probeer het opnieuw.",
+    "loadFailed": "De spraaklijn kon niet worden geladen."
+  },
+  "readiness": {
+    "title": "Klaar voor gesprekken?",
+    "intro": "Alles wat de telefoonassistent nodig heeft voordat een echte beller wordt doorgezet.",
+    "ok": "Klaar",
+    "missingFix": "Ontbreekt, oplossen",
+    "optional": "Optioneel, toevoegen",
+    "ready": "Klaar voor gesprekken",
+    "missingCount_one": "{{count}} onderdeel ontbreekt",
+    "missingCount_other": "{{count}} onderdelen ontbreken",
+    "items": {
+      "number": "Telefoonnummer gekoppeld",
+      "persona": "Live persona gekoppeld",
+      "kb": "Kennisbank gevuld",
+      "voice": "Stem en taal gekozen",
+      "agent": "Naam van de assistent ingesteld",
+      "transfer": "Doorschakelnummer ingesteld",
+      "hours": "Openingstijden ingesteld",
+      "extra": "Extra instructies"
+    }
+  },
+  "stats": {
+    "title": "Gesprekken deze maand",
+    "month": "Maand",
+    "calls": "Gesprekken",
+    "bookings": "Boekingen",
+    "transfers": "Doorverbindingen",
+    "transfersFailed_one": "{{count}} mislukte doorverbinding",
+    "transfersFailed_other": "{{count}} mislukte doorverbindingen",
+    "minutes": "Minuten",
+    "empty": "Nog geen gesprekken deze maand."
+  },
+  "number": {
+    "title": "Telefoonnummer",
+    "help": "Het nummer dat bellers kiezen of waarnaar wordt doorgeschakeld. Nummers worden apart besteld en hier gekoppeld.",
+    "status": {
+      "not_set": "Niet ingesteld",
+      "pending": "In beoordeling",
+      "live": "Live"
+    },
+    "current": "Gekoppeld nummer",
+    "detach": "Ontkoppelen",
+    "pickLabel": "Kies een vrij nummer",
+    "pickPlaceholder": "Kies een nummer",
+    "noneFree": "Geen vrije nummers",
+    "typeLabel": "Of typ een nummer (internationaal formaat)",
+    "attach": "Nummer koppelen",
+    "invalid": "Gebruik het internationale formaat, bijvoorbeeld +31851234567."
+  },
+  "persona": {
+    "title": "Live persona",
+    "help": "De bedrijfstekst waarmee de assistent spreekt. Die wordt gegenereerd vanuit het account en niet met de hand bewerkt.",
+    "company": "Bedrijf",
+    "description": "Omschrijving",
+    "usp": "Wat hen onderscheidt",
+    "generatedNote": "Pas de accountgegevens of het communicatieprofiel aan om deze tekst te wijzigen.",
+    "emptyTitle": "Nog geen live persona",
+    "emptyHelp": "Maak er een aan op basis van de bedrijfsgegevens van dit account, zodat de assistent als het bedrijf kan antwoorden.",
+    "create": "Live persona aanmaken"
+  },
+  "agent": {
+    "title": "Stem van de assistent",
+    "help": "Hoe de assistent zich voorstelt en klinkt aan de telefoon.",
+    "name": "Naam van de assistent",
+    "pronunciation": "Uitspraak"
+  },
+  "transfer": {
+    "title": "Doorverbinden",
+    "help": "Naar wie de assistent een beller doorzet wanneer een mens nodig is.",
+    "number": "Doorschakelnummer",
+    "name": "Doorverbinden naar",
+    "namePlaceholder": "bijv. Robben",
+    "invalid": "Gebruik het internationale formaat, bijvoorbeeld +31612345678."
+  },
+  "extra": {
+    "title": "Extra instructies",
+    "help": "Optioneel. Bedrijfsfeiten die het kerngedrag van de assistent aanvullen maar nooit overrulen, zoals een afwijkende openingsdag of een bezorgregel.",
+    "placeholder": "bijv. Proefritten alleen op afspraak. We zijn de eerste maandag van de maand gesloten."
+  },
+  "hours": {
+    "title": "Openingstijden"
+  },
+  "knowledge": {
+    "title": "Kennisbank",
+    "count_one": "{{count}} onderdeel dat de assistent in gesprekken kan gebruiken.",
+    "count_other": "{{count}} onderdelen die de assistent in gesprekken kan gebruiken."
+  }
+}

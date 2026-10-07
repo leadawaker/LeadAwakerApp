@@ -34,6 +34,7 @@ import enTags from "./locales/en/tags.json";
 import enSetup from "./locales/en/setup.json";
 import enCommunicationProfile from "./locales/en/communicationProfile.json";
 import enSpeedToLead from "./locales/en/speedToLead.json";
+import enVoiceTab from "./locales/en/voiceTab.json";
 
 import ptDocs from "./locales/pt/docs.json";
 import ptCommon from "./locales/pt/common.json";
@@ -64,6 +65,7 @@ import ptTags from "./locales/pt/tags.json";
 import ptSetup from "./locales/pt/setup.json";
 import ptCommunicationProfile from "./locales/pt/communicationProfile.json";
 import ptSpeedToLead from "./locales/pt/speedToLead.json";
+import ptVoiceTab from "./locales/pt/voiceTab.json";
 
 import nlDocs from "./locales/nl/docs.json";
 import nlCommon from "./locales/nl/common.json";
@@ -94,6 +96,7 @@ import nlTags from "./locales/nl/tags.json";
 import nlSetup from "./locales/nl/setup.json";
 import nlCommunicationProfile from "./locales/nl/communicationProfile.json";
 import nlSpeedToLead from "./locales/nl/speedToLead.json";
+import nlVoiceTab from "./locales/nl/voiceTab.json";
 
 const resources = {
   en: {
@@ -126,6 +129,7 @@ const resources = {
     setup: enSetup,
     communicationProfile: enCommunicationProfile,
     speedToLead: enSpeedToLead,
+    voiceTab: enVoiceTab,
   },
   pt: {
     common: ptCommon,
@@ -157,6 +161,7 @@ const resources = {
     setup: ptSetup,
     communicationProfile: ptCommunicationProfile,
     speedToLead: ptSpeedToLead,
+    voiceTab: ptVoiceTab,
   },
   nl: {
     common: nlCommon,
@@ -188,6 +193,7 @@ const resources = {
     setup: nlSetup,
     communicationProfile: nlCommunicationProfile,
     speedToLead: nlSpeedToLead,
+    voiceTab: nlVoiceTab,
   },
 };
 
@@ -230,6 +236,7 @@ i18n
       "setup",
       "communicationProfile",
       "speedToLead",
+      "voiceTab",
     ],
 
     interpolation: {
