@@ -246,8 +246,8 @@ export function registerDemoSettingsRoutes(app: Express) {
    * actually has rather than what was last clicked.
    */
   const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
-  const engineRoute = async (method: "GET" | "PUT", body?: unknown) => {
-    const resp = await fetch(`${ENGINE_BASE}/voice/phone/route`, {
+  const engineRoute = async (method: "GET" | "PUT", body?: unknown, path = "route") => {
+    const resp = await fetch(`${ENGINE_BASE}/voice/phone/${path}`, {
       method,
       headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
       body: body ? JSON.stringify(body) : undefined,
@@ -268,6 +268,21 @@ export function registerDemoSettingsRoutes(app: Express) {
     if (!parsed.success) return handleZodError(res, parsed.error);
     const r = await engineRoute("PUT", parsed.data);
     if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not switch the phone route." });
+    res.json(r.data);
+  }));
+
+  // The direct line's jitter buffer at Telnyx: smoother audio for a little delay.
+  app.get("/api/demo-settings/voice/phone-jitter", requireAuth, requireAgency, wrapAsync(async (_req: Request, res: Response) => {
+    const r = await engineRoute("GET", undefined, "jitter");
+    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not read the jitter buffer." });
+    res.json(r.data);
+  }));
+
+  app.put("/api/demo-settings/voice/phone-jitter", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
+    const parsed = z.object({ enabled: z.boolean() }).safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const r = await engineRoute("PUT", parsed.data, "jitter");
+    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not switch the jitter buffer." });
     res.json(r.data);
   }));
 

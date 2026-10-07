@@ -158,6 +158,13 @@
           "medium": "Médio",
           "high": "Alto"
         }
+      },
+      "jitter": {
+        "title": "Áudio suave (jitter buffer)",
+        "hint": "Segura de {{min}} a {{max}} ms do áudio dela na Telnyx, para que pacotes irregulares da OpenAI toquem sem pequenas falhas. Adiciona até {{max}} ms de atraso. Vale para todas as ligações da linha.",
+        "onState": "Ligado: áudio mais suave, até {{max}} ms depois. Vale a partir da próxima ligação.",
+        "offState": "Desligado: menor atraso, pequenas falhas são possíveis.",
+        "anchor": "Áudio roteado por {{site}}."
       }
     }
   },

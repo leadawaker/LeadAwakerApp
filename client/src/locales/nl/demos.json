@@ -158,6 +158,13 @@
           "medium": "Gemiddeld",
           "high": "Hard"
         }
+      },
+      "jitter": {
+        "title": "Vloeiend geluid (jitterbuffer)",
+        "hint": "Houdt {{min}} tot {{max}} ms van haar geluid vast bij Telnyx, zodat ongelijk binnenkomende pakketten van OpenAI zonder kleine haperingen spelen. Voegt tot {{max}} ms vertraging toe. Geldt voor elk gesprek op de lijn.",
+        "onState": "Aan: vloeiender geluid, tot {{max}} ms later. Geldt vanaf het volgende gesprek.",
+        "offState": "Uit: zo min mogelijk vertraging, kleine haperingen zijn mogelijk.",
+        "anchor": "Geluid loopt via {{site}}."
       }
     }
   },

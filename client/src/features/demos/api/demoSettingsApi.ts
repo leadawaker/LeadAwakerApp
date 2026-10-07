@@ -84,6 +84,37 @@ export function useSetPhoneRoute() {
   });
 }
 
+/** The direct line's jitter buffer at Telnyx (engine telnyx_bridge.get_jitter). */
+export interface PhoneJitter {
+  enabled: boolean;
+  min_ms: number | null;
+  max_ms: number | null;
+  anchorsite: string | null;
+}
+
+const JITTER_KEY = ["demo-phone-jitter"];
+
+export function usePhoneJitter() {
+  return useQuery({
+    queryKey: JITTER_KEY,
+    queryFn: async () => json<PhoneJitter>(await apiFetch("/api/demo-settings/voice/phone-jitter")),
+  });
+}
+
+/** Changes the connection at Telnyx right away: no Save button. */
+export function useSetPhoneJitter() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (enabled: boolean) =>
+      json<PhoneJitter>(await apiFetch("/api/demo-settings/voice/phone-jitter", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled }),
+      })),
+    onSuccess: (next) => qc.setQueryData(JITTER_KEY, next),
+  });
+}
+
 /** The locales and voices the engine actually offers, for the pickers. */
 export interface EngineVoiceOptions {
   locales: { id: string; label: string; voice: string; needs_listening_test?: boolean }[];

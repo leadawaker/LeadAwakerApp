@@ -158,6 +158,13 @@
           "medium": "Medium",
           "high": "Loud"
         }
+      },
+      "jitter": {
+        "title": "Smooth audio (jitter buffer)",
+        "hint": "Holds {{min}} to {{max}} ms of her audio at Telnyx so uneven packets from OpenAI play without tiny dropouts. Adds up to {{max}} ms of delay. Applies to every call on the line.",
+        "onState": "On: smoother audio, up to {{max}} ms later. Takes effect on the next call.",
+        "offState": "Off: lowest delay, small dropouts are possible.",
+        "anchor": "Media routed through {{site}}."
       }
     }
   },
