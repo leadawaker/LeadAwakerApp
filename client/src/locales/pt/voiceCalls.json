@@ -5,9 +5,10 @@
   "empty": "Nenhuma chamada de voz ainda. As chamadas feitas na demo de voz aparecem aqui.",
   "selectCall": "Selecione uma chamada para ver o que aconteceu.",
   "notFound": "Esta chamada não foi encontrada.",
+  "callLoadError": "Não foi possível carregar esta chamada.",
   "spokenAs": "Como foi dito na chamada",
   "loadError": "Não foi possível carregar as chamadas de voz.",
-  "back": "Voltar para as chamadas",
+  "back": "Voltar para todas as ligações",
   "turns_one": "{{count}} fala",
   "turns_other": "{{count}} falas",
   "sections": {
@@ -17,13 +18,14 @@
     "recording": "Gravação",
     "transcript": "Transcrição",
     "recap": "Resumo",
+    "details": "Detalhes",
     "wanted": "O que pediram"
   },
   "noSummary": "Nenhum resumo foi gerado para esta chamada.",
   "recordingExpired": "Gravação indisponível (a OpenAI guarda por 30 dias).",
   "recordingPending": "Gravação ainda não está pronta. Ela costuma aparecer alguns minutos depois da ligação.",
   "recordingUnavailable": "Gravação indisponível para esta ligação.",
-  "caller": "Cliente",
+  "caller": "Quem ligou",
   "ai": "Recepcionista IA",
   "interest": "Quer",
   "notes": "Observações",
@@ -107,10 +109,11 @@
     "aria": "Origem das chamadas"
   },
   "stats": {
-    "demosWeek": "Demos esta semana",
-    "callsWeek": "Chamadas esta semana",
-    "bookedRate": "Taxa de agendamento",
-    "avgLength": "Duração média da chamada",
+    "thisWeek": "Esta semana",
+    "demos": "Demos",
+    "calls": "Ligações",
+    "booked": "Agendados",
+    "avgLength": "Duração média",
     "last7Days": "Últimos 7 dias",
     "noValue": "–"
   },
@@ -140,8 +143,8 @@
   },
   "callers": {
     "view": {
-      "calls": "Ligações",
-      "callers": "Quem ligou",
+      "calls": "Todas as ligações",
+      "callers": "Por pessoa",
       "aria": "Visualização"
     },
     "callCount_one": "{{count}} ligação",
@@ -165,7 +168,7 @@
     },
     "calls": "Ligações",
     "empty": "Selecione uma pessoa para ver as ligações.",
-    "back": "Voltar para a lista",
+    "back": "Voltar para as pessoas",
     "dismiss": "Fechar",
     "search": "Buscar pessoas…"
   }

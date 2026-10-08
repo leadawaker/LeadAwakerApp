@@ -5,9 +5,10 @@
   "empty": "Nog geen spraakgesprekken. Gesprekken via de spraakdemo verschijnen hier.",
   "selectCall": "Selecteer een gesprek om te zien wat er gebeurde.",
   "notFound": "Dit gesprek is niet gevonden.",
+  "callLoadError": "Dit gesprek kon niet worden geladen.",
   "spokenAs": "Zoals gezegd in het gesprek",
   "loadError": "Spraakgesprekken konden niet worden geladen.",
-  "back": "Terug naar gesprekken",
+  "back": "Terug naar alle gesprekken",
   "turns_one": "{{count}} beurt",
   "turns_other": "{{count}} beurten",
   "sections": {
@@ -17,6 +18,7 @@
     "recording": "Opname",
     "transcript": "Transcript",
     "recap": "Samenvatting",
+    "details": "Details",
     "wanted": "Waar ze om vroegen"
   },
   "noSummary": "Voor dit gesprek is geen samenvatting gemaakt.",
@@ -107,10 +109,11 @@
     "aria": "Gesprekbron"
   },
   "stats": {
-    "demosWeek": "Demo's deze week",
-    "callsWeek": "Gesprekken deze week",
-    "bookedRate": "Boekingspercentage",
-    "avgLength": "Gemiddelde gespreksduur",
+    "thisWeek": "Deze week",
+    "demos": "Demo's",
+    "calls": "Gesprekken",
+    "booked": "Geboekt",
+    "avgLength": "Gem. duur",
     "last7Days": "Laatste 7 dagen",
     "noValue": "–"
   },
@@ -140,8 +143,8 @@
   },
   "callers": {
     "view": {
-      "calls": "Gesprekken",
-      "callers": "Bellers",
+      "calls": "Alle gesprekken",
+      "callers": "Per persoon",
       "aria": "Weergave"
     },
     "callCount_one": "{{count}} gesprek",
@@ -165,7 +168,7 @@
     },
     "calls": "Gesprekken",
     "empty": "Kies een beller om de gesprekken te zien.",
-    "back": "Terug naar bellers",
+    "back": "Terug naar personen",
     "dismiss": "Sluiten",
     "search": "Zoek bellers…"
   }

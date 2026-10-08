@@ -1,15 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { AudioLines, Building2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { MonoLabel } from "@/features/voice/components/atoms";
 import { useVoiceCall, type VoiceCallDetail as Detail } from "../api/voiceCallsApi";
-import { formatDateTime, formatDuration } from "../format";
-import { callStatus } from "../status";
 import { maskSpoken } from "../maskIdentity";
-import { CallAvatar, callerIni, callerTitle, maskCaller } from "./bits";
+import { maskCaller } from "./bits";
+import { CallHeader } from "./CallHeader";
 import { CallConversation } from "./CallConversation";
-import { CallRecap } from "./CallRecap";
-import { OutcomePill } from "./OutcomePill";
+import { CallerHistory, CallSidebar, type CallerContext } from "./CallSidebar";
 
 function useNarrow(): boolean {
   const [narrow, setNarrow] = useState(typeof window !== "undefined" && window.innerWidth < 1100);
@@ -19,51 +17,6 @@ function useNarrow(): boolean {
     return () => window.removeEventListener("resize", onR);
   }, []);
   return narrow;
-}
-
-/** Same header card as the Chats page: who called, when, and how it ended. */
-function DetailHeader({ call, narrow }: { call: Detail; narrow: boolean }) {
-  const { t, i18n } = useTranslation("voiceCalls");
-  const demo = call.scope === "demo";
-  const conclusion = call.conclusion ?? call.summary?.outcome ?? null;
-  return (
-    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", overflow: "hidden", flexShrink: 0 }}>
-      <div style={{ padding: narrow ? "14px 16px" : "16px 20px", display: "flex", alignItems: "center", gap: narrow ? 12 : 16 }}>
-        <CallAvatar ini={callerIni(call, t("webCaller"))} status={callStatus(call)} size={narrow ? 42 : 50} radius={14} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6, flexWrap: "wrap" }}>
-            <span style={{ fontFamily: "var(--serif)", fontSize: narrow ? 22 : 27, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em" }}>
-              {callerTitle(call, t("webCaller"))}
-            </span>
-            <OutcomePill outcome={call.outcome} bookedSlot={call.bookedSlot} bookedIso={call.bookedIso} />
-            {demo && (
-              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-pill)", padding: "4px 11px 4px 9px", color: "var(--ink-soft)", fontSize: 11.5, fontWeight: 600 }}>
-                <Building2 className="h-[12px] w-[12px]" style={{ color: "var(--wine)" }} />
-                {call.personaCompany || t("persona.universal")}
-                {call.personaNiche && <span style={{ fontWeight: 400, color: "var(--mute)" }}>{`· ${call.personaNiche}`}</span>}
-              </span>
-            )}
-          </div>
-          <div style={{ display: "flex", gap: 14, alignItems: "center", fontSize: 12, color: "var(--mute)", flexWrap: "wrap" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--wine)", fontWeight: 600 }}>
-              <AudioLines size={13} />{t("voiceCall")}
-            </span>
-            {call.callerName && call.callerNumber && <span style={{ fontFamily: "var(--mono)" }}>{call.callerNumber}</span>}
-            <span>{formatDateTime(call.startedAt, i18n.language)}</span>
-            <span>{formatDuration(call.durationSeconds)}</span>
-            <span>{t("turns", { count: call.turnCount })}</span>
-            {call.language && <span>{call.language.toUpperCase()}</span>}
-          </div>
-        </div>
-      </div>
-      <div style={{ borderTop: "1px solid var(--line)", padding: narrow ? "12px 16px 14px" : "14px 20px 16px", display: "flex", gap: 12, alignItems: "baseline" }}>
-        <span style={{ fontSize: 12, fontWeight: 600, color: "var(--mute)", flexShrink: 0 }}>{t("sections.outcome")}</span>
-        <p style={{ margin: 0, fontFamily: "var(--serif)", fontSize: narrow ? 15 : 16.5, lineHeight: 1.45, color: conclusion ? "var(--ink)" : "var(--mute)" }}>
-          {conclusion || t("noSummary")}
-        </p>
-      </div>
-    </div>
-  );
 }
 
 /** Presenting mode for the whole call: header via maskCaller, plus the name and
@@ -83,31 +36,67 @@ function maskDetail(call: Detail, masked: boolean): Detail {
   };
 }
 
-export function VoiceCallDetail({ callId, masked }: { callId: string; masked: boolean }) {
+interface Props {
+  callId: string;
+  masked: boolean;
+  /** Callers view: adds the caller actions to the header and the call history to the sidebar. */
+  caller?: CallerContext;
+}
+
+/**
+ * Loading / error / not-found pane. In the Callers view the person's call history
+ * (from the callers list, not the single-call query) stays up beside it.
+ */
+function StatusPane({ caller, narrow, children }: { caller?: CallerContext; narrow: boolean; children: React.ReactNode }) {
+  const center = <div style={{ flex: 1, minHeight: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>{children}</div>;
+  if (!caller || caller.calls.length === 0) return center;
+  return (
+    <div style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: narrow ? "column" : "row", gap: 14, overflow: "hidden" }}>
+      {center}
+      <div
+        className="neu-raised"
+        style={{ width: narrow ? "auto" : 310, flexShrink: 0, minHeight: 0, borderRadius: "var(--r-card)", background: "var(--card)", overflowX: "hidden", overflowY: "auto" }}
+      >
+        <CallerHistory ctx={caller} />
+      </div>
+    </div>
+  );
+}
+
+/**
+ * One header, the transcript filling the middle, a sidebar on the right.
+ * Below 1100px the whole pane scrolls as one column instead.
+ */
+export function VoiceCallDetail({ callId, masked, caller }: Props) {
   const { t } = useTranslation("voiceCalls");
-  const { data: rawCall, isLoading } = useVoiceCall(callId);
+  const { data, isLoading, isError } = useVoiceCall(callId);
+  // Never render a call other than the selected one.
+  const rawCall = data && data.callId === callId ? data : data === null ? null : undefined;
   const call = useMemo(() => (rawCall ? maskDetail(rawCall, masked) : rawCall), [rawCall, masked]);
   const narrow = useNarrow();
 
-  if (isLoading) return null;
-  if (!call) {
+  if (isError && !call) {
+    return <StatusPane caller={caller} narrow={narrow}><MonoLabel>{t("callLoadError")}</MonoLabel></StatusPane>;
+  }
+  if (isLoading || call === undefined) {
     return (
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <MonoLabel>{t("notFound")}</MonoLabel>
-      </div>
+      <StatusPane caller={caller} narrow={narrow}>
+        <Loader2 size={18} className="animate-spin" style={{ color: "var(--mute)" }} />
+      </StatusPane>
     );
+  }
+  if (!call) {
+    return <StatusPane caller={caller} narrow={narrow}><MonoLabel>{t("notFound")}</MonoLabel></StatusPane>;
   }
 
   return (
-    <div style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: "column", gap: 14, overflowY: narrow ? "auto" : "hidden" }}>
-      <DetailHeader call={call} narrow={narrow} />
-      <div style={{ flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: narrow ? "column-reverse" : "row", gap: 14 }}>
-        <div style={{ flex: narrow ? undefined : 1, minWidth: 0, minHeight: narrow ? 760 : 0, display: "flex" }}>
+    <div style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: "column", gap: 14, overflowY: narrow ? "auto" : "hidden", overflowX: "hidden" }}>
+      <CallHeader call={call} narrow={narrow} caller={caller} />
+      <div style={{ flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: narrow ? "column" : "row", gap: 14 }}>
+        <div style={{ flex: narrow ? "0 0 auto" : 1, minWidth: 0, minHeight: narrow ? 760 : 0, display: "flex", overflow: "hidden", order: narrow ? 2 : 0 }}>
           <CallConversation key={call.callId} call={call} />
         </div>
-        <div style={{ width: narrow ? "auto" : 290, flexShrink: 0, minHeight: narrow ? "auto" : 0, display: "flex" }}>
-          <CallRecap call={call} />
-        </div>
+        <CallSidebar call={call} narrow={narrow} caller={caller} />
       </div>
     </div>
   );

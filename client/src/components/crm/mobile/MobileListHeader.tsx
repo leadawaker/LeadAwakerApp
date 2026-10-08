@@ -403,6 +403,8 @@ export interface MobileListHeaderProps {
   mainRowTrailing?: React.ReactNode;
   /** Extra action buttons (e.g. add / chats) — rendered in the drawer's main view. */
   extraActions?: React.ReactNode;
+  /** Optional second row under the title row (e.g. view tabs that do not fit beside the title). */
+  subRow?: React.ReactNode;
 }
 
 /**
@@ -435,6 +437,7 @@ export function MobileListHeader({
   leftActions,
   mainRowTrailing,
   extraActions,
+  subRow,
 }: MobileListHeaderProps) {
   const { t } = useTranslation("crm");
   const hasSearch = typeof onSearchChange === "function";
@@ -517,6 +520,12 @@ export function MobileListHeader({
           </>
         )}
       </div>
+
+      {subRow && (
+        <div className="row" style={{ gap: 8, alignItems: "center", flexWrap: "nowrap", overflowX: "auto", padding: "0 16px 12px" }}>
+          {subRow}
+        </div>
+      )}
 
       {hasSettings && (
         <TopDrawer

@@ -1,12 +1,14 @@
 import { useTranslation } from "react-i18next";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import type { VoiceScope } from "../api/voiceCallsApi";
 import { VIEWS, type VoiceView } from "../callers";
 import type { ListOptions } from "../listOptions";
 import { AccountFilter, type AccountOption } from "./AccountFilter";
 import { PresentingToggle } from "./PresentingToggle";
 import { VoiceCallsMenus } from "./VoiceCallsMenus";
+import { VoiceCallsMobileTopbar } from "./VoiceCallsMobileTopbar";
 
 const SCOPES: VoiceScope[] = ["live", "demo"];
 
@@ -30,6 +32,17 @@ interface Props {
 
 export function VoiceCallsTopbar({ scope, isOwner, onScope, view, onView, options, setOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
   const { t } = useTranslation("voiceCalls");
+  const isMobile = useIsMobile(768);
+  if (isMobile) {
+    return (
+      <VoiceCallsMobileTopbar
+        scope={scope} isOwner={isOwner} onScope={onScope} view={view} onView={onView}
+        options={options} setOptions={setOptions} languages={languages}
+        accounts={accounts} accountId={accountId} onAccount={onAccount}
+        masked={masked} onTogglePresenting={onTogglePresenting}
+      />
+    );
+  }
   return (
     <div className="la-page-header" style={{ gap: 12, padding: "0 17px", overflowX: "auto" }}>
       <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em", flexShrink: 0 }}>

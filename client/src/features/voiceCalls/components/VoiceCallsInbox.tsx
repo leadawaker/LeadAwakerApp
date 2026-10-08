@@ -6,6 +6,7 @@ import type { VoiceCallListItem, VoiceScope } from "../api/voiceCallsApi";
 import { filterCalls, groupCalls, sortCalls, type ListOptions } from "../listOptions";
 import { VoiceCallListCard } from "./VoiceCallListCard";
 import { VoiceCallDetail } from "./VoiceCallDetail";
+import { WeekSummaryCard } from "./WeekSummaryCard";
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
@@ -31,12 +32,14 @@ interface Props {
   error: unknown;
   options: ListOptions;
   scope: VoiceScope;
+  /** Live scope only: the picked account, so the week summary matches the list. */
+  accountId?: number;
   masked: boolean;
   selection: string | null;
   setSelection: (id: string | null) => void;
 }
 
-export function VoiceCallsInbox({ calls, isLoading, error, options, scope, masked, selection, setSelection }: Props) {
+export function VoiceCallsInbox({ calls, isLoading, error, options, scope, accountId, masked, selection, setSelection }: Props) {
   const { t } = useTranslation("voiceCalls");
   const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 1600);
   useEffect(() => {
@@ -86,6 +89,7 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
 
   const listPane = (
     <div style={{ width: narrow ? "100%" : 348, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: narrow ? "none" : "1px solid var(--line)", background: "var(--surface)" }}>
+      <WeekSummaryCard scope={scope} accountId={accountId} />
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "6px 10px 8px", display: "flex", flexDirection: "column" }}>
         {listBody}
       </div>

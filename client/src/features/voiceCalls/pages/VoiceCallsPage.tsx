@@ -6,7 +6,6 @@ import { useVoiceCallers, useVoiceCalls, useVoiceCapabilities, type VoiceCapabil
 import { VIEW_KEY, type VoiceView } from "../callers";
 import type { AccountOption } from "../components/AccountFilter";
 import { CallersInbox } from "../components/CallersInbox";
-import { StatsStrip } from "../components/StatsStrip";
 import { VoiceCallsInbox } from "../components/VoiceCallsInbox";
 import { VoiceCallsTopbar } from "../components/VoiceCallsTopbar";
 import type { ListOptions } from "../listOptions";
@@ -92,8 +91,6 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
         onTogglePresenting={toggle}
       />
 
-      <StatsStrip scope={scope} accountId={accountId} />
-
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {view === "callers" ? (
           <CallersInbox
@@ -103,6 +100,7 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
             error={callersQuery.error}
             query={options.query}
             scope={scope}
+            accountId={accountId}
             masked={masked}
             isOwner={isOwner}
             selection={callerSelection}
@@ -115,6 +113,7 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
             error={error}
             options={options}
             scope={scope}
+            accountId={accountId}
             masked={masked}
             selection={selection}
             setSelection={setSelection}

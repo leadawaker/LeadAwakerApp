@@ -41,7 +41,7 @@ export function CallRecap({ call }: { call: VoiceCallDetail }) {
   const items = call.summary?.items ?? [];
 
   return (
-    <Card variant="flat" headLeft={<CardLabel>{t("sections.recap")}</CardLabel>} style={{ flex: 1, minWidth: 0 }} bodyStyle={{ overflowY: "auto" }}>
+    <Card variant="flat" headLeft={<CardLabel>{t("sections.recap")}</CardLabel>} style={{ minWidth: 0 }}>
       {call.bookedSlot && (
         <section style={{ padding: "16px 16px 18px", borderBottom: "1px solid var(--line)" }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: "var(--good)", marginBottom: 10 }}>{t("sections.booked")}</div>

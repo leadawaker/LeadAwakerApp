@@ -5,9 +5,10 @@
   "empty": "No voice calls yet. Calls made on the voice demo will appear here.",
   "selectCall": "Select a call to see what happened.",
   "notFound": "This call could not be found.",
+  "callLoadError": "This call could not be loaded.",
   "spokenAs": "As said on the call",
   "loadError": "Could not load voice calls.",
-  "back": "Back to calls",
+  "back": "Back to all calls",
   "turns_one": "{{count}} turn",
   "turns_other": "{{count}} turns",
   "sections": {
@@ -17,6 +18,7 @@
     "recording": "Recording",
     "transcript": "Transcript",
     "recap": "Recap",
+    "details": "Details",
     "wanted": "What they asked for"
   },
   "noSummary": "No recap was generated for this call.",
@@ -107,10 +109,11 @@
     "aria": "Call source"
   },
   "stats": {
-    "demosWeek": "Demos this week",
-    "callsWeek": "Calls this week",
-    "bookedRate": "Booked rate",
-    "avgLength": "Average call length",
+    "thisWeek": "This week",
+    "demos": "Demos",
+    "calls": "Calls",
+    "booked": "Booked",
+    "avgLength": "Avg length",
     "last7Days": "Last 7 days",
     "noValue": "–"
   },
@@ -140,8 +143,8 @@
   },
   "callers": {
     "view": {
-      "calls": "Calls",
-      "callers": "Callers",
+      "calls": "All calls",
+      "callers": "By person",
       "aria": "View"
     },
     "callCount_one": "{{count}} call",
@@ -165,7 +168,7 @@
     },
     "calls": "Calls",
     "empty": "Select a caller to see their calls.",
-    "back": "Back to callers",
+    "back": "Back to people",
     "dismiss": "Dismiss",
     "search": "Search callers…"
   }
