@@ -165,14 +165,14 @@ export const SAMPLE_ACTIVITY: ActivitySample[] = [
 ];
 
 export interface QuickActionConfig {
-  key: "newCampaign" | "importContacts" | "newSequence";
+  key: "newCampaign" | "importLeads" | "newSequence";
   icon: HomeIconName;
   href?: string;
 }
 
 export const QUICK_ACTIONS: QuickActionConfig[] = [
   { key: "newCampaign", icon: "send", href: "/platform/campaigns" },
-  { key: "importContacts", icon: "import", href: "/platform/contacts" },
+  { key: "importLeads", icon: "import", href: "/platform/contacts" },
   { key: "newSequence", icon: "mail" },
 ];
 

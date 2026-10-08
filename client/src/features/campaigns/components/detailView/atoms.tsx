@@ -560,7 +560,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                         to check first. See specs/demo-persona-library. */}
                     {(savedClients ?? []).length > 0 && (
                       <div>
-                        <label className="block text-[12px] font-medium mb-1">{t("share.savedClient", "Saved Client")}</label>
+                        <label className="block text-[12px] font-medium mb-1">{t("share.savedClient", "Saved persona")}</label>
                         <select
                           value={savedClient}
                           onChange={(e) => setSavedClient(e.target.value)}
@@ -611,7 +611,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                       />
                       {!niche.trim() && !savedClient && (
                         <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
-                          {t("share.prospectCompanyHint", "Fill in their niche or pick a saved client first.")}
+                          {t("share.prospectCompanyHint", "Fill in their niche or pick a saved persona first.")}
                         </p>
                       )}
                     </div>
@@ -640,7 +640,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                     {(["en", "nl", "pt"] as const).map((l) => (
                       <button key={l} type="button" onClick={() => setLanguage(l)}
                         disabled={!languageAllowed(l)}
-                        title={languageAllowed(l) ? undefined : t("share.languageMissing", "This client has no opener in this language yet.")}
+                        title={languageAllowed(l) ? undefined : t("share.languageMissing", "This persona has no opener in this language yet.")}
                         className={cn("px-3 py-1 rounded-md border text-[12px] font-medium transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
                           language === l ? "border-brand-indigo bg-brand-indigo text-white" : "border-black/[0.125] bg-white hover:bg-muted/50")}>
                         {l.toUpperCase()}
@@ -651,7 +651,7 @@ export function ShareButton({ campaign }: { campaign: Campaign }) {
                     <p className="mt-1 text-[10.5px] text-muted-foreground leading-snug">
                       {t("share.languageLimitedHint", {
                         defaultValue:
-                          "This client only exists in {{langs}}. Add the missing opener fields on the Clients tab to mint it in another language.",
+                          "This persona only exists in {{langs}}. Add the missing opener fields on the Demo personas tab to mint it in another language.",
                         langs: clientLanguages.map((l) => l.toUpperCase()).join(", "),
                       })}
                     </p>

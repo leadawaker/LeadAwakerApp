@@ -4,7 +4,7 @@
   "tabs": {
     "sessions": "Sessions",
     "new": "New demo",
-    "clients": "Clients",
+    "clients": "Demo personas",
     "settings": "Settings"
   },
   "table": {
@@ -113,7 +113,7 @@
     "dbr": "Database reactivation",
     "speed": "Speed to Lead",
     "widget": "Website widget",
-    "voice": "Voice receptionist",
+    "voice": "AI receptionist",
     "reputation": "Reputation",
     "socials": "Social DMs",
     "soon": "Not built yet",

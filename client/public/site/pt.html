@@ -2630,7 +2630,7 @@ footer img{height:24px;width:auto;display:block}
 (function(){
   var auth=false;try{auth=!!localStorage.getItem('leadawaker_auth')}catch(e){}
   if(!auth)return;
-  [].forEach.call(document.querySelectorAll('.js-login'),function(a){a.textContent='Abrir app';a.href='/platform/campaigns'});
+  [].forEach.call(document.querySelectorAll('.js-login'),function(a){a.textContent='Abrir app';a.href='/platform'});
 })();
 /* The language menu. A pick is remembered so the language redirect respects it. */
 (function(){

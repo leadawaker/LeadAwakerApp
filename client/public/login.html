@@ -515,8 +515,7 @@
   try {
     const isAuthed = Boolean(localStorage.getItem('leadawaker_auth'));
     if (isAuthed) {
-      const role = localStorage.getItem('leadawaker_user_role') || '';
-      const href = (role === 'Admin' || role === 'Operator') ? '/platform/campaigns' : '/platform/campaigns';
+      const href = '/platform';
       ['nav-login-desktop', 'nav-login-mobile'].forEach((id) => {
         const el = document.getElementById(id);
         if (el) {
@@ -568,9 +567,7 @@
     const isAuthed = Boolean(localStorage.getItem('leadawaker_auth'));
     const remembered = localStorage.getItem('leadawaker_remember_me') === 'true';
     if (isAuthed && remembered) {
-      const role = localStorage.getItem('leadawaker_user_role') || 'Viewer';
-      const isAgency = role === 'Admin' || role === 'Operator';
-      window.location.href = isAgency ? '/platform/campaigns' : '/platform/campaigns';
+      window.location.href = '/platform';
     }
   } catch (_) {}
 
@@ -617,6 +614,8 @@
       const data = await res.json();
       const user = data.user || {};
       localStorage.setItem('leadawaker_auth', 'session');
+      // Drop the previous user's landing page and service toggles: the app re-reads them from the session.
+      ['leadawaker_landing_page','leadawaker_show_speed_page','leadawaker_show_missed_calls_page','leadawaker_show_reputation_page'].forEach((k) => localStorage.removeItem(k));
       localStorage.setItem('leadawaker_user_email', user.email || email);
       localStorage.setItem('leadawaker_user_role', user.role || 'Viewer');
       localStorage.setItem('leadawaker_user_name', user.fullName1 || user.email || email);
@@ -625,8 +624,7 @@
       if (rememberEl.checked) localStorage.setItem('leadawaker_remember_me', 'true');
       else localStorage.removeItem('leadawaker_remember_me');
 
-      const isAgency = user.role === 'Admin' || user.role === 'Operator';
-      window.location.href = isAgency ? '/platform/campaigns' : '/platform/campaigns';
+      window.location.href = '/platform';
     } catch (_) {
       showError('Network error — please try again');
     } finally {

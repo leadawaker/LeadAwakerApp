@@ -1,7 +1,7 @@
 {
   "title": "Cadence",
   "loading": "Loading…",
-  "empty": "No contacts due today.",
+  "empty": "No prospects due today.",
   "dailyGoal": "/ {{goal}} today",
   "overdue": "Overdue",
   "step": "Step {{n}}",

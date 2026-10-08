@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { apiFetch } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
 import { User, Send, Loader2, ChevronLeft, Mic, Trash2, Paperclip, MessageSquare } from "lucide-react";
@@ -535,6 +536,7 @@ function FounderChatView({
 
 /** Admin founder inbox: lists all founder DM sessions, click to view and reply */
 export function FounderInbox() {
+  const { t } = useTranslation("crm");
   const [selectedSession, setSelectedSession] = useState<FounderSession | null>(null);
 
   const { data: sessions = [], isLoading } = useQuery<FounderSession[]>({
@@ -581,7 +583,7 @@ export function FounderInbox() {
           className="font-semibold"
           style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}
         >
-          Inbox
+          {t("sidebar.founderInbox")}
         </span>
       </div>
 

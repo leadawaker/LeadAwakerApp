@@ -114,7 +114,7 @@
   },
   "book": {
     "newAppointment": "New appointment",
-    "title": "Book a Lead",
+    "title": "Book appointment",
     "bookAppointment": "Book Appointment",
     "booking": "Booking..."
   },
@@ -130,7 +130,7 @@
     "month": "Month",
     "weekOf": "Week of",
     "tapDay": "Tap a day",
-    "noMeetingsWeek": "No meetings this week",
+    "noMeetingsWeek": "No appointments this week",
     "today": "Today",
     "book": "Book",
     "filters": {
@@ -140,7 +140,7 @@
       "attention": "Needs attention"
     },
     "stats": {
-      "meetings": "Meetings this week",
+      "meetings": "Appointments this week",
       "upcoming": "Upcoming",
       "needsAttention": "Needs attention"
     },
@@ -170,7 +170,7 @@
   },
   "design": {
     "kpi": {
-      "meetings": "Meetings this week"
+      "meetings": "Appointments this week"
     },
     "tabs": {
       "all": "All",
@@ -198,15 +198,15 @@
       },
       "conversation": "Conversation",
       "openInLead": "Open in lead",
-      "selectMeeting": "Select a meeting",
-      "noMeetings": "No meetings",
+      "selectMeeting": "Select an appointment",
+      "noMeetings": "No appointments",
       "aiAgent": "AI Agent",
       "googleMeet": "Google Meet",
       "phone": "Phone",
       "email": "Email",
       "actions": "Appointment actions",
       "reschedule": "Reschedule",
-      "cancelCall": "Cancel call",
+      "cancelCall": "Cancel appointment",
       "close": "Close"
     },
     "panel": {

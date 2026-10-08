@@ -49,7 +49,7 @@
     "booking": "Booking setup",
     "services": "Services",
     "handoff": "Handoff",
-    "voice": "Phone receptionist",
+    "voice": "AI receptionist",
     "widget": "Website chat",
     "whatsapp": "WhatsApp"
   },
@@ -231,8 +231,8 @@
       "help": "Tick everything that applies. Each service adds its own short section at the end. The questions every channel shares are asked once.",
       "options": {
         "voice": {
-          "label": "Phone receptionist",
-          "help": "The assistant answers calls the client misses, books viewings or appointments and puts serious buyers through."
+          "label": "AI receptionist",
+          "help": "The AI receptionist answers calls the client misses, books viewings or appointments and puts serious buyers through."
         },
         "widget": {
           "label": "Website chat",
@@ -290,9 +290,9 @@
       "recapTime": "Recap time"
     },
     "voiceForwarding": {
-      "label": "Which calls go to the assistant?",
+      "label": "Which calls go to the receptionist?",
       "short": "Call forwarding",
-      "help": "The client keeps answering their own phone. Calls they miss are forwarded to the assistant's number.",
+      "help": "The client keeps answering their own phone. Calls they miss are forwarded to the receptionist's number.",
       "linesLabel": "Which line",
       "lines": {
         "landline": "Company line",
@@ -315,7 +315,7 @@
       "cancelHint": "To undo a forward, dial ## followed by the same number and # (e.g. ##61#)."
     },
     "voiceSound": {
-      "label": "How should the assistant sound?",
+      "label": "How should the receptionist sound?",
       "short": "Voice & greeting",
       "voiceLabel": "Voice",
       "voices": {
@@ -336,7 +336,7 @@
       "greetingPlaceholder": "e.g. Good afternoon, Robben Rosmalen, you're speaking with Sanne, the digital assistant. How can I help?"
     },
     "voicePronunciation": {
-      "label": "Words the assistant must pronounce correctly",
+      "label": "Words the receptionist must pronounce correctly",
       "short": "Pronunciation",
       "help": "Brand names, models, names and street names. Write how they sound, the way you would spell it out to someone.",
       "wordPlaceholder": "Word, e.g. Porsche",
@@ -351,11 +351,11 @@
       "options": {
         "message": {
           "label": "Take a message",
-          "help": "The assistant notes who called and why, and the client calls back."
+          "help": "The receptionist notes who called and why, and the client calls back."
         },
         "callback": {
           "label": "Book a callback",
-          "help": "The assistant books a time in the agenda for the client to call back."
+          "help": "The receptionist books a time in the agenda for the client to call back."
         },
         "ringHot": {
           "label": "Ring for serious buyers",

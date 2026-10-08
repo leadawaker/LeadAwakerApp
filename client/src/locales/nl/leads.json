@@ -3,13 +3,13 @@
     "label": "Type",
     "widget": "Widget",
     "voice": "Spraak",
-    "dbr": "DBR / Offertes",
+    "dbr": "Reactivatie / Offertes",
     "instagram": "Instagram",
     "other": "Overig"
   },
   "page": {
-    "chatsTitle": "Chats",
-    "title": "Mijn Leads",
+    "chatsTitle": "Gesprekken",
+    "title": "Leads",
     "opportunities": "Kansen"
   },
   "viewTabs": {
@@ -20,6 +20,7 @@
   "toolbar": {
     "add": "Toevoegen",
     "searchPlaceholder": "Leads zoeken...",
+    "searchConversationsPlaceholder": "Gesprekken zoeken...",
     "searchLeads": "Leads zoeken",
     "group": "Groeperen",
     "sort": "Sorteren",
@@ -54,18 +55,18 @@
     "previous": "Vorige",
     "next": "Volgende",
     "of": "van",
-    "chats": "Chats",
+    "chats": "Gesprekken",
     "chatsPeek": "Laatste bericht voor elke lead tonen",
     "minimizeList": "Lijst minimaliseren",
     "expandList": "Lijst uitvouwen",
     "filterLeads": "Leads filteren",
     "switchToList": "Lijstweergave",
     "switchToKanban": "Kanbanweergave",
-    "upcomingCalls": "Aankomende gesprekken",
+    "upcomingCalls": "Aankomende afspraken",
     "more": "Meer",
     "exportPdf": "PDF exporteren",
-    "showChats": "Chats tonen",
-    "hideChats": "Chats verbergen"
+    "showChats": "Gesprekken tonen",
+    "hideChats": "Gesprekken verbergen"
   },
   "sort": {
     "sortBy": "Sorteren op",
@@ -153,7 +154,9 @@
       "company": "Bedrijf",
       "bumpStage": "Bump Fase",
       "created": "Aangemaakt",
-      "assignedTo": "Toegewezen aan"
+      "assignedTo": "Toegewezen aan",
+      "chats": "Gesprekken",
+      "createdAt": "Aangemaakt"
     },
     "empty": {
       "noResults": "Geen leads gevonden voor uw zoekopdracht",
@@ -179,48 +182,6 @@
       "Lost": "Verloren",
       "DND": "Niet Storen",
       "Unknown": "Onbekend"
-    },
-    "emptyStates": {
-      "New": {
-        "message": "Nog geen nieuwe leads",
-        "hint": "Importeer contacten of voeg een lead toe om te beginnen"
-      },
-      "Contacted": {
-        "message": "Geen gecontacteerde leads",
-        "hint": "Neem contact op met nieuwe leads om ze hier te plaatsen"
-      },
-      "Responded": {
-        "message": "Geen leads hebben gereageerd",
-        "hint": "Blijf opvolgen — reacties verschijnen hier"
-      },
-      "MultipleResponses": {
-        "message": "Geen actieve gesprekken",
-        "hint": "Ga in gesprek met uw gecontacteerde leads"
-      },
-      "Qualified": {
-        "message": "Nog geen gekwalificeerde leads",
-        "hint": "Kwalificeer veelbelovende gesprekken om deze fase te vullen"
-      },
-      "Booked": {
-        "message": "Nog geen gesprekken gepland",
-        "hint": "Dit is uw hoofddoel — blijf doorgaan!"
-      },
-      "Closed": {
-        "message": "Nog geen afgesloten deals",
-        "hint": "Afgeronde afspraken verschijnen hier"
-      },
-      "Lost": {
-        "message": "Geen verloren leads",
-        "hint": "Geweldig! Al uw leads zitten nog in de pipeline"
-      },
-      "DND": {
-        "message": "Geen leads op Niet Storen",
-        "hint": "Leads die zich afmelden verschijnen hier"
-      },
-      "default": {
-        "message": "Geen leads in deze fase",
-        "hint": "Sleep leads hierheen om ze naar deze fase te verplaatsen"
-      }
     },
     "dropHere": "Hier neerzetten",
     "foldColumn": "Klik om in te klappen",
@@ -256,7 +217,7 @@
     "expandPanel": "Paneel uitklappen",
     "collapsePanel": "Paneel inklappen",
     "deselectLead": "Lead deselecteren",
-    "openFullPage": "Volledige contactpagina openen",
+    "openFullPage": "Volledige leadpagina openen",
     "sections": {
       "contact": "Contact",
       "scores": "Scores",
@@ -301,7 +262,7 @@
       "firstContacted": "Eerste Contact",
       "nextAction": "Volgende Actie",
       "whatTheyDid": "Wat Ze Deden",
-      "callDate": "Gespreksdatum",
+      "callDate": "Afspraakdatum",
       "previousCallDate": "Vorige",
       "confirmedAt": "Bevestigd Op",
       "noShow": "Niet Verschenen",
@@ -309,7 +270,7 @@
       "rescheduleCall": "Afspraak verzetten",
       "pickNewTime": "Kies een nieuw tijdstip",
       "letAiRebook": "AI laten herplannen",
-      "calendarEditWarning": "Verplaats dit gesprek niet via je eigen agenda — dat synchroniseert niet. Gebruik deze knop.",
+      "calendarEditWarning": "Verplaats deze afspraak niet via je eigen agenda: dat synchroniseert niet. Gebruik deze knop.",
       "aiRebookTriggered": "AI re-engagement gestart",
       "aiRebookFailed": "Mislukt om AI te starten",
       "cancelCall": "Afspraak annuleren",
@@ -386,7 +347,7 @@
     "title": "Lead Score",
     "notScored": "Niet gescoord",
     "insights": {
-      "callBooked": "Gesprek succesvol gepland",
+      "callBooked": "Afspraak gepland",
       "leadQualified": "Lead is gekwalificeerd",
       "multipleResponses": "Meerdere reacties ontvangen",
       "leadResponded": "Lead heeft gereageerd",
@@ -596,7 +557,7 @@
     "noMessagesHint": "Berichten verschijnen hier zodra het contact begint",
     "typePlaceholder": "Typ een bericht…",
     "letAiContinue": "AI laten doorgaan",
-    "openInChats": "Openen in Chats",
+    "openInChats": "Openen in Gesprekken",
     "transcribing": "Transcriberen…"
   },
   "team": {
@@ -606,7 +567,7 @@
   },
   "activity": {
     "title": "Activiteit",
-    "callBooked": "Gesprek Gepland",
+    "callBooked": "Afspraak gepland",
     "scheduledFor": "Gepland voor {{date}}",
     "doNotDisturb": "Niet Storen",
     "leadRequestedNoContact": "Lead heeft geen contact verzocht",
@@ -641,7 +602,7 @@
     "leadLabel": "Lead",
     "activityLabel": "Activiteit",
     "stageOf": "Fase {{current}} van {{total}}",
-    "bookCall": "Gesprek plannen",
+    "bookCall": "Afspraak plannen",
     "viewBooking": "Afspraak bekijken",
     "meetingBooked": "Afspraak gepland",
     "noSummary": "Nog geen samenvatting",
@@ -685,7 +646,7 @@
   },
   "noShow": {
     "title": "No-show melden",
-    "description": "De lead is niet komen opdagen voor het geplande gesprek. Kies wat er gebeurd is; dit bepaalt de automatische opvolging.",
+    "description": "De lead is niet komen opdagen voor de geplande afspraak. Kies wat er gebeurd is; dit bepaalt de automatische opvolging.",
     "reportButton": "Lead is niet komen opdagen",
     "claimedBadge": "No-show gemeld",
     "reported": "No-show gemeld, opvolging gestart",

@@ -6,21 +6,18 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import {
   ArrowUpDown, Filter, Check, Search, X, Plus,
   Mail, Phone, Copy, Clock, User, Shield, Calendar,
-  Layers, Trash2, ExternalLink, Megaphone, Users, HandMetal, Eye, Bell,
+  Layers, Trash2, ExternalLink, Megaphone, Users, HandMetal,
 } from "lucide-react";
 import { useLocation } from "wouter";
-import { ProfileSection } from "@/features/settings/components/ProfileSection";
-import { NotificationsSection } from "@/features/settings/components/NotificationsSection";
 import { UsersCardGrid } from "./UsersCardGrid";
 import type { UserTableItem } from "./UsersInlineTable";
 import type { AppUser, AccountMap } from "../types";
 import { apiFetch } from "@/lib/apiUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSession } from "@/hooks/useSession";
-import { useImpersonation } from "@/hooks/useImpersonation";
 import { cn } from "@/lib/utils";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription,
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
 import {
   Popover, PopoverContent, PopoverTrigger,
@@ -209,7 +206,6 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
   const isMobile = useIsMobile();
   const { currentAccountId, isOwner } = useWorkspace();
   const session = useSession();
-  const { impersonate } = useImpersonation();
 
   // ── Data fetching ──────────────────────────────────────────────────────────
   const [users, setUsers] = useState<AppUser[]>([]);
@@ -532,8 +528,6 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
 
   // ── Edit user dialog ───────────────────────────────────────────────────────
   const [editingUser, setEditingUser] = useState<AppUser | null>(null);
-  // Self-edit reuses the full ProfileSection (avatar, secure password, Gmail, impersonation)
-  const [editingSelf, setEditingSelf] = useState(false);
 
   const handleSaveUser = useCallback(async () => {
     if (!editingUser) return;
@@ -829,12 +823,12 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
                       style={{ background: "var(--bg)", boxShadow: "0 2px 4px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04)", color: "var(--ink)" }}
                       onClick={() => {
                         const u = viewingUser;
-                        if (u.email === currentUserEmail) setEditingSelf(true);
+                        if (u.email === currentUserEmail) setLocation("/platform/settings?tab=profile");
                         else { setViewingUser(null); setEditingUser(u); }
                       }}
                     >
                       <User className="h-4 w-4" />
-                      Edit Profile
+                      {t("team.editProfile")}
                     </button>
                   )}
                 </div>
@@ -916,48 +910,6 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
                     </div>
                   )}
                 </div>
-
-                {/* Impersonation — Owner only, at the bottom */}
-                {isOwner && viewingUser.email === currentUserEmail && (
-                  <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--line)" }}>
-                    <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-3 flex items-center gap-1.5">
-                      <Eye className="w-3.5 h-3.5" />View As
-                    </p>
-                    <div className="space-y-2">
-                      <button
-                        type="button"
-                        onClick={() => impersonate("Admin")}
-                        className="w-full h-9 rounded-lg inline-flex items-center justify-center gap-2.5 text-[12px] font-semibold border"
-                        style={{ background: "var(--bg)", borderColor: "var(--line)", color: "var(--ink)" }}
-                      >
-                        <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold shrink-0 bg-primary text-primary-foreground">A</div>
-                        Admin
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const selectedAccountName = currentAccountId > 0 ? accounts[currentAccountId] : null;
-                          impersonate("Manager", selectedAccountName ? currentAccountId : undefined);
-                        }}
-                        className="w-full h-9 rounded-lg inline-flex items-center justify-center gap-2.5 text-[12px] font-semibold border"
-                        style={{ background: "var(--bg)", borderColor: "var(--line)", color: "var(--ink)" }}
-                      >
-                        <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold shrink-0 bg-muted-foreground/20 text-muted-foreground">C</div>
-                        View as Client
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Notifications — own profile only, at the very bottom */}
-                {viewingUser.email === currentUserEmail && (
-                  <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--line)" }}>
-                    <p className="text-[11px] text-muted-foreground uppercase tracking-wide font-medium mb-3 flex items-center gap-1.5">
-                      <Bell className="w-3.5 h-3.5" />{t("notifications.title")}
-                    </p>
-                    <NotificationsSection />
-                  </div>
-                )}
               </div>
             </div>
           )}
@@ -1037,17 +989,6 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
             <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
             <Button onClick={handleSaveUser}>Save Changes</Button>
           </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ── Self-edit popup — full ProfileSection (avatar, secure password, Gmail, impersonation) ── */}
-      <Dialog open={editingSelf} onOpenChange={(o) => setEditingSelf(o)}>
-        <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>{t("team.editMyProfile", "Edit My Profile")}</DialogTitle>
-            <DialogDescription className="sr-only">{t("team.editMyProfile", "Edit My Profile")}</DialogDescription>
-          </DialogHeader>
-          <ProfileSection />
         </DialogContent>
       </Dialog>
     </div>

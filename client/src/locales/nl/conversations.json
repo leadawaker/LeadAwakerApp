@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Gesprekken",
-    "searchPlaceholder": "Chats zoeken...",
+    "searchPlaceholder": "Gesprekken zoeken...",
     "group": "Groeperen",
     "groupBy": "Groeperen op",
     "sort": "Sorteren",
@@ -12,10 +12,15 @@
     "allCampaigns": "Alle Campagnes"
   },
   "inbox": {
-    "title": "Chats",
+    "title": "Gesprekken",
+    "prospectTitle": "Prospect-inbox",
+    "newChat": "Nieuw gesprek",
+    "startNewChat": "Nieuw gesprek starten",
+    "openInConversations": "Openen in Gesprekken",
     "tabs": {
-      "all": "Inbox",
+      "all": "Alle",
       "unread": "Ongelezen",
+      "prospects": "Prospects",
       "support": "Ondersteuning"
     },
     "supportAssistant": "Ondersteuningsassistent",
@@ -78,7 +83,7 @@
       "description": "Begin het gesprek door hieronder een bericht te sturen."
     },
     "compose": {
-      "placeholderNoContact": "Selecteer eerst een contact",
+      "placeholderNoContact": "Selecteer eerst een lead",
       "placeholderHuman": "Overnemen van AI \u2014 Enter om te verzenden",
       "placeholderDefault": "Typ een bericht\u2026 (Enter om te verzenden)",
       "sendMessage": "Bericht verzenden",
@@ -128,7 +133,7 @@
       "cancel": "Annuleren",
       "confirmSend": "Overnemen & Verzenden"
     },
-    "showContactPanel": "Contactpaneel tonen",
+    "showContactPanel": "Leadpaneel tonen",
     "scrollToLatest": "Naar nieuwste bericht scrollen",
     "microphoneAccessDenied": "Microfoontoegang geweigerd",
     "microphoneAccessDescription": "Sta microfoontoegang toe om spraakberichten op te nemen.",

@@ -9,12 +9,8 @@ function Nav({ logoVariant }) {
   const isLoggedIn = React.useMemo(() => {
     try { return Boolean(localStorage.getItem('leadawaker_auth')); } catch (_) { return false; }
   }, []);
-  const appHref = React.useMemo(() => {
-    try {
-      const role = localStorage.getItem('leadawaker_user_role') || '';
-      return (role === 'Admin' || role === 'Operator') ? '/platform/campaigns' : '/platform/campaigns';
-    } catch (_) { return '/platform/campaigns'; }
-  }, []);
+  // `/platform` sends each user to their own landing page.
+  const appHref = '/platform';
 
   const NAV_ITEMS = [
     { label: t('nav.home'),    href: "/" },

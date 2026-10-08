@@ -1,4 +1,5 @@
 import { useState, useEffect, type RefObject, type KeyboardEvent } from "react";
+import { useTranslation } from "react-i18next";
 import { Headphones, X, Maximize2, Camera, Pencil, User, Mail } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type SupportBotConfig } from "@/hooks/useSupportChat";
@@ -61,6 +62,7 @@ export function SupportChatHeader({
   aiAgents,
   onOpenAgent,
 }: SupportChatHeaderProps) {
+  const { t } = useTranslation("conversations");
   // Founder avatar follows the owner's selected profile avatar (live), falling
   // back to the bundled photo for everyone else (e.g. clients).
   const [personalAvatar, setPersonalAvatar] = useState<string>(() => localStorage.getItem("leadawaker_user_avatar") || "");
@@ -203,12 +205,12 @@ export function SupportChatHeader({
               </a>
             )}
 
-            {/* Open in Chats (floating mode only) */}
+            {/* Open in Conversations (floating mode only) */}
             {!isInline && onOpenInChats && (
               <button
                 onClick={onOpenInChats}
                 className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
-                title="Open in Chats"
+                title={t("inbox.openInConversations", "Open in Conversations")}
               >
                 <Maximize2 className="h-4 w-4" />
               </button>

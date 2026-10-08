@@ -3,13 +3,13 @@
     "label": "Type",
     "widget": "Widget",
     "voice": "Voice",
-    "dbr": "DBR / Quotes",
+    "dbr": "Reactivation / Quotes",
     "instagram": "Instagram",
     "other": "Other"
   },
   "page": {
-    "chatsTitle": "Chats",
-    "title": "My Leads",
+    "chatsTitle": "Conversations",
+    "title": "Leads",
     "opportunities": "Opportunities"
   },
   "viewTabs": {
@@ -20,6 +20,7 @@
   "toolbar": {
     "add": "Add",
     "searchPlaceholder": "Search leads...",
+    "searchConversationsPlaceholder": "Search conversations...",
     "searchLeads": "Search leads",
     "group": "Group",
     "sort": "Sort",
@@ -54,18 +55,18 @@
     "previous": "Previous",
     "next": "Next",
     "of": "of",
-    "chats": "Chats",
+    "chats": "Conversations",
     "chatsPeek": "Show last message for every lead",
     "minimizeList": "Minimize list",
     "expandList": "Expand list",
     "filterLeads": "Filter leads",
     "switchToList": "Switch to list view",
     "switchToKanban": "Switch to kanban view",
-    "upcomingCalls": "Upcoming calls",
+    "upcomingCalls": "Upcoming appointments",
     "more": "More",
     "exportPdf": "Export PDF",
-    "showChats": "Show chats",
-    "hideChats": "Hide chats"
+    "showChats": "Show conversations",
+    "hideChats": "Hide conversations"
   },
   "sort": {
     "sortBy": "Sort by",
@@ -153,7 +154,9 @@
       "company": "Company",
       "bumpStage": "Bump Stage",
       "created": "Created",
-      "assignedTo": "Assigned To"
+      "assignedTo": "Assigned To",
+      "chats": "Conversations",
+      "createdAt": "Created"
     },
     "empty": {
       "noResults": "No leads match your search",
@@ -179,48 +182,6 @@
       "Lost": "Lost",
       "DND": "DND",
       "Unknown": "Unknown"
-    },
-    "emptyStates": {
-      "New": {
-        "message": "No new leads yet",
-        "hint": "Import contacts or add a lead to get started"
-      },
-      "Contacted": {
-        "message": "No contacted leads",
-        "hint": "Reach out to new leads to move them here"
-      },
-      "Responded": {
-        "message": "No leads have responded",
-        "hint": "Keep following up — responses will appear here"
-      },
-      "MultipleResponses": {
-        "message": "No active conversations",
-        "hint": "Engage with your contacted leads to build dialogue"
-      },
-      "Qualified": {
-        "message": "No qualified leads yet",
-        "hint": "Qualify promising conversations to fill this stage"
-      },
-      "Booked": {
-        "message": "No calls booked yet",
-        "hint": "This is your north-star goal — keep pushing!"
-      },
-      "Closed": {
-        "message": "No closed deals yet",
-        "hint": "Completed bookings will appear here"
-      },
-      "Lost": {
-        "message": "No lost leads",
-        "hint": "Great! All your leads are still in the pipeline"
-      },
-      "DND": {
-        "message": "No leads on DND",
-        "hint": "Leads who opt out will appear here"
-      },
-      "default": {
-        "message": "No leads in this stage",
-        "hint": "Drag leads here to move them into this stage"
-      }
     },
     "dropHere": "Drop here",
     "foldColumn": "Click to fold",
@@ -256,7 +217,7 @@
     "expandPanel": "Expand panel",
     "collapsePanel": "Collapse panel",
     "deselectLead": "Deselect lead",
-    "openFullPage": "Open full contact page",
+    "openFullPage": "Open full lead page",
     "sections": {
       "contact": "Contact",
       "scores": "Scores",
@@ -301,18 +262,18 @@
       "firstContacted": "First Contacted",
       "nextAction": "Next Action",
       "whatTheyDid": "What They Did",
-      "callDate": "Call Date",
+      "callDate": "Appointment date",
       "previousCallDate": "Previous",
       "confirmedAt": "Confirmed At",
       "noShow": "No Show",
       "rescheduled": "Rescheduled",
-      "rescheduleCall": "Reschedule Call",
+      "rescheduleCall": "Reschedule appointment",
       "pickNewTime": "Pick a new time",
       "letAiRebook": "Let AI rebook",
-      "calendarEditWarning": "Don’t move this call by editing your own calendar — it won’t sync. Use this button.",
+      "calendarEditWarning": "Don’t move this appointment by editing your own calendar: it won’t sync. Use this button.",
       "aiRebookTriggered": "AI re-engagement started",
       "aiRebookFailed": "Failed to trigger AI rebook",
-      "cancelCall": "Cancel call",
+      "cancelCall": "Cancel appointment",
       "cancelConfirm": "Are you sure? The lead will not be marked as Cancelled, but the booking will be removed.",
       "cancelConfirmYes": "Yes, cancel",
       "cancelConfirmNo": "No",
@@ -386,7 +347,7 @@
     "title": "Lead Score",
     "notScored": "Not scored",
     "insights": {
-      "callBooked": "Call successfully booked",
+      "callBooked": "Appointment booked",
       "leadQualified": "Lead is qualified",
       "multipleResponses": "Multiple responses received",
       "leadResponded": "Lead has responded",
@@ -596,7 +557,7 @@
     "noMessagesHint": "Messages will appear here once outreach begins",
     "typePlaceholder": "Type a message…",
     "letAiContinue": "Let AI continue",
-    "openInChats": "Open in Chats",
+    "openInChats": "Open in Conversations",
     "transcribing": "Transcribing…"
   },
   "team": {
@@ -641,9 +602,9 @@
     "leadLabel": "Lead",
     "activityLabel": "Activity",
     "stageOf": "Stage {{current}} of {{total}}",
-    "bookCall": "Book call",
+    "bookCall": "Book appointment",
     "viewBooking": "View booking",
-    "meetingBooked": "Meeting booked",
+    "meetingBooked": "Appointment booked",
     "noSummary": "No summary yet",
     "interactionFinished": "Interaction finished",
     "aiSummary": "AI Summary",
@@ -685,7 +646,7 @@
   },
   "noShow": {
     "title": "Report a no-show",
-    "description": "The lead did not show up for the booked call. Pick what happened; this decides the automatic follow-up.",
+    "description": "The lead did not show up for the booked appointment. Pick what happened; this decides the automatic follow-up.",
     "reportButton": "Lead didn't show up",
     "claimedBadge": "No-show reported",
     "reported": "No-show reported, follow-up triggered",

@@ -114,7 +114,7 @@
   },
   "book": {
     "newAppointment": "Nieuwe afspraak",
-    "title": "Een Lead Boeken",
+    "title": "Afspraak inplannen",
     "bookAppointment": "Afspraak Boeken",
     "booking": "Boeken..."
   },
@@ -206,7 +206,7 @@
       "email": "E-mail",
       "actions": "Afspraakacties",
       "reschedule": "Verzetten",
-      "cancelCall": "Gesprek annuleren",
+      "cancelCall": "Afspraak annuleren",
       "close": "Sluiten"
     },
     "panel": {

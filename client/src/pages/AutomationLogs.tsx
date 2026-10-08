@@ -34,7 +34,7 @@ export default function AutomationLogsPage() {
     <CrmShell>
       <div className="pt-4 px-4 pb-8 max-w-3xl" data-testid="page-automation-logs">
         <div className="flex items-center justify-between gap-3 mb-4">
-          <h1 className="text-lg font-semibold text-foreground">{t("health.pageTitle")}</h1>
+          <h1 className="text-lg font-semibold text-foreground">{t("page.title")}</h1>
           <IconBtn
             onClick={() => healthQuery.refetch()}
             title={t("toolbar.refreshLogs")}

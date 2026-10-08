@@ -3,9 +3,9 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
+import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
-import { MessageSquare, AlertTriangle, Mail } from "lucide-react";
+import { MessageSquare, AlertTriangle, Mail, Check } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import {
   type NotificationPreferences,
@@ -458,13 +458,16 @@ export function NotificationsSection() {
                           className="flex items-center justify-center w-11 h-11 rounded-xl transition-colors duration-150 hover:bg-muted/60 active:scale-95"
                           style={{ transition: "background-color 150ms, transform 150ms" }}
                         >
-                          <Checkbox
-                            checked={val}
-                            onCheckedChange={(checked) => setChannelValue(nt.key, ch, !!checked)}
+                          {/* Visual-only checkbox: a real <Checkbox> is a <button>, which cannot nest in this one */}
+                          <span
                             aria-hidden="true"
-                            tabIndex={-1}
-                            className="pointer-events-none"
-                          />
+                            className={cn(
+                              "grid place-content-center h-4 w-4 shrink-0 rounded-sm border border-primary shadow",
+                              val && "bg-primary text-primary-foreground",
+                            )}
+                          >
+                            {val && <Check className="h-4 w-4" />}
+                          </span>
                         </button>
                       );
                     })}

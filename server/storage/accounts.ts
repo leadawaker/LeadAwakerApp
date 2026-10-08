@@ -395,3 +395,28 @@ export const accountsStorage = {
     return updated;
   },
 };
+
+  /**
+   * Shallow-merge `patch` into the user's preferences JSON in ONE statement,
+   * so concurrent patches of different keys never overwrite each other.
+   * A missing, non-JSON or non-object existing value is treated as `{}`.
+   */
+  async mergeAppUserPreferences(id: number, patch: Record<string, unknown>): Promise<Users | undefined> {
+    const p = users.preferences;
+    const [updated] = await db
+      .update(users)
+      .set({
+        preferences: sql`(
+          CASE
+            WHEN ${p} IS NOT NULL
+              AND pg_input_is_valid(${p}, 'jsonb')
+              AND jsonb_typeof(${p}::jsonb) = 'object'
+            THEN ${p}::jsonb
+            ELSE '{}'::jsonb
+          END || ${JSON.stringify(patch)}::jsonb
+        )::text`,
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updated;
+  },

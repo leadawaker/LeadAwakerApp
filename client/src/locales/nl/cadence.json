@@ -1,7 +1,7 @@
 {
   "title": "Cadentie",
   "loading": "Laden…",
-  "empty": "Geen contacten gepland voor vandaag.",
+  "empty": "Geen prospects gepland voor vandaag.",
   "dailyGoal": "/ {{goal}} vandaag",
   "overdue": "Achterstallig",
   "step": "Stap {{n}}",

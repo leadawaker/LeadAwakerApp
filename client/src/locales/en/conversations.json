@@ -1,7 +1,7 @@
 {
   "page": {
     "title": "Conversations",
-    "searchPlaceholder": "Search chats...",
+    "searchPlaceholder": "Search conversations...",
     "group": "Group",
     "groupBy": "Group by",
     "sort": "Sort",
@@ -12,10 +12,15 @@
     "allCampaigns": "All Campaigns"
   },
   "inbox": {
-    "title": "Chats",
+    "title": "Conversations",
+    "prospectTitle": "Prospect inbox",
+    "newChat": "New conversation",
+    "startNewChat": "Start new conversation",
+    "openInConversations": "Open in Conversations",
     "tabs": {
-      "all": "Inbox",
+      "all": "All",
       "unread": "Unread",
+      "prospects": "Prospects",
       "support": "Support"
     },
     "supportAssistant": "Support Assistant",
@@ -78,7 +83,7 @@
       "description": "Start the conversation by sending a message below."
     },
     "compose": {
-      "placeholderNoContact": "Select a contact first",
+      "placeholderNoContact": "Select a lead first",
       "placeholderHuman": "Taking over from AI \u2014 Enter to send",
       "placeholderDefault": "Type a message\u2026 (Enter to send)",
       "sendMessage": "Send message",
@@ -128,7 +133,7 @@
       "cancel": "Cancel",
       "confirmSend": "Take over & Send"
     },
-    "showContactPanel": "Show contact panel",
+    "showContactPanel": "Show lead panel",
     "scrollToLatest": "Scroll to latest message",
     "microphoneAccessDenied": "Microphone access denied",
     "microphoneAccessDescription": "Allow microphone access to record voice messages.",

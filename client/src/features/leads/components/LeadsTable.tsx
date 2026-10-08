@@ -76,7 +76,7 @@ const TABLE_COL_META = [
   { key: "tags",         label: "Tags",          defaultVisible: true  },
   { key: "lastActivity", label: "Last Activity", defaultVisible: true  },
   { key: "notes",        label: "Notes",         defaultVisible: true  },
-  { key: "chats",        label: "Chats",         defaultVisible: false },
+  { key: "chats",        label: "Conversations",       defaultVisible: false },
   { key: "account",      label: "Account",       defaultVisible: false },
   { key: "source",       label: "Source",        defaultVisible: false },
   { key: "company",      label: "Company",       defaultVisible: false },

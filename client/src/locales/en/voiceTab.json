@@ -7,7 +7,7 @@
   },
   "readiness": {
     "title": "Ready to take calls?",
-    "intro": "Everything the phone assistant needs before a real caller is put through.",
+    "intro": "Everything the AI receptionist needs before a real caller is put through.",
     "ok": "Ready",
     "missingFix": "Missing, fix",
     "optional": "Optional, add",
@@ -19,7 +19,7 @@
       "persona": "Live persona linked",
       "kb": "Knowledge base filled in",
       "voice": "Voice and language chosen",
-      "agent": "Assistant name set",
+      "agent": "Receptionist name set",
       "transfer": "Transfer number set",
       "hours": "Opening hours set",
       "extra": "Extra instructions"
@@ -61,33 +61,33 @@
   },
   "persona": {
     "title": "Live persona",
-    "help": "The business text the assistant speaks from. It is generated from the account, not edited by hand.",
+    "help": "The business text the receptionist speaks from. It is generated from the account, not edited by hand.",
     "company": "Company",
     "description": "Description",
     "usp": "What sets them apart",
     "generatedNote": "Update the account details or the communication profile to change this text.",
     "emptyTitle": "No live persona yet",
-    "emptyHelp": "Create one from this account's company details so the assistant can answer as the business.",
+    "emptyHelp": "Create one from this account's company details so the receptionist can answer as the business.",
     "create": "Create live persona"
   },
   "agent": {
-    "title": "Assistant voice",
-    "help": "How the assistant introduces itself and sounds on the phone.",
-    "name": "Assistant name",
+    "title": "Receptionist voice",
+    "help": "How the receptionist introduces itself and sounds on the phone.",
+    "name": "Receptionist name",
     "pronunciation": "Pronunciation"
   },
   "transfer": {
     "title": "Transfer",
-    "help": "Who the assistant puts a caller through to when a human is needed.",
+    "help": "Who the receptionist puts a caller through to when a human is needed.",
     "number": "Transfer number",
     "name": "Transfer to",
     "namePlaceholder": "e.g. Robben",
     "invalid": "Use international format, for example +31612345678.",
     "waiting": {
       "label": "While we ring you",
-      "sara": "The assistant keeps them company",
+      "sara": "The receptionist keeps them company",
       "hold": "Hold music",
-      "help": "Before you are connected you hear a short brief about the caller: press 1 to take the call, or 2 and the assistant books a callback. Meanwhile the caller either keeps chatting with the assistant or hears hold music."
+      "help": "Before you are connected you hear a short brief about the caller: press 1 to take the call, or 2 and the receptionist books a callback. Meanwhile the caller either keeps chatting with the receptionist or hears hold music."
     },
     "mode": {
       "label": "How callers are put through",
@@ -102,7 +102,7 @@
   },
   "extra": {
     "title": "Extra instructions",
-    "help": "Optional. Business facts that add to the assistant's core behavior but never override it, such as opening-day quirks or a delivery rule.",
+    "help": "Optional. Business facts that add to the receptionist's core behavior but never override it, such as opening-day quirks or a delivery rule.",
     "placeholder": "e.g. Test drives are by appointment only. We close on the first Monday of the month."
   },
   "hours": {
@@ -110,8 +110,8 @@
   },
   "knowledge": {
     "title": "Knowledge base",
-    "count_one": "{{count}} entry the assistant can use on calls.",
-    "count_other": "{{count}} entries the assistant can use on calls."
+    "count_one": "{{count}} entry the receptionist can use on calls.",
+    "count_other": "{{count}} entries the receptionist can use on calls."
   },
   "test": {
     "title": "Try her out",
@@ -138,10 +138,10 @@
   "live": {
     "goLive": "Go live",
     "readyHelp": "Everything is ready. Going live lets real callers on this number reach her.",
-    "confirmHelp": "Calls to {{number}} will be answered by the assistant from now on. Make sure the number is pointed at the voice connection in Telnyx.",
+    "confirmHelp": "Calls to {{number}} will be answered by the AI receptionist from now on. Make sure the number is pointed at the voice connection in Telnyx.",
     "confirm": "Yes, go live",
     "cancel": "Cancel",
-    "isLive": "Live: calls to {{number}} are answered by the assistant.",
+    "isLive": "Live: calls to {{number}} are answered by the AI receptionist.",
     "takeOffline": "Take offline",
     "notReady": "Can go live once these are done: {{items}}."
   },

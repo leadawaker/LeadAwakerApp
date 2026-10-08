@@ -94,6 +94,7 @@ export function LeadsDesktopToolbar({
   onCreateLead,
   showLeadActions,
   title,
+  searchPlaceholder,
   showTypeControls,
   filterType,
   onToggleFilterType,
@@ -145,6 +146,8 @@ export function LeadsDesktopToolbar({
   showLeadActions?: boolean;
   /** Page title (defaults to the Leads title). */
   title?: string;
+  /** Search placeholder (defaults to "Search leads..."). */
+  searchPlaceholder?: string;
   /** Conversations page: adds the Type filter and Group-by-Type. */
   showTypeControls?: boolean;
   filterType: ConversationType[];
@@ -302,7 +305,7 @@ export function LeadsDesktopToolbar({
               }}
             >
               <MessageSquare className="h-4 w-4 mr-2" />
-              {peekOn ? t("toolbar.hideChats", "Hide chats") : t("toolbar.showChats", "Show chats")}
+              {peekOn ? t("toolbar.hideChats", "Hide conversations") : t("toolbar.showChats", "Show conversations")}
               {peekOn && <Check className="h-3.5 w-3.5 ml-auto" />}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -324,7 +327,7 @@ export function LeadsDesktopToolbar({
         <input
           value={listSearch}
           onChange={(e) => onListSearchChange(e.target.value)}
-          placeholder={t("toolbar.searchPlaceholder")}
+          placeholder={searchPlaceholder ?? t("toolbar.searchPlaceholder")}
           className="la-input"
           style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 10, height: 32, fontSize: 11 }}
         />

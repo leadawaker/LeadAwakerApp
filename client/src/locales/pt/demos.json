@@ -4,7 +4,7 @@
   "tabs": {
     "sessions": "Sessões",
     "new": "Nova demo",
-    "clients": "Clients",
+    "clients": "Personas de demo",
     "settings": "Configurações"
   },
   "table": {
@@ -113,7 +113,7 @@
     "dbr": "Reativação de base",
     "speed": "Speed to Lead",
     "widget": "Widget do site",
-    "voice": "Recepcionista de voz",
+    "voice": "Recepcionista IA",
     "reputation": "Reputação",
     "socials": "DMs de redes",
     "soon": "Ainda não criado",

@@ -5,18 +5,18 @@
   },
   "title": "Settings",
   "sections": {
+    "profile": "Profile",
+    "preferences": "Preferences",
+    "team": "Team",
     "account": "My Account",
-    "profile": "My Profile",
     "security": "Security",
-    "notifications": "Notifications",
-    "team": "Team"
+    "notifications": "Notifications"
   },
   "team": {
     "people": "People",
     "table": "Table",
     "back": "Back",
     "editProfile": "Edit Profile",
-    "editMyProfile": "Edit My Profile",
     "title": "Team"
   },
   "account": {
@@ -58,7 +58,29 @@
     "lastLogin": "Last login",
     "outreachPages": "Outreach pages",
     "outreachPagesDescription": "Show the Inbox, Prospects and Cadence pages in the nav bar.",
-    "outreachPagesToggle": "Show in nav bar"
+    "outreachPagesToggle": "Show in nav bar",
+    "servicePages": "Service pages",
+    "servicePagesDescription": "Show these service pages in the nav bar and on Home. Hidden by default.",
+    "servicePageSpeed": "Speed to Lead",
+    "servicePageReputation": "Reputation",
+    "servicePageMissedCalls": "Missed Calls",
+    "landingPage": "Landing page",
+    "landingPageDescription": "The page that opens first when you log in.",
+    "personalInfo": "Personal information",
+    "personalInfoDescription": "Your name and how to reach you.",
+    "viewAsClient": "View as Client: {{name}}",
+    "viewAsClientSandbox": "View as Client (sandbox)"
+  },
+  "preferences": {
+    "timezoneDescription": "Used for dates, times and scheduling.",
+    "appearance": "Appearance",
+    "appearanceDescription": "Theme and language for this device.",
+    "theme": "Theme",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "System",
+    "ownerTools": "Owner tools",
+    "ownerToolsDescription": "Only visible to the owner."
   },
   "notifications": {
     "title": "Notifications",
@@ -71,7 +93,7 @@
       "chatIdPlaceholder": "e.g. 6586636723",
       "save": "Save",
       "saved": "Telegram Chat ID saved",
-      "setupHint": "Tap the link below to open the bot — it will reply with your Chat ID. Paste it here.",
+      "setupHint": "Tap the link below to open the bot. It will reply with your Chat ID. Paste it here.",
       "openBot": "Open @Lead_Awaker_bot on Telegram"
     },
     "push": {

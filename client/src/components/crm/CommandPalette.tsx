@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import {
   Command,
   CommandEmpty,
@@ -18,6 +19,8 @@ import {
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
+import { setPersistedSelection } from "@/hooks/usePersistedSelection";
+import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
 import {
   Megaphone,
   BookUser,
@@ -29,15 +32,27 @@ import {
   Building2,
   User,
   ArrowRight,
+  Home,
+  AudioLines,
+  ClipboardList,
+  Settings,
+  Receipt,
+  MonitorPlay,
+  UserSearch,
+  PhoneCall,
+  Send,
+  Star,
+  PhoneMissed,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
-type NavItem = {
+/** Gates mirror RightSidebar's navItems (see navVisibility.ts) so the palette lists what the nav shows. */
+type NavItem = NavGate & {
   href: string;
-  label: string;
+  /** i18n key in the crm namespace */
+  labelKey: string;
   icon: LucideIcon;
   keywords: string;
-  agencyOnly?: boolean;
 };
 
 type SearchResult = {
@@ -46,6 +61,8 @@ type SearchResult = {
   title: string;
   subtitle: string;
   href: string;
+  /** Persisted-selection key the target page reads to open this record. */
+  selectionKey?: string;
 };
 
 export function CommandPalette() {
@@ -54,27 +71,42 @@ export function CommandPalette() {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
   const [, setLocation] = useLocation();
-  const { isAgencyView, isAgencyUser, currentAccountId } = useWorkspace();
+  const { t } = useTranslation("crm");
+  const { isAgencyUser, currentAccountId } = useWorkspace();
+  const navGates = useNavGateContext();
   const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const prefix = "/platform";
 
   // Navigation items
   const allNavItems: NavItem[] = useMemo(() => [
-    { href: `${prefix}/accounts`, label: "Accounts", icon: Building2, keywords: "clients organizations", agencyOnly: true },
-    { href: `${prefix}/campaigns`, label: "Campaigns", icon: Megaphone, keywords: "campaigns messages outreach drip reactivation" },
-    { href: `${prefix}/chat`, label: "Conversations", icon: MessageSquare, keywords: "chats whatsapp threads leads messages inbox" },
-    { href: `${prefix}/contacts`, label: "Contacts", icon: BookUser, keywords: "leads people prospects directory table pipeline" },
-    { href: `${prefix}/outreach-inbox`, label: "Inbox", icon: MessageSquare, keywords: "inbox messages whatsapp prospects outreach chats", agencyOnly: true },
-    { href: `${prefix}/calendar`, label: "Calendar", icon: Calendar, keywords: "events schedule bookings" },
-    { href: `${prefix}/prompt-library`, label: "Prompt Library", icon: BookOpen, keywords: "ai templates prompts", agencyOnly: true },
-    { href: `${prefix}/users`, label: "Users", icon: Users, keywords: "team members roles", agencyOnly: true },
-    { href: `${prefix}/automation-logs`, label: "Automation Logs", icon: ScrollText, keywords: "n8n workflows automations", agencyOnly: true },
+    { href: `${prefix}/home`, labelKey: "sidebar.home", icon: Home, keywords: "home hub dashboard services", ownerOnly: true },
+    { href: `${prefix}/campaigns`, labelKey: "sidebar.reactivation", icon: Megaphone, keywords: "campaigns messages outreach drip reactivation" },
+    // Speed to Lead links only for agency users (clients see it as "Soon" in the nav).
+    { href: `${prefix}/speed-to-lead`, labelKey: "sidebar.speedToLead", icon: Send, keywords: "speed to lead fast response new leads", serviceKey: "speed", agencyOnly: true },
+    { href: `${prefix}/reputation`, labelKey: "sidebar.reputation", icon: Star, keywords: "reputation reviews google ratings", serviceKey: "reputation" },
+    { href: `${prefix}/missed-calls`, labelKey: "sidebar.missedCalls", icon: PhoneMissed, keywords: "missed calls text back phone", serviceKey: "missedcall" },
+    { href: `${prefix}/voice-calls`, labelKey: "sidebar.voiceCalls", icon: AudioLines, keywords: "voice calls phone receptionist recordings transcripts callers", voiceCallsOnly: true },
+    // /chat redirects client users to /contacts, so only agency users get this entry.
+    { href: `${prefix}/chat`, labelKey: "sidebar.conversations", icon: MessageSquare, keywords: "conversations chats interactions whatsapp threads leads messages inbox", agencyOnly: true },
+    { href: `${prefix}/calendar`, labelKey: "sidebar.calendar", icon: Calendar, keywords: "events schedule appointments bookings" },
+    { href: `${prefix}/contacts`, labelKey: "sidebar.leads", icon: BookUser, keywords: "leads contacts people directory table pipeline" },
+    { href: `${prefix}/tasks`, labelKey: "sidebar.tasks", icon: ClipboardList, keywords: "tasks todo kanban gantt", agencyOnly: true },
+    { href: `${prefix}/accounts`, labelKey: "sidebar.accounts", icon: Building2, keywords: "clients organizations" },
+    { href: `${prefix}/billing`, labelKey: "sidebar.billing", icon: Receipt, keywords: "billing invoices payments subscription plan" },
+    { href: `${prefix}/prompt-library`, labelKey: "sidebar.promptLibrary", icon: BookOpen, keywords: "ai templates prompts", agencyOnly: true },
+    { href: `${prefix}/outreach-inbox`, labelKey: "sidebar.inbox", icon: MessageSquare, keywords: "prospect inbox messages whatsapp prospects outreach chats", ownerOnly: true, outreachOnly: true },
+    { href: `${prefix}/prospects`, labelKey: "sidebar.prospects", icon: UserSearch, keywords: "prospects outreach pipeline", ownerOnly: true, outreachOnly: true },
+    { href: `${prefix}/cadence`, labelKey: "sidebar.cadence", icon: PhoneCall, keywords: "cadence cold calls outreach", ownerOnly: true, outreachOnly: true },
+    { href: `${prefix}/automation-logs`, labelKey: "sidebar.automations", icon: ScrollText, keywords: "automation logs n8n workflows automations health engine", ownerOnly: true },
+    { href: `${prefix}/demos`, labelKey: "sidebar.demos", icon: MonitorPlay, keywords: "demos browser demo sessions links", ownerOnly: true },
+    { href: `${prefix}/settings`, labelKey: "sidebar.settings", icon: Settings, keywords: "settings preferences profile account" },
+    { href: `${prefix}/settings?tab=team`, labelKey: "commandPalette.team", icon: Users, keywords: "users team members roles", agencyOnly: true },
   ], [prefix]);
 
   const visibleNavItems = useMemo(() =>
-    allNavItems.filter((item) => !item.agencyOnly || isAgencyUser),
-    [allNavItems, isAgencyUser]
+    allNavItems.filter((item) => isNavItemVisible(item, navGates)),
+    [allNavItems, navGates]
   );
 
   // Filter nav items based on query (manual filtering since we use shouldFilter={false})
@@ -82,10 +114,10 @@ export function CommandPalette() {
     const trimmed = query.trim().toLowerCase();
     if (!trimmed) return visibleNavItems;
     return visibleNavItems.filter((item) => {
-      const searchable = `${item.label} ${item.keywords}`.toLowerCase();
+      const searchable = `${t(item.labelKey)} ${item.keywords}`.toLowerCase();
       return searchable.includes(trimmed);
     });
-  }, [query, visibleNavItems]);
+  }, [query, visibleNavItems, t]);
 
   // Keyboard shortcut listener
   useEffect(() => {
@@ -170,7 +202,7 @@ export function CommandPalette() {
                 })
                 .slice(0, 5)
                 .forEach((l: any) => {
-                  const name = l.full_name_1 || l.full_name || `Lead #${l.id}`;
+                  const name = l.full_name_1 || l.full_name || t("commandPalette.fallbackLead", { id: l.id });
                   const phone = l.phone_1 || l.phone || "";
                   const email = l.email_1 || l.email || "";
                   results.push({
@@ -192,7 +224,8 @@ export function CommandPalette() {
       promises.push(
         (async () => {
           try {
-            const campaignsUrl = isAgencyUser
+            // Match the Campaigns page scope so the selected campaign is in its list.
+            const campaignsUrl = isAgencyUser && currentAccountId <= 0
               ? `/api/campaigns`
               : `/api/campaigns?accountId=${currentAccountId}`;
             const campaignsRes = await apiFetch(campaignsUrl);
@@ -209,9 +242,11 @@ export function CommandPalette() {
                   results.push({
                     id: c.id,
                     type: "campaign",
-                    title: c.name || `Campaign #${c.id}`,
-                    subtitle: `${c.Status || c.status || "Unknown"} \u2022 ${c.Campaign_Type || c.type || "Campaign"}`,
-                    href: `${prefix}/campaigns/${c.id}`,
+                    title: c.name || t("commandPalette.fallbackCampaign", { id: c.id }),
+                    subtitle: `${c.Status || c.status || t("commandPalette.unknownStatus")} \u2022 ${c.Campaign_Type || c.type || t("commandPalette.resultTypes.campaign")}`,
+                    // No /campaigns/:id route: open the Campaigns page with this campaign selected.
+                    href: `${prefix}/campaigns`,
+                    selectionKey: "selected-campaign-id",
                   });
                 });
             }
@@ -241,9 +276,10 @@ export function CommandPalette() {
                     results.push({
                       id: a.id,
                       type: "account",
-                      title: a.name || `Account #${a.id}`,
+                      title: a.name || t("commandPalette.fallbackAccount", { id: a.id }),
                       subtitle: a.owner_email || "",
                       href: `${prefix}/accounts`,
+                      selectionKey: "selected-account-id",
                     });
                   });
               }
@@ -257,11 +293,12 @@ export function CommandPalette() {
       await Promise.all(promises);
       return results;
     },
-    [currentAccountId, isAgencyUser, prefix],
+    [currentAccountId, isAgencyUser, prefix, t],
   );
 
-  const handleSelect = (href: string) => {
+  const handleSelect = (href: string, selection?: { key: string; id: number }) => {
     setOpen(false);
+    if (selection) setPersistedSelection(selection.key, selection.id);
     setLocation(href);
   };
 
@@ -278,18 +315,8 @@ export function CommandPalette() {
     }
   };
 
-  const getResultLabel = (type: string) => {
-    switch (type) {
-      case "lead":
-        return "Lead";
-      case "campaign":
-        return "Campaign";
-      case "account":
-        return "Account";
-      default:
-        return "Result";
-    }
-  };
+  const getResultLabel = (type: string) =>
+    t(`commandPalette.resultTypes.${type}`, { defaultValue: t("commandPalette.resultTypes.result") });
 
   const hasResults = filteredNavItems.length > 0 || searchResults.length > 0;
 
@@ -297,31 +324,29 @@ export function CommandPalette() {
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="overflow-hidden p-0 max-w-[520px]">
         <VisuallyHidden>
-          <DialogTitle>Command Palette</DialogTitle>
-          <DialogDescription>
-            Search for pages, leads, campaigns, or accounts. Use arrow keys to navigate and Enter to select.
-          </DialogDescription>
+          <DialogTitle>{t("commandPalette.title")}</DialogTitle>
+          <DialogDescription>{t("commandPalette.description")}</DialogDescription>
         </VisuallyHidden>
         <Command
           shouldFilter={false}
           className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5"
         >
           <CommandInput
-            placeholder="Search pages, leads, campaigns..."
+            placeholder={t("commandPalette.placeholder")}
             value={query}
             onValueChange={setQuery}
           />
           <CommandList>
             {!hasResults && !isSearching && (
-              <CommandEmpty>No results found.</CommandEmpty>
+              <CommandEmpty>{t("commandPalette.noResults")}</CommandEmpty>
             )}
             {!hasResults && isSearching && (
-              <CommandEmpty>Searching...</CommandEmpty>
+              <CommandEmpty>{t("commandPalette.searching")}</CommandEmpty>
             )}
 
             {/* Navigation Pages */}
             {filteredNavItems.length > 0 && (
-              <CommandGroup heading="Pages">
+              <CommandGroup heading={t("commandPalette.pages")}>
                 {filteredNavItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -332,7 +357,7 @@ export function CommandPalette() {
                       className="cursor-pointer"
                     >
                       <Icon className="mr-2 h-4 w-4 text-muted-foreground" />
-                      <span>{item.label}</span>
+                      <span>{t(item.labelKey)}</span>
                       <ArrowRight className="ml-auto h-3 w-3 text-muted-foreground opacity-50" />
                     </CommandItem>
                   );
@@ -344,14 +369,14 @@ export function CommandPalette() {
             {searchResults.length > 0 && (
               <>
                 {filteredNavItems.length > 0 && <CommandSeparator />}
-                <CommandGroup heading="Search Results">
+                <CommandGroup heading={t("commandPalette.searchResults")}>
                   {searchResults.map((result) => {
                     const Icon = getResultIcon(result.type);
                     return (
                       <CommandItem
                         key={`${result.type}-${result.id}`}
                         value={`${result.type}-${result.id}`}
-                        onSelect={() => handleSelect(result.href)}
+                        onSelect={() => handleSelect(result.href, result.selectionKey ? { key: result.selectionKey, id: result.id } : undefined)}
                         className="cursor-pointer"
                       >
                         <Icon className="mr-2 h-4 w-4 text-muted-foreground" />
@@ -378,15 +403,15 @@ export function CommandPalette() {
           <div className="border-t border-border px-3 py-2 flex items-center gap-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">{"↑↓"}</kbd>
-              <span>Navigate</span>
+              <span>{t("commandPalette.navigate")}</span>
             </div>
             <div className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">{"↵"}</kbd>
-              <span>Select</span>
+              <span>{t("commandPalette.select")}</span>
             </div>
             <div className="flex items-center gap-1">
               <kbd className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-mono">Esc</kbd>
-              <span>Close</span>
+              <span>{t("commandPalette.close")}</span>
             </div>
           </div>
         </Command>

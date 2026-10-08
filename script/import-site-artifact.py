@@ -73,7 +73,7 @@ WIDGET_JS = f"""<script>
 (function(){{
   var auth=false;try{{auth=!!localStorage.getItem('leadawaker_auth')}}catch(e){{}}
   if(!auth)return;
-  [].forEach.call(document.querySelectorAll('.js-login'),function(a){{a.textContent='Open app';a.href='/platform/campaigns'}});
+  [].forEach.call(document.querySelectorAll('.js-login'),function(a){{a.textContent='Open app';a.href='/platform'}});
 }})();
 </script>
 <script src="https://api.leadawaker.com/widget/v1.js?v=14" data-key="{WIDGET_KEY}" async></script>

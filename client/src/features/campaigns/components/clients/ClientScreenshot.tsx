@@ -55,7 +55,7 @@ export function ClientScreenshot({ niche, screenshot }: { niche: string; screens
     <section className="neu-raised" style={{ padding: 22, borderRadius: "var(--r-card)" }}>
       <div className="eyebrow wine" style={{ marginBottom: 4 }}>{t("clients.shot.title", "Website image")}</div>
       <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 16, lineHeight: 1.5 }}>
-        {t("clients.shot.hint", "The page the widget demo sits on. Uploaded by hand for a Client with no website of its own.")}
+        {t("clients.shot.hint", "The page the widget demo sits on. Uploaded by hand for a persona with no website of its own.")}
       </p>
 
       <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>

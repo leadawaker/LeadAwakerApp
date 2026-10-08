@@ -340,6 +340,7 @@ export function LeadsCardView({
           onCreateLead={onCreateLead}
           showLeadActions={isAgencyUser && !!selectedLead}
           title={isConversationsMode ? t("page.chatsTitle") : undefined}
+          searchPlaceholder={isConversationsMode ? t("toolbar.searchConversationsPlaceholder") : undefined}
           showTypeControls={isConversationsMode}
           filterType={filterType}
           onToggleFilterType={toggleFilterType}

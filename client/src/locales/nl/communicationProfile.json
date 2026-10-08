@@ -49,7 +49,7 @@
     "booking": "Afspraken instellen",
     "services": "Diensten",
     "handoff": "Doorverbinden",
-    "voice": "Telefoonassistent",
+    "voice": "AI-receptionist",
     "widget": "Websitechat",
     "whatsapp": "WhatsApp"
   },
@@ -231,8 +231,8 @@
       "help": "Vink alles aan wat van toepassing is. Elke dienst voegt aan het eind een eigen kort onderdeel toe. Vragen die voor elk kanaal gelden, stellen we maar één keer.",
       "options": {
         "voice": {
-          "label": "Telefoonassistent",
-          "help": "De assistent neemt gemiste oproepen aan, plant bezichtigingen of afspraken en verbindt serieuze kopers door."
+          "label": "AI-receptionist",
+          "help": "De AI-receptionist neemt gemiste oproepen aan, plant bezichtigingen of afspraken en verbindt serieuze kopers door."
         },
         "widget": {
           "label": "Websitechat",
@@ -290,9 +290,9 @@
       "recapTime": "Tijd van het overzicht"
     },
     "voiceForwarding": {
-      "label": "Welke gesprekken gaan naar de assistent?",
+      "label": "Welke gesprekken gaan naar de receptionist?",
       "short": "Doorschakelen",
-      "help": "De klant blijft zelf opnemen. Gesprekken die hij mist, worden doorgeschakeld naar het nummer van de assistent.",
+      "help": "De klant blijft zelf opnemen. Gesprekken die hij mist, worden doorgeschakeld naar het nummer van de receptionist.",
       "linesLabel": "Welke lijn",
       "lines": {
         "landline": "Bedrijfsnummer",
@@ -315,7 +315,7 @@
       "cancelHint": "Doorschakelen ongedaan maken: toets ## met hetzelfde nummer en # (bijv. ##61#)."
     },
     "voiceSound": {
-      "label": "Hoe moet de assistent klinken?",
+      "label": "Hoe moet de receptionist klinken?",
       "short": "Stem & begroeting",
       "voiceLabel": "Stem",
       "voices": {
@@ -336,7 +336,7 @@
       "greetingPlaceholder": "bijv. Goedemiddag, Robben Rosmalen, u spreekt met Sanne, de digitale assistent. Waarmee kan ik u helpen?"
     },
     "voicePronunciation": {
-      "label": "Woorden die de assistent goed moet uitspreken",
+      "label": "Woorden die de receptionist goed moet uitspreken",
       "short": "Uitspraak",
       "help": "Merken, modellen, namen en straatnamen. Schrijf op hoe het klinkt, zoals je het aan iemand zou voorspellen.",
       "wordPlaceholder": "Woord, bijv. Porsche",
@@ -351,11 +351,11 @@
       "options": {
         "message": {
           "label": "Bericht noteren",
-          "help": "De assistent noteert wie er belde en waarom, en de klant belt terug."
+          "help": "De receptionist noteert wie er belde en waarom, en de klant belt terug."
         },
         "callback": {
           "label": "Terugbelafspraak plannen",
-          "help": "De assistent plant een moment in de agenda waarop de klant terugbelt."
+          "help": "De receptionist plant een moment in de agenda waarop de klant terugbelt."
         },
         "ringHot": {
           "label": "Bellen bij serieuze kopers",

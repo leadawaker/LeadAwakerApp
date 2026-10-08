@@ -1,6 +1,6 @@
 {
   "header": {
-    "title": "Speed-to-Lead",
+    "title": "Speed to Lead",
     "range": "Last 24 hours",
     "refresh": "Refresh"
   },
@@ -26,7 +26,7 @@
     "whatsapp": "WhatsApp"
   },
   "detail": {
-    "label": "Speed-to-Lead"
+    "label": "Speed to Lead"
   },
   "meta": {
     "status": "Status",

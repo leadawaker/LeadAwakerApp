@@ -5,18 +5,18 @@
   },
   "title": "Instellingen",
   "sections": {
+    "profile": "Profiel",
+    "preferences": "Voorkeuren",
+    "team": "Team",
     "account": "Mijn Account",
-    "profile": "Mijn Profiel",
     "security": "Beveiliging",
-    "notifications": "Meldingen",
-    "team": "Team"
+    "notifications": "Meldingen"
   },
   "team": {
     "people": "Personen",
     "table": "Tabel",
     "back": "Terug",
     "editProfile": "Profiel bewerken",
-    "editMyProfile": "Mijn profiel bewerken",
     "title": "Team"
   },
   "account": {
@@ -58,7 +58,29 @@
     "lastLogin": "Laatste login",
     "outreachPages": "Outreach-pagina's",
     "outreachPagesDescription": "Toon de Inbox-, Prospects- en Cadence-pagina's in de navigatiebalk.",
-    "outreachPagesToggle": "Tonen in navigatiebalk"
+    "outreachPagesToggle": "Tonen in navigatiebalk",
+    "servicePages": "Servicepagina's",
+    "servicePagesDescription": "Toon deze servicepagina's in de navigatiebalk en op Home. Standaard verborgen.",
+    "servicePageSpeed": "Speed to Lead",
+    "servicePageReputation": "Reputatie",
+    "servicePageMissedCalls": "Gemiste oproepen",
+    "landingPage": "Startpagina",
+    "landingPageDescription": "De pagina die als eerste opent wanneer je inlogt.",
+    "personalInfo": "Persoonlijke gegevens",
+    "personalInfoDescription": "Je naam en hoe we je bereiken.",
+    "viewAsClient": "Weergeven als klant: {{name}}",
+    "viewAsClientSandbox": "Weergeven als klant (sandbox)"
+  },
+  "preferences": {
+    "timezoneDescription": "Gebruikt voor datums, tijden en planning.",
+    "appearance": "Weergave",
+    "appearanceDescription": "Thema en taal op dit apparaat.",
+    "theme": "Thema",
+    "themeLight": "Licht",
+    "themeDark": "Donker",
+    "themeSystem": "Systeem",
+    "ownerTools": "Eigenaarstools",
+    "ownerToolsDescription": "Alleen zichtbaar voor de eigenaar."
   },
   "notifications": {
     "title": "Meldingen",
@@ -71,7 +93,7 @@
       "chatIdPlaceholder": "bijv. 6586636723",
       "save": "Opslaan",
       "saved": "Telegram Chat ID opgeslagen",
-      "setupHint": "Tik op de link hieronder om de bot te openen — hij antwoordt met je Chat ID. Plak het hier.",
+      "setupHint": "Tik op de link hieronder om de bot te openen. Hij antwoordt met je Chat ID. Plak het hier.",
       "openBot": "Open @Lead_Awaker_bot op Telegram"
     },
     "push": {

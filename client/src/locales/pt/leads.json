@@ -3,13 +3,13 @@
     "label": "Tipo",
     "widget": "Widget",
     "voice": "Voz",
-    "dbr": "DBR / Or\u00e7amentos",
+    "dbr": "Reativa\u00e7\u00e3o / Or\u00e7amentos",
     "instagram": "Instagram",
     "other": "Outros"
   },
   "page": {
     "chatsTitle": "Conversas",
-    "title": "Meus Leads",
+    "title": "Leads",
     "opportunities": "Oportunidades"
   },
   "viewTabs": {
@@ -20,6 +20,7 @@
   "toolbar": {
     "add": "Adicionar",
     "searchPlaceholder": "Buscar leads...",
+    "searchConversationsPlaceholder": "Buscar conversas...",
     "searchLeads": "Buscar leads",
     "group": "Agrupar",
     "sort": "Ordenar",
@@ -61,7 +62,7 @@
     "filterLeads": "Filtrar leads",
     "switchToList": "Ver em lista",
     "switchToKanban": "Ver em kanban",
-    "upcomingCalls": "Próximas chamadas",
+    "upcomingCalls": "Próximos agendamentos",
     "more": "Mais",
     "exportPdf": "Exportar PDF",
     "showChats": "Mostrar conversas",
@@ -153,7 +154,9 @@
       "company": "Empresa",
       "bumpStage": "Etapa de Follow-up",
       "created": "Criado",
-      "assignedTo": "Atribuído a"
+      "assignedTo": "Atribuído a",
+      "chats": "Conversas",
+      "createdAt": "Criado"
     },
     "empty": {
       "noResults": "Nenhum lead corresponde à sua busca",
@@ -179,48 +182,6 @@
       "Lost": "Perdido",
       "DND": "Não Perturbe",
       "Unknown": "Desconhecido"
-    },
-    "emptyStates": {
-      "New": {
-        "message": "Nenhum lead novo ainda",
-        "hint": "Importe contatos ou adicione um lead para começar"
-      },
-      "Contacted": {
-        "message": "Nenhum lead contatado",
-        "hint": "Entre em contato com novos leads para movê-los para cá"
-      },
-      "Responded": {
-        "message": "Nenhum lead respondeu",
-        "hint": "Continue acompanhando — as respostas aparecerão aqui"
-      },
-      "MultipleResponses": {
-        "message": "Nenhuma conversa ativa",
-        "hint": "Engaje com seus leads contatados para construir diálogo"
-      },
-      "Qualified": {
-        "message": "Nenhum lead qualificado ainda",
-        "hint": "Qualifique conversas promissoras para preencher esta etapa"
-      },
-      "Booked": {
-        "message": "Nenhuma chamada agendada ainda",
-        "hint": "Este é o seu objetivo principal — continue focado!"
-      },
-      "Closed": {
-        "message": "Nenhum negócio fechado ainda",
-        "hint": "Agendamentos concluídos aparecerão aqui"
-      },
-      "Lost": {
-        "message": "Nenhum lead perdido",
-        "hint": "Ótimo! Todos os seus leads ainda estão no pipeline"
-      },
-      "DND": {
-        "message": "Nenhum lead em Não Perturbe",
-        "hint": "Leads que optarem por sair aparecerão aqui"
-      },
-      "default": {
-        "message": "Nenhum lead nesta etapa",
-        "hint": "Arraste leads aqui para movê-los para esta etapa"
-      }
     },
     "dropHere": "Soltar aqui",
     "foldColumn": "Clique para recolher",
@@ -256,7 +217,7 @@
     "expandPanel": "Expandir painel",
     "collapsePanel": "Recolher painel",
     "deselectLead": "Desselecionar lead",
-    "openFullPage": "Abrir página completa do contato",
+    "openFullPage": "Abrir página completa do lead",
     "sections": {
       "contact": "Contato",
       "scores": "Pontuações",
@@ -301,18 +262,18 @@
       "firstContacted": "Primeiro Contato",
       "nextAction": "Próxima Ação",
       "whatTheyDid": "O Que Fizeram",
-      "callDate": "Data da Chamada",
+      "callDate": "Data do agendamento",
       "previousCallDate": "Anterior",
       "confirmedAt": "Confirmado Em",
       "noShow": "Não Compareceu",
       "rescheduled": "Reagendado",
-      "rescheduleCall": "Reagendar Chamada",
+      "rescheduleCall": "Reagendar",
       "pickNewTime": "Escolher novo horário",
       "letAiRebook": "Deixar a IA reagendar",
-      "calendarEditWarning": "Não mova esta chamada editando sua agenda diretamente — não sincronizará. Use este botão.",
+      "calendarEditWarning": "Não mova este agendamento editando sua agenda diretamente: não sincronizará. Use este botão.",
       "aiRebookTriggered": "Re-engajamento por IA iniciado",
       "aiRebookFailed": "Falha ao acionar IA para reagendamento",
-      "cancelCall": "Cancelar chamada",
+      "cancelCall": "Cancelar agendamento",
       "cancelConfirm": "Tem certeza? O lead não será marcado como Cancelado, mas a chamada será removida.",
       "cancelConfirmYes": "Sim, cancelar",
       "cancelConfirmNo": "Não",
@@ -384,7 +345,7 @@
     "title": "Pontuação do Lead",
     "notScored": "Sem pontuação",
     "insights": {
-      "callBooked": "Chamada agendada com sucesso",
+      "callBooked": "Agendamento confirmado",
       "leadQualified": "Lead está qualificado",
       "multipleResponses": "Múltiplas respostas recebidas",
       "leadResponded": "Lead respondeu",
@@ -594,7 +555,7 @@
     "noMessagesHint": "Mensagens aparecerão aqui quando o contato começar",
     "typePlaceholder": "Digite uma mensagem…",
     "letAiContinue": "Deixar IA continuar",
-    "openInChats": "Abrir no Chat",
+    "openInChats": "Abrir em Conversas",
     "transcribing": "Transcrevendo…"
   },
   "team": {
@@ -604,7 +565,7 @@
   },
   "activity": {
     "title": "Atividade",
-    "callBooked": "Chamada Agendada",
+    "callBooked": "Agendado",
     "scheduledFor": "Agendado para {{date}}",
     "doNotDisturb": "Não Perturbe",
     "leadRequestedNoContact": "Lead solicitou sem contato",
@@ -639,9 +600,9 @@
     "leadLabel": "Lead",
     "activityLabel": "Atividade",
     "stageOf": "Etapa {{current}} de {{total}}",
-    "bookCall": "Agendar ligação",
+    "bookCall": "Agendar",
     "viewBooking": "Ver agendamento",
-    "meetingBooked": "Reunião agendada",
+    "meetingBooked": "Agendamento confirmado",
     "noSummary": "Nenhum resumo ainda",
     "interactionFinished": "Interação concluída",
     "aiSummary": "Resumo da IA",

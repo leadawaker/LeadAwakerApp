@@ -1,4 +1,5 @@
-import { Suspense, lazy, useEffect, useState, type ReactElement } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState, type ReactElement } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { BreadcrumbProvider } from "@/contexts/BreadcrumbContext";
@@ -8,6 +9,16 @@ import { AgentChatWidget } from "@/features/ai-agents/components/AgentChatWidget
 import { Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { useVoiceCapabilities } from "@/features/voiceCalls/api/voiceCallsApi";
+import {
+  PREFS_CHANGED_EVENT,
+  hydrateServicePageToggles,
+  readServicePageToggles,
+  useServicePageToggles,
+  type ServicePageKey,
+} from "@/hooks/useServicePageToggles";
+import { hydrateLandingPage, isLandingHydrated, resolveLandingPath } from "@/lib/landingPage";
+import { getQueryFn } from "@/lib/queryClient";
+import { parsePrefs } from "@/lib/userPrefs";
 
 // Route-level code splitting: each page is its own lazy chunk so the initial
 // CRM bundle stays small. Named exports are unwrapped to { default }.
@@ -76,6 +87,83 @@ function OwnerOnly({ children, prefix }: { children: ReactElement; prefix: strin
     return <Redirect to={`${prefix}/campaigns`} />;
   }
   return children;
+}
+
+/**
+ * Route guard for the Owner-only service pages that are hidden by default
+ * (Speed to Lead, Reputation, Missed Calls). With the toggle off, a direct URL
+ * sends the user to their landing page instead.
+ */
+function ServicePageGuard({ service, children }: { service: ServicePageKey; children: ReactElement }) {
+  const toggles = useServicePageToggles();
+  if (toggles[service]) return children;
+  // The localStorage mirror can be stale or empty (cleared at login, or the toggle
+  // was switched on from another device), so only redirect on the fresh value.
+  return <ServicePageAfterSession service={service}>{children}</ServicePageAfterSession>;
+}
+
+type AuthMe = { user: { role?: string | null; preferences?: string | Record<string, unknown> | null } | null } | null;
+
+/**
+ * The session user from the cached `/api/auth/me` query (shared with
+ * useWorkspace), with its role and preferences mirrored into localStorage
+ * (service-page toggles + landing page) before the synchronous readers below run.
+ */
+function useFreshSessionPrefs(): { loading: boolean; fetching: boolean; authenticated: boolean } {
+  const { data, isLoading, isFetching } = useQuery<AuthMe>({
+    queryKey: ["/api/auth/me"],
+    queryFn: getQueryFn({ on401: "returnNull" }),
+    staleTime: 30_000,
+  });
+  const user = data?.user ?? null;
+  // Idempotent localStorage writes, done during render so this render already
+  // reads the fresh values; the change event (nav re-read) fires after commit.
+  useMemo(() => {
+    if (!user) return;
+    try {
+      localStorage.setItem("leadawaker_user_role", user.role ?? "Viewer");
+    } catch {
+      /* storage unavailable */
+    }
+    const prefs = parsePrefs(user.preferences);
+    hydrateServicePageToggles(prefs);
+    hydrateLandingPage(prefs);
+  }, [user]);
+  useEffect(() => {
+    if (user) window.dispatchEvent(new Event(PREFS_CHANGED_EVENT));
+  }, [user]);
+  return { loading: isLoading, fetching: isFetching, authenticated: !!user };
+}
+
+/** Waits for the session fetch, then decides from the fresh preferences. */
+function ServicePageAfterSession({ service, children }: { service: ServicePageKey; children: ReactElement }) {
+  const session = useFreshSessionPrefs();
+  if (session.loading) return <PageLoader />;
+  if (!session.authenticated) return <Redirect to="/login" />;
+  if (!readServicePageToggles()[service]) {
+    // A cached copy may be stale: wait for a background refetch before redirecting.
+    if (session.fetching) return <PageLoader />;
+    return <Redirect to={resolveLandingPath()} />;
+  }
+  return children;
+}
+
+/** Waits for the session to hydrate the saved landing page (first load after login). */
+function LandingAfterSession() {
+  const session = useFreshSessionPrefs();
+  if (session.loading) return <PageLoader />;
+  if (!session.authenticated) return <Redirect to="/login" />;
+  return <Redirect to={resolveLandingPath()} />;
+}
+
+/**
+ * `/platform` index: sends the user to their chosen landing page. Reads the
+ * localStorage mirror synchronously so there is no flash; only when it has never
+ * been written (fresh login) does it wait for the session fetch.
+ */
+function LandingRedirect() {
+  if (isLandingHydrated()) return <Redirect to={resolveLandingPath()} />;
+  return <LandingAfterSession />;
 }
 
 /**
@@ -158,7 +246,7 @@ export default function AppArea() {
         <Switch>
           {/* Unified CRM routes — agency vs client behaviour is derived from the
               user's role/session, no longer from the URL prefix. */}
-          <Route path="/platform" component={() => <Redirect to="/platform/campaigns" />} />
+          <Route path="/platform"><LandingRedirect /></Route>
           <Route path="/platform/dashboard" component={() => <Redirect to="/platform/campaigns" />} />
           <Route path="/platform/home">
             <OwnerOnly prefix="/platform"><HomePage /></OwnerOnly>
@@ -179,10 +267,16 @@ export default function AppArea() {
           <Route path="/platform/contacts/:id" component={LeadDetailPage} />
           <Route path="/platform/campaigns" component={AppCampaigns} />
           <Route path="/platform/speed-to-lead">
-            <AgencyOnly prefix="/platform"><SpeedToLeadPage /></AgencyOnly>
+            <ServicePageGuard service="speed">
+              <AgencyOnly prefix="/platform"><SpeedToLeadPage /></AgencyOnly>
+            </ServicePageGuard>
           </Route>
-          <Route path="/platform/reputation" component={ReputationPage} />
-          <Route path="/platform/missed-calls" component={VoicePage} />
+          <Route path="/platform/reputation">
+            <ServicePageGuard service="reputation"><ReputationPage /></ServicePageGuard>
+          </Route>
+          <Route path="/platform/missed-calls">
+            <ServicePageGuard service="missedcall"><VoicePage /></ServicePageGuard>
+          </Route>
           <Route path="/platform/calendar" component={CalendarPage} />
           <Route path="/platform/settings" component={SettingsPage} />
 
@@ -205,7 +299,7 @@ export default function AppArea() {
             <AgencyOnly prefix="/platform"><AppCadence /></AgencyOnly>
           </Route>
           <Route path="/platform/users">
-            <Redirect to="/platform/settings" />
+            <Redirect to="/platform/settings?tab=team" />
           </Route>
           <Route path="/platform/tags">
             <Redirect to="/platform/campaigns" />

@@ -133,8 +133,8 @@ function AppRoutes() {
       <Route path="/agency" component={LegacyAppRedirect} />
       <Route path="/subaccount/:rest*" component={LegacyAppRedirect} />
       <Route path="/subaccount" component={LegacyAppRedirect} />
-      <Route path="/app/agency" component={() => <Redirect to="/platform/campaigns" />} />
-      <Route path="/app/subaccount" component={() => <Redirect to="/platform/campaigns" />} />
+      <Route path="/app/agency" component={() => <Redirect to="/platform" />} />
+      <Route path="/app/subaccount" component={() => <Redirect to="/platform" />} />
       <Route path="/canvas" component={Canvas} />
       <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />

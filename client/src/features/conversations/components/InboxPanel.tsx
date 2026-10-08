@@ -538,10 +538,10 @@ export function InboxPanel({
   const prospectUnread = prospectThreads?.reduce((sum, t) => sum + t.unread_count, 0) || 0;
 
   const INBOX_TABS: TabDef[] = [
-    { id: "all", label: "Inbox", icon: Inbox },
+    { id: "all", label: t("inbox.tabs.all", "All"), icon: Inbox },
     {
       id: "unread",
-      label: "Unread",
+      label: t("inbox.tabs.unread", "Unread"),
       icon: BellDot,
       badge: totalUnread > 0 ? (
         <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold leading-none">
@@ -551,7 +551,7 @@ export function InboxPanel({
     },
     ...(isAgencyUser ? [{
       id: "prospects" as const,
-      label: "Prospects",
+      label: t("inbox.tabs.prospects", "Prospects"),
       icon: UserSearch,
       badge: prospectUnread > 0 ? (
         <span className="ml-0.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold leading-none">
@@ -697,7 +697,7 @@ export function InboxPanel({
                 {tab === "prospects" && (
                   <DropdownMenuItem onClick={() => setProspectPickerOpen(true)} className="flex items-center gap-2 text-[12px]">
                     <Plus className="h-3.5 w-3.5 shrink-0" />
-                    <span>New chat</span>
+                    <span>{t("inbox.newChat", "New conversation")}</span>
                   </DropdownMenuItem>
                 )}
               </DropdownMenuContent>
@@ -874,7 +874,7 @@ export function InboxPanel({
       {/* ── Header: title + Inbox/Unread tabs on same row ── */}
       <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center" data-testid="panel-inbox-head">
         <div className="flex items-center justify-between w-full md:w-[306px] shrink-0">
-          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{prospectOnly ? "Inbox" : "Chats"}</h2>
+          <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{prospectOnly ? t("inbox.prospectTitle", "Prospect inbox") : t("inbox.title", "Conversations")}</h2>
           {!prospectOnly && (
             <ViewTabBar
               tabs={INBOX_TABS}
@@ -894,7 +894,7 @@ export function InboxPanel({
             onChange={onSearchChange}
             open={searchOpenProp}
             onOpenChange={onSearchOpenChange ?? (() => {})}
-            placeholder="Search conversations…"
+            placeholder={t("page.searchPlaceholder", "Search conversations...")}
             className="ml-[9px] max-w-[149px]"
           />
 
@@ -1338,10 +1338,10 @@ export function InboxPanel({
           <button
             className={cn(xBase, "hover:max-w-[100px]", xDefault)}
             onClick={() => setProspectPickerOpen(true)}
-            aria-label="Start new chat"
+            aria-label={t("inbox.startNewChat", "Start new conversation")}
           >
             <Plus className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>New chat</span>
+            <span className={xSpan}>{t("inbox.newChat", "New conversation")}</span>
           </button>
         </div>
       )}
@@ -1372,7 +1372,7 @@ export function InboxPanel({
               type="text"
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search conversations…"
+              placeholder={t("page.searchPlaceholder", "Search conversations...")}
               className="flex-1 min-w-0 bg-transparent outline-none text-[13px] text-foreground placeholder:text-muted-foreground/60"
               data-testid="mobile-inbox-search-input"
             />

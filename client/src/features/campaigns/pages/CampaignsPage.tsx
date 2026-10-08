@@ -380,7 +380,7 @@ function CampaignsContent() {
   const handleAddCampaign = useCallback(async () => {
     try {
       const payload: Record<string, unknown> = {
-        name: "New Campaign",
+        name: t("newCampaignName", "New campaign"),
         status: "Draft",
         type: "Re-engagement",
         description: "",
@@ -418,7 +418,7 @@ function CampaignsContent() {
                 if (tags.length > templateTags.length) templateTags = tags;
               });
               if (templateTags.length > 0) {
-                const campaignName = newCampaign.name || "New Campaign";
+                const campaignName = newCampaign.name || t("newCampaignName", "New campaign");
                 await Promise.allSettled(
                   templateTags.map((tag) =>
                     apiFetch("/api/tags", {
@@ -443,7 +443,7 @@ function CampaignsContent() {
         }
       }
     } catch (err) { console.error("Create campaign failed", err); }
-  }, [handleRefresh, setSelectedCampaign]);
+  }, [handleRefresh, setSelectedCampaign, t]);
 
   // Show error fallback if campaigns failed to load
   if (campaignsError && !loading && campaigns.length === 0) {

@@ -196,7 +196,7 @@
     "campaignsAndContracts": "Campaigns & Contracts",
     "aiAndSchedule": "AI & Schedule",
     "integrations": "Integrations",
-    "voiceClone": "Voice",
+    "voiceClone": "Voice clone",
     "voiceIdForCampaigns": "Voice ID for campaigns",
     "voiceIdWillBe": "Voice ID will be",
     "clickOrDragAudio": "Click or drag audio file",
@@ -420,7 +420,7 @@
       "integrations": "Integrations",
       "knowledge": "Company Intel",
       "communication": "Communication",
-      "voice": "Voice"
+      "voice": "Phone line"
     },
     "createAccount": "Create account",
     "compactPanel": "Compact panel",
@@ -446,7 +446,7 @@
     "invoices": "Invoices",
     "viewAllInvoices": "View all {{count}} invoices",
     "integrations": "Integrations",
-    "voiceClone": "Voice",
+    "voiceClone": "Voice clone",
     "knowledgeBase": "Company Intel",
     "available": "Available",
     "leads": "Leads",

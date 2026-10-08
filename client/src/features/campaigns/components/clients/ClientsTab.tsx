@@ -75,13 +75,13 @@ export function ClientsTab({
             {/* ── Header ── */}
             <div style={{ marginBottom: 20 }}>
               <div className="eyebrow wine" style={{ marginBottom: 8 }}>
-                {t("clients.eyebrow", "Demo personas")}
+                {t("clients.eyebrow", "Library")}
               </div>
               <div
                 className="serif italic"
                 style={{ fontSize: 40, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em", marginBottom: 10 }}
               >
-                {t("clients.title", "Clients")}
+                {t("clients.title", "Demo personas")}
               </div>
               <p style={{ fontSize: 14, color: "var(--mute)", maxWidth: 620, lineHeight: 1.55 }}>
                 {t("clients.intro")}
@@ -97,7 +97,7 @@ export function ClientsTab({
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("clients.searchPlaceholder", "Search Clients...")}
+                placeholder={t("clients.searchPlaceholder", "Search personas...")}
                 style={{
                   width: "100%",
                   fontSize: 13,

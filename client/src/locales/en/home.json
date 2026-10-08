@@ -8,7 +8,7 @@
   },
   "greetingSub": "Here's what's happening across your services.",
   "pulse": {
-    "bookings": "Bookings",
+    "bookings": "Appointments",
     "sent": "Messages Sent",
     "replies": "Replies",
     "reviews": "Reviews"
@@ -17,7 +17,7 @@
     "open": "Open",
     "reactivation": {
       "name": "Reactivation",
-      "northLabel": "Calls Booked",
+      "northLabel": "Appointments booked",
       "delta": "+20% vs last 7d",
       "support1": "Response Rate",
       "support2": "Active Campaigns"
@@ -30,7 +30,7 @@
       "support2": "Requests Sent"
     },
     "speed": {
-      "name": "Speed-to-Lead",
+      "name": "Speed to Lead",
       "northLabel": "Median Response",
       "delta": "−18s vs last 7d",
       "support1": "New Leads Today",
@@ -43,7 +43,7 @@
   "needs": {
     "title": "Needs Attention",
     "viewAll": "View all",
-    "action": "Open Chat",
+    "action": "Open conversation",
     "empty": "Nothing needs your attention right now.",
     "samples": {
       "negFeedback": { "title": "Negative feedback intercepted", "snippet": "“Crew was late and left a mess.”" },
@@ -58,7 +58,7 @@
     "allServices": "All services",
     "samples": {
       "newReview": { "title": "New 5-star review posted", "meta": "“Great job on the roof!”" },
-      "bookingConfirmed": { "title": "Booking confirmed", "meta": "Roof Inspection · 10:00 AM" },
+      "bookingConfirmed": { "title": "Appointment confirmed", "meta": "Roof Inspection · 10:00 AM" },
       "replyReceived": { "title": "Reply received", "meta": "“Sounds good, let's do it.”" },
       "campaignSent": { "title": "Campaign sent", "meta": "Dormant Leads · Reactivation" },
       "sequenceSent": { "title": "Sequence message sent", "meta": "Nurture Sequence · Day 3" }
@@ -66,8 +66,8 @@
   },
   "quick": {
     "title": "Quick Actions",
-    "newCampaign": "New Campaign",
-    "importContacts": "Import Contacts",
+    "newCampaign": "New campaign",
+    "importLeads": "Import leads",
     "newSequence": "New Sequence"
   },
   "explore": {
@@ -75,7 +75,7 @@
     "blurb": "Add more power to your CRM.",
     "add": "Add this service",
     "upsell": {
-      "voice": { "name": "AI Voice Caller", "blurb": "Let AI place + answer calls to book jobs hands-free." },
+      "voice": { "name": "AI receptionist", "blurb": "Let AI answer your calls and book jobs hands-free." },
       "referral": { "name": "Referral Engine", "blurb": "Turn closed jobs into a steady stream of warm referrals." }
     }
   }

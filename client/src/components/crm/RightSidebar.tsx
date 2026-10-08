@@ -41,18 +41,16 @@ import {
   Star,
   Megaphone,
   AudioLines,
+  UserRound,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
 import { useVoiceRecorderState, toggleVoiceRecording, MAX_RECORDING_SECONDS } from "@/lib/voiceRecorder";
 import { useToast } from "@/hooks/use-toast";
-import { useVoiceCapabilities } from "@/features/voiceCalls/api/voiceCallsApi";
-
-const NAV_LANGUAGES = [
-  { code: "en", label: "English", flag: "🇬🇧" },
-  { code: "pt", label: "Português", flag: "🇧🇷" },
-  { code: "nl", label: "Nederlands", flag: "🇳🇱" },
-] as const;
+import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
+import { APP_LANGUAGES } from "@/lib/languages";
+import type { ServicePageKey } from "@/hooks/useServicePageToggles";
 
 const THEME_CYCLE: { mode: ThemeMode; icon: typeof Sun; labelKey: string }[] = [
   { mode: "light", icon: Sun,     labelKey: "sidebar.themeLight" },
@@ -73,12 +71,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { NotificationCenter } from "@/components/crm/NotificationCenter";
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider,
-} from "@/components/ui/tooltip";
 /**
  * Trigger a short haptic feedback vibration (10ms) on mobile devices only.
  * Uses the Web Vibration API (navigator.vibrate). Gracefully degrades on
@@ -98,7 +90,6 @@ export function RightSidebar({
   onToggleHelp,
   onOpenFounderChat,
   onOpenFounderInbox,
-  onOpenSettings,
   notificationsCount,
   isMobileMenuOpen = false,
   onCloseMobileMenu,
@@ -115,7 +106,6 @@ export function RightSidebar({
   onToggleHelp: () => void;
   onOpenFounderChat?: () => void;
   onOpenFounderInbox?: () => void;
-  onOpenSettings?: () => void;
   notificationsCount?: number;
   isMobileMenuOpen?: boolean;
   onCloseMobileMenu?: () => void;
@@ -133,7 +123,6 @@ export function RightSidebar({
     currentAccount,
     currentAccountId,
     setCurrentAccountId,
-    isAgencyView,
     accounts,
     isAgencyUser,
     isOwner,
@@ -184,7 +173,7 @@ export function RightSidebar({
   const cycleTheme = () => setThemeMode(THEME_CYCLE[(themeIndex + 1) % THEME_CYCLE.length].mode);
 
   const currentLang = i18n.language?.split("-")[0] || "en";
-  const currentLanguage = NAV_LANGUAGES.find((l) => l.code === currentLang) ?? NAV_LANGUAGES[0];
+  const currentLanguage = APP_LANGUAGES.find((l) => l.code === currentLang) ?? APP_LANGUAGES[0];
   const handleChangeLanguage = (lang: string) => {
     i18n.changeLanguage(lang);
     localStorage.setItem("leadawaker_lang", lang);
@@ -208,16 +197,9 @@ export function RightSidebar({
     return () => window.removeEventListener("leadawaker-avatar-changed", handler);
   }, []);
 
-  // Owner-only preference: outreach pages (Inbox/Prospects/Cadence) are hidden from the
-  // nav by default and only show once the Owner opts back in from Settings > Edit Profile.
-  const [showOutreachPages, setShowOutreachPages] = useState(
-    () => localStorage.getItem("leadawaker_show_outreach_pages") === "1"
-  );
-  useEffect(() => {
-    const handler = () => setShowOutreachPages(localStorage.getItem("leadawaker_show_outreach_pages") === "1");
-    window.addEventListener("leadawaker-prefs-changed", handler);
-    return () => window.removeEventListener("leadawaker-prefs-changed", handler);
-  }, []);
+  // Role, impersonation, outreach pref, voice capabilities and the Owner's service
+  // page toggles: the same context the mobile More page and landing picker use.
+  const navCtx = useNavGateContext();
 
   // Owner-only voice memo mic — recording state lives outside React (see voiceRecorder.ts)
   // so it survives navigation between pages, since every page remounts CrmShell.
@@ -264,29 +246,19 @@ export function RightSidebar({
   }, [location]);
 
   const prefix = "/platform";
-  // Hidden until the server says this user has a voice line (or is the Owner).
-  const { data: voiceCaps } = useVoiceCapabilities();
-
-  const navItems: {
+  const navItems: (NavGate & {
     href: string;
     label: string;
     labelKey: string;
     icon: any;
     testId: string;
-    adminOnly?: boolean;
-    agencyOnly?: boolean;
-    agencyViewOnly?: boolean;
-    ownerOnly?: boolean;
-    outreachOnly?: boolean;
-    /** Shown only when /api/voice-calls/capabilities says this user has Live or Demo. */
-    voiceCallsOnly?: boolean;
-  }[] = [
-    { href: `${prefix}/campaigns`, label: t("sidebar.campaigns"), labelKey: "Campaigns", icon: Megaphone, testId: "nav-reactivation" },
+  })[] = [
+    { href: `${prefix}/campaigns`, label: t("sidebar.reactivation"), labelKey: "Reactivation", icon: Megaphone, testId: "nav-reactivation" },
     { href: `${prefix}/voice-calls`, label: t("sidebar.voiceCalls"), labelKey: "Voice calls", icon: AudioLines, testId: "nav-voice-calls", voiceCallsOnly: true },
-    // Agency = full chat ("Chats"); clients = summary-only view ("Interactions"). No gate needed.
-    { href: `${prefix}/chat`, label: isAgencyUser ? t("sidebar.chats") : t("sidebar.interactions"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations" },
+    // Agency only: /chat redirects client users to /contacts, so clients get the single "Leads" entry below.
+    { href: `${prefix}/chat`, label: t("sidebar.conversations"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations", agencyOnly: true },
     { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
-    { href: `${prefix}/contacts`, label: t("sidebar.contacts"), labelKey: "Contacts", icon: BookUser, testId: "nav-contacts" },
+    { href: `${prefix}/contacts`, label: t("sidebar.leads"), labelKey: "Leads", icon: BookUser, testId: "nav-contacts" },
     {
       href: `${prefix}/tasks`,
       label: t("sidebar.tasks"),
@@ -311,13 +283,13 @@ export function RightSidebar({
       agencyOnly: true,
     },
     { href: `${prefix}/billing`, label: t("sidebar.billing"), labelKey: "Billing", icon: Receipt, testId: "nav-billing" },
-    { href: `${prefix}/outreach-inbox`, label: t("sidebar.inbox"), labelKey: "Inbox", icon: MessageSquare, testId: "nav-outreach-inbox", ownerOnly: true, outreachOnly: true },
+    { href: `${prefix}/outreach-inbox`, label: t("sidebar.inbox"), labelKey: "Prospect inbox", icon: MessageSquare, testId: "nav-outreach-inbox", ownerOnly: true, outreachOnly: true },
     { href: `${prefix}/prospects`, label: t("sidebar.prospects"), labelKey: "Prospects", icon: UserSearch, testId: "nav-prospects", ownerOnly: true, outreachOnly: true },
     { href: `${prefix}/cadence`, label: t("sidebar.cadence"), labelKey: "Cadence", icon: PhoneCall, testId: "nav-cadence", ownerOnly: true, outreachOnly: true },
     {
       href: `${prefix}/automation-logs`,
       label: t("sidebar.automations"),
-      labelKey: "Automations",
+      labelKey: "Automation logs",
       icon: ScrollText,
       testId: "nav-automations",
       ownerOnly: true,
@@ -335,15 +307,7 @@ export function RightSidebar({
   ];
 
   // Filter nav items based on user role and current view context
-  const visibleNavItems = navItems.filter((it) => {
-    if (it.ownerOnly && !isOwner) return false;
-    if (it.voiceCallsOnly && !(voiceCaps?.live || voiceCaps?.demo)) return false;
-    if (it.outreachOnly && !showOutreachPages) return false;
-    if (it.adminOnly && !isAgencyUser) return false;
-    if (it.agencyOnly && !isAgencyUser) return false;
-    if (it.agencyViewOnly && !isAgencyView) return false;
-    return true;
-  });
+  const visibleNavItems = navItems.filter((it) => isNavItemVisible(it, navCtx));
 
   /** Check if a nav item is active (exact match or sub-route match) */
   const isActive = (href: string) => {
@@ -352,74 +316,6 @@ export function RightSidebar({
     // But don't let /platform/campaigns match sub-routes (campaigns has no sub-routes)
     if (href !== `${prefix}/campaigns` && location.startsWith(href + '/')) return true;
     return false;
-  };
-
-  /** Render a single desktop nav link with Radix Tooltip support */
-  const renderDesktopNavLink = (it: typeof navItems[0]) => {
-    const active = isActive(it.href);
-    const Icon = it.icon;
-    const showUnreadCount = it.testId === "nav-chats" && !!unreadChatCount && unreadChatCount > 0;
-    const isCalendar = it.testId === "nav-calendar" && bookedThisMonth > 0;
-    const showBookedBadge = isCalendar && active;
-    const showBookedOnHover = isCalendar && !active;
-
-    return (
-      <Tooltip key={it.href}>
-        <TooltipTrigger asChild>
-          <Link
-            href={it.href}
-            className={cn(
-              "group/nav relative flex items-center rounded-full transition-colors mb-0.5",
-              collapsed
-                ? "h-[44px] w-[44px] justify-center mx-auto"
-                : "h-[44px] pl-[1.5px] pr-2 gap-2.5",
-              active
-                ? "bg-sidebar-active text-sidebar-active-foreground font-semibold"
-                : "text-foreground/70 hover:bg-card hover:text-foreground"
-            )}
-            data-testid={`link-${it.testId}`}
-            data-onboarding={it.testId}
-            data-active={active || undefined}
-          >
-            <div className={cn("relative h-10 w-10 rounded-full flex items-center justify-center shrink-0", active ? "border border-white/25" : "")}>
-              <Icon className="h-4 w-4" />
-              {showUnreadCount && (
-                <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-brand-indigo text-white text-[10px] font-bold flex items-center justify-center border border-background">
-                  {unreadChatCount! > 9 ? "9+" : unreadChatCount}
-                </span>
-              )}
-              {showBookedBadge && (
-                <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-[#DA9426] text-[#1F1A14] text-[10px] font-bold flex items-center justify-center border border-background">
-                  {bookedThisMonth > 9 ? "9+" : bookedThisMonth}
-                </span>
-              )}
-              {showBookedOnHover && (
-                <span className="absolute -top-1 -right-1 h-4 min-w-[1rem] px-1 rounded-full bg-[#DA9426] text-[#1F1A14] text-[10px] font-bold flex items-center justify-center border border-background opacity-0 group-hover/nav:opacity-100 transition-opacity">
-                  {bookedThisMonth > 9 ? "9+" : bookedThisMonth}
-                </span>
-              )}
-            </div>
-            {!collapsed && (
-              <span className="text-sm font-bold">{it.label}</span>
-            )}
-
-          </Link>
-        </TooltipTrigger>
-        {collapsed && (
-          <TooltipContent
-            side="right"
-            className={cn(
-              "rounded-lg px-3 h-10 flex items-center text-sm font-semibold shadow-md border-0 ml-1",
-              isActive(it.href)
-                ? "bg-sidebar-active text-sidebar-active-foreground"
-                : "bg-card text-foreground"
-            )}
-          >
-            {it.label}
-          </TooltipContent>
-        )}
-      </Tooltip>
-    );
   };
 
   return (
@@ -434,7 +330,7 @@ export function RightSidebar({
         />
       </div>
 
-      {/* MOBILE BOTTOM BAR — wine/paper neumorphic, 5 tabs: Campaigns, Leads, Calendar, Tasks, More */}
+      {/* MOBILE BOTTOM BAR — wine/paper neumorphic, 5 tabs: Reactivation, Leads, Calendar, Tasks, More */}
       <div
         className="md:hidden fixed bottom-0 left-0 right-0 z-[100] grid grid-cols-5 items-stretch"
         style={{
@@ -450,11 +346,11 @@ export function RightSidebar({
           // Owner keeps the services hub; admins/clients land on Campaigns instead.
           isOwner
             ? { key: "home", href: `${prefix}/home`, icon: Home, label: t("sidebar.home"), testId: "mobile-nav-home" }
-            : { key: "campaigns", href: `${prefix}/campaigns`, icon: Megaphone, label: t("sidebar.campaigns"), testId: "mobile-nav-campaigns" },
-          // Agency = full chat ("Chats"); clients = summary-only ("Interactions").
+            : { key: "campaigns", href: `${prefix}/campaigns`, icon: Megaphone, label: t("sidebar.reactivation"), testId: "mobile-nav-campaigns" },
+          // Agency = Conversations inbox; clients go straight to Leads (/chat redirects them there anyway).
           isAgencyUser
-            ? { key: "conversations", href: `${prefix}/chat`, icon: MessageSquare, label: t("sidebar.chats"), testId: "mobile-nav-conversations" }
-            : { key: "conversations", href: `${prefix}/chat`, icon: MessageSquare, label: t("sidebar.interactions"), testId: "mobile-nav-conversations" },
+            ? { key: "conversations", href: `${prefix}/chat`, icon: MessageSquare, label: t("sidebar.conversations"), testId: "mobile-nav-conversations" }
+            : { key: "leads", href: `${prefix}/contacts`, icon: BookUser, label: t("sidebar.leads"), testId: "mobile-nav-leads" },
           { key: "calendar", href: `${prefix}/calendar`, icon: CalendarDays, label: t("sidebar.calendar"), testId: "mobile-nav-calendar" },
           // Agency users get Tasks; clients get their Accounts page instead.
           isAgencyUser
@@ -573,14 +469,14 @@ export function RightSidebar({
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <button className="la-switcher" style={{ marginBottom: 12 }}>
-                  <span>{currentAccountId === 0 ? "Agency View" : (currentAccount?.name || "Account")}</span>
+                  <span>{currentAccountId === 0 ? t("topbar.agencyView") : (currentAccount?.name || t("topbar.account"))}</span>
                   <span style={{ display: "flex", transform: "rotate(90deg)", color: "var(--muted-foreground)" }}>
                     <ChevronRight size={12} />
                   </span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="right" align="start" sideOffset={8} className="w-56 rounded-2xl shadow-xl border-border bg-background">
-                <div className="px-3 pt-2 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Agency</div>
+                <div className="px-3 pt-2 pb-0.5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t("sidebarSections.agency")}</div>
                 <DropdownMenuItem onClick={() => handleAccountSelect(0)}
                   className={cn("flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1", currentAccountId === 0 && "bg-muted font-bold")}>
                   <div className="h-6 w-6 rounded-md flex items-center justify-center text-[10px] font-bold shrink-0 bg-brand-yellow text-brand-yellow-foreground">
@@ -621,20 +517,22 @@ export function RightSidebar({
 
           {/* Services group — each row is a service the agency runs. Reactivation
               sits on top (→ Campaigns dashboard). Reputation is live (mock
-              workspace); Speed-to-Lead is live for agency users and a "Soon"
+              workspace); Speed to Lead is live for agency users and a "Soon"
               placeholder for clients; Missed-Call is a mock workspace. */}
           <div>
             <div className="la-nav-section">{t("sidebar.services")}</div>
             {[
               // Reactivation = the original service; its cockpit is the Campaigns dashboard.
-              { key: "reactivation", labelKey: "sidebar.campaigns", Icon: Megaphone, href: `${prefix}/campaigns` as string | null },
-              // Speed-to-Lead has a live mission-control dashboard for agency users;
+              { key: "reactivation", labelKey: "sidebar.reactivation", Icon: Megaphone, href: `${prefix}/campaigns` as string | null },
+              // Speed to Lead has a live mission-control dashboard for agency users;
               // client users still see it as an upcoming "Soon" service.
               { key: "speed", labelKey: "sidebar.speedToLead", Icon: Send, href: isAgencyUser ? `${prefix}/speed-to-lead` : null },
               { key: "reputation", labelKey: "sidebar.reputation", Icon: Star, href: `${prefix}/reputation` as string | null },
               // Missed-Call Text-Back (Voice service) — mock workspace for now.
               { key: "missedcall", labelKey: "sidebar.missedCalls", Icon: PhoneMissed, href: `${prefix}/missed-calls` as string | null },
-            ].filter(({ key }) => isOwner || key === "reactivation").map(({ key, labelKey, Icon, href }) =>
+            ].filter(({ key }) =>
+              key === "reactivation" || isNavItemVisible({ serviceKey: key as ServicePageKey }, navCtx)
+            ).map(({ key, labelKey, Icon, href }) =>
               href ? (
                 <Link
                   key={key}
@@ -690,20 +588,20 @@ export function RightSidebar({
           {/* Nav section groups */}
           {(() => {
             const sections = [
-              { section: "Engage", items: visibleNavItems.filter(it => ["Voice calls", "Conversations", "Calendar", "Contacts"].includes(it.labelKey)) },
-              { section: "Admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
-              { section: "Backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automations", "Demos"].includes(it.labelKey)) },
-              { section: "Outreach", items: visibleNavItems.filter(it => ["Inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
+              { section: "engage", items: visibleNavItems.filter(it => ["Voice calls", "Conversations", "Calendar", "Leads"].includes(it.labelKey)) },
+              { section: "admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
+              { section: "backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automation logs", "Demos"].includes(it.labelKey)) },
+              { section: "outreach", items: visibleNavItems.filter(it => ["Prospect inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
             ];
             return sections.map((g) => {
               if (g.items.length === 0) return null;
               return (
                 <div key={g.section}>
-                  <div className="la-nav-section">{g.section}</div>
+                  <div className="la-nav-section">{t(`sidebarSections.${g.section}`)}</div>
                   {g.items.map((it) => {
                     const active = isActive(it.href);
                     const Icon = it.icon;
-                    const showUnreadCount = it.testId === "nav-chats" && !!unreadChatCount && unreadChatCount > 0;
+                    const showUnreadCount = it.testId === "nav-conversations" && !!unreadChatCount && unreadChatCount > 0;
                     return (
                       <Link key={it.href} href={it.href}
                         className={`la-nav-item ${active ? "active" : ""}`}
@@ -805,6 +703,14 @@ export function RightSidebar({
           <div style={{ position: "relative", marginTop: 8 }}>
             {profileOpen && (
               <div className="la-profile-menu">
+                <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); setLocation(`${prefix}/settings?tab=profile`); }}
+                  data-testid="nav-my-profile">
+                  <UserRound size={14} />{t("topbar.myProfile")}
+                </button>
+                <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); setLocation(`${prefix}/settings?tab=preferences`); }}
+                  data-testid="nav-preferences">
+                  <SlidersHorizontal size={14} />{t("sidebar.preferences")}
+                </button>
                 <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); setLocation(`${prefix}/settings`); }}>
                   <Settings size={14} />{t("sidebar.settings")}
                 </button>
@@ -863,7 +769,7 @@ export function RightSidebar({
                     </button>
                   </PopoverTrigger>
                   <PopoverContent side="right" align="start" sideOffset={4} className="w-48 p-1 rounded-2xl shadow-xl border-border bg-background">
-                    {NAV_LANGUAGES.map((lang) => (
+                    {APP_LANGUAGES.map((lang) => (
                       <button
                         key={lang.code}
                         onClick={() => handleChangeLanguage(lang.code)}

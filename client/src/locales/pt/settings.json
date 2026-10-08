@@ -5,18 +5,18 @@
   },
   "title": "Configuracoes",
   "sections": {
+    "profile": "Perfil",
+    "preferences": "Preferências",
+    "team": "Equipe",
     "account": "Minha Conta",
-    "profile": "Meu Perfil",
     "security": "Seguranca",
-    "notifications": "Notificacoes",
-    "team": "Equipe"
+    "notifications": "Notificacoes"
   },
   "team": {
     "people": "Pessoas",
     "table": "Tabela",
     "back": "Voltar",
     "editProfile": "Editar perfil",
-    "editMyProfile": "Editar meu perfil",
     "title": "Equipe"
   },
   "account": {
@@ -58,7 +58,29 @@
     "lastLogin": "Ultimo login",
     "outreachPages": "Paginas de prospeccao",
     "outreachPagesDescription": "Mostrar as paginas Inbox, Prospects e Cadence na barra de navegacao.",
-    "outreachPagesToggle": "Mostrar na barra de navegacao"
+    "outreachPagesToggle": "Mostrar na barra de navegacao",
+    "servicePages": "Páginas de serviço",
+    "servicePagesDescription": "Mostrar estas páginas de serviço na barra de navegação e no Início. Ocultas por padrão.",
+    "servicePageSpeed": "Resposta Rápida",
+    "servicePageReputation": "Reputação",
+    "servicePageMissedCalls": "Chamadas Perdidas",
+    "landingPage": "Página inicial",
+    "landingPageDescription": "A página que abre primeiro quando você entra.",
+    "personalInfo": "Informações pessoais",
+    "personalInfoDescription": "Seu nome e como falar com você.",
+    "viewAsClient": "Ver como cliente: {{name}}",
+    "viewAsClientSandbox": "Ver como cliente (sandbox)"
+  },
+  "preferences": {
+    "timezoneDescription": "Usado para datas, horários e agendamentos.",
+    "appearance": "Aparência",
+    "appearanceDescription": "Tema e idioma neste dispositivo.",
+    "theme": "Tema",
+    "themeLight": "Claro",
+    "themeDark": "Escuro",
+    "themeSystem": "Sistema",
+    "ownerTools": "Ferramentas do proprietário",
+    "ownerToolsDescription": "Visível apenas para o proprietário."
   },
   "notifications": {
     "title": "Notificacoes",
@@ -71,7 +93,7 @@
       "chatIdPlaceholder": "ex. 6586636723",
       "save": "Salvar",
       "saved": "Chat ID do Telegram salvo",
-      "setupHint": "Toque no link abaixo para abrir o bot — ele responderá com seu Chat ID. Cole aqui.",
+      "setupHint": "Toque no link abaixo para abrir o bot. Ele responderá com seu Chat ID. Cole aqui.",
       "openBot": "Abrir @Lead_Awaker_bot no Telegram"
     },
     "push": {

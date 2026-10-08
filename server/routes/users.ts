@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { storage } from "../storage";
-import { requireAuth, requireAgency } from "../auth";
+import { requireAuth, requireAgency, invalidateUserCache } from "../auth";
 import { canManageUser, isOwner } from "../permissions";
 import {
   users,
@@ -75,9 +75,26 @@ export function registerUsersRoutes(app: Express): void {
       if (rawBody.role === "Owner" && !isOwner(sessionUser)) {
         return res.status(403).json({ message: "Only an Owner can grant Owner role" });
       }
+      // `preferencesPatch`: partial preferences object merged into the DB value
+      // inside a single UPDATE statement (see storage.mergeAppUserPreferences),
+      // so concurrent saves of different keys never overwrite each other.
+      const prefsPatch = rawBody.preferencesPatch;
+      delete rawBody.preferencesPatch;
+      if (prefsPatch !== undefined) {
+        if (!prefsPatch || typeof prefsPatch !== "object" || Array.isArray(prefsPatch)) {
+          return res.status(400).json({ message: "preferencesPatch must be an object" });
+        }
+      }
       const parsed = insertUsersSchema.partial().safeParse(fromDbKeys(rawBody, users));
       if (!parsed.success) return handleZodError(res, parsed.error);
-      const updated = await storage.updateAppUser(targetId, parsed.data as any);
+      const hasFields = Object.keys(parsed.data).length > 0;
+      let updated = hasFields || prefsPatch === undefined
+        ? await storage.updateAppUser(targetId, parsed.data as any)
+        : target;
+      if (updated && prefsPatch !== undefined) {
+        updated = await storage.mergeAppUserPreferences(targetId, prefsPatch);
+      }
+      invalidateUserCache(targetId);
       if (!updated) return res.status(404).json({ message: "User not found" });
       const { passwordHash: _, ...safeUser } = updated;
       res.json(safeUser);
@@ -119,6 +136,7 @@ export function registerUsersRoutes(app: Express): void {
           preferences: newPreferences,
         });
         if (!updated) return res.status(500).json({ message: "Failed to re-invite user" });
+        invalidateUserCache(existing.id!);
 
         const { passwordHash: _, ...safeUser } = updated;
 
@@ -220,6 +238,7 @@ export function registerUsersRoutes(app: Express): void {
       });
 
       const updated = await storage.updateAppUser(targetId, { preferences: newPreferences });
+      invalidateUserCache(targetId);
       if (!updated) return res.status(404).json({ message: "Failed to update user" });
 
       const { passwordHash: _, ...safeUser } = updated;
@@ -276,6 +295,7 @@ export function registerUsersRoutes(app: Express): void {
         status: "Inactive",
       });
       if (!updated) return res.status(404).json({ message: "Failed to update user" });
+      invalidateUserCache(targetId);
 
       const { passwordHash: _, ...safeUser } = updated;
 

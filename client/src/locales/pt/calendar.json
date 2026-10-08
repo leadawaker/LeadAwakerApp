@@ -1,5 +1,5 @@
 {
-  "title": "Calendario",
+  "title": "Calendário",
   "months": {
     "short": {
       "jan": "Jan",
@@ -114,7 +114,7 @@
   },
   "book": {
     "newAppointment": "Novo agendamento",
-    "title": "Agendar um Lead",
+    "title": "Criar agendamento",
     "bookAppointment": "Agendar Consulta",
     "booking": "Agendando..."
   },
@@ -130,7 +130,7 @@
     "month": "Mês",
     "weekOf": "Semana de",
     "tapDay": "Toque em um dia",
-    "noMeetingsWeek": "Nenhuma reunião nesta semana",
+    "noMeetingsWeek": "Nenhum agendamento nesta semana",
     "today": "Hoje",
     "book": "Agendar",
     "filters": {
@@ -140,7 +140,7 @@
       "attention": "Requer atenção"
     },
     "stats": {
-      "meetings": "Reuniões nesta semana",
+      "meetings": "Agendamentos nesta semana",
       "upcoming": "Próximas",
       "needsAttention": "Requer atenção"
     },
@@ -170,7 +170,7 @@
   },
   "design": {
     "kpi": {
-      "meetings": "Reuniões esta semana"
+      "meetings": "Agendamentos esta semana"
     },
     "tabs": {
       "all": "Todas",
@@ -198,15 +198,15 @@
       },
       "conversation": "Conversa",
       "openInLead": "Abrir no lead",
-      "selectMeeting": "Selecione uma reunião",
-      "noMeetings": "Nenhuma reunião",
+      "selectMeeting": "Selecione um agendamento",
+      "noMeetings": "Nenhum agendamento",
       "aiAgent": "Agente IA",
       "googleMeet": "Google Meet",
       "phone": "Telefone",
       "email": "E-mail",
       "actions": "Ações do agendamento",
       "reschedule": "Reagendar",
-      "cancelCall": "Cancelar chamada",
+      "cancelCall": "Cancelar agendamento",
       "close": "Fechar"
     },
     "panel": {

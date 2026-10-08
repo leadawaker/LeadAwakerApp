@@ -1,11 +1,12 @@
 {
-  "title": "Campanhas",
+  "title": "Reativação",
+  "newCampaignName": "Nova campanha",
   "views": {
     "list": "Lista",
     "table": "Tabela"
   },
   "toolbar": {
-    "add": "Adicionar",
+    "add": "Nova campanha",
     "sort": "Ordenar",
     "sortBy": "Ordenar por",
     "filter": "Filtrar",
@@ -40,8 +41,8 @@
     "generateFailed": "Geração falhou"
   },
   "share": {
-    "languageMissing": "Este cliente ainda não tem uma abertura nesse idioma.",
-    "languageLimitedHint": "Este cliente só existe em {{langs}}. Preencha os campos de abertura que faltam na aba Clientes para gerá-lo em outro idioma."
+    "languageMissing": "Esta persona ainda não tem uma abertura nesse idioma.",
+    "languageLimitedHint": "Esta persona só existe em {{langs}}. Preencha os campos de abertura que faltam na aba Personas de demo para gerá-la em outro idioma."
   },
   "columns": {
     "name": "Nome",
@@ -124,7 +125,8 @@
   "tabs": {
     "summary": "Resumo",
     "configurations": "Configurações",
-    "tags": "Tags"
+    "tags": "Tags",
+    "clients": "Personas de demo"
   },
   "summary": {
     "eyebrows": {
@@ -609,6 +611,8 @@
     }
   },
   "clients": {
+    "eyebrow": "Biblioteca",
+    "title": "Personas de demo",
     "live": {
       "badge": "AO VIVO",
       "title": "Persona de cliente ao vivo (somente leitura)",
@@ -622,7 +626,7 @@
     },
     "shot": {
       "title": "Imagem do site",
-      "hint": "A página em que a demonstração do widget aparece. Enviada manualmente para um Client sem site próprio.",
+      "hint": "A página em que a demonstração do widget aparece. Enviada manualmente para uma persona sem site próprio.",
       "none": "Ainda sem imagem",
       "upload": "Enviar",
       "replace": "Substituir",

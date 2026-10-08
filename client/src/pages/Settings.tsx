@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback } from "react";
+import { useLocation, useSearch } from "wouter";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiUtils";
 import { cn } from "@/lib/utils";
-import { Building2, Users } from "lucide-react";
+import { Building2, SlidersHorizontal, UserRound, Users } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { SettingsTeamSection } from "@/features/users/components/SettingsTeamSection";
 import { AccountDetailView } from "@/features/accounts/components/AccountDetailView";
@@ -12,16 +13,26 @@ import { updateAccount } from "@/features/accounts/api/accountsApi";
 import type { AccountRow } from "@/features/accounts/components/AccountDetailsDialog";
 import { SkeletonSettingsSection } from "@/components/ui/skeleton";
 import { MobileAgencySwitcher } from "@/components/crm/mobile/MobileAgencySwitcher";
+import { MyProfileGate } from "@/features/settings/components/MyProfileGate";
+import { ProfileTab } from "@/features/settings/components/ProfileTab";
+import { PreferencesTab } from "@/features/settings/components/PreferencesTab";
 
 // ── Settings sections ────────────────────────────────────────────────
-// (Niche Words moved to the Prompt Library page. Notifications moved to the
-// Team tab — see the bottom of the profile detail card for the logged-in user.)
-type SettingsSection = "team" | "account";
+// URL contract: /platform/settings?tab=profile|preferences|team|account.
+// The tab lives in the query string (not local state) so nav links that only
+// change ?tab= switch the tab even while this page is already open.
+type SettingsSection = "profile" | "preferences" | "team" | "account";
+const DEFAULT_SECTION: SettingsSection = "profile";
 
-const BASE_SECTIONS: { id: SettingsSection; labelKey: string; icon: React.ElementType; agencyOnly?: boolean; scopedOnly?: boolean }[] = [
-  { id: "account", labelKey: "sections.account", icon: Building2, scopedOnly: true },
+const BASE_SECTIONS: { id: SettingsSection; labelKey: string; icon: React.ElementType; scopedOnly?: boolean }[] = [
+  { id: "profile", labelKey: "sections.profile", icon: UserRound },
+  { id: "preferences", labelKey: "sections.preferences", icon: SlidersHorizontal },
   { id: "team", labelKey: "sections.team", icon: Users },
+  // "My Account" shown only for agency users scoped to a specific client account
+  { id: "account", labelKey: "sections.account", icon: Building2, scopedOnly: true },
 ];
+
+const isSection = (v: string | null): v is SettingsSection => BASE_SECTIONS.some((s) => s.id === v);
 
 // ── Main Settings Page ───────────────────────────────────────────────
 function SettingsContent() {
@@ -29,29 +40,30 @@ function SettingsContent() {
   const { toast } = useToast();
   const { isAgencyUser, currentAccountId } = useWorkspace();
   const isScopedToAccount = currentAccountId > 0;
+  const [location, navigate] = useLocation();
+  const search = useSearch();
 
-  // "My Account" shown only for agency users scoped to a specific client account
-  const SECTIONS = BASE_SECTIONS.filter((s) => {
-    if (s.agencyOnly && !isAgencyUser) return false;
-    if (s.scopedOnly && !(isScopedToAccount && isAgencyUser)) return false;
-    return true;
-  });
+  const SECTIONS = BASE_SECTIONS.filter((s) => !(s.scopedOnly && !(isScopedToAccount && isAgencyUser)));
 
-  // ── Active tab (normal screens) ────────────────────────────────────
-  const [activeSection, setActiveSection] = useState<SettingsSection>("team");
+  // ── Active tab: derived from ?tab=, unknown / unauthorized falls back to profile
+  const requested = new URLSearchParams(search).get("tab");
+  const activeSection: SettingsSection =
+    isSection(requested) && SECTIONS.some((s) => s.id === requested) ? requested : DEFAULT_SECTION;
 
-  // Deep-link: other pages can set sessionStorage to open/scroll to a panel
+  const setActiveSection = useCallback((id: SettingsSection) => {
+    const params = new URLSearchParams(window.location.search);
+    params.set("tab", id);
+    navigate(`${location}?${params.toString()}`, { replace: true });
+  }, [location, navigate]);
+
+  // Deep-link: other pages can set sessionStorage to open a tab
   useEffect(() => {
-    const pending = sessionStorage.getItem("pendingSettingsSection") as SettingsSection | null;
+    const pending = sessionStorage.getItem("pendingSettingsSection");
     if (!pending) return;
     sessionStorage.removeItem("pendingSettingsSection");
-    if (BASE_SECTIONS.some((s) => s.id === pending)) setActiveSection(pending);
+    if (isSection(pending)) setActiveSection(pending);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Keep activeSection valid when the available sections change
-  useEffect(() => {
-    if (!SECTIONS.some((s) => s.id === activeSection)) setActiveSection(SECTIONS[0]?.id ?? "team");
-  }, [SECTIONS, activeSection]);
 
   // ── Account detail state (when scoped to a specific account) ───────
   const [accountData, setAccountData] = useState<AccountRow | null>(null);
@@ -89,24 +101,21 @@ function SettingsContent() {
     );
   };
 
-  const showAccountPanel = SECTIONS.some((s) => s.id === "account");
-  const tabSections = SECTIONS.filter((s) => s.id !== "account");
-
   return (
     <div className="la-page" data-testid="page-settings">
-      {/* Agency/account switcher — relocated here from the mobile list header */}
+      {/* Agency/account switcher, relocated here from the mobile list header */}
       {isAgencyUser && (
         <div className="md:hidden px-4 pt-3 pb-1" style={{ paddingTop: "calc(var(--safe-top) + 12px)" }}>
           <MobileAgencySwitcher />
         </div>
       )}
-      <div className="la-page-header flex items-center gap-4">
+      <div className="la-page-header flex items-center gap-4 min-w-0">
         <span className="serif shrink-0" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>
           {t("title")}
         </span>
         {/* Tabs immediately next to title */}
-        <div className="la-seg shrink-0" role="tablist" data-testid="settings-tabs">
-          {tabSections.map((s) => (
+        <div className="la-seg min-w-0 max-w-full overflow-x-auto" role="tablist" data-testid="settings-tabs">
+          {SECTIONS.map((s) => (
             <button
               key={s.id}
               role="tab"
@@ -120,7 +129,7 @@ function SettingsContent() {
             </button>
           ))}
         </div>
-        {/* Toolbar portal slot — team toolbar mounts here on the topbar */}
+        {/* Toolbar portal slot: the team toolbar mounts here on the topbar */}
         {activeSection === "team" && (
           <div id="settings-team-toolbar-slot" className="flex-1 flex items-center justify-end gap-1.5 px-2" style={{ overflow: "visible" }} />
         )}
@@ -128,19 +137,30 @@ function SettingsContent() {
 
       <div className="flex-1 min-h-0 overflow-y-auto">
         {activeSection === "team" ? (
-          // Team: full-height layout — toolbar (cards) flush left, divider spans full height
+          // Team: full-height layout, toolbar (cards) flush left, divider spans full height
           <div className="h-full" data-testid="settings-panel-team">
             <SettingsTeamSection isUltrawide={false} />
           </div>
-        ) : (
+        ) : activeSection === "account" ? (
           // Account: centered layout
           <div className="flex justify-center">
             <div className="w-full max-w-[500px] px-4 md:px-6 py-6">
-              {showAccountPanel && activeSection === "account" && (
-                <div className="neu-raised p-5 mb-4" data-testid="settings-panel-account">
-                  {renderAccountSection()}
-                </div>
-              )}
+              <div className="neu-raised p-5 mb-4" data-testid="settings-panel-account">
+                {renderAccountSection()}
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Profile / Preferences: centered single column of cards
+          <div className="flex justify-center">
+            <div className="w-full max-w-[720px] px-4 md:px-6 py-6" data-testid={`settings-panel-${activeSection}`}>
+              <MyProfileGate key={activeSection} testId={activeSection === "profile" ? "section-profile" : "section-preferences"}>
+                {(profile, setProfile) =>
+                  activeSection === "profile"
+                    ? <ProfileTab profile={profile} onProfileUpdated={setProfile} />
+                    : <PreferencesTab profile={profile} onProfileUpdated={setProfile} />
+                }
+              </MyProfileGate>
             </div>
           </div>
         )}

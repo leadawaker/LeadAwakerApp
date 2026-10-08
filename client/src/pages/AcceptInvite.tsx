@@ -64,7 +64,7 @@ export default function AcceptInvite() {
   // Only redirect if there's NO invite token and the user is already logged in
   useEffect(() => {
     if (!token && !email && localStorage.getItem("leadawaker_auth")) {
-      setLocation("/platform/campaigns");
+      setLocation("/platform");
     }
   }, []);
 

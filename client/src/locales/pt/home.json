@@ -17,7 +17,7 @@
     "open": "Abrir",
     "reactivation": {
       "name": "Reativação",
-      "northLabel": "Reuniões agendadas",
+      "northLabel": "Agendamentos marcados",
       "delta": "+20% vs 7d",
       "support1": "Taxa de resposta",
       "support2": "Campanhas ativas"
@@ -43,7 +43,7 @@
   "needs": {
     "title": "Requer atenção",
     "viewAll": "Ver tudo",
-    "action": "Abrir chat",
+    "action": "Abrir conversa",
     "empty": "Nada requer sua atenção agora.",
     "samples": {
       "negFeedback": { "title": "Feedback negativo interceptado", "snippet": "“A equipe atrasou e deixou bagunça.”" },
@@ -67,7 +67,7 @@
   "quick": {
     "title": "Ações rápidas",
     "newCampaign": "Nova campanha",
-    "importContacts": "Importar contatos",
+    "importLeads": "Importar leads",
     "newSequence": "Nova sequência"
   },
   "explore": {
@@ -75,7 +75,7 @@
     "blurb": "Adicione mais poder ao seu CRM.",
     "add": "Adicionar este serviço",
     "upsell": {
-      "voice": { "name": "Assistente de Voz IA", "blurb": "Deixe a IA ligar + atender para agendar serviços sem usar as mãos." },
+      "voice": { "name": "Recepcionista IA", "blurb": "Deixe a IA atender suas ligações e agendar serviços sem usar as mãos." },
       "referral": { "name": "Motor de Indicações", "blurb": "Transforme serviços concluídos em um fluxo constante de indicações." }
     }
   }

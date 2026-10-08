@@ -313,7 +313,7 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
           <ArrowLeft className="h-4 w-4" />
         </button>
         <div style={{ flex: 1, minWidth: 180 }}>
-          <div className="eyebrow wine">{t("clients.editing", "Client")}</div>
+          <div className="eyebrow wine">{t("clients.editing", "Persona")}</div>
           <div className="serif italic" style={{ fontSize: 26, color: "var(--ink)", lineHeight: 1.25 }}>
             {formatClientTitle(client)}
           </div>

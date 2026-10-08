@@ -44,7 +44,7 @@ export const VOICE_CALLS: MissedCall[] = [
     thread: [
       { id: "m1", from: "ai", auto: true, time: "9:23 AM", text: "Sorry we missed your call! This is Solar Co. How can we help?" },
       { id: "m2", from: "lead", time: "9:31 AM", text: "I'd like to book a site visit" },
-      { id: "m3", from: "ai", time: "9:31 AM", text: "Great — I have Thursday 14:00 or Friday 10:00 open. Which works?" },
+      { id: "m3", from: "ai", time: "9:31 AM", text: "Great, I have Thursday 14:00 or Friday 10:00 open. Which works?" },
       { id: "m4", from: "lead", time: "9:40 AM", text: "Thursday works" },
     ],
   },

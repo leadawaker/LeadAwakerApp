@@ -1,6 +1,6 @@
 {
   "header": {
-    "title": "Speed-to-Lead",
+    "title": "Resposta Rápida",
     "range": "Últimas 24 horas",
     "refresh": "Atualizar"
   },
@@ -26,7 +26,7 @@
     "whatsapp": "WhatsApp"
   },
   "detail": {
-    "label": "Speed-to-Lead"
+    "label": "Resposta Rápida"
   },
   "meta": {
     "status": "Status",

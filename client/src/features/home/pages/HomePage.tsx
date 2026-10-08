@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { useServicePageToggles } from "@/hooks/useServicePageToggles";
 import "../home.css";
 import {
   SERVICES,
@@ -12,6 +13,7 @@ import {
   SAMPLE_ACTIVITY,
   QUICK_ACTIONS,
   UPSELL,
+  type TagKey,
 } from "../data";
 import { PulseStrip } from "../components/PulseStrip";
 import { NorthStarCell } from "../components/NorthStarCell";
@@ -19,11 +21,24 @@ import { ExplorePanel } from "../components/ExplorePanel";
 import { NeedsAttention } from "../components/NeedsAttention";
 import { ActivityFeed, QuickActions } from "../components/ActivitySidebar";
 
+/** Service cards per row on xl screens, plus the Explore panel (0.74fr). */
+const SERVICE_GRID_COLS: Record<number, string> = {
+  1: "xl:[grid-template-columns:1fr_0.74fr]",
+  2: "xl:[grid-template-columns:repeat(2,1fr)_0.74fr]",
+  3: "xl:[grid-template-columns:repeat(3,1fr)_0.74fr]",
+};
+
 const DATE_LOCALE: Record<string, string> = { en: "en-US", pt: "pt-BR", nl: "nl-NL" };
 
 function HomeHub() {
   const { t, i18n } = useTranslation("home");
   const [, setLocation] = useLocation();
+
+  // Speed to Lead / Reputation are hidden until the Owner switches them on in Settings.
+  // Reactivation and Nurture rows are always shown.
+  const toggles = useServicePageToggles();
+  const tagVisible = (tag: TagKey) => (tag === "speed" ? toggles.speed : tag === "reputation" ? toggles.reputation : true);
+  const services = SERVICES.filter((s) => tagVisible(s.key));
 
   // Reveal-on-mount: home-stage gains `shown` a tick after paint so the
   // `.home-rise` sections animate in (resting state stays visible w/o JS).
@@ -49,9 +64,9 @@ function HomeHub() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [i18n.language, t]);
 
-  const pulseItems = PULSE.map((p) => ({ key: p.key, icon: p.icon, value: p.value, label: t(`pulse.${p.key}`) }));
+  const pulseItems = PULSE.filter((p) => p.key !== "reviews" || toggles.reputation).map((p) => ({ key: p.key, icon: p.icon, value: p.value, label: t(`pulse.${p.key}`) }));
 
-  const needsRows = SAMPLE_NEEDS.map((n) => ({
+  const needsRows = SAMPLE_NEEDS.filter((n) => tagVisible(n.tag)).map((n) => ({
     id: n.id,
     sevColor: SEVERITY_COLOR[n.sev],
     icon: n.icon,
@@ -63,7 +78,7 @@ function HomeHub() {
     time: n.time,
   }));
 
-  const activityItems = SAMPLE_ACTIVITY.map((a) => ({
+  const activityItems = SAMPLE_ACTIVITY.filter((a) => tagVisible(a.tag)).map((a) => ({
     id: a.id,
     icon: a.icon,
     color: TAG_COLOR[a.tag],
@@ -111,8 +126,8 @@ function HomeHub() {
           </div>
 
           {/* Service north-star cards + Explore panel */}
-          <div className="home-rise grid grid-cols-1 gap-5 md:grid-cols-2 xl:[grid-template-columns:repeat(3,1fr)_0.74fr]">
-            {SERVICES.map((s) => (
+          <div className={`home-rise grid grid-cols-1 gap-5 md:grid-cols-2 ${SERVICE_GRID_COLS[services.length]}`}>
+            {services.map((s) => (
               <NorthStarCell
                 key={s.key}
                 name={t(`services.${s.key}.name`)}

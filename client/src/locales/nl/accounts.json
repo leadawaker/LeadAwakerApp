@@ -196,7 +196,7 @@
     "campaignsAndContracts": "Campagnes & Contracten",
     "aiAndSchedule": "AI & Planning",
     "integrations": "Integraties",
-    "voiceClone": "Stem",
+    "voiceClone": "Stemkloon",
     "voiceIdForCampaigns": "Stem-ID voor campagnes",
     "voiceIdWillBe": "Stem-ID wordt",
     "clickOrDragAudio": "Klik of sleep audiobestand",
@@ -420,7 +420,7 @@
       "integrations": "Integraties",
       "knowledge": "Bedrijfsintel",
       "communication": "Communicatie",
-      "voice": "Spraak"
+      "voice": "Telefoonlijn"
     },
     "createAccount": "Account aanmaken",
     "compactPanel": "Paneel verkleinen",
@@ -446,7 +446,7 @@
     "invoices": "Facturen",
     "viewAllInvoices": "Bekijk alle {{count}} facturen",
     "integrations": "Integraties",
-    "voiceClone": "Stem",
+    "voiceClone": "Stemkloon",
     "knowledgeBase": "Bedrijfsintel",
     "available": "Beschikbaar",
     "leads": "Leads",

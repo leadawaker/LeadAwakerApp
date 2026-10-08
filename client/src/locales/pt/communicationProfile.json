@@ -174,8 +174,8 @@
       "help": "Marque tudo o que se aplica. Cada serviço adiciona uma seção curta no final. As perguntas comuns a todos os canais são feitas uma vez só.",
       "options": {
         "voice": {
-          "label": "Atendente por telefone",
-          "help": "A assistente atende as ligações que o cliente perde, agenda visitas ou horários e transfere compradores sérios."
+          "label": "Recepcionista IA",
+          "help": "A recepcionista IA atende as ligações que o cliente perde, agenda visitas ou horários e transfere compradores sérios."
         },
         "widget": {
           "label": "Chat do site",
@@ -233,9 +233,9 @@
       "recapTime": "Horário do resumo"
     },
     "voiceForwarding": {
-      "label": "Quais ligações vão para a assistente?",
+      "label": "Quais ligações vão para a recepcionista?",
       "short": "Desvio de chamadas",
-      "help": "O cliente continua atendendo o próprio telefone. As ligações que ele perde são desviadas para o número da assistente.",
+      "help": "O cliente continua atendendo o próprio telefone. As ligações que ele perde são desviadas para o número da recepcionista.",
       "linesLabel": "Qual linha",
       "lines": {
         "landline": "Telefone da empresa",
@@ -258,7 +258,7 @@
       "cancelHint": "Para desfazer um desvio, digite ## com o mesmo número e # (ex.: ##61#)."
     },
     "voiceSound": {
-      "label": "Como a assistente deve soar?",
+      "label": "Como a recepcionista deve soar?",
       "short": "Voz e saudação",
       "voiceLabel": "Voz",
       "voices": {
@@ -279,7 +279,7 @@
       "greetingPlaceholder": "ex.: Boa tarde, Robben Rosmalen, aqui é a Sanne, a assistente digital. Como posso ajudar?"
     },
     "voicePronunciation": {
-      "label": "Palavras que a assistente precisa pronunciar certo",
+      "label": "Palavras que a recepcionista precisa pronunciar certo",
       "short": "Pronúncia",
       "help": "Marcas, modelos, nomes e ruas. Escreva como soa, do jeito que você soletraria para alguém.",
       "wordPlaceholder": "Palavra, ex.: Porsche",
@@ -294,11 +294,11 @@
       "options": {
         "message": {
           "label": "Anotar recado",
-          "help": "A assistente anota quem ligou e por quê, e o cliente retorna."
+          "help": "A recepcionista anota quem ligou e por quê, e o cliente retorna."
         },
         "callback": {
           "label": "Agendar retorno",
-          "help": "A assistente marca um horário na agenda para o cliente retornar."
+          "help": "A recepcionista marca um horário na agenda para o cliente retornar."
         },
         "ringHot": {
           "label": "Ligar para compradores sérios",
@@ -389,7 +389,7 @@
     "booking": "Agendamento",
     "services": "Serviços",
     "handoff": "Transferência",
-    "voice": "Atendente por telefone",
+    "voice": "Recepcionista IA",
     "widget": "Chat do site",
     "whatsapp": "WhatsApp"
   },

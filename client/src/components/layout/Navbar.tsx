@@ -219,7 +219,7 @@ export function Navbar() {
 
             {isLoggedIn ? (
               <>
-                <Link href="/platform/campaigns">
+                <Link href="/platform">
                   <Button className="font-heading font-bold bg-primary hover:bg-yellow-400 hover:text-black text-white shadow-lg shadow-primary/20 transition-all text-[15px]">
                     {t("nav.openApp")}
                   </Button>
@@ -299,7 +299,7 @@ export function Navbar() {
           </div>
 
           {[...navLinks, ...(isLoggedIn
-              ? [{ href: "/platform/campaigns", label: t("nav.openApp") }]
+              ? [{ href: "/platform", label: t("nav.openApp") }]
               : [{ href: "/login", label: t("nav.login") }]
             )].map((link) => {
               if ((link as any).isHash) {

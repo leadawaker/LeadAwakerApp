@@ -8,7 +8,7 @@
   },
   "greetingSub": "Dit speelt er vandaag binnen al je diensten.",
   "pulse": {
-    "bookings": "Boekingen",
+    "bookings": "Afspraken",
     "sent": "Verzonden berichten",
     "replies": "Reacties",
     "reviews": "Reviews"
@@ -17,7 +17,7 @@
     "open": "Openen",
     "reactivation": {
       "name": "Reactivatie",
-      "northLabel": "Geboekte gesprekken",
+      "northLabel": "Geboekte afspraken",
       "delta": "+20% t.o.v. 7d",
       "support1": "Reactiepercentage",
       "support2": "Actieve campagnes"
@@ -30,7 +30,7 @@
       "support2": "Verzonden verzoeken"
     },
     "speed": {
-      "name": "Speed-to-Lead",
+      "name": "Speed to Lead",
       "northLabel": "Mediane reactietijd",
       "delta": "−18s t.o.v. 7d",
       "support1": "Nieuwe leads vandaag",
@@ -43,7 +43,7 @@
   "needs": {
     "title": "Vereist aandacht",
     "viewAll": "Alles bekijken",
-    "action": "Open chat",
+    "action": "Gesprek openen",
     "empty": "Er vereist nu niets je aandacht.",
     "samples": {
       "negFeedback": { "title": "Negatieve feedback onderschept", "snippet": "“Ploeg was laat en liet een rommel achter.”" },
@@ -58,7 +58,7 @@
     "allServices": "Alle diensten",
     "samples": {
       "newReview": { "title": "Nieuwe 5-sterrenreview geplaatst", "meta": "“Goed werk aan het dak!”" },
-      "bookingConfirmed": { "title": "Boeking bevestigd", "meta": "Dakinspectie · 10:00" },
+      "bookingConfirmed": { "title": "Afspraak bevestigd", "meta": "Dakinspectie · 10:00" },
       "replyReceived": { "title": "Reactie ontvangen", "meta": "“Klinkt goed, laten we het doen.”" },
       "campaignSent": { "title": "Campagne verzonden", "meta": "Slapende leads · Reactivatie" },
       "sequenceSent": { "title": "Sequentiebericht verzonden", "meta": "Nurture-sequentie · Dag 3" }
@@ -67,7 +67,7 @@
   "quick": {
     "title": "Snelle acties",
     "newCampaign": "Nieuwe campagne",
-    "importContacts": "Contacten importeren",
+    "importLeads": "Leads importeren",
     "newSequence": "Nieuwe sequentie"
   },
   "explore": {
@@ -75,7 +75,7 @@
     "blurb": "Voeg meer kracht toe aan je CRM.",
     "add": "Voeg deze dienst toe",
     "upsell": {
-      "voice": { "name": "AI-belassistent", "blurb": "Laat AI bellen + opnemen om klussen handsfree te boeken." },
+      "voice": { "name": "AI-receptionist", "blurb": "Laat AI je oproepen beantwoorden en klussen handsfree inplannen." },
       "referral": { "name": "Referral Engine", "blurb": "Maak van afgeronde klussen een gestage stroom warme aanbevelingen." }
     }
   }

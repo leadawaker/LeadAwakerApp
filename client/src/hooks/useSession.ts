@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/apiUtils";
+import { clearServicePageToggles, hydrateServicePageToggles } from "@/hooks/useServicePageToggles";
+import { clearLandingPage, hydrateLandingPage } from "@/lib/landingPage";
 
 export type SessionUser = {
   id: number;
@@ -45,12 +47,16 @@ export function useSession(): SessionState {
           localStorage.setItem("leadawaker_user_avatar", user.avatarUrl ?? "");
           window.dispatchEvent(new Event("leadawaker-avatar-changed"));
           // Owner-only preference: whether the outreach pages (Inbox/Prospects/Cadence) show in the nav
+          // Also mirrors the Owner service-page toggles and every user's landing page.
+          let prefs: Record<string, unknown> = {};
           try {
-            const prefs = typeof user.preferences === "string" ? JSON.parse(user.preferences || "{}") : (user.preferences ?? {});
-            localStorage.setItem("leadawaker_show_outreach_pages", prefs?.showOutreachPages ? "1" : "0");
+            prefs = (typeof user.preferences === "string" ? JSON.parse(user.preferences || "{}") : (user.preferences ?? {})) ?? {};
           } catch {
-            localStorage.setItem("leadawaker_show_outreach_pages", "0");
+            prefs = {};
           }
+          localStorage.setItem("leadawaker_show_outreach_pages", prefs.showOutreachPages ? "1" : "0");
+          hydrateServicePageToggles(prefs);
+          hydrateLandingPage(prefs);
           window.dispatchEvent(new Event("leadawaker-prefs-changed"));
           // Only set account ID if not already stored (preserve explicit user selections).
           // For agency users (Admin), default to 0 (all-accounts view).
@@ -89,4 +95,6 @@ export async function logout(): Promise<void> {
   localStorage.removeItem("leadawaker_user_role");
   localStorage.removeItem("leadawaker_current_account_id");
   localStorage.removeItem("leadawaker_account_explicitly_selected");
+  clearServicePageToggles();
+  clearLandingPage();
 }

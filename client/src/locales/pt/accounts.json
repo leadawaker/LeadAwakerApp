@@ -190,7 +190,7 @@
     "campaignsAndContracts": "Campanhas e Contratos",
     "aiAndSchedule": "IA e Agenda",
     "integrations": "Integrações",
-    "voiceClone": "Clone de Voz",
+    "voiceClone": "Clone de voz",
     "voiceIdForCampaigns": "ID de Voz para campanhas",
     "voiceIdWillBe": "ID de Voz será",
     "clickOrDragAudio": "Clique ou arraste um arquivo de áudio",
@@ -413,7 +413,7 @@
       "integrations": "Integrações",
       "knowledge": "Intel da Empresa",
       "communication": "Comunicação",
-      "voice": "Voz"
+      "voice": "Linha telefônica"
     },
     "createAccount": "Criar conta",
     "compactPanel": "Compactar painel",

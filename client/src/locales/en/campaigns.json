@@ -1,11 +1,12 @@
 {
-  "title": "Campaigns",
+  "title": "Reactivation",
+  "newCampaignName": "New campaign",
   "views": {
     "list": "List",
     "table": "Table"
   },
   "toolbar": {
-    "add": "Add",
+    "add": "New campaign",
     "sort": "Sort",
     "sortBy": "Sort by",
     "filter": "Filter",
@@ -52,10 +53,10 @@
     "nicheHint": "Leave blank to send the campaign as it is. Filling it in generates this prospect's own vocabulary, questions and opener.",
     "prospectCompany": "Their company",
     "prospectCompanyPlaceholder": "Hoffman Puxadores",
-    "prospectCompanyHint": "Fill in their niche or pick a saved client first.",
+    "prospectCompanyHint": "Fill in their niche or pick a saved persona first.",
     "language": "Language",
-    "languageMissing": "This client has no opener in this language yet.",
-    "languageLimitedHint": "This client only exists in {{langs}}. Add the missing opener fields on the Clients tab to mint it in another language.",
+    "languageMissing": "This persona has no opener in this language yet.",
+    "languageLimitedHint": "This persona only exists in {{langs}}. Add the missing opener fields on the Demo personas tab to mint it in another language.",
     "market": "Market",
     "marketOptions": {
       "uk": "UK",
@@ -78,7 +79,7 @@
     "sameSession": "Same session either way: whichever the prospect opens first claims it.",
     "copiedHint": "Link copied to clipboard.",
     "telegramShare": "Share this Telegram link, the bot asks for language and name on first message.",
-    "savedClient": "Saved Client",
+    "savedClient": "Saved persona",
     "savedClientNone": "Generate a new one",
     "reusing": "Preparing their demo...",
     "demoMode": "Conversation",
@@ -187,7 +188,7 @@
     "summary": "Summary",
     "configurations": "Settings",
     "tags": "Tags",
-    "clients": "Clients"
+    "clients": "Demo personas"
   },
   "summary": {
     "eyebrows": {
@@ -772,10 +773,10 @@
     }
   },
   "clients": {
-    "eyebrow": "Demo personas",
-    "title": "Clients",
-    "intro": "Every demo you mint for a prospect is saved here as a Client, so the next demo in the same niche starts from a persona you have already read and approved instead of a fresh generation. The company name is a default: override it per prospect when you send the link, and the saved Client stays as it is.",
-    "searchPlaceholder": "Search Clients...",
+    "eyebrow": "Library",
+    "title": "Demo personas",
+    "intro": "Every demo you mint for a prospect is saved here as a persona, so the next demo in the same niche starts from one you have already read and approved instead of a fresh generation. The company name is a default: override it per prospect when you send the link, and the saved persona stays as it is.",
+    "searchPlaceholder": "Search personas...",
     "loading": "Loading...",
     "vocabOnly": "WORDS ONLY",
     "live": {
@@ -785,22 +786,22 @@
       "open": "Open Account > Voice",
       "menuNote": "Live personas cannot be duplicated or deleted here."
     },
-    "noMatches": "No Clients match that search.",
-    "emptyLibrary": "No Clients saved yet. Mint a demo link for a prospect and the persona lands here automatically.",
+    "noMatches": "No personas match that search.",
+    "emptyLibrary": "No personas saved yet. Mint a demo link for a prospect and the persona lands here automatically.",
     "back": "Back",
-    "editing": "Client",
+    "editing": "Persona",
     "saving": "Saving...",
     "delete": "Delete",
     "deleting": "Deleting...",
     "cancel": "Cancel",
     "empty": "(empty)",
-    "confirmDeleteTitle": "Delete this Client?",
+    "confirmDeleteTitle": "Delete this persona?",
     "confirmDeleteBody": "{{niche}} will be removed from the library. Demos already sent keep working: they carry their own copy of the persona.",
     "moreActions": "More actions",
     "duplicate": "Duplicate",
     "duplicating": "Duplicating…",
-    "duplicateNamePrompt": "Name for the new Client",
-    "duplicateFailed": "Could not duplicate this Client.",
+    "duplicateNamePrompt": "Name for the new persona",
+    "duplicateFailed": "Could not duplicate this persona.",
     "categoryLabel": "Category",
     "emojiLabel": "Emoji",
     "noCategory": "Uncategorized",
@@ -841,7 +842,7 @@
     },
     "shot": {
       "title": "Website image",
-      "hint": "The page the widget demo sits on. Uploaded by hand for a Client with no website of its own.",
+      "hint": "The page the widget demo sits on. Uploaded by hand for a persona with no website of its own.",
       "none": "No image yet",
       "upload": "Upload",
       "replace": "Replace",

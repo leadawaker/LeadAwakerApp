@@ -9,7 +9,6 @@ import { PageTransition } from "@/components/crm/PageTransition";
 import { CommandPalette } from "@/components/crm/CommandPalette";
 import { ErrorBoundary } from "@/components/crm/ErrorBoundary";
 import { ConnectionBanner } from "@/components/crm/ConnectionBanner";
-import { SettingsPanel } from "@/components/crm/SettingsPanel";
 import { ColorPickerWidget } from "@/components/ui/color-picker-widget";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ImpersonationBanner } from "@/components/crm/ImpersonationBanner";
@@ -261,7 +260,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           onToggleHelp={() => setActivePanel('help')}
           onOpenFounderChat={() => setFounderChatOpen(true)}
           onOpenFounderInbox={() => setActivePanel('founder-inbox')}
-          onOpenSettings={() => setActivePanel('settings')}
           isMobileMenuOpen={isMobileMenuOpen}
           onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
           onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
@@ -281,11 +279,11 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           />
           <aside className={cn(
             "absolute right-0 top-0 bottom-0 w-full sm:right-4 sm:top-8 sm:bottom-4 border border-border/60 bg-background shadow-sm sm:rounded-2xl pointer-events-auto flex flex-col overflow-hidden",
-            activePanel === 'settings' ? "sm:w-[540px]" : "sm:w-[400px]"
+            "sm:w-[400px]"
           )}>
             <div className="h-[40px] px-4 flex items-center justify-between border-b border-border/30 bg-background sticky top-0 z-10 shrink-0">
               <div className="font-bold text-base capitalize pl-1">
-                {activePanel === 'settings' ? 'Settings' : activePanel.replace('-', ' ')}
+                {activePanel.replace('-', ' ')}
               </div>
               <button
                 onClick={closePanel}
@@ -297,7 +295,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             </div>
 
             <div className="flex-grow overflow-hidden h-full">
-              {activePanel === 'settings' && <SettingsPanel />}
               {activePanel === 'help' && (
                 <HelpPanelContent
                   onNavigate={(path) => { closePanel(); setLocation(path); }}

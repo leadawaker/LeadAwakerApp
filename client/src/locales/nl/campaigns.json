@@ -1,11 +1,12 @@
 {
-  "title": "Campagnes",
+  "title": "Reactivatie",
+  "newCampaignName": "Nieuwe campagne",
   "views": {
     "list": "Lijst",
     "table": "Tabel"
   },
   "toolbar": {
-    "add": "Toevoegen",
+    "add": "Nieuwe campagne",
     "sort": "Sorteren",
     "sortBy": "Sorteren op",
     "filter": "Filteren",
@@ -52,10 +53,10 @@
     "nicheHint": "Laat leeg om de campagne te sturen zoals die is. Vul je iets in, dan genereren we het vakjargon, de vragen en de opener van deze prospect.",
     "prospectCompany": "Hun bedrijf",
     "prospectCompanyPlaceholder": "Hoffman Puxadores",
-    "prospectCompanyHint": "Vul eerst hun niche in of kies een opgeslagen klant.",
+    "prospectCompanyHint": "Vul eerst hun niche in of kies een opgeslagen persona.",
     "language": "Taal",
-    "languageMissing": "Deze client heeft nog geen openingsbericht in deze taal.",
-    "languageLimitedHint": "Deze client bestaat alleen in {{langs}}. Vul de ontbrekende openingsvelden in op het tabblad Clients om hem in een andere taal aan te maken.",
+    "languageMissing": "Deze persona heeft nog geen openingsbericht in deze taal.",
+    "languageLimitedHint": "Deze persona bestaat alleen in {{langs}}. Vul de ontbrekende openingsvelden in op het tabblad Demo-persona's om haar in een andere taal aan te maken.",
     "market": "Markt",
     "marketOptions": {
       "uk": "VK",
@@ -78,7 +79,7 @@
     "sameSession": "Hoe dan ook dezelfde sessie: wie het eerst opent, claimt hem.",
     "copiedHint": "Link gekopieerd naar klembord.",
     "telegramShare": "Deel deze Telegram-link, de bot vraagt bij het eerste bericht om taal en naam.",
-    "savedClient": "Bewaarde klant",
+    "savedClient": "Bewaarde persona",
     "savedClientNone": "Nieuwe aanmaken",
     "reusing": "Demo voorbereiden...",
     "demoMode": "Gesprek",
@@ -187,7 +188,7 @@
     "summary": "Samenvatting",
     "configurations": "Instellingen",
     "tags": "Tags",
-    "clients": "Klanten"
+    "clients": "Demo-persona's"
   },
   "summary": {
     "eyebrows": {
@@ -772,10 +773,10 @@
     }
   },
   "clients": {
-    "eyebrow": "Demo personas",
-    "title": "Klanten",
-    "intro": "Elke demo die je voor een prospect aanmaakt wordt hier bewaard als klant, zodat de volgende demo in dezelfde niche start vanaf een persona die je al gelezen en goedgekeurd hebt in plaats van een nieuwe generatie. De bedrijfsnaam is een standaardwaarde: overschrijf hem per prospect bij het versturen van de link, de bewaarde klant blijft ongewijzigd.",
-    "searchPlaceholder": "Zoek klanten...",
+    "eyebrow": "Bibliotheek",
+    "title": "Demo-persona's",
+    "intro": "Elke demo die je voor een prospect aanmaakt wordt hier bewaard als persona, zodat de volgende demo in dezelfde niche start vanaf een persona die je al gelezen en goedgekeurd hebt in plaats van een nieuwe generatie. De bedrijfsnaam is een standaardwaarde: overschrijf hem per prospect bij het versturen van de link, de bewaarde persona blijft ongewijzigd.",
+    "searchPlaceholder": "Zoek persona's...",
     "loading": "Laden...",
     "vocabOnly": "ALLEEN WOORDEN",
     "live": {
@@ -785,22 +786,22 @@
       "open": "Open Account > Spraak",
       "menuNote": "Live persona's kunnen hier niet worden gedupliceerd of verwijderd."
     },
-    "noMatches": "Geen klanten gevonden voor die zoekopdracht.",
-    "emptyLibrary": "Nog geen klanten bewaard. Maak een demolink voor een prospect aan en de persona komt hier vanzelf terecht.",
+    "noMatches": "Geen persona's gevonden voor die zoekopdracht.",
+    "emptyLibrary": "Nog geen persona's bewaard. Maak een demolink voor een prospect aan en de persona komt hier vanzelf terecht.",
     "back": "Terug",
-    "editing": "Klant",
+    "editing": "Persona",
     "saving": "Opslaan...",
     "delete": "Verwijderen",
     "deleting": "Verwijderen...",
     "cancel": "Annuleren",
     "empty": "(leeg)",
-    "confirmDeleteTitle": "Deze klant verwijderen?",
+    "confirmDeleteTitle": "Deze persona verwijderen?",
     "confirmDeleteBody": "{{niche}} wordt uit de bibliotheek verwijderd. Al verstuurde demos blijven werken: die hebben hun eigen kopie van de persona.",
     "moreActions": "Meer acties",
     "duplicate": "Dupliceren",
     "duplicating": "Dupliceren...",
-    "duplicateNamePrompt": "Naam voor de nieuwe klant",
-    "duplicateFailed": "Kon deze klant niet dupliceren.",
+    "duplicateNamePrompt": "Naam voor de nieuwe persona",
+    "duplicateFailed": "Kon deze persona niet dupliceren.",
     "categoryLabel": "Categorie",
     "emojiLabel": "Emoji",
     "noCategory": "Zonder categorie",
@@ -841,7 +842,7 @@
     },
     "shot": {
       "title": "Website-afbeelding",
-      "hint": "De pagina waarop de widgetdemo staat. Handmatig te uploaden voor een Client zonder eigen website.",
+      "hint": "De pagina waarop de widgetdemo staat. Handmatig te uploaden voor een persona zonder eigen website.",
       "none": "Nog geen afbeelding",
       "upload": "Uploaden",
       "replace": "Vervangen",

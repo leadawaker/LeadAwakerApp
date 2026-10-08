@@ -20,6 +20,11 @@ import {
   X,
   Megaphone,
   BookUser,
+  Settings,
+  AudioLines,
+  Send,
+  Star,
+  PhoneMissed,
   type LucideIcon,
 } from "lucide-react";
 import { FounderInbox } from "@/components/crm/FounderInbox";
@@ -30,12 +35,8 @@ import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
 import { useMobileChrome } from "@/contexts/MobileChromeContext";
 import { ProfileSection } from "@/features/settings/components/ProfileSection";
 import { NotificationsSection } from "@/features/settings/components/NotificationsSection";
-
-const NAV_LANGUAGES = [
-  { code: "en", label: "English", flag: "🇬🇧" },
-  { code: "pt", label: "Português", flag: "🇧🇷" },
-  { code: "nl", label: "Nederlands", flag: "🇳🇱" },
-] as const;
+import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
+import { APP_LANGUAGES } from "@/lib/languages";
 
 const THEME_CYCLE: { mode: ThemeMode; icon: LucideIcon; labelKey: string }[] = [
   { mode: "light", icon: Sun, labelKey: "sidebar.themeLight" },
@@ -71,11 +72,10 @@ function NavButton({ icon: Icon, label, href, onClick, testId }: {
  * Layout (top → bottom):
  *   1. Topbar: "More" title + Lead Awaker AI (owner)
  *   2. Account switcher (agency only) — chevron-down dropdown affordance
- *   3. Admin section — plain label + one raised button per page
- *   4. Backend section — plain label + one raised button per page
- *   5. Help section — plain label + Documentation + Assistance buttons
+ *   3. Services / Engage / Admin / Backend sections (grouped like the desktop nav bar)
+ *   5. Help section: plain label + Documentation + Support inbox (owner) or Assistance
  *   6. Utility row (Notifications · Theme · Language) — above the profile
- *   7. Bottom panel — Profile + Logout, divider between
+ *   7. Bottom panel: Profile, Settings, Logout (dividers between)
  */
 export function MobileMorePage({
   open,
@@ -90,13 +90,15 @@ export function MobileMorePage({
 }) {
   const { t, i18n } = useTranslation("crm");
   const [, setLocation] = useLocation();
-  const { isAgencyUser, isAgencyView, isOwner, currentAccountId, setCurrentAccountId, currentAccount, accounts } = useWorkspace();
+  const { isAgencyUser, isOwner, currentAccountId, setCurrentAccountId, currentAccount, accounts } = useWorkspace();
   const { themeMode, setThemeMode } = useTheme();
   const { openNotifications, unreadCount } = useMobileChrome();
   const [langOpen, setLangOpen] = useState(false);
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
   const [acctSheetOpen, setAcctSheetOpen] = useState(false);
   const [inboxSheetOpen, setInboxSheetOpen] = useState(false);
+  // Same gates as the desktop nav bar (role, impersonation, voice line, Owner toggles).
+  const navCtx = useNavGateContext();
 
   const switcherAccounts = [
     { id: 0, name: t("topbar.viewAsAgency", "Agency View") },
@@ -111,7 +113,7 @@ export function MobileMorePage({
   const userInitials = userName.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "U";
 
   const currentLang = i18n.language?.split("-")[0] || "en";
-  const currentLanguage = NAV_LANGUAGES.find((l) => l.code === currentLang) ?? NAV_LANGUAGES[0];
+  const currentLanguage = APP_LANGUAGES.find((l) => l.code === currentLang) ?? APP_LANGUAGES[0];
   const handleChangeLanguage = (lang: string) => {
     i18n.changeLanguage(lang);
     localStorage.setItem("leadawaker_lang", lang);
@@ -122,18 +124,28 @@ export function MobileMorePage({
   const ThemeIcon = THEME_CYCLE[themeIndex].icon;
   const cycleTheme = () => setThemeMode(THEME_CYCLE[(themeIndex + 1) % THEME_CYCLE.length].mode);
 
-  // Nav items split into Admin and Backend sections
-  type Item = { label: string; href: string; icon: LucideIcon };
-  const adminItems: Item[] = [
-    ...(isAgencyUser ? [{ label: t("sidebar.campaigns"), href: `${prefix}/campaigns`, icon: Megaphone }] : []),
-    ...(isAgencyUser ? [{ label: t("sidebar.contacts"), href: `${prefix}/contacts`, icon: BookUser }] : []),
-    ...(isAgencyUser && isAgencyView ? [{ label: t("sidebar.accounts"), href: `${prefix}/accounts`, icon: Building2 }] : []),
-    ...(isAgencyUser ? [{ label: t("sidebar.billing"), href: `${prefix}/billing`, icon: Receipt }] : []),
-  ];
-  const backendItems: Item[] = [
-    ...(isAgencyUser ? [{ label: t("sidebar.promptLibrary"), href: `${prefix}/prompt-library`, icon: BookOpen }] : []),
-    ...(isOwner ? [{ label: t("sidebar.automations"), href: `${prefix}/automation-logs`, icon: ScrollText }] : []),
-  ];
+  // Nav items grouped like the desktop nav bar (Services, Engage, Admin, Backend).
+  // Reactivation stays agency-only here: clients have it in the bottom bar.
+  type Item = NavGate & { label: string; href: string; icon: LucideIcon };
+  const visible = (items: Item[]) => items.filter((it) => isNavItemVisible(it, navCtx));
+  const serviceItems = visible([
+    { label: t("sidebar.reactivation"), href: `${prefix}/campaigns`, icon: Megaphone, agencyOnly: true },
+    { label: t("sidebar.speedToLead"), href: `${prefix}/speed-to-lead`, icon: Send, agencyOnly: true, serviceKey: "speed" },
+    { label: t("sidebar.reputation"), href: `${prefix}/reputation`, icon: Star, serviceKey: "reputation" },
+    { label: t("sidebar.missedCalls"), href: `${prefix}/missed-calls`, icon: PhoneMissed, serviceKey: "missedcall" },
+  ]);
+  const engageItems = visible([
+    { label: t("sidebar.voiceCalls"), href: `${prefix}/voice-calls`, icon: AudioLines, voiceCallsOnly: true },
+    { label: t("sidebar.leads"), href: `${prefix}/contacts`, icon: BookUser, agencyOnly: true },
+  ]);
+  const adminItems = visible([
+    { label: t("sidebar.accounts"), href: `${prefix}/accounts`, icon: Building2, agencyOnly: true, agencyViewOnly: true },
+    { label: t("sidebar.billing"), href: `${prefix}/billing`, icon: Receipt, agencyOnly: true },
+  ]);
+  const backendItems = visible([
+    { label: t("sidebar.promptLibrary"), href: `${prefix}/prompt-library`, icon: BookOpen, agencyOnly: true },
+    { label: t("sidebar.automations"), href: `${prefix}/automation-logs`, icon: ScrollText, ownerOnly: true },
+  ]);
 
   const openFounderChat = () => {
     window.dispatchEvent(new CustomEvent("open-founder-chat"));
@@ -221,6 +233,18 @@ export function MobileMorePage({
           </div>
         )}
 
+        {([
+          ["services", t("sidebar.services"), serviceItems],
+          ["engage", t("sidebarSections.engage"), engageItems],
+        ] as const).map(([key, heading, items]) => items.length > 0 && (
+          <div key={key} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="eyebrow" style={{ padding: "2px 4px" }}>{heading}</div>
+            {items.map((it) => (
+              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} testId={`mobile-more-link-${it.label.toLowerCase().replace(/\s+/g, "-")}`} />
+            ))}
+          </div>
+        ))}
+
         {/* Admin — plain label dividing the screen + one button per page */}
         {adminItems.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -241,12 +265,12 @@ export function MobileMorePage({
           </div>
         )}
 
-        {/* Help — Documentation + Inbox (owner) or Assistance (others) */}
+        {/* Help: Documentation + Support inbox (owner) or Assistance (others) */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="eyebrow" style={{ padding: "2px 4px" }}>{t("sidebar.help", "Help")}</div>
           <NavButton icon={BookOpen} label={t("sidebar.documentation", "Documentation")} onClick={() => setLocation(`${prefix}/docs`)} testId="mobile-more-docs" />
           {isOwner ? (
-            <NavButton icon={Inbox} label={t("sidebar.inbox", "Inbox")} onClick={() => setInboxSheetOpen(true)} testId="mobile-more-inbox" />
+            <NavButton icon={Inbox} label={t("sidebar.founderInbox", "Support inbox")} onClick={() => setInboxSheetOpen(true)} testId="mobile-more-inbox" />
           ) : (
             <NavButton icon={MessageSquare} label={t("help.assistance", "Assistance")} onClick={openFounderChat} testId="mobile-more-assistance" />
           )}
@@ -263,7 +287,7 @@ export function MobileMorePage({
               </button>
             </PopoverTrigger>
             <PopoverContent side="top" align="end" className="w-48 p-1 rounded-2xl shadow-xl border-border bg-background">
-              {NAV_LANGUAGES.map((lang) => (
+              {APP_LANGUAGES.map((lang) => (
                 <button
                   key={lang.code}
                   onClick={() => handleChangeLanguage(lang.code)}
@@ -298,7 +322,7 @@ export function MobileMorePage({
           </button>
         </div>
 
-        {/* Bottom panel — Profile (above) + Logout, divider between */}
+        {/* Bottom panel: Profile, Settings, Logout (dividers between) */}
         <div className="neu-raised" style={{ padding: 6, borderRadius: "var(--r-card)" }}>
           <button
             onClick={() => setProfileSheetOpen(true)}
@@ -326,10 +350,23 @@ export function MobileMorePage({
               </div>
             </div>
             <span style={{ fontSize: 13, fontWeight: 600, color: "var(--mute)", whiteSpace: "nowrap" }}>
-              {t("sidebar.editProfile", "Edit profile")}
+              {t("topbar.myProfile")}
             </span>
             <span style={{ color: "var(--mute-2)", display: "flex" }}><ChevronRight size={15} /></span>
           </button>
+
+          <div style={{ margin: "2px 12px", borderTop: "1px solid var(--line)" }} />
+
+          <Link
+            href={`${prefix}/settings`}
+            className="row"
+            style={{ gap: 14, padding: "14px 14px", width: "100%", textDecoration: "none", color: "var(--ink)" }}
+            data-testid="mobile-more-settings"
+          >
+            <span style={{ display: "flex", color: "var(--wine)" }}><Settings size={18} /></span>
+            <span style={{ flex: 1, fontSize: 15, fontWeight: 600 }}>{t("sidebar.settings")}</span>
+            <span style={{ color: "var(--mute-2)", display: "flex" }}><ChevronRight size={15} /></span>
+          </Link>
 
           <div style={{ margin: "2px 12px", borderTop: "1px solid var(--line)" }} />
 

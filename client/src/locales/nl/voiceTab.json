@@ -7,7 +7,7 @@
   },
   "readiness": {
     "title": "Klaar voor gesprekken?",
-    "intro": "Alles wat de telefoonassistent nodig heeft voordat een echte beller wordt doorgezet.",
+    "intro": "Alles wat de AI-receptionist nodig heeft voordat een echte beller wordt doorgezet.",
     "ok": "Klaar",
     "missingFix": "Ontbreekt, oplossen",
     "optional": "Optioneel, toevoegen",
@@ -19,7 +19,7 @@
       "persona": "Live persona gekoppeld",
       "kb": "Kennisbank gevuld",
       "voice": "Stem en taal gekozen",
-      "agent": "Naam van de assistent ingesteld",
+      "agent": "Naam van de receptionist ingesteld",
       "transfer": "Doorschakelnummer ingesteld",
       "hours": "Openingstijden ingesteld",
       "extra": "Extra instructies"
@@ -61,33 +61,33 @@
   },
   "persona": {
     "title": "Live persona",
-    "help": "De bedrijfstekst waarmee de assistent spreekt. Die wordt gegenereerd vanuit het account en niet met de hand bewerkt.",
+    "help": "De bedrijfstekst waarmee de receptionist spreekt. Die wordt gegenereerd vanuit het account en niet met de hand bewerkt.",
     "company": "Bedrijf",
     "description": "Omschrijving",
     "usp": "Wat hen onderscheidt",
     "generatedNote": "Pas de accountgegevens of het communicatieprofiel aan om deze tekst te wijzigen.",
     "emptyTitle": "Nog geen live persona",
-    "emptyHelp": "Maak er een aan op basis van de bedrijfsgegevens van dit account, zodat de assistent als het bedrijf kan antwoorden.",
+    "emptyHelp": "Maak er een aan op basis van de bedrijfsgegevens van dit account, zodat de receptionist als het bedrijf kan antwoorden.",
     "create": "Live persona aanmaken"
   },
   "agent": {
-    "title": "Stem van de assistent",
-    "help": "Hoe de assistent zich voorstelt en klinkt aan de telefoon.",
-    "name": "Naam van de assistent",
+    "title": "Stem van de receptionist",
+    "help": "Hoe de receptionist zich voorstelt en klinkt aan de telefoon.",
+    "name": "Naam van de receptionist",
     "pronunciation": "Uitspraak"
   },
   "transfer": {
     "title": "Doorverbinden",
-    "help": "Naar wie de assistent een beller doorzet wanneer een mens nodig is.",
+    "help": "Naar wie de receptionist een beller doorzet wanneer een mens nodig is.",
     "number": "Doorschakelnummer",
     "name": "Doorverbinden naar",
     "namePlaceholder": "bijv. Robben",
     "invalid": "Gebruik het internationale formaat, bijvoorbeeld +31612345678.",
     "waiting": {
       "label": "Terwijl we je bellen",
-      "sara": "De assistent houdt ze gezelschap",
+      "sara": "De receptionist houdt ze gezelschap",
       "hold": "Wachtmuziek",
-      "help": "Voordat je wordt doorverbonden hoor je een korte samenvatting over de beller: druk 1 om het gesprek aan te nemen, of 2 en de assistent plant een terugbelafspraak. Ondertussen blijft de beller met de assistent praten of hoort wachtmuziek."
+      "help": "Voordat je wordt doorverbonden hoor je een korte samenvatting over de beller: druk 1 om het gesprek aan te nemen, of 2 en de receptionist plant een terugbelafspraak. Ondertussen blijft de beller met de receptionist praten of hoort wachtmuziek."
     },
     "mode": {
       "label": "Hoe bellers worden doorverbonden",
@@ -102,7 +102,7 @@
   },
   "extra": {
     "title": "Extra instructies",
-    "help": "Optioneel. Bedrijfsfeiten die het kerngedrag van de assistent aanvullen maar nooit overrulen, zoals een afwijkende openingsdag of een bezorgregel.",
+    "help": "Optioneel. Bedrijfsfeiten die het kerngedrag van de receptionist aanvullen maar nooit overrulen, zoals een afwijkende openingsdag of een bezorgregel.",
     "placeholder": "bijv. Proefritten alleen op afspraak. We zijn de eerste maandag van de maand gesloten."
   },
   "hours": {
@@ -110,8 +110,8 @@
   },
   "knowledge": {
     "title": "Kennisbank",
-    "count_one": "{{count}} onderdeel dat de assistent in gesprekken kan gebruiken.",
-    "count_other": "{{count}} onderdelen die de assistent in gesprekken kan gebruiken."
+    "count_one": "{{count}} onderdeel dat de receptionist in gesprekken kan gebruiken.",
+    "count_other": "{{count}} onderdelen die de receptionist in gesprekken kan gebruiken."
   },
   "test": {
     "title": "Probeer haar uit",
@@ -138,10 +138,10 @@
   "live": {
     "goLive": "Live zetten",
     "readyHelp": "Alles staat klaar. Live zetten betekent dat echte bellers op dit nummer haar krijgen.",
-    "confirmHelp": "Gesprekken naar {{number}} worden vanaf nu door de assistent aangenomen. Zorg dat het nummer in Telnyx naar de spraakverbinding wijst.",
+    "confirmHelp": "Gesprekken naar {{number}} worden vanaf nu door de AI-receptionist aangenomen. Zorg dat het nummer in Telnyx naar de spraakverbinding wijst.",
     "confirm": "Ja, zet live",
     "cancel": "Annuleren",
-    "isLive": "Live: gesprekken naar {{number}} worden door de assistent aangenomen.",
+    "isLive": "Live: gesprekken naar {{number}} worden door de AI-receptionist aangenomen.",
     "takeOffline": "Offline halen",
     "notReady": "Kan live zodra dit klaar is: {{items}}."
   },

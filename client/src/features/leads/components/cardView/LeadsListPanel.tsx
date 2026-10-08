@@ -375,7 +375,7 @@ export function LeadsListPanel({
             )}
             searchValue={listSearch}
             onSearchChange={onListSearchChange}
-            searchPlaceholder={t("toolbar.searchPlaceholder")}
+            searchPlaceholder={t(isConversationsMode ? "toolbar.searchConversationsPlaceholder" : "toolbar.searchPlaceholder")}
             filterPanel={leadsFilterPanel}
             filterActive={filterOn}
             filterLabel={t("toolbar.filter")}
@@ -387,7 +387,7 @@ export function LeadsListPanel({
             groupLabel={t("toolbar.group")}
             leftActions={(
               <DrawerMainButton
-                label={t("toolbar.chats", "Chats")}
+                label={t("toolbar.chats", "Conversations")}
                 icon={MessageSquare}
                 active={peekOn}
                 variant="solid"
@@ -508,7 +508,7 @@ export function LeadsListPanel({
                 <input
                   value={listSearch}
                   onChange={(e) => onListSearchChange(e.target.value)}
-                  placeholder={t("toolbar.searchPlaceholder")}
+                  placeholder={t(isConversationsMode ? "toolbar.searchConversationsPlaceholder" : "toolbar.searchPlaceholder")}
                   className="flex-1 min-w-0 bg-transparent outline-none text-[13px]"
                   style={{ color: 'var(--ink)' }}
                   data-testid="mobile-leads-search-input"

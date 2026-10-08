@@ -48,7 +48,7 @@ const ALL_TABLE_COLUMNS: ColumnDef[] = [
   { key: "tags",         label: "Tags",          width: 160, editable: false, type: "text"   },
   { key: "lastActivity", label: "Last Activity", width: 110, editable: false, type: "text"   },
   { key: "notes",        label: "Notes",         width: 200, editable: true,  type: "text"   },
-  { key: "chats",        label: "Chats",         width: 60,  editable: false, type: "text"   },
+  { key: "chats",        label: "Conversations", width: 130, editable: false, type: "text"   },
   // Extended (hidden by default — toggled via Fields button)
   { key: "account",      label: "Account",       width: 130, editable: false, type: "text"   },
   { key: "source",       label: "Source",        width: 110, editable: false, type: "text"   },
@@ -1030,7 +1030,7 @@ export function LeadsInlineTable({
                                   const basePath = "/platform";
                                   setLocation(`${basePath}/chat`);
                                 }}
-                                title={t("conversations.title", "Chats")}
+                                title={t("conversations.title", "Conversations")}
                               >
                                 <MessageSquare className="h-3.5 w-3.5" />
                               </button>

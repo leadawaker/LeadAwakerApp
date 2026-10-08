@@ -51,7 +51,7 @@ export function ClientActionsMenu({
           onDuplicated(data.client.niche);
         },
         onError: (err: unknown) => {
-          setError(err instanceof Error ? err.message : t("clients.duplicateFailed", "Could not duplicate this Client."));
+          setError(err instanceof Error ? err.message : t("clients.duplicateFailed", "Could not duplicate this persona."));
         },
       },
     );
@@ -124,7 +124,7 @@ export function ClientActionsMenu({
               </button>
               <div>
                 <label className="block text-[12px] font-medium mb-1">
-                  {t("clients.duplicateNamePrompt", "Name for the new Client")}
+                  {t("clients.duplicateNamePrompt", "Name for the new persona")}
                 </label>
                 <input
                   autoFocus
@@ -190,7 +190,7 @@ function ConfirmDelete({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="serif" style={{ fontSize: 20, color: "var(--ink)", marginBottom: 8 }}>
-          {t("clients.confirmDeleteTitle", "Delete this Client?")}
+          {t("clients.confirmDeleteTitle", "Delete this persona?")}
         </div>
         <p style={{ fontSize: 13, color: "var(--mute)", lineHeight: 1.5, marginBottom: 18 }}>
           {t("clients.confirmDeleteBody", { niche })}

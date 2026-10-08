@@ -7,7 +7,7 @@
   },
   "readiness": {
     "title": "Pronto para atender chamadas?",
-    "intro": "Tudo o que o assistente de telefone precisa antes de receber uma ligação de verdade.",
+    "intro": "Tudo o que a recepcionista IA precisa antes de receber uma ligação de verdade.",
     "ok": "Pronto",
     "missingFix": "Faltando, corrigir",
     "optional": "Opcional, adicionar",
@@ -19,7 +19,7 @@
       "persona": "Persona ao vivo vinculada",
       "kb": "Base de conhecimento preenchida",
       "voice": "Voz e idioma escolhidos",
-      "agent": "Nome do assistente definido",
+      "agent": "Nome da recepcionista definido",
       "transfer": "Número de transferência definido",
       "hours": "Horário de funcionamento definido",
       "extra": "Instruções extras"
@@ -61,33 +61,33 @@
   },
   "persona": {
     "title": "Persona ao vivo",
-    "help": "O texto da empresa com o qual o assistente fala. Ele é gerado a partir da conta, não editado à mão.",
+    "help": "O texto da empresa com o qual a recepcionista fala. Ele é gerado a partir da conta, não editado à mão.",
     "company": "Empresa",
     "description": "Descrição",
     "usp": "Diferencial",
     "generatedNote": "Altere os dados da conta ou o perfil de comunicação para mudar este texto.",
     "emptyTitle": "Ainda não há persona ao vivo",
-    "emptyHelp": "Crie uma a partir dos dados da empresa desta conta para que o assistente responda em nome do negócio.",
+    "emptyHelp": "Crie uma a partir dos dados da empresa desta conta para que a recepcionista responda em nome do negócio.",
     "create": "Criar persona ao vivo"
   },
   "agent": {
-    "title": "Voz do assistente",
-    "help": "Como o assistente se apresenta e soa ao telefone.",
-    "name": "Nome do assistente",
+    "title": "Voz da recepcionista",
+    "help": "Como a recepcionista se apresenta e soa ao telefone.",
+    "name": "Nome da recepcionista",
     "pronunciation": "Pronúncia"
   },
   "transfer": {
     "title": "Transferência",
-    "help": "Para quem o assistente transfere a ligação quando é preciso falar com uma pessoa.",
+    "help": "Para quem a recepcionista transfere a ligação quando é preciso falar com uma pessoa.",
     "number": "Número de transferência",
     "name": "Transferir para",
     "namePlaceholder": "ex.: Robben",
     "invalid": "Use o formato internacional, por exemplo +5511912345678.",
     "waiting": {
       "label": "Enquanto ligamos para você",
-      "sara": "A assistente faz companhia",
+      "sara": "A recepcionista faz companhia",
       "hold": "Música de espera",
-      "help": "Antes de ser conectado, você ouve um breve resumo sobre quem está ligando: pressione 1 para atender, ou 2 e a assistente agenda um retorno. Enquanto isso, a pessoa continua conversando com a assistente ou ouve música de espera."
+      "help": "Antes de ser conectado, você ouve um breve resumo sobre quem está ligando: pressione 1 para atender, ou 2 e a recepcionista agenda um retorno. Enquanto isso, a pessoa continua conversando com a recepcionista ou ouve música de espera."
     },
     "mode": {
       "label": "Como as ligações são transferidas",
@@ -102,7 +102,7 @@
   },
   "extra": {
     "title": "Instruções extras",
-    "help": "Opcional. Fatos do negócio que complementam o comportamento principal do assistente, mas nunca o substituem, como um dia de funcionamento diferente ou uma regra de entrega.",
+    "help": "Opcional. Fatos do negócio que complementam o comportamento principal da recepcionista, mas nunca o substituem, como um dia de funcionamento diferente ou uma regra de entrega.",
     "placeholder": "ex.: Test drives somente com hora marcada. Fechamos na primeira segunda-feira do mês."
   },
   "hours": {
@@ -110,11 +110,11 @@
   },
   "knowledge": {
     "title": "Base de conhecimento",
-    "count_one": "{{count}} entrada que o assistente pode usar nas chamadas.",
-    "count_other": "{{count}} entradas que o assistente pode usar nas chamadas."
+    "count_one": "{{count}} entrada que a recepcionista pode usar nas chamadas.",
+    "count_other": "{{count}} entradas que a recepcionista pode usar nas chamadas."
   },
   "test": {
-    "title": "Teste a assistente",
+    "title": "Teste a recepcionista",
     "help": "Fale com ela no navegador, exatamente como quem liga para esta linha a ouviria: persona, voz, saudação, horários e configuração deste cliente. Sem telefone.",
     "call": "Testar no navegador",
     "filedNote": "Abre em uma nova aba. As ligações de teste aparecem abaixo, fora das estatísticas e do CRM deste cliente.",
@@ -138,10 +138,10 @@
   "live": {
     "goLive": "Ativar",
     "readyHelp": "Tudo pronto. Ao ativar, quem ligar para este número fala com ela.",
-    "confirmHelp": "As ligações para {{number}} serão atendidas pela assistente a partir de agora. Confira se o número aponta para a conexão de voz na Telnyx.",
+    "confirmHelp": "As ligações para {{number}} serão atendidas pela recepcionista IA a partir de agora. Confira se o número aponta para a conexão de voz na Telnyx.",
     "confirm": "Sim, ativar",
     "cancel": "Cancelar",
-    "isLive": "Ativa: as ligações para {{number}} são atendidas pela assistente.",
+    "isLive": "Ativa: as ligações para {{number}} são atendidas pela recepcionista IA.",
     "takeOffline": "Desativar",
     "notReady": "Pode ser ativada quando isto estiver pronto: {{items}}."
   },

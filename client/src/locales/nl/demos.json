@@ -4,7 +4,7 @@
   "tabs": {
     "sessions": "Sessies",
     "new": "Nieuwe demo",
-    "clients": "Clients",
+    "clients": "Demo-persona's",
     "settings": "Instellingen"
   },
   "table": {
@@ -113,7 +113,7 @@
     "dbr": "Database reactivatie",
     "speed": "Speed to Lead",
     "widget": "Website widget",
-    "voice": "Telefonist AI",
+    "voice": "AI-receptionist",
     "reputation": "Reputatie",
     "socials": "Social DM's",
     "soon": "Nog niet gebouwd",

@@ -28,7 +28,7 @@ export interface HomeMetrics {
 /**
  * Reactivation is the only live service, so the hub's real metrics all derive
  * from the leads + campaigns endpoints scoped to the current account (agency view
- * = all accounts). Reputation/Speed-to-Lead stay on sample data until they ship.
+ * = all accounts). Reputation/Speed to Lead stay on sample data until they ship.
  */
 export function useHomeMetrics(): HomeMetrics {
   const { currentAccountId } = useWorkspace();

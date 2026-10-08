@@ -40,13 +40,7 @@ import {
   Phone,
   Mail,
   ChevronRight,
-  Users,
-  PhoneCall,
-  MessageCircle,
   MessageSquare,
-  Star,
-  Trophy,
-  BanIcon,
   HeartCrack,
   AlertCircle,
   Zap,
@@ -133,31 +127,6 @@ const STAGE_ICON_TEXT: Record<string, string> = {
   DND: "#ffffff",
 };
 const DEFAULT_ICON_TEXT = "#ffffff";
-
-/* ─────────── Contextual empty state messages per pipeline stage ─────────── */
-
-type EmptyStateConfig = {
-  message: string;
-  hint: string;
-  icon: React.FC<{ className?: string }>;
-};
-
-const STAGE_EMPTY_STATES: Record<string, EmptyStateConfig> = {
-  New:                  { message: "No new leads yet",          hint: "Import contacts or add a lead to get started",            icon: Users        },
-  Contacted:            { message: "No contacted leads",         hint: "Reach out to new leads to move them here",                icon: PhoneCall    },
-  Responded:            { message: "No leads have responded",    hint: "Keep following up — responses will appear here",          icon: MessageCircle },
-  "Multiple Responses": { message: "No active conversations",    hint: "Engage with your contacted leads to build dialogue",      icon: MessageSquare },
-  Qualified:            { message: "No qualified leads yet",     hint: "Qualify promising conversations to fill this stage",      icon: Star         },
-  Booked:               { message: "No calls booked yet",        hint: "This is your north-star goal — keep pushing!",           icon: Trophy       },
-  Lost:                 { message: "No lost leads",              hint: "Great! All your leads are still in the pipeline",         icon: HeartCrack   },
-  DND:                  { message: "No leads on DND",            hint: "Leads who opt out will appear here",                      icon: BanIcon      },
-};
-
-const DEFAULT_EMPTY_STATE: EmptyStateConfig = {
-  message: "No leads in this stage",
-  hint: "Drag leads here to move them into this stage",
-  icon: AlertCircle,
-};
 
 /** Map a pipeline stage value to its i18n key suffix (e.g. "Multiple Responses" → "MultipleResponses") */
 function stageKey(stage: string): string {
