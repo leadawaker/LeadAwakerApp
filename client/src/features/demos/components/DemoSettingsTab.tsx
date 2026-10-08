@@ -290,6 +290,7 @@ export function DemoSettingsTab() {
         ) : service === "voice" ? (
           <>
             <VoiceSettings />
+            <PublicDemoSettings />
             <PhoneAmbienceSettings />
             <PhoneJitterSettings />
           </>
@@ -300,4 +301,3 @@ export function DemoSettingsTab() {
     </div>
   );
 }
-            <PublicDemoSettings />
