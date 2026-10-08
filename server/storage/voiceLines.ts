@@ -26,6 +26,11 @@ export const VOICE_LOCALES = ["nl", "en-GB", "en-US", "pt-BR"] as const;
 export const AFTER_HOURS = ["message", "callback", "ringHot"] as const;
 /** What a caller hears while a screened transfer rings the owner. */
 export const TRANSFER_WAITING = ["sara", "hold"] as const;
+/** Screened: the owner hears a brief and presses 1. Direct: connected on answer. Off: nobody is put through. */
+export const TRANSFER_MODES = ["screened", "direct", "off"] as const;
+/** Unwanted calls she turns away (engine call_screening.py). A switch never saved is on. */
+export const SCREENING_KINDS = ["sales", "robocalls", "abuse"] as const;
+export type Screening = Record<(typeof SCREENING_KINDS)[number], boolean>;
 
 export interface PronunciationRow { word: string; sayAs: string }
 
@@ -40,6 +45,10 @@ export interface VoiceLine {
   transferNumber: string | null;
   transferName: string | null;
   transferWaiting: (typeof TRANSFER_WAITING)[number];
+  transferMode: (typeof TRANSFER_MODES)[number];
+  /** Office sound under her voice (puts the number on the Telnyx conference route). */
+  officeSound: boolean;
+  screening: Screening;
   greeting: string;
   pronunciation: PronunciationRow[];
   afterHours: (typeof AFTER_HOURS)[number] | null;
@@ -65,6 +74,9 @@ export interface VoiceLinePatch {
   transferNumber?: string | null;
   transferName?: string | null;
   transferWaiting?: (typeof TRANSFER_WAITING)[number];
+  transferMode?: (typeof TRANSFER_MODES)[number];
+  officeSound?: boolean;
+  screening?: Partial<Screening>;
   greeting?: string;
   pronunciation?: PronunciationRow[];
   afterHours?: (typeof AFTER_HOURS)[number] | null;
@@ -135,6 +147,13 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     .filter((r) => typeof r.word === "string" && typeof r.sayAs === "string")
     .map((r) => ({ word: r.word as string, sayAs: r.sayAs as string }));
   const transferNumber = text(handoff.number) || null;
+  const rawMode = text(handoff.mode);
+  const transferMode = (TRANSFER_MODES as readonly string[]).includes(rawMode)
+    ? (rawMode as VoiceLine["transferMode"]) : "screened";
+  const savedScreening = obj(setup.screening);
+  const screening = Object.fromEntries(
+    SCREENING_KINDS.map((k) => [k, savedScreening[k] !== false]),
+  ) as Screening;
   const lang = localeLanguage(locale);
   const agentName = text(profile?.agentName) || null;
   const agentNameCustom = text(profile?.agentNameCustom) || null;
@@ -151,7 +170,8 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     voice: !!voice && !!locale,
     // A custom name clears agent_name in the wizard, so either counts as set.
     agent: !!agentName || !!agentNameCustom,
-    transfer: !!transferNumber,
+    // Transfers switched off need nobody to ring.
+    transfer: !!transferNumber || transferMode === "off",
     hours: !!hours.start && !!hours.end,
   };
   const items = (Object.keys(ok) as (keyof typeof ok)[]).map((key) => ({ key, ok: ok[key] }));
@@ -178,6 +198,9 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     transferNumber,
     transferName: text(handoff.name) || null,
     transferWaiting: text(handoff.waiting) === "hold" ? "hold" : "sara",
+    transferMode,
+    officeSound: voiceSetup.officeSound === true,
+    screening,
     greeting: typeof voiceSetup.greeting === "string" ? voiceSetup.greeting : "",
     pronunciation,
     afterHours,
@@ -279,6 +302,12 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   if (patch.transferNumber !== undefined) setHandoff("number", patch.transferNumber ?? "");
   if (patch.transferName !== undefined) setHandoff("name", patch.transferName ?? "");
   if (patch.transferWaiting !== undefined) setHandoff("waiting", patch.transferWaiting);
+  if (patch.transferMode !== undefined) setHandoff("mode", patch.transferMode);
+  if (patch.officeSound !== undefined) setVoice("officeSound", patch.officeSound);
+  if (patch.screening !== undefined) {
+    setup.screening = { ...obj(setup.screening), ...patch.screening };
+    setupTouched = true;
+  }
 
   const set: Partial<typeof accountCommunicationProfile.$inferInsert> = {};
   // Same exclusivity as the wizard: a preset clears the custom name and back.
@@ -362,8 +391,34 @@ async function saveVoiceLine(accountId: number, patch: VoiceLinePatch): Promise<
   return found ? getVoiceLine(accountId) : null;
 }
 
+export interface BlockedCaller { id: number; phone: string; reason: string; blockedUntil: string; createdAt: string }
+
+/** Numbers blocked on the account's line right now (abuse), newest first. */
+async function listBlockedCallers(accountId: number): Promise<BlockedCaller[]> {
+  const r = await db.execute(sql`
+    SELECT id, phone, reason,
+      to_char(blocked_until AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "blockedUntil",
+      to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
+    FROM "p2mxx34fvbf3ll6"."Voice_Blocked_Callers"
+    WHERE accounts_id = ${accountId} AND unblocked_at IS NULL AND blocked_until > now()
+    ORDER BY created_at DESC
+  `);
+  return r.rows as unknown as BlockedCaller[];
+}
+
+/** Lift one block. False when it is not this account's, or already lifted. */
+async function unblockCaller(accountId: number, blockId: number): Promise<boolean> {
+  const r = await db.execute(sql`
+    UPDATE "p2mxx34fvbf3ll6"."Voice_Blocked_Callers" SET unblocked_at = now()
+    WHERE id = ${blockId} AND accounts_id = ${accountId} AND unblocked_at IS NULL
+  `);
+  return (r.rowCount ?? 0) > 0;
+}
+
 export const voiceLinesStorage = {
   getVoiceLine,
   saveVoiceLine,
   listUnassignedNumbers,
+  listBlockedCallers,
+  unblockCaller,
 };

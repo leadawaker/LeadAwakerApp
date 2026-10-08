@@ -51,7 +51,13 @@
     "noneFree": "Nenhum número livre",
     "typeLabel": "Ou digite um número (formato internacional)",
     "attach": "Vincular número",
-    "invalid": "Use o formato internacional, por exemplo +5511912345678."
+    "invalid": "Use o formato internacional, por exemplo +5511912345678.",
+    "officeSound": {
+      "label": "Som de escritório",
+      "on": "Som suave de escritório sob a voz da recepcionista",
+      "off": "Desligado",
+      "help": "Quem liga ouve um escritório tranquilo ao fundo. Só quem liga ouve, e o som para quando você atende uma ligação transferida."
+    }
   },
   "persona": {
     "title": "Persona ao vivo",
@@ -82,7 +88,17 @@
       "sara": "A assistente faz companhia",
       "hold": "Música de espera",
       "help": "Antes de ser conectado, você ouve um breve resumo sobre quem está ligando: pressione 1 para atender, ou 2 e a assistente agenda um retorno. Enquanto isso, a pessoa continua conversando com a assistente ou ouve música de espera."
-    }
+    },
+    "mode": {
+      "label": "Como as ligações são transferidas",
+      "screened": "Com aviso (pressione 1)",
+      "direct": "Direto",
+      "off": "Sem transferência",
+      "screenedHelp": "Seu telefone toca com um breve resumo sobre quem está ligando. Pressione 1 para atender, ou 2 e a recepcionista agenda um retorno. Se você não atender, a pessoa volta para a recepcionista.",
+      "directHelp": "A ligação é transferida direto quando você atende, sem resumo. Sem o som de escritório, a recepcionista sai da ligação na hora, então se você não atender a pessoa cai na sua caixa postal.",
+      "offHelp": "Ninguém é transferido. Quando alguém pede para falar com uma pessoa, a Recepcionista IA anota o recado e agenda um retorno."
+    },
+    "wiringFailed": "Salvo, mas não foi possível reconfigurar a linha: {{error}}"
   },
   "extra": {
     "title": "Instruções extras",
@@ -128,5 +144,27 @@
     "isLive": "Ativa: as ligações para {{number}} são atendidas pela assistente.",
     "takeOffline": "Desativar",
     "notReady": "Pode ser ativada quando isto estiver pronto: {{items}}."
+  },
+  "screening": {
+    "title": "Ligações indesejadas",
+    "help": "O que a Recepcionista IA recusa. Toda ligação encerrada assim fica marcada na transcrição.",
+    "sales": {
+      "label": "Recusar ofertas de vendas",
+      "help": "Quem oferece à empresa um produto ou serviço próprio recebe um não educado e não é transferido. Quem pergunta sobre o que a empresa oferece é tratado como cliente."
+    },
+    "robocalls": {
+      "label": "Desligar robocalls",
+      "help": "Gravações e vozes automáticas são encerradas sem uma palavra. Se ela não tiver certeza de que é uma máquina, trata como uma pessoa."
+    },
+    "abuse": {
+      "label": "Encerrar ligações abusivas",
+      "help": "Depois de um aviso calmo, ela encerra a ligação e o número fica bloqueado nesta linha por 14 dias."
+    },
+    "blocked": {
+      "label": "Números bloqueados",
+      "empty": "Nenhum número bloqueado.",
+      "until": "até {{date}}",
+      "unblock": "Desbloquear"
+    }
   }
 }

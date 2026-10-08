@@ -3,7 +3,9 @@ import { z } from "zod";
 import { storage } from "../storage";
 import { requireAuth, requireAgency } from "../auth";
 import { handleZodError, wrapAsync } from "./_helpers";
-import { AFTER_HOURS, TRANSFER_WAITING, VOICE_LOCALES, VoiceLineError } from "../storage/voiceLines";
+import {
+  AFTER_HOURS, TRANSFER_MODES, TRANSFER_WAITING, VOICE_LOCALES, VoiceLineError,
+} from "../storage/voiceLines";
 
 // Account Workspace "Voice" tab (specs/voice-tab). Reads are open to the
 // account's own users; writes are agency-only.
@@ -24,6 +26,13 @@ const putBodySchema = z.object({
   transferNumber: clearableE164.optional(),
   transferName: z.string().trim().max(100).nullable().optional(),
   transferWaiting: z.enum(TRANSFER_WAITING).optional(),
+  transferMode: z.enum(TRANSFER_MODES).optional(),
+  officeSound: z.boolean().optional(),
+  screening: z.object({
+    sales: z.boolean().optional(),
+    robocalls: z.boolean().optional(),
+    abuse: z.boolean().optional(),
+  }).strict().optional(),
   greeting: z.string().max(500).optional(),
   pronunciation: z.array(z.object({
     word: z.string().max(80),
@@ -36,6 +45,32 @@ const putBodySchema = z.object({
   message: "Send either numberId or phoneNumber, not both",
   path: ["numberId"],
 });
+
+const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
+
+export interface NumberWiring { number: string; wiring: "conference" | "direct" | null; changed?: boolean; error?: string }
+
+/**
+ * Put the account's numbers on the Telnyx route its saved settings call for
+ * (engine line_wiring.py): the conference route for screened transfers or the
+ * office sound, else direct. Never throws: a save that worked stays saved, and
+ * the tab shows the wiring error instead.
+ */
+export async function syncVoiceWiring(accountId: number): Promise<NumberWiring[] | { error: string }> {
+  try {
+    const resp = await fetch(`${ENGINE_BASE}/voice/phone/wiring/sync`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
+      body: JSON.stringify({ account_id: accountId }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) return { error: (data as { detail?: string }).detail || `engine ${resp.status}` };
+    return (data as { numbers: NumberWiring[] }).numbers ?? [];
+  } catch (err) {
+    return { error: err instanceof Error ? err.message : String(err) };
+  }
+}
 
 /** Parse :id and enforce the same account access check as booking-stats. */
 function accountIdFor(req: Request, res: Response): number | null {
@@ -70,7 +105,9 @@ export function registerVoiceLineRoutes(app: Express): void {
     try {
       const line = await storage.saveVoiceLine(accountId, parsed.data);
       if (!line) return res.status(404).json({ message: "Account not found" });
-      res.json(line);
+      // Only when a real number is attached: there is nothing to wire otherwise.
+      const wiring = line.number ? await syncVoiceWiring(accountId) : [];
+      res.json({ ...line, wiring });
     } catch (err) {
       if (err instanceof VoiceLineError) return res.status(err.status).json({ message: err.message });
       throw err;
@@ -92,6 +129,23 @@ export function registerVoiceLineRoutes(app: Express): void {
     const accountId = accountIdFor(req, res);
     if (accountId == null) return;
     res.json(await storage.listTestCalls(accountId));
+  }));
+
+  // Numbers blocked for abuse on this account's line, and lifting one.
+  app.get("/api/accounts/:id/voice/blocked", requireAuth, wrapAsync(async (req, res) => {
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
+    res.json(await storage.listBlockedCallers(accountId));
+  }));
+
+  app.delete("/api/accounts/:id/voice/blocked/:blockId", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
+    const blockId = Number(req.params.blockId);
+    if (!Number.isInteger(blockId) || blockId <= 0) return res.status(400).json({ message: "Invalid block id" });
+    const ok = await storage.unblockCaller(accountId, blockId);
+    if (!ok) return res.status(404).json({ message: "No such block" });
+    res.json({ ok: true });
   }));
 
   app.get("/api/voice-numbers/unassigned", requireAgency, wrapAsync(async (_req, res) => {

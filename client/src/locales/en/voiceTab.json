@@ -51,7 +51,13 @@
     "noneFree": "No unassigned numbers",
     "typeLabel": "Or type a number (international format)",
     "attach": "Attach number",
-    "invalid": "Use international format, for example +31851234567."
+    "invalid": "Use international format, for example +31851234567.",
+    "officeSound": {
+      "label": "Office sound",
+      "on": "Soft office sound under the receptionist's voice",
+      "off": "Off",
+      "help": "Callers hear a quiet office in the background. Only the caller hears it, and it stops when you take a transferred call."
+    }
   },
   "persona": {
     "title": "Live persona",
@@ -82,7 +88,17 @@
       "sara": "The assistant keeps them company",
       "hold": "Hold music",
       "help": "Before you are connected you hear a short brief about the caller: press 1 to take the call, or 2 and the assistant books a callback. Meanwhile the caller either keeps chatting with the assistant or hears hold music."
-    }
+    },
+    "mode": {
+      "label": "How callers are put through",
+      "screened": "Screened (press 1)",
+      "direct": "Straight through",
+      "off": "No transfers",
+      "screenedHelp": "Your phone rings with a short brief about the caller. Press 1 to take the call, or 2 and the receptionist books a callback. If you don't answer, the caller goes back to the receptionist.",
+      "directHelp": "The caller is put straight through when you answer, with no brief. Without the office sound the receptionist leaves the call at once, so if you don't answer they reach your voicemail.",
+      "offHelp": "Nobody is put through. When a caller asks for a person, the AI receptionist takes a message and books a callback."
+    },
+    "wiringFailed": "Saved, but the phone line could not be rewired: {{error}}"
   },
   "extra": {
     "title": "Extra instructions",
@@ -128,5 +144,27 @@
     "isLive": "Live: calls to {{number}} are answered by the assistant.",
     "takeOffline": "Take offline",
     "notReady": "Can go live once these are done: {{items}}."
+  },
+  "screening": {
+    "title": "Unwanted calls",
+    "help": "What the AI receptionist turns away. Every call she ends this way is marked in its transcript.",
+    "sales": {
+      "label": "Turn away sales pitches",
+      "help": "People offering the business their own product or service get a polite no and are not put through. Anyone asking about what the business offers is treated as a customer."
+    },
+    "robocalls": {
+      "label": "Hang up on robocalls",
+      "help": "Recordings and automated voices are ended without a word. When she isn't sure it's a machine, she treats it as a person."
+    },
+    "abuse": {
+      "label": "End abusive calls",
+      "help": "After one calm warning she ends the call, and the number is blocked on this line for 14 days."
+    },
+    "blocked": {
+      "label": "Blocked numbers",
+      "empty": "No numbers are blocked.",
+      "until": "until {{date}}",
+      "unblock": "Unblock"
+    }
   }
 }

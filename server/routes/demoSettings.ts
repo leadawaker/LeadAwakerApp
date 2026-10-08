@@ -18,6 +18,8 @@ import { promisify } from "util";
 import os from "os";
 import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
+import { storage } from "../storage";
+import { syncVoiceWiring } from "./voice-line";
 
 export const DEMO_AVATAR_DIR = path.resolve("uploads/demo-avatars");
 /** The bundled photo every widget demo uses until one is uploaded. */
@@ -221,6 +223,10 @@ export function registerDemoSettingsRoutes(app: Express) {
     // How loud the office bed is on the phone's ambience route. Read by the
     // engine at the start of each call (telnyx_bridge.py).
     phoneAmbienceLevel: z.enum(["low", "medium", "high"]).optional(),
+    // Numbers Sara never remembers as returning callers, so a demo from your
+    // own phone always starts fresh. Stored as typed; the engine reads them as
+    // E.164 (Dutch when typed as 06-...).
+    forgetNumbers: z.array(z.string().trim().min(1).max(30)).max(20).optional(),
   });
 
   app.put("/api/demo-settings/voice", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
@@ -257,18 +263,28 @@ export function registerDemoSettingsRoutes(app: Express) {
     return { ok: resp.ok, status: resp.status, data };
   };
 
+  // The office sound is now the demo account's own Voice tab switch (account 1,
+  // setup.voice.officeSound). This switch writes the same setting, and the
+  // engine then wires the number: the conference route serves screened
+  // transfers too, so "on the conference route" no longer means "office sound".
+  const DEMO_ACCOUNT_ID = 1;
+
   app.get("/api/demo-settings/voice/phone-route", requireAuth, requireAgency, wrapAsync(async (_req: Request, res: Response) => {
     const r = await engineRoute("GET");
     if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not read the phone route." });
-    res.json(r.data);
+    const line = await storage.getVoiceLine(DEMO_ACCOUNT_ID);
+    res.json({ ...r.data, ambience: !!line?.officeSound });
   }));
 
   app.put("/api/demo-settings/voice/phone-route", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
     const parsed = z.object({ ambience: z.boolean() }).safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
-    const r = await engineRoute("PUT", parsed.data);
-    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not switch the phone route." });
-    res.json(r.data);
+    await storage.saveVoiceLine(DEMO_ACCOUNT_ID, { officeSound: parsed.data.ambience });
+    const wiring = await syncVoiceWiring(DEMO_ACCOUNT_ID);
+    if (!Array.isArray(wiring)) return res.status(502).json({ message: wiring.error || "Could not switch the phone route." });
+    const r = await engineRoute("GET");
+    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not read the phone route." });
+    res.json({ ...r.data, ambience: parsed.data.ambience });
   }));
 
   // The direct line's jitter buffer at Telnyx: smoother audio for a little delay.

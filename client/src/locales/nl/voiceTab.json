@@ -51,7 +51,13 @@
     "noneFree": "Geen vrije nummers",
     "typeLabel": "Of typ een nummer (internationaal formaat)",
     "attach": "Nummer koppelen",
-    "invalid": "Gebruik het internationale formaat, bijvoorbeeld +31851234567."
+    "invalid": "Gebruik het internationale formaat, bijvoorbeeld +31851234567.",
+    "officeSound": {
+      "label": "Kantoorgeluid",
+      "on": "Zacht kantoorgeluid onder de stem van de receptionist",
+      "off": "Uit",
+      "help": "Bellers horen een rustig kantoor op de achtergrond. Alleen de beller hoort het, en het stopt zodra je een doorverbonden gesprek aanneemt."
+    }
   },
   "persona": {
     "title": "Live persona",
@@ -82,7 +88,17 @@
       "sara": "De assistent houdt ze gezelschap",
       "hold": "Wachtmuziek",
       "help": "Voordat je wordt doorverbonden hoor je een korte samenvatting over de beller: druk 1 om het gesprek aan te nemen, of 2 en de assistent plant een terugbelafspraak. Ondertussen blijft de beller met de assistent praten of hoort wachtmuziek."
-    }
+    },
+    "mode": {
+      "label": "Hoe bellers worden doorverbonden",
+      "screened": "Met aankondiging (druk 1)",
+      "direct": "Direct doorverbinden",
+      "off": "Niet doorverbinden",
+      "screenedHelp": "Je telefoon gaat over met een korte samenvatting over de beller. Druk 1 om het gesprek aan te nemen, of 2 en de receptionist plant een terugbelafspraak. Neem je niet op, dan gaat de beller terug naar de receptionist.",
+      "directHelp": "De beller wordt direct doorverbonden zodra je opneemt, zonder samenvatting. Zonder kantoorgeluid verlaat de receptionist het gesprek meteen, dus neem je niet op, dan komt de beller op je voicemail.",
+      "offHelp": "Niemand wordt doorverbonden. Vraagt een beller naar een mens, dan neemt de AI-receptionist een bericht aan en plant een terugbelafspraak."
+    },
+    "wiringFailed": "Opgeslagen, maar de telefoonlijn kon niet worden omgezet: {{error}}"
   },
   "extra": {
     "title": "Extra instructies",
@@ -128,5 +144,27 @@
     "isLive": "Live: gesprekken naar {{number}} worden door de assistent aangenomen.",
     "takeOffline": "Offline halen",
     "notReady": "Kan live zodra dit klaar is: {{items}}."
+  },
+  "screening": {
+    "title": "Ongewenste gesprekken",
+    "help": "Wat de AI-receptionist afwijst. Elk gesprek dat ze zo beëindigt, wordt in het transcript gemarkeerd.",
+    "sales": {
+      "label": "Verkoopgesprekken afwijzen",
+      "help": "Wie het bedrijf een eigen product of dienst wil verkopen, krijgt een vriendelijk nee en wordt niet doorverbonden. Wie vraagt naar wat het bedrijf aanbiedt, wordt als klant behandeld."
+    },
+    "robocalls": {
+      "label": "Robocalls ophangen",
+      "help": "Opnames en automatische stemmen worden zonder een woord beëindigd. Twijfelt ze of het een machine is, dan behandelt ze het als een mens."
+    },
+    "abuse": {
+      "label": "Misbruik beëindigen",
+      "help": "Na één rustige waarschuwing beëindigt ze het gesprek, en het nummer wordt 14 dagen geblokkeerd op deze lijn."
+    },
+    "blocked": {
+      "label": "Geblokkeerde nummers",
+      "empty": "Er zijn geen nummers geblokkeerd.",
+      "until": "tot {{date}}",
+      "unblock": "Deblokkeren"
+    }
   }
 }

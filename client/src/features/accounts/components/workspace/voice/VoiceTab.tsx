@@ -9,6 +9,7 @@ import { NumberCard } from "./NumberCard";
 import { PersonaCard } from "./PersonaCard";
 import { AgentVoiceCard } from "./AgentVoiceCard";
 import { TransferCard } from "./TransferCard";
+import { UnwantedCallsCard } from "./UnwantedCallsCard";
 import { ExtraInstructionsCard } from "./ExtraInstructionsCard";
 import { HoursCard, KnowledgeCard } from "./ReuseCards";
 import { TestCard } from "./TestCard";
@@ -51,6 +52,7 @@ export function VoiceTab({ accountId, readOnly = false }: { accountId: number; r
         <div style={{ display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
           <AgentVoiceCard {...card} />
           <ExtraInstructionsCard {...card} />
+          <UnwantedCallsCard {...card} />
         </div>
       </div>
       <KnowledgeCard line={line} canEdit={canEdit} onChanged={onChanged} />
