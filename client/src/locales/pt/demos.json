@@ -20,6 +20,8 @@
     "actions": "Links",
     "other": "Outros",
     "editHint": "Clique para editar",
+    "websitePill": "Site",
+    "websitePillHint": "Iniciada por um visitante em leadawaker.com",
     "svc": {
       "dbr": "DBR",
       "quote": "Orçamento",
@@ -125,6 +127,16 @@
     "create": "Criar"
   },
   "settings": {
+    "publicDemo": {
+      "title": "Demo do site em leadawaker.com",
+      "hint": "Visitantes digitam o site, confirmam o número pelo WhatsApp e conversam com a Sara como recepcionista da própria empresa. Desligado, a página mostra \"agende uma conversa\".",
+      "today": "Hoje: €{{eur}} de €{{budget}} estimados, {{built}} de {{cap}} demos criadas.",
+      "dailyBudgetEur": "Orçamento diário (€)",
+      "maxDemosPerDay": "Demos criadas por dia",
+      "voiceMaxMinutesPerSession": "Minutos por ligação de voz",
+      "voiceMaxSessionsPerDemo": "Ligações de voz por demo",
+      "callNumber": "Número em \"Ou ligue para ela\""
+    },
     "empty": "Ainda não há configurações para este serviço.",
     "widget": {
       "avatarTitle": "Foto da atendente",

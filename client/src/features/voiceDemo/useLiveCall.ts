@@ -51,6 +51,15 @@ export const MAX_CALL_MS = 5 * 60 * 1000;
 /** The limit the Demos page set, if the options call answered before this one. */
 const limitMsRef = { current: MAX_CALL_MS };
 
+/**
+ * A landing-page website demo carries its own per-session limit, which the
+ * engine also enforces with a server-side hangup; this keeps the page's timer
+ * in step with it.
+ */
+export function setCallLimitMinutes(mins: number): void {
+  if (mins >= 1 && mins <= 30) limitMsRef.current = mins * 60_000;
+}
+
 /** The limit in force right now: the configured one, else the built-in five minutes. */
 export function callLimitMs(): number {
   return limitMsRef.current;

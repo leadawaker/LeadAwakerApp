@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, AlertTriangle, CalendarCheck, MessageSquareWarning, Bot, Megaphone, MonitorPlay } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, CalendarCheck, MessageSquareWarning, Bot, Megaphone, MonitorPlay, Globe } from "lucide-react";
 
 // ── User profile type ────────────────────────────────────────────────
 export type UserProfile = {
@@ -43,6 +43,9 @@ export const NOTIF_TYPE_KEYS = [
   // Fires on a demo prospect's FIRST reply only, never on a mere open: see
   // server/demo-reply-notifier.ts for why.
   { key: "demo_replied", labelKey: "notifications.types.demoReplied", icon: MonitorPlay },
+  // A visitor finished the website demo on the landing page: call them.
+  // See server/publicDemo/poller.ts.
+  { key: "public_demo_lead", labelKey: "notifications.types.publicDemoLead", icon: Globe },
 ] as const;
 
 export function getDefaultNotifPrefs(): NotificationPreferences {

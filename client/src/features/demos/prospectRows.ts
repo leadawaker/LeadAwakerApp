@@ -22,6 +22,8 @@ export interface ProspectRow {
    *  demos scannable. */
   screenshot: string;
   websiteUrl: string;
+  /** A landing-page website demo (specs/public-website-demo). */
+  publicDemo: boolean;
   /** The most recent link in the row: "when did I last send this prospect
    *  something", which is what the column is read for. */
   createdAt: string | null;
@@ -49,6 +51,7 @@ export function groupProspects(sessions: DemoSession[]): ProspectRow[] {
         language: "",
         screenshot: "",
         websiteUrl: "",
+        publicDemo: false,
         createdAt: null,
         tokens: [],
         byService: {},
@@ -67,6 +70,7 @@ export function groupProspects(sessions: DemoSession[]): ProspectRow[] {
     if (!row.language) row.language = s.language;
     if (!row.screenshot) row.screenshot = s.screenshot || "";
     if (!row.websiteUrl) row.websiteUrl = s.websiteUrl || "";
+    if (s.publicDemo) row.publicDemo = true;
     if (s.createdAt && (!row.createdAt || s.createdAt > row.createdAt)) row.createdAt = s.createdAt;
 
     const svc = serviceOf(s);

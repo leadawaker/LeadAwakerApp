@@ -1824,6 +1824,250 @@ footer img{height:24px;width:auto;display:block}
     </div>
   </section>
 
+  <!-- Public website demo (specs/public-website-demo). Hidden until launch:
+       ?try=1 shows it live, ?try=mock runs it on fake answers for design review.
+       All copy lives in COPY below (en/nl/pt), picked by <html lang>, so the
+       /nl and /pt builds need no pairs for it. -->
+  <section class="band" id="try-sara" hidden>
+    <style>
+    #try-sara .ts-card{max-width:640px;margin:0 auto;border-radius:24px;background:var(--paper);box-shadow:var(--sh-raised);padding:clamp(24px,4vw,40px);display:grid;gap:18px;text-align:center;justify-items:center}
+    #try-sara .ts-state{display:grid;gap:16px;justify-items:center;width:100%}
+    #try-sara .ts-state[hidden]{display:none!important}
+    #try-sara h3{font-family:var(--serif);font-size:clamp(22px,2.4vw,28px);line-height:1.2}
+    #try-sara .ts-text{color:var(--ink-soft);font-size:16px;max-width:30em}
+    #try-sara .ts-small{color:var(--mute);font-size:13.5px;max-width:34em}
+    #try-sara form{display:grid;gap:14px;width:100%;text-align:left}
+    #try-sara .ts-field{display:grid;gap:6px}
+    #try-sara .ts-field span{font-size:13px;font-weight:600;color:var(--ink-soft)}
+    #try-sara input[type=text]{width:100%;height:52px;border-radius:10px;border:1px solid var(--line);background:var(--white);color:var(--ink);padding:0 16px;font:inherit;font-size:17px;box-shadow:var(--sh-inset)}
+    #try-sara input[type=text]:focus{outline:2px solid var(--wine);outline-offset:2px}
+    #try-sara .ts-consent{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--mute);line-height:1.5}
+    #try-sara .ts-consent input{margin-top:3px;accent-color:var(--wine);width:16px;height:16px;flex:0 0 auto}
+    #try-sara .ts-turnstile{min-height:65px;display:flex;justify-content:center}
+    #try-sara .btn{width:100%}
+    #try-sara .ts-actions{display:grid;gap:10px;width:100%;max-width:420px}
+    #try-sara .btn-soft{background:var(--surface);color:var(--ink);box-shadow:var(--sh-crisp)}
+    #try-sara .btn-soft:hover{transform:translateY(-1px)}
+    #try-sara .ts-link{background:none;border:0;color:var(--wine);font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:6px}
+    #try-sara .ts-qr{width:200px;height:200px;padding:12px;border-radius:16px;background:#fff;box-shadow:var(--sh-crisp)}
+    #try-sara .ts-qr svg{width:100%;height:100%;display:block}
+    #try-sara .ts-wait{display:inline-flex;align-items:center;gap:10px;color:var(--mute);font-size:14px}
+    #try-sara .ts-dot{width:8px;height:8px;border-radius:50%;background:var(--wine);animation:ts-pulse 1.2s ease-in-out infinite}
+    @keyframes ts-pulse{0%,100%{opacity:.25}50%{opacity:1}}
+    #try-sara .ts-error{color:var(--rose);font-size:14px;min-height:1em}
+    #try-sara .ts-desk{display:grid;gap:12px;justify-items:center}
+    @media (pointer:coarse){#try-sara .ts-desk{display:none}}
+    .ts-modal{position:fixed;inset:0;z-index:1000;background:rgba(31,26,20,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+    .ts-modal[hidden]{display:none}
+    .ts-modal-box{position:relative;width:min(1100px,100%);height:min(820px,100%);border-radius:20px;overflow:hidden;background:var(--paper);box-shadow:var(--sh-float)}
+    .ts-modal iframe{width:100%;height:100%;border:0;display:block}
+    .ts-close{position:absolute;top:10px;right:10px;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:var(--white);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;box-shadow:var(--sh-crisp)}
+    @media (max-width:640px){.ts-modal{padding:0}.ts-modal-box{width:100%;height:100%;border-radius:0}}
+    </style>
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow" data-t="eyebrow"></span>
+        <h2 data-t="title" data-html></h2>
+        <p data-t="lede"></p>
+      </div>
+      <div class="ts-card">
+        <div class="ts-state" data-state="form">
+          <form novalidate>
+            <label class="ts-field"><span data-t="label"></span>
+              <input type="text" name="url" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" maxlength="300" required>
+            </label>
+            <label class="ts-consent"><input type="checkbox" name="consent"><span><span data-t="consent"></span> <a href="/privacy-policy" target="_blank" rel="noopener" data-t="privacy"></a></span></label>
+            <div class="ts-turnstile"></div>
+            <p class="ts-error" role="alert"></p>
+            <button class="btn btn-wine" type="submit" data-t="submit"></button>
+            <p class="ts-small" style="text-align:center;justify-self:center" data-t="note"></p>
+          </form>
+        </div>
+        <div class="ts-state" data-state="verify" hidden>
+          <h3 data-t="verifyTitle"></h3>
+          <p class="ts-text" data-t="verifyText"></p>
+          <div class="ts-desk"><div class="ts-qr"></div><p class="ts-small" data-t="qrHint"></p></div>
+          <div class="ts-actions"><a class="btn btn-wine ts-wa" target="_blank" rel="noopener" data-t="openWa"></a></div>
+          <span class="ts-wait"><i class="ts-dot"></i><span data-t="waiting"></span></span>
+        </div>
+        <div class="ts-state" data-state="building" hidden>
+          <span class="lo" style="--lo-s:84px" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span></span>
+          <h3 data-t="buildingTitle"></h3>
+          <p class="ts-text" data-t="buildingText"></p>
+          <span class="ts-wait"><i class="ts-dot"></i></span>
+        </div>
+        <div class="ts-state" data-state="ready" hidden>
+          <span class="lo" style="--lo-s:84px" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span></span>
+          <h3 data-t="readyTitle"></h3>
+          <p class="ts-text" data-t="readyText"></p>
+          <div class="ts-actions">
+            <button class="btn btn-wine ts-talk" type="button" data-t="talk"></button>
+            <a class="btn btn-soft ts-wa" target="_blank" rel="noopener" data-t="wa"></a>
+            <a class="btn btn-soft ts-call" hidden></a>
+          </div>
+        </div>
+        <div class="ts-state" data-state="blocked" hidden>
+          <h3 data-t="blockedTitle"></h3>
+          <p class="ts-text ts-reason"></p>
+          <div class="ts-actions"><a class="btn btn-wine ts-book" target="_blank" rel="noopener" data-t="book"></a></div>
+          <button class="ts-link ts-again" type="button" data-t="again"></button>
+        </div>
+      </div>
+    </div>
+    <div class="ts-modal" hidden role="dialog" aria-modal="true">
+      <div class="ts-modal-box"><button class="ts-close" type="button">&times;</button><iframe allow="microphone; autoplay" title="Sara"></iframe></div>
+    </div>
+    <script>
+    (function(){
+      var sec=document.getElementById('try-sara');if(!sec)return;
+      var q=new URLSearchParams(location.search),mode=q.get('try');
+      if(mode!=='1'&&mode!=='mock')return; // hidden until launch
+      sec.hidden=false;
+      var MOCK=mode==='mock';
+      var lang=(document.documentElement.lang||'en').slice(0,2);if(['en','nl','pt'].indexOf(lang)<0)lang='en';
+      var COPY={
+        en:{eyebrow:'Try her yourself',title:'Hear Sara answer for <em class="w">your</em> business',
+          lede:'Type your website. Sara reads it and becomes your receptionist in about a minute. Then talk to her in your browser, on WhatsApp or on the phone.',
+          label:'Your website',placeholder:'yourbusiness.com',
+          consent:'Lead Awaker may store my website and phone number to run this demo and contact me about it by WhatsApp or phone.',privacy:'Privacy policy',
+          submit:'Build my demo',note:'Free. You confirm your number with one WhatsApp message.',
+          verifyTitle:'One last step: send us the WhatsApp message',verifyText:'We prepared the message for you. Sending it proves the number is yours and starts your demo.',
+          qrHint:'Scan with your phone’s camera',openWa:'Open WhatsApp',waiting:'Waiting for your message',
+          buildingTitle:'Sara is reading {domain}',buildingText:'This takes about a minute. She’ll also let you know on WhatsApp when she’s ready.',
+          readyTitle:'Sara is now the receptionist of {company}',readyText:'Talk to her as if you were one of your customers. Ask about prices, opening hours or an appointment.',
+          talk:'Talk to her now',wa:'Continue on WhatsApp',call:'Or call her: {number}',
+          blockedTitle:'Let Gabriel show you instead',book:'Book a call with Gabriel',again:'Try another website',close:'Close',
+          err:{country:'This demo works with numbers from the Netherlands, the UK and Brazil.',limit:'You’ve reached today’s demo limit.',
+            busy:'So many people are trying Sara today that she’s hit her limit. Book a call and Gabriel will show you instead.',
+            unreadable:'Sara couldn’t read that website. It may block visitors like her. Book a call and Gabriel will show you how it works for your business.',
+            bot_check:'We couldn’t check that you’re human. Refresh the page and try again.',invalid_url:'That doesn’t look like a website address.',
+            consent:'Please tick the box first.',expired:'This demo has expired. Start again with your website.',
+            network:'Something went wrong. Try again in a moment.',disabled:'The self-serve demo is paused right now. Book a call and Gabriel will show you Sara for your business.'}},
+        nl:{eyebrow:'Probeer haar zelf',title:'Hoor Sara opnemen voor <em class="w">jouw</em> bedrijf',
+          lede:'Vul je website in. Sara leest hem en is binnen een minuut jouw receptioniste. Praat daarna met haar in je browser, via WhatsApp of aan de telefoon.',
+          label:'Je website',placeholder:'jouwbedrijf.nl',
+          consent:'Lead Awaker mag mijn website en telefoonnummer bewaren om deze demo te laten werken en mij hierover via WhatsApp of telefoon benaderen.',privacy:'Privacybeleid',
+          submit:'Maak mijn demo',note:'Gratis. Je bevestigt je nummer met één WhatsApp-bericht.',
+          verifyTitle:'Nog één stap: stuur ons het WhatsApp-bericht',verifyText:'Het bericht staat al klaar. Door het te versturen bevestig je dat het nummer van jou is en start je demo.',
+          qrHint:'Scan met de camera van je telefoon',openWa:'Open WhatsApp',waiting:'Wachten op je bericht',
+          buildingTitle:'Sara leest {domain}',buildingText:'Dit duurt ongeveer een minuut. Ze laat het je ook via WhatsApp weten als ze klaar is.',
+          readyTitle:'Sara is nu de receptioniste van {company}',readyText:'Praat met haar alsof je een van je klanten bent. Vraag naar prijzen, openingstijden of een afspraak.',
+          talk:'Praat nu met haar',wa:'Verder op WhatsApp',call:'Of bel haar: {number}',
+          blockedTitle:'Laat Gabriel het je laten zien',book:'Plan een gesprek met Gabriel',again:'Probeer een andere website',close:'Sluiten',
+          err:{country:'Deze demo werkt met nummers uit Nederland, het Verenigd Koninkrijk en Brazilië.',limit:'Je hebt de demolimiet voor vandaag bereikt.',
+            busy:'Er proberen vandaag zoveel mensen Sara uit dat ze haar limiet heeft bereikt. Plan een gesprek, dan laat Gabriel het je zien.',
+            unreadable:'Sara kon die website niet lezen. Misschien blokkeert hij bezoekers zoals zij. Plan een gesprek, dan laat Gabriel zien hoe het voor jouw bedrijf werkt.',
+            bot_check:'We konden niet controleren dat je een mens bent. Ververs de pagina en probeer het opnieuw.',invalid_url:'Dat lijkt geen websiteadres.',
+            consent:'Vink eerst het vakje aan.',expired:'Deze demo is verlopen. Begin opnieuw met je website.',
+            network:'Er ging iets mis. Probeer het zo nog eens.',disabled:'De demo staat even op pauze. Plan een gesprek, dan laat Gabriel je Sara voor jouw bedrijf zien.'}},
+        pt:{eyebrow:'Teste você mesmo',title:'Ouça a Sara atendendo pela <em class="w">sua</em> empresa',
+          lede:'Digite o seu site. A Sara lê tudo e vira a sua recepcionista em mais ou menos um minuto. Depois é só conversar com ela no navegador, no WhatsApp ou por telefone.',
+          label:'Seu site',placeholder:'suaempresa.com.br',
+          consent:'A Lead Awaker pode guardar meu site e meu número para fazer esta demonstração funcionar e entrar em contato comigo sobre ela por WhatsApp ou telefone.',privacy:'Política de privacidade',
+          submit:'Criar minha demonstração',note:'Grátis. Você confirma seu número com uma mensagem no WhatsApp.',
+          verifyTitle:'Último passo: mande a mensagem no WhatsApp',verifyText:'A mensagem já está pronta. Ao enviar, você confirma que o número é seu e começa a sua demonstração.',
+          qrHint:'Escaneie com a câmera do celular',openWa:'Abrir o WhatsApp',waiting:'Aguardando a sua mensagem',
+          buildingTitle:'A Sara está lendo {domain}',buildingText:'Isso leva mais ou menos um minuto. Ela também avisa no WhatsApp quando estiver pronta.',
+          readyTitle:'A Sara agora é a recepcionista da {company}',readyText:'Converse com ela como se você fosse um dos seus clientes. Pergunte sobre preços, horários ou um agendamento.',
+          talk:'Falar com ela agora',wa:'Continuar no WhatsApp',call:'Ou ligue para ela: {number}',
+          blockedTitle:'Deixe o Gabriel te mostrar',book:'Agendar uma conversa com o Gabriel',again:'Tentar outro site',close:'Fechar',
+          err:{country:'Esta demonstração funciona com números da Holanda, do Reino Unido e do Brasil.',limit:'Você chegou ao limite de demonstrações de hoje.',
+            busy:'Tanta gente está testando a Sara hoje que ela chegou no limite. Agende uma conversa e o Gabriel te mostra.',
+            unreadable:'A Sara não conseguiu ler esse site. Talvez ele bloqueie visitantes como ela. Agende uma conversa e o Gabriel mostra como funciona para a sua empresa.',
+            bot_check:'Não conseguimos confirmar que você é humano. Atualize a página e tente de novo.',invalid_url:'Isso não parece um endereço de site.',
+            consent:'Marque a caixinha primeiro.',expired:'Esta demonstração expirou. Comece de novo com o seu site.',
+            network:'Algo deu errado. Tente de novo daqui a pouco.',disabled:'A demonstração está pausada agora. Agende uma conversa e o Gabriel te mostra a Sara para a sua empresa.'}}
+      };
+      var C=COPY[lang],API='/api/public-demo',KEY='la_try_sara',BOOK=(document.querySelector('#book a.btn')||{}).href||'https://cal.com/leadawaker/quick-chat';
+      function $(s){return sec.querySelector(s)}
+      function fill(s,v){return s.replace(/\{(\w+)\}/g,function(_,k){return v&&v[k]!=null?v[k]:''})}
+      [].forEach.call(sec.querySelectorAll('[data-t]'),function(el){var v=C[el.getAttribute('data-t')];if(v==null)return;if(el.hasAttribute('data-html'))el.innerHTML=v;else el.textContent=v});
+      var form=$('form'),input=form.url,err=$('.ts-error'),modal=sec.querySelector('.ts-modal'),frame=modal.querySelector('iframe');
+      input.placeholder=C.placeholder;modal.querySelector('.ts-close').setAttribute('aria-label',C.close);
+      function show(state){[].forEach.call(sec.querySelectorAll('.ts-state'),function(el){el.hidden=el.getAttribute('data-state')!==state})}
+      function blocked(code,bookingUrl){$('.ts-reason').textContent=C.err[code]||C.err.network;$('.ts-book').href=bookingUrl||BOOK;show('blocked')}
+      function fmtNum(n){var d=String(n||'').replace(/\D/g,'');if(d.indexOf('31')===0)return '+31 '+d.slice(2,4)+' '+d.slice(4,7)+' '+d.slice(7);if(d.indexOf('44')===0)return '+44 '+d.slice(2,6)+' '+d.slice(6);return '+'+d}
+      function save(t){try{t?sessionStorage.setItem(KEY,t):sessionStorage.removeItem(KEY)}catch(e){}}
+      function load(){try{return sessionStorage.getItem(KEY)}catch(e){return null}}
+
+      /* Fake answers for ?try=mock: walks through every state without a server. */
+      var mockT0=0;
+      function api(path,opts){
+        if(!MOCK)return fetch(API+path,opts).then(function(r){return r.json().then(function(b){b._status=r.status;return b})});
+        return new Promise(function(res){setTimeout(function(){
+          if(path==='/availability')return res({available:true,siteKey:null});
+          if(path==='/requests')return res({ok:true,token:'0123456789abcdef',domain:'brightsmile.nl',whatsappUrl:'https://wa.me/31627458300',
+            qrSvg:'<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="#fff"/><path d="M1 1h3v3H1zM6 1h3v3H6zM1 6h3v3H1zM6 6h1v1H6zM8 8h1v1H8z" fill="#1F1A14"/></svg>'});
+          var s=(Date.now()-mockT0)/1000;
+          res(s<6?{status:'verify',domain:'brightsmile.nl'}:s<12?{status:'building',domain:'brightsmile.nl'}:
+            {status:'ready',domain:'brightsmile.nl',companyName:'Brightsmile Dental',voiceUrl:'/voice-demo?embed=1',whatsappUrl:'https://wa.me/31627458300',callNumber:'+31738519847'});
+        },300)});
+      }
+
+      var widget=null,siteKey=null,tsToken='';
+      function loadTurnstile(){
+        if(MOCK||!siteKey||widget!==null)return;widget=false;
+        window.__tsReady=function(){widget=window.turnstile.render($('.ts-turnstile'),{sitekey:siteKey,action:'public_demo',language:lang==='pt'?'pt-br':lang,
+          callback:function(t){tsToken=t},'expired-callback':function(){tsToken=''},'error-callback':function(){tsToken=''}})};
+        var s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=__tsReady';s.async=true;document.head.appendChild(s);
+      }
+
+      var pollTimer=null,pollStart=0;
+      function render(d,token){
+        if(d.status==='verify'){$('.ts-wa').href=d.whatsappUrl||$('.ts-wa').href;show('verify');return true}
+        if(d.status==='building'){$('[data-t=buildingTitle]').textContent=fill(C.buildingTitle,{domain:d.domain});show('building');return true}
+        if(d.status==='ready'){
+          $('[data-t=readyTitle]').textContent=fill(C.readyTitle,{company:d.companyName||d.domain});
+          sec.querySelectorAll('.ts-wa')[1].href=d.whatsappUrl;
+          var call=$('.ts-call');if(d.callNumber){call.hidden=false;call.href='tel:'+d.callNumber;call.textContent=fill(C.call,{number:fmtNum(d.callNumber)})}else call.hidden=true;
+          $('.ts-talk').onclick=function(){frame.src=d.voiceUrl;modal.hidden=false};
+          show('ready');return false;
+        }
+        save(null);
+        blocked(d.status==='expired'?'expired':d.code||'network',d.bookingUrl);return false;
+      }
+      function poll(token){
+        clearTimeout(pollTimer);
+        var age=Date.now()-pollStart;if(age>15*60*1000)return;
+        api('/requests/'+token).then(function(d){
+          if(render(d,token))pollTimer=setTimeout(function(){poll(token)},age>120000?5000:2000);
+        }).catch(function(){pollTimer=setTimeout(function(){poll(token)},5000)});
+      }
+      function start(token){save(token);pollStart=Date.now();mockT0=mockT0||Date.now();poll(token)}
+
+      form.addEventListener('submit',function(e){
+        e.preventDefault();err.textContent='';
+        if(!input.value.trim()){err.textContent=C.err.invalid_url;input.focus();return}
+        if(!form.consent.checked){err.textContent=C.err.consent;return}
+        if(!MOCK&&!tsToken){err.textContent=C.err.bot_check;return}
+        var btn=form.querySelector('button');btn.disabled=true;
+        api('/requests',{method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({url:input.value.trim(),language:lang,consent:true,turnstileToken:tsToken})})
+        .then(function(d){
+          btn.disabled=false;
+          if(!d.ok){
+            if(window.turnstile&&widget){window.turnstile.reset(widget);tsToken=''}
+            if(d.code==='invalid_url'||d.code==='consent'||d.code==='bot_check'||d.code==='invalid'){err.textContent=C.err[d.code==='invalid'?'invalid_url':d.code];return}
+            blocked(d.code||'network',d.bookingUrl);return;
+          }
+          $('.ts-qr').innerHTML=d.qrSvg||'';$('.ts-wa').href=d.whatsappUrl;
+          mockT0=Date.now();show('verify');start(d.token);
+        }).catch(function(){btn.disabled=false;err.textContent=C.err.network});
+      });
+      $('.ts-again').addEventListener('click',function(){save(null);clearTimeout(pollTimer);input.value='';show('form');loadTurnstile();if(window.turnstile&&widget)window.turnstile.reset(widget)});
+      modal.querySelector('.ts-close').addEventListener('click',function(){modal.hidden=true;frame.src='about:blank'});
+
+      api('/availability').then(function(a){
+        siteKey=a.siteKey||null;
+        var resume=load();
+        if(resume&&/^[a-f0-9]{16}$/.test(resume)){start(resume);return}
+        if(!a.available){blocked(a.reason==='busy'?'busy':'disabled');return}
+        show('form');loadTurnstile();
+      }).catch(function(){show('form')});
+    })();
+    </script>
+  </section>
+
   <section class="band" id="book" style="padding-top:clamp(28px,4vw,48px)">
     <div class="orbit-cta" id="orbit-cta" aria-hidden="true"></div>
     <div class="wrap">

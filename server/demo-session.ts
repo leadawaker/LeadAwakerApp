@@ -400,6 +400,8 @@ export interface GenerateOptions {
   /** Default "openai" keeps the public flow and older callers as they were. */
   provider?: GenProvider;
   claudeModel?: ClaudeModel;
+  /** OpenAI key override: the public website demo bills its own capped project. */
+  openaiApiKey?: string;
 }
 
 /** Row 91 (or its in-file copy) plus the language, market and category lines. */
@@ -618,6 +620,7 @@ export async function generateNicheContextStrict(
       maxTokens: 6000,
       // Measured 15-20s on luna; 90s leaves room for terra's slow days.
       timeoutMs: 90_000,
+      apiKey: opts.openaiApiKey,
     },
   });
   return { ctx: normalizeGenerated(data as NicheContext, niche, language, scenario, market), providerUsed };
@@ -971,8 +974,11 @@ export async function createPendingDemoLead(params: {
    *  offered — restarting as a different scenario, above all. Defaults to false
    *  so a new mint path has to opt IN, never leaks the offer by forgetting. */
   invited?: boolean;
+  /** Leads.Source. "Public Website Demo" marks the landing page's website
+   *  demo, which the engine holds back until the persona is built. */
+  source?: string;
 }): Promise<number> {
-  const { token, firstName, language, campaignId, demoNiche, invited = false } = params;
+  const { token, firstName, language, campaignId, demoNiche, invited = false, source = "WhatsApp Demo" } = params;
   const now = new Date();
   const [row] = await db
     .insert(leads)
@@ -981,7 +987,7 @@ export async function createPendingDemoLead(params: {
       campaignsId: campaignId,
       firstName,
       language,
-      source: "WhatsApp Demo",
+      source,
       channelIdentifier: `wa-demo:${token}`,
       conversionStatus: "New",
       // Explicitly NOT 'queued' so the campaign launcher never picks it up.

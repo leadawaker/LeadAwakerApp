@@ -20,6 +20,8 @@
     "actions": "Links",
     "other": "Overig",
     "editHint": "Klik om te bewerken",
+    "websitePill": "Website",
+    "websitePillHint": "Gestart door een bezoeker op leadawaker.com",
     "svc": {
       "dbr": "DBR",
       "quote": "Offerte",
@@ -125,6 +127,16 @@
     "create": "Maken"
   },
   "settings": {
+    "publicDemo": {
+      "title": "Websitedemo op leadawaker.com",
+      "hint": "Bezoekers vullen hun website in, verifiëren hun nummer via WhatsApp en praten met Sara als hun eigen receptioniste. Zet je het uit, dan toont de pagina \"plan een gesprek\".",
+      "today": "Vandaag: €{{eur}} van €{{budget}} geschat, {{built}} van {{cap}} demo's gebouwd.",
+      "dailyBudgetEur": "Dagbudget (€)",
+      "maxDemosPerDay": "Demo's per dag",
+      "voiceMaxMinutesPerSession": "Minuten per spraakgesprek",
+      "voiceMaxSessionsPerDemo": "Spraakgesprekken per demo",
+      "callNumber": "Nummer bij \"Of bel haar\""
+    },
     "empty": "Nog geen instellingen voor deze dienst.",
     "widget": {
       "avatarTitle": "Foto van de medewerker",

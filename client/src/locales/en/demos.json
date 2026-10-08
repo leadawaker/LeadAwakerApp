@@ -20,6 +20,8 @@
     "actions": "Links",
     "other": "Other",
     "editHint": "Click to edit",
+    "websitePill": "Website",
+    "websitePillHint": "Started by a visitor on leadawaker.com",
     "svc": {
       "dbr": "DBR",
       "quote": "Quote",
@@ -125,6 +127,16 @@
     "create": "Create"
   },
   "settings": {
+    "publicDemo": {
+      "title": "Website demo on leadawaker.com",
+      "hint": "Visitors type their website, verify their phone on WhatsApp, and talk to Sara as their own receptionist. Turn it off and the page shows \"book a call\" instead.",
+      "today": "Today: €{{eur}} of €{{budget}} estimated, {{built}} of {{cap}} demos built.",
+      "dailyBudgetEur": "Daily budget (€)",
+      "maxDemosPerDay": "Demos built per day",
+      "voiceMaxMinutesPerSession": "Minutes per voice call",
+      "voiceMaxSessionsPerDemo": "Voice calls per demo",
+      "callNumber": "Number shown as \"Or call her\""
+    },
     "empty": "No settings for this service yet.",
     "widget": {
       "avatarTitle": "Agent photo",

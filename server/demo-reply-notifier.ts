@@ -59,8 +59,11 @@ async function checkDemoReplies(): Promise<void> {
   const leadIds = recent.map((r) => r.leadsId).filter((id): id is number => typeof id === "number");
   if (!leadIds.length) return;
 
-  const candidates = (await db.select().from(leads).where(inArray(leads.id, leadIds))).filter((l) =>
-    isDemoChannel(l.channelIdentifier),
+  // Landing-page website demos have their own "call them" notification when
+  // the demo ends (server/publicDemo/poller.ts), and their first inbound is
+  // a synthetic opener, so they are left out here.
+  const candidates = (await db.select().from(leads).where(inArray(leads.id, leadIds))).filter(
+    (l) => isDemoChannel(l.channelIdentifier) && l.source !== "Public Website Demo",
   );
   if (!candidates.length) return;
 

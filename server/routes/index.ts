@@ -41,6 +41,8 @@ import { registerDemoSettingsRoutes } from "./demoSettings";
 import { registerVoicePromptRoutes } from "./voicePrompts";
 import { registerDemoSocialRoutes } from "./demoSocial";
 import { registerDemoLogoRoutes } from "./demoLogos";
+import { registerPublicDemoRoutes } from "./publicDemo";
+import { startPublicDemoPoller } from "../publicDemo/poller";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
@@ -93,6 +95,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerVoicePromptRoutes(app);
   registerDemoSocialRoutes(app);
   registerDemoLogoRoutes(app);
+  registerPublicDemoRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)
@@ -109,6 +112,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   startCampaignFinishedNotifier();  // campaign finished check (10min)
   startReviewPoller();              // Reputation v2: Google review ingest + auto-post (20min)
   startDemoReplyNotifier();         // a prospect replied to a demo for the first time (60s)
+  startPublicDemoPoller();          // landing-page website demos: call task, budget, retention (60s)
 
   return httpServer;
 }

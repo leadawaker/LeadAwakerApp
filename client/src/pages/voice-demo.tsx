@@ -17,7 +17,7 @@ import {
   storedVoicePassword,
   VOICE_DEMO_UNLOCK_KEY,
 } from "@/features/voiceDemo/door";
-import { ENGINE_BASE_URL, useLiveCall } from "@/features/voiceDemo/useLiveCall";
+import { ENGINE_BASE_URL, setCallLimitMinutes, useLiveCall } from "@/features/voiceDemo/useLiveCall";
 import { useAmbiencePref, useOfficeAmbience } from "@/features/voiceDemo/useOfficeAmbience";
 import type { LiveSetup, VoiceLang, VoiceLocale } from "@/features/voiceDemo/types";
 import { copyFor, dateLocaleOf } from "@/features/voiceDemo/copy";
@@ -108,6 +108,15 @@ async function unlockViaServer(raw: string, setUnlocked: (v: boolean) => void): 
   }
 }
 
+/**
+ * `?embed=1`: the page sits inside the landing page's website-demo modal, so
+ * it drops its own page chrome (outer padding, theme toggle).
+ */
+function isEmbedded(): boolean {
+  if (typeof window === "undefined") return false;
+  return new URLSearchParams(window.location.search).get("embed") === "1";
+}
+
 /** A link minted for a prospect, rather than the bare page we test on. */
 function isDemoLink(): boolean {
   if (typeof window === "undefined") return false;
@@ -120,6 +129,7 @@ export default function VoiceDemoPage() {
   const preset = useRef(readSetupFromUrl()).current;
   const simple = useRef(isDemoLink()).current;
   const showSettings = useRef(isAppHost()).current;
+  const embedded = useRef(isEmbedded()).current;
 
   const [ambience, setAmbience] = useAmbiencePref();
   useOfficeAmbience({
@@ -129,6 +139,14 @@ export default function VoiceDemoPage() {
   });
 
   const [unlocked, setUnlocked] = useState(() => isValidVoicePassword(storedVoicePassword()));
+  /**
+   * A verified visitor of the landing page's website demo: their token is the
+   * key, so the password door never shows. Until the context answers we do
+   * not know, so a public link waits instead of flashing the door.
+   */
+  const [publicDemo, setPublicDemo] = useState<boolean | null>(() =>
+    /^[a-f0-9]{16}$/.test(new URLSearchParams(window.location.search).get("token") || "") ? null : false,
+  );
 
   const [setup, setSetup] = useState<LiveSetup>(() => {
     const locale = preset?.locale ?? "en-GB";
@@ -171,9 +189,15 @@ export default function VoiceDemoPage() {
     void (async () => {
       try {
         const res = await fetch(`${ENGINE_BASE_URL}/voice/demo-context?token=${token}`);
-        if (!res.ok) return;
+        if (!res.ok) {
+          if (!cancelled) setPublicDemo(false);
+          return;
+        }
         const data = await res.json();
-        if (cancelled || !data?.found) return;
+        if (cancelled) return;
+        setPublicDemo(data?.public === true);
+        if (data?.public === true && typeof data.max_minutes === "number") setCallLimitMinutes(data.max_minutes);
+        if (!data?.found) return;
         setSetup((prev) => {
           const lang = data.language as VoiceLang | undefined;
           // Order of authority: the link, then the persona's own accent, then
@@ -195,6 +219,7 @@ export default function VoiceDemoPage() {
       } catch {
         // A themed link that cannot reach the engine still runs as the plain
         // demo, which is a better failure than a blocked setup screen.
+        if (!cancelled) setPublicDemo(false);
       }
     })();
     return () => {
@@ -234,7 +259,11 @@ export default function VoiceDemoPage() {
   const split = call.state !== "idle";
   const large = useMediaQuery("(min-width: 1024px)");
 
-  if (!unlocked) {
+  if (!unlocked && publicDemo === null) {
+    return <div className="min-h-svh" style={{ background: embedded ? "var(--card)" : "var(--bone)" }} />;
+  }
+
+  if (!unlocked && !publicDemo) {
     return (
       <VoiceDemoLock
         copy={copy}
@@ -260,12 +289,16 @@ export default function VoiceDemoPage() {
   return (
     // Bone page ground, so the panels read as sheets sitting ON something.
     <div
-      className="flex min-h-svh flex-col items-center justify-center p-3 sm:p-5"
-      style={{ background: "var(--bone)" }}
+      className={embedded ? "flex h-svh flex-col" : "flex min-h-svh flex-col items-center justify-center p-3 sm:p-5"}
+      style={{ background: embedded ? "var(--card)" : "var(--bone)" }}
     >
-      <ThemeToggle copy={copy} />
+      {!embedded && <ThemeToggle copy={copy} />}
       <div
-        className="flex h-[min(92svh,940px)] w-full max-w-[1200px] overflow-hidden rounded-[var(--r-panel)] border border-border shadow-lg max-lg:h-auto max-lg:min-h-[88svh] max-lg:flex-col"
+        className={
+          embedded
+            ? "flex min-h-0 w-full flex-1 overflow-hidden max-lg:flex-col"
+            : "flex h-[min(92svh,940px)] w-full max-w-[1200px] overflow-hidden rounded-[var(--r-panel)] border border-border shadow-lg max-lg:h-auto max-lg:min-h-[88svh] max-lg:flex-col"
+        }
         style={{ background: "var(--card)" }}
       >
         {/*

@@ -26,13 +26,15 @@ export interface OpenAIOpts {
   model: string;
   maxTokens: number;
   timeoutMs: number;
+  /** Bills another OpenAI project (the public website demo's capped one). */
+  apiKey?: string;
 }
 
 /** A validator returns null when the data is usable, or what is wrong with it. */
 export type Validate = (data: any) => string | null;
 
 async function openaiJson(system: string, user: string, o: OpenAIOpts): Promise<string> {
-  const apiKey = process.env.OPEN_AI_API_KEY;
+  const apiKey = o.apiKey || process.env.OPEN_AI_API_KEY;
   if (!apiKey) throw new Error("no OPEN_AI_API_KEY set");
   const res = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",

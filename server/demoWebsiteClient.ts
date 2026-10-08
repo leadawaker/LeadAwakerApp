@@ -36,8 +36,13 @@ export async function buildClientFromSite(opts: {
   market?: "uk" | "us" | "nl";
   provider: "claude" | "openai";
   claudeModel: "opus" | "sonnet";
+  /** The landing page's website demo: a stranger's URL. The engine reads it
+   *  with tighter caps and no Firecrawl, and both model calls bill the capped
+   *  public-demo OpenAI project. Callers must not save the result anywhere
+   *  shared (no Niche_Vocabulary, no screenshot, no logo). */
+  public?: boolean;
 }): Promise<SiteBuildResult> {
-  const { url, text, language, niche, scenario, market, provider, claudeModel } = opts;
+  const { url, text, language, niche, scenario, market, provider, claudeModel, public: isPublic = false } = opts;
 
   const engineBase = process.env.ENGINE_URL || "http://localhost:8100";
   let scraped: Record<string, any> | null = null;
@@ -48,7 +53,7 @@ export async function buildClientFromSite(opts: {
         "Content-Type": "application/json",
         "X-Internal-Key": process.env.INTERNAL_API_KEY || "",
       },
-      body: JSON.stringify(text ? { text, language } : { url, language }),
+      body: JSON.stringify(isPublic ? { url, language, public: true } : text ? { text, language } : { url, language }),
       // A cold site with six subpages can take a while; the model call is
       // on top of that. Below any sensible proxy timeout, above the p95.
       signal: AbortSignal.timeout(120_000),
@@ -86,7 +91,8 @@ export async function buildClientFromSite(opts: {
   let providerUsed: string;
   try {
     ({ ctx, providerUsed } = await generateNicheContextStrict(
-      nicheForGeneration, language, scenario, market, { provider, claudeModel },
+      nicheForGeneration, language, scenario, market,
+      { provider, claudeModel, openaiApiKey: isPublic ? process.env.OPENAI_PUBLIC_DEMO_API_KEY || undefined : undefined },
     ));
   } catch (err) {
     return {

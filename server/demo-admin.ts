@@ -225,6 +225,9 @@ export type DemoSessionRow = {
   service: string;
   prospectGroup: string;
   invited: boolean;
+  /** Minted by a visitor on the landing page's website demo
+   *  (specs/public-website-demo), not by Gabriel. */
+  publicDemo: boolean;
   campaignId: number | null;
   createdAt: Date | null;
   /** The prospect's homepage screenshot (specs/website-widget), when this demo
@@ -308,6 +311,10 @@ export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
     const isWeb = ident.startsWith("web-demo:");
     const token = ident.slice(ident.indexOf(":") + 1);
     if (!token) continue;
+    // A landing-page website demo nobody verified yet is a form submission,
+    // not a demo: leave it out until a phone has claimed it.
+    const isPublic = lead.source === "Public Website Demo";
+    if (isPublic && !lead.phone) continue;
 
     const niche = parseDemoNiche(lead.demoNiche);
     const str = (v: unknown) => (typeof v === "string" ? v : "");
@@ -351,6 +358,7 @@ export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
         service: str(niche.service),
         prospectGroup: str(niche.prospect_group),
         invited: !!lead.demoInvited,
+        publicDemo: isPublic,
         campaignId: lead.campaignsId ?? null,
         createdAt: (lead.createdAt as Date) ?? null,
         screenshot: str(niche.screenshot),

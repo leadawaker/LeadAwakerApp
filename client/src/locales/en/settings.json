@@ -109,7 +109,8 @@
       "leadManualTakeover": "Lead Manual Takeover",
       "criticalAutomationFailure": "Critical Automation Failure",
       "campaignFinished": "Campaign Finished",
-      "demoReplied": "Demo Reply"
+      "demoReplied": "Demo Reply",
+      "publicDemoLead": "Website Demo Lead"
     }
   },
   "hub": {

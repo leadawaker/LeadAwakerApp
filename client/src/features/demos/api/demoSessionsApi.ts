@@ -32,6 +32,8 @@ export interface DemoSession {
   service: string;
   prospectGroup: string;
   invited: boolean;
+  /** Started by a visitor on the landing page's website demo. */
+  publicDemo?: boolean;
   campaignId: number | null;
   createdAt: string | null;
   /** Homepage screenshot file for demos built from a website URL; served by

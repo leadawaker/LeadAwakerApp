@@ -867,6 +867,10 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
   outcome: text("outcome"),
   // 'none' | 'transferred' | 'failed' (engine migration migrate_voice_tab.py).
   transferOutcome: text("transfer_outcome").notNull().default("none"),
+  // Why the call ended (engine migrate_voice_call_end_reason.py): goodbye |
+  // caller_hung_up | silence | time_limit | no_greeting | transferred | lost | abandoned.
+  // Null on browser calls and rows from before the column.
+  endReason: text("end_reason"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
@@ -1994,3 +1998,51 @@ export const demoSettings = nocodb.table("Demo_Settings", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
 export type DemoSettings = typeof demoSettings.$inferSelect;
+
+// Public website demo (specs/public-website-demo). One row per landing-page
+// request, from "awaiting_phone" through verification, build and completion.
+// The engine reads and updates these rows directly (same Postgres).
+export const publicDemoRequests = nocodb.table("Public_Demo_Requests", {
+  id: serial("id").primaryKey(),
+  token: text("token").notNull().unique(),           // same 16-hex token as the lead's wa-demo:<token>
+  status: text("status").notNull().default("awaiting_phone"),
+  // awaiting_phone | building | ready | completed | failed
+  // | blocked_country | blocked_limit | reconnected
+  websiteUrl: text("website_url").notNull(),
+  domain: text("domain").notNull(),                  // lowercase host without leading "www."
+  language: text("language").notNull(),              // en | nl | pt
+  ipHash: text("ip_hash").notNull(),
+  userAgent: text("user_agent"),
+  consentAt: timestamp("consent_at", { withTimezone: true }).notNull(),
+  phone: text("phone"),                              // E.164 once verified
+  leadId: integer("lead_id"),
+  persona: jsonb("persona"),                         // built site context, reused per domain
+  companyName: text("company_name"),
+  reason: text("reason"),                            // failure / block reason, internal only
+  estCostEur: numeric("est_cost_eur", { precision: 8, scale: 4 }).notNull().default("0"),
+  voiceSessions: integer("voice_sessions").notNull().default(0),
+  voiceSeconds: integer("voice_seconds").notNull().default(0),
+  chatTurns: integer("chat_turns").notNull().default(0),
+  voiceEndedAt: timestamp("voice_ended_at", { withTimezone: true }),
+  feedback: text("feedback"),
+  followupTaskId: integer("followup_task_id"),
+  feedbackSentAt: timestamp("feedback_sent_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  verifiedAt: timestamp("verified_at", { withTimezone: true }),
+  readyAt: timestamp("ready_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+}, (t) => [
+  index("public_demo_requests_domain_idx").on(t.domain, t.readyAt),
+  index("public_demo_requests_phone_idx").on(t.phone, t.createdAt),
+  index("public_demo_requests_ip_idx").on(t.ipHash, t.createdAt),
+  index("public_demo_requests_status_idx").on(t.status),
+]);
+export type PublicDemoRequest = typeof publicDemoRequests.$inferSelect;
+
+// Daily estimated spend ledger for public demos (Europe/Amsterdam day).
+export const publicDemoSpend = nocodb.table("Public_Demo_Spend", {
+  day: date("day").primaryKey(),
+  estCostEur: numeric("est_cost_eur", { precision: 10, scale: 4 }).notNull().default("0"),
+  demosBuilt: integer("demos_built").notNull().default(0),
+  budgetAlertSentAt: timestamp("budget_alert_sent_at", { withTimezone: true }),
+});

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { SERVICES } from "../services";
 import { PhoneAmbienceSettings } from "./PhoneAmbienceSettings";
 import { PhoneJitterSettings } from "./PhoneJitterSettings";
+import { PublicDemoSettings } from "./PublicDemoSettings";
 import {
   apiAsset,
   useDemoSettings,
@@ -299,3 +300,4 @@ export function DemoSettingsTab() {
     </div>
   );
 }
+            <PublicDemoSettings />

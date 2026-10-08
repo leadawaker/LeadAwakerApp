@@ -6,6 +6,7 @@ import { demoOpenUrl, useUpdateDemoIdentity, type DemoSession } from "../api/dem
 import { SERVICES } from "../services";
 import { groupProspects, type ProspectRow } from "../prospectRows";
 import { ServiceCell } from "./ServiceCell";
+import { Pill } from "@/components/crm/primitives/Pill";
 
 /** Column widths are fixed so the static header and the scrolling body line up:
  *  two <table>s share one <colgroup>, which is the house pattern for a list
@@ -322,7 +323,7 @@ function ProspectTableRow({
         />
       </td>
       <td className="truncate px-3" style={{ fontSize: 12, color: "var(--mute)" }}>
-        {row.clientNiche || "—"}
+        {row.clientNiche || (row.publicDemo ? <WebsitePill /> : "—")}
       </td>
       {SERVICES.map((svc) => (
         <td key={svc.key} className="px-3">
@@ -338,6 +339,16 @@ function ProspectTableRow({
         {row.createdAt ? dateFmt.format(new Date(row.createdAt)) : "—"}
       </td>
     </tr>
+  );
+}
+
+/** Marks a demo a visitor started themselves on leadawaker.com. */
+function WebsitePill() {
+  const { t } = useTranslation("demos");
+  return (
+    <Pill color="var(--wine)" title={t("table.websitePillHint")}>
+      {t("table.websitePill")}
+    </Pill>
   );
 }
 
