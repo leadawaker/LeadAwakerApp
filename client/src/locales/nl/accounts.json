@@ -420,7 +420,8 @@
       "integrations": "Integraties",
       "knowledge": "Bedrijfsintel",
       "communication": "Communicatie",
-      "voice": "Telefoonlijn"
+      "voice": "Telefoonlijn",
+      "automations": "Automatiseringen"
     },
     "createAccount": "Account aanmaken",
     "compactPanel": "Paneel verkleinen",

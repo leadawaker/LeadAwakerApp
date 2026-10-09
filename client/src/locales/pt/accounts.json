@@ -413,7 +413,8 @@
       "integrations": "Integrações",
       "knowledge": "Intel da Empresa",
       "communication": "Comunicação",
-      "voice": "Linha telefônica"
+      "voice": "Linha telefônica",
+      "automations": "Automações"
     },
     "createAccount": "Criar conta",
     "compactPanel": "Compactar painel",

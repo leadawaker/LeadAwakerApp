@@ -420,7 +420,8 @@
       "integrations": "Integrations",
       "knowledge": "Company Intel",
       "communication": "Communication",
-      "voice": "Phone line"
+      "voice": "Phone line",
+      "automations": "Automations"
     },
     "createAccount": "Create account",
     "compactPanel": "Compact panel",

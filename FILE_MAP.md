@@ -26,7 +26,7 @@ CRM routes are registered in `pages/app.tsx`; top-level routes in `App.tsx`. **E
 | Billing | `features/billing/pages/BillingPage.tsx` | Imported directly in app.tsx (invoices/contracts/expenses) |
 | Prompt Library | `features/prompts/pages/PromptsPage.tsx` | Imported directly in app.tsx |
 | AI Agents | `features/ai-agents/pages/AgentsPage.tsx` + `AgentChatPage.tsx` | Imported directly in app.tsx |
-| Automation Logs | `pages/AutomationLogs.tsx` | Python automation-engine logs — agency admin only |
+| Automation Logs | `pages/AutomationLogs.tsx` | Automations overview (service groups, health, diary panel) — agency admin only |
 | Settings | `pages/Settings.tsx` | Thin composition; sections live in `features/settings/components/{ProfileSection,NotificationsSection,DashboardSection,SettingsMobileHub,SettingsFields}.tsx` + `features/settings/types.ts` |
 | Docs | `pages/Docs.tsx` | In-app Operator Manual + Client Guide |
 | Lead Detail (standalone) | `pages/LeadDetail.tsx` | Full-page lead view |
@@ -328,10 +328,15 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 
 | Component | File | Notes |
 |-----------|------|-------|
-| PipelineView | `components/PipelineView.tsx` | Automation logs pipeline view — shown on the AutomationLogs page |
-| ExecutionProgressBar | `components/ExecutionProgressBar.tsx` | Progress bar for in-progress execution groups |
-| useExecutionGroups | `hooks/useExecutionGroups.ts` | Groups log entries by `workflow_execution_id` for timeline display |
-| automationRegistry | `automationRegistry.ts` | Maps workflow names → icons, labels, descriptions — add new automation types here |
+| api | `api.ts` | Query hooks: `useAutomationsOverview`, `useAutomationDiary`, `useClientAutomations` |
+| labels | `labels.ts` | i18n label helpers: `automationName`, `triggerLabel`, `actionLabel`, `summaryText`, `timeAgo` |
+| HealthDot | `components/HealthDot.tsx` | Coloured status dot for a `HealthState` |
+| OverviewRowCard | `components/OverviewRowCard.tsx` | One automation row on the Automations page (health, trigger, 24h counts) |
+| DiaryPanel | `components/DiaryPanel.tsx` | Per-automation diary (paged, failures-only filter, opens lead); reused by the per-client tab |
+| automationCatalogue | `shared/automationCatalogue.ts` | Catalogue of every automation: service group, trigger, `SERVICE_ORDER`, `findEntry` |
+| automationTypes | `shared/automationTypes.ts` | Overview / diary / per-client response types |
+| server automations | `server/automations/*` | Health rules, per-client gates, overview and per-client builders |
+| automationDiary | `server/storage/automationDiary.ts` | Diary read/write storage (90-day retention) |
 
 ---
 
