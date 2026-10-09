@@ -535,6 +535,11 @@ export const automationLogs = nocodb.table("Automation_Logs", {
   accountId: bigint("account_id", { mode: "number" }),
   campaignId: bigint("campaign_id", { mode: "number" }),
   leadId: bigint("lead_id", { mode: "number" }),
+  skippedReason: text("skipped_reason"),
+  isCriticalError: boolean("is_critical_error"),
+  // 'action' = one diary line per real automation action (specs/automation-overview).
+  // NULL = debug step row (2-day retention).
+  kind: text("kind"),
 }, (t) => [
   index("automation_logs_accounts_id_idx").on(t.accountsId),
   index("automation_logs_created_at_idx").on(t.createdAt),
