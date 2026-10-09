@@ -163,6 +163,7 @@
     "failedOnly": "Failures only",
     "allClients": "All clients",
     "empty": "Nothing recorded yet.",
+    "error": "Could not load the diary.",
     "loadMore": "Show more",
     "openLead": "Open lead",
     "close": "Close"

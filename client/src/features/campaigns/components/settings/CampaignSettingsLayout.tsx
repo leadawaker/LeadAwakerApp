@@ -35,6 +35,8 @@ interface CampaignSettingsLayoutProps {
   focusField?: string | null;
   onStartEditField?: (field: string) => void;
   isAgency?: boolean;
+  /** Section to open first (deep link from the Automations tab). */
+  initialSection?: "business" | "ai" | "behavior";
   contracts?: any[];
   conversationPrompts?: any[];
   onNicheChange?: (niche: string) => void;
@@ -53,7 +55,7 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
   const isUniversal = isServiceDemoCampaign(
     (props.campaign?.id ?? props.campaign?.Id) as number | undefined,
   );
-  const [active, setActive] = useState(isUniversal ? "ai" : "business");
+  const [active, setActive] = useState<string>(props.initialSection ?? (isUniversal ? "ai" : "business"));
   // Optional name typed live during a discovery-call screenshare. Rides along in
   // the Launch button's "/start <campaignId> <name>" message so the engine
   // switches the VIP lead to this campaign and sets first_name before replaying

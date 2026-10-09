@@ -95,6 +95,8 @@ export interface CampaignDetailViewProps {
   promptPanelOpen?: boolean;
   onTogglePromptPanel?: () => void;
   mainColumnRef?: React.Ref<HTMLDivElement>;
+  /** Settings section to open first (deep link from the Automations tab). */
+  initialSettingsSection?: "business" | "ai" | "behavior";
 }
 
 export function CampaignDetailView({
@@ -104,7 +106,7 @@ export function CampaignDetailView({
   filterAccount, onFilterAccountChange, isFilterActive, showDemoCampaigns, onShowDemoCampaignsChange,
   groupBy, onGroupByChange, isGroupNonDefault, availableAccounts, onResetControls, onBack,
   promptPanelOpen: promptPanelOpenProp, onTogglePromptPanel: onTogglePromptPanelProp,
-  mainColumnRef,
+  mainColumnRef, initialSettingsSection,
 }: CampaignDetailViewProps) {
   const { t } = useTranslation("campaigns");
   const { isAgencyUser, isAdmin } = useWorkspace();
@@ -475,6 +477,7 @@ export function CampaignDetailView({
         handleApplyGradient={handleApplyGradient}
         onTogglePromptPanel={isAgencyUser ? togglePromptPanel : undefined}
         onGenerated={onRefresh}
+        initialSettingsSection={initialSettingsSection}
       />
       </div> {/* end main column */}
 

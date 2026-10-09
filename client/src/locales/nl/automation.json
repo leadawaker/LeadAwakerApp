@@ -163,6 +163,7 @@
     "failedOnly": "Alleen fouten",
     "allClients": "Alle klanten",
     "empty": "Nog niets vastgelegd.",
+    "error": "Kon het logboek niet laden.",
     "loadMore": "Meer tonen",
     "openLead": "Lead openen",
     "close": "Sluiten"

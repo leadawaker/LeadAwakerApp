@@ -19,7 +19,10 @@ export function DiaryPanel({ automationId, accountId, onClose }: { automationId:
   const q = useAutomationDiary(automationId, { accountId, failedOnly, page });
 
   // Accumulate pages; reset when the filter or automation changes.
-  const shown = page === 1 ? (q.data?.lines ?? []) : [...lines, ...(q.data?.page === page ? q.data.lines : [])];
+  const combined = page === 1 ? (q.data?.lines ?? []) : [...lines, ...(q.data?.page === page ? q.data.lines : [])];
+  // An offset page can overlap the snapshot, so keep only the first occurrence of each line.
+  const seen = new Set<DiaryLine["id"]>();
+  const shown = combined.filter((l) => (seen.has(l.id) ? false : (seen.add(l.id), true)));
 
   const openLead = (leadId: number) => {
     setPersistedSelection("selected-lead-id", leadId);
@@ -40,7 +43,8 @@ export function DiaryPanel({ automationId, accountId, onClose }: { automationId:
         <button className="la-btn la-btn--soft la-btn--icon" onClick={onClose} title={t("diary.close")}><X className="h-4 w-4" /></button>
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {shown.length === 0 && !q.isLoading && <div style={{ color: "var(--mute)", fontSize: 13 }}>{t("diary.empty")}</div>}
+        {q.isError && <div style={{ color: "var(--destructive)", fontSize: 13 }}>{t("diary.error")}</div>}
+        {shown.length === 0 && !q.isLoading && !q.isError && <div style={{ color: "var(--mute)", fontSize: 13 }}>{t("diary.empty")}</div>}
         {shown.map((l) => (
           <div key={l.id} style={{ borderBottom: "1px solid var(--line)", paddingBottom: 8 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>

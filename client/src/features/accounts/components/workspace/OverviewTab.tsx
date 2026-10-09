@@ -9,6 +9,7 @@ import { KBPanel } from "./knowledge/KBPanel";
 import { CommunicationProfilePanel } from "./communication/CommunicationProfilePanel";
 import { CallNotes } from "./communication/CallNotes";
 import { VoiceTab } from "./voice/VoiceTab";
+import { ClientAutomationsTab } from "@/features/automation/components/ClientAutomationsTab";
 import type { AccountRow, AccountDetail, WorkspaceTab, CampaignRowData, ContractRowData, TeamMemberData } from "./types";
 
 interface OverviewData {
@@ -54,8 +55,9 @@ function OverviewMobile(p: OverviewData) {
   );
 }
 
-export function TabContent({ tab, isMobile, data, readOnly = false }: {
+export function TabContent({ tab, isMobile, data, readOnly = false, onOpenTab }: {
   tab: WorkspaceTab; isMobile: boolean; data: OverviewData; readOnly?: boolean;
+  onOpenTab?: (t: WorkspaceTab) => void;
 }) {
   // While the onboarding wizard is on screen, the Company Intel panel below it
   // is hidden so the call stays focused on one thing at a time.
@@ -75,6 +77,7 @@ export function TabContent({ tab, isMobile, data, readOnly = false }: {
     </div>
   );
   if (tab === "voice") return <VoiceTab accountId={data.accountId} readOnly={readOnly} />;
+  if (tab === "automations") return <ClientAutomationsTab accountId={data.accountId} onOpenTab={onOpenTab} />;
   return null;
 }
 

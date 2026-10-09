@@ -15,6 +15,8 @@ interface MobileCampaignDetailPanelProps {
   open: boolean;
   onBack: () => void;
   onSave: (id: number, patch: Record<string, unknown>) => Promise<void>;
+  /** Deep link: open on Configurations at this settings section. */
+  initialSection?: "business" | "ai" | "behavior";
 }
 
 /* ── Inner content ────────────────────────────────────────────────────────────
@@ -25,14 +27,16 @@ function MobileCampaignDetailContent({
   metrics,
   onClose,
   onSave,
+  initialSection,
 }: {
   campaign: Campaign;
   metrics: CampaignMetricsHistory[];
   onClose: () => void;
   onSave: (id: number, patch: Record<string, unknown>) => Promise<void>;
+  initialSection?: "business" | "ai" | "behavior";
 }) {
   const { t } = useTranslation("campaigns");
-  const [activeTab, setActiveTab] = useState<TabId>("summary");
+  const [activeTab, setActiveTab] = useState<TabId>(initialSection ? "configurations" : "summary");
 
   // Same data + inline-edit logic the desktop CampaignDetailView uses.
   const detail = useCampaignDetail(campaign, onSave);
@@ -112,6 +116,7 @@ function MobileCampaignDetailContent({
               compact
               focusField={detail.focusField}
               onStartEditField={detail.startEditForField}
+              initialSection={initialSection}
             />
           )}
         </div>
@@ -127,6 +132,7 @@ export function MobileCampaignDetailPanel({
   open,
   onBack,
   onSave,
+  initialSection,
 }: MobileCampaignDetailPanelProps) {
   return (
     <MobileSheet
@@ -140,6 +146,7 @@ export function MobileCampaignDetailPanel({
           metrics={metrics}
           onClose={onBack}
           onSave={onSave}
+          initialSection={initialSection}
         />
       )}
     </MobileSheet>

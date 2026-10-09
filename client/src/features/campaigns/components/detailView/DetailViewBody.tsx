@@ -61,6 +61,7 @@ interface DetailViewBodyProps {
   handleApplyGradient: () => void;
   onTogglePromptPanel?: () => void;
   onGenerated?: () => void;
+  initialSettingsSection?: "business" | "ai" | "behavior";
 }
 
 export function DetailViewBody({
@@ -94,6 +95,7 @@ export function DetailViewBody({
   handleApplyGradient,
   onTogglePromptPanel,
   onGenerated,
+  initialSettingsSection,
 }: DetailViewBodyProps) {
   return (
     <>
@@ -137,6 +139,7 @@ export function DetailViewBody({
             onStartEditField={detail.startEditForField}
             onTogglePromptPanel={onTogglePromptPanel}
             onGenerated={onGenerated}
+            initialSection={initialSettingsSection}
           />
         )}
       </div>

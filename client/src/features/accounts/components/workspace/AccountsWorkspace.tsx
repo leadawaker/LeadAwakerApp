@@ -21,7 +21,7 @@ import type { NewAccountForm } from "../AccountCreateDialog";
 import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "communication", "voice"];
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "communication", "voice", "automations"];
 
 interface Props {
   accounts: AccountRow[];
@@ -52,9 +52,20 @@ interface Props {
 export function AccountsWorkspace(p: Props) {
   const { t } = useTranslation("accounts");
   const isNarrow = useIsMobile(1024);
-  const { isAgencyUser, isAdmin } = useWorkspace();
+  const { isAgencyUser, isAdmin, isOwner } = useWorkspace();
+
+  // The Automations tab is owner only: hidden for everyone else, including via ?tab=automations.
+  const visibleTabs = useMemo(
+    () => (isOwner ? ACCOUNT_TABS : ACCOUNT_TABS.filter((k) => k !== "automations")),
+    [isOwner],
+  );
 
   const [tab, setTab] = useState<WorkspaceTab>("overview");
+
+  // Owner-only tab: fall back to Overview if the role changes (e.g. impersonation) while it is open.
+  useEffect(() => {
+    if (tab === "automations" && !isOwner) setTab("overview");
+  }, [tab, isOwner]);
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
 
   const { state: listPanelState, cycle } = useListPanelState();
@@ -100,11 +111,12 @@ export function AccountsWorkspace(p: Props) {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const wanted = params.get("tab") as WorkspaceTab | null;
-    if (!wanted || !ACCOUNT_TABS.includes(wanted)) return;
+    if (!wanted || !visibleTabs.includes(wanted)) return;
     setTab(wanted);
     params.delete("tab");
     const qs = params.toString();
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Publish entity data for the AI chat context.
@@ -135,7 +147,7 @@ export function AccountsWorkspace(p: Props) {
   // ── Shared mobile detail blocks (used by the client page + the agency sheet) ──
   const mobileTabSeg = (
     <div className="la-seg la-seg--fill" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
-      {ACCOUNT_TABS.map((k) => (
+      {visibleTabs.map((k) => (
         <button
           key={k}
           onClick={() => setTab(k)}
@@ -159,6 +171,7 @@ export function AccountsWorkspace(p: Props) {
         tab={tab}
         isMobile
         readOnly={!isAdmin}
+        onOpenTab={setTab}
         data={{
           account, d, accountId, onSave: p.onSave,
           campaigns: detailData.campaigns,
@@ -269,6 +282,7 @@ export function AccountsWorkspace(p: Props) {
       />
       <AccountsTopBar
         tab={tab}
+        tabs={visibleTabs}
         onTabChange={setTab}
         showTabs={!isNarrow}
         count={p.count}
@@ -375,6 +389,7 @@ export function AccountsWorkspace(p: Props) {
                   tab={tab}
                   isMobile={false}
                   readOnly={!isAdmin}
+                  onOpenTab={setTab}
                   data={{
                     account, d, accountId, onSave: p.onSave,
                     campaigns: detailData.campaigns,

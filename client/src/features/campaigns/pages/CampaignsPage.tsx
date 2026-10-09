@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { Plus, Trash2, Copy, X } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
-import { usePersistedSelection } from "@/hooks/usePersistedSelection";
+import { usePersistedSelection, setPersistedSelection } from "@/hooks/usePersistedSelection";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { CampaignListView } from "../components/CampaignListView";
 import { CampaignDetailPanel } from "../components/CampaignDetailPanel";
@@ -160,6 +160,24 @@ function CampaignsContent() {
     (c) => (c as any).Id ?? (c as any).id ?? 0,
     campaigns,
   );
+
+  // Deep link from the Automations tab: /platform/campaigns?campaign=<id>&section=<business|ai|behavior>
+  // selects the campaign, opens its Configurations tab and the given settings section. Stripped once applied.
+  // Declared after usePersistedSelection so its event listener is already registered.
+  const [initialSettingsSection, setInitialSettingsSection] = useState<"business" | "ai" | "behavior" | null>(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const id = params.get("campaign");
+    if (!id) return;
+    const section = params.get("section");
+    if (section === "business" || section === "ai" || section === "behavior") setInitialSettingsSection(section);
+    setPersistedSelection("selected-campaign-id", id);
+    setDetailTab("configurations");
+    params.delete("campaign");
+    params.delete("section");
+    const qs = params.toString();
+    window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
+  }, []);
 
   // Auto-select first campaign when data first arrives — one-shot, no loop.
   const hasAutoSelected = useRef(false);
@@ -500,6 +518,7 @@ function CampaignsContent() {
             isGroupNonDefault={isGroupNonDefault}
             isSortNonDefault={isSortNonDefault}
             onResetControls={handleResetControls}
+            initialSettingsSection={initialSettingsSection}
           />
         </div>
       </div>

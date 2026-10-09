@@ -163,6 +163,7 @@
     "failedOnly": "Só falhas",
     "allClients": "Todos os clientes",
     "empty": "Nada registrado ainda.",
+    "error": "Não foi possível carregar o histórico.",
     "loadMore": "Mostrar mais",
     "openLead": "Abrir lead",
     "close": "Fechar"

@@ -24,6 +24,7 @@ export function useAutomationDiary(id: string | null, opts: { accountId?: number
     queryKey: ["/api/automations/diary", id, opts],
     queryFn: () => getJson(`/api/automations/${encodeURIComponent(id!)}/diary?${qs}`),
     enabled: !!id,
+    refetchOnWindowFocus: false,
   });
 }
 

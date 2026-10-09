@@ -22,6 +22,8 @@ export interface CampaignStageEditorProps {
   conversationPrompts: any[];
   linkedContract: ContractFinancials | null;
   compact?: boolean;
+  /** Settings section to open first (deep link from the Automations tab). */
+  initialSection?: "business" | "ai" | "behavior";
   focusField?: string | null;
   onStartEditField?: (field: string) => void;
   onTogglePromptPanel?: () => void;
@@ -35,6 +37,7 @@ export function CampaignStageEditor({
   conversationPrompts,
   compact,
   focusField, onStartEditField,
+  initialSection,
   onGenerated,
 }: CampaignStageEditorProps) {
   const { isOwner } = useWorkspace();
@@ -80,6 +83,7 @@ export function CampaignStageEditor({
       onStartEditField={onStartEditField}
       conversationPrompts={conversationPrompts}
       compact={compact}
+      initialSection={initialSection}
       isAgency={isOwner}
       onNicheChange={handleNicheChange}
       onFieldsGenerated={applyGeneratedFields}

@@ -137,6 +137,8 @@ interface CampaignListViewProps {
   onResetControls: () => void;
   onRefresh?: () => void;
   onDelete?: (id: number) => Promise<void>;
+  /** Deep link from the Automations tab: settings section to open first. */
+  initialSettingsSection?: "business" | "ai" | "behavior" | null;
 }
 
 // ── Main component ──────────────────────────────────────────────────────────
@@ -177,6 +179,7 @@ export function CampaignListView({
   onResetControls,
   onRefresh,
   onDelete,
+  initialSettingsSection,
 }: CampaignListViewProps) {
   const { t } = useTranslation("campaigns");
   const { isAgencyUser } = useWorkspace();
@@ -210,6 +213,13 @@ export function CampaignListView({
   const PAGE_SIZE = 20;
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
   const [mobilePanelOpen, setMobilePanelOpen] = useState(false);
+  // Deep link on phones: open the detail sheet once the linked campaign is selected.
+  const deepLinkSheetOpened = useRef(false);
+  useEffect(() => {
+    if (!initialSettingsSection || !isMobile768 || !selectedCampaign || deepLinkSheetOpened.current) return;
+    deepLinkSheetOpened.current = true;
+    setMobilePanelOpen(true);
+  }, [initialSettingsSection, isMobile768, selectedCampaign]);
   const { state: leftPanelState, cycle } = useListPanelState();
   const [promptPanelOpen, setPromptPanelOpen] = useState(() => {
     try { return localStorage.getItem("campaigns-prompt-panel-open") === "true"; } catch { return false; }
@@ -871,6 +881,7 @@ export function CampaignListView({
         open={mobilePanelOpen}
         onBack={() => setMobilePanelOpen(false)}
         onSave={onSave}
+        initialSection={initialSettingsSection ?? undefined}
       />
 
       {/* ── MOBILE FILTER BOTTOM SHEET (< 768px) ────────────────────── */}
@@ -943,6 +954,7 @@ export function CampaignListView({
               promptPanelOpen={promptPanelOpen}
               onTogglePromptPanel={togglePromptPanel}
               mainColumnRef={compactObserverRef}
+              initialSettingsSection={initialSettingsSection ?? undefined}
             />
           ) : (
             <CampaignDetailViewEmpty showNoCampaigns={totalCampaigns === 0} />
