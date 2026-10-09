@@ -178,7 +178,7 @@
     "changeHintAccount": "Wijzig dit in Instellingen > Mijn account terwijl je deze klant bekijkt",
     "counts7d": "7 dagen: {{success}} gelukt · {{failed}} mislukt · {{skipped}} overgeslagen",
     "topReason": "Meest voorkomend probleem: {{reason}}",
-    "warning": { "paused_followups": "Campagne gepauzeerd, follow-ups gaan nog steeds naar {{count}} leads" },
+    "warning": { "paused_followups": "Campagne niet actief, maar opvolgberichten gaan nog naar {{count}} leads" },
     "empty": "Deze klant heeft nog geen automatiseringen."
   },
   "summaryTokens": {

@@ -308,7 +308,7 @@ export default function AppArea() {
             <AgencyOnly prefix="/platform"><TasksPage /></AgencyOnly>
           </Route>
           <Route path="/platform/automation-logs">
-            <AgencyOnly prefix="/platform"><AutomationLogsPage /></AgencyOnly>
+            <OwnerOnly prefix="/platform"><AutomationLogsPage /></OwnerOnly>
           </Route>
           {/* Owner-only: the list names every prospect who has been demoed to. */}
           <Route path="/platform/demos">

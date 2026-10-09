@@ -178,7 +178,7 @@
     "changeHintAccount": "Altere em Configurações > Minha conta enquanto vê este cliente",
     "counts7d": "7 dias: {{success}} deram certo · {{failed}} falharam · {{skipped}} ignoradas",
     "topReason": "Problema mais comum: {{reason}}",
-    "warning": { "paused_followups": "Campanha pausada, follow-ups ainda saindo para {{count}} leads" },
+    "warning": { "paused_followups": "Campanha inativa, mas os follow-ups ainda estão indo para {{count}} leads" },
     "empty": "Este cliente ainda não tem automações."
   },
   "summaryTokens": {

@@ -4,14 +4,19 @@ import { useLocation } from "wouter";
 import { X } from "lucide-react";
 import { Pill } from "@/components/crm/primitives";
 import { setPersistedSelection } from "@/hooks/usePersistedSelection";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import type { DiaryLine } from "@shared/automationTypes";
 import { useAutomationDiary } from "../api";
 import { actionLabel, automationName, timeAgo } from "../labels";
 
 const OUTCOME_COLOR = { success: "var(--good)", failed: "var(--destructive)", skipped: "var(--mute)" } as const;
 
-export function DiaryPanel({ automationId, accountId, onClose }: { automationId: string; accountId?: number; onClose: () => void }) {
+export function DiaryPanel({ automationId, accountId: fixedAccountId, onClose }: { automationId: string; accountId?: number; onClose: () => void }) {
   const { t } = useTranslation("automation");
+  const { accounts } = useWorkspace();
+  // Global page (no fixed account): the header offers a client filter.
+  const [pickedAccountId, setPickedAccountId] = useState<number | undefined>(undefined);
+  const accountId = fixedAccountId ?? pickedAccountId;
   const [, setLocation] = useLocation();
   const [failedOnly, setFailedOnly] = useState(false);
   const [page, setPage] = useState(1);
@@ -36,6 +41,19 @@ export function DiaryPanel({ automationId, accountId, onClose }: { automationId:
           <div style={{ fontSize: 11, letterSpacing: "0.13em", textTransform: "uppercase", color: "var(--mute)" }}>{t("diary.title")}</div>
           <div style={{ fontWeight: 600, color: "var(--ink)" }}>{automationName(t, automationId)}</div>
         </div>
+        {fixedAccountId === undefined && (
+          <select
+            aria-label={t("diary.allClients")}
+            data-testid="automation-diary-client-filter"
+            value={pickedAccountId ?? ""}
+            onChange={(e) => { setPickedAccountId(e.target.value ? Number(e.target.value) : undefined); setPage(1); setLines([]); }}
+            className="text-sm text-foreground"
+            style={{ maxWidth: 160, height: 32, padding: "0 8px", borderRadius: "var(--r-button)", backgroundColor: "var(--bg)", border: "1px solid var(--line)" }}
+          >
+            <option value="">{t("diary.allClients")}</option>
+            {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
+          </select>
+        )}
         <label style={{ fontSize: 12, color: "var(--mute)", display: "flex", alignItems: "center", gap: 6 }}>
           <input type="checkbox" checked={failedOnly} onChange={(e) => { setFailedOnly(e.target.checked); setPage(1); setLines([]); }} />
           {t("diary.failedOnly")}

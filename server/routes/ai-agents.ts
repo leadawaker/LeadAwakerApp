@@ -2145,6 +2145,8 @@ export function startAutomationFailureNotifier(): void {
       const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
       if (agencyUsers.length === 0) return;
       for (const failure of failures) {
+        // Routine delivery failures stay visible on the Automations page but do not page people.
+        if (failure.workflowName === "message_delivery") continue;
         const last = automationLastNotified.get(failure.workflowName);
         if (last !== undefined && Date.now() - last < AUTOMATION_NOTIFY_COOLDOWN_MS) continue;
         automationLastNotified.set(failure.workflowName, Date.now());

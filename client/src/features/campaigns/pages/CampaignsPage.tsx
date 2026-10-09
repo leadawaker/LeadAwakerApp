@@ -165,12 +165,18 @@ function CampaignsContent() {
   // selects the campaign, opens its Configurations tab and the given settings section. Stripped once applied.
   // Declared after usePersistedSelection so its event listener is already registered.
   const [initialSettingsSection, setInitialSettingsSection] = useState<"business" | "ai" | "behavior" | null>(null);
+  // Deep-linked campaign id + whether the selection has reached it yet (see the clearing effect below).
+  const deepLinkCampaignId = useRef<string | null>(null);
+  const deepLinkReached = useRef(false);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const id = params.get("campaign");
     if (!id) return;
     const section = params.get("section");
-    if (section === "business" || section === "ai" || section === "behavior") setInitialSettingsSection(section);
+    if (section === "business" || section === "ai" || section === "behavior") {
+      setInitialSettingsSection(section);
+      deepLinkCampaignId.current = id;
+    }
     setPersistedSelection("selected-campaign-id", id);
     setDetailTab("configurations");
     params.delete("campaign");
@@ -178,6 +184,20 @@ function CampaignsContent() {
     const qs = params.toString();
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
   }, []);
+
+  // The deep-linked section applies to that campaign only: once the selection has reached it and
+  // then moves to another campaign, drop it so later opens (desktop tab or mobile sheet) start normally.
+  const selectedCampaignId = selectedCampaign ? String((selectedCampaign as any).id ?? (selectedCampaign as any).Id ?? "") : "";
+  useEffect(() => {
+    if (!deepLinkCampaignId.current || !selectedCampaignId) return;
+    if (selectedCampaignId === deepLinkCampaignId.current) {
+      deepLinkReached.current = true;
+    } else if (deepLinkReached.current) {
+      deepLinkCampaignId.current = null;
+      deepLinkReached.current = false;
+      setInitialSettingsSection(null);
+    }
+  }, [selectedCampaignId]);
 
   // Auto-select first campaign when data first arrives — one-shot, no loop.
   const hasAutoSelected = useRef(false);
