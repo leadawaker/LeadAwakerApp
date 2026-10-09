@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>The Report | Lead Awaker</title>
+<meta name="description" content="Free report: the four places service businesses leak revenue, backed by research, with the fix for each leak. 25 pages, free.">
+<meta property="og:title" content="The Report: four places your business leaks revenue">
+<meta property="og:description" content="Half your callers never reach a person. Read where the money goes, and how to plug each leak. Free, 25 pages.">
+<meta property="og:image" content="https://www.leadawaker.com/site/img/report-cover.webp">
+<meta property="og:type" content="website">
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap">
+<style>
+/* Layout: lead-magnet opt-in in the leadawaker.com language. Hero with a 3D book, what's inside,
+   a peek at real pages on wine, the author with real testimonials, one popup form repeated behind every button. */
+:root{
+  color-scheme:light;
+  --bg:#F3EFE8; --bg-2:#EAE4D9; --paper:#F9F6F0; --surface:#F1ECE4; --white:#FDFCF9;
+  --ink:#1F1A14; --ink-soft:#3A322A; --mute:#6C6354; --mute-2:#948A77;
+  --line:rgba(110,95,65,.16); --line-2:rgba(110,95,65,.09);
+  --wine:#5E2230; --wine-2:#6E2638; --wine-deep:#3E1520; --cream:#F4EFE3; --blush:#EBB9A8; --drip:#9B2F45;
+  --sh-raised:-12px 5px 30px rgba(105,75,40,.30), 12px -5px 30px rgba(255,253,245,.95);
+  --sh-crisp:-5px 2px 13px rgba(105,75,40,.30), 5px -2px 13px rgba(255,253,245,.95);
+  --sh-float:0 24px 48px -24px rgba(60,40,15,.26),0 2px 6px rgba(60,40,15,.07);
+  --serif:"Playfair Display",Georgia,"Times New Roman",serif;
+  --sans:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(900px 520px at 88% -4%,rgba(255,230,180,.36),transparent 70%),radial-gradient(700px 500px at 0% 45%,rgba(255,253,245,.35),transparent 70%)}
+main,header,footer{position:relative;z-index:1}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.08;text-wrap:balance}
+h1 em,h2 em{font-style:italic;color:var(--wine-2)}
+a{color:inherit}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:24px}
+@media (max-width:560px){.wrap{padding-inline:16px}}
+.eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--wine)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:54px;padding:18px 28px;border:0;border-radius:8px;font:700 13.5px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:box-shadow .18s,transform .18s}
+.btn-wine{background:linear-gradient(145deg,var(--wine-2),#4B1A26);color:var(--cream);box-shadow:var(--sh-raised)}
+.btn-wine:hover{box-shadow:var(--sh-crisp);transform:translateY(-1px)}
+.btn-cream{background:var(--cream);color:var(--wine-deep)}
+.btn-cream:hover{transform:translateY(-1px)}
+.btn svg{width:18px;height:18px}
+.under{font-size:13.5px;color:var(--mute);display:flex;align-items:center;gap:8px}
+.under svg{width:15px;height:15px;color:var(--wine-2)}
+.ic{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+:focus-visible{outline:2px solid var(--wine-2);outline-offset:3px}
+
+/* nav */
+.nav{padding-top:14px}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;gap:16px;background:rgba(241,236,228,.72);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line-2);border-radius:14px;padding:10px 10px 10px 18px}
+.nav-bar img{height:30px;display:block}
+.nav-bar .btn{min-height:40px;padding:12px 18px;font-size:12px}
+@media (max-width:560px){.nav-bar img{height:24px}}
+
+/* hero */
+.hero{padding-block:clamp(40px,7vw,88px) clamp(56px,8vw,104px)}
+.hero-grid{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:clamp(32px,6vw,80px);align-items:center}
+.hero-copy{display:grid;gap:22px;justify-items:start}
+.hero h1{font-size:clamp(40px,5.6vw,70px);letter-spacing:-.01em}
+.hero .sub{font-size:clamp(17px,1.6vw,19px);color:var(--ink-soft);max-width:34em}
+.facts{display:flex;flex-wrap:wrap;gap:8px}
+.facts span{font-size:13px;font-weight:600;color:var(--ink-soft);background:var(--paper);border:1px solid var(--line);border-radius:99px;padding:6px 12px}
+@media (max-width:860px){.hero-grid{grid-template-columns:1fr}.book-wrap{order:-1}}
+
+/* book */
+.book-wrap{display:grid;place-items:center;perspective:1600px;padding:20px 30px 40px}
+.book{position:relative;width:min(340px,64vw);aspect-ratio:760/1075;transform:rotateY(-17deg) rotateX(5deg) rotateZ(1deg);transform-style:preserve-3d;transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.book:hover{transform:rotateY(-8deg) rotateX(3deg)}
+.book img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:3px 7px 7px 3px;box-shadow:
+  1px 1px 0 #efe8dc,3px 3px 0 #d8cfbf,5px 5px 0 #efe8dc,7px 7px 0 #d3c9b8,9px 9px 0 #ede6da,11px 11px 0 #cfc5b3,
+  40px 44px 60px -20px rgba(40,18,10,.55),0 2px 8px rgba(40,18,10,.25)}
+.book::after{content:"";position:absolute;inset:0;border-radius:3px 7px 7px 3px;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.35) 0,rgba(255,255,255,.18) 2.2%,rgba(0,0,0,.12) 4%,transparent 9%,transparent 85%,rgba(255,255,255,.06))}
+.badge{position:absolute;right:-26px;top:22px;transform:rotate(8deg) translateZ(40px);width:92px;height:92px;border-radius:50%;background:var(--cream);color:var(--wine-deep);display:grid;place-items:center;text-align:center;font:800 12px/1.15 var(--sans);letter-spacing:.06em;text-transform:uppercase;box-shadow:var(--sh-float)}
+.badge b{display:block;font-family:var(--serif);font-size:26px;letter-spacing:0;text-transform:none;font-weight:600}
+@media (prefers-reduced-motion:reduce){.book{transition:none}}
+
+/* inside */
+section.band{padding-block:clamp(64px,9vw,112px)}
+.head{display:grid;gap:14px;max-width:740px;margin:0 auto clamp(36px,5vw,56px);text-align:center;justify-items:center}
+.head h2{font-size:clamp(30px,3.8vw,46px)}
+.head p{font-size:18px;color:var(--ink-soft);max-width:36em}
+.inside{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.item{display:grid;grid-template-columns:52px minmax(0,1fr);gap:16px;align-items:center;background:var(--paper);border:1px solid var(--line-2);border-radius:14px;padding:22px;box-shadow:var(--sh-float)}
+.sym{width:52px;height:52px;border-radius:50%;background:var(--wine-2);color:var(--blush);display:grid;place-items:center}
+.sym svg{width:24px;height:24px}
+.item h3{font-family:var(--sans);font-size:17px;font-weight:800;line-height:1.35}
+.item p{font-size:15px;color:var(--mute);margin-top:6px;line-height:1.55}
+.cta-row{display:grid;justify-items:center;gap:12px;margin-top:clamp(36px,5vw,52px);text-align:center}
+@media (max-width:760px){.inside{grid-template-columns:1fr}}
+
+/* peek */
+.peek{background:radial-gradient(120% 120% at 80% 0%,var(--wine-2),var(--wine-deep) 70%);color:var(--cream);overflow:hidden}
+.peek .head p{color:rgba(244,239,227,.78)}
+.peek .eyebrow{color:var(--blush)}
+.peek h2 em{color:var(--blush)}
+.pages{display:flex;justify-content:center;gap:clamp(10px,2vw,22px);padding-block:10px 20px}
+.pages img{width:clamp(130px,19vw,220px);height:auto;border-radius:6px;box-shadow:0 30px 50px -20px rgba(0,0,0,.6),0 2px 6px rgba(0,0,0,.3);transition:transform .3s}
+.pages img:nth-child(1){transform:rotate(-4deg) translateY(10px)}
+.pages img:nth-child(2){transform:rotate(-1.5deg)}
+.pages img:nth-child(3){transform:rotate(1.5deg)}
+.pages img:nth-child(4){transform:rotate(4deg) translateY(10px)}
+.pages img:hover{transform:translateY(-8px) scale(1.03)}
+@media (max-width:640px){.pages{flex-wrap:wrap}.pages img{width:calc(50% - 10px)}}
+.peek .under{color:rgba(244,239,227,.7)}.peek .under svg{color:var(--blush)}
+
+/* author */
+.author{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(28px,5vw,64px);align-items:center}
+.me{display:grid;grid-template-columns:120px minmax(0,1fr);gap:20px;align-items:center}
+.me img{width:120px;height:120px;border-radius:50%;object-fit:cover;object-position:center 15%;background:var(--wine-2);box-shadow:var(--sh-float)}
+.me h3{font-size:28px}
+.me p{font-size:15.5px;color:var(--ink-soft);margin-top:8px}
+.quotes{display:grid;gap:14px}
+.quote{background:var(--white);border:1px solid var(--line-2);border-radius:14px;padding:22px 24px;box-shadow:var(--sh-float)}
+.quote p{font-size:15.5px;line-height:1.65;color:var(--ink-soft)}
+.who{display:flex;align-items:center;gap:12px;margin-top:14px;font-size:14px}
+.who img{width:38px;height:38px;border-radius:50%;object-fit:cover}
+.who b{display:block}
+.who span{color:var(--mute);font-size:13px}
+@media (max-width:860px){.author{grid-template-columns:1fr}}
+@media (max-width:420px){.me{grid-template-columns:84px minmax(0,1fr)}.me img{width:84px;height:84px}}
+
+/* final */
+.final{text-align:center;display:grid;justify-items:center;gap:20px}
+.final h2{font-size:clamp(34px,4.6vw,58px)}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px 24px;border-top:1px solid var(--line);padding-block:24px 36px;font-size:13.5px;color:var(--mute)}
+footer a{color:var(--mute)}
+
+/* popup */
+dialog{border:0;padding:0;border-radius:18px;width:min(460px,calc(100vw - 32px));background:var(--paper);color:var(--ink);box-shadow:0 40px 80px -20px rgba(40,18,10,.5)}
+dialog::backdrop{background:rgba(31,16,20,.62);backdrop-filter:blur(3px)}
+.pop{padding:28px;display:grid;gap:16px;position:relative}
+.pop-top{display:grid;grid-template-columns:64px minmax(0,1fr);gap:16px;align-items:center}
+.pop-top img{width:64px;border-radius:3px;box-shadow:4px 6px 14px rgba(40,18,10,.35)}
+.pop h2{font-size:26px}
+.pop .lead{font-size:14.5px;color:var(--mute);margin-top:4px}
+.field{display:grid;gap:6px}
+.field label{font-size:13px;font-weight:700}
+.field input{font:500 16px var(--sans);padding:14px 14px;border-radius:10px;border:1px solid var(--line);background:var(--white);color:var(--ink);width:100%}
+.field input:focus{outline:2px solid var(--wine-2);outline-offset:0;border-color:transparent}
+.check{display:grid;grid-template-columns:20px minmax(0,1fr);gap:10px;align-items:start;font-size:13.5px;color:var(--ink-soft);line-height:1.45;cursor:pointer}
+.check input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--wine-2)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.pop .btn{width:100%}
+.pop .err{font-size:14px;color:#9b2f2f;background:#f6e1da;border-radius:8px;padding:10px 12px}
+.fine{font-size:12px;color:var(--mute-2);text-align:center}
+.close{position:absolute;right:12px;top:12px;width:36px;height:36px;border-radius:50%;border:0;background:transparent;color:var(--mute);font-size:22px;cursor:pointer}
+.close:hover{background:var(--surface)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i1" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="M16 2l6 6M22 2l-6 6"/></symbol>
+  <symbol id="i2" viewBox="0 0 24 24"><path d="M13 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21H10"/><path d="M13 3v5h5"/><path d="M13 3l5 5v2.5"/><circle cx="16.5" cy="16.5" r="4.5"/><path d="M16.5 14.3v2.4l1.6 1"/></symbol>
+  <symbol id="i3" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+  <symbol id="i4" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M4 22V4"/><path d="M4 4h12l-2 4 2 4H4"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <div class="nav-bar">
+      <a href="/"><img src="/premium/logo-v2-light.svg" alt="Lead Awaker"></a>
+      <button class="btn btn-wine" type="button" data-open>Get the Report</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap hero-grid">
+      <div class="hero-copy">
+        <span class="eyebrow">Free report · 2026 edition</span>
+        <h1>Your business doesn't have a lead problem. It has <em>four leaks.</em></h1>
+        <p class="sub">Where service businesses lose the customers they already paid for, and how to plug each leak.</p>
+        <div class="facts"><span>25 pages</span><span>11 cited sources</span><span>Readable in 15 minutes</span></div>
+        <button class="btn btn-wine" type="button" data-open><svg class="ic"><use href="#i-down"/></svg>Send me the Report</button>
+        <span class="under"><svg class="ic"><use href="#i-mail"/></svg>Free. Straight to your inbox.</span>
+      </div>
+      <div class="book-wrap">
+        <div class="book">
+          <img src="/site/img/report-cover.webp" alt="Cover of The Report by Lead Awaker" width="760" height="1075">
+          <span class="badge"><span><b>Free</b>PDF</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" style="padding-top:0">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">Inside the Report</span>
+        <h2>In 15 minutes, <em>you'll know:</em></h2>
+      </div>
+      <div class="inside">
+        <div class="item"><span class="sym"><svg class="ic"><use href="#i1"/></svg></span><div><h3>Why 48 of every 100 calls never reach a person</h3></div></div>
+        <div class="item"><span class="sym"><svg class="ic"><use href="#i2"/></svg></span><div><h3>The seven messages that reopen a cold quote</h3></div></div>
+        <div class="item"><span class="sym"><svg class="ic"><use href="#i3"/></svg></span><div><h3>How to get reviews from 83% of clients, within Google's rules</h3></div></div>
+        <div class="item"><span class="sym"><svg class="ic"><use href="#i4"/></svg></span><div><h3>When past clients need you again, month by month</h3></div></div>
+        <div class="item"><span class="sym"><svg class="ic"><use href="#i-chart"/></svg></span><div><h3>A worked example: €220,500 a year left on the table</h3></div></div>
+        <div class="item"><span class="sym"><svg class="ic"><use href="#i-flag"/></svg></span><div><h3>Which leak to plug first</h3></div></div>
+      </div>
+      <div class="cta-row">
+        <button class="btn btn-wine" type="button" data-open><svg class="ic"><use href="#i-down"/></svg>Send me the Report</button>
+        <span class="under"><svg class="ic"><use href="#i-mail"/></svg>Free. Delivered by email.</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="band peek">
+    <div class="wrap">
+      <div class="head">
+        <span class="eyebrow">A peek inside</span>
+        <h2>One idea per page. <em>No fluff.</em></h2>
+      </div>
+      <div class="pages">
+        <img src="/site/img/report-p06.webp" alt="Chapter opener: the missed call" width="520" height="735" loading="lazy">
+        <img src="/site/img/report-p07.webp" alt="48 of every 100 calls never reach a human" width="520" height="735" loading="lazy">
+        <img src="/site/img/report-p11.webp" alt="An example conversation that reopens a cold quote" width="520" height="735" loading="lazy">
+        <img src="/site/img/report-p18.webp" alt="The year chart for past clients" width="520" height="735" loading="lazy">
+      </div>
+      <div class="cta-row">
+        <button class="btn btn-cream" type="button" data-open><svg class="ic"><use href="#i-down"/></svg>Get the full Report</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="band">
+    <div class="wrap author">
+      <div class="me">
+        <img src="/site/img/report-gabriel.webp" alt="Gabriel Fronza">
+        <div>
+          <span class="eyebrow">Written by</span>
+          <h3>Gabriel Fronza</h3>
+          <p>12 years building digital systems, for small businesses and for Warner Bros. and Sega. Today he builds AI employees for service businesses.</p>
+        </div>
+      </div>
+      <div class="quotes">
+        <div class="quote"><p>“I work with sales software every day, so I don’t impress easily. What stands out with Gabriel is how he builds: he tests everything himself, rings his own receptionist until nothing sounds off, and only then lets a customer hear it.”</p><div class="who"><img src="/site/img/abdulla-dilimi.webp" alt=""><div><b>Abdulla Dilimi</b><span>Growth Specialist, HubSpot</span></div></div></div>
+        <div class="quote"><p>“Gabriel doesn’t hand you a tool and disappear. He asked how we actually talk to our customers, built around that, and kept adjusting the details. It felt like working with a builder who cares how every sentence sounds.”</p><div class="who"><img src="/site/img/diederik-vandelaarschot.webp" alt=""><div><b>Diederik van de Laarschot</b><span>Co-Founder, FusionCraft</span></div></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="band" style="padding-top:0">
+    <div class="wrap final">
+      <h2>Read it tonight. <em>Plug one leak this month.</em></h2>
+      <button class="btn btn-wine" type="button" data-open><svg class="ic"><use href="#i-down"/></svg>Send me the Report</button>
+      <span class="under"><svg class="ic"><use href="#i-mail"/></svg>Free. No spam. Unsubscribe from anything, anytime.</span>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><span>© 2026 Lead Awaker</span><a href="/privacy-policy">Privacy policy</a></div>
+</footer>
+
+<dialog id="optin" aria-labelledby="optin-h">
+  <form class="pop" id="optin-form" novalidate>
+    <button class="close" type="button" aria-label="Close" data-close>×</button>
+    <div class="pop-top">
+      <img src="/site/img/report-cover.webp" alt="">
+      <div><h2 id="optin-h">Where should we send it?</h2><p class="lead">The Report lands in your inbox right away.</p></div>
+    </div>
+    <div class="field"><label for="f-name">First name</label><input id="f-name" name="firstName" autocomplete="given-name" required maxlength="80"></div>
+    <div class="field"><label for="f-email">Email</label><input id="f-email" name="email" type="email" autocomplete="email" required maxlength="254" inputmode="email"></div>
+    <div class="hp" aria-hidden="true"><label for="f-web">Website</label><input id="f-web" name="website" tabindex="-1" autocomplete="off"></div>
+    <label class="check" for="f-consent"><input id="f-consent" name="consent" type="checkbox"><span>Also send me short lessons on plugging leaks. Unsubscribe anytime.</span></label>
+    <p class="err" id="f-err" hidden></p>
+    <button class="btn btn-wine" type="submit" id="f-submit"><svg class="ic"><use href="#i-down"/></svg>Send me the Report</button>
+    <p class="fine">We use your email to send the Report. See our <a href="/privacy-policy">privacy policy</a>.</p>
+  </form>
+</dialog>
+
+<script>
+(function(){
+  // Everything language-specific in one line (script/report/build-pages.cjs swaps it for /nl and /pt).
+  var T = {lang:'en', thanks:'/report/thanks', send:'Send me the Report', sending:'Sending…', noName:'Please add your first name.', badEmail:"That email address doesn't look right.", fail:'Something went wrong. Please try again.', offline:'No connection. Please try again.'};
+
+  var dlg = document.getElementById('optin'), form = document.getElementById('optin-form');
+  var err = document.getElementById('f-err'), btn = document.getElementById('f-submit');
+  function open(){ err.hidden = true; if (dlg.showModal) dlg.showModal(); else dlg.setAttribute('open', ''); setTimeout(function(){ document.getElementById('f-name').focus(); }, 30); }
+  document.querySelectorAll('[data-open]').forEach(function(b){ b.addEventListener('click', open); });
+  document.querySelector('[data-close]').addEventListener('click', function(){ dlg.close(); });
+  dlg.addEventListener('click', function(e){ if (e.target === dlg) dlg.close(); });
+
+  function fail(msg){ err.textContent = msg; err.hidden = false; btn.disabled = false; btn.lastChild.textContent = T.send; }
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    var name = form.firstName.value.trim(), email = form.email.value.trim();
+    if (!name) return fail(T.noName);
+    if (!/^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]+$/.test(email)) return fail(T.badEmail);
+    err.hidden = true; btn.disabled = true; btn.lastChild.textContent = T.sending;
+    fetch('/api/report/optin', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ firstName: name, email: email, consent: form.consent.checked, website: form.website.value, lang: T.lang })
+    }).then(function(r){ return r.json().catch(function(){ return {}; }).then(function(j){ return {ok: r.ok, j: j}; }); })
+      .then(function(res){
+        if (!res.ok) return fail(res.j.message || T.fail);
+        location.href = T.thanks + '?n=' + encodeURIComponent(name);
+      })
+      .catch(function(){ fail(T.offline); });
+  });
+})();
+</script>
+</body>
+</html>

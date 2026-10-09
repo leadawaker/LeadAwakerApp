@@ -1,0 +1,792 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>The Report</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&family=Caveat:wght@500;600&display=swap">
+<style>
+/* The Report: A4 print layout. Noir chapter openers, one idea per page, a symbol per leak, wine stat pages, dark pause pages. */
+:root{
+  --paper:#F5F0E7; --paper-2:#ECE4D7; --ink:#1F1A14; --ink-2:#4A4036; --mute:#7D7262;
+  --line:rgba(31,26,20,.14); --line-2:rgba(31,26,20,.07);
+  --wine:#6E2638; --wine-deep:#3E1520; --wine-top:#55202E; --night:#1A0E11; --drip:#9B2F45;
+  --blush:#EBB9A8; --on-wine:#F7F1E6; --on-wine-2:rgba(247,241,230,.8); --on-wine-3:rgba(247,241,230,.55);
+  --wa-bg:#EFEAE2; --wa-out:#DCF0D3;
+  --display:"Playfair Display", Georgia, serif;
+  --body:"Manrope", "Helvetica Neue", Arial, sans-serif;
+  --mono:"DM Mono", Menlo, monospace;
+  --hand:"Caveat", "Bradley Hand", cursive;
+}
+@page{size:A4;margin:0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#8a8178;font-family:var(--body);color:var(--ink);-webkit-print-color-adjust:exact;print-color-adjust:exact;font-size:10.5pt;line-height:1.6}
+@media screen{body{padding:12mm 0;display:flex;flex-direction:column;align-items:center;gap:8mm}}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-family:var(--display);font-weight:600;line-height:1.08;letter-spacing:-.01em;text-wrap:balance}
+a{color:inherit}
+sup{font-family:var(--mono);font-size:6.5pt;color:var(--drip);margin-left:1px}
+.on-wine sup,.night sup{color:var(--blush)}
+
+/* icons */
+.ic{width:100%;height:100%;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round;display:block}
+.sym{display:inline-grid;place-items:center;border-radius:50%;flex:none}
+.sym svg{width:52%;height:52%}
+.sym.lg{width:15mm;height:15mm;background:var(--wine);color:var(--blush)}
+.sym.md{width:10mm;height:10mm;background:var(--wine);color:var(--blush)}
+.sym.ghost{width:9mm;height:9mm;border:1px solid rgba(235,185,168,.6);color:var(--blush)}
+.sym.tint{width:10mm;height:10mm;background:rgba(235,185,168,.16);color:var(--blush)}
+
+.page{width:210mm;height:297mm;position:relative;overflow:hidden;break-after:page;background:var(--paper);padding:30mm 22mm 30mm;display:flex;flex-direction:column}
+.page:last-child{break-after:auto}
+.foot{position:absolute;left:22mm;right:22mm;bottom:13mm;display:flex;justify-content:space-between;font-family:var(--mono);font-size:7.5pt;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+.on-wine .foot,.night .foot{color:var(--on-wine-3)}
+
+.eyebrow{font-family:var(--mono);font-size:8pt;letter-spacing:.16em;text-transform:uppercase;color:var(--drip);display:inline-flex;align-items:center;gap:2.5mm}
+.eyebrow svg{width:4.2mm;height:4.2mm}
+.on-wine .eyebrow,.night .eyebrow,.opener .eyebrow{color:var(--blush)}
+.h-xl{font-size:44pt}
+.h-l{font-size:32pt}
+.h-m{font-size:20pt}
+.lede{font-size:14pt;line-height:1.5;color:var(--ink-2);max-width:135mm}
+.body{font-size:11pt;line-height:1.65;color:var(--ink-2);max-width:140mm}
+.small{font-size:8.5pt;color:var(--mute);line-height:1.5}
+.gap-s{height:6mm}.gap-m{height:12mm}.gap-l{height:20mm}
+.push{margin-top:auto}
+
+/* backgrounds (linear only: radial gradients render badly in PDF viewers) */
+.on-wine{background:linear-gradient(180deg,var(--wine-top) 0%,var(--wine-deep) 55%);color:var(--on-wine)}
+.night{background:var(--night);color:var(--on-wine)}
+.on-wine .lede,.night .lede{color:var(--on-wine-2)}
+.on-wine .small,.night .small{color:var(--on-wine-3)}
+.on-wine .body,.night .body{color:var(--on-wine-2)}
+
+/* cover */
+.cover{padding:0;background:#1a0d10;color:var(--on-wine)}
+.bleed{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.cover .bleed{object-position:center top}
+.shade-top{position:absolute;inset:0;background:linear-gradient(180deg,rgba(18,7,10,.88) 0%,rgba(18,7,10,.45) 32%,rgba(18,7,10,0) 55%)}
+.shade-bottom{position:absolute;inset:0;background:linear-gradient(0deg,rgba(18,7,10,.85) 0%,rgba(18,7,10,0) 30%)}
+.cover-in{position:relative;height:100%;padding:24mm 22mm 20mm;display:flex;flex-direction:column}
+.cover-top{display:flex;justify-content:space-between;align-items:center}
+.cover-top img{height:8mm}
+.cover-top span{font-family:var(--mono);font-size:8pt;letter-spacing:.16em;text-transform:uppercase;color:var(--on-wine-2)}
+.cover h1{font-size:84pt;line-height:.9;font-weight:700;letter-spacing:-.02em;margin-top:12mm}
+.cover h1 em{font-weight:600;color:var(--blush)}
+.cover .sub{font-family:var(--display);font-style:italic;font-size:17pt;line-height:1.3;max-width:115mm;margin-top:6mm}
+.cover .cover-bottom{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;font-size:8.5pt;color:var(--on-wine-2);gap:10mm}
+.cover .cover-bottom span:last-child{text-align:right;max-width:70mm}
+
+/* contents */
+.toc{display:flex;flex-direction:column;margin-top:9mm;border-top:1px solid var(--line)}
+.toc a{display:grid;grid-template-columns:22mm 1fr 14mm;align-items:center;padding:2.9mm 0;border-bottom:1px solid var(--line-2);text-decoration:none}
+.toc .n{display:flex;align-items:center;gap:2.5mm;font-family:var(--display);font-style:italic;font-size:14pt;color:var(--drip)}
+.toc .n .sym{width:7mm;height:7mm}
+.toc .t{font-size:11pt;font-weight:600;line-height:1.35}
+.toc .t small{display:block;font-weight:500;font-size:8.5pt;color:var(--mute)}
+.toc .p{font-family:var(--mono);font-size:9pt;color:var(--mute);text-align:right}
+
+/* intro */
+.img-band{position:absolute;left:0;right:0;top:0;width:100%;object-fit:cover}
+.intro-in{position:relative;display:flex;flex-direction:column;flex:1}
+.pull{font-family:var(--display);font-style:italic;font-size:17pt;line-height:1.3;border-left:2px solid var(--drip);padding-left:6mm;max-width:120mm}
+
+/* tuesday */
+.day{display:flex;flex-direction:column;margin-top:12mm;border-top:1px solid rgba(247,241,230,.16)}
+.day-row{display:grid;grid-template-columns:22mm 1fr 10mm;gap:7mm;padding:6.5mm 0;border-bottom:1px solid rgba(247,241,230,.12);align-items:center}
+.clock{width:20mm;height:20mm}
+.day-row time{display:block;font-family:var(--mono);font-size:10pt;color:var(--blush);letter-spacing:.06em}
+.day-row p{font-size:12pt;line-height:1.5;color:var(--on-wine);margin-top:1mm}
+
+/* map */
+.quadmap{display:grid;grid-template-columns:1fr 1fr;margin-top:10mm;margin-bottom:8mm;position:relative;border:1px solid var(--line);border-radius:5mm;overflow:hidden;background:var(--paper)}
+.quadmap > div{padding:7mm 7mm 7mm;display:flex;flex-direction:column;gap:2mm}
+.quadmap > div:nth-child(2n){border-left:1px solid var(--line)}
+.quadmap > div:nth-child(n+3){border-top:1px solid var(--line)}
+.quadmap > div:nth-child(1),.quadmap > div:nth-child(4){background:var(--paper-2)}
+.quadmap .top{display:flex;justify-content:space-between;align-items:flex-start}
+.quadmap .n{font-family:var(--display);font-style:italic;font-size:22pt;color:var(--drip);line-height:1}
+.quadmap .stage{font-family:var(--mono);font-size:7.5pt;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin-top:3mm}
+.quadmap h3{font-size:15.5pt}
+.quadmap p{font-size:9.6pt;line-height:1.5;color:var(--ink-2)}
+.quadmap .tell{font-size:9pt;color:var(--mute)}
+.quadmap .who{margin-top:auto;padding-top:3mm;font-family:var(--mono);font-size:7.5pt;letter-spacing:.1em;text-transform:uppercase;color:var(--drip)}
+.quadmap .mid{position:absolute;left:50%;top:50%;width:3.2mm;height:3.2mm;background:var(--drip);transform:translate(-50%,-50%) rotate(45deg);padding:0}
+
+/* opener */
+.opener{padding:0;background:#1a0d10;color:var(--on-wine)}
+.opener-in{position:relative;height:100%;padding:0 22mm 22mm;display:flex;flex-direction:column}
+.big-n{font-family:var(--display);font-style:italic;font-weight:600;font-size:230pt;line-height:.78;color:var(--blush);margin-left:-14mm;margin-top:-6mm;opacity:.95}
+.opener .tag-row{display:flex;align-items:center;gap:3mm;margin-top:14mm;position:relative}
+.opener h2{font-size:46pt;margin-top:5mm;max-width:150mm}
+.plugged{margin-top:6mm;display:inline-flex;align-items:center;gap:3mm;font-size:10pt;color:var(--on-wine-2)}
+.plugged b{color:var(--on-wine)}
+.pill{font-family:var(--mono);font-size:7pt;letter-spacing:.14em;text-transform:uppercase;color:var(--blush);border:1px solid rgba(235,185,168,.5);border-radius:99px;padding:1mm 3mm}
+
+/* dots */
+.dotwrap{display:grid;grid-template-columns:auto 1fr;gap:12mm;align-items:center;margin-top:14mm}
+.dots{display:grid;grid-template-columns:repeat(10,6.4mm);gap:2.6mm}
+.dots i{width:6.4mm;height:6.4mm;border-radius:50%;border:1px solid var(--on-wine-3)}
+.dots i.on{background:var(--blush);border-color:var(--blush)}
+.dot-cap .fig{font-family:var(--display);font-weight:600;font-size:64pt;line-height:.9;color:var(--blush)}
+.dot-cap p{font-size:12pt;line-height:1.5;color:var(--on-wine);margin-top:4mm;max-width:62mm}
+
+/* stats */
+.row-stats{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:auto;border-top:1px solid rgba(247,241,230,.2);padding-top:7mm}
+.row-stats .fig{font-family:var(--display);font-weight:600;font-size:34pt;line-height:1;color:var(--blush)}
+.row-stats p{font-size:10pt;line-height:1.5;color:var(--on-wine-2);margin-top:2.5mm}
+.quad{display:grid;grid-template-columns:1fr 1fr;margin-top:16mm;position:relative}
+.quad > div{padding:9mm 8mm 9mm 0}
+.quad > div:nth-child(2n){padding-left:9mm;border-left:1px solid rgba(247,241,230,.22)}
+.quad > div:nth-child(n+3){border-top:1px solid rgba(247,241,230,.22)}
+.quad::after{content:"";position:absolute;left:50%;top:50%;width:2.4mm;height:2.4mm;background:var(--blush);transform:translate(-50%,-50%) rotate(45deg)}
+.quad .fig{font-family:var(--display);font-style:italic;font-weight:600;font-size:58pt;line-height:.95;color:var(--blush)}
+.quad p{font-size:11pt;line-height:1.45;color:var(--on-wine);margin-top:3mm;max-width:66mm}
+.stack-stats{display:flex;flex-direction:column;margin-top:14mm}
+.stack-stats > div{display:grid;grid-template-columns:62mm 1fr;gap:8mm;align-items:baseline;padding:8mm 0;border-top:1px solid rgba(247,241,230,.2)}
+.stack-stats .fig{font-family:var(--display);font-style:italic;font-weight:600;font-size:54pt;line-height:.95;color:var(--blush)}
+.stack-stats p{font-size:12pt;line-height:1.5;color:var(--on-wine)}
+
+/* attempts */
+.attempts{display:flex;gap:5mm;align-items:center;margin-top:16mm}
+.attempts i{width:17mm;height:17mm;border-radius:50%;border:1.2px dashed var(--on-wine-3);display:grid;place-items:center;font-style:normal;font-family:var(--mono);font-size:8pt;color:var(--on-wine-3)}
+.attempts i.on{border:none;background:var(--blush);color:var(--wine-deep);font-weight:500}
+.attempt-cap{display:grid;grid-template-columns:auto 1fr;gap:8mm;align-items:center;margin-top:10mm}
+.attempt-cap .fig{font-family:var(--display);font-weight:600;font-size:80pt;line-height:.85;color:var(--blush)}
+.attempt-cap p{font-size:12pt;line-height:1.5;max-width:90mm}
+
+/* steps */
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:0;margin-top:10mm;border-top:1.5px solid var(--ink)}
+.step{padding:5mm 8mm 6mm 0;border-bottom:1px solid var(--line-2)}
+.step:nth-child(2n){padding-left:8mm;border-left:1px solid var(--line-2)}
+.step .sn{font-family:var(--display);font-style:italic;font-size:22pt;color:var(--drip);line-height:1}
+.step h4{margin:2.5mm 0 1.2mm;font-size:11.5pt;font-weight:800}
+.step p{font-size:9.8pt;line-height:1.5;color:var(--ink-2)}
+.callout{margin-top:auto;display:grid;grid-template-columns:3px 1fr;gap:6mm;font-size:10.5pt;line-height:1.55;color:var(--ink-2)}
+.callout::before{content:"";background:var(--drip);border-radius:2px}
+.callout b{color:var(--ink)}
+.night .callout{color:var(--on-wine-2)}.night .callout b{color:var(--on-wine)}.night .callout::before{background:var(--blush)}
+
+/* coverage rings */
+.cover-rings{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:9mm;padding:7mm 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.ringbox{display:grid;grid-template-columns:30mm 1fr;gap:6mm;align-items:center}
+.ringbox svg{width:30mm;height:30mm}
+.ringbox b{display:block;font-family:var(--display);font-size:24pt;font-weight:600;line-height:1}
+.ringbox span{display:block;font-size:9.5pt;color:var(--ink-2);margin-top:2mm;line-height:1.45}
+.ringbox.on b{color:var(--drip)}
+
+/* whatsapp */
+.convo{display:grid;grid-template-columns:96mm 1fr;gap:10mm;margin-top:12mm;align-items:start}
+.phone{background:var(--wa-bg);border-radius:7mm;padding:5mm;display:flex;flex-direction:column;gap:2.4mm;box-shadow:0 0 0 1px var(--line)}
+.ph-head{display:flex;align-items:center;gap:3mm;padding-bottom:3mm;border-bottom:1px solid var(--line-2)}
+.ph-head .av{width:9mm;height:9mm;border-radius:50%;background:var(--wine);color:var(--on-wine);display:grid;place-items:center;font-weight:800;font-size:10pt}
+.ph-head b{display:block;font-size:10pt}
+.ph-head small{font-size:8pt;color:var(--mute)}
+.msg{position:relative;max-width:84%;padding:2.4mm 3.4mm;border-radius:3.4mm;font-size:9.2pt;line-height:1.42;background:#fff}
+.msg.out{align-self:flex-end;background:var(--wa-out);border-top-right-radius:1mm}
+.msg.in{align-self:flex-start;border-top-left-radius:1mm}
+.msg .tag{position:absolute;left:-7mm;top:1.5mm;width:5mm;height:5mm;border-radius:50%;background:var(--drip);color:var(--on-wine);font-family:var(--mono);font-size:7pt;display:grid;place-items:center}
+.sys{align-self:center;font-family:var(--mono);font-size:7pt;letter-spacing:.1em;text-transform:uppercase;color:var(--mute);background:var(--paper-2);padding:1mm 3mm;border-radius:1.5mm}
+.notes{display:flex;flex-direction:column;gap:9mm;padding-top:22mm}
+.note{display:grid;grid-template-columns:7mm 1fr;gap:3mm;align-items:start}
+.note i{width:6mm;height:6mm;border-radius:50%;background:var(--drip);color:var(--on-wine);font-family:var(--mono);font-size:7.5pt;font-style:normal;display:grid;place-items:center;margin-top:1mm}
+.note p{font-family:var(--hand);font-size:17pt;line-height:1.1;color:var(--wine)}
+
+/* cascade */
+.cascade{display:flex;flex-direction:column;gap:2.4mm;margin-top:6mm}
+.cas{display:grid;grid-template-columns:1fr 20mm;gap:4mm;align-items:center}
+.cas div{height:9mm;border-radius:1.6mm;background:var(--wine);color:var(--on-wine);font-size:8.5pt;font-weight:600;display:flex;align-items:center;padding-left:3.5mm;white-space:nowrap}
+.cas span{font-family:var(--display);font-weight:600;font-size:16pt;text-align:right}
+
+/* image-topped fix page */
+.top-img{padding-top:0}
+.top-img .img-band{height:108mm}
+.top-img .after{margin-top:118mm;display:flex;flex-direction:column;flex:1}
+
+/* year strip */
+.year{margin-top:8mm;border-top:1.5px solid var(--ink)}
+.yr{display:grid;grid-template-columns:46mm repeat(12,1fr);align-items:center;border-bottom:1px solid var(--line-2);min-height:12mm}
+.yr.head{min-height:8mm}
+.yr.head span{font-family:var(--mono);font-size:7.5pt;color:var(--mute);text-align:center}
+.yr .svc{display:flex;align-items:center;gap:3mm}
+.yr .svc .sym{width:8mm;height:8mm;background:var(--paper-2);color:var(--wine)}
+.yr .svc b{display:block;font-size:9.5pt;line-height:1.2}
+.yr .svc small{display:block;font-family:var(--mono);font-size:7pt;color:var(--mute);margin-top:.6mm}
+.yr .m{height:12mm;position:relative;border-left:1px dotted var(--line)}
+.yr .m.on::after{content:"";position:absolute;left:50%;top:50%;width:4.4mm;height:4.4mm;border-radius:50%;background:var(--drip);transform:translate(-50%,-50%);box-shadow:0 0 0 1.2mm rgba(155,47,69,.15)}
+.legend{display:flex;align-items:center;gap:2.5mm;margin-top:3mm;font-size:8.5pt;color:var(--mute)}
+.legend i{width:3.4mm;height:3.4mm;border-radius:50%;background:var(--drip)}
+
+/* moments */
+.moments{display:flex;flex-direction:column;margin-top:12mm;position:relative;padding-left:9mm}
+.moments::before{content:"";position:absolute;left:1.6mm;top:3mm;bottom:3mm;width:1.5px;background:var(--line)}
+.mo{position:relative;padding:4.6mm 0;display:grid;grid-template-columns:36mm 1fr;gap:6mm}
+.mo::before{content:"";position:absolute;left:-9mm;top:6.4mm;width:3.4mm;height:3.4mm;border-radius:50%;background:var(--drip);box-shadow:0 0 0 1.4mm var(--paper)}
+.mo .when{font-family:var(--mono);font-size:8.5pt;color:var(--drip);padding-top:1mm}
+.mo h4{margin:0;font-size:12pt;font-weight:800}
+.mo p{font-size:10pt;line-height:1.5;color:var(--ink-2);margin-top:1mm}
+.mo .who{font-family:var(--mono);font-size:7pt;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-top:1.5mm}
+.mini{display:grid;grid-template-columns:1fr 1fr;gap:10mm;margin-top:auto;padding-top:6mm;border-top:1px solid var(--line)}
+.mini .fig{font-family:var(--display);font-weight:600;font-size:28pt;color:var(--wine);line-height:1}
+.mini p{font-size:9.5pt;color:var(--ink-2);margin-top:2mm;line-height:1.45}
+
+/* numbers */
+.calc{display:grid;grid-template-columns:1fr 1fr;margin-top:12mm;border-radius:4mm;overflow:hidden;box-shadow:0 0 0 1px var(--line)}
+.calc-in{background:var(--paper-2);padding:7mm}
+.calc-in div{display:flex;justify-content:space-between;gap:4mm;padding:2.3mm 0;border-bottom:1px solid var(--line-2);font-size:9.5pt}
+.calc-in div b{font-variant-numeric:tabular-nums}
+.calc-out{background:var(--wine-deep);color:var(--on-wine);padding:7mm;display:flex;flex-direction:column;gap:4mm}
+.calc-out .lab{font-family:var(--mono);font-size:7pt;letter-spacing:.14em;text-transform:uppercase;color:var(--blush)}
+.calc-out .tot{font-family:var(--display);font-weight:700;font-size:38pt;line-height:1}
+.bar{display:flex;flex-direction:column;gap:1.4mm}
+.bar .top{display:flex;justify-content:space-between;align-items:center;font-size:9pt}
+.bar .top span{display:inline-flex;align-items:center;gap:2mm}
+.bar .top svg{width:3.6mm;height:3.6mm;color:var(--blush)}
+.bar .track{height:2.2mm;border-radius:2mm;background:rgba(247,241,230,.14)}
+.bar .fill{height:100%;border-radius:2mm;background:var(--blush)}
+.audit{margin-top:auto;background:var(--ink);color:var(--on-wine);border-radius:5mm;padding:9mm;display:flex;flex-direction:column;align-items:flex-start;gap:3mm}
+.audit h3{font-size:22pt}
+.audit p{font-size:10.5pt;color:var(--on-wine-2)}
+.btn{display:inline-flex;align-items:center;gap:3mm;margin-top:3mm;background:var(--blush);color:var(--wine-deep);text-decoration:none;font-weight:800;font-size:12pt;padding:4mm 8mm;border-radius:99px}
+.audit .url{font-family:var(--mono);font-size:8pt;color:var(--on-wine-3)}
+
+/* start */
+.choices{display:flex;flex-direction:column;margin-top:12mm;border-top:1.5px solid var(--ink)}
+.choice{display:grid;grid-template-columns:15mm 1fr 46mm;gap:7mm;padding:7mm 0;border-bottom:1px solid var(--line);align-items:center}
+.choice h4{margin:0;font-size:12.5pt;font-weight:800;line-height:1.35}
+.choice p{font-size:9.6pt;color:var(--ink-2);margin-top:1.6mm;line-height:1.5}
+.choice .go{border:1px solid var(--line);border-radius:3mm;padding:3mm 4mm;background:var(--paper-2)}
+.choice .go span{display:block;font-family:var(--mono);font-size:7pt;letter-spacing:.14em;text-transform:uppercase;color:var(--drip)}
+.choice .go b{display:block;font-family:var(--display);font-size:13pt;font-weight:600;margin-top:1mm;line-height:1.2}
+
+/* employee */
+.versus{display:grid;grid-template-columns:1fr 1fr;gap:12mm;margin-top:12mm}
+.vlab{font-family:var(--mono);font-size:7.5pt;letter-spacing:.16em;text-transform:uppercase;color:var(--on-wine-3)}
+.vlab.on{color:var(--blush)}
+.pile{position:relative;height:74mm;margin-top:5mm}
+.tool{position:absolute;left:0;right:6mm;height:13mm;border:1px dashed rgba(247,241,230,.3);border-radius:2.5mm;display:flex;align-items:center;justify-content:space-between;padding:0 4mm;font-size:10pt;color:var(--on-wine-2);background:#22141a}
+.tool small{font-family:var(--mono);font-size:7pt;color:var(--on-wine-3)}
+.vfoot{font-family:var(--mono);font-size:8pt;color:var(--on-wine-3);margin-top:4mm}
+.vfoot.on{color:var(--blush)}
+.orbit{position:relative;width:74mm;height:74mm;margin-top:5mm}
+.orbit .ring{position:absolute;inset:7mm;border-radius:50%;border:1.4px solid rgba(235,185,168,.55)}
+.orbit .ring2{position:absolute;inset:18mm;border-radius:50%;border:1px dashed rgba(235,185,168,.25)}
+.orbit .core{position:absolute;inset:22mm;border-radius:50%;background:var(--wine);display:grid;place-items:center;text-align:center;box-shadow:0 0 0 2mm rgba(110,38,56,.35)}
+.orbit .core b{font-family:var(--display);font-size:11pt;font-weight:600;line-height:1.15}
+.orbit .node{position:absolute;width:14mm;height:14mm;border-radius:50%;background:var(--night);border:1.4px solid var(--blush);color:var(--blush);display:grid;place-items:center}
+.orbit .node svg{width:6mm;height:6mm}
+.orbit .n1{left:30mm;top:0}.orbit .n2{right:0;top:30mm}.orbit .n3{left:30mm;bottom:0}.orbit .n4{left:0;top:30mm}
+.swap{margin-top:12mm;border-top:1px solid rgba(247,241,230,.2)}
+.swap-row{display:grid;grid-template-columns:9mm 1fr 6mm 1fr;gap:4mm;align-items:center;padding:3.4mm 0;border-bottom:1px solid rgba(247,241,230,.1)}
+.swap-row .sym{width:8mm;height:8mm;background:rgba(235,185,168,.14);color:var(--blush)}
+.swap-row .old{font-size:9.5pt;color:var(--on-wine-3);text-decoration:line-through;text-decoration-color:rgba(235,185,168,.5)}
+.swap-row .arr{color:var(--blush);font-size:11pt;text-align:center}
+.swap-row .new{font-size:9.8pt;font-weight:600;color:var(--on-wine)}
+
+/* closing */
+.close-img{position:absolute;left:0;right:0;top:0;height:132mm;width:100%;object-fit:cover;object-position:center 60%}
+.close-in{position:relative;margin-top:112mm;display:flex;flex-direction:column;flex:1}
+.close-in h2{font-size:42pt;color:var(--on-wine)}
+.letter{display:grid;grid-template-columns:30mm 1fr;gap:8mm;margin-top:10mm;align-items:start}
+.letter img{width:30mm;height:30mm;border-radius:50%;object-fit:cover;object-position:center 18%;background:var(--wine)}
+.letter p{font-size:11pt;line-height:1.6;color:var(--on-wine-2)}
+.letter .sig{font-family:var(--hand);font-size:20pt;color:var(--blush);margin-top:2mm;line-height:1}
+.letter .sig small{display:block;font-family:var(--mono);font-size:7.5pt;letter-spacing:.12em;text-transform:uppercase;color:var(--on-wine-3);margin-top:1.5mm}
+.ctas{display:grid;grid-template-columns:1fr 1fr;gap:5mm;margin-top:auto}
+.cta{display:block;text-decoration:none;border-radius:3.5mm;padding:6mm;border:1px solid rgba(247,241,230,.25)}
+.cta.primary{background:var(--on-wine);color:var(--wine-deep);border-color:var(--on-wine)}
+.cta .k{font-family:var(--mono);font-size:7pt;letter-spacing:.14em;text-transform:uppercase;opacity:.7}
+.cta b{display:block;font-family:var(--display);font-size:17pt;font-weight:600;margin-top:1.5mm}
+.cta span{display:block;font-family:var(--mono);font-size:8.5pt;margin-top:2mm;opacity:.85}
+
+/* sources */
+.src{margin:10mm 0 0;padding-left:6mm;display:flex;flex-direction:column;gap:3.4mm;font-size:8.6pt;line-height:1.5;color:var(--ink-2)}
+.src a{color:var(--drip);text-decoration:none;word-break:break-all}
+
+/* back */
+.back{justify-content:space-between}
+.back img{height:9mm;align-self:flex-start}
+.back .small{color:var(--on-wine-2);font-size:9pt}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i1" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="M16 2l6 6M22 2l-6 6"/></symbol>
+  <symbol id="i2" viewBox="0 0 24 24"><path d="M13 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21H10"/><path d="M13 3v5h5"/><path d="M13 3l5 5v2.5"/><circle cx="16.5" cy="16.5" r="4.5"/><path d="M16.5 14.3v2.4l1.6 1"/></symbol>
+  <symbol id="i3" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+  <symbol id="i4" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+  <symbol id="s-flame" viewBox="0 0 24 24"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.07-2.14-.22-4.05 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.15.43-2.29 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></symbol>
+  <symbol id="s-tooth" viewBox="0 0 24 24"><path d="M7 3C4.8 3 3 4.8 3 7.2c0 2.6 1.2 4 1.8 6.3.6 2.3.9 7.5 2.7 7.5 1.6 0 1.6-4.5 4.5-4.5s2.9 4.5 4.5 4.5c1.8 0 2.1-5.2 2.7-7.5.6-2.3 1.8-3.7 1.8-6.3C21 4.8 19.2 3 17 3c-1.9 0-3 1-5 1S8.9 3 7 3z"/></symbol>
+  <symbol id="s-leaf" viewBox="0 0 24 24"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></symbol>
+  <symbol id="s-roof" viewBox="0 0 24 24"><path d="M2 11 12 3l10 8"/><path d="M5 9v12h14V9"/><path d="M10 21v-6h4v6"/></symbol>
+</svg>
+
+<!-- 1 COVER -->
+<section class="page cover">
+  <img class="bleed" src="img/cover.jpg" alt="">
+  <div class="shade-top"></div><div class="shade-bottom"></div>
+  <div class="cover-in">
+    <div class="cover-top"><img src="img/logo-night.svg" alt="Lead Awaker"><span>2026 edition</span></div>
+    <h1>The<br><em>Report</em></h1>
+    <p class="sub">The four places service businesses leak revenue, and how to plug each one.</p>
+    <div class="cover-bottom"><span>A Lead Awaker field report</span><span>With research from Harvard Business Review, BrightLocal, Invoca and Nielsen</span></div>
+  </div>
+</section>
+
+<!-- 2 CONTENTS -->
+<section class="page folio">
+  <span class="eyebrow">Inside</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Read the headlines.<br>You'll get the whole argument.</h2>
+  <nav class="toc" id="toc"></nav>
+</section>
+
+<!-- 3 INTRO -->
+<section class="page folio" style="padding-top:0" data-toc="You don't have a lead problem" data-toc-sub="Introduction">
+  <img class="img-band" src="img/intro.jpg" alt="" style="height:122mm;object-position:center 40%">
+  <div class="intro-in" style="margin-top:134mm">
+    <span class="eyebrow">Introduction</span>
+    <div class="gap-s"></div>
+    <h1 class="h-xl" style="font-size:40pt">You don't have a lead problem.</h1>
+    <h2 class="h-xl" style="font-size:40pt;font-style:italic;color:var(--drip);margin-top:1mm">You have a leak.</h2>
+    <div class="gap-m"></div>
+    <p class="body">Most growth advice is about getting more leads. But look at the ones you already get. Calls go to voicemail. Quotes go unchased. Happy clients never get asked. Past clients drift to whoever advertised last.</p>
+    <div class="push"></div>
+    <p class="pull">Pouring more water into a leaking bucket is the most expensive way to fill it.</p>
+  </div>
+</section>
+
+<!-- 4 TUESDAY -->
+<section class="page night folio">
+  <span class="eyebrow">An ordinary Tuesday</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Four leaks before dinner.</h2>
+  <div class="day">
+    <div class="day-row"><svg class="clock" data-t="8:47"></svg><div><time>08:47</time><p>A homeowner calls. You're on a job. Voicemail. They call the next name on Google.</p></div><span class="sym ghost"><svg class="ic"><use href="#i1"/></svg></span></div>
+    <div class="day-row"><svg class="clock" data-t="11:30"></svg><div><time>11:30</time><p>A quote goes out. You mean to chase it. Then it's next month.</p></div><span class="sym ghost"><svg class="ic"><use href="#i2"/></svg></span></div>
+    <div class="day-row"><svg class="clock" data-t="15:10"></svg><div><time>15:10</time><p>A client loves the finished job. Nobody asks for a review.</p></div><span class="sym ghost"><svg class="ic"><use href="#i3"/></svg></span></div>
+    <div class="day-row"><svg class="clock" data-t="19:20"></svg><div><time>19:20</time><p>Last year's client needs you again. They can't remember your name, so they click an ad.</p></div><span class="sym ghost"><svg class="ic"><use href="#i4"/></svg></span></div>
+  </div>
+  <p class="small push">An illustrative day. The details are invented. The four moments happen in nearly every service business.</p>
+</section>
+
+<!-- 5 MAP -->
+<section class="page folio" data-toc="The leak map" data-toc-sub="Four leaks, four fixes">
+  <span class="eyebrow">The map</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Four leaks. Most businesses have all four.</h2>
+  <p class="body" style="margin-top:5mm">They don't happen in order, and you don't have to fix them in order. Each one has its own fix.</p>
+  <div class="quadmap">
+    <div><div class="top"><span class="sym md"><svg class="ic"><use href="#i1"/></svg></span><span class="n">01</span></div><span class="stage">Enquiry</span><h3>The missed call</h3><p>Calls and messages answered late, or never.</p><p class="tell">We tell ourselves: they'll call back.</p><span class="who">Plugged by the Receptionist</span></div>
+    <div><div class="top"><span class="sym md"><svg class="ic"><use href="#i2"/></svg></span><span class="n">02</span></div><span class="stage">Quote</span><h3>The quote gone cold</h3><p>Quotes and old enquiries nobody followed up.</p><p class="tell">We tell ourselves: they went quiet, so they're not interested.</p><span class="who">Plugged by the Sales Rep</span></div>
+    <div><div class="top"><span class="sym md"><svg class="ic"><use href="#i3"/></svg></span><span class="n">03</span></div><span class="stage">Job done</span><h3>The review nobody asked for</h3><p>Happy clients who were never asked.</p><p class="tell">We tell ourselves: happy clients leave reviews anyway.</p><span class="who">Plugged by the Reputation Manager</span></div>
+    <div><div class="top"><span class="sym md"><svg class="ic"><use href="#i4"/></svg></span><span class="n">04</span></div><span class="stage">Months later</span><h3>The client you never called back</h3><p>Repeat work and referrals from past clients.</p><p class="tell">We tell ourselves: they know where to find us.</p><span class="who">Plugged by the Loyalty Manager</span></div>
+    <i class="mid"></i>
+  </div>
+  <p class="callout push"><span><b>AI won't fix a bad service.</b> If clients don't like your work, plugging leaks only brings you more unhappy clients, faster. If the work is good, it makes sure the work gets paid for.</span></p>
+</section>
+
+<!-- ============ LEAK 01 ============ -->
+<section class="page opener" data-toc="The missed call" data-toc-sub="Plugged by the Receptionist" data-toc-n="01" data-toc-i="i1">
+  <img class="bleed" src="img/leak1.jpg" alt="">
+  <div class="shade-top"></div>
+  <div class="opener-in">
+    <span class="big-n">01</span>
+    <div class="tag-row"><span class="sym ghost"><svg class="ic"><use href="#i1"/></svg></span><span class="eyebrow">Leak 01 · Enquiry</span></div>
+    <h2>The missed call</h2>
+    <span class="plugged"><span class="pill">Plugged by</span><b>The Receptionist</b></span>
+  </div>
+</section>
+
+<section class="page on-wine folio">
+  <span class="eyebrow"><svg class="ic"><use href="#i1"/></svg>The leak</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Half your callers never reach a person.</h2>
+  <div class="dotwrap">
+    <div class="dots" data-on="48"></div>
+    <div class="dot-cap"><span class="fig">48</span><p>of every 100 calls to home-service businesses never reach a human.<sup>1</sup></p></div>
+  </div>
+  <div class="row-stats">
+    <div><span class="fig">&lt;3 in 100</span><p>callers sent to voicemail leave a message. The rest call the next business.<sup>2</sup></p></div>
+    <div><span class="fig">7×</span><p>more likely to qualify a lead when you reply within the hour instead of an hour later.<sup>3</sup></p></div>
+  </div>
+</section>
+
+<section class="page folio">
+  <span class="eyebrow"><svg class="ic"><use href="#i1"/></svg>The fix</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">The Receptionist picks up. Every time.</h2>
+  <p class="body" style="margin-top:5mm">Ours is called Sara. She answers on our website, day and night. Yours can have any name you like.</p>
+  <div class="cover-rings">
+    <div class="ringbox"><svg viewBox="0 0 100 100" data-ring="40"></svg><div><b>40 hours</b><span>Your office. Weekdays, nine to five.</span></div></div>
+    <div class="ringbox on"><svg viewBox="0 0 100 100" data-ring="168"></svg><div><b>168 hours</b><span>Your Receptionist. Every hour of the week.</span></div></div>
+  </div>
+  <div class="steps">
+    <div class="step"><span class="sn">1</span><h4>She answers</h4><p>Calls you can't take, plus WhatsApp and website messages, go straight to her.</p></div>
+    <div class="step"><span class="sn">2</span><h4>She sounds like you</h4><p>Your name, your prices, your FAQs. In the caller's language, within seconds.</p></div>
+    <div class="step"><span class="sn">3</span><h4>She qualifies</h4><p>What's the job, where, how urgent, what budget.</p></div>
+    <div class="step"><span class="sn">4</span><h4>She books or hands over</h4><p>Into your calendar, or straight to you. You get a summary on WhatsApp.</p></div>
+  </div>
+  <p class="callout push"><span><b>Callers can always reach a person.</b> She asks who's calling and why, then rings you. You hear the summary and press 1 to take the call.</span></p>
+</section>
+
+<!-- ============ LEAK 02 ============ -->
+<section class="page opener" data-toc="The quote gone cold" data-toc-sub="Plugged by the Sales Rep" data-toc-n="02" data-toc-i="i2">
+  <img class="bleed" src="img/leak2.jpg" alt="">
+  <div class="shade-top"></div>
+  <div class="opener-in">
+    <span class="big-n">02</span>
+    <div class="tag-row"><span class="sym ghost"><svg class="ic"><use href="#i2"/></svg></span><span class="eyebrow">Leak 02 · Quote</span></div>
+    <h2>The quote gone cold</h2>
+    <span class="plugged"><span class="pill">Plugged by</span><b>The Sales Rep</b></span>
+  </div>
+</section>
+
+<section class="page on-wine folio">
+  <span class="eyebrow"><svg class="ic"><use href="#i2"/></svg>The leak</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Most enquiries get one try. Then silence.</h2>
+  <div class="attempts"><i class="on">1</i><i>2</i><i>3</i><i>4</i><i>5</i><i>6</i></div>
+  <div class="attempt-cap"><span class="fig">1</span><p>The median number of times companies tried to reach a new lead before giving up.<sup>4</sup></p></div>
+  <div class="gap-m"></div>
+  <p class="lede">These people already know your name and wanted what you sell. They're the cheapest leads you'll ever get. You paid for them once already.</p>
+  <div class="row-stats">
+    <div><span class="fig">23%</span><p>of companies never replied to an enquiry at all.<sup>3</sup></p></div>
+    <div><span class="fig">55%</span><p>of home-service businesses never ask the lead to book.<sup>1</sup></p></div>
+  </div>
+</section>
+
+<section class="page folio">
+  <span class="eyebrow"><svg class="ic"><use href="#i2"/></svg>What it looks like</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Reopening a cold quote, in seven messages.</h2>
+  <div class="convo">
+    <div class="phone">
+      <div class="ph-head"><span class="av">B</span><div><b>Brightsmile Dental</b><small>Example conversation</small></div></div>
+      <span class="sys">Whitening quote sent in March</span>
+      <div class="msg out"><span class="tag">1</span>Hi Mark, Sophie from Brightsmile Dental. In March you asked us about teeth whitening. Is that still on your list?</div>
+      <div class="msg in">Still thinking about it honestly, it was a bit pricey</div>
+      <div class="msg out"><span class="tag">2</span>Fair enough. You're also due for your six-month check-up, so we could do both in one visit.</div>
+      <div class="msg in">Oh right. How much was the whitening again?</div>
+      <div class="msg out"><span class="tag">3</span>It's €395, and you can spread it over three months. Thursday 14:00 or Saturday 10:00?</div>
+      <div class="msg in">Thursday works</div>
+      <div class="msg out"><span class="tag">4</span>Done. Thursday 14:00 with Dr. Visser, check-up and whitening. You'll get a reminder the day before.</div>
+    </div>
+    <div class="notes">
+      <div class="note"><i>1</i><p>Mentions what they actually asked for. No "just checking in".</p></div>
+      <div class="note"><i>2</i><p>Finds a second reason to come in: the overdue check-up.</p></div>
+      <div class="note"><i>3</i><p>Answers the real objection, then offers two real times.</p></div>
+      <div class="note"><i>4</i><p>Booked, with a reminder. You just show up.</p></div>
+    </div>
+  </div>
+  <p class="small push">The practice, names and prices are invented.</p>
+</section>
+
+<section class="page folio">
+  <span class="eyebrow"><svg class="ic"><use href="#i2"/></svg>The fix</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">The Sales Rep reopens the conversation.</h2>
+  <div class="steps">
+    <div class="step"><span class="sn">1</span><h4>You hand over the list</h4><p>Old quotes and enquiries, from a spreadsheet or your CRM. We clean it first.</p></div>
+    <div class="step"><span class="sn">2</span><h4>It opens personally</h4><p>A short WhatsApp message about what each person asked for. No blasts.</p></div>
+    <div class="step"><span class="sn">3</span><h4>It has the conversation</h4><p>Answers questions, handles "not now", follows up with a new angle.</p></div>
+    <div class="step"><span class="sn">4</span><h4>It books</h4><p>Interested people land in your calendar. You read one summary per lead.</p></div>
+  </div>
+  <div class="gap-s"></div>
+  <h3 class="h-m">What 1,000 old enquiries can become</h3>
+  <div class="cascade">
+    <div class="cas"><div style="width:100%">Messaged</div><span>1,000</span></div>
+    <div class="cas"><div style="width:70%;background:#80394A">Reply · 12%</div><span>120</span></div>
+    <div class="cas"><div style="width:48%;background:#934D5D">Real conversation · 40%</div><span>48</span></div>
+    <div class="cas"><div style="width:32%;background:#A66270">Book · 35%</div><span>17</span></div>
+    <div class="cas"><div style="width:20%;background:#3F6B4A">Paid jobs · 30%</div><span>5</span></div>
+  </div>
+  <p class="small" style="margin-top:3mm">An illustration, not a benchmark. Your list, offer and market change every number. At an average job of 4,000, five jobs is 20,000 from a list that was earning nothing.</p>
+  <p class="callout push"><span><b>Respectful by design.</b> Every message has an easy way out, and a "stop" is final.</span></p>
+</section>
+
+<!-- ============ LEAK 03 ============ -->
+<section class="page opener" data-toc="The review nobody asked for" data-toc-sub="Plugged by the Reputation Manager" data-toc-n="03" data-toc-i="i3">
+  <img class="bleed" src="img/lake.jpg" alt="">
+  <div class="shade-top" style="background:linear-gradient(180deg,rgba(18,7,10,.92) 0%,rgba(18,7,10,.7) 30%,rgba(18,7,10,0) 48%)"></div>
+  <div class="opener-in">
+    <span class="big-n">03</span>
+    <div class="tag-row"><span class="sym ghost"><svg class="ic"><use href="#i3"/></svg></span><span class="eyebrow">Leak 03 · Job done</span></div>
+    <h2>The review nobody asked for</h2>
+    <span class="plugged"><span class="pill">Plugged by</span><b>The Reputation Manager</b></span>
+  </div>
+</section>
+
+<section class="page on-wine folio">
+  <span class="eyebrow"><svg class="ic"><use href="#i3"/></svg>The leak</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Happy clients stay quiet. Unless you ask.</h2>
+  <div class="quad">
+    <div><span class="fig">97%</span><p>of consumers use reviews to decide what to buy.<sup>5</sup></p></div>
+    <div><span class="fig">83%</span><p>of people who were asked for a review left one.<sup>5</sup></p></div>
+    <div><span class="fig">47%</span><p>won't use a business with fewer than 20 reviews.<sup>5</sup></p></div>
+    <div><span class="fig">74%</span><p>want to see reviews from the last three months.<sup>5</sup></p></div>
+  </div>
+  <p class="lede push">Unhappy clients write reviews unprompted. Happy ones need a nudge. A business that never asks ends up with fewer, older, grumpier reviews than its work deserves.</p>
+</section>
+
+<section class="page folio top-img">
+  <img class="img-band" src="img/leak3.jpg" alt="" style="object-position:center 52%">
+  <div class="after">
+    <span class="eyebrow"><svg class="ic"><use href="#i3"/></svg>The fix</span>
+    <div class="gap-s"></div>
+    <h2 class="h-l">The Reputation Manager asks everyone, at the right moment.</h2>
+    <div class="steps">
+      <div class="step"><span class="sn">1</span><h4>The job is done</h4><p>One tap from you, or automatically from your calendar.</p></div>
+      <div class="step"><span class="sn">2</span><h4>It asks how it went</h4><p>A short WhatsApp message while the work is fresh. Not a survey a week later.</p></div>
+      <div class="step"><span class="sn">3</span><h4>It routes the answer</h4><p>Happy? Your Google link, one tap away. Unhappy? You hear first, so you can fix it.</p></div>
+      <div class="step"><span class="sn">4</span><h4>It replies</h4><p>Every new review gets a thoughtful reply in your voice.</p></div>
+    </div>
+    <p class="callout push"><span><b>Unhappy clients still get the link.</b> Asking only happy clients is called review gating, and Google's review policy forbids it.<sup>11</sup> So we ask everyone, and you get the chance to put things right first.</span></p>
+  </div>
+</section>
+
+<!-- ============ LEAK 04 ============ -->
+<section class="page opener" data-toc="The client you never called back" data-toc-sub="Plugged by the Loyalty Manager" data-toc-n="04" data-toc-i="i4">
+  <img class="bleed" src="img/leak4.jpg" alt="">
+  <div class="shade-top"></div>
+  <div class="opener-in">
+    <span class="big-n">04</span>
+    <div class="tag-row"><span class="sym ghost"><svg class="ic"><use href="#i4"/></svg></span><span class="eyebrow">Leak 04 · Months later</span></div>
+    <h2>The client you never called back</h2>
+    <span class="plugged"><span class="pill">Plugged by</span><b>The Loyalty Manager</b></span>
+  </div>
+</section>
+
+<section class="page on-wine folio">
+  <span class="eyebrow"><svg class="ic"><use href="#i4"/></svg>The leak</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Your cheapest next job is someone who already paid you.</h2>
+  <div class="stack-stats">
+    <div><span class="fig">5–25×</span><p>more expensive to win a new customer than to keep one, depending on the study.<sup>6</sup></p></div>
+    <div><span class="fig">88%</span><p>trust recommendations from people they know more than any other kind of advertising.<sup>7</sup></p></div>
+    <div><span class="fig">16%</span><p>more valuable: referred customers, compared with everyone else, in a study of 10,000 bank clients.<sup>8</sup></p></div>
+  </div>
+  <p class="lede push">Most businesses go silent the moment the invoice is paid, then spend money on ads to find strangers.</p>
+</section>
+
+<section class="page folio">
+  <span class="eyebrow"><svg class="ic"><use href="#i4"/></svg>The fix</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">The Loyalty Manager remembers, so you don't have to.</h2>
+  <div class="steps">
+    <div class="step"><span class="sn">1</span><h4>It remembers</h4><p>What you did for each client, and when the next job is due.</p></div>
+    <div class="step"><span class="sn">2</span><h4>It checks in</h4><p>A personal message about their job, at that moment. Not a newsletter.</p></div>
+    <div class="step"><span class="sn">3</span><h4>It rebooks</h4><p>A yes becomes an appointment. Nobody picks up the phone.</p></div>
+    <div class="step"><span class="sn">4</span><h4>It asks for the referral</h4><p>Happy clients get an easy way to pass your name to a friend.</p></div>
+  </div>
+  <div class="gap-m"></div>
+  <h3 class="h-m">Most services come back around</h3>
+  <div class="year" id="year"></div>
+  <div class="legend"><i></i>The Loyalty Manager checks in, right when the next job is due.</div>
+  <p class="callout push"><span><b>Each dot is a job you can remind people about,</b> or let a competitor's ad remind them about.</span></p>
+</section>
+
+<!-- MOMENTS -->
+<section class="page folio" data-toc="Five moments that should never go silent" data-toc-sub="Why a conversation beats a sequence">
+  <span class="eyebrow">The system</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Five moments that should never go silent.</h2>
+  <p class="body" style="margin-top:6mm">You don't need a complicated funnel. You need a reply at five moments, every time, in the app people actually read.</p>
+  <div class="moments">
+    <div class="mo"><span class="when">Within a minute</span><div><h4>A missed call or new message</h4><p>Answer before they try the next business.</p><div class="who">The Receptionist</div></div></div>
+    <div class="mo"><span class="when">Day 2 and day 7</span><div><h4>A quote goes out</h4><p>Check it arrived and makes sense, then nudge while it's fresh.</p><div class="who">The Sales Rep</div></div></div>
+    <div class="mo"><span class="when">Same day</span><div><h4>A no-show</h4><p>No guilt trip. Two new times, sent while they still feel bad.</p><div class="who">The Receptionist</div></div></div>
+    <div class="mo"><span class="when">The day it's done</span><div><h4>The job is finished</h4><p>Ask how it went. Happy clients get the review link.</p><div class="who">The Reputation Manager</div></div></div>
+    <div class="mo"><span class="when">When it's due</span><div><h4>Months later</h4><p>The reminder that turns into the next job, or a referral.</p><div class="who">The Loyalty Manager</div></div></div>
+  </div>
+  <div class="mini">
+    <div><span class="fig">2.6%</span><p>average click rate on a marketing email.<sup>9</sup></p></div>
+    <div><span class="fig">600M</span><p>conversations a day between people and businesses on Meta's apps, WhatsApp included.<sup>10</sup></p></div>
+  </div>
+</section>
+
+<!-- NUMBERS -->
+<section class="page folio" data-toc="What is it costing you?" data-toc-sub="A worked example, and your own numbers">
+  <span class="eyebrow">Your numbers</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">What is it costing you?</h2>
+  <p class="body" style="margin-top:6mm">Here is an example business, run through our Leak Audit. Your numbers will be different. That's the point.</p>
+  <div class="calc">
+    <div class="calc-in">
+      <span class="eyebrow" style="color:var(--mute)">Example business</span>
+      <div><span>Average job value</span><b>€2,500</b></div>
+      <div><span>Close rate</span><b>30%</b></div>
+      <div><span>New enquiries a month</span><b>80</b></div>
+      <div><span>Missed or answered late</span><b>25%</b></div>
+      <div><span>Old quotes and enquiries</span><b>1,200</b></div>
+      <div><span>Jobs completed a month</span><b>20</b></div>
+      <div><span>Past clients</span><b>900</b></div>
+    </div>
+    <div class="calc-out">
+      <span class="lab">Recoverable in 12 months</span>
+      <span class="tot">€220,500</span>
+      <div class="bar"><div class="top"><span><svg class="ic"><use href="#i1"/></svg>Missed calls</span><b>€108,000</b></div><div class="track"><div class="fill" style="width:100%"></div></div></div>
+      <div class="bar"><div class="top"><span><svg class="ic"><use href="#i4"/></svg>Past clients</span><b>€67,500</b></div><div class="track"><div class="fill" style="width:62.5%"></div></div></div>
+      <div class="bar"><div class="top"><span><svg class="ic"><use href="#i2"/></svg>Cold quotes</span><b>€45,000</b></div><div class="track"><div class="fill" style="width:41.7%"></div></div></div>
+      <div class="bar"><div class="top"><span><svg class="ic"><use href="#i3"/></svg>Reviews never written</span><b>108 a year</b></div></div>
+    </div>
+  </div>
+  <p class="small" style="margin-top:3mm">Assumes 60% of missed enquiries go elsewhere, 5% of old enquiries re-engage, 3% more past clients rebook or refer each year, and half of clients leave a review when asked (you ask 10% today). Deliberately cautious.</p>
+  <div class="audit">
+    <h3>Now run your own numbers.</h3>
+    <p>Two minutes, eight questions. See which leak is costing you most.</p>
+    <a class="btn" href="https://www.leadawaker.com/audit">Open the Leak Audit →</a>
+    <span class="url">leadawaker.com/audit</span>
+  </div>
+</section>
+
+<!-- START -->
+<section class="page folio" data-toc="Plug one leak first" data-toc-sub="Where to start">
+  <span class="eyebrow">Where to start</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Plug one leak first.</h2>
+  <p class="body" style="margin-top:5mm">One leak plugged properly beats four plugged halfway. Find the sentence that sounds like your business.</p>
+  <div class="choices">
+    <div class="choice"><span class="sym lg"><svg class="ic"><use href="#i1"/></svg></span><div><h4>"The phone rings while we're working, and after hours."</h4><p>Every missed call is a lead you already paid for, walking to a competitor.</p></div><div class="go"><span>Start with</span><b>The Receptionist</b></div></div>
+    <div class="choice"><span class="sym lg"><svg class="ic"><use href="#i2"/></svg></span><div><h4>"We have hundreds of old quotes in a spreadsheet."</h4><p>The fastest money in this report. The leads already exist.</p></div><div class="go"><span>Start with</span><b>The Sales Rep</b></div></div>
+    <div class="choice"><span class="sym lg"><svg class="ic"><use href="#i3"/></svg></span><div><h4>"Clients love us, but our reviews don't show it."</h4><p>Ask every client, at the moment they're happiest.</p></div><div class="go"><span>Start with</span><b>The Reputation Manager</b></div></div>
+    <div class="choice"><span class="sym lg"><svg class="ic"><use href="#i4"/></svg></span><div><h4>"Clients only come back when they happen to remember us."</h4><p>Remind them when the next job is actually due.</p></div><div class="go"><span>Start with</span><b>The Loyalty Manager</b></div></div>
+  </div>
+</section>
+
+<!-- EMPLOYEE -->
+<section class="page night folio" data-toc="Five tools, or one employee" data-toc-sub="How it fits together">
+  <span class="eyebrow">How it fits together</span>
+  <div class="gap-s"></div>
+  <h2 class="h-l">Five tools, or one employee.</h2>
+  <p class="body" style="margin-top:5mm">Most businesses try to plug these leaks with a stack of apps. Nothing talks to anything, and nobody remembers the customer.</p>
+  <div class="versus">
+    <div>
+      <span class="vlab">The stack</span>
+      <div class="pile">
+        <div class="tool" style="top:0;transform:rotate(-2deg)">Answering service<small>office hours</small></div>
+        <div class="tool" style="top:15mm;transform:rotate(1.5deg);left:3mm">CRM<small>nobody updates it</small></div>
+        <div class="tool" style="top:30mm;transform:rotate(-1deg)">Texting tool<small>one-way blasts</small></div>
+        <div class="tool" style="top:45mm;transform:rotate(2deg);left:2mm">Review platform<small>email requests</small></div>
+        <div class="tool" style="top:60mm;transform:rotate(-1.5deg)">Booking app<small>another login</small></div>
+      </div>
+      <p class="vfoot">5 logins · 5 bills · 0 shared memory</p>
+    </div>
+    <div>
+      <span class="vlab on">The employee</span>
+      <div class="orbit">
+        <div class="ring"></div><div class="ring2"></div>
+        <div class="core"><b>One AI<br>employee</b></div>
+        <span class="node n1"><svg class="ic"><use href="#i1"/></svg></span>
+        <span class="node n2"><svg class="ic"><use href="#i2"/></svg></span>
+        <span class="node n3"><svg class="ic"><use href="#i3"/></svg></span>
+        <span class="node n4"><svg class="ic"><use href="#i4"/></svg></span>
+      </div>
+      <p class="vfoot on">4 jobs · 1 inbox · 1 memory · day and night</p>
+    </div>
+  </div>
+  <div class="swap">
+    <div class="swap-row"><span class="sym"><svg class="ic"><use href="#i1"/></svg></span><span class="old">A receptionist for office hours</span><span class="arr">→</span><span class="new">Every call and message answered, day and night</span></div>
+    <div class="swap-row"><span class="sym"><svg class="ic"><use href="#i2"/></svg></span><span class="old">Chasing quotes when someone remembers</span><span class="arr">→</span><span class="new">Every open quote followed up, personally</span></div>
+    <div class="swap-row"><span class="sym"><svg class="ic"><use href="#i3"/></svg></span><span class="old">A review email nobody opens</span><span class="arr">→</span><span class="new">A WhatsApp message when they're happiest</span></div>
+    <div class="swap-row"><span class="sym"><svg class="ic"><use href="#i4"/></svg></span><span class="old">A Christmas card</span><span class="arr">→</span><span class="new">A check-in when the next job is due</span></div>
+  </div>
+  <p class="callout push"><span><b>Done with you, not by you.</b> We set it up, write the messages in your voice, and you see every conversation in one inbox.</span></p>
+</section>
+
+<!-- CLOSING -->
+<section class="page night" data-toc="One leak. This month." data-toc-sub="Your next step">
+  <img class="close-img" src="img/close.jpg" alt="">
+  <div class="shade-bottom" style="background:linear-gradient(0deg,var(--night) 58%,rgba(26,14,17,0) 64%)"></div>
+  <div class="close-in">
+    <span class="eyebrow">Your next step</span>
+    <div class="gap-s"></div>
+    <h2>One leak. This month.</h2>
+    <div class="letter">
+      <img src="img/gabriel.png" alt="Gabriel">
+      <div>
+        <p>If you've read this far, you already know which leak is yours. The fastest way to find out if an AI employee can plug it is to talk to one. Sara answers on our website, day and night. Try to trip her up.</p>
+        <p class="sig">Gabriel<small>Founder, Lead Awaker</small></p>
+      </div>
+    </div>
+    <div class="ctas">
+      <a class="cta primary" href="https://www.leadawaker.com"><span class="k">Try it now</span><b>Talk to Sara</b><span>leadawaker.com</span></a>
+      <a class="cta" href="https://cal.com/leadawaker/reactivatie-scan"><span class="k">20 minutes · free</span><b>Book a Leak Scan</b><span>Your numbers, your first leak</span></a>
+    </div>
+  </div>
+</section>
+
+<!-- SOURCES -->
+<section class="page folio">
+  <span class="eyebrow">Sources</span>
+  <div class="gap-s"></div>
+  <h2 class="h-m">Every number in this report, and where it comes from.</h2>
+  <ol class="src">
+    <li>Invoca, <i>Home Services Lead Conversion Benchmarks Report</i>, 2026. Averages from calls on Invoca's platform. <a href="https://invoca.com/reports/the-invoca-home-services-lead-conversion-benchmarks-report-2026">invoca.com</a></li>
+    <li>Invoca, <i>How much missed sales calls cost home services businesses</i>, 2024. Vendor platform data. <a href="https://invoca.com/blog/how-much-missed-sales-calls-cost-home-services-businesses">invoca.com</a></li>
+    <li>Oldroyd, McElheran &amp; Elkington, <i>The Short Life of Online Sales Leads</i>, Harvard Business Review, 2011. The 23% figure comes from a test of 2,241 US companies; the 7× figure from a separate dataset of 1.25 million leads. <a href="https://hbr.org/2011/03/the-short-life-of-online-sales-leads">hbr.org</a></li>
+    <li>InsideSales.com, <i>2014 Lead Response Report</i>, an audit of 14,061 companies. <a href="https://resources.insidesales.com/wp-content/uploads/2019/11/2014-Lead-Response-Report.pdf">insidesales.com</a></li>
+    <li>BrightLocal, <i>Local Consumer Review Survey</i>, February 2026, 1,002 US adults. <a href="https://www.brightlocal.com/research/local-consumer-review-survey/">brightlocal.com</a></li>
+    <li>Amy Gallo, <i>The Value of Keeping the Right Customers</i>, Harvard Business Review, 2014. <a href="https://hbr.org/2014/10/the-value-of-keeping-the-right-customers">hbr.org</a></li>
+    <li>Nielsen, <i>Trust in Advertising</i>, 2021, around 40,000 respondents. <a href="https://develop.nielsen.com/wp-content/uploads/sites/2/2022/02/2021-Nielsen-Trust-In-Advertising-U.S.-sell-sheet.pdf">nielsen.com</a></li>
+    <li>Schmitt, Skiera &amp; Van den Bulte, <i>Referral Programs and Customer Value</i>, Journal of Marketing, 2011. <a href="https://faculty.wharton.upenn.edu/wp-content/uploads/2012/04/Schmitt-Skiera-vandenBulte-2011-Referral-Programs-Customer-Value.pdf">wharton.upenn.edu</a></li>
+    <li>Mailchimp, <i>Email Marketing Benchmarks</i>, all users. <a href="https://mailchimp.com/resources/email-marketing-benchmarks/">mailchimp.com</a></li>
+    <li>Meta, Q3 2023 earnings call, as reported by TechCrunch, October 2023. <a href="https://techcrunch.com/2023/10/26/meta-says-users-and-businesses-have-600-million-chats-on-its-platforms-every-day/">techcrunch.com</a></li>
+    <li>Google, <i>Maps user contributed content policy: Prohibited &amp; restricted content</i>. <a href="https://support.google.com/contributionpolicy/answer/7400114">support.google.com</a></li>
+  </ol>
+  <p class="small push">Example businesses, conversations, the reactivation illustration and the calculator example are illustrations and are labeled as such. Every other figure comes from the sources above.</p>
+</section>
+
+<!-- BACK -->
+<section class="page on-wine back">
+  <img src="img/logo-night.svg" alt="Lead Awaker">
+  <div>
+    <h2 class="h-l" style="max-width:140mm">Stop losing the leads you already paid for.</h2>
+    <p class="lede" style="margin-top:6mm">leadawaker.com</p>
+  </div>
+  <p class="small">© 2026 Lead Awaker. Share freely with credit.<br>With thanks to Jason Drohn (DoneForYou.com), whose AI Funnel Factor inspired this report.</p>
+</section>
+
+<script>
+var NS='http://www.w3.org/2000/svg';
+function el(n,a){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);return e}
+// dot grids
+document.querySelectorAll('.dots').forEach(function(g){var on=+g.dataset.on;for(var i=0;i<100;i++){var d=document.createElement('i');if(i<on)d.className='on';g.appendChild(d)}});
+// analog clocks
+document.querySelectorAll('svg.clock').forEach(function(s){
+  var t=s.dataset.t.split(':'),h=+t[0]%12,m=+t[1];s.setAttribute('viewBox','0 0 100 100');
+  s.appendChild(el('circle',{cx:50,cy:50,r:46,fill:'none',stroke:'rgba(247,241,230,.35)','stroke-width':2}));
+  for(var i=0;i<12;i++){var a=i*Math.PI/6,r1=i%3?38:34;s.appendChild(el('line',{x1:50+Math.sin(a)*r1,y1:50-Math.cos(a)*r1,x2:50+Math.sin(a)*42,y2:50-Math.cos(a)*42,stroke:'rgba(247,241,230,.5)','stroke-width':i%3?1.5:3,'stroke-linecap':'round'}))}
+  var ha=(h+m/60)*Math.PI/6,ma=m*Math.PI/30;
+  s.appendChild(el('line',{x1:50,y1:50,x2:50+Math.sin(ha)*22,y2:50-Math.cos(ha)*22,stroke:'#EBB9A8','stroke-width':5,'stroke-linecap':'round'}));
+  s.appendChild(el('line',{x1:50,y1:50,x2:50+Math.sin(ma)*34,y2:50-Math.cos(ma)*34,stroke:'#F7F1E6','stroke-width':3,'stroke-linecap':'round'}));
+  s.appendChild(el('circle',{cx:50,cy:50,r:4,fill:'#EBB9A8'}));
+});
+// coverage rings (hours of 168)
+document.querySelectorAll('svg[data-ring]').forEach(function(s){
+  var v=+s.dataset.ring,C=2*Math.PI*42,on=s.closest('.ringbox').classList.contains('on');
+  s.appendChild(el('circle',{cx:50,cy:50,r:42,fill:'none',stroke:'rgba(31,26,20,.1)','stroke-width':10}));
+  s.appendChild(el('circle',{cx:50,cy:50,r:42,fill:'none',stroke:on?'#9B2F45':'#7D7262','stroke-width':10,'stroke-dasharray':(C*v/168)+' '+C,transform:'rotate(-90 50 50)','stroke-linecap':v<168?'round':'butt'}));
+  var t=el('text',{x:50,y:55,'text-anchor':'middle','font-family':'DM Mono, monospace','font-size':13,fill:on?'#9B2F45':'#7D7262'});t.textContent=Math.round(v/168*100)+'%';s.appendChild(t);
+});
+// year strip
+(function(){
+  var y=document.getElementById('year');if(!y)return;
+  var M=['J','F','M','A','M','J','J','A','S','O','N','D'];
+  var rows=[['s-flame','Boiler service','every 12 months',[8]],['s-tooth','Dental check-up','every 6 months',[2,8]],['s-leaf','Garden','every spring',[3]],['s-roof','Roof check','after winter',[2]]];
+  var h='<div class="yr head"><span></span>'+M.map(function(m){return '<span>'+m+'</span>'}).join('')+'</div>';
+  rows.forEach(function(r){h+='<div class="yr"><div class="svc"><span class="sym"><svg class="ic"><use href="#'+r[0]+'"/></svg></span><div><b>'+r[1]+'</b><small>'+r[2]+'</small></div></div>'+M.map(function(_,i){return '<span class="m'+(r[3].indexOf(i)>-1?' on':'')+'"></span>'}).join('')+'</div>'});
+  y.innerHTML=h;
+})();
+// folios + contents
+var pages=[].slice.call(document.querySelectorAll('.page'));
+pages.forEach(function(p,i){if(!p.classList.contains('folio'))return;var f=document.createElement('div');f.className='foot';f.innerHTML='<span>The Report · Lead Awaker</span><span>'+String(i+1).padStart(2,'0')+'</span>';p.appendChild(f)});
+var toc=document.getElementById('toc');
+pages.forEach(function(p,i){if(!p.dataset.toc)return;p.id='p'+(i+1);var a=document.createElement('a');a.href='#p'+(i+1);
+  var n=p.dataset.tocI?'<span class="sym md"><svg class="ic"><use href="#'+p.dataset.tocI+'"/></svg></span>'+p.dataset.tocN:'';
+  a.innerHTML='<span class="n">'+n+'</span><span class="t">'+p.dataset.toc+'<small>'+p.dataset.tocSub+'</small></span><span class="p">'+String(i+1).padStart(2,'0')+'</span>';toc.appendChild(a)});
+</script>
+</body>
+</html>

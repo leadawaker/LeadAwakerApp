@@ -110,6 +110,14 @@ app.use((req, res, next) => {
   // script/build-site-pt.py and build-site-nl.py. Mirror vercel.json.
   app.get("/pt", sendFile(path.join(publicDir, "site"), "pt.html"));
   app.get("/nl", sendFile(path.join(publicDir, "site"), "nl.html"));
+  // The Report funnel (opt-in page, thank-you page, Leak Audit) in each
+  // language. Mirrors vercel.json.
+  const sitePages: Record<string, string> = {
+    "/report": "report.html", "/report/thanks": "report-thanks.html", "/audit": "audit.html",
+    "/nl/rapport": "report-nl.html", "/nl/rapport/bedankt": "report-thanks-nl.html", "/nl/lekcheck": "audit-nl.html",
+    "/pt/relatorio": "report-pt.html", "/pt/relatorio/obrigado": "report-thanks-pt.html", "/pt/raio-x": "audit-pt.html",
+  };
+  for (const [route, file] of Object.entries(sitePages)) app.get(route, sendFile(path.join(publicDir, "site"), file));
   // Landing-page variants of the previous homepage: /reactivate is database
   // reactivation (the old root, moved 2026-10-02), /home is the home-improvement
   // page, /solar is the dormant solar page, /uk /us force a market on the
@@ -158,7 +166,7 @@ app.use((req, res, next) => {
 
   await registerRoutes(httpServer, app);
   startSseListener(); // Real-time push via PostgreSQL LISTEN/NOTIFY
-  verifySmtp(); // Log SMTP status at startup (non-blocking)
+  verifySmtp().catch(() => {}); // Log email status at startup (non-blocking; failures already logged)
 
   // Log notification channel status at startup
   console.log("[notifications] VAPID configured:", !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY));

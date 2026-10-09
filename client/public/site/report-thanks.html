@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Your Report is ready | Lead Awaker</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&family=Caveat:wght@600&display=swap">
+<style>
+/* Layout: thank-you page. A confirmation bar, then the founder's video (or, until it exists,
+   a photo and a short note) as the hero, then download and book side by side, then two next steps. */
+:root{
+  color-scheme:light;
+  --bg:#F3EFE8; --paper:#F9F6F0; --surface:#F1ECE4; --white:#FDFCF9;
+  --ink:#1F1A14; --ink-soft:#3A322A; --mute:#6C6354; --mute-2:#948A77;
+  --line:rgba(110,95,65,.16); --line-2:rgba(110,95,65,.09);
+  --wine:#5E2230; --wine-2:#6E2638; --wine-deep:#3E1520; --cream:#F4EFE3; --blush:#EBB9A8; --green:#3F6B4A;
+  --sh-raised:-12px 5px 30px rgba(105,75,40,.30), 12px -5px 30px rgba(255,253,245,.95);
+  --sh-crisp:-5px 2px 13px rgba(105,75,40,.30), 5px -2px 13px rgba(255,253,245,.95);
+  --sh-float:0 24px 48px -24px rgba(60,40,15,.26),0 2px 6px rgba(60,40,15,.07);
+  --serif:"Playfair Display",Georgia,"Times New Roman",serif;
+  --sans:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --hand:"Caveat","Bradley Hand",cursive;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(900px 520px at 88% -4%,rgba(255,230,180,.36),transparent 70%)}
+main,header,footer,.bar{position:relative;z-index:1}
+h1,h2,h3,p{margin:0}
+h1,h2,h3{font-family:var(--serif);font-weight:500;line-height:1.08;text-wrap:balance}
+h1 em{font-style:italic;color:var(--wine-2)}
+a{color:inherit}
+.wrap{max-width:980px;margin:0 auto;padding-inline:24px}
+@media (max-width:560px){.wrap{padding-inline:16px}}
+.ic{fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+:focus-visible{outline:2px solid var(--wine-2);outline-offset:3px}
+
+.bar{background:var(--wine-deep);color:var(--cream);font-size:14.5px;font-weight:600;text-align:center;padding:12px 16px;display:flex;justify-content:center;align-items:center;gap:10px}
+.bar svg{width:18px;height:18px;color:var(--blush);flex:none}
+.top{display:flex;justify-content:center;padding-top:22px}
+.top img{height:28px}
+
+.hero{padding-block:clamp(28px,5vw,56px) 0;text-align:center;display:grid;gap:14px;justify-items:center}
+.hero h1{font-size:clamp(36px,5vw,60px)}
+.hero p{font-size:18px;color:var(--ink-soft);max-width:34em}
+
+/* video slot */
+.stage{margin-top:clamp(28px,4vw,44px);border-radius:18px;overflow:hidden;background:radial-gradient(120% 120% at 80% 0%,var(--wine-2),var(--wine-deep) 70%);box-shadow:0 40px 80px -30px rgba(40,18,10,.55)}
+.stage video,.stage iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#000}
+.note{display:grid;grid-template-columns:minmax(0,.42fr) minmax(0,.58fr);align-items:end;color:var(--cream);min-height:360px}
+.note img{width:100%;height:100%;max-height:440px;object-fit:cover;object-position:center top;align-self:end}
+.note-txt{padding:clamp(24px,4vw,44px);display:grid;gap:14px;align-self:center}
+.note-txt .k{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--blush)}
+.note-txt p{font-size:16.5px;line-height:1.65;color:rgba(244,239,227,.88)}
+.note-txt b{color:var(--cream)}
+.sig{font-family:var(--hand);font-size:30px;color:var(--blush);line-height:1}
+@media (max-width:720px){.note{grid-template-columns:1fr}.note img{max-height:300px;order:2;object-position:center 12%}}
+
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:22px}
+.btn{display:flex;align-items:center;justify-content:center;gap:12px;min-height:64px;padding:18px 24px;border-radius:12px;font:800 14px/1.2 var(--sans);letter-spacing:.05em;text-transform:uppercase;text-decoration:none;transition:transform .18s,box-shadow .18s;text-align:center}
+.btn svg{width:20px;height:20px;flex:none}
+.btn-wine{background:linear-gradient(145deg,var(--wine-2),#4B1A26);color:var(--cream);box-shadow:var(--sh-raised)}
+.btn-neu{background:var(--surface);color:var(--ink);box-shadow:var(--sh-crisp)}
+.btn:hover{transform:translateY(-1px)}
+@media (max-width:640px){.actions{grid-template-columns:1fr}}
+.spam{text-align:center;font-size:13.5px;color:var(--mute);margin-top:14px}
+
+.next{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-block:clamp(48px,7vw,80px) clamp(56px,8vw,96px)}
+.card{display:grid;grid-template-columns:52px minmax(0,1fr) 20px;gap:16px;align-items:center;background:var(--paper);border:1px solid var(--line-2);border-radius:14px;padding:20px 22px;box-shadow:var(--sh-float);text-decoration:none}
+.card .sym{width:52px;height:52px;border-radius:50%;background:var(--wine-2);color:var(--blush);display:grid;place-items:center}
+.card .sym svg{width:24px;height:24px}
+.card b{display:block;font-size:16.5px}
+.card span{font-size:14.5px;color:var(--mute)}
+.card .arr{color:var(--wine-2);font-size:20px}
+.card:hover{transform:translateY(-1px)}
+@media (max-width:640px){.next{grid-template-columns:1fr}}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px 24px;border-top:1px solid var(--line);padding-block:24px 36px;font-size:13.5px;color:var(--mute)}
+footer a{color:var(--mute)}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m8 12 3 3 5-6"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></symbol>
+  <symbol id="i1" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="M16 2l6 6M22 2l-6 6"/></symbol>
+</svg>
+
+<div class="bar"><svg class="ic"><use href="#i-check"/></svg><span>Done. The Report is on its way to your inbox.</span></div>
+<header class="top"><a href="/"><img src="/premium/logo-v2-light.svg" alt="Lead Awaker"></a></header>
+
+<main class="wrap">
+  <section class="hero">
+    <h1 id="hello">Your Report is <em>ready.</em></h1>
+    <p>Download it now, or find it in your inbox in a minute or two. First, a quick word from me.</p>
+  </section>
+
+  <div class="stage" id="stage">
+    <div class="note">
+      <img src="/site/img/report-gabriel.webp" alt="Gabriel Fronza">
+      <div class="note-txt">
+        <span class="k">Before you start reading</span>
+        <p>If you only read one chapter, make it <b>Leak 01 on page 6</b>. The missed call is the leak almost every business has, and the easiest one to plug.</p>
+        <p>Then run your own numbers in the Leak Audit. And if you'd like a second pair of eyes, book a free Leak Scan. Twenty minutes, your numbers, and I'll tell you which leak to plug first, even if the answer isn't us.</p>
+        <span class="sig">Gabriel</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <a class="btn btn-wine" href="/site/the-report.pdf" download="The-Report-Lead-Awaker.pdf"><svg class="ic"><use href="#i-down"/></svg>Download the Report</a>
+    <a class="btn btn-neu" href="https://cal.com/leadawaker/reactivatie-scan" target="_blank" rel="noopener"><svg class="ic"><use href="#i-cal"/></svg>Book a free Leak Scan</a>
+  </div>
+  <p class="spam">No email after a few minutes? Check your spam folder, or just use the download button.</p>
+
+  <section class="next">
+    <a class="card" href="/audit"><span class="sym"><svg class="ic"><use href="#i-chart"/></svg></span><span><b>Run the Leak Audit</b><span>Two minutes. See which leak costs you most.</span></span><span class="arr">→</span></a>
+    <a class="card" href="/"><span class="sym"><svg class="ic"><use href="#i1"/></svg></span><span><b>Talk to Sara</b><span>Our AI receptionist. Try to trip her up.</span></span><span class="arr">→</span></a>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap"><span>© 2026 Lead Awaker</span><a href="/privacy-policy">Privacy policy</a></div>
+</footer>
+
+<script>
+(function(){
+  // When the welcome video exists, put its URL here: an .mp4 file, or a Vimeo/YouTube embed link.
+  var VIDEO_URL = '';
+
+  // Language-specific strings (script/report/build-pages.cjs swaps this line for /nl and /pt).
+  var T = {hi: 'Your Report is ready, ', video: 'A word from Gabriel'};
+
+  var name = (new URLSearchParams(location.search).get('n') || '').trim().slice(0, 40);
+  if (name) {
+    var h = document.getElementById('hello');
+    h.textContent = T.hi + name + '.';
+  }
+
+  if (VIDEO_URL) {
+    var stage = document.getElementById('stage');
+    if (/\.mp4(\?|$)/i.test(VIDEO_URL)) {
+      stage.innerHTML = '<video controls playsinline preload="metadata" poster="/site/img/report-gabriel.webp"></video>';
+      stage.firstChild.src = VIDEO_URL;
+    } else {
+      stage.innerHTML = '<iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>';
+      stage.firstChild.src = VIDEO_URL;
+      stage.firstChild.title = T.video;
+    }
+  }
+})();
+</script>
+</body>
+</html>

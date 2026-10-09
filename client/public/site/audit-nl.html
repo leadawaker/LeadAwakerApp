@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>De Lekcheck | Lead Awaker</title>
+<meta name="description" content="Vul je eigen cijfers in en zie wat gemiste telefoontjes, vergeten offertes, reviews die nooit kwamen en uit het oog verloren klanten je per jaar kosten. Duurt 2 minuten.">
+<link rel="icon" type="image/svg+xml" href="/premium/favicon.svg">
+<link rel="canonical" href="https://www.leadawaker.com/nl/lekcheck">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lead Awaker">
+<meta property="og:title" content="De Lekcheck | Lead Awaker">
+<meta property="og:description" content="Vul je eigen cijfers in en zie wat gemiste telefoontjes, vergeten offertes, reviews die nooit kwamen en uit het oog verloren klanten je per jaar kosten. Duurt 2 minuten.">
+<meta property="og:url" content="https://www.leadawaker.com/nl/lekcheck">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#F3EFE8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,500;1,400&display=swap">
+<style>
+/* The Leak Audit: a standalone calculator linked from page 20 of The Report.
+   Same tokens, fonts and nav as the homepage (client/public/site/index.html). Light theme only, like the site. */
+:root{
+  color-scheme:light;
+  --bg:#F3EFE8; --paper:#F9F6F0; --surface:#F1ECE4; --white:#FDFCF9;
+  --ink:#1F1A14; --ink-soft:#3A322A; --mute:#6C6354;
+  --line:rgba(110,95,65,.16); --line-2:rgba(110,95,65,.09);
+  --wine:#5E2230; --wine-2:#6E2638; --wine-deep:#3E1520; --wine-tint:rgba(94,34,48,.08);
+  --cream:#F4EFE3; --on-wine:#F7F1E6; --on-wine-2:rgba(244,239,227,.84); --on-wine-3:rgba(244,239,227,.62); --blush:#EBB9A8;
+  --neu-dark:rgba(105,75,40,.30); --neu-light:rgba(255,253,245,.95);
+  --sh-raised:-12px 5px 30px var(--neu-dark), 12px -5px 30px var(--neu-light);
+  --sh-crisp:-5px 2px 13px var(--neu-dark), 5px -2px 13px var(--neu-light);
+  --sh-inset:inset -4px 2px 10px var(--neu-dark), inset 4px -2px 10px var(--neu-light);
+  --sh-float:0 24px 48px -24px rgba(60,40,15,.26),0 2px 6px rgba(60,40,15,.07);
+  --serif:"Playfair Display",Georgia,"Times New Roman",serif;
+  --sans:"Manrope",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-padding-top:90px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(900px 520px at 88% -4%,rgba(255,230,180,.36),transparent 70%),radial-gradient(700px 500px at 0% 45%,rgba(255,253,245,.35),transparent 70%)}
+main,footer,.nav-shell{position:relative;z-index:1}
+.wrap{max-width:1160px;margin:0 auto;padding-inline:24px}
+@media (max-width:560px){.wrap{padding-inline:16px}}
+h1,h2,h3{margin:0;font-weight:400;text-wrap:balance}
+h1,h2{font-family:var(--serif);letter-spacing:-.012em}
+p{margin:0}
+a{color:inherit}
+em.w{font-style:italic;color:var(--wine)}
+:focus-visible{outline:2px solid var(--wine);outline-offset:3px;border-radius:6px}
+.num{font-variant-numeric:tabular-nums}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:50px;padding:16px 26px;border:0;border-radius:8px;
+  font:600 13px/1 var(--sans);letter-spacing:.05em;text-transform:uppercase;text-decoration:none;cursor:pointer;transition:box-shadow .18s,transform .18s}
+.btn-wine{background:linear-gradient(145deg,var(--wine-2),#4B1A26);color:var(--cream);box-shadow:var(--sh-raised)}
+.btn-wine:hover{box-shadow:var(--sh-crisp);transform:translateY(-1px)}
+.btn-neu{background:var(--surface);color:var(--ink);box-shadow:var(--sh-crisp)}
+.btn-neu:hover{transform:translateY(-1px)}
+.btn:active{box-shadow:var(--sh-inset);transform:none}
+
+/* header: the homepage nav, cut down to logo + one link */
+.nav-shell{position:sticky;top:env(safe-area-inset-top,0px);z-index:30}
+.nav{max-width:1240px;margin:0 auto;padding:8px 32px}
+.nav-bar{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:10px 12px 10px 20px;border-radius:12px;
+  background:rgba(230,225,214,.72);backdrop-filter:blur(10px) saturate(140%);-webkit-backdrop-filter:blur(10px) saturate(140%);border:1px solid rgba(255,250,238,.8)}
+.logo{display:inline-flex;align-items:center}
+.logo img{height:36px;width:auto;display:block}
+.nav-cta.btn{min-height:40px;padding:12px 18px;font-size:12px}
+@media (max-width:760px){.nav{padding:6px 12px}.nav-bar{padding:8px 8px 8px 14px}.logo img{height:26px}.nav-cta.btn{padding:11px 14px}}
+
+/* hero */
+.hero{padding-block:clamp(40px,6vw,76px) clamp(28px,4vw,52px);text-align:center;display:grid;justify-items:center;gap:20px}
+.kicker{display:inline-flex;align-items:center;gap:10px;padding:8px 16px;border-radius:999px;background:var(--surface);box-shadow:var(--sh-inset);font-size:13.5px;font-weight:500;color:var(--mute)}
+.kicker i{width:8px;height:8px;border-radius:50%;background:var(--wine);box-shadow:0 0 0 4px var(--wine-tint)}
+.hero h1{font-size:clamp(46px,6.6vw,80px);line-height:1.02}
+.hero .lede{font-size:clamp(16.5px,1.5vw,19px);color:var(--ink-soft);max-width:34em;line-height:1.6}
+
+/* leak symbols */
+.ic{width:20px;height:20px;display:block;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.sym{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:50%}
+.sym-in{width:34px;height:34px;background:var(--wine-2);color:var(--blush)}
+.sym-in .ic{width:17px;height:17px}
+.sym-in.cur{font:700 15px/1 var(--sans);background:var(--surface);color:var(--wine);box-shadow:var(--sh-inset)}
+.sym-out{background:var(--blush);color:var(--wine-2)}
+
+/* calculator */
+.audit{padding-bottom:clamp(56px,8vw,96px)}
+.calc{display:grid;grid-template-columns:minmax(0,1.08fr) minmax(0,1fr);gap:28px;align-items:start}
+.card-in{background:var(--paper);border:1px solid rgba(110,95,65,.1);border-radius:20px;box-shadow:var(--sh-float);padding:clamp(20px,3vw,34px)}
+.grp + .grp,.assume{border-top:1px solid var(--line-2);margin-top:22px;padding-top:22px}
+.grp-h{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.grp-t{font-weight:700;font-size:16px;line-height:1.2}
+.grp-t small{display:block;font-weight:600;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:3px}
+.fields{display:grid;gap:14px}
+.field{display:grid;grid-template-columns:minmax(0,1fr) 132px;gap:14px;align-items:center}
+.field label{font-size:14.5px;font-weight:600;line-height:1.35}
+.field label small{display:block;font-weight:500;color:var(--mute);font-size:12.5px;margin-top:2px}
+.field input,.field select{width:100%;height:46px;margin:0;font:600 16px/1 var(--sans);font-variant-numeric:tabular-nums;color:var(--ink);background:var(--white);
+  border:1px solid var(--line);border-radius:10px;padding:0 12px;text-align:right;box-shadow:inset 0 1px 2px rgba(60,40,15,.06);transition:border-color .15s}
+.field input:hover,.field select:hover{border-color:rgba(110,95,65,.3)}
+.field input:focus,.field select:focus{outline:2px solid var(--wine);outline-offset:1px;border-color:transparent}
+.field input[type=number]{-moz-appearance:textfield;appearance:textfield}
+.field input::-webkit-inner-spin-button,.field input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.field select{text-align:left;-webkit-appearance:none;appearance:none;cursor:pointer;padding-right:34px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5l5 5 5-5' fill='none' stroke='%235E2230' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center}
+.unit{position:relative;display:block}
+.unit::after,.unit::before{position:absolute;top:50%;transform:translateY(-50%);font-size:14px;font-weight:600;color:var(--mute);pointer-events:none}
+.unit[data-u]::after{content:attr(data-u);right:12px}
+.unit[data-u] input{padding-right:32px}
+.unit[data-pre]::before{content:attr(data-pre);left:13px}
+.unit[data-pre] input{padding-left:30px}
+
+.assume summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:16px;font-weight:700;font-size:15px;color:var(--wine)}
+.assume summary::-webkit-details-marker{display:none}
+.assume summary::after{content:"";flex:none;width:9px;height:9px;border-right:2px solid var(--wine);border-bottom:2px solid var(--wine);transform:rotate(45deg) translate(-3px,-3px);transition:transform .25s}
+.assume[open] summary::after{transform:rotate(225deg) translate(-3px,-3px)}
+.assume-note{margin:12px 0 16px;font-size:13.5px;line-height:1.55;color:var(--mute)}
+.assume-note a{color:var(--wine);text-underline-offset:2px}
+
+/* results */
+.out-col{position:sticky;top:96px}
+.calc-out{border-radius:20px;padding:clamp(22px,3vw,34px);display:grid;gap:22px;color:var(--on-wine);
+  background:radial-gradient(120% 90% at 90% 0%,rgba(235,185,168,.14),transparent 60%),linear-gradient(160deg,var(--wine-2),var(--wine-deep));box-shadow:var(--sh-raised)}
+.tot{display:grid;gap:8px}
+.tot-k{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--blush)}
+.tot-v{font-family:var(--serif);font-weight:500;font-size:clamp(50px,6vw,76px);line-height:1;letter-spacing:-.01em;font-variant-numeric:lining-nums tabular-nums;color:var(--on-wine)}
+.leaks{list-style:none;margin:0;padding:0;display:grid;gap:18px}
+.leak{display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px;align-items:start}
+.leak-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;min-height:40px;align-content:center;flex-wrap:wrap}
+.leak-n{font-weight:700;font-size:15.5px;line-height:1.25}
+.leak-n small{font-weight:600;font-size:11.5px;letter-spacing:.1em;color:var(--on-wine-3);margin-right:8px}
+.leak-v{font-weight:700;font-size:17px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.leak-top{display:flex;align-items:center}
+.track{height:8px;border-radius:4px;background:rgba(247,241,230,.12);overflow:hidden;display:flex;margin-top:4px}
+.track i{display:block;height:100%;width:0;background:rgba(235,185,168,.55);transition:width .5s cubic-bezier(.3,.7,.2,1)}
+.leak.top .track i{background:var(--blush)}
+.track i.today{background:rgba(247,241,230,.34)}
+.leak-t{font-size:13px;line-height:1.5;color:var(--on-wine-2);margin-top:8px}
+.leak.rev{padding-top:18px;border-top:1px solid rgba(247,241,230,.14)}
+.start{display:grid;grid-template-columns:40px minmax(0,1fr);gap:14px;align-items:start;padding:16px;border-radius:14px;background:rgba(247,241,230,.07);border:1px solid rgba(235,185,168,.38)}
+.start p{font-size:14.5px;line-height:1.55;color:var(--on-wine-2)}
+.start b{display:block;color:var(--on-wine);font-size:16px;margin-bottom:2px}
+.start.empty{grid-template-columns:minmax(0,1fr)}
+
+/* next step */
+.next{padding-block:clamp(8px,2vw,24px) clamp(64px,9vw,112px)}
+.next-in{max-width:760px;margin:0 auto;text-align:center;display:grid;justify-items:center;gap:20px;border-top:1px solid var(--line);padding-top:clamp(48px,7vw,80px)}
+.next h2{font-size:clamp(34px,4.4vw,52px);line-height:1.08}
+.next .lede{font-size:clamp(16.5px,1.5vw,18.5px);color:var(--ink-soft);max-width:36em}
+.cta-row{display:flex;flex-wrap:wrap;justify-content:center;gap:14px;margin-top:6px}
+.fine{font-size:13.5px;color:var(--mute);max-width:36em}
+
+footer{padding-block:0 56px}
+footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px 28px;flex-wrap:wrap;font-size:14px;color:var(--mute);border-top:1px solid var(--line);padding-top:28px}
+.f-co{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
+.f-links{display:flex;gap:22px;flex-wrap:wrap}
+footer a{color:var(--ink-soft);text-decoration:none}
+footer a:hover{color:var(--wine);text-decoration:underline}
+footer img{height:24px;width:auto;display:block}
+
+/* phone: total pinned to the bottom while the inputs are on screen */
+.peek{display:none}
+@media (max-width:899px){
+  .calc{grid-template-columns:minmax(0,1fr);gap:20px}
+  .out-col{position:static}
+  .peek{display:flex;position:fixed;z-index:20;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));align-items:center;justify-content:space-between;gap:12px;
+    padding:12px 16px;border-radius:14px;text-decoration:none;color:var(--on-wine);background:linear-gradient(160deg,var(--wine-2),var(--wine-deep));
+    box-shadow:0 18px 36px -14px rgba(40,15,20,.55);transform:translateY(calc(100% + 24px));opacity:0;transition:transform .3s ease,opacity .3s ease;pointer-events:none}
+  .peek.show{transform:none;opacity:1;pointer-events:auto}
+  .peek-k{display:block;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--blush)}
+  .peek-v{display:block;font-family:var(--serif);font-weight:500;font-size:26px;line-height:1.1;font-variant-numeric:lining-nums tabular-nums}
+  .peek-go{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+  .peek-go svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+}
+@media (max-width:560px){
+  .field{grid-template-columns:minmax(0,1fr) 116px;gap:12px}
+  .cta-row{width:100%}
+  .cta-row .btn{width:100%}
+}
+@media (prefers-reduced-motion:reduce){.track i,.peek,.btn{transition:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-calls" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.840 12.840 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/><path d="M16 2l6 6M22 2l-6 6"/></symbol>
+  <symbol id="i-quotes" viewBox="0 0 24 24"><path d="M13 3H6.5A1.5 1.5 0 0 0 5 4.5v15A1.5 1.5 0 0 0 6.5 21H10"/><path d="M13 3v5h5"/><path d="M13 3l5 5v2.5"/><circle cx="16.5" cy="16.5" r="4.5"/><path d="M16.5 14.3v2.4l1.6 1"/></symbol>
+  <symbol id="i-reviews" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></symbol>
+  <symbol id="i-clients" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></symbol>
+</svg>
+
+<div class="nav-shell">
+  <nav class="nav" aria-label="Hoofdmenu">
+    <div class="nav-bar">
+      <a class="logo" href="/nl"><img src="/premium/logo-v2-light.svg" alt="Lead Awaker"></a>
+      <a class="btn btn-wine nav-cta" href="/nl">Praat met Sara</a>
+    </div>
+  </nav>
+</div>
+
+<main>
+  <header class="hero wrap">
+    <span class="kicker"><i></i>Gratis rekentool · 2 minuten</span>
+    <h1>De <em class="w">Lek</em>check</h1>
+    <p class="lede">Vul je eigen cijfers in en zie wat gemiste telefoontjes, vergeten offertes, reviews die nooit kwamen en uit het oog verloren klanten je bedrijf per jaar kosten.</p>
+  </header>
+
+  <section class="audit wrap" aria-label="Lekkencalculator">
+    <form class="calc" id="calc" autocomplete="off">
+      <div class="card-in">
+        <div class="grp" role="group" aria-labelledby="g0">
+          <div class="grp-h"><span class="sym sym-in cur" id="cur-sym" aria-hidden="true">€</span><span class="grp-t" id="g0"><small>Start</small>Je bedrijf</span></div>
+          <div class="fields">
+            <div class="field"><label for="cur">Valuta</label><select id="cur"><option value="EUR">€ Euro</option><option value="GBP">£ Pond</option><option value="USD">$ Dollar</option></select></div>
+            <div class="field"><label for="job">Gemiddelde opdrachtwaarde<small>Wat een gemiddelde betaalde klus oplevert</small></label><span class="unit" id="job-unit" data-pre="€"><input id="job" type="number" min="0" step="50" value="2500" inputmode="numeric"></span></div>
+            <div class="field"><label for="close">Je slagingspercentage<small>Van de aanvragen die je spreekt, hoeveel worden betaald werk</small></label><span class="unit" data-u="%"><input id="close" type="number" min="0" max="100" value="30" inputmode="numeric"></span></div>
+          </div>
+        </div>
+        <div class="grp" role="group" aria-labelledby="g1">
+          <div class="grp-h"><span class="sym sym-in" aria-hidden="true"><svg class="ic"><use href="#i-calls"/></svg></span><span class="grp-t" id="g1"><small>Lek 01</small>Gemiste telefoontjes</span></div>
+          <div class="fields">
+            <div class="field"><label for="enq">Nieuwe aanvragen per maand<small>Telefoontjes, berichten en formulieren</small></label><input id="enq" type="number" min="0" value="80" inputmode="numeric"></div>
+            <div class="field"><label for="miss">Gemist of te laat beantwoord<small>Je eerlijke inschatting</small></label><span class="unit" data-u="%"><input id="miss" type="number" min="0" max="100" value="25" inputmode="numeric"></span></div>
+          </div>
+        </div>
+        <div class="grp" role="group" aria-labelledby="g2">
+          <div class="grp-h"><span class="sym sym-in" aria-hidden="true"><svg class="ic"><use href="#i-quotes"/></svg></span><span class="grp-t" id="g2"><small>Lek 02</small>Vergeten offertes</span></div>
+          <div class="fields">
+            <div class="field"><label for="old">Oude offertes en aanvragen<small>Mensen die nooit ja zeiden, in je CRM of Excel</small></label><input id="old" type="number" min="0" value="1200" inputmode="numeric"></div>
+          </div>
+        </div>
+        <div class="grp" role="group" aria-labelledby="g3">
+          <div class="grp-h"><span class="sym sym-in" aria-hidden="true"><svg class="ic"><use href="#i-reviews"/></svg></span><span class="grp-t" id="g3"><small>Lek 03</small>Reviews</span></div>
+          <div class="fields">
+            <div class="field"><label for="jobs">Afgeronde klussen per maand</label><input id="jobs" type="number" min="0" value="20" inputmode="numeric"></div>
+          </div>
+        </div>
+        <div class="grp" role="group" aria-labelledby="g4">
+          <div class="grp-h"><span class="sym sym-in" aria-hidden="true"><svg class="ic"><use href="#i-clients"/></svg></span><span class="grp-t" id="g4"><small>Lek 04</small>Oud-klanten</span></div>
+          <div class="fields">
+            <div class="field"><label for="past">Oud-klanten die je kunt benaderen</label><input id="past" type="number" min="0" value="900" inputmode="numeric"></div>
+          </div>
+        </div>
+        <details class="assume">
+          <summary>Onze aannames (ook aan te passen)</summary>
+          <p class="assume-note">Bewust voorzichtig. <a href="https://invoca.com/blog/how-much-missed-sales-calls-cost-home-services-businesses" target="_blank" rel="noopener">Invoca</a> zag dat minder dan 3% van de bellers een voicemail inspreekt, en <a href="https://www.brightlocal.com/research/local-consumer-review-survey/" target="_blank" rel="noopener">BrightLocal</a> zag dat 83% van de mensen die om een review werd gevraagd er ook een schreef. Wij rekenen met lagere cijfers.</p>
+          <div class="fields">
+            <div class="field"><label for="gone">Gemiste aanvragen die naar een ander gaan<small>Van wie je mist of te laat antwoordt</small></label><span class="unit" data-u="%"><input id="gone" type="number" min="0" max="100" value="60" inputmode="numeric"></span></div>
+            <div class="field"><label for="reeng">Oude aanvragen die weer reageren<small>Antwoorden en een echt gesprek beginnen</small></label><span class="unit" data-u="%"><input id="reeng" type="number" min="0" max="100" value="5" inputmode="numeric"></span></div>
+            <div class="field"><label for="repeat">Extra oud-klanten die opnieuw boeken of je aanbevelen, per jaar<small>Bovenop wat je nu al krijgt</small></label><span class="unit" data-u="%"><input id="repeat" type="number" min="0" max="100" value="3" inputmode="numeric"></span></div>
+            <div class="field"><label for="asked">Klanten die je nu al om een review vraagt</label><span class="unit" data-u="%"><input id="asked" type="number" min="0" max="100" value="10" inputmode="numeric"></span></div>
+            <div class="field"><label for="leave">Klanten die een review schrijven als je het vraagt</label><span class="unit" data-u="%"><input id="leave" type="number" min="0" max="100" value="50" inputmode="numeric"></span></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="out-col" id="results">
+        <div class="calc-out">
+          <div class="tot">
+            <span class="tot-k" id="tot-k">Terug te halen in de komende 12 maanden</span>
+            <output class="tot-v" id="total" for="job close enq miss old past gone reeng repeat" aria-labelledby="tot-k" aria-live="polite">€ 220.500</output>
+          </div>
+          <ul class="leaks">
+            <li class="leak top" data-k="l1">
+              <span class="sym sym-out" aria-hidden="true"><svg class="ic"><use href="#i-calls"/></svg></span>
+              <div><div class="leak-top"><span class="leak-n"><small>01</small>Gemiste telefoontjes</span><b class="leak-v" id="v1">€108,000</b></div>
+              <div class="track"><i id="b1" style="width:100%"></i></div>
+              <p class="leak-t" id="t1">144 enquiries a year go elsewhere, about 43 of them would have been jobs.</p></div>
+            </li>
+            <li class="leak" data-k="l2">
+              <span class="sym sym-out" aria-hidden="true"><svg class="ic"><use href="#i-quotes"/></svg></span>
+              <div><div class="leak-top"><span class="leak-n"><small>02</small>Vergeten offertes</span><b class="leak-v" id="v2">€45,000</b></div>
+              <div class="track"><i id="b2" style="width:41.67%"></i></div>
+              <p class="leak-t" id="t2">One-time: 60 old enquiries back in conversation, about 18 jobs.</p></div>
+            </li>
+            <li class="leak" data-k="l4">
+              <span class="sym sym-out" aria-hidden="true"><svg class="ic"><use href="#i-clients"/></svg></span>
+              <div><div class="leak-top"><span class="leak-n"><small>04</small>Oud-klanten</span><b class="leak-v" id="v4">€67,500</b></div>
+              <div class="track"><i id="b4" style="width:62.5%"></i></div>
+              <p class="leak-t" id="t4">27 extra rebookings or referrals a year.</p></div>
+            </li>
+            <li class="leak rev" data-k="l3">
+              <span class="sym sym-out" aria-hidden="true"><svg class="ic"><use href="#i-reviews"/></svg></span>
+              <div><div class="leak-top"><span class="leak-n"><small>03</small>Reviews die nooit kwamen</span><b class="leak-v" id="v3">108 a year</b></div>
+              <div class="track"><i class="today" id="b3a" style="width:10%"></i><i id="b3" style="width:90%"></i></div>
+              <p class="leak-t" id="t3">From asking every client, on top of about 12 today. Counted, not priced, so not in the total.</p></div>
+            </li>
+          </ul>
+          <div class="start" id="start" aria-live="polite">
+            <span class="sym sym-out" aria-hidden="true"><svg class="ic"><use href="#i-calls"/></svg></span>
+            <p><b>Begin hier: gemiste telefoontjes</b>Met deze cijfers je grootste lek. De oplossing: een AI-receptioniste die elk telefoontje en bericht beantwoordt, dag en nacht.</p>
+          </div>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="next wrap" aria-labelledby="next-h">
+    <div class="next-in">
+      <h2 id="next-h">Eén lek. <em class="w">Deze maand.</em></h2>
+      <p class="lede">Plan een gratis Lekscan: 20 minuten met jouw cijfers, en we vertellen je welk lek je als eerste dicht, ook als het antwoord niet wij zijn. Of praat met Sara, onze AI-receptioniste, en probeer haar van haar stuk te brengen.</p>
+      <div class="cta-row">
+        <a class="btn btn-wine" href="https://cal.com/leadawaker/reactivatie-scan" target="_blank" rel="noopener">Plan een gratis Lekscan</a>
+        <a class="btn btn-neu" href="/nl">Praat met Sara</a>
+      </div>
+      <p class="fine">Dit zijn schattingen op basis van jouw cijfers en voorzichtige aannames, geen belofte.</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <img src="/premium/logo-v2-light.svg" alt="Lead Awaker">
+    <div class="f-co"><span>KvK 99366738</span><span>’s-Hertogenbosch</span><a href="mailto:admin@leadawaker.com">admin@leadawaker.com</a></div>
+    <div class="f-links"><a href="/reactivate">Database-reactivatie</a><a href="/terms-of-service">Algemene voorwaarden</a><a href="/privacy-policy">Privacybeleid</a></div>
+    <span>© 2026 LeadAwaker</span>
+  </div>
+</footer>
+
+<a class="peek" id="peek" href="#results" tabindex="-1" aria-hidden="true">
+  <span><span class="peek-k">Terug te halen in 12 maanden</span><b class="peek-v" id="peek-v">€220,500</b></span>
+  <span class="peek-go">Bekijk resultaat<svg viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></svg></span>
+</a>
+
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var num=function(id){var v=parseFloat($(id).value);return isFinite(v)&&v>0?v:0};
+  var pct=function(id){return Math.min(num(id),100)/100};
+  // Everything language-specific in one line (script/report/build-pages.cjs swaps it for /nl and /pt).
+  var T={loc:"nl-NL",year:" per jaar",t1:"{a} aanvragen per jaar gaan naar een ander, waarvan zo’n {b} een klus waren geworden.",t2:"Eenmalig: {a} oude aanvragen weer in gesprek, zo’n {b} klussen.",t4:"{a} extra herhaalboekingen of aanbevelingen per jaar.",t3:"Door het elke klant te vragen, bovenop de zo’n {a} van nu. Geteld, niet in geld uitgedrukt, dus niet in het totaal.",start:"Begin hier: ",why:"Met deze cijfers je grootste lek. De oplossing: ",empty:"Vul je cijfers in en zie waar je het meest lekt.",l1:["gemiste telefoontjes","een AI-receptioniste die elk telefoontje en bericht beantwoordt, dag en nacht."],l2:["vergeten offertes","een AI-verkoper die elke oude offerte en aanvraag opvolgt."],l4:["oud-klanten","een AI-klantbinder die oud-klanten opnieuw inplant en om aanbevelingen vraagt."]};
+  var LOCALE={EUR:"en-IE",GBP:"en-GB",USD:"en-US",BRL:"pt-BR"};
+  var SYMBOL={EUR:"€",GBP:"£",USD:"$",BRL:"R$"};
+  var LEAKS={
+    l1:{name:T.l1[0],icon:"i-calls",fix:T.l1[1]},
+    l2:{name:T.l2[0],icon:"i-quotes",fix:T.l2[1]},
+    l4:{name:T.l4[0],icon:"i-clients",fix:T.l4[1]}
+  };
+  function fill(t,a,b){return t.replace("{a}",a).replace("{b}",b)}
+  function money(v){var c=$("cur").value;try{return new Intl.NumberFormat(T.loc||LOCALE[c],{style:"currency",currency:c,maximumFractionDigits:0}).format(Math.round(v))}catch(e){return SYMBOL[c]+Math.round(v).toLocaleString(T.loc||"en-GB")}}
+  function whole(v){return Math.round(v).toLocaleString(T.loc||"en-GB")}
+  function calc(){
+    var job=num("job"),close=pct("close");
+    var lostEnq=num("enq")*12*pct("miss")*pct("gone");
+    var l1=lostEnq*close*job;
+    var reeng=num("old")*pct("reeng");
+    var l2=reeng*close*job;
+    var extra=num("past")*pct("repeat");
+    var l4=extra*job;
+    var reviews=num("jobs")*12*(1-pct("asked"))*pct("leave");
+    var today=num("jobs")*12*pct("asked")*pct("leave");
+    var total=l1+l2+l4, max=Math.max(l1,l2,l4,1), revMax=Math.max(reviews+today,1);
+    var sym=SYMBOL[$("cur").value];
+    $("cur-sym").textContent=sym;$("job-unit").setAttribute("data-pre",sym);
+    $("total").textContent=money(total);$("peek-v").textContent=money(total);
+    $("v1").textContent=money(l1);$("v2").textContent=money(l2);$("v4").textContent=money(l4);
+    $("v3").textContent=whole(reviews)+T.year;
+    $("b1").style.width=(l1/max*100)+"%";$("b2").style.width=(l2/max*100)+"%";$("b4").style.width=(l4/max*100)+"%";
+    $("b3a").style.width=(today/revMax*100)+"%";$("b3").style.width=(reviews/revMax*100)+"%";
+    $("t1").textContent=fill(T.t1,whole(lostEnq),whole(lostEnq*close));
+    $("t2").textContent=fill(T.t2,whole(reeng),whole(reeng*close));
+    $("t4").textContent=fill(T.t4,whole(extra));
+    $("t3").textContent=fill(T.t3,whole(today));
+    var best=[["l1",l1],["l2",l2],["l4",l4]].sort(function(a,b){return b[1]-a[1]})[0];
+    document.querySelectorAll(".leak").forEach(function(r){r.classList.toggle("top",total>0&&r.dataset.k===best[0])});
+    var s=$("start"),n=LEAKS[best[0]];
+    if(total>0){
+      s.classList.remove("empty");
+      s.innerHTML='<span class="sym sym-out" aria-hidden="true"><svg class="ic"><use href="#'+n.icon+'"/></svg></span><p><b>'+T.start+n.name+'</b>'+T.why+n.fix+'</p>';
+    }else{
+      s.classList.add("empty");
+      s.innerHTML="<p>"+T.empty+"</p>";
+    }
+  }
+  $("calc").addEventListener("input",calc);
+  $("calc").addEventListener("change",calc);
+  $("calc").addEventListener("submit",function(e){e.preventDefault()});
+  calc();
+
+  /* phone: show the running total while the inputs are on screen and the results are not */
+  var peek=$("peek"),inp=document.querySelector(".card-in"),out=$("results"),tick=false;
+  function peekCheck(){
+    tick=false;
+    if(window.innerWidth>=900){peek.classList.remove("show");return}
+    var h=window.innerHeight,i=inp.getBoundingClientRect(),r=out.getBoundingClientRect();
+    peek.classList.toggle("show",i.top<h*0.55&&r.top>h+60);
+  }
+  function onScroll(){if(!tick){tick=true;requestAnimationFrame(peekCheck)}}
+  window.addEventListener("scroll",onScroll,{passive:true});
+  window.addEventListener("resize",onScroll);
+  peekCheck();
+})();
+</script>
+</body>
+</html>

@@ -376,14 +376,12 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 .seqsteps li.on{color:var(--ink-soft)}.seqsteps li.on::before{background:var(--wine)}
 
 /* persona builder */
-.persona{border-radius:18px;background:var(--white);border:1px solid rgba(110,95,65,.14);box-shadow:var(--sh-float);padding:22px;display:grid;gap:14px;font-size:13.5px}
 .pe-head{display:flex;align-items:center;gap:14px}
 .pe-av{width:58px;height:58px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#8A3A4C,var(--wine) 55%,var(--wine-deep));color:var(--cream);display:grid;place-items:center;font:500 26px/1 var(--serif);
   box-shadow:0 0 0 6px var(--wine-tint);transition:transform .6s cubic-bezier(.3,1.5,.5,1),opacity .4s}
 .pe-head div{flex:1;min-width:0;display:grid;gap:2px}
 .pe-name{font-family:var(--serif);font-size:24px;font-weight:400;min-height:1.2em}
 .pe-name::after{content:"";display:inline-block;width:2px;height:.9em;margin-left:2px;background:var(--wine);vertical-align:-2px;opacity:0}
-.persona.typing .pe-name::after{opacity:1;animation:blink .8s steps(1) infinite}
 .pe-head small{font-size:12.5px;color:var(--mute);transition:opacity .4s}
 .pe-ready{transition:opacity .4s,transform .5s cubic-bezier(.3,1.6,.5,1)}
 .pe-bar{height:4px;border-radius:9px;background:var(--bg-2);overflow:hidden}
@@ -400,14 +398,6 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 .mini-bars i:nth-child(2){animation-delay:.15s}.mini-bars i:nth-child(3){animation-delay:.3s}.mini-bars i:nth-child(4){animation-delay:.45s}
 @keyframes talk2{0%,100%{height:3px}50%{height:12px}}
 /* the build: hidden until each point is added */
-.persona.build .pe-av{transform:scale(0);opacity:0}
-.persona.build .pe-head small,.persona.build .pe-ready{opacity:0}
-.persona.build .pe-ready{transform:scale(.6)}
-.persona.build .pe-steps li:not(.in){opacity:0;transform:translateX(-8px)}
-.persona.build .pe-steps li:not(.in)::before{transform:rotate(-45deg) scale(0)}
-.persona.build .pe-steps li:not(.in) em{opacity:0;transform:scale(.7)}
-.persona.build .pe-av.in{transform:none;opacity:1}
-.persona.build .pe-head small.in,.persona.build .pe-ready.in{opacity:1;transform:none}
 @media (max-width:520px){.pe-steps li{grid-template-columns:minmax(0,1fr);gap:2px}}
 
 /* v2 website widget */
@@ -575,35 +565,66 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 .team{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2.4fr);gap:clamp(28px,5vw,56px);align-items:start;padding:clamp(28px,5vw,64px) clamp(18px,5vw,64px) clamp(28px,4vw,56px);border-radius:24px;
   background:rgba(255,253,248,.42);border:1px solid rgba(255,255,255,.75);box-shadow:0 30px 60px -30px rgba(60,40,15,.2)}
 @media (max-width:900px){.team{grid-template-columns:minmax(0,1fr)}}
-.team-h{display:grid;gap:16px;align-content:start;padding-top:20px;min-width:0}
-.team-h h2{font-size:clamp(42px,5vw,76px);line-height:1}
-.team-h h2 span{display:block}
-.team-h p{color:var(--mute);font-size:15.5px;max-width:24em}
 .bar{display:block;width:32px;height:2px;border-radius:2px;background:var(--wine)}
-.people{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);column-gap:32px;row-gap:40px;position:relative;min-width:0}
-.people::before{content:"";position:absolute;left:50%;top:20px;bottom:0;width:1px;background:var(--line)}
-@media (max-width:640px){.people{grid-template-columns:minmax(0,1fr)}.people::before{display:none}}
-.person{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;min-width:0}
 .pc{position:relative;width:88%;margin:24% auto 0;padding-bottom:80%}
 .pc-bg{position:absolute;inset:0;border-radius:18px;overflow:hidden;background:var(--bg-2) url('/site/img/747e59e76ab6.webp') 50% 35%/cover}
 .pc-bg::after{content:"";position:absolute;left:0;right:0;bottom:0;height:72px;background:linear-gradient(to bottom,transparent,rgba(0,0,0,.22))}
 .pc-img{position:absolute;left:0;right:0;bottom:0;background-repeat:no-repeat;background-position:top center;clip-path:inset(0 0 0 0 round 0 0 18px 18px)}
 .pc-img.g{top:-32%;background-size:150%;background-image:url('/site/img/852f929bb442.webp')}
-.pc-img.f{top:-36%;background-size:132%;background-image:url('/site/img/0928b7b657ca.webp')}
-.p-txt{padding:24px 6% 8px;display:grid;gap:12px}
-.person h3{font-family:var(--serif);font-size:clamp(28px,2.5vw,34px);line-height:1.1}
-.person h3 span{color:var(--wine)}
 .role{display:flex;align-items:center;gap:8px;font:700 10.5px/1 var(--mono);letter-spacing:.13em;text-transform:uppercase;color:#9c2b3c}
 .role svg{flex:none;width:20px;height:20px;fill:none;stroke:#9c2b3c;stroke-width:1.1;stroke-linecap:round;stroke-linejoin:round}
 .role svg .fillc{fill:#9c2b3c;stroke:none}
 .role div{display:grid;gap:3px}.role span{opacity:.75;font-weight:500}
-.bio{display:grid;gap:12px;padding-top:18px;border-top:1px solid var(--line)}
-.bio p{font-size:13.5px;line-height:1.8;color:var(--mute)}
+
+/* creds: the companies Gabriel has worked with, a slow logo rail under the hero */
+.creds{padding-block:clamp(28px,4vw,48px) 0}
+.creds-h{text-align:center;font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);margin:0 0 18px}
+.creds-rail{overflow:hidden;-webkit-mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.creds-track{list-style:none;margin:0;padding:0;display:flex;width:max-content;animation:creds 48s linear infinite}
+.creds-rail:hover .creds-track{animation-play-state:paused}
+.creds-track li{display:flex;align-items:center;gap:14px;height:64px;padding:0 clamp(28px,4vw,52px)}
+.creds-track img{display:block;width:auto;filter:grayscale(1) contrast(.9);opacity:.55;transition:filter .3s,opacity .3s}
+.creds-track li:hover img{filter:none;opacity:1}
+.creds-track span{font-size:13px;color:var(--mute-2);white-space:nowrap}
+@keyframes creds{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.creds-rail{-webkit-mask:none;mask:none}.creds-track{animation:none;width:auto;flex-wrap:wrap;justify-content:center}.creds-track li[aria-hidden]{display:none}}
+
+/* about: Sara introduces Gabriel, as a chat that plays when it scrolls into view */
+.team.me{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);align-items:center}
+.me-l{min-width:0}
+.me-l .pc{width:92%;margin:20% auto 0;padding-bottom:88%}
+.me-sig{display:grid;gap:12px;padding:22px 4% 0}
+.me-sig b{font-family:var(--serif);font-size:clamp(28px,2.6vw,36px);font-weight:400;line-height:1.1}
+.me-sig b span{color:var(--wine)}
+.me-r{display:grid;gap:18px;min-width:0;justify-items:start}
+.me-r h2{font-size:clamp(40px,4.6vw,68px);line-height:1}
+.me-chat{width:100%;border-radius:20px;background:var(--white);border:1px solid rgba(110,95,65,.14);box-shadow:var(--sh-float);overflow:hidden}
+.me-chat-h{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid var(--line-2);background:#F6F3EE}
+.me-chat-h b{display:block;font-size:14.5px;line-height:1.3}
+.me-chat-h small{font-size:12px;color:var(--mute)}
+.me-msgs{display:flex;flex-direction:column;gap:10px;padding:18px}
+.me-m{max-width:86%;margin:0;padding:11px 14px;border-radius:16px;font-size:15px;line-height:1.55}
+.me-m.v{align-self:flex-end;background:var(--surface);color:var(--ink-soft);border-bottom-right-radius:4px}
+.me-m.s{align-self:flex-start;background:var(--wine-tint);color:var(--ink);border-bottom-left-radius:4px}
+.me-m .btn{display:flex;width:max-content;max-width:100%;margin-top:12px}
+.me-anim .me-m{display:none}
+.me-anim .me-m.in{display:block;animation:me-in .45s cubic-bezier(.2,.8,.2,1) both}
+.me-typing{align-self:flex-start;display:flex;gap:5px;padding:15px 16px;border-radius:16px 16px 16px 4px;background:var(--wine-tint)}
+.me-typing i{width:6px;height:6px;border-radius:50%;background:var(--wine);animation:me-dot 1s ease-in-out infinite}
+.me-typing i:nth-child(2){animation-delay:.15s}.me-typing i:nth-child(3){animation-delay:.3s}
+@keyframes me-in{from{opacity:0;transform:translateY(8px)}}
+@keyframes me-dot{0%,100%{opacity:.25}50%{opacity:.9}}
+@media (max-width:900px){.team.me{grid-template-columns:minmax(0,1fr)}.me-l .pc{width:min(70%,340px);margin-top:14%}.me-sig{justify-items:center;text-align:center}}
+
+/* #book: the self-serve demo next to the calendar (shown by the #try-sara script) */
+.btn-ghost-light{background:rgba(255,255,255,.08);color:#F7F1E6;box-shadow:inset 0 0 0 1.5px rgba(244,239,227,.45)}
+.btn-ghost-light:hover{transform:translateY(-1px)}
+.ts-cta[hidden]{display:none}
 
 /* testimonials: people who have worked with Gabriel, about how he builds (no results claims) */
 .quotes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;max-width:1040px;margin:0 auto}
 @media (max-width:760px){.quotes{grid-template-columns:minmax(0,1fr)}}
-.quote{margin:0;display:grid;grid-template-rows:auto 1fr auto;gap:20px;padding:clamp(24px,3vw,34px);border-radius:16px;background:var(--surface);box-shadow:var(--sh-crisp)}
+.quote{margin:0;display:grid;grid-template-rows:auto 1fr auto;gap:20px;padding:clamp(24px,3vw,34px);border-radius:16px;background:radial-gradient(ellipse 80% 50% at 50% 100%,rgba(255,230,180,.18),transparent 60%),#fff;border:1px solid rgba(110,95,65,.1);box-shadow:var(--sh-crisp)}
 .quote::before{content:"\201C";font-family:var(--serif);font-size:64px;line-height:.6;height:28px;color:var(--wine)}
 .quote blockquote{margin:0;font-size:16.5px;line-height:1.7;color:var(--ink-soft)}
 .quote figcaption{display:flex;align-items:center;gap:14px;padding-top:18px;border-top:1px solid var(--line)}
@@ -1360,7 +1381,6 @@ footer img{height:24px;width:auto;display:block}
 @keyframes lsn-in{from{opacity:0;transform:translateY(-12px) scale(.96)}to{opacity:1;transform:none}}
 </style>
 <style id="i18n-fit">/* Translated headings with a longer word than the English one. */
-.team-h h2.h-long{font-size:clamp(34px,3.7vw,58px)}</style>
 <style id="lang-sw">
 .lang{position:relative;display:flex;align-items:center;margin-left:12px;padding-left:12px;border-left:1px solid var(--line)}
 .lang-btn{display:flex;align-items:center;gap:5px;height:40px;padding:0 9px 0 11px;border:0;border-radius:999px;background:rgba(255,255,255,.45);color:var(--ink-soft);font:inherit;font-size:12px;font-weight:700;letter-spacing:.06em;cursor:pointer;transition:background .18s}
@@ -1508,6 +1528,461 @@ footer img{height:24px;width:auto;display:block}
         </div>
       </div>
     </div>
+  </section>
+
+  <section class="creds" id="creds">
+    <p class="creds-h">Gebouwd door iemand die werkte met</p>
+    <div class="creds-rail"><ul class="creds-track"><li><img src="/site/img/logo-warnerbros.svg" alt="Warner Bros." style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li><img src="/site/img/logo-sega.svg" alt="Sega" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li><img src="/site/img/logo-saber.svg" alt="Saber Interactive" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li><img src="/site/img/logo-valve.svg" alt="Valve" style="height:24px" loading="lazy"><span>VR-gamejam, Londen</span></li><li aria-hidden="true"><img src="/site/img/logo-warnerbros.svg" alt="" style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li aria-hidden="true"><img src="/site/img/logo-sega.svg" alt="" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li aria-hidden="true"><img src="/site/img/logo-saber.svg" alt="" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li aria-hidden="true"><img src="/site/img/logo-valve.svg" alt="" style="height:24px" loading="lazy"><span>VR-gamejam, Londen</span></li><li aria-hidden="true"><img src="/site/img/logo-warnerbros.svg" alt="" style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li aria-hidden="true"><img src="/site/img/logo-sega.svg" alt="" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li aria-hidden="true"><img src="/site/img/logo-saber.svg" alt="" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li aria-hidden="true"><img src="/site/img/logo-valve.svg" alt="" style="height:24px" loading="lazy"><span>VR-gamejam, Londen</span></li><li aria-hidden="true"><img src="/site/img/logo-warnerbros.svg" alt="" style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li aria-hidden="true"><img src="/site/img/logo-sega.svg" alt="" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li aria-hidden="true"><img src="/site/img/logo-saber.svg" alt="" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li aria-hidden="true"><img src="/site/img/logo-valve.svg" alt="" style="height:24px" loading="lazy"><span>VR-gamejam, Londen</span></li></ul></div>
+  </section>
+
+  <!-- Public website demo (specs/public-website-demo). Hidden until launch:
+       ?try=1 shows it live, ?try=mock runs it on fake answers for design review.
+       On app.leadawaker.com (the Pi dev server) it is always live.
+       While shown, it also points the hero "Test her out" button here and shows
+       the "Try her on your website" button in #book.
+       All copy lives in COPY below (en/nl/pt), picked by <html lang>, so the
+       /nl and /pt builds need no pairs for it. -->
+  <section class="band" id="try-sara" hidden>
+    <style>
+    #try-sara{padding-top:clamp(28px,4vw,56px);--tc:#F7F1E6;--tc-2:rgba(244,239,227,.84);--tc-3:rgba(244,239,227,.62);--tc-acc:#EBB9A8}
+    #try-sara .ts-stage{position:relative;overflow:hidden;isolation:isolate;border-radius:28px;background:linear-gradient(155deg,var(--wine-2),var(--wine-deep) 72%);color:var(--tc);box-shadow:var(--sh-raised);
+      display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,.9fr);gap:clamp(28px,5vw,64px);align-items:center;padding:clamp(28px,5vw,68px)}
+    #try-sara .ts-stage::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+      background:radial-gradient(45% 55% at 82% 40%,rgba(235,185,168,.22),transparent 70%),radial-gradient(40% 40% at 0% 100%,rgba(0,0,0,.25),transparent 70%)}
+    #try-sara .ts-copy{display:grid;gap:22px;min-width:0}
+    #try-sara .ts-eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--tc-acc)}
+    #try-sara h2{font-size:clamp(34px,4.4vw,56px);line-height:1.05;color:var(--tc)}
+    #try-sara h2 em.w{color:var(--tc-acc)}
+    #try-sara .ts-lede{font-size:17.5px;color:var(--tc-2);max-width:31em}
+    #try-sara .ts-track{list-style:none;margin:0;padding:0;display:flex;flex-wrap:wrap;gap:8px}
+    #try-sara .ts-track li{display:flex;align-items:center;gap:8px;padding:6px 14px 6px 6px;border-radius:999px;font-size:13.5px;font-weight:600;color:var(--tc-3);background:rgba(255,255,255,.06);transition:background .4s,color .4s}
+    #try-sara .ts-track li span{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:rgba(255,255,255,.1);transition:background .4s,color .4s}
+    #try-sara .ts-track li.on{background:var(--tc);color:var(--wine)}
+    #try-sara .ts-track li.on span{background:var(--wine);color:var(--tc)}
+    #try-sara .ts-track li.done{color:var(--tc-2)}
+    #try-sara .ts-track li.done span{background:var(--tc-acc);color:var(--wine-deep)}
+    #try-sara .ts-state{display:grid;gap:16px;justify-items:start;min-width:0}
+    #try-sara .ts-state[hidden]{display:none!important}
+    #try-sara h3{font-family:var(--serif);font-size:clamp(22px,2.4vw,28px);line-height:1.2;color:var(--tc)}
+    #try-sara .ts-text{color:var(--tc-2);font-size:16px;max-width:30em}
+    #try-sara .ts-small{color:var(--tc-3);font-size:13.5px;max-width:34em}
+    #try-sara form{display:grid;gap:14px;width:100%}
+    #try-sara .ts-bar{display:flex;align-items:center;gap:6px;width:100%;padding:6px;border-radius:14px;background:var(--white);box-shadow:0 22px 40px -20px rgba(0,0,0,.6),0 0 0 4px rgba(255,255,255,.08)}
+    #try-sara .ts-bar:focus-within{box-shadow:0 22px 40px -20px rgba(0,0,0,.6),0 0 0 4px rgba(235,185,168,.55)}
+    #try-sara .ts-bar svg{flex:none;width:20px;height:20px;margin-left:12px;fill:none;stroke:var(--mute-2);stroke-width:1.8;stroke-linecap:round}
+    #try-sara .ts-bar input{flex:1;min-width:0;height:52px;border:0;background:transparent;color:var(--ink);padding:0 6px;font:inherit;font-size:18px;outline:0}
+    #try-sara .ts-bar .btn{flex:none;min-height:52px;padding:14px 22px}
+    #try-sara .ts-consent{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--tc-3);line-height:1.5}
+    #try-sara .ts-consent input{margin-top:3px;accent-color:var(--tc-acc);width:16px;height:16px;flex:0 0 auto}
+    #try-sara .ts-consent a{color:var(--tc-2)}
+    #try-sara .ts-turnstile:empty{display:none}
+    #try-sara .ts-error{color:#FFD3C7;font-size:14px;font-weight:600}
+    #try-sara .ts-error:empty{display:none}
+    #try-sara .ts-actions{display:flex;flex-wrap:wrap;gap:10px}
+    #try-sara .btn-light{background:#fff;color:#4B1A26;box-shadow:0 12px 24px -12px rgba(0,0,0,.45)}
+    #try-sara .btn-ghost{background:rgba(255,255,255,.08);color:var(--tc);box-shadow:inset 0 0 0 1.5px rgba(244,239,227,.38)}
+    #try-sara .btn-light:hover,#try-sara .btn-ghost:hover{transform:translateY(-1px)}
+    #try-sara .btn[disabled]{opacity:.65;cursor:progress}
+    #try-sara .ts-link{background:none;border:0;color:var(--tc);font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:6px 0}
+    #try-sara .ts-alt{font-size:14px;color:var(--tc-3);padding-top:18px;border-top:1px solid rgba(244,239,227,.14)}
+    #try-sara .ts-alt a{color:var(--tc);font-weight:600;text-underline-offset:3px}
+    #try-sara .ts-qr{width:168px;height:168px;padding:10px;border-radius:14px;background:#fff}
+    #try-sara .ts-qr svg{width:100%;height:100%;display:block}
+    #try-sara .ts-wait{display:inline-flex;align-items:center;gap:10px;color:var(--tc-3);font-size:14px}
+    #try-sara .ts-dot{width:8px;height:8px;border-radius:50%;background:var(--tc-acc);animation:ts-pulse 1.2s ease-in-out infinite}
+    @keyframes ts-pulse{0%,100%{opacity:.25}50%{opacity:1}}
+    #try-sara .ts-desk{display:flex;align-items:center;gap:18px}
+    @media (pointer:coarse){#try-sara .ts-desk{display:none}}
+    #try-sara .ts-steps{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+    #try-sara .ts-steps li{display:flex;align-items:center;gap:12px;font-size:15px;color:var(--tc-3);opacity:.35;transition:opacity .5s,color .5s}
+    #try-sara .ts-steps li::before{content:"";flex:none;width:18px;height:18px;border-radius:50%;border:2px solid currentColor;box-sizing:border-box}
+    #try-sara .ts-steps li.now{opacity:1;color:var(--tc)}
+    #try-sara .ts-steps li.now::before{border-color:var(--tc-acc) transparent var(--tc-acc) var(--tc-acc);animation:ts-spin .9s linear infinite}
+    #try-sara .ts-steps li.ok{opacity:1;color:var(--tc-2)}
+    #try-sara .ts-steps li.ok::before{border:0;background:var(--tc-acc) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M4 8.5l2.6 2.5L12 5.5' fill='none' stroke='%233E1520' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/14px no-repeat}
+    @keyframes ts-spin{to{transform:rotate(360deg)}}
+
+    /* the phone: it becomes the visitor's business as they type, then walks the demo with them */
+    #try-sara .ts-visual{position:relative;display:grid;place-items:center;min-width:0;padding:10px 0}
+    #try-sara .ts-visual::before{content:"";position:absolute;width:min(420px,90%);aspect-ratio:1;border-radius:50%;background:radial-gradient(circle,rgba(235,185,168,.28),transparent 65%);filter:blur(8px)}
+    #try-sara .dev{width:272px}
+    #try-sara .dev-screen{grid-template-rows:auto 1fr;gap:0;padding:12px 14px 22px}
+    #try-sara .ts-scenes{display:grid;min-height:0;position:relative}
+    #try-sara .ts-scene{grid-area:1/1;display:grid;align-content:start;justify-items:center;gap:10px;min-height:0;opacity:0;visibility:hidden;transform:translateY(8px);transition:opacity .45s,transform .45s,visibility 0s .45s}
+    #try-sara [data-scene=idle] .ts-scene.s-idle,#try-sara [data-scene=verify] .ts-scene.s-verify,#try-sara [data-scene=building] .ts-scene.s-building,#try-sara [data-scene=ready] .ts-scene.s-ready{opacity:1;visibility:visible;transform:none;transition:opacity .45s,transform .45s}
+    #try-sara .s-idle,#try-sara .s-ready{grid-template-rows:auto auto 1fr auto}
+    #try-sara .ts-st{font-size:12.5px;color:rgba(255,255,255,.55);margin-top:22px}
+    #try-sara .ts-biz{display:block;max-width:100%;font-size:21px;font-weight:600;line-height:1.2;overflow-wrap:anywhere;transition:opacity .25s}
+    #try-sara .ts-biz.swap{opacity:0}
+    #try-sara .ts-by{font-size:12px;color:rgba(255,255,255,.6)}
+    #try-sara .ts-orb{align-self:center;display:grid;place-items:center;position:relative}
+    #try-sara .ts-orb::before{content:"";position:absolute;inset:-18px;border-radius:50%;border:1.5px solid rgba(235,185,168,.35);animation:callpulse 2.6s ease-out infinite}
+    #try-sara .ts-say{width:100%;text-align:left;font-size:12.5px;line-height:1.45;padding:10px 12px;border-radius:14px 14px 14px 4px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.92);min-height:3.1em}
+    #try-sara .ts-say b{font-weight:600}
+    #try-sara .ts-cur{display:inline-block;width:2px;height:1em;margin-left:1px;vertical-align:-2px;background:var(--tc-acc);animation:blink .8s steps(1) infinite}
+    #try-sara .s-verify{padding-top:10px;justify-items:stretch}
+    #try-sara .ts-wa-h{display:flex;align-items:center;gap:10px;padding:6px 4px 12px;border-bottom:1px solid rgba(255,255,255,.08);text-align:left}
+    #try-sara .ts-wa-h b{display:block;font-size:13px}
+    #try-sara .ts-wa-h small{font-size:11px;color:#34C759}
+    #try-sara .ts-wa-msg{justify-self:end;max-width:86%;margin-top:14px;text-align:left;font-size:12.5px;line-height:1.45;padding:9px 11px 18px;border-radius:12px 12px 4px 12px;background:#1F5E3B;color:#fff;position:relative;animation:ts-in .5s .2s both}
+    #try-sara .ts-wa-msg::after{content:"✓✓";position:absolute;right:8px;bottom:3px;font-size:10px;color:rgba(255,255,255,.55);letter-spacing:-2px}
+    #try-sara .ts-wa-cap{font-size:11.5px;color:rgba(255,255,255,.5);text-align:center;margin-top:8px}
+    @keyframes ts-in{from{opacity:0;transform:translateY(10px) scale(.96)}}
+    #try-sara .s-building{align-content:center;height:100%}
+    #try-sara .s-building .lo{animation:ts-breathe 2.4s ease-in-out infinite}
+    @keyframes ts-breathe{50%{transform:scale(1.06)}}
+    #try-sara .ts-read{font-size:13px;color:rgba(255,255,255,.7);margin-top:14px}
+    #try-sara .ts-read b{display:block;color:#fff;font-size:15px;overflow-wrap:anywhere}
+    #try-sara .ts-scan{width:78%;display:grid;gap:7px;margin-top:10px}
+    #try-sara .ts-scan i{height:6px;border-radius:4px;background:linear-gradient(90deg,rgba(255,255,255,.08) 30%,rgba(235,185,168,.6) 50%,rgba(255,255,255,.08) 70%) 0 0/300% 100%;animation:ts-shine 1.8s linear infinite}
+    #try-sara .ts-scan i:nth-child(2){width:84%;animation-delay:.2s}#try-sara .ts-scan i:nth-child(3){width:64%;animation-delay:.4s}
+    @keyframes ts-shine{from{background-position:100% 0}to{background-position:0 0}}
+    #try-sara .ts-answer{display:grid;justify-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.8);background:none;border:0;cursor:pointer;font-family:inherit;padding:0}
+    #try-sara .ts-answer .playbtn{pointer-events:none}
+    #try-sara .ts-chip{position:absolute;z-index:2;display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:999px;background:rgba(253,252,249,.95);color:var(--ink);font-size:13px;font-weight:600;
+      box-shadow:0 14px 28px -14px rgba(0,0,0,.55);animation:ts-float 6s ease-in-out infinite;white-space:nowrap;transition:opacity .4s}
+    #try-sara .dev:not([data-scene=idle]) .ts-chip{opacity:0}
+    #try-sara .ts-chip i{width:8px;height:8px;border-radius:50%;background:var(--wine)}
+    #try-sara .ts-chip.c1{right:calc(100% - 56px);top:44%}
+    #try-sara .ts-chip.c2{left:calc(100% - 76px);top:63%;animation-delay:-3s}
+    @keyframes ts-float{50%{transform:translateY(-8px)}}
+    @media (max-width:1100px){#try-sara .ts-chip{display:none}}
+    @media (max-width:900px){#try-sara .ts-stage{grid-template-columns:minmax(0,1fr)}}
+    @media (max-width:560px){#try-sara .ts-stage{border-radius:22px;padding:28px 18px}
+      #try-sara .ts-bar{flex-wrap:wrap;padding:6px}#try-sara .ts-bar input{flex:1 1 60%}#try-sara .ts-bar .btn{flex:1 1 100%}
+      #try-sara .ts-actions{display:grid;width:100%}#try-sara .dev{width:232px}}
+    @media (prefers-reduced-motion:reduce){#try-sara .ts-chip,#try-sara .ts-orb::before,#try-sara .s-building .lo,#try-sara .ts-scan i{animation:none}}
+    .ts-modal{position:fixed;inset:0;z-index:1000;background:rgba(31,26,20,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+    .ts-modal[hidden]{display:none}
+    .ts-modal-box{position:relative;width:min(1100px,100%);height:min(820px,100%);border-radius:20px;overflow:hidden;background:var(--paper);box-shadow:var(--sh-float)}
+    .ts-modal iframe{width:100%;height:100%;border:0;display:block}
+    .ts-close{position:absolute;top:10px;right:10px;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:var(--white);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;box-shadow:var(--sh-crisp)}
+    @media (max-width:640px){.ts-modal{padding:0}.ts-modal-box{width:100%;height:100%;border-radius:0}}
+    </style>
+    <div class="wrap">
+      <div class="ts-stage">
+        <div class="ts-copy">
+          <span class="ts-eyebrow" data-t="eyebrow"></span>
+          <h2 data-t="title" data-html></h2>
+          <p class="ts-lede" data-t="lede"></p>
+          <ol class="ts-track"><li class="on"><span>1</span><b data-t="step1"></b></li><li><span>2</span><b data-t="step2"></b></li><li><span>3</span><b data-t="step3"></b></li></ol>
+
+          <div class="ts-state" data-state="form">
+            <form novalidate>
+              <div class="ts-bar">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9S9.4 5.6 12 3z"/></svg>
+                <input type="text" name="url" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" maxlength="300" required>
+                <button class="btn btn-wine" type="submit" data-t="submit"></button>
+              </div>
+              <label class="ts-consent"><input type="checkbox" name="consent"><span><span data-t="consent"></span> <a href="/privacy-policy" target="_blank" rel="noopener" data-t="privacy"></a></span></label>
+              <div class="ts-turnstile"></div>
+              <p class="ts-error" role="alert"></p>
+              <p class="ts-small" data-t="note"></p>
+            </form>
+          </div>
+          <div class="ts-state" data-state="verify" hidden>
+            <h3 data-t="verifyTitle"></h3>
+            <p class="ts-text" data-t="verifyText"></p>
+            <div class="ts-desk"><div class="ts-qr"></div><p class="ts-small" data-t="qrHint"></p></div>
+            <div class="ts-actions"><a class="btn btn-light ts-wa" target="_blank" rel="noopener" data-t="openWa"></a></div>
+            <span class="ts-wait"><i class="ts-dot"></i><span data-t="waiting"></span></span>
+          </div>
+          <div class="ts-state" data-state="building" hidden>
+            <h3 data-t="buildingTitle"></h3>
+            <ul class="ts-steps"><li data-t="b1"></li><li data-t="b2"></li><li data-t="b3"></li><li data-t="b4"></li></ul>
+            <p class="ts-small" data-t="buildingText"></p>
+          </div>
+          <div class="ts-state" data-state="ready" hidden>
+            <h3 data-t="readyTitle"></h3>
+            <p class="ts-text" data-t="readyText"></p>
+            <div class="ts-actions">
+              <button class="btn btn-light ts-talk" type="button" data-t="talk"></button>
+              <a class="btn btn-ghost ts-wa" target="_blank" rel="noopener" data-t="wa"></a>
+              <a class="btn btn-ghost ts-call" hidden></a>
+            </div>
+          </div>
+          <div class="ts-state" data-state="blocked" hidden>
+            <h3 data-t="blockedTitle"></h3>
+            <p class="ts-text ts-reason"></p>
+            <div class="ts-actions"><a class="btn btn-light ts-book" target="_blank" rel="noopener" data-t="book"></a></div>
+            <button class="ts-link ts-again" type="button" data-t="again"></button>
+          </div>
+
+          <p class="ts-alt"><span data-t="alt"></span> <a class="js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener" data-t="altLink"></a></p>
+        </div>
+
+        <div class="ts-visual" aria-hidden="true">
+          <div class="dev" data-scene="idle">
+            <span class="ts-chip c1"><i></i><span data-t="chip1"></span></span>
+            <span class="ts-chip c2"><i></i><span data-t="chip2"></span></span>
+            <div class="dev-screen">
+              <div class="dev-status"><span class="num">19:42</span><i class="island"></i><span class="dev-ic"><i class="sig"></i><i class="bat"></i></span></div>
+              <div class="ts-scenes">
+                <div class="ts-scene s-idle">
+                  <span class="ts-st" data-t="incoming"></span>
+                  <div><b class="ts-biz"></b><small class="ts-by" data-t="answeredBy"></small></div>
+                  <span class="ts-orb"><span class="lo" style="--lo-s:96px"><span class="lo-eyes"><i></i><i></i></span></span></span>
+                  <p class="ts-say"></p>
+                </div>
+                <div class="ts-scene s-verify">
+                  <div class="ts-wa-h"><span class="lo" style="--lo-s:32px"><span class="lo-eyes"><i></i><i></i></span></span><div><b>Sara · Lead Awaker</b><small>online</small></div></div>
+                  <p class="ts-wa-msg"></p>
+                  <p class="ts-wa-cap" data-t="waCap"></p>
+                </div>
+                <div class="ts-scene s-building">
+                  <span class="lo" style="--lo-s:110px"><span class="lo-eyes"><i></i><i></i></span></span>
+                  <p class="ts-read"><span data-t="reading"></span><b class="ts-dom"></b></p>
+                  <div class="ts-scan"><i></i><i></i><i></i></div>
+                </div>
+                <div class="ts-scene s-ready">
+                  <span class="ts-st" data-t="incoming"></span>
+                  <div><b class="ts-biz ts-co"></b><small class="ts-by" data-t="yourReceptionist"></small></div>
+                  <span class="ts-orb"><span class="lo" style="--lo-s:96px"><span class="lo-eyes"><i></i><i></i></span></span></span>
+                  <button class="ts-answer" type="button" tabindex="-1"><span class="playbtn"><svg class="i-play" viewBox="0 0 24 24"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z"/></svg></span><span data-t="answer"></span></button>
+                </div>
+              </div>
+              <i class="home-bar"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ts-modal" hidden role="dialog" aria-modal="true">
+      <div class="ts-modal-box"><button class="ts-close" type="button">&times;</button><iframe allow="microphone; autoplay" title="Sara"></iframe></div>
+    </div>
+    <script>
+    (function(){
+      var sec=document.getElementById('try-sara');if(!sec)return;
+      var q=new URLSearchParams(location.search),mode=q.get('try');
+      if(!mode&&location.hostname==='app.leadawaker.com')mode='1'; // always on the dev server
+      if(mode!=='1'&&mode!=='mock')return; // hidden on leadawaker.com until launch
+      sec.hidden=false;
+      // While the demo is live, the hero's first button leads here and #book offers it next to the calendar.
+      var hero=document.querySelector('.hero .cta-row .js-book');
+      if(hero){hero.classList.remove('js-book');hero.href='#try-sara';hero.removeAttribute('target');hero.removeAttribute('rel')}
+      function showCta(){[].forEach.call(document.querySelectorAll('.ts-cta'),function(a){a.hidden=false})}
+      if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',showCta);else showCta();
+      var MOCK=mode==='mock';
+      var lang=(document.documentElement.lang||'en').slice(0,2);if(['en','nl','pt'].indexOf(lang)<0)lang='en';
+      var COPY={
+        en:{eyebrow:'Try her yourself',title:'Hear Sara answer for <em class="w">your</em> business',
+          lede:'Type your website. Sara reads it and becomes your receptionist in about a minute. Then talk to her in your browser, on WhatsApp or on the phone.',
+          step1:'Your website',step2:'Confirm on WhatsApp',step3:'Talk to her',
+          label:'Your website',placeholder:'yourbusiness.com',
+          consent:'Lead Awaker may store my website and phone number to run this demo and contact me about it by WhatsApp or phone.',privacy:'Privacy policy',
+          submit:'Build my demo',note:'Free. You confirm your number with one WhatsApp message.',
+          alt:'Rather talk to Gabriel first?',altLink:'Book a call',
+          chip1:'Reads your website',chip2:'Ready in about a minute',
+          incoming:'Incoming call',answeredBy:'Answered by Sara',yourReceptionist:'Your new receptionist',answer:'Answer',
+          examples:['Brightsmile Dental','Northgate Motors','Oak & Pine Roofing'],greet:'{biz}, Sara speaking. How can I help?',
+          waCap:'Waiting for you to press send',waMsg:'Hi Sara, start my demo',reading:'Reading',
+          verifyTitle:'One last step: send us the WhatsApp message',verifyText:'We prepared the message for you. Sending it proves the number is yours and starts your demo.',
+          qrHint:'Scan with your phone’s camera',openWa:'Open WhatsApp',waiting:'Waiting for your message',
+          buildingTitle:'Sara is reading {domain}',buildingText:'She’ll also let you know on WhatsApp when she’s ready.',
+          b1:'Reading your website',b2:'Learning what you offer',b3:'Writing how she answers',b4:'Getting her voice ready',
+          readyTitle:'Sara is now the receptionist of {company}',readyText:'Talk to her as if you were one of your customers. Ask about prices, opening hours or an appointment.',
+          talk:'Talk to her now',wa:'Continue on WhatsApp',call:'Or call her: {number}',
+          blockedTitle:'Let Gabriel show you instead',book:'Book a call with Gabriel',again:'Try another website',close:'Close',
+          err:{country:'This demo works with numbers from the Netherlands, the UK and Brazil.',limit:'You’ve reached today’s demo limit.',
+            busy:'So many people are trying Sara today that she’s hit her limit. Book a call and Gabriel will show you instead.',
+            unreadable:'Sara couldn’t read that website. It may block visitors like her. Book a call and Gabriel will show you how it works for your business.',
+            bot_check:'We couldn’t check that you’re human. Refresh the page and try again.',invalid_url:'That doesn’t look like a website address.',
+            consent:'Please tick the box first.',expired:'This demo has expired. Start again with your website.',
+            network:'Something went wrong. Try again in a moment.',disabled:'The self-serve demo is paused right now. Book a call and Gabriel will show you Sara for your business.'}},
+        nl:{eyebrow:'Probeer haar zelf',title:'Hoor Sara opnemen voor <em class="w">jouw</em> bedrijf',
+          lede:'Vul je website in. Sara leest hem en is binnen een minuut jouw receptioniste. Praat daarna met haar in je browser, via WhatsApp of aan de telefoon.',
+          step1:'Je website',step2:'Bevestig via WhatsApp',step3:'Praat met haar',
+          label:'Je website',placeholder:'jouwbedrijf.nl',
+          consent:'Lead Awaker mag mijn website en telefoonnummer bewaren om deze demo te laten werken en mij hierover via WhatsApp of telefoon benaderen.',privacy:'Privacybeleid',
+          submit:'Maak mijn demo',note:'Gratis. Je bevestigt je nummer met één WhatsApp-bericht.',
+          alt:'Liever eerst met Gabriel praten?',altLink:'Plan een gesprek',
+          chip1:'Leest je website',chip2:'Klaar in een minuut',
+          incoming:'Inkomend gesprek',answeredBy:'Opgenomen door Sara',yourReceptionist:'Je nieuwe receptioniste',answer:'Opnemen',
+          examples:['Tandartspraktijk Lindehof','Northgate Motors','Keukenstudio Vos'],greet:'{biz}, met Sara. Waarmee kan ik je helpen?',
+          waCap:'Wacht tot je op verzenden drukt',waMsg:'Hoi Sara, start mijn demo',reading:'Leest',
+          verifyTitle:'Nog één stap: stuur ons het WhatsApp-bericht',verifyText:'Het bericht staat al klaar. Door het te versturen bevestig je dat het nummer van jou is en start je demo.',
+          qrHint:'Scan met de camera van je telefoon',openWa:'Open WhatsApp',waiting:'Wachten op je bericht',
+          buildingTitle:'Sara leest {domain}',buildingText:'Ze laat het je ook via WhatsApp weten als ze klaar is.',
+          b1:'Je website lezen',b2:'Leren wat je aanbiedt',b3:'Bepalen hoe ze opneemt',b4:'Haar stem klaarzetten',
+          readyTitle:'Sara is nu de receptioniste van {company}',readyText:'Praat met haar alsof je een van je klanten bent. Vraag naar prijzen, openingstijden of een afspraak.',
+          talk:'Praat nu met haar',wa:'Verder op WhatsApp',call:'Of bel haar: {number}',
+          blockedTitle:'Laat Gabriel het je laten zien',book:'Plan een gesprek met Gabriel',again:'Probeer een andere website',close:'Sluiten',
+          err:{country:'Deze demo werkt met nummers uit Nederland, het Verenigd Koninkrijk en Brazilië.',limit:'Je hebt de demolimiet voor vandaag bereikt.',
+            busy:'Er proberen vandaag zoveel mensen Sara uit dat ze haar limiet heeft bereikt. Plan een gesprek, dan laat Gabriel het je zien.',
+            unreadable:'Sara kon die website niet lezen. Misschien blokkeert hij bezoekers zoals zij. Plan een gesprek, dan laat Gabriel zien hoe het voor jouw bedrijf werkt.',
+            bot_check:'We konden niet controleren dat je een mens bent. Ververs de pagina en probeer het opnieuw.',invalid_url:'Dat lijkt geen websiteadres.',
+            consent:'Vink eerst het vakje aan.',expired:'Deze demo is verlopen. Begin opnieuw met je website.',
+            network:'Er ging iets mis. Probeer het zo nog eens.',disabled:'De demo staat even op pauze. Plan een gesprek, dan laat Gabriel je Sara voor jouw bedrijf zien.'}},
+        pt:{eyebrow:'Teste você mesmo',title:'Ouça a Sara atendendo pela <em class="w">sua</em> empresa',
+          lede:'Digite o seu site. A Sara lê tudo e vira a sua recepcionista em mais ou menos um minuto. Depois é só conversar com ela no navegador, no WhatsApp ou por telefone.',
+          step1:'Seu site',step2:'Confirme no WhatsApp',step3:'Fale com ela',
+          label:'Seu site',placeholder:'suaempresa.com.br',
+          consent:'A Lead Awaker pode guardar meu site e meu número para fazer esta demonstração funcionar e entrar em contato comigo sobre ela por WhatsApp ou telefone.',privacy:'Política de privacidade',
+          submit:'Criar minha demonstração',note:'Grátis. Você confirma seu número com uma mensagem no WhatsApp.',
+          alt:'Prefere falar com o Gabriel primeiro?',altLink:'Agendar uma conversa',
+          chip1:'Lê o seu site',chip2:'Pronta em um minuto',
+          incoming:'Chamada recebida',answeredBy:'Atendida pela Sara',yourReceptionist:'Sua nova recepcionista',answer:'Atender',
+          examples:['Clínica Sorriso Claro','Northgate Motors','Marcenaria Ipê'],greet:'{biz}, aqui é a Sara. Como posso ajudar?',
+          waCap:'Esperando você tocar em enviar',waMsg:'Oi Sara, começar minha demonstração',reading:'Lendo',
+          verifyTitle:'Último passo: mande a mensagem no WhatsApp',verifyText:'A mensagem já está pronta. Ao enviar, você confirma que o número é seu e começa a sua demonstração.',
+          qrHint:'Escaneie com a câmera do celular',openWa:'Abrir o WhatsApp',waiting:'Aguardando a sua mensagem',
+          buildingTitle:'A Sara está lendo {domain}',buildingText:'Ela também avisa no WhatsApp quando estiver pronta.',
+          b1:'Lendo o seu site',b2:'Aprendendo o que você oferece',b3:'Definindo como ela atende',b4:'Preparando a voz dela',
+          readyTitle:'A Sara agora é a recepcionista da {company}',readyText:'Converse com ela como se você fosse um dos seus clientes. Pergunte sobre preços, horários ou um agendamento.',
+          talk:'Falar com ela agora',wa:'Continuar no WhatsApp',call:'Ou ligue para ela: {number}',
+          blockedTitle:'Deixe o Gabriel te mostrar',book:'Agendar uma conversa com o Gabriel',again:'Tentar outro site',close:'Fechar',
+          err:{country:'Esta demonstração funciona com números da Holanda, do Reino Unido e do Brasil.',limit:'Você chegou ao limite de demonstrações de hoje.',
+            busy:'Tanta gente está testando a Sara hoje que ela chegou no limite. Agende uma conversa e o Gabriel te mostra.',
+            unreadable:'A Sara não conseguiu ler esse site. Talvez ele bloqueie visitantes como ela. Agende uma conversa e o Gabriel mostra como funciona para a sua empresa.',
+            bot_check:'Não conseguimos confirmar que você é humano. Atualize a página e tente de novo.',invalid_url:'Isso não parece um endereço de site.',
+            consent:'Marque a caixinha primeiro.',expired:'Esta demonstração expirou. Comece de novo com o seu site.',
+            network:'Algo deu errado. Tente de novo daqui a pouco.',disabled:'A demonstração está pausada agora. Agende uma conversa e o Gabriel te mostra a Sara para a sua empresa.'}}
+      };
+      var C=COPY[lang],API='/api/public-demo',KEY='la_try_sara';
+      function bookUrl(){return (document.querySelector('#book a.btn')||{}).href||'https://cal.com/leadawaker/quick-chat'}
+      function $(s){return sec.querySelector(s)}
+      function $$(s){return [].slice.call(sec.querySelectorAll(s))}
+      function fill(s,v){return s.replace(/\{(\w+)\}/g,function(_,k){return v&&v[k]!=null?v[k]:''})}
+      $$('[data-t]').forEach(function(el){var v=C[el.getAttribute('data-t')];if(v==null)return;if(el.hasAttribute('data-html'))el.innerHTML=v;else el.textContent=v});
+      var form=$('form'),input=form.url,err=$('.ts-error'),modal=sec.querySelector('.ts-modal'),frame=modal.querySelector('iframe'),dev=$('.dev');
+      input.placeholder=C.placeholder;input.setAttribute('aria-label',C.label);modal.querySelector('.ts-close').setAttribute('aria-label',C.close);
+      var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* The phone. Idle, it cycles example businesses with Sara typing their greeting;
+         as soon as the visitor types, it becomes their own domain. */
+      var biz=$('.s-idle .ts-biz'),say=$('.s-idle .ts-say'),exI=0,typeT=null,cycleT=null,own='';
+      function host(v){v=String(v||'').trim().toLowerCase().replace(/^[a-z]+:\/\//,'').replace(/^www\./,'');return v.split(/[\/?#\s]/)[0].slice(0,40)}
+      function greet(name,instant){
+        clearTimeout(typeT);var full=fill(C.greet,{biz:name}),cut=full.indexOf(name)+name.length,n=instant||reduced?full.length:0;
+        (function step(){
+          var shown=full.slice(0,n),b=shown.slice(0,Math.min(n,cut)),rest=shown.slice(b.length);
+          say.innerHTML='';var bb=document.createElement('b');bb.textContent=b;say.appendChild(bb);say.appendChild(document.createTextNode(rest));
+          if(n<full.length){var cur=document.createElement('i');cur.className='ts-cur';say.appendChild(cur);n++;typeT=setTimeout(step,28)}
+        })();
+      }
+      function setBiz(name,instant){
+        if(biz.textContent===name)return;
+        if(instant){biz.textContent=name;greet(name,true);return}
+        biz.classList.add('swap');setTimeout(function(){biz.textContent=name;biz.classList.remove('swap');greet(name)},220);
+      }
+      function cycle(){clearTimeout(cycleT);if(own)return;setBiz(C.examples[exI%C.examples.length]);exI++;cycleT=setTimeout(cycle,5200)}
+      input.addEventListener('input',function(){
+        own=host(input.value);clearTimeout(cycleT);
+        if(own)setBiz(own,true);else cycleT=setTimeout(cycle,900);
+      });
+      cycle();
+
+      function scene(s){dev.setAttribute('data-scene',s)}
+      function track(n){$$('.ts-track li').forEach(function(li,i){li.className=i<n-1?'done':i===n-1?'on':''})}
+      var buildT=null;
+      function buildSteps(on){
+        clearTimeout(buildT);var items=$$('.ts-steps li'),i=0;
+        items.forEach(function(li){li.className=''});
+        if(!on)return;
+        (function next(){
+          items.forEach(function(li,k){li.className=k<i?'ok':k===i?'now':''});
+          if(i<items.length-1){i++;buildT=setTimeout(next,9000)}
+        })();
+      }
+      function show(state){
+        $$('.ts-state').forEach(function(el){el.hidden=el.getAttribute('data-state')!==state});
+        track(state==='verify'?2:state==='building'?2:state==='ready'?3:1);
+        if(state==='building')$$('.ts-track li')[1].className='done';
+        scene(state==='verify'||state==='building'||state==='ready'?state:'idle');
+        if(state!=='building')buildSteps(false);
+      }
+      function blocked(code,bookingUrl){$('.ts-reason').textContent=C.err[code]||C.err.network;$('.ts-book').href=bookingUrl||bookUrl();show('blocked')}
+      function fmtNum(n){var d=String(n||'').replace(/\D/g,'');if(d.indexOf('31')===0)return '+31 '+d.slice(2,4)+' '+d.slice(4,7)+' '+d.slice(7);if(d.indexOf('44')===0)return '+44 '+d.slice(2,6)+' '+d.slice(6);return '+'+d}
+      function waText(url){try{return new URL(url).searchParams.get('text')||C.waMsg}catch(e){return C.waMsg}}
+      function save(t){try{t?sessionStorage.setItem(KEY,t):sessionStorage.removeItem(KEY)}catch(e){}}
+      function load(){try{return sessionStorage.getItem(KEY)}catch(e){return null}}
+
+      /* Fake answers for ?try=mock: walks through every state without a server. */
+      var mockT0=0;
+      function api(path,opts){
+        if(!MOCK)return fetch(API+path,opts).then(function(r){return r.json().then(function(b){b._status=r.status;return b})});
+        return new Promise(function(res){setTimeout(function(){
+          if(path==='/availability')return res({available:true,siteKey:null});
+          if(path==='/requests')return res({ok:true,token:'0123456789abcdef',domain:'brightsmile.nl',whatsappUrl:'https://wa.me/31627458300',
+            qrSvg:'<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="#fff"/><path d="M1 1h3v3H1zM6 1h3v3H6zM1 6h3v3H1zM6 6h1v1H6zM8 8h1v1H8z" fill="#1F1A14"/></svg>'});
+          var s=(Date.now()-mockT0)/1000;
+          res(s<6?{status:'verify',domain:'brightsmile.nl'}:s<30?{status:'building',domain:'brightsmile.nl'}:
+            {status:'ready',domain:'brightsmile.nl',companyName:'Brightsmile Dental',voiceUrl:'/voice-demo?embed=1',whatsappUrl:'https://wa.me/31627458300',callNumber:'+31738519847'});
+        },300)});
+      }
+
+      var widget=null,siteKey=null,tsToken='';
+      function loadTurnstile(){
+        if(MOCK||!siteKey||widget!==null)return;widget=false;
+        window.__tsReady=function(){widget=window.turnstile.render($('.ts-turnstile'),{sitekey:siteKey,action:'public_demo',language:lang==='pt'?'pt-br':lang,appearance:'interaction-only',
+          callback:function(t){tsToken=t},'expired-callback':function(){tsToken=''},'error-callback':function(){tsToken=''}})};
+        var s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=__tsReady';s.async=true;document.head.appendChild(s);
+      }
+      // The check runs invisibly; a fast visitor may submit before it finishes, so give it a few seconds.
+      function whenToken(cb){var t0=Date.now();(function wait(){if(MOCK||tsToken)return cb(true);if(Date.now()-t0>6000)return cb(false);setTimeout(wait,250)})()}
+
+      var pollTimer=null,pollStart=0;
+      function render(d,token){
+        if(d.status==='verify'){$$('.ts-wa')[0].href=d.whatsappUrl||$$('.ts-wa')[0].href;$('.ts-wa-msg').textContent=waText(d.whatsappUrl);show('verify');return true}
+        if(d.status==='building'){
+          $('[data-t=buildingTitle]').textContent=fill(C.buildingTitle,{domain:d.domain});$('.ts-dom').textContent=d.domain||'';
+          if(sec.querySelector('[data-state=building]').hidden){show('building');buildSteps(true)}
+          return true;
+        }
+        if(d.status==='ready'){
+          var co=d.companyName||d.domain;
+          $('[data-t=readyTitle]').textContent=fill(C.readyTitle,{company:co});$('.ts-co').textContent=co;
+          $$('.ts-wa')[1].href=d.whatsappUrl;
+          var call=$('.ts-call');if(d.callNumber){call.hidden=false;call.href='tel:'+d.callNumber;call.textContent=fill(C.call,{number:fmtNum(d.callNumber)})}else call.hidden=true;
+          var talk=function(){frame.src=d.voiceUrl;modal.hidden=false};
+          $('.ts-talk').onclick=talk;$('.ts-answer').onclick=talk;
+          show('ready');return false;
+        }
+        save(null);
+        blocked(d.status==='expired'?'expired':d.code||'network',d.bookingUrl);return false;
+      }
+      function poll(token){
+        clearTimeout(pollTimer);
+        var age=Date.now()-pollStart;if(age>15*60*1000)return;
+        api('/requests/'+token).then(function(d){
+          if(render(d,token))pollTimer=setTimeout(function(){poll(token)},age>120000?5000:2000);
+        }).catch(function(){pollTimer=setTimeout(function(){poll(token)},5000)});
+      }
+      function start(token){save(token);pollStart=Date.now();mockT0=mockT0||Date.now();poll(token)}
+
+      form.addEventListener('submit',function(e){
+        e.preventDefault();err.textContent='';
+        if(!input.value.trim()){err.textContent=C.err.invalid_url;input.focus();return}
+        if(!form.consent.checked){err.textContent=C.err.consent;return}
+        var btn=form.querySelector('button');btn.disabled=true;
+        whenToken(function(ok){
+          if(!ok){btn.disabled=false;err.textContent=C.err.bot_check;return}
+          api('/requests',{method:'POST',headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({url:input.value.trim(),language:lang,consent:true,turnstileToken:tsToken})})
+          .then(function(d){
+            btn.disabled=false;
+            if(!d.ok){
+              if(window.turnstile&&widget){window.turnstile.reset(widget);tsToken=''}
+              if(d.code==='invalid_url'||d.code==='consent'||d.code==='bot_check'||d.code==='invalid'){err.textContent=C.err[d.code==='invalid'?'invalid_url':d.code];return}
+              blocked(d.code||'network',d.bookingUrl);return;
+            }
+            $('.ts-qr').innerHTML=d.qrSvg||'';$$('.ts-wa')[0].href=d.whatsappUrl;$('.ts-wa-msg').textContent=waText(d.whatsappUrl);
+            mockT0=Date.now();show('verify');start(d.token);
+          }).catch(function(){btn.disabled=false;err.textContent=C.err.network});
+        });
+      });
+      $('.ts-again').addEventListener('click',function(){save(null);clearTimeout(pollTimer);input.value='';own='';cycle();show('form');loadTurnstile();if(window.turnstile&&widget)window.turnstile.reset(widget)});
+      modal.querySelector('.ts-close').addEventListener('click',function(){modal.hidden=true;frame.src='about:blank'});
+
+      api('/availability').then(function(a){
+        siteKey=a.siteKey||null;
+        var resume=load();
+        if(resume&&/^[a-f0-9]{16}$/.test(resume)){start(resume);return}
+        if(!a.available){blocked(a.reason==='busy'?'busy':'disabled');return}
+        show('form');loadTurnstile();
+      }).catch(function(){show('form')});
+    })();
+    </script>
   </section>
 
   <section class="band" id="problem" style="padding-top:clamp(24px,4vw,48px)">
@@ -1760,35 +2235,45 @@ footer img{height:24px;width:auto;display:block}
 
   <section class="band" id="about">
     <div class="wrap">
-      <div class="team">
-        <div class="team-h">
+      <div class="team me">
+        <div class="me-l">
+          <div class="pc"><div class="pc-bg"></div><div class="pc-img g" role="img" aria-label="Gabriel Fronza"></div></div>
+          <div class="me-sig"><b>Gabriel Fronza<span>.</span></b><div class="role"><svg viewBox="0 0 16 16" aria-hidden="true"><polygon points="8,1 14,4.5 14,11.5 8,15 2,11.5 2,4.5"/><polyline points="2,4.5 8,8 14,4.5"/><line x1="8" y1="8" x2="8" y2="15"/></svg><div>Oprichter<span>Bouwt elke receptioniste zelf</span></div></div></div>
+        </div>
+        <div class="me-r">
           <span class="eyebrow">Met wie je werkt</span>
           <span class="bar"></span>
-          <h2><span>Systemen</span><span>én</span><em class="w">sales.</em></h2>
-          <p>De een bouwt de systemen. De ander weet hoe je verkoopt.</p>
-        </div>
-        <div class="people">
-          <div class="person">
-            <div class="pc"><div class="pc-bg"></div><div class="pc-img g" role="img" aria-label="Gabriel Fronza"></div></div>
-            <div class="p-txt">
-              <h3>Gabriel Fronza<span>.</span></h3>
-              <span class="bar"></span>
-              <div class="role"><svg viewBox="0 0 16 16" aria-hidden="true"><polygon points="8,1 14,4.5 14,11.5 8,15 2,11.5 2,4.5"/><polyline points="2,4.5 8,8 14,4.5"/><line x1="8" y1="8" x2="8" y2="15"/></svg><div>Oprichter<span>Systemen &amp; Automatisering</span></div></div>
-              <div class="bio"><p>12+ jaar digitale systemen bouwen voor mkb-bedrijven en namen als Warner Bros. en Sega. Nu bouwt hij AI die opneemt, opvolgt en inplant.</p></div>
-            </div>
-          </div>
-          <div class="person">
-            <div class="pc"><div class="pc-bg"></div><div class="pc-img f" role="img" aria-label="Finn Zijlstra"></div></div>
-            <div class="p-txt">
-              <h3>Finn Zijlstra<span>.</span></h3>
-              <span class="bar"></span>
-              <div class="role"><svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="4.5"/><circle cx="8" cy="8" r="1.6" class="fillc"/><line x1="8" y1=".5" x2="8" y2="2.8"/><line x1="8" y1="13.2" x2="8" y2="15.5"/><line x1=".5" y1="8" x2="2.8" y2="8"/><line x1="13.2" y1="8" x2="15.5" y2="8"/></svg><div>Partner<span>Sales &amp; Acquisitie</span></div></div>
-              <div class="bio"><p>Salesstrateeg die voor miljoenen aan technische projecten verkocht. Hij bepaalt hoe Sara omgaat met “wat kost het?” en “kan het eerder?”.</p></div>
+          <h2>Eén bouwer. <em class="w">Elk detail.</em></h2>
+          <div class="me-chat">
+            <div class="me-chat-h"><span class="lo" style="--lo-s:34px" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span></span><div><b>Sara</b><small>over degene die haar bouwde</small></div></div>
+            <div class="me-msgs">
+            <p class="me-m v">Wie heeft jou gebouwd?</p>
+            <p class="me-m s">Gabriel. Hij bouwde 12 jaar lang digitale systemen, voor mkb-bedrijven en voor Warner Bros. en Sega. Nu bouwt hij mij.</p>
+            <p class="me-m v">Zit er echt een mens achter?</p>
+            <p class="me-m s">Ja, alleen hij, en dat is bewust. Wie je receptioniste bouwt, is ook degene met wie je praat. Niets wordt doorgeschoven.</p>
+            <p class="me-m v">Kan ik hem spreken?</p>
+            <div class="me-m s">Natuurlijk. Kies een moment en hij neemt zelf op. <a class="btn btn-wine js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Plan een gesprek met Gabriel</a></div>
             </div>
           </div>
         </div>
       </div>
     </div>
+    <script>
+    (function(){
+      var box=document.querySelector('#about .me-msgs');if(!box||!('IntersectionObserver' in window))return;
+      if(window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+      box.style.minHeight=box.offsetHeight+'px';box.classList.add('me-anim');
+      var msgs=[].slice.call(box.querySelectorAll('.me-m')),i=0;
+      function next(){
+        if(i>=msgs.length)return;var m=msgs[i++];
+        if(m.classList.contains('v')){setTimeout(function(){m.classList.add('in');next()},i===1?200:700);return}
+        var t=document.createElement('div');t.className='me-typing';t.innerHTML='<i></i><i></i><i></i>';
+        setTimeout(function(){box.insertBefore(t,m);setTimeout(function(){t.remove();m.classList.add('in');next()},1100)},350);
+      }
+      var io=new IntersectionObserver(function(es){if(es[0].isIntersecting){io.disconnect();next()}},{threshold:.35});
+      io.observe(box);
+    })();
+    </script>
   </section>
 
   <section class="band" id="testimonials" style="padding-top:0">
@@ -1824,248 +2309,43 @@ footer img{height:24px;width:auto;display:block}
     </div>
   </section>
 
-  <!-- Public website demo (specs/public-website-demo). Hidden until launch:
-       ?try=1 shows it live, ?try=mock runs it on fake answers for design review.
-       All copy lives in COPY below (en/nl/pt), picked by <html lang>, so the
-       /nl and /pt builds need no pairs for it. -->
-  <section class="band" id="try-sara" hidden>
+  <!-- The Report: free lead magnet, a full-width wine bar right above the closing CTA. Links to the
+       opt-in page (/nl/rapport). Source of the PDF: script/report/ (node script/report/build.cjs). -->
+  <section id="report" aria-labelledby="rp-h">
     <style>
-    #try-sara .ts-card{max-width:640px;margin:0 auto;border-radius:24px;background:var(--paper);box-shadow:var(--sh-raised);padding:clamp(24px,4vw,40px);display:grid;gap:18px;text-align:center;justify-items:center}
-    #try-sara .ts-state{display:grid;gap:16px;justify-items:center;width:100%}
-    #try-sara .ts-state[hidden]{display:none!important}
-    #try-sara h3{font-family:var(--serif);font-size:clamp(22px,2.4vw,28px);line-height:1.2}
-    #try-sara .ts-text{color:var(--ink-soft);font-size:16px;max-width:30em}
-    #try-sara .ts-small{color:var(--mute);font-size:13.5px;max-width:34em}
-    #try-sara form{display:grid;gap:14px;width:100%;text-align:left}
-    #try-sara .ts-field{display:grid;gap:6px}
-    #try-sara .ts-field span{font-size:13px;font-weight:600;color:var(--ink-soft)}
-    #try-sara input[type=text]{width:100%;height:52px;border-radius:10px;border:1px solid var(--line);background:var(--white);color:var(--ink);padding:0 16px;font:inherit;font-size:17px;box-shadow:var(--sh-inset)}
-    #try-sara input[type=text]:focus{outline:2px solid var(--wine);outline-offset:2px}
-    #try-sara .ts-consent{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;color:var(--mute);line-height:1.5}
-    #try-sara .ts-consent input{margin-top:3px;accent-color:var(--wine);width:16px;height:16px;flex:0 0 auto}
-    #try-sara .ts-turnstile{min-height:65px;display:flex;justify-content:center}
-    #try-sara .btn{width:100%}
-    #try-sara .ts-actions{display:grid;gap:10px;width:100%;max-width:420px}
-    #try-sara .btn-soft{background:var(--surface);color:var(--ink);box-shadow:var(--sh-crisp)}
-    #try-sara .btn-soft:hover{transform:translateY(-1px)}
-    #try-sara .ts-link{background:none;border:0;color:var(--wine);font:inherit;font-size:14px;font-weight:600;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:6px}
-    #try-sara .ts-qr{width:200px;height:200px;padding:12px;border-radius:16px;background:#fff;box-shadow:var(--sh-crisp)}
-    #try-sara .ts-qr svg{width:100%;height:100%;display:block}
-    #try-sara .ts-wait{display:inline-flex;align-items:center;gap:10px;color:var(--mute);font-size:14px}
-    #try-sara .ts-dot{width:8px;height:8px;border-radius:50%;background:var(--wine);animation:ts-pulse 1.2s ease-in-out infinite}
-    @keyframes ts-pulse{0%,100%{opacity:.25}50%{opacity:1}}
-    #try-sara .ts-error{color:var(--rose);font-size:14px;min-height:1em}
-    #try-sara .ts-desk{display:grid;gap:12px;justify-items:center}
-    @media (pointer:coarse){#try-sara .ts-desk{display:none}}
-    .ts-modal{position:fixed;inset:0;z-index:1000;background:rgba(31,26,20,.55);display:flex;align-items:center;justify-content:center;padding:16px}
-    .ts-modal[hidden]{display:none}
-    .ts-modal-box{position:relative;width:min(1100px,100%);height:min(820px,100%);border-radius:20px;overflow:hidden;background:var(--paper);box-shadow:var(--sh-float)}
-    .ts-modal iframe{width:100%;height:100%;border:0;display:block}
-    .ts-close{position:absolute;top:10px;right:10px;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:var(--white);color:var(--ink);font-size:22px;line-height:1;cursor:pointer;box-shadow:var(--sh-crisp)}
-    @media (max-width:640px){.ts-modal{padding:0}.ts-modal-box{width:100%;height:100%;border-radius:0}}
+      #report{position:relative;z-index:1;background:linear-gradient(160deg,var(--wine-2) 0%,var(--wine-deep) 75%);color:var(--cream);overflow:hidden}
+      #report .rp-in{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:clamp(24px,4vw,56px);align-items:center;padding-block:clamp(40px,5vw,56px)}
+      #report .rp-book-wrap{display:block;perspective:1200px;margin-block:-8px}
+      #report .rp-book{position:relative;display:block;width:clamp(120px,13vw,150px);aspect-ratio:760/1075;transform:rotateY(-18deg) rotateX(4deg);transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+      #report:hover .rp-book{transform:rotateY(-6deg) rotateX(2deg)}
+      #report .rp-book img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:2px 5px 5px 2px;box-shadow:1px 1px 0 #efe8dc,2px 2px 0 #cfc5b3,3px 3px 0 #efe8dc,4px 4px 0 #c9bfad,5px 5px 0 #ece5d8,24px 28px 36px -14px rgba(0,0,0,.6)}
+      #report .rp-book::after{content:"";position:absolute;inset:0;border-radius:2px 5px 5px 2px;pointer-events:none;background:linear-gradient(90deg,rgba(0,0,0,.35) 0,rgba(255,255,255,.18) 2.2%,rgba(0,0,0,.12) 4%,transparent 9%)}
+      #report .rp-copy{display:grid;gap:10px}
+      #report .rp-eyebrow{font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#EBB9A8}
+      #report h2{font-size:clamp(28px,3.4vw,42px);line-height:1.08;color:var(--cream)}
+      #report h2 em{font-style:italic;color:#EBB9A8}
+      #report .rp-copy p{font-size:17px;line-height:1.55;color:rgba(244,239,227,.84);max-width:34em}
+      #report .rp-act{display:grid;gap:10px;justify-items:center}
+      #report .rp-btn{display:inline-flex;align-items:center;gap:10px;min-height:54px;padding:16px 28px;border-radius:8px;background:var(--cream);color:var(--wine-deep);font:700 13px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;white-space:nowrap;transition:transform .18s;box-shadow:0 12px 24px -12px rgba(0,0,0,.45)}
+      #report .rp-btn:hover{transform:translateY(-1px)}
+      #report .rp-fine{font-size:13px;color:rgba(244,239,227,.62)}
+      #report + #book{padding-top:clamp(64px,9vw,112px)!important}
+      @media (max-width:900px){#report .rp-in{grid-template-columns:auto minmax(0,1fr)}#report .rp-act{grid-column:1/-1;justify-items:start}}
+      @media (max-width:560px){#report .rp-in{grid-template-columns:1fr;justify-items:center;text-align:center}#report .rp-copy p{margin-inline:auto}#report .rp-act{justify-items:center}#report .rp-btn{white-space:normal}}
+      @media (prefers-reduced-motion:reduce){#report .rp-book{transition:none}}
     </style>
-    <div class="wrap">
-      <div class="head">
-        <span class="eyebrow" data-t="eyebrow"></span>
-        <h2 data-t="title" data-html></h2>
-        <p data-t="lede"></p>
+    <div class="wrap rp-in">
+      <a class="rp-book-wrap" href="/nl/rapport" aria-label="Ontvang Het Rapport"><span class="rp-book"><img src="/site/img/report-cover-nl.webp" alt="Omslag van Het Rapport" width="760" height="1075" loading="lazy"></span></a>
+      <div class="rp-copy">
+        <span class="rp-eyebrow">Gratis rapport</span>
+        <h2 id="rp-h">Waar lekt jouw bedrijf <em>geld weg?</em></h2>
+        <p>De vier lekken die elk dienstverlenend bedrijf heeft, en hoe je ze dicht.</p>
       </div>
-      <div class="ts-card">
-        <div class="ts-state" data-state="form">
-          <form novalidate>
-            <label class="ts-field"><span data-t="label"></span>
-              <input type="text" name="url" inputmode="url" autocomplete="url" autocapitalize="off" spellcheck="false" maxlength="300" required>
-            </label>
-            <label class="ts-consent"><input type="checkbox" name="consent"><span><span data-t="consent"></span> <a href="/privacy-policy" target="_blank" rel="noopener" data-t="privacy"></a></span></label>
-            <div class="ts-turnstile"></div>
-            <p class="ts-error" role="alert"></p>
-            <button class="btn btn-wine" type="submit" data-t="submit"></button>
-            <p class="ts-small" style="text-align:center;justify-self:center" data-t="note"></p>
-          </form>
-        </div>
-        <div class="ts-state" data-state="verify" hidden>
-          <h3 data-t="verifyTitle"></h3>
-          <p class="ts-text" data-t="verifyText"></p>
-          <div class="ts-desk"><div class="ts-qr"></div><p class="ts-small" data-t="qrHint"></p></div>
-          <div class="ts-actions"><a class="btn btn-wine ts-wa" target="_blank" rel="noopener" data-t="openWa"></a></div>
-          <span class="ts-wait"><i class="ts-dot"></i><span data-t="waiting"></span></span>
-        </div>
-        <div class="ts-state" data-state="building" hidden>
-          <span class="lo" style="--lo-s:84px" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span></span>
-          <h3 data-t="buildingTitle"></h3>
-          <p class="ts-text" data-t="buildingText"></p>
-          <span class="ts-wait"><i class="ts-dot"></i></span>
-        </div>
-        <div class="ts-state" data-state="ready" hidden>
-          <span class="lo" style="--lo-s:84px" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span></span>
-          <h3 data-t="readyTitle"></h3>
-          <p class="ts-text" data-t="readyText"></p>
-          <div class="ts-actions">
-            <button class="btn btn-wine ts-talk" type="button" data-t="talk"></button>
-            <a class="btn btn-soft ts-wa" target="_blank" rel="noopener" data-t="wa"></a>
-            <a class="btn btn-soft ts-call" hidden></a>
-          </div>
-        </div>
-        <div class="ts-state" data-state="blocked" hidden>
-          <h3 data-t="blockedTitle"></h3>
-          <p class="ts-text ts-reason"></p>
-          <div class="ts-actions"><a class="btn btn-wine ts-book" target="_blank" rel="noopener" data-t="book"></a></div>
-          <button class="ts-link ts-again" type="button" data-t="again"></button>
-        </div>
+      <div class="rp-act">
+        <a class="rp-btn" href="/nl/rapport">Ontvang het gratis Rapport →</a>
+        <span class="rp-fine">25 pagina's · gratis</span>
       </div>
     </div>
-    <div class="ts-modal" hidden role="dialog" aria-modal="true">
-      <div class="ts-modal-box"><button class="ts-close" type="button">&times;</button><iframe allow="microphone; autoplay" title="Sara"></iframe></div>
-    </div>
-    <script>
-    (function(){
-      var sec=document.getElementById('try-sara');if(!sec)return;
-      var q=new URLSearchParams(location.search),mode=q.get('try');
-      if(mode!=='1'&&mode!=='mock')return; // hidden until launch
-      sec.hidden=false;
-      var MOCK=mode==='mock';
-      var lang=(document.documentElement.lang||'en').slice(0,2);if(['en','nl','pt'].indexOf(lang)<0)lang='en';
-      var COPY={
-        en:{eyebrow:'Try her yourself',title:'Hear Sara answer for <em class="w">your</em> business',
-          lede:'Type your website. Sara reads it and becomes your receptionist in about a minute. Then talk to her in your browser, on WhatsApp or on the phone.',
-          label:'Your website',placeholder:'yourbusiness.com',
-          consent:'Lead Awaker may store my website and phone number to run this demo and contact me about it by WhatsApp or phone.',privacy:'Privacy policy',
-          submit:'Build my demo',note:'Free. You confirm your number with one WhatsApp message.',
-          verifyTitle:'One last step: send us the WhatsApp message',verifyText:'We prepared the message for you. Sending it proves the number is yours and starts your demo.',
-          qrHint:'Scan with your phone’s camera',openWa:'Open WhatsApp',waiting:'Waiting for your message',
-          buildingTitle:'Sara is reading {domain}',buildingText:'This takes about a minute. She’ll also let you know on WhatsApp when she’s ready.',
-          readyTitle:'Sara is now the receptionist of {company}',readyText:'Talk to her as if you were one of your customers. Ask about prices, opening hours or an appointment.',
-          talk:'Talk to her now',wa:'Continue on WhatsApp',call:'Or call her: {number}',
-          blockedTitle:'Let Gabriel show you instead',book:'Book a call with Gabriel',again:'Try another website',close:'Close',
-          err:{country:'This demo works with numbers from the Netherlands, the UK and Brazil.',limit:'You’ve reached today’s demo limit.',
-            busy:'So many people are trying Sara today that she’s hit her limit. Book a call and Gabriel will show you instead.',
-            unreadable:'Sara couldn’t read that website. It may block visitors like her. Book a call and Gabriel will show you how it works for your business.',
-            bot_check:'We couldn’t check that you’re human. Refresh the page and try again.',invalid_url:'That doesn’t look like a website address.',
-            consent:'Please tick the box first.',expired:'This demo has expired. Start again with your website.',
-            network:'Something went wrong. Try again in a moment.',disabled:'The self-serve demo is paused right now. Book a call and Gabriel will show you Sara for your business.'}},
-        nl:{eyebrow:'Probeer haar zelf',title:'Hoor Sara opnemen voor <em class="w">jouw</em> bedrijf',
-          lede:'Vul je website in. Sara leest hem en is binnen een minuut jouw receptioniste. Praat daarna met haar in je browser, via WhatsApp of aan de telefoon.',
-          label:'Je website',placeholder:'jouwbedrijf.nl',
-          consent:'Lead Awaker mag mijn website en telefoonnummer bewaren om deze demo te laten werken en mij hierover via WhatsApp of telefoon benaderen.',privacy:'Privacybeleid',
-          submit:'Maak mijn demo',note:'Gratis. Je bevestigt je nummer met één WhatsApp-bericht.',
-          verifyTitle:'Nog één stap: stuur ons het WhatsApp-bericht',verifyText:'Het bericht staat al klaar. Door het te versturen bevestig je dat het nummer van jou is en start je demo.',
-          qrHint:'Scan met de camera van je telefoon',openWa:'Open WhatsApp',waiting:'Wachten op je bericht',
-          buildingTitle:'Sara leest {domain}',buildingText:'Dit duurt ongeveer een minuut. Ze laat het je ook via WhatsApp weten als ze klaar is.',
-          readyTitle:'Sara is nu de receptioniste van {company}',readyText:'Praat met haar alsof je een van je klanten bent. Vraag naar prijzen, openingstijden of een afspraak.',
-          talk:'Praat nu met haar',wa:'Verder op WhatsApp',call:'Of bel haar: {number}',
-          blockedTitle:'Laat Gabriel het je laten zien',book:'Plan een gesprek met Gabriel',again:'Probeer een andere website',close:'Sluiten',
-          err:{country:'Deze demo werkt met nummers uit Nederland, het Verenigd Koninkrijk en Brazilië.',limit:'Je hebt de demolimiet voor vandaag bereikt.',
-            busy:'Er proberen vandaag zoveel mensen Sara uit dat ze haar limiet heeft bereikt. Plan een gesprek, dan laat Gabriel het je zien.',
-            unreadable:'Sara kon die website niet lezen. Misschien blokkeert hij bezoekers zoals zij. Plan een gesprek, dan laat Gabriel zien hoe het voor jouw bedrijf werkt.',
-            bot_check:'We konden niet controleren dat je een mens bent. Ververs de pagina en probeer het opnieuw.',invalid_url:'Dat lijkt geen websiteadres.',
-            consent:'Vink eerst het vakje aan.',expired:'Deze demo is verlopen. Begin opnieuw met je website.',
-            network:'Er ging iets mis. Probeer het zo nog eens.',disabled:'De demo staat even op pauze. Plan een gesprek, dan laat Gabriel je Sara voor jouw bedrijf zien.'}},
-        pt:{eyebrow:'Teste você mesmo',title:'Ouça a Sara atendendo pela <em class="w">sua</em> empresa',
-          lede:'Digite o seu site. A Sara lê tudo e vira a sua recepcionista em mais ou menos um minuto. Depois é só conversar com ela no navegador, no WhatsApp ou por telefone.',
-          label:'Seu site',placeholder:'suaempresa.com.br',
-          consent:'A Lead Awaker pode guardar meu site e meu número para fazer esta demonstração funcionar e entrar em contato comigo sobre ela por WhatsApp ou telefone.',privacy:'Política de privacidade',
-          submit:'Criar minha demonstração',note:'Grátis. Você confirma seu número com uma mensagem no WhatsApp.',
-          verifyTitle:'Último passo: mande a mensagem no WhatsApp',verifyText:'A mensagem já está pronta. Ao enviar, você confirma que o número é seu e começa a sua demonstração.',
-          qrHint:'Escaneie com a câmera do celular',openWa:'Abrir o WhatsApp',waiting:'Aguardando a sua mensagem',
-          buildingTitle:'A Sara está lendo {domain}',buildingText:'Isso leva mais ou menos um minuto. Ela também avisa no WhatsApp quando estiver pronta.',
-          readyTitle:'A Sara agora é a recepcionista da {company}',readyText:'Converse com ela como se você fosse um dos seus clientes. Pergunte sobre preços, horários ou um agendamento.',
-          talk:'Falar com ela agora',wa:'Continuar no WhatsApp',call:'Ou ligue para ela: {number}',
-          blockedTitle:'Deixe o Gabriel te mostrar',book:'Agendar uma conversa com o Gabriel',again:'Tentar outro site',close:'Fechar',
-          err:{country:'Esta demonstração funciona com números da Holanda, do Reino Unido e do Brasil.',limit:'Você chegou ao limite de demonstrações de hoje.',
-            busy:'Tanta gente está testando a Sara hoje que ela chegou no limite. Agende uma conversa e o Gabriel te mostra.',
-            unreadable:'A Sara não conseguiu ler esse site. Talvez ele bloqueie visitantes como ela. Agende uma conversa e o Gabriel mostra como funciona para a sua empresa.',
-            bot_check:'Não conseguimos confirmar que você é humano. Atualize a página e tente de novo.',invalid_url:'Isso não parece um endereço de site.',
-            consent:'Marque a caixinha primeiro.',expired:'Esta demonstração expirou. Comece de novo com o seu site.',
-            network:'Algo deu errado. Tente de novo daqui a pouco.',disabled:'A demonstração está pausada agora. Agende uma conversa e o Gabriel te mostra a Sara para a sua empresa.'}}
-      };
-      var C=COPY[lang],API='/api/public-demo',KEY='la_try_sara',BOOK=(document.querySelector('#book a.btn')||{}).href||'https://cal.com/leadawaker/quick-chat';
-      function $(s){return sec.querySelector(s)}
-      function fill(s,v){return s.replace(/\{(\w+)\}/g,function(_,k){return v&&v[k]!=null?v[k]:''})}
-      [].forEach.call(sec.querySelectorAll('[data-t]'),function(el){var v=C[el.getAttribute('data-t')];if(v==null)return;if(el.hasAttribute('data-html'))el.innerHTML=v;else el.textContent=v});
-      var form=$('form'),input=form.url,err=$('.ts-error'),modal=sec.querySelector('.ts-modal'),frame=modal.querySelector('iframe');
-      input.placeholder=C.placeholder;modal.querySelector('.ts-close').setAttribute('aria-label',C.close);
-      function show(state){[].forEach.call(sec.querySelectorAll('.ts-state'),function(el){el.hidden=el.getAttribute('data-state')!==state})}
-      function blocked(code,bookingUrl){$('.ts-reason').textContent=C.err[code]||C.err.network;$('.ts-book').href=bookingUrl||BOOK;show('blocked')}
-      function fmtNum(n){var d=String(n||'').replace(/\D/g,'');if(d.indexOf('31')===0)return '+31 '+d.slice(2,4)+' '+d.slice(4,7)+' '+d.slice(7);if(d.indexOf('44')===0)return '+44 '+d.slice(2,6)+' '+d.slice(6);return '+'+d}
-      function save(t){try{t?sessionStorage.setItem(KEY,t):sessionStorage.removeItem(KEY)}catch(e){}}
-      function load(){try{return sessionStorage.getItem(KEY)}catch(e){return null}}
-
-      /* Fake answers for ?try=mock: walks through every state without a server. */
-      var mockT0=0;
-      function api(path,opts){
-        if(!MOCK)return fetch(API+path,opts).then(function(r){return r.json().then(function(b){b._status=r.status;return b})});
-        return new Promise(function(res){setTimeout(function(){
-          if(path==='/availability')return res({available:true,siteKey:null});
-          if(path==='/requests')return res({ok:true,token:'0123456789abcdef',domain:'brightsmile.nl',whatsappUrl:'https://wa.me/31627458300',
-            qrSvg:'<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg"><rect width="10" height="10" fill="#fff"/><path d="M1 1h3v3H1zM6 1h3v3H6zM1 6h3v3H1zM6 6h1v1H6zM8 8h1v1H8z" fill="#1F1A14"/></svg>'});
-          var s=(Date.now()-mockT0)/1000;
-          res(s<6?{status:'verify',domain:'brightsmile.nl'}:s<12?{status:'building',domain:'brightsmile.nl'}:
-            {status:'ready',domain:'brightsmile.nl',companyName:'Brightsmile Dental',voiceUrl:'/voice-demo?embed=1',whatsappUrl:'https://wa.me/31627458300',callNumber:'+31738519847'});
-        },300)});
-      }
-
-      var widget=null,siteKey=null,tsToken='';
-      function loadTurnstile(){
-        if(MOCK||!siteKey||widget!==null)return;widget=false;
-        window.__tsReady=function(){widget=window.turnstile.render($('.ts-turnstile'),{sitekey:siteKey,action:'public_demo',language:lang==='pt'?'pt-br':lang,
-          callback:function(t){tsToken=t},'expired-callback':function(){tsToken=''},'error-callback':function(){tsToken=''}})};
-        var s=document.createElement('script');s.src='https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=__tsReady';s.async=true;document.head.appendChild(s);
-      }
-
-      var pollTimer=null,pollStart=0;
-      function render(d,token){
-        if(d.status==='verify'){$('.ts-wa').href=d.whatsappUrl||$('.ts-wa').href;show('verify');return true}
-        if(d.status==='building'){$('[data-t=buildingTitle]').textContent=fill(C.buildingTitle,{domain:d.domain});show('building');return true}
-        if(d.status==='ready'){
-          $('[data-t=readyTitle]').textContent=fill(C.readyTitle,{company:d.companyName||d.domain});
-          sec.querySelectorAll('.ts-wa')[1].href=d.whatsappUrl;
-          var call=$('.ts-call');if(d.callNumber){call.hidden=false;call.href='tel:'+d.callNumber;call.textContent=fill(C.call,{number:fmtNum(d.callNumber)})}else call.hidden=true;
-          $('.ts-talk').onclick=function(){frame.src=d.voiceUrl;modal.hidden=false};
-          show('ready');return false;
-        }
-        save(null);
-        blocked(d.status==='expired'?'expired':d.code||'network',d.bookingUrl);return false;
-      }
-      function poll(token){
-        clearTimeout(pollTimer);
-        var age=Date.now()-pollStart;if(age>15*60*1000)return;
-        api('/requests/'+token).then(function(d){
-          if(render(d,token))pollTimer=setTimeout(function(){poll(token)},age>120000?5000:2000);
-        }).catch(function(){pollTimer=setTimeout(function(){poll(token)},5000)});
-      }
-      function start(token){save(token);pollStart=Date.now();mockT0=mockT0||Date.now();poll(token)}
-
-      form.addEventListener('submit',function(e){
-        e.preventDefault();err.textContent='';
-        if(!input.value.trim()){err.textContent=C.err.invalid_url;input.focus();return}
-        if(!form.consent.checked){err.textContent=C.err.consent;return}
-        if(!MOCK&&!tsToken){err.textContent=C.err.bot_check;return}
-        var btn=form.querySelector('button');btn.disabled=true;
-        api('/requests',{method:'POST',headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({url:input.value.trim(),language:lang,consent:true,turnstileToken:tsToken})})
-        .then(function(d){
-          btn.disabled=false;
-          if(!d.ok){
-            if(window.turnstile&&widget){window.turnstile.reset(widget);tsToken=''}
-            if(d.code==='invalid_url'||d.code==='consent'||d.code==='bot_check'||d.code==='invalid'){err.textContent=C.err[d.code==='invalid'?'invalid_url':d.code];return}
-            blocked(d.code||'network',d.bookingUrl);return;
-          }
-          $('.ts-qr').innerHTML=d.qrSvg||'';$('.ts-wa').href=d.whatsappUrl;
-          mockT0=Date.now();show('verify');start(d.token);
-        }).catch(function(){btn.disabled=false;err.textContent=C.err.network});
-      });
-      $('.ts-again').addEventListener('click',function(){save(null);clearTimeout(pollTimer);input.value='';show('form');loadTurnstile();if(window.turnstile&&widget)window.turnstile.reset(widget)});
-      modal.querySelector('.ts-close').addEventListener('click',function(){modal.hidden=true;frame.src='about:blank'});
-
-      api('/availability').then(function(a){
-        siteKey=a.siteKey||null;
-        var resume=load();
-        if(resume&&/^[a-f0-9]{16}$/.test(resume)){start(resume);return}
-        if(!a.available){blocked(a.reason==='busy'?'busy':'disabled');return}
-        show('form');loadTurnstile();
-      }).catch(function(){show('form')});
-    })();
-    </script>
   </section>
 
   <section class="band" id="book" style="padding-top:clamp(28px,4vw,48px)">
@@ -2074,7 +2354,7 @@ footer img{height:24px;width:auto;display:block}
       <div class="book">
         <h2>Hoor je receptioniste voordat je beslist</h2>
         <p>20 minuten. We laten Sara horen als receptioniste van jouw bedrijf. Vul bij het inplannen je website in.</p>
-        <div class="book-ctas"><a class="btn btn-light" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Kies een moment in de agenda</a></div>
+        <div class="book-ctas"><a class="btn btn-light" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Kies een moment in de agenda</a><a class="btn btn-ghost-light ts-cta" href="#try-sara" hidden>Probeer haar op je eigen website</a></div>
         <div class="cal-wrap" id="cal-wrap" hidden><div id="cal-inline"></div></div>
       </div>
     </div>
