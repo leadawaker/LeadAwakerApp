@@ -2,7 +2,7 @@
 // Pure functions: no DB, no fetch. Scheduled health comes from the engine's
 // /api/jobs-health; event health from the last 24h of diary lines.
 import { findEntry, entryJobId, type AutomationEntry, type AutomationTrigger } from "@shared/automationCatalogue";
-import { EMPTY_COUNTS, type ActionCounts, type EngineJob, type EngineJobsHealth, type HealthState, type OverviewResponse, type OverviewRow } from "@shared/automationTypes";
+import { EMPTY_COUNTS, emptyPulse, type ActionCounts, type HourlyPulse, type EngineJob, type EngineJobsHealth, type HealthState, type OverviewResponse, type OverviewRow } from "@shared/automationTypes";
 
 export function intervalSeconds(t: AutomationTrigger): number | null {
   if (t.type === "schedule") return t.everySeconds;
@@ -45,9 +45,19 @@ export function buildOverviewRows(args: {
   engine: EngineJobsHealth | null;
   counts24h: Map<string, ActionCounts>;
   clientsOn: Map<string, number>;
+  pulse?: Map<string, HourlyPulse>;
   now: number;
 }): OverviewRow[] {
   const { catalogue, engine, counts24h, clientsOn, now } = args;
+  // Fold hourly pulses the same way: diary names (ids + aliases) onto catalogue ids.
+  const pulseById = new Map<string, HourlyPulse>();
+  (args.pulse ?? new Map<string, HourlyPulse>()).forEach((p, name) => {
+    const key = findEntry(name)?.id ?? name;
+    const acc = pulseById.get(key) ?? emptyPulse();
+    p.ok.forEach((n, i) => { acc.ok[i] += n; });
+    p.failed.forEach((n, i) => { acc.failed[i] += n; });
+    pulseById.set(key, acc);
+  });
   const engineReachable = engine !== null;
   const jobs = new Map((engine?.jobs ?? []).map((j) => [j.id, j]));
 
@@ -78,6 +88,7 @@ export function buildOverviewRows(args: {
       counts24h: counts,
       clientsOn: entry.audience === "client" ? (clientsOn.get(entry.id) ?? 0) : null,
       quiet,
+      pulse: pulseById.get(entry.id) ?? emptyPulse(),
     };
   });
 
@@ -96,6 +107,7 @@ export function buildOverviewRows(args: {
       counts24h: counts,
       clientsOn: null,
       quiet: false,
+      pulse: pulseById.get(id) ?? emptyPulse(),
     });
   });
   return rows;

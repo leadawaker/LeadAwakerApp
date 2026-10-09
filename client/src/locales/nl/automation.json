@@ -1,5 +1,9 @@
 {
-  "page": { "title": "Automatiseringen", "refresh": "Vernieuwen" },
+  "page": {
+    "title": "Automatiseringen",
+    "refresh": "Vernieuwen",
+    "subtitle": "Alles wat de AI voor je klanten doet, en of het werkt"
+  },
   "summary": {
     "automations": "{{count}} automatiseringen",
     "healthy": "{{count}} in orde",
@@ -38,7 +42,11 @@
     "clientsOn": "{{count}} klant",
     "clientsOn_other": "{{count}} klanten",
     "quiet": "Al een tijd stil",
-    "failedBadge": "{{count}} mislukt"
+    "failedBadge": "{{count}} mislukt",
+    "pulseTitle": "Acties per uur, laatste 24 uur",
+    "neverShort": "nooit",
+    "internal": "intern",
+    "unlisted": "Nog niet in de catalogus"
   },
   "trigger": {
     "everySeconds": "Elke {{n}} sec",
@@ -157,7 +165,11 @@
     "call_transferred": "Oproep beantwoord en doorverbonden",
     "call_failed": "Oproep mislukt"
   },
-  "outcome": { "success": "Gelukt", "failed": "Mislukt", "skipped": "Overgeslagen" },
+  "outcome": {
+    "success": "Gelukt",
+    "failed": "Mislukt",
+    "skipped": "Overgeslagen"
+  },
   "diary": {
     "title": "Logboek",
     "failedOnly": "Alleen fouten",
@@ -166,20 +178,50 @@
     "error": "Kon het logboek niet laden.",
     "loadMore": "Meer tonen",
     "openLead": "Lead openen",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "today": "Vandaag",
+    "yesterday": "Gisteren",
+    "everything": "Alles",
+    "failures": "Mislukt",
+    "emptyTitle": "Nog geen activiteit",
+    "emptyBody": "Elke keer dat deze automatisering iets voor een klant doet, verschijnt hier een regel.",
+    "emptyFailedTitle": "Niets mislukt",
+    "emptyFailedBody": "Er is niets misgegaan in het dagboek.",
+    "stat": {
+      "success": "gelukt in 24u",
+      "failed": "mislukt in 24u",
+      "skipped": "overgeslagen in 24u"
+    }
   },
-  "ago": { "justNow": "zojuist", "minutes": "{{n}} min geleden", "hours": "{{n}} u geleden", "days": "{{n}} d geleden" },
+  "ago": {
+    "justNow": "zojuist",
+    "minutes": "{{n}} min geleden",
+    "hours": "{{n}} u geleden",
+    "days": "{{n}} d geleden"
+  },
   "client": {
     "title": "Automatiseringen",
     "lastDays": "Laatste 7 dagen",
     "header": "{{on}} van {{total}} aan · {{actions}} acties · {{failed}} mislukt",
-    "state": { "on": "Aan", "off": "Uit", "always_on": "Altijd aan" },
+    "state": {
+      "on": "Aan",
+      "off": "Uit",
+      "always_on": "Altijd aan"
+    },
     "change": "Wijzigen",
     "changeHintAccount": "Wijzig dit in Instellingen > Mijn account terwijl je deze klant bekijkt",
     "counts7d": "7 dagen: {{success}} gelukt · {{failed}} mislukt · {{skipped}} overgeslagen",
     "topReason": "Meest voorkomend probleem: {{reason}}",
-    "warning": { "paused_followups": "Campagne niet actief, maar opvolgberichten gaan nog naar {{count}} leads" },
-    "empty": "Deze klant heeft nog geen automatiseringen."
+    "warning": {
+      "paused_followups": "Campagne gepauzeerd: opvolging voor {{count}} leads staat stil tot hij weer actief is"
+    },
+    "empty": "Deze klant heeft nog geen automatiseringen.",
+    "stat": {
+      "on": "aan",
+      "actions": "acties",
+      "failed": "mislukt"
+    },
+    "onOf": "{{on}} van {{total}} aan"
   },
   "summaryTokens": {
     "dailyLimit": "{{n}} per dag",
@@ -190,5 +232,84 @@
     "reminderTimes": "24 uur + 1 uur ervoor",
     "voiceLine": "Lijn {{number}}",
     "missedCallNumber": "Nummer {{number}}"
+  },
+  "hero": {
+    "engineOn": "Engine online",
+    "engineOff": "Engine reageert niet",
+    "restarted": "herstart {{ago}}",
+    "allGood": "Alles draait.",
+    "attention_one": "{{count}} automatisering vraagt aandacht.",
+    "attention_other": "{{count}} automatiseringen vragen aandacht.",
+    "broken_one": "{{count}} automatisering is kapot.",
+    "broken_other": "{{count}} automatiseringen zijn kapot.",
+    "down": "De engine reageert niet.",
+    "downHint": "Geplande automatiseringen kunnen pas gecontroleerd worden als hij terug is. Berichten en gesprekken worden mogelijk niet afgehandeld.",
+    "pulseLabel": "Laatste 24 uur",
+    "actions_one": "{{count}} actie",
+    "actions_other": "{{count}} acties",
+    "failed": "{{count}} mislukt",
+    "noActions": "Nog niets gedaan",
+    "pulseStart": "24u geleden",
+    "pulseMid": "12u geleden",
+    "pulseNow": "Nu",
+    "thisHour": "dit uur",
+    "hourTitle": "{{ago}}: {{ok}} gedaan, {{failed}} mislukt"
+  },
+  "bucket": {
+    "fine": "werkt goed",
+    "attention": "vragen aandacht",
+    "broken": "kapot",
+    "waiting": "wacht op werk",
+    "attention_one": "vraagt aandacht"
+  },
+  "filter": {
+    "label": "Toon",
+    "all": "Alles",
+    "attention": "Vraagt aandacht",
+    "active": "Vandaag gewerkt",
+    "search": "Zoek automatiseringen",
+    "none": "Geen automatiseringen gevonden.",
+    "noneAttention": "Niets vraagt nu aandacht."
+  },
+  "captions": {
+    "automation": "Automatisering",
+    "runs": "Draait",
+    "pulse": "Laatste 24u",
+    "actions": "Acties",
+    "clients": "Klanten",
+    "last": "Laatst"
+  },
+  "section": {
+    "allFine": "Geen problemen",
+    "allFineBusy_one": "Geen problemen, {{count}} vandaag actief",
+    "allFineBusy_other": "Geen problemen, {{count}} vandaag actief",
+    "attention_one": "{{count}} vraagt aandacht",
+    "attention_other": "{{count}} vragen aandacht",
+    "broken_one": "{{count}} kapot",
+    "broken_other": "{{count}} kapot"
+  },
+  "serviceBlurb": {
+    "reactivation": "Wekt oude leads op met WhatsApp en opvolging",
+    "speed_to_lead": "Antwoordt nieuwe leads binnen seconden",
+    "bookings": "Herinneringen, no-shows en agendawijzigingen",
+    "reputation": "Vraagt tevreden klanten om reviews en schrijft antwoorden",
+    "receptionist": "Neemt de telefoon op en handelt gemiste oproepen af",
+    "inbox": "Leest binnenkomende berichten en antwoordt met AI",
+    "internal": "Onderhoud dat het CRM netjes houdt",
+    "unlisted": "Draait in de engine maar is nog niet beschreven"
+  },
+  "reasons": {
+    "reputation_callback": "Klant wil teruggebeld worden",
+    "opted_out": "Lead heeft zich afgemeld",
+    "no_parseable_message": "Bericht kon niet gelezen worden",
+    "manual_takeover": "Iemand heeft het gesprek overgenomen",
+    "invalid_caller_number": "Nummer van beller ongeldig",
+    "empty_transcript": "Er werd niets gezegd",
+    "duplicate": "Al afgehandeld",
+    "daily_cap_reached": "Daglimiet bereikt",
+    "campaign_not_found": "Campagne niet gevonden",
+    "atomic_claim_lost": "Een andere run was eerder",
+    "already_claimed_or_not_queued": "Al verstuurd of niet in de wachtrij",
+    "abuse": "Beledigende beller"
   }
 }

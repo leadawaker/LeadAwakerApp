@@ -28,3 +28,9 @@ export function timeAgo(t: TFunction, iso: string | null): string {
   if (h < 48) return t("ago.hours", { n: h });
   return t("ago.days", { n: Math.round(h / 24) });
 }
+
+/** Engine reasons are either a snake_case code (translated) or a raw error message (shown as is). */
+export function reasonLabel(t: TFunction, reason: string): string {
+  if (!/^[a-z][a-z0-9_]*$/.test(reason)) return reason;
+  return t(`reasons.${reason}`, { defaultValue: reason.replace(/_/g, " ") });
+}

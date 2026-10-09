@@ -24,12 +24,13 @@ async function fetchEngineHealth(): Promise<EngineJobsHealth | null> {
 export function registerAutomationRoutes(app: Express) {
   app.get("/api/automations/overview", requireOwner, wrapAsync(async (_req, res) => {
     if (overviewCache && Date.now() - overviewCache.ts < OVERVIEW_TTL_MS) return res.json(overviewCache.data);
-    const [engine, counts24h, clientsOn] = await Promise.all([
+    const [engine, counts24h, clientsOn, pulse] = await Promise.all([
       fetchEngineHealth(),
       storage.getActionCountsByWorkflow(24),
       storage.getClientsOnCounts(),
+      storage.getHourlyPulseByWorkflow(),
     ]);
-    const rows = buildOverviewRows({ catalogue: AUTOMATION_CATALOGUE, engine, counts24h, clientsOn, now: Date.now() });
+    const rows = buildOverviewRows({ catalogue: AUTOMATION_CATALOGUE, engine, counts24h, clientsOn, pulse, now: Date.now() });
     const data: OverviewResponse = {
       engineReachable: engine !== null,
       schedulerRunning: engine?.scheduler_running ?? false,

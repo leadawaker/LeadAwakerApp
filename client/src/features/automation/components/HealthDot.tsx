@@ -1,22 +1,12 @@
+import type { CSSProperties } from "react";
 import type { HealthState } from "@shared/automationTypes";
+import { BUCKET_COLOR, bucketOf } from "../status";
 
-const COLOR: Record<HealthState, string> = {
-  healthy: "var(--good)",
-  warning: "var(--warn)",
-  late: "var(--warn)",
-  failing: "var(--destructive)",
-  waiting: "var(--mute)",
-  idle: "var(--mute)",
-  unknown: "var(--mute)",
-};
-
+/** Status dot: green fine, amber needs a look, red broken, grey ring while waiting. Problems breathe. */
 export function HealthDot({ state, title }: { state: HealthState; title?: string }) {
-  return (
-    <span
-      role="img"
-      aria-label={title ?? state}
-      title={title ?? state}
-      style={{ display: "inline-block", width: 9, height: 9, borderRadius: "50%", background: COLOR[state], flexShrink: 0 }}
-    />
-  );
+  const bucket = bucketOf(state);
+  const cls = ["am-dot", bucket === "waiting" && "am-dot--hollow", (bucket === "broken" || bucket === "attention") && "am-dot--alert"]
+    .filter(Boolean)
+    .join(" ");
+  return <span role="img" aria-label={title ?? state} title={title ?? state} className={cls} style={{ "--am-dot": BUCKET_COLOR[bucket] } as CSSProperties} />;
 }

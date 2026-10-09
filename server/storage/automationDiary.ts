@@ -3,7 +3,7 @@
 // Diary rows are Automation_Logs with kind = 'action'.
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import { type ActionCounts, type DiaryLine, type DiaryPage } from "@shared/automationTypes";
+import { emptyPulse, type ActionCounts, type DiaryLine, type DiaryPage, type HourlyPulse } from "@shared/automationTypes";
 import { buildClientLines, type GateInputs } from "../automations/clientGates";
 
 const T = sql.raw(`"p2mxx34fvbf3ll6"."Automation_Logs"`);
@@ -46,6 +46,28 @@ export const automationDiaryStorage = {
       GROUP BY l.workflow_name, l.last_action_at, r.top_reason
     `);
     return new Map((res.rows as any[]).map((r) => [r.workflow_name, toCounts(r)]));
+  },
+
+  /** Diary lines per workflow over the last 24h, in hourly buckets (index 23 = the current hour). */
+  async getHourlyPulseByWorkflow(): Promise<Map<string, HourlyPulse>> {
+    const res = await db.execute(sql`
+      SELECT workflow_name,
+        LEAST(23, FLOOR(EXTRACT(EPOCH FROM (NOW() - created_at)) / 3600))::int AS hours_ago,
+        COUNT(*) FILTER (WHERE status <> 'Failure') AS ok,
+        COUNT(*) FILTER (WHERE status = 'Failure') AS failed
+      FROM ${T}
+      WHERE kind = 'action' AND created_at > NOW() - INTERVAL '24 hours'
+      GROUP BY 1, 2
+    `);
+    const out = new Map<string, HourlyPulse>();
+    for (const r of res.rows as any[]) {
+      const p = out.get(r.workflow_name) ?? emptyPulse();
+      const i = 23 - Math.max(0, Number(r.hours_ago));
+      p.ok[i] += Number(r.ok);
+      p.failed[i] += Number(r.failed);
+      out.set(r.workflow_name, p);
+    }
+    return out;
   },
 
   async getActionCountsForAccount(accountId: number, sinceDays: number): Promise<Map<string, ActionCounts>> {

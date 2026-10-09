@@ -1,5 +1,9 @@
 {
-  "page": { "title": "Automations", "refresh": "Refresh" },
+  "page": {
+    "title": "Automations",
+    "refresh": "Refresh",
+    "subtitle": "Everything the AI does for your clients, and whether it is working"
+  },
   "summary": {
     "automations": "{{count}} automations",
     "healthy": "{{count}} healthy",
@@ -38,7 +42,11 @@
     "clientsOn": "{{count}} client",
     "clientsOn_other": "{{count}} clients",
     "quiet": "Quiet for a while",
-    "failedBadge": "{{count}} failed"
+    "failedBadge": "{{count}} failed",
+    "pulseTitle": "Actions per hour, last 24 hours",
+    "neverShort": "never",
+    "internal": "internal",
+    "unlisted": "Not in the catalogue yet"
   },
   "trigger": {
     "everySeconds": "Every {{n}} sec",
@@ -157,7 +165,11 @@
     "call_transferred": "Answered and transferred a call",
     "call_failed": "Call failed"
   },
-  "outcome": { "success": "Worked", "failed": "Failed", "skipped": "Skipped" },
+  "outcome": {
+    "success": "Worked",
+    "failed": "Failed",
+    "skipped": "Skipped"
+  },
   "diary": {
     "title": "Diary",
     "failedOnly": "Failures only",
@@ -166,20 +178,50 @@
     "error": "Could not load the diary.",
     "loadMore": "Show more",
     "openLead": "Open lead",
-    "close": "Close"
+    "close": "Close",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "everything": "Everything",
+    "failures": "Failures",
+    "emptyTitle": "No activity yet",
+    "emptyBody": "Each time this automation does something for a client, a line shows up here.",
+    "emptyFailedTitle": "No failures",
+    "emptyFailedBody": "Nothing has gone wrong in the diary.",
+    "stat": {
+      "success": "worked in 24h",
+      "failed": "failed in 24h",
+      "skipped": "skipped in 24h"
+    }
   },
-  "ago": { "justNow": "just now", "minutes": "{{n}}m ago", "hours": "{{n}}h ago", "days": "{{n}}d ago" },
+  "ago": {
+    "justNow": "just now",
+    "minutes": "{{n}}m ago",
+    "hours": "{{n}}h ago",
+    "days": "{{n}}d ago"
+  },
   "client": {
     "title": "Automations",
     "lastDays": "Last 7 days",
     "header": "{{on}} of {{total}} on · {{actions}} actions · {{failed}} failed",
-    "state": { "on": "On", "off": "Off", "always_on": "Always on" },
+    "state": {
+      "on": "On",
+      "off": "Off",
+      "always_on": "Always on"
+    },
     "change": "Change",
     "changeHintAccount": "Change in Settings > My Account while viewing this client",
     "counts7d": "7 days: {{success}} worked · {{failed}} failed · {{skipped}} skipped",
     "topReason": "Most common problem: {{reason}}",
-    "warning": { "paused_followups": "Campaign not active, but follow-ups are still going out to {{count}} leads" },
-    "empty": "No automations for this client yet."
+    "warning": {
+      "paused_followups": "Campaign paused: follow-ups for {{count}} leads are on hold until it is active again"
+    },
+    "empty": "No automations for this client yet.",
+    "stat": {
+      "on": "switched on",
+      "actions": "actions",
+      "failed": "failed"
+    },
+    "onOf": "{{on}} of {{total}} on"
   },
   "summaryTokens": {
     "dailyLimit": "{{n}} per day",
@@ -190,5 +232,84 @@
     "reminderTimes": "24h + 1h before",
     "voiceLine": "Line {{number}}",
     "missedCallNumber": "Number {{number}}"
+  },
+  "hero": {
+    "engineOn": "Engine online",
+    "engineOff": "Engine not answering",
+    "restarted": "restarted {{ago}}",
+    "allGood": "Everything is running.",
+    "attention_one": "{{count}} automation needs a look.",
+    "attention_other": "{{count}} automations need a look.",
+    "broken_one": "{{count}} automation is broken.",
+    "broken_other": "{{count}} automations are broken.",
+    "down": "The engine is not answering.",
+    "downHint": "Scheduled automations can't be checked until it is back. Messages and calls may not be handled.",
+    "pulseLabel": "Last 24 hours",
+    "actions_one": "{{count}} action",
+    "actions_other": "{{count}} actions",
+    "failed": "{{count}} failed",
+    "noActions": "Nothing done yet",
+    "pulseStart": "24h ago",
+    "pulseMid": "12h ago",
+    "pulseNow": "Now",
+    "thisHour": "this hour",
+    "hourTitle": "{{ago}}: {{ok}} done, {{failed}} failed"
+  },
+  "bucket": {
+    "fine": "running fine",
+    "attention": "need a look",
+    "broken": "broken",
+    "waiting": "waiting for work",
+    "attention_one": "needs a look"
+  },
+  "filter": {
+    "label": "Show",
+    "all": "All",
+    "attention": "Needs a look",
+    "active": "Worked today",
+    "search": "Search automations",
+    "none": "No automations match.",
+    "noneAttention": "Nothing needs a look right now."
+  },
+  "captions": {
+    "automation": "Automation",
+    "runs": "Runs",
+    "pulse": "Last 24h",
+    "actions": "Actions",
+    "clients": "Clients",
+    "last": "Last"
+  },
+  "section": {
+    "allFine": "No problems",
+    "allFineBusy_one": "No problems, {{count}} busy today",
+    "allFineBusy_other": "No problems, {{count}} busy today",
+    "attention_one": "{{count}} needs a look",
+    "attention_other": "{{count}} need a look",
+    "broken_one": "{{count}} broken",
+    "broken_other": "{{count}} broken"
+  },
+  "serviceBlurb": {
+    "reactivation": "Wakes up old leads with WhatsApp and follow-ups",
+    "speed_to_lead": "Replies to new leads in seconds",
+    "bookings": "Reminders, no-shows and calendar changes",
+    "reputation": "Asks happy customers for reviews and drafts replies",
+    "receptionist": "Answers the phone and handles missed calls",
+    "inbox": "Reads incoming messages and replies with AI",
+    "internal": "Housekeeping that keeps the CRM tidy",
+    "unlisted": "Running in the engine but not described yet"
+  },
+  "reasons": {
+    "reputation_callback": "Customer asked for a call back",
+    "opted_out": "Lead opted out",
+    "no_parseable_message": "Message could not be read",
+    "manual_takeover": "A person took over the chat",
+    "invalid_caller_number": "Caller number not valid",
+    "empty_transcript": "Nothing was said",
+    "duplicate": "Already handled",
+    "daily_cap_reached": "Daily limit reached",
+    "campaign_not_found": "Campaign not found",
+    "atomic_claim_lost": "Another run took it first",
+    "already_claimed_or_not_queued": "Already sent or not waiting",
+    "abuse": "Abusive caller"
   }
 }

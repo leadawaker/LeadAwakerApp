@@ -36,6 +36,13 @@ export interface OverviewRow {
   counts24h: ActionCounts;
   clientsOn: number | null;
   quiet: boolean;
+  /** Last 24 hours of diary lines in hourly buckets, oldest first (index 23 = the current hour). */
+  pulse: HourlyPulse;
+}
+
+export interface HourlyPulse {
+  ok: number[];
+  failed: number[];
 }
 
 export interface OverviewResponse {
@@ -97,5 +104,7 @@ export interface ClientAutomationsResponse {
   lines: ClientLine[];
   totals: { on: number; total: number; actions7d: number; failed7d: number };
 }
+
+export const emptyPulse = (): HourlyPulse => ({ ok: Array(24).fill(0), failed: Array(24).fill(0) });
 
 export const EMPTY_COUNTS: ActionCounts = { success: 0, failed: 0, skipped: 0, lastActionAt: null, topFailureReason: null };

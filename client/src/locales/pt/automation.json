@@ -1,5 +1,9 @@
 {
-  "page": { "title": "Automações", "refresh": "Atualizar" },
+  "page": {
+    "title": "Automações",
+    "refresh": "Atualizar",
+    "subtitle": "Tudo o que a IA faz pelos seus clientes, e se está funcionando"
+  },
   "summary": {
     "automations": "{{count}} automações",
     "healthy": "{{count}} funcionando bem",
@@ -38,7 +42,11 @@
     "clientsOn": "{{count}} cliente",
     "clientsOn_other": "{{count}} clientes",
     "quiet": "Parada há um tempo",
-    "failedBadge": "{{count}} falharam"
+    "failedBadge": "{{count}} falharam",
+    "pulseTitle": "Ações por hora, últimas 24 horas",
+    "neverShort": "nunca",
+    "internal": "interna",
+    "unlisted": "Ainda não está no catálogo"
   },
   "trigger": {
     "everySeconds": "A cada {{n}} s",
@@ -157,7 +165,11 @@
     "call_transferred": "Chamada atendida e transferida",
     "call_failed": "Chamada falhou"
   },
-  "outcome": { "success": "Deu certo", "failed": "Falhou", "skipped": "Ignorado" },
+  "outcome": {
+    "success": "Deu certo",
+    "failed": "Falhou",
+    "skipped": "Ignorado"
+  },
   "diary": {
     "title": "Diário",
     "failedOnly": "Só falhas",
@@ -166,20 +178,50 @@
     "error": "Não foi possível carregar o histórico.",
     "loadMore": "Mostrar mais",
     "openLead": "Abrir lead",
-    "close": "Fechar"
+    "close": "Fechar",
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "everything": "Tudo",
+    "failures": "Falhas",
+    "emptyTitle": "Nenhuma atividade ainda",
+    "emptyBody": "Cada vez que esta automação faz algo por um cliente, aparece uma linha aqui.",
+    "emptyFailedTitle": "Nenhuma falha",
+    "emptyFailedBody": "Nada deu errado no diário.",
+    "stat": {
+      "success": "funcionaram em 24h",
+      "failed": "falharam em 24h",
+      "skipped": "puladas em 24h"
+    }
   },
-  "ago": { "justNow": "agora mesmo", "minutes": "há {{n}} min", "hours": "há {{n}} h", "days": "há {{n}} d" },
+  "ago": {
+    "justNow": "agora mesmo",
+    "minutes": "há {{n}} min",
+    "hours": "há {{n}} h",
+    "days": "há {{n}} d"
+  },
   "client": {
     "title": "Automações",
     "lastDays": "Últimos 7 dias",
     "header": "{{on}} de {{total}} ativas · {{actions}} ações · {{failed}} falharam",
-    "state": { "on": "Ativa", "off": "Desativada", "always_on": "Sempre ativa" },
+    "state": {
+      "on": "Ativa",
+      "off": "Desativada",
+      "always_on": "Sempre ativa"
+    },
     "change": "Alterar",
     "changeHintAccount": "Altere em Configurações > Minha conta enquanto vê este cliente",
     "counts7d": "7 dias: {{success}} deram certo · {{failed}} falharam · {{skipped}} ignoradas",
     "topReason": "Problema mais comum: {{reason}}",
-    "warning": { "paused_followups": "Campanha inativa, mas os follow-ups ainda estão indo para {{count}} leads" },
-    "empty": "Este cliente ainda não tem automações."
+    "warning": {
+      "paused_followups": "Campanha pausada: os follow-ups de {{count}} leads ficam em espera até ela voltar a ficar ativa"
+    },
+    "empty": "Este cliente ainda não tem automações.",
+    "stat": {
+      "on": "ligadas",
+      "actions": "ações",
+      "failed": "falharam"
+    },
+    "onOf": "{{on}} de {{total}} ligadas"
   },
   "summaryTokens": {
     "dailyLimit": "{{n}} por dia",
@@ -190,5 +232,87 @@
     "reminderTimes": "24h + 1h antes",
     "voiceLine": "Linha {{number}}",
     "missedCallNumber": "Número {{number}}"
+  },
+  "hero": {
+    "engineOn": "Motor online",
+    "engineOff": "Motor não responde",
+    "restarted": "reiniciado {{ago}}",
+    "allGood": "Tudo funcionando.",
+    "attention_one": "{{count}} automação precisa de atenção.",
+    "attention_other": "{{count}} automações precisam de atenção.",
+    "broken_one": "{{count}} automação está quebrada.",
+    "broken_other": "{{count}} automações estão quebradas.",
+    "down": "O motor não está respondendo.",
+    "downHint": "As automações agendadas só podem ser verificadas quando ele voltar. Mensagens e ligações podem não ser atendidas.",
+    "pulseLabel": "Últimas 24 horas",
+    "actions_one": "{{count}} ação",
+    "actions_other": "{{count}} ações",
+    "failed": "{{count}} falharam",
+    "noActions": "Nada feito ainda",
+    "pulseStart": "24h atrás",
+    "pulseMid": "12h atrás",
+    "pulseNow": "Agora",
+    "thisHour": "nesta hora",
+    "hourTitle": "{{ago}}: {{ok}} feitas, {{failed}} falharam"
+  },
+  "bucket": {
+    "fine": "funcionando bem",
+    "attention": "precisam de atenção",
+    "broken": "quebradas",
+    "waiting": "esperando trabalho",
+    "attention_one": "precisa de atenção",
+    "broken_one": "quebrada",
+    "fine_one": "funcionando bem",
+    "waiting_one": "esperando trabalho"
+  },
+  "filter": {
+    "label": "Mostrar",
+    "all": "Todas",
+    "attention": "Precisa de atenção",
+    "active": "Trabalharam hoje",
+    "search": "Buscar automações",
+    "none": "Nenhuma automação encontrada.",
+    "noneAttention": "Nada precisa de atenção agora."
+  },
+  "captions": {
+    "automation": "Automação",
+    "runs": "Roda",
+    "pulse": "Últimas 24h",
+    "actions": "Ações",
+    "clients": "Clientes",
+    "last": "Última"
+  },
+  "section": {
+    "allFine": "Sem problemas",
+    "allFineBusy_one": "Sem problemas, {{count}} ativa hoje",
+    "allFineBusy_other": "Sem problemas, {{count}} ativas hoje",
+    "attention_one": "{{count}} precisa de atenção",
+    "attention_other": "{{count}} precisam de atenção",
+    "broken_one": "{{count}} quebrada",
+    "broken_other": "{{count}} quebradas"
+  },
+  "serviceBlurb": {
+    "reactivation": "Reativa leads antigos com WhatsApp e follow-ups",
+    "speed_to_lead": "Responde novos leads em segundos",
+    "bookings": "Lembretes, faltas e mudanças na agenda",
+    "reputation": "Pede avaliações a clientes satisfeitos e escreve respostas",
+    "receptionist": "Atende o telefone e cuida das chamadas perdidas",
+    "inbox": "Lê as mensagens recebidas e responde com IA",
+    "internal": "Manutenção que mantém o CRM organizado",
+    "unlisted": "Roda no motor mas ainda não foi descrita"
+  },
+  "reasons": {
+    "reputation_callback": "Cliente pediu para ligar de volta",
+    "opted_out": "Lead pediu para sair",
+    "no_parseable_message": "Não foi possível ler a mensagem",
+    "manual_takeover": "Uma pessoa assumiu a conversa",
+    "invalid_caller_number": "Número de quem ligou é inválido",
+    "empty_transcript": "Ninguém falou nada",
+    "duplicate": "Já foi tratado",
+    "daily_cap_reached": "Limite diário atingido",
+    "campaign_not_found": "Campanha não encontrada",
+    "atomic_claim_lost": "Outra execução pegou primeiro",
+    "already_claimed_or_not_queued": "Já enviado ou fora da fila",
+    "abuse": "Pessoa abusiva na ligação"
   }
 }

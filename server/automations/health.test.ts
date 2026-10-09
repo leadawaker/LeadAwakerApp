@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { scheduledHealth, eventHealth, buildOverviewRows, overviewTotals } from "./health";
 import { AUTOMATION_CATALOGUE, findEntry } from "@shared/automationCatalogue";
-import { EMPTY_COUNTS, type EngineJobsHealth } from "@shared/automationTypes";
+import { EMPTY_COUNTS, emptyPulse, type EngineJobsHealth } from "@shared/automationTypes";
 
 const NOW = Date.parse("2026-10-09T12:00:00Z");
 const bump = findEntry("bump_scheduler")!;
@@ -77,4 +77,16 @@ test("send_queue_worker (3s interval) tolerates jitter via a 120s grace", () => 
   const mk = (overdueMs: number) => ({ id: "send_queue_worker", name: "", next_run_at: iso(overdueMs), last_run_at: iso(overdueMs + 3000), last_ok: true, errors_24h: 0 });
   assert.equal(scheduledHealth(mk(30_000), sq, { now: NOW, engineReachable: true }), "healthy");
   assert.equal(scheduledHealth(mk(200_000), sq, { now: NOW, engineReachable: true }), "late");
+});
+
+test("hourly pulse folds aliases onto their entry and defaults to zeros", () => {
+  const a = emptyPulse(); a.ok[23] = 2;
+  const b = emptyPulse(); b.failed[23] = 1; b.ok[0] = 4;
+  const pulse = new Map([["review_response", a], ["review_drafter", b]]);
+  const rows = buildOverviewRows({ catalogue: AUTOMATION_CATALOGUE, engine: null, counts24h: new Map(), clientsOn: new Map(), pulse, now: NOW });
+  const r = rows.find((x) => x.id === "review_response")!;
+  assert.equal(r.pulse.ok[23], 2);
+  assert.equal(r.pulse.failed[23], 1);
+  assert.equal(r.pulse.ok[0], 4);
+  assert.equal(rows.find((x) => x.id === "bump_scheduler")!.pulse.ok.length, 24);
 });

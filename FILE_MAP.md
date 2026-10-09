@@ -329,9 +329,15 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 | Component | File | Notes |
 |-----------|------|-------|
 | api | `api.ts` | Query hooks: `useAutomationsOverview`, `useAutomationDiary`, `useClientAutomations` |
-| labels | `labels.ts` | i18n label helpers: `automationName`, `triggerLabel`, `actionLabel`, `summaryText`, `timeAgo` |
+| labels | `labels.ts` | i18n label helpers: `automationName`, `triggerLabel`, `actionLabel`, `reasonLabel`, `summaryText`, `timeAgo` |
 | HealthDot | `components/HealthDot.tsx` | Coloured status dot for a `HealthState` |
-| OverviewRowCard | `components/OverviewRowCard.tsx` | One automation row on the Automations page (health, trigger, 24h counts) |
+| status | `status.ts` | Health folded into 4 buckets (fine / needs a look / broken / waiting), colors, service icons, pulse sums |
+| automation.css | `automation.css` | Scoped `.am-*` styles: status dot, pulse bars, row grid (container queries), diary timeline |
+| OverviewHero | `components/OverviewHero.tsx` | Page hero: one-sentence verdict, bucket counts, 24h pulse |
+| ServiceSection | `components/ServiceSection.tsx` | One service card with header verdict and its rows |
+| AutomationRow | `components/AutomationRow.tsx` | One automation row (status, trigger, mini pulse, 24h actions, clients, last activity) |
+| PulseBars / HealthDot | `components/PulseBars.tsx`, `components/HealthDot.tsx` | 24 hourly bars; breathing status dot |
+| DiaryTimeline | `components/DiaryTimeline.tsx` | Diary lines grouped by day on a timeline rail |
 | DiaryPanel | `components/DiaryPanel.tsx` | Per-automation diary (paged, failures-only filter, opens lead); reused by the per-client tab |
 | automationCatalogue | `shared/automationCatalogue.ts` | Catalogue of every automation: service group, trigger, `SERVICE_ORDER`, `findEntry` |
 | automationTypes | `shared/automationTypes.ts` | Overview / diary / per-client response types |
