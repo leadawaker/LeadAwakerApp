@@ -1,18 +1,20 @@
 import type { Express } from "express";
 import { storage } from "../storage";
 import { requireOwner } from "../auth";
-import { wrapAsync, getEngineUrl } from "./_helpers";
+import { wrapAsync } from "./_helpers";
 import { AUTOMATION_CATALOGUE, findEntry } from "@shared/automationCatalogue";
 import { EMPTY_COUNTS, type ClientAutomationsResponse, type EngineJobsHealth, type OverviewResponse } from "@shared/automationTypes";
 import { buildOverviewRows, overviewTotals } from "../automations/health";
 import { buildClientLines } from "../automations/clientGates";
+
+const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 
 let overviewCache: { data: OverviewResponse; ts: number } | null = null;
 const OVERVIEW_TTL_MS = 25_000;
 
 async function fetchEngineHealth(): Promise<EngineJobsHealth | null> {
   try {
-    const r = await fetch(getEngineUrl() + "/api/jobs-health", { signal: AbortSignal.timeout(5000) });
+    const r = await fetch(ENGINE_BASE + "/api/jobs-health", { signal: AbortSignal.timeout(3000) });
     return r.ok ? ((await r.json()) as EngineJobsHealth) : null;
   } catch {
     return null;
@@ -43,18 +45,19 @@ export function registerAutomationRoutes(app: Express) {
     const id = String(req.params.id);
     const entry = findEntry(id);
     const names = entry ? [entry.id, ...(entry.aliases ?? []), ...(entry.jobId ? [entry.jobId] : [])] : [id];
-    const page = Math.max(1, Number(req.query.page) || 1);
-    const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
+    const page = Math.min(10_000, Math.max(1, Math.floor(Number(req.query.page)) || 1));
+    const rawAccountId = req.query.accountId ? Number(req.query.accountId) : undefined;
+    const accountId = rawAccountId !== undefined && Number.isInteger(rawAccountId) && rawAccountId > 0 ? rawAccountId : undefined;
     res.json(await storage.getDiaryPage({
       names, page, limit: 50,
-      accountId: accountId && Number.isFinite(accountId) ? accountId : undefined,
+      accountId,
       failedOnly: req.query.failedOnly === "1",
     }));
   }));
 
   app.get("/api/accounts/:id/automations", requireOwner, wrapAsync(async (req, res) => {
     const accountId = Number(req.params.id);
-    if (!Number.isFinite(accountId)) return res.status(400).json({ message: "Invalid account id" });
+    if (!Number.isInteger(accountId) || accountId <= 0) return res.status(400).json({ message: "Invalid account id" });
     const [inputs, counts] = await Promise.all([
       storage.getGateInputs(accountId),
       storage.getActionCountsForAccount(accountId, 7),

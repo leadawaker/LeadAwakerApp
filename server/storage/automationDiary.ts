@@ -89,7 +89,7 @@ export const automationDiaryStorage = {
         AND l.workflow_name IN (${sql.join(opts.names.map((n) => sql`${n}`), sql`, `)})
         ${opts.accountId ? sql`AND l."Accounts_id" = ${opts.accountId}` : sql``}
         ${opts.failedOnly ? sql`AND l.status = 'Failure'` : sql``}
-      ORDER BY l.created_at DESC
+      ORDER BY l.created_at DESC NULLS LAST, l.id DESC
       LIMIT ${opts.limit + 1} OFFSET ${offset}
     `);
     const rows = res.rows as any[];

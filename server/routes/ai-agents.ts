@@ -2129,6 +2129,9 @@ export async function seedAiAgents(): Promise<void> {
   }
 }
 
+const AUTOMATION_NOTIFY_COOLDOWN_MS = 6 * 3600 * 1000;
+const automationLastNotified = new Map<string, number>();
+
 export function startAutomationFailureNotifier(): void {
   const notify = createAndDispatchNotification;
   let lastAutomationFailureCheck = new Date();
@@ -2142,6 +2145,9 @@ export function startAutomationFailureNotifier(): void {
       const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
       if (agencyUsers.length === 0) return;
       for (const failure of failures) {
+        const last = automationLastNotified.get(failure.workflowName);
+        if (last !== undefined && Date.now() - last < AUTOMATION_NOTIFY_COOLDOWN_MS) continue;
+        automationLastNotified.set(failure.workflowName, Date.now());
         for (const user of agencyUsers) {
           await notify({
             type: "critical_automation_failure",
