@@ -1,13 +1,13 @@
 import type { Express } from "express";
 import { storage } from "../storage";
 import { requireOwner } from "../auth";
-import { wrapAsync } from "./_helpers";
+import { wrapAsync, getEngineUrl } from "./_helpers";
 import { AUTOMATION_CATALOGUE, findEntry } from "@shared/automationCatalogue";
 import { EMPTY_COUNTS, type ClientAutomationsResponse, type EngineJobsHealth, type OverviewResponse } from "@shared/automationTypes";
 import { buildOverviewRows, overviewTotals } from "../automations/health";
 import { buildClientLines } from "../automations/clientGates";
 
-const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
+const ENGINE_BASE = getEngineUrl();
 
 let overviewCache: { data: OverviewResponse; ts: number } | null = null;
 const OVERVIEW_TTL_MS = 25_000;

@@ -14,7 +14,7 @@ import {
 import { db } from "../db";
 import { createAndDispatchNotification } from "../notification-dispatcher";
 import { broadcast } from "../sse";
-import { handleZodError, wrapAsync } from "./_helpers";
+import { handleZodError, wrapAsync, getEngineUrl } from "./_helpers";
 import { eq, count, desc, and, sql, lte, gte } from "drizzle-orm";
 import crypto from "crypto";
 import fs from "fs";
@@ -168,17 +168,7 @@ export function registerAiAgentsRoutes(app: Express): void {
       content,
     });
 
-    const webhookUrl = process.env.SUPPORT_CHAT_WEBHOOK_URL;
-    if (!webhookUrl) {
-      const fallbackMsg = await storage.createSupportMessage({
-        sessionId,
-        userId: user.id!,
-        accountId: user.accountsId ?? null,
-        role: "assistant",
-        content: "Support is being configured. Please try again later.",
-      });
-      return res.json({ userMessage: userMsg, assistantMessage: fallbackMsg, escalated: false });
-    }
+    const webhookUrl = `${getEngineUrl()}/webhook/support-chat`;
 
     try {
       const history = await storage.getSupportMessagesBySessionId(sessionId);

@@ -46,14 +46,9 @@ export function wrapAsync(
   };
 }
 
-/** Derive the automation engine base URL from the support chat webhook URL. */
+/** Base URL of the Python automation engine (same host as the CRM by default). */
 export function getEngineUrl(): string {
-  const raw = process.env.SUPPORT_CHAT_WEBHOOK_URL;
-  if (raw) {
-    const u = new URL(raw);
-    return u.origin;
-  }
-  return "http://192.168.1.107:8100";
+  return process.env.ENGINE_URL || "http://localhost:8100";
 }
 
 /**
