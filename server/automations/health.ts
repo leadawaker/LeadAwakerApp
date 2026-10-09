@@ -14,8 +14,9 @@ export function scheduledHealth(job: EngineJob | undefined, entry: AutomationEnt
   if (!opts.engineReachable) return "unknown";
   if (!job) return "late";
   if (job.last_ok === false) return "failing";
-  const interval = intervalSeconds(entry.trigger) ?? 86_400;
-  if (job.next_run_at && opts.now - Date.parse(job.next_run_at) > interval * 1000) return "late";
+  // Minimum 120s grace so a 3s job (send_queue_worker) does not flicker to "late" on jitter.
+  const graceS = Math.max(intervalSeconds(entry.trigger) ?? 86_400, 120);
+  if (job.next_run_at && opts.now - Date.parse(job.next_run_at) > graceS * 1000) return "late";
   if ("last_run_at" in job && job.last_run_at == null) return "waiting";
   return "healthy";
 }

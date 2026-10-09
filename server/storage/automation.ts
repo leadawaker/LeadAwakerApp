@@ -107,24 +107,6 @@ import type { NotificationItem, ProspectsListParams } from "./types";
 export const automationStorage = {
   // ─── Automation Logs ────────────────────────────────────────────────
 
-  async getSchedulerJobHealth() {
-    const result = await db.execute(sql`
-      SELECT
-        workflow_name,
-        MAX(created_at) as last_run_at,
-        (array_agg(status ORDER BY created_at DESC))[1] as last_status,
-        COUNT(*) FILTER (WHERE status = 'Failure' AND created_at > NOW() - INTERVAL '24 hours') as errors_24h
-      FROM "p2mxx34fvbf3ll6"."Automation_Logs"
-      GROUP BY workflow_name
-    `);
-    return result.rows as Array<{
-      workflow_name: string;
-      last_run_at: string | null;
-      last_status: string | null;
-      errors_24h: number;
-    }>;
-  },
-
   async getAutomationLogsSummary(accountId?: number) {
     const result = await db.execute(sql`
       SELECT
@@ -238,15 +220,14 @@ export const automationStorage = {
     };
   },
 
-  async getRecentFailedAutomationLogs(since: Date): Promise<Automation_Logs[]> {
-    return db
-      .select()
-      .from(automationLogs)
-      .where(
-        and(
-          inArray(automationLogs.status, ["failed", "error"]),
-          gte(automationLogs.createdAt, since),
-        ),
-      );
+  async getRecentFailedAutomationLogs(since: Date) {
+    const result = await db.execute(sql`
+      SELECT workflow_name AS "workflowName", COUNT(*)::int AS count,
+        (array_agg(COALESCE(NULLIF(skipped_reason, ''), NULLIF(output_data, ''), NULLIF(error_code, '')) ORDER BY created_at DESC))[1] AS "lastReason"
+      FROM "p2mxx34fvbf3ll6"."Automation_Logs"
+      WHERE kind = 'action' AND status = 'Failure' AND created_at > ${since}
+      GROUP BY workflow_name
+    `);
+    return result.rows as Array<{ workflowName: string; count: number; lastReason: string | null }>;
   },
 };

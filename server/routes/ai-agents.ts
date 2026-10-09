@@ -2145,8 +2145,8 @@ export function startAutomationFailureNotifier(): void {
         for (const user of agencyUsers) {
           await notify({
             type: "critical_automation_failure",
-            title: `${failure.workflowName || "Automation"} failed`,
-            body: failure.stepName || failure.errorCode || null,
+            title: `${failure.workflowName}: ${failure.count} failed`,
+            body: failure.lastReason || null,
             userId: user.id!,
             accountId: user.accountsId ?? null,
             read: false,

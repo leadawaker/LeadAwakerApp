@@ -12,6 +12,7 @@ import { campaignsStorage } from "./storage/campaigns";
 import { leadsStorage } from "./storage/leads";
 import { interactionsStorage } from "./storage/interactions";
 import { automationStorage } from "./storage/automation";
+import { automationDiaryStorage } from "./storage/automationDiary";
 import { notificationsStorage } from "./storage/notifications";
 import { billingStorage } from "./storage/billing";
 import { tasksStorage } from "./storage/tasks";
@@ -77,6 +78,7 @@ export const storage = {
   ...leadsStorage,
   ...interactionsStorage,
   ...automationStorage,
+  ...automationDiaryStorage,
   ...notificationsStorage,
   ...billingStorage,
   ...tasksStorage,

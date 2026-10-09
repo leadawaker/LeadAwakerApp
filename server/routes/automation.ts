@@ -1,120 +1,94 @@
 import type { Express } from "express";
 import { storage } from "../storage";
-import { requireAgency } from "../auth";
+import { requireOwner } from "../auth";
 import { wrapAsync, getEngineUrl } from "./_helpers";
+import { AUTOMATION_CATALOGUE, findEntry } from "@shared/automationCatalogue";
+import { EMPTY_COUNTS, type ClientAutomationsResponse, type EngineJobsHealth, type OverviewResponse } from "@shared/automationTypes";
+import { buildOverviewRows, overviewTotals } from "../automations/health";
+import { buildClientLines } from "../automations/clientGates";
 
-const JOB_GRACE_MAP: Record<string, number> = {
-  campaign_launcher:      60 * 2,
-  bump_scheduler:         60 * 5 * 2,
-  demo_bump_scheduler:    60 * 5 * 2,
-  lead_scorer:            60 * 30 * 2,
-  task_reminders:         60 * 15 * 2,
-  buying_signal_followup: 60 * 5 * 2,
-  metrics_aggregator:     60 * 60 * 26,
-  nightly_summary:        60 * 60 * 26,
-};
+let overviewCache: { data: OverviewResponse; ts: number } | null = null;
+const OVERVIEW_TTL_MS = 25_000;
 
-const JOB_CADENCE_LABEL: Record<string, string> = {
-  campaign_launcher:      "every 60s",
-  bump_scheduler:         "every 5m",
-  demo_bump_scheduler:    "every 5m",
-  lead_scorer:            "every 30m",
-  task_reminders:         "every 15m",
-  buying_signal_followup: "every 5m",
-  metrics_aggregator:     "daily 00:00",
-  nightly_summary:        "daily 00:00",
-};
-
-let _healthCache: { data: any; ts: number } | null = null;
-const HEALTH_CACHE_TTL = 25_000;
+async function fetchEngineHealth(): Promise<EngineJobsHealth | null> {
+  try {
+    const r = await fetch(getEngineUrl() + "/api/jobs-health", { signal: AbortSignal.timeout(5000) });
+    return r.ok ? ((await r.json()) as EngineJobsHealth) : null;
+  } catch {
+    return null;
+  }
+}
 
 export function registerAutomationRoutes(app: Express) {
-  app.get("/api/automation-health", requireAgency, wrapAsync(async (_req, res) => {
-    if (_healthCache && Date.now() - _healthCache.ts < HEALTH_CACHE_TTL) {
-      return res.json(_healthCache.data);
-    }
-
-    const KNOWN_JOBS = Object.keys(JOB_GRACE_MAP);
-    let engineHealthy = false;
-    let schedulerRunning = false;
-    let engineJobs: Array<{ id: string; name: string; next_run_at: string | null }> = [];
-
-    try {
-      const r = await fetch(getEngineUrl() + "/api/jobs-health", { signal: AbortSignal.timeout(5000) });
-      if (r.ok) {
-        const body = await r.json() as { scheduler_running: boolean; jobs: typeof engineJobs };
-        engineHealthy = true;
-        schedulerRunning = body.scheduler_running;
-        engineJobs = body.jobs ?? [];
-      }
-    } catch {
-      // engine unreachable — engineHealthy stays false
-    }
-
-    const dbRows = await storage.getSchedulerJobHealth();
-    const dbByWorkflow = new Map(dbRows.map(r => [r.workflow_name, r]));
-    const engineById = new Map(engineJobs.map(j => [j.id, j]));
-
-    const now = Date.now();
-    const jobs = KNOWN_JOBS.map(id => {
-      const db = dbByWorkflow.get(id);
-      const eng = engineById.get(id);
-      const lastRunAt = db?.last_run_at ?? null;
-      const lastRunStatus = db?.last_status ?? null;
-      const errors24h = Number(db?.errors_24h ?? 0);
-      const nextRunAt = eng?.next_run_at ?? null;
-
-      let status: "healthy" | "overdue" | "error";
-      if (!engineHealthy || !eng) {
-        status = "error";
-      } else if (lastRunStatus === "Failure") {
-        status = "error";
-      } else if (lastRunAt) {
-        const age = (now - new Date(lastRunAt).getTime()) / 1000;
-        status = age > JOB_GRACE_MAP[id] ? "overdue" : "healthy";
-      } else {
-        status = "overdue";
-      }
-
-      return {
-        id,
-        name: eng?.name ?? id,
-        cadenceLabel: JOB_CADENCE_LABEL[id] ?? "",
-        status,
-        lastRunAt,
-        lastRunStatus,
-        nextRunAt,
-        errors24h,
-      };
-    });
-
-    const data = {
-      engineHealthy,
-      schedulerRunning,
-      generatedAt: new Date().toISOString(),
-      jobs,
+  app.get("/api/automations/overview", requireOwner, wrapAsync(async (_req, res) => {
+    if (overviewCache && Date.now() - overviewCache.ts < OVERVIEW_TTL_MS) return res.json(overviewCache.data);
+    const [engine, counts24h, clientsOn] = await Promise.all([
+      fetchEngineHealth(),
+      storage.getActionCountsByWorkflow(24),
+      storage.getClientsOnCounts(),
+    ]);
+    const rows = buildOverviewRows({ catalogue: AUTOMATION_CATALOGUE, engine, counts24h, clientsOn, now: Date.now() });
+    const data: OverviewResponse = {
+      engineReachable: engine !== null,
+      schedulerRunning: engine?.scheduler_running ?? false,
+      engineStartedAt: engine?.started_at ?? null,
+      rows,
+      totals: overviewTotals(rows),
     };
-    _healthCache = { data, ts: Date.now() };
+    overviewCache = { data, ts: Date.now() };
     res.json(data);
   }));
 
-  app.get("/api/automation-logs/summary", requireAgency, wrapAsync(async (req, res) => {
+  app.get("/api/automations/:id/diary", requireOwner, wrapAsync(async (req, res) => {
+    const id = String(req.params.id);
+    const entry = findEntry(id);
+    const names = entry ? [entry.id, ...(entry.aliases ?? []), ...(entry.jobId ? [entry.jobId] : [])] : [id];
+    const page = Math.max(1, Number(req.query.page) || 1);
     const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
-    const data = await storage.getAutomationLogsSummary(accountId);
-    res.json(data);
+    res.json(await storage.getDiaryPage({
+      names, page, limit: 50,
+      accountId: accountId && Number.isFinite(accountId) ? accountId : undefined,
+      failedOnly: req.query.failedOnly === "1",
+    }));
   }));
 
-  app.get("/api/automation-logs", requireAgency, wrapAsync(async (req, res) => {
-    const { page = '0', limit = '50', accountId, status, workflowName, dateFrom, dateTo } = req.query;
-    const data = await storage.getAutomationLogsPaginated({
-      page: Number(page),
-      limit: Number(limit),
-      accountId: accountId ? Number(accountId) : undefined,
-      status: status as string | undefined,
-      workflowName: workflowName as string | undefined,
-      dateFrom: dateFrom as string | undefined,
-      dateTo: dateTo as string | undefined,
-    });
+  app.get("/api/accounts/:id/automations", requireOwner, wrapAsync(async (req, res) => {
+    const accountId = Number(req.params.id);
+    if (!Number.isFinite(accountId)) return res.status(400).json({ message: "Invalid account id" });
+    const [inputs, counts] = await Promise.all([
+      storage.getGateInputs(accountId),
+      storage.getActionCountsForAccount(accountId, 7),
+    ]);
+    const countsFor = (automationId: string, campaignId: number | null) => {
+      const entry = findEntry(automationId);
+      const names = entry ? [entry.id, ...(entry.aliases ?? [])] : [automationId];
+      // Campaign lines read their campaign's rows; account lines read every row of that automation.
+      let acc = { ...EMPTY_COUNTS };
+      counts.forEach((c, key) => {
+        const [name, camp] = key.split("|");
+        if (!names.includes(name)) return;
+        if (campaignId !== null && camp !== String(campaignId)) return;
+        acc = {
+          success: acc.success + c.success, failed: acc.failed + c.failed, skipped: acc.skipped + c.skipped,
+          lastActionAt: !acc.lastActionAt || (c.lastActionAt && c.lastActionAt > acc.lastActionAt) ? c.lastActionAt : acc.lastActionAt,
+          topFailureReason: acc.topFailureReason ?? c.topFailureReason,
+        };
+      });
+      return acc;
+    };
+    const lines = buildClientLines(inputs).map((l) => ({ ...l, counts7d: countsFor(l.automationId, l.campaignId) }));
+    const onIds = new Set(lines.filter((l) => l.state !== "off").map((l) => l.automationId));
+    const allIds = new Set(lines.map((l) => l.automationId));
+    const data: ClientAutomationsResponse = {
+      accountId,
+      lines,
+      totals: {
+        on: onIds.size,
+        total: allIds.size,
+        actions7d: lines.reduce((n, l) => n + l.counts7d.success + l.counts7d.failed + l.counts7d.skipped, 0),
+        failed7d: lines.reduce((n, l) => n + l.counts7d.failed, 0),
+      },
+    };
     res.json(data);
   }));
 }

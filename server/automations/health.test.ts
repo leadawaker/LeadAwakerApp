@@ -71,3 +71,10 @@ test("totals", () => {
   assert.equal(t.automations, AUTOMATION_CATALOGUE.length);
   assert.equal(t.failures24h, 2);
 });
+
+test("send_queue_worker (3s interval) tolerates jitter via a 120s grace", () => {
+  const sq = findEntry("send_queue_worker")!;
+  const mk = (overdueMs: number) => ({ id: "send_queue_worker", name: "", next_run_at: iso(overdueMs), last_run_at: iso(overdueMs + 3000), last_ok: true, errors_24h: 0 });
+  assert.equal(scheduledHealth(mk(30_000), sq, { now: NOW, engineReachable: true }), "healthy");
+  assert.equal(scheduledHealth(mk(200_000), sq, { now: NOW, engineReachable: true }), "late");
+});

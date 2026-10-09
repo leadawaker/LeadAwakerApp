@@ -9,7 +9,6 @@ import type {
   Campaign,
   Lead,
   Interaction,
-  AutomationLog,
   AppUser,
   TagItem,
   PromptItem,
@@ -382,42 +381,6 @@ export function usePrompts(accountId?: number) {
   useEffect(() => { refresh(); }, [refresh]);
 
   return { prompts, loading, refresh };
-}
-
-/* ─── Automation Logs ─────────────────────────────────────────── */
-
-export function useAutomationLogs(accountId?: number) {
-  const [logs, setLogs] = useState<AutomationLog[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const refresh = useCallback(async () => {
-    setLoading(true);
-    try {
-      const params = accountId ? `?accountId=${accountId}` : "";
-      const data = await fetchApi<AutomationLog>(`/api/automation-logs${params}`);
-      const normalized = data.map((log: any) => ({
-        ...log,
-        id: log.Id || log.id,
-        account_id: log.account_id || log.accounts_id || log.Accounts_id,
-        campaign_id: log.campaign_id || log.campaigns_id || log.Campaigns_id,
-        lead_id: log.lead_id || log.leads_id || log.Leads_id,
-        status: log.status || log.Status || "success",
-        error_message: log.error_message || log.Error_message || "",
-        execution_time_ms: log.execution_time_ms || log.Execution_time_ms || 0,
-        stage: log.stage || log.Stage || "",
-        created_at: log.created_at || log.Created_time || "",
-      }));
-      setLogs(normalized);
-    } catch (err) {
-      console.error("Failed to fetch automation logs", err);
-    } finally {
-      setLoading(false);
-    }
-  }, [accountId]);
-
-  useEffect(() => { refresh(); }, [refresh]);
-
-  return { logs, loading, refresh };
 }
 
 /* ─── Campaign Metrics History ─────────────────────────────────── */
