@@ -1,4 +1,4 @@
-// Generates a proposal's illustrations with OpenAI gpt-image-1, in the same house style as The Report.
+// Generates a proposal's illustrations with OpenAI's newest quality image model (script/lib/image-model.cjs), in the same house style as The Report.
 // Shots live in proposals/<slug>/shots.json: { "style"?: "...", "shots": { "cover": "A ... ", ... } }.
 // Writes proposals/<slug>/img/<name>.png and a JPG next to it (the JPG is what proposal.html uses).
 // Usage: node script/proposal/gen-images.cjs <slug> [name ...]   (no names = all). About $0.25 per image.
@@ -9,6 +9,7 @@ const { execFileSync } = require('child_process');
 const ROOT = path.join(__dirname, '../..');
 const env = fs.readFileSync(path.join(ROOT, '.env'), 'utf8');
 const KEY = (env.match(/^OPENAI_API_KEY=(.*)$/m) || [])[1]?.trim().replace(/^["']|["']$/g, '');
+const { resolveImageModel } = require('../lib/image-model.cjs');
 if (!KEY) { console.error('OPENAI_API_KEY missing'); process.exit(1); }
 
 const [slug, ...only] = process.argv.slice(2);
@@ -23,7 +24,7 @@ async function gen(name) {
   const res = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'gpt-image-1', prompt: `${shots[name]} ${STYLE}`, size: '1024x1536', quality: 'high', n: 1 }),
+    body: JSON.stringify({ model: await resolveImageModel('quality', KEY), prompt: `${shots[name]} ${STYLE}`, size: '1024x1536', quality: 'high', n: 1 }),
   });
   const j = await res.json();
   if (!res.ok) throw new Error(`${name}: ${res.status} ${JSON.stringify(j.error || j).slice(0, 300)}`);

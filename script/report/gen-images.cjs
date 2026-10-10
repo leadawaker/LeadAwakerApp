@@ -1,9 +1,10 @@
-// Generates the Report's editorial illustrations with OpenAI gpt-image-1.
+// Generates the Report's editorial illustrations with OpenAI's newest quality image model (script/lib/image-model.cjs).
 // Usage: node script/report/gen-images.cjs [name ...]   (no args = all)
 const fs = require('fs');
 const path = require('path');
 const env = fs.readFileSync(path.join(__dirname, '../../.env'), 'utf8');
 const KEY = (env.match(/^OPENAI_API_KEY=(.*)$/m) || [])[1]?.trim().replace(/^["']|["']$/g, '');
+const { resolveImageModel } = require('../lib/image-model.cjs');
 if (!KEY) { console.error('OPENAI_API_KEY missing'); process.exit(1); }
 
 const STYLE = 'Editorial poster illustration in a mid-century screenprint style: flat vector shapes with heavy risograph grain texture. Film-noir lighting from one single hard light source, long cast shadows, venetian-blind light stripes where it fits. Strict limited palette only: deep wine red #6E2638, dark oxblood #3E1520, warm bone off-white #F7F3EC for highlights, near-black ink #1F1A14 for shadows. Minimalist composition with one clear subject and at least 55% calm empty negative space in the upper part of the frame. No text, no letters, no numbers, no logos, no detailed faces. Quiet, cinematic, premium.';
@@ -23,7 +24,7 @@ async function gen(name) {
   const res = await fetch('https://api.openai.com/v1/images/generations', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${KEY}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'gpt-image-1', prompt: `${SHOTS[name]} ${STYLE}`, size: '1024x1536', quality: 'high', n: 1 }),
+    body: JSON.stringify({ model: await resolveImageModel('quality', KEY), prompt: `${SHOTS[name]} ${STYLE}`, size: '1024x1536', quality: 'high', n: 1 }),
   });
   const j = await res.json();
   if (!res.ok) throw new Error(`${name}: ${res.status} ${JSON.stringify(j.error || j).slice(0, 300)}`);

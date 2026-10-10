@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { resolveImageModel } from "../lib/imageModel";
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
@@ -24,7 +25,6 @@ function defaultDeps(): ImageDeps {
   };
 }
 
-const MODEL = "gpt-image-1";
 
 export async function generateSocialImage(
   prompt: string,
@@ -32,11 +32,12 @@ export async function generateSocialImage(
   quality: "low" | "medium" = "medium",
 ): Promise<string> {
   if (!deps.apiKey) throw new Error("OPENAI_API_KEY is not set");
+  const model = await resolveImageModel("draft", deps.apiKey, deps.fetch);
   const res = await deps.fetch("https://api.openai.com/v1/images/generations", {
     method: "POST",
     headers: { "content-type": "application/json", authorization: `Bearer ${deps.apiKey}` },
     body: JSON.stringify({
-      model: MODEL,
+      model,
       prompt: `${prompt}. Square photo. No text, no logos, no watermarks, no signs.`,
       size: "1024x1024",
       quality,
