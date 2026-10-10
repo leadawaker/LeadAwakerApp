@@ -107,7 +107,7 @@ async function deliver(msg: Outgoing): Promise<DeliveryResult> {
 
 export const EMAIL_THEME = {
   bg: "#F3EFE8",
-  card: "#FDFCF9", // the logo PNG is flattened onto this colour
+  card: "#FDFCF9", // the logo PNG (homepage logo in its nav pill) is flattened onto this colour
   surface: "#F6F1EA",
   line: "#E7E0D4",
   ink: "#1F1A14",
@@ -229,7 +229,7 @@ ${preheader}
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td class="la-pad" style="padding:34px 40px 0;">
-                  <a href="${SITE_URL}" target="_blank" style="text-decoration:none;"><img src="${EMAIL_LOGO_URL}" width="180" height="32" alt="Lead Awaker" style="display:block;width:180px;max-width:180px;height:auto;border:0;"></a>
+                  <a href="${SITE_URL}" target="_blank" style="text-decoration:none;"><img src="${EMAIL_LOGO_URL}" width="210" height="52" alt="Lead Awaker" style="display:block;width:210px;max-width:210px;height:auto;border:0;"></a>
                 </td>
               </tr>
               <tr>

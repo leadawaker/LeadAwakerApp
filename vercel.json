@@ -72,10 +72,6 @@
       "destination": "/site/report.html"
     },
     {
-      "source": "/report/thanks",
-      "destination": "/site/report-thanks.html"
-    },
-    {
       "source": "/audit",
       "destination": "/site/audit.html"
     },
@@ -84,20 +80,12 @@
       "destination": "/site/report-nl.html"
     },
     {
-      "source": "/nl/rapport/bedankt",
-      "destination": "/site/report-thanks-nl.html"
-    },
-    {
       "source": "/nl/lekcheck",
       "destination": "/site/audit-nl.html"
     },
     {
       "source": "/pt/relatorio",
       "destination": "/site/report-pt.html"
-    },
-    {
-      "source": "/pt/relatorio/obrigado",
-      "destination": "/site/report-thanks-pt.html"
     },
     {
       "source": "/pt/raio-x",

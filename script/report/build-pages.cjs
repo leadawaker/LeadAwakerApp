@@ -1,5 +1,5 @@
 // Builds the Dutch and Portuguese Report funnel pages from the English ones in client/public/site/:
-// report.html, report-thanks.html and audit.html become <name>-nl.html and <name>-pt.html.
+// report.html and audit.html become <name>-nl.html and <name>-pt.html.
 // The copy lives in lang/pages-<code>.cjs. Every English fragment must still exist, so an edit to an
 // English page fails loudly here instead of leaking English onto /nl or /pt.
 // Usage: node script/report/build-pages.cjs

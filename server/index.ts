@@ -110,12 +110,12 @@ app.use((req, res, next) => {
   // script/build-site-pt.py and build-site-nl.py. Mirror vercel.json.
   app.get("/pt", sendFile(path.join(publicDir, "site"), "pt.html"));
   app.get("/nl", sendFile(path.join(publicDir, "site"), "nl.html"));
-  // The Report funnel (opt-in page, thank-you page, Leak Audit) in each
+  // The Report funnel (opt-in page, Leak Audit) in each
   // language. Mirrors vercel.json.
   const sitePages: Record<string, string> = {
-    "/report": "report.html", "/report/thanks": "report-thanks.html", "/audit": "audit.html",
-    "/nl/rapport": "report-nl.html", "/nl/rapport/bedankt": "report-thanks-nl.html", "/nl/lekcheck": "audit-nl.html",
-    "/pt/relatorio": "report-pt.html", "/pt/relatorio/obrigado": "report-thanks-pt.html", "/pt/raio-x": "audit-pt.html",
+    "/report": "report.html", "/audit": "audit.html",
+    "/nl/rapport": "report-nl.html", "/nl/lekcheck": "audit-nl.html",
+    "/pt/relatorio": "report-pt.html", "/pt/raio-x": "audit-pt.html",
   };
   for (const [route, file] of Object.entries(sitePages)) app.get(route, sendFile(path.join(publicDir, "site"), file));
   // Landing-page variants of the previous homepage: /reactivate is database
