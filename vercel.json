@@ -56,6 +56,10 @@
       "destination": "https://api.leadawaker.com/widget-demo/:token"
     },
     {
+      "source": "/p/:path*",
+      "destination": "https://api.leadawaker.com/p/:path*"
+    },
+    {
       "source": "/widget/:path*",
       "destination": "https://api.leadawaker.com/widget/:path*"
     },

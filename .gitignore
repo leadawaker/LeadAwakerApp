@@ -119,3 +119,4 @@ login.png
 /*.yaml
 client/public/images/*.png
 __pycache__/
+/proposals/
