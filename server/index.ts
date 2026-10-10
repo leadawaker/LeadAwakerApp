@@ -60,6 +60,17 @@ app.use((_req, res, next) => {
   next();
 });
 
+// Keep this server out of search results. The public site is the static build
+// on Vercel (www.leadawaker.com); what Express answers is the CRM, the API and
+// the dev copy of the site on app.leadawaker.com. Google had indexed
+// app.leadawaker.com and api.leadawaker.com as sites of their own (2026-10).
+// The paths Vercel proxies here (/api, /p, /widget, the demos) are not meant
+// for search either, so the header goes on every response.
+app.use((_req, res, next) => {
+  res.setHeader("X-Robots-Tag", "noindex");
+  next();
+});
+
 // Auth: sessions + passport (must come before routes)
 setupAuth(app);
 
