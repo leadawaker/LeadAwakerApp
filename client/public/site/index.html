@@ -2119,10 +2119,10 @@ footer img{height:24px;width:auto;display:block}
           submit:'Build my demo',
           alt:'Rather talk to Gabriel first?',altLink:'Book a call',
           incoming:'Incoming call',answeredBy:'Sara answering for',yourReceptionist:'Your new receptionist',answer:'Answer',decline:'Decline',
-          examples:[['Bright Smile Dental','Dental clinic'],['Oak & Pine Roofing','Roofing'],['Paws & Claws Vets','Vet'],
-            ['Northgate Plumbing','Plumbing'],['Iron Peak Gym','Gym'],['Harbour Windows','Windows & doors'],['Willow Hair Studio','Hair salon'],
-            ['Kessler & Shaw Law','Law firm'],['Brightline Kitchens','Kitchens'],['Riverside Auto Repair','Garage'],['Elm Street Electrical','Electrician'],
-            ['Seaview Hotel','Hotel'],['Greenway Solar','Solar panels'],['Bloom Physio','Physiotherapy']],
+          examples:[['Brightline Kitchens','Kitchens',1],['Sharp & Co Barbers','Barber','barber'],['Prestige Motors','Car dealership','car'],
+            ['Oak & Pine Builders','Construction','builder'],['Bright Smile Dental','Dental clinic','dental'],['Elm Street Electrical','Electrician','electrician'],
+            ['Spark Events','Event planner','events'],['Elm Street Medical','Medical practice','doctor'],['Iron Peak Gym','Gym','gym'],
+            ['Seaview Hotel','Hotel','hotel'],['Kessler & Shaw Law','Law firm','lawyer']],
           yours:'Your business',
           readyEyebrow:'Your demo is ready',tipsLabel:'How to test her',tipsTitle:'Get the most out of your demo',
           tips:['Ask what a job costs, or when someone can come by.','Push back: “that’s too expensive” or “I’ll think about it”.','Ask something your website doesn’t answer.','Interrupt her in the middle of a sentence.','Try to book an appointment.'],
@@ -2147,10 +2147,10 @@ footer img{height:24px;width:auto;display:block}
           submit:'Maak mijn demo',
           alt:'Liever eerst met Gabriel praten?',altLink:'Plan een gesprek',
           incoming:'Inkomend gesprek',answeredBy:'Sara neemt op voor',yourReceptionist:'Je nieuwe receptioniste',answer:'Opnemen',decline:'Weigeren',
-          examples:[['Tandarts Lindenhof','Tandarts'],['Dakwerken Eikhout','Dakdekker'],['Dierenkliniek De Weide','Dierenarts'],
-            ['Loodgieter De Bruin','Loodgieter'],['Sportschool Kracht','Sportschool'],['Kozijnen Van Dam','Kozijnen'],['Kapsalon Mooi','Kapper'],
-            ['Advocatenkantoor Smit','Advocaat'],['Keukenstudio Vos','Keukens'],['Autobedrijf Visser','Garage'],['Elektro Jansen','Elektricien'],
-            ['Hotel De Duinen','Hotel'],['Zonnepanelen Oost','Zonnepanelen'],['Fysio Vitaal','Fysiotherapie']],
+          examples:[['Keukenstudio Vos','Keukens',1],['Barbershop Knip','Barbier','barber'],['Autobedrijf Visser','Autodealer','car'],
+            ['Bouwbedrijf Eikhout','Bouw','builder'],['Tandarts Lindenhof','Tandarts','dental'],['Elektro Jansen','Elektricien','electrician'],
+            ['Eventbureau Sfeer','Evenementen','events'],['Huisartsenpraktijk De Linde','Huisarts','doctor'],['Sportschool Kracht','Sportschool','gym'],
+            ['Hotel De Duinen','Hotel','hotel'],['Advocatenkantoor Smit','Advocaat','lawyer']],
           yours:'Jouw bedrijf',
           readyEyebrow:'Je demo staat klaar',tipsLabel:'Zo test je haar',tipsTitle:'Haal het meeste uit je demo',
           tips:['Vraag wat een klus kost, of wanneer er iemand kan langskomen.','Sputter tegen: “dat is te duur” of “ik denk er nog even over na”.','Vraag iets wat niet op je website staat.','Val haar midden in een zin in de rede.','Probeer een afspraak te maken.'],
@@ -2175,10 +2175,10 @@ footer img{height:24px;width:auto;display:block}
           submit:'Cria minha demo',
           alt:'Prefere falar com o Gabriel primeiro?',altLink:'Agendar uma conversa',
           incoming:'Chamada recebida',answeredBy:'Sara atendendo',yourReceptionist:'Sua nova recepcionista',answer:'Atender',decline:'Recusar',
-          examples:[['Clínica Sorriso','Dentista'],['Telhados Aroeira','Telhados'],['Pet Vida Veterinária','Veterinário'],
-            ['Hidráulica Rio','Encanador'],['Academia Força','Academia'],['Esquadrias Litoral','Esquadrias'],['Salão Bela Flor','Salão de beleza'],
-            ['Almeida Advogados','Advocacia'],['Marcenaria Ipê','Marcenaria'],['Auto Center Paulista','Oficina'],['Elétrica Bem-Te-Vi','Eletricista'],
-            ['Pousada Mar Azul','Pousada'],['Solar Cerrado','Energia solar'],['Fisio Movimento','Fisioterapia']],
+          examples:[['Marcenaria Ipê','Marcenaria',1],['Barbearia Navalha','Barbearia','barber'],['Concessionária Paulista','Concessionária','car'],
+            ['Construtora Aroeira','Construção','builder'],['Clínica Sorriso','Dentista','dental'],['Elétrica Bem-Te-Vi','Eletricista','electrician'],
+            ['Estúdio de Eventos Brilho','Eventos','events'],['Clínica Saúde Viva','Clínica médica','doctor'],['Academia Força','Academia','gym'],
+            ['Hotel Mar Azul','Hotel','hotel'],['Almeida Advogados','Advocacia','lawyer']],
           yours:'Sua empresa',
           readyEyebrow:'Sua demonstração está pronta',tipsLabel:'Como testar a Sara',tipsTitle:'Aproveite ao máximo a sua demonstração',
           tips:['Pergunte quanto custa um serviço, ou quando alguém pode ir até aí.','Faça objeções: “está caro” ou “vou pensar”.','Pergunte algo que o seu site não responde.','Interrompa a Sara no meio de uma frase.','Tente agendar um horário.'],
@@ -2212,18 +2212,21 @@ footer img{height:24px;width:auto;display:block}
          as soon as the visitor types, she answers for their own domain. */
       var photo=$('.ts-photo'),flash=$('.ts-flash'),biz=$('.s-idle .ts-biz'),niche=$('.ts-niche'),exI=0,cycleT=null,own='';
       function host(v){v=String(v||'').trim().toLowerCase().replace(/^[a-z]+:\/\//,'').replace(/^www\./,'');return v.split(/[\/?#\s]/)[0].slice(0,40)}
-      function setBiz(name,label,instant){
+      function setBiz(name,label,instant,pic){
         if(biz.textContent===name)return;
+        if(!instant&&pic&&screen.getAttribute('data-scene')==='idle')setPhoto(pic,true);
         var put=function(){biz.textContent=name;niche.textContent=label;$('.s-idle .ts-ini').textContent=ini(name)};
         if(instant||reduced){put();return}
         flash.classList.add('swap');setTimeout(function(){put();flash.classList.remove('swap')},180);
       }
-      function cycle(){clearTimeout(cycleT);if(own)return;var ex=C.examples[exI%C.examples.length];setBiz(ex[0],ex[1]);exI++;cycleT=setTimeout(cycle,reduced?4000:3200)}
+      function cycle(){clearTimeout(cycleT);if(own)return;var ex=C.examples[exI%C.examples.length];setBiz(ex[0],ex[1],false,ex[2]);exI++;cycleT=setTimeout(cycle,reduced?4000:3200)}
       input.addEventListener('input',function(){
         own=host(input.value);clearTimeout(cycleT);
         if(own)setBiz(own,C.yours,true);else cycleT=setTimeout(cycle,900);
       });
       cycle();
+      // The costumes are fetched once the page has settled, so each swap is instant when its turn comes.
+      window.addEventListener('load',function(){setTimeout(function(){C.examples.forEach(function(e){if(e[2]&&e[2]!==1)photoImg(e[2])})},2500)});
 
       /* The headline: the pitch, until the demo has something of its own to say. */
       var h2=$('h2'),lede=$('.ts-lede'),eyebrow=$('.ts-eyebrow');
@@ -2242,9 +2245,11 @@ footer img{height:24px;width:auto;display:block}
         if(!img){img=new Image();img.alt='';img.setAttribute('data-n',n);img.decoding='async';img.src=['','site','img','try-phone-'+n+'.webp'].join('/');photo.insertBefore(img,screen)}
         return img;
       }
-      function setPhoto(n){
+      // quiet: the new photo has the phone in the same spot, so the screen stays and only the person fades.
+      function setPhoto(n,quiet){
         if(photo.getAttribute('data-photo')===String(n))return;
         var img=photoImg(n),go=function(){
+          if(quiet){[].forEach.call(photo.querySelectorAll(':scope>img'),function(i){i.classList.toggle('on',i===img)});photo.setAttribute('data-photo',n);return}
           photo.classList.add('swap');
           setTimeout(function(){
             [].forEach.call(photo.querySelectorAll(':scope>img'),function(i){i.classList.toggle('on',i===img)});
