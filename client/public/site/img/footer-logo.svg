@@ -102,10 +102,10 @@
 <g clip-path="url(#clip_3)">
 <g>
 <g clip-path="url(#clip_4)">
-<use data-text="L" xlink:href="#font_5_12" transform="matrix(58.74683,0,0,-58.74683,15.281352,214.55463)" fill="#ffffff" stroke="#2B1117" stroke-width="0.06" stroke-linejoin="round" paint-order="stroke" filter="url(#lead-shadow)"></use>
-<use data-text="E" xlink:href="#font_5_6" transform="matrix(58.74683,0,0,-58.74683,50.584138,214.55463)" fill="#ffffff" stroke="#2B1117" stroke-width="0.06" stroke-linejoin="round" paint-order="stroke" filter="url(#lead-shadow)"></use>
-<use data-text="A" xlink:href="#font_5_2" transform="matrix(58.74683,0,0,-58.74683,88.0603,214.55463)" fill="#ffffff" stroke="#2B1117" stroke-width="0.06" stroke-linejoin="round" paint-order="stroke" filter="url(#lead-shadow)"></use>
-<use data-text="D" xlink:href="#font_5_5" transform="matrix(58.74683,0,0,-58.74683,136.52086,214.55463)" fill="#ffffff" stroke="#2B1117" stroke-width="0.06" stroke-linejoin="round" paint-order="stroke" filter="url(#lead-shadow)"></use>
+<use data-text="L" xlink:href="#font_5_12" transform="matrix(58.74683,0,0,-58.74683,15.281352,214.55463)" fill="#ffffff" stroke="#2B1117" stroke-opacity="0.5" stroke-width="0.06" stroke-linejoin="round" paint-order="stroke" filter="url(#lead-shadow)"></use>
+<use data-text="E" xlink:href="#font_5_6" transform="matrix(58.74683,0,0,-58.74683,50.584138,214.55463)" fill="#ffffff" stroke="#2B1117" stroke-opacity="0.5" stroke-width="0.06" stroke-linejoin="round" paint-order="stroke" filter="url(#lead-shadow)"></use>
+<use data-text="A" xlink:href="#font_5_2" transform="matrix(58.74683,0,0,-58.74683,88.0603,214.55463)" fill="#ffffff" stroke="#2B1117" stroke-opacity="0.5" stroke-width="0.06" stroke-linejoin="round" paint-order="stroke" filter="url(#lead-shadow)"></use>
+<use data-text="D" xlink:href="#font_5_5" transform="matrix(58.74683,0,0,-58.74683,136.52086,214.55463)" fill="#ffffff" stroke="#2B1117" stroke-opacity="0.5" stroke-width="0.06" stroke-linejoin="round" paint-order="stroke" filter="url(#lead-shadow)"></use>
 </g>
 </g>
 <g clip-path="url(#clip_19)">
