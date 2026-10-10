@@ -1,0 +1,242 @@
+/* Traffic page (/platform/traffic). Scoped `.tf-*` classes; colors are live
+   tokens so dark mode follows. */
+
+.tf-mono {
+  font-family: var(--mono, 'Geist Mono', ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  color: var(--mute);
+}
+
+/* ── headline numbers ───────────────────────────────────────────────── */
+.tf-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.tf-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  padding: 20px 24px;
+  border-left: 1px solid var(--line);
+}
+.tf-stat:first-child { border-left: none; }
+.tf-stat-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.tf-stat-value {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(30px, 3.4vw, 40px);
+  line-height: 1;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+.tf-stat--accent .tf-stat-value { color: var(--wine); }
+.tf-stat .tf-stat-value.is-empty { color: var(--mute-2); }
+.tf-stat-note { display: inline-flex; align-items: center; gap: 5px; white-space: normal; line-height: 1.4; }
+.tf-stat-note .up { color: var(--good); flex-shrink: 0; }
+.tf-stat-note .down { color: var(--warn); flex-shrink: 0; }
+
+/* ── the two main cards ─────────────────────────────────────────────── */
+.tf-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.tf-col { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+.tf-card { display: flex; flex-direction: column; min-width: 0; container: tf-card / inline-size; }
+.tf-card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--line);
+}
+.tf-icon-tile {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--r-button);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--wine);
+  background: var(--surface);
+  box-shadow: var(--sh-inset-super-crisp);
+}
+.tf-card-title { font-family: 'Playfair Display', serif; font-size: 19px; color: var(--ink); line-height: 1.2; }
+.tf-card-caption { font-size: 12.5px; color: var(--mute); line-height: 1.4; margin-top: 2px; }
+.tf-card-body { display: flex; flex-direction: column; gap: 22px; padding: 18px 20px 20px; }
+.tf-block { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.tf-block-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.tf-block-title { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+.tf-empty { font-size: 13px; color: var(--mute); line-height: 1.5; }
+.tf-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
+
+/* ── bars, one per day ──────────────────────────────────────────────── */
+.tf-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--tf-gap, 3px);
+  height: 72px;
+}
+.tf-bar-col {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: center;
+}
+/* The full bar is the lighter number (shown); the solid part the stronger one (clicked). */
+.tf-bar {
+  width: 100%;
+  border-radius: 3px 3px 1px 1px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--wine) 26%, transparent);
+  transform-origin: bottom;
+  animation: tf-grow 480ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.tf-bar > i { display: block; background: var(--wine); }
+.tf-bar-empty { width: 3px; height: 3px; border-radius: 50%; background: var(--line-strong); }
+.tf-bars-axis { display: flex; justify-content: space-between; font-size: 10px; color: var(--mute-2); }
+.tf-legend { display: inline-flex; align-items: center; gap: 12px; }
+.tf-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.tf-legend i { width: 8px; height: 8px; border-radius: 2px; background: var(--wine); }
+.tf-legend i.soft { background: color-mix(in srgb, var(--wine) 26%, transparent); }
+@keyframes tf-grow {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+/* ── ranked rows: a name, a number, and a bar behind them ───────────── */
+.tf-rank { display: flex; flex-direction: column; gap: 2px; }
+.tf-rank-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 32px;
+  padding: 5px 10px;
+  border-radius: var(--r-flush, 6px);
+  overflow: hidden;
+}
+.tf-rank-row::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: var(--tf-pct, 0%);
+  background: var(--wine-tint);
+  border-radius: inherit;
+}
+.tf-rank-row > * { position: relative; }
+.tf-rank-name {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.tf-rank-name > span.text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tf-rank-num {
+  font-family: var(--mono, 'Geist Mono', ui-monospace, monospace);
+  font-size: 13px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.tf-rank-num small { font-size: 11px; color: var(--mute); margin-left: 6px; }
+
+/* ── small tables (searches, pages, countries) ──────────────────────── */
+.tf-table { display: flex; flex-direction: column; }
+.tf-tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 54px 54px 62px;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 2px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.tf-tr.head {
+  border-top: none;
+  padding: 0 2px 6px;
+  font-family: var(--mono, 'Geist Mono', ui-monospace, monospace);
+  font-size: 10px;
+  color: var(--mute-2);
+}
+.tf-tr > .name { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.tf-tr > .name > span.text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tf-tr > .n {
+  text-align: right;
+  font-family: var(--mono, 'Geist Mono', ui-monospace, monospace);
+  font-size: 13px;
+  font-variant-numeric: tabular-nums;
+}
+.tf-tr:not(.head) > .n.zero { color: var(--mute-2); }
+
+/* ── index status ───────────────────────────────────────────────────── */
+.tf-index-row {
+  display: grid;
+  grid-template-columns: 10px minmax(0, 0.8fr) minmax(0, 1.2fr) auto 36px;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 20px;
+  min-height: 44px;
+  border-top: 1px solid var(--line);
+  font-size: 13.5px;
+  color: var(--ink);
+}
+.tf-index-row:first-child { border-top: none; }
+.tf-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--tf-dot); }
+.tf-dot.hollow { background: transparent; box-shadow: inset 0 0 0 2px var(--tf-dot); }
+.tf-index-path { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.tf-index-state { color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tf-note {
+  margin: 0 20px 18px;
+  padding: 12px 14px;
+  border-radius: var(--r-flush, 6px);
+  background: var(--wine-tint);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--ink-soft);
+}
+.tf-link { color: var(--wine); font-weight: 600; transition: color 150ms ease; }
+.tf-link:hover { color: var(--wine-soft); text-decoration: underline; }
+.tf-link:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; border-radius: 2px; }
+
+/* ── narrow screens ─────────────────────────────────────────────────── */
+/* The page decides columns; each card decides its own rows. */
+.tf-wrap { container: tf-page / inline-size; }
+@container tf-page (max-width: 980px) {
+  .tf-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@container tf-page (max-width: 760px) {
+  .tf-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .tf-stat { padding: 16px; }
+  .tf-stat:nth-child(odd) { border-left: none; }
+  .tf-stat:nth-child(n + 3) { border-top: 1px solid var(--line); }
+}
+@container tf-card (max-width: 560px) {
+  .tf-index-row { grid-template-columns: 10px minmax(0, 1fr) 36px; row-gap: 0; padding: 8px 16px; }
+  .tf-index-row .tf-index-state { grid-column: 2; grid-row: 2; font-size: 12.5px; }
+  .tf-index-row .tf-index-crawl { display: none; }
+  .tf-index-row .tf-index-open { grid-column: 3; grid-row: 1 / span 2; }
+  .tf-index-row .tf-dot { grid-row: 1 / span 2; }
+}
+@container tf-card (max-width: 460px) {
+  .tf-trio { grid-template-columns: minmax(0, 1fr); }
+  .tf-card-head, .tf-card-body { padding-left: 16px; padding-right: 16px; }
+  .tf-note { margin-left: 16px; margin-right: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tf-bar { animation: none; }
+}

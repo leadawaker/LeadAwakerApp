@@ -27,6 +27,7 @@ CRM routes are registered in `pages/app.tsx`; top-level routes in `App.tsx`. **E
 | Prompt Library | `features/prompts/pages/PromptsPage.tsx` | Imported directly in app.tsx |
 | AI Agents | `features/ai-agents/pages/AgentsPage.tsx` + `AgentChatPage.tsx` | Imported directly in app.tsx |
 | Automation Logs | `pages/AutomationLogs.tsx` | Automations overview (service groups, health, diary panel) — agency admin only |
+| Traffic | `features/traffic/pages/TrafficPage.tsx` | `/platform/traffic`, Owner only: the public site's visitors + Google Search Console (see Traffic Feature) |
 | Settings | `pages/Settings.tsx` | Thin composition; sections live in `features/settings/components/{ProfileSection,NotificationsSection,DashboardSection,SettingsMobileHub,SettingsFields}.tsx` + `features/settings/types.ts` |
 | Docs | `pages/Docs.tsx` | In-app Operator Manual + Client Guide |
 | Lead Detail (standalone) | `pages/LeadDetail.tsx` | Full-page lead view |
@@ -344,6 +345,30 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 | automationTypes | `shared/automationTypes.ts` | Overview / diary / per-client response types |
 | server automations | `server/automations/*` | Health rules, per-client gates, overview and per-client builders |
 | automationDiary | `server/storage/automationDiary.ts` | Diary read/write storage (90-day retention) |
+
+---
+
+## Traffic Feature (`features/traffic/`)
+
+Who finds the public site (www.leadawaker.com). Owner only, nav bar under Backend.
+
+| Component | File | Notes |
+|-----------|------|-------|
+| TrafficPage | `pages/TrafficPage.tsx` | Page shell: period switch (7/28/90 days), refresh, two columns |
+| api | `api.ts` | `useVisits`, `useSearch`, `useIndexStatus`, `refreshTraffic` (skips the server cache) |
+| format | `format.ts` | Numbers, dates, country / language / time-zone names |
+| StatStrip | `components/StatStrip.tsx` | Visits, AI-assistant visits, Google clicks, times shown, each vs the period before |
+| VisitorsCard | `components/VisitorsCard.tsx` | The site's own counter: per day, sources, pages, language / device / time zone |
+| SearchCard | `components/SearchCard.tsx` | Search Console: per day, searches, pages, countries |
+| IndexCard | `components/IndexCard.tsx` | Each sitemap page's index status + other hostnames Google shows |
+| parts | `components/parts.tsx` | `CardHead`, `Block`, `DayBars`, `RankList` |
+| traffic.css | `traffic.css` | Scoped `.tf-*` styles (container queries: `tf-page`, `tf-card`) |
+| trafficTypes | `shared/trafficTypes.ts` | Response shapes for the three endpoints |
+| routes | `server/routes/traffic.ts` | `GET /api/traffic/{visits,search,index}` (Owner) + public `POST /api/site/visit` |
+| searchConsole | `server/traffic/searchConsole.ts` | Search Console reads (server's Google login, in-memory cache: 3h / 12h) |
+| sources, visit | `server/traffic/{sources,visit}.ts` | Referrer/utm → channel + name (on read); payload checks for the counter. Tests: `traffic.test.ts` |
+| siteVisits | `server/storage/siteVisits.ts` | `Site_Visits` table: record, overview, 25-month prune |
+| visit.js | `client/public/site/visit.js` | The counter's beacon. Its tag is added at build by `script/build-site.ts` (`COUNT_VISITS`, off until the privacy policy mentions it) |
 
 ---
 

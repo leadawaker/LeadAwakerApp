@@ -6,6 +6,7 @@ import {
   Receipt,
   BookOpen,
   ScrollText,
+  ChartNoAxesColumn,
   LogOut,
   ChevronRight,
   ChevronDown,
@@ -145,6 +146,7 @@ export function MobileMorePage({
   const backendItems = visible([
     { label: t("sidebar.promptLibrary"), href: `${prefix}/prompt-library`, icon: BookOpen, agencyOnly: true },
     { label: t("sidebar.automations"), href: `${prefix}/automation-logs`, icon: ScrollText, ownerOnly: true },
+    { label: t("sidebar.traffic"), href: `${prefix}/traffic`, icon: ChartNoAxesColumn, ownerOnly: true },
   ]);
 
   const openFounderChat = () => {

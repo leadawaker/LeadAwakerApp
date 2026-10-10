@@ -33,6 +33,7 @@ const AppProspects = lazy(() => import("@/pages/AppProspects"));
 const AppCadence = lazy(() => import("@/pages/AppCadence"));
 const CalendarPage = lazy(() => import("@/pages/Calendar"));
 const AutomationLogsPage = lazy(() => import("@/pages/AutomationLogs"));
+const TrafficPage = lazy(() => import("@/features/traffic/pages/TrafficPage").then(m => ({ default: m.TrafficPage })));
 const DemosPage = lazy(() => import("@/features/demos/pages/DemosPage").then(m => ({ default: m.DemosPage })));
 const VoiceCallsPage = lazy(() => import("@/features/voiceCalls/pages/VoiceCallsPage").then(m => ({ default: m.VoiceCallsPage })));
 // UsersPage removed — user management now lives in Settings > Team tab
@@ -309,6 +310,10 @@ export default function AppArea() {
           </Route>
           <Route path="/platform/automation-logs">
             <OwnerOnly prefix="/platform"><AutomationLogsPage /></OwnerOnly>
+          </Route>
+          {/* Owner-only: the public site's visitors and Google Search numbers. */}
+          <Route path="/platform/traffic">
+            <OwnerOnly prefix="/platform"><TrafficPage /></OwnerOnly>
           </Route>
           {/* Owner-only: the list names every prospect who has been demoed to. */}
           <Route path="/platform/demos">

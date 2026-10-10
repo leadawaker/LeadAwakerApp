@@ -2057,3 +2057,25 @@ export const publicDemoSpend = nocodb.table("Public_Demo_Spend", {
   demosBuilt: integer("demos_built").notNull().default(0),
   budgetAlertSentAt: timestamp("budget_alert_sent_at", { withTimezone: true }),
 });
+
+// The public site's own visit counter, read by the Owner-only Traffic page
+// (/platform/traffic). One row per page view, sent by client/public/site/visit.js.
+// Deliberately anonymous: no IP address, no user agent, no cookie or visitor id.
+// "Visits" are the rows with is_entry (the view did not come from another page
+// of the site). Sources are classified on read (server/traffic/sources.ts).
+export const siteVisits = nocodb.table("Site_Visits", {
+  id: serial("id").primaryKey(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  path: text("path").notNull(),                     // pathname only, no query string
+  lang: text("lang"),                               // the page's language: en | nl | pt
+  isEntry: boolean("is_entry").notNull().default(false),
+  referrerHost: text("referrer_host"),              // external referrer's hostname, null = none
+  utmSource: text("utm_source"),
+  utmMedium: text("utm_medium"),
+  utmCampaign: text("utm_campaign"),
+  device: text("device"),                           // mobile | tablet | desktop (from viewport width)
+  timezone: text("timezone"),                       // browser time zone, e.g. Europe/Amsterdam
+}, (t) => [
+  index("site_visits_created_idx").on(t.createdAt),
+]);
+export type SiteVisit = typeof siteVisits.$inferSelect;

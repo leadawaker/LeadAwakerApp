@@ -25,6 +25,7 @@ import { voiceCallsStorage } from "./storage/voiceCalls";
 import { voiceCallersStorage } from "./storage/voiceCallers";
 import { voiceLinesStorage } from "./storage/voiceLines";
 import { voiceStatsStorage } from "./storage/voiceStats";
+import { siteVisitsStorage } from "./storage/siteVisits";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -91,4 +92,5 @@ export const storage = {
   ...voiceCallersStorage,
   ...voiceLinesStorage,
   ...voiceStatsStorage,
+  ...siteVisitsStorage,
 };

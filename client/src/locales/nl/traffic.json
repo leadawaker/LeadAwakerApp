@@ -1,0 +1,113 @@
+{
+  "page": {
+    "title": "Websiteverkeer",
+    "subtitle": "Wie leadawaker.com vindt, en hoe",
+    "period": "Periode",
+    "days": "{{count}} dagen",
+    "refresh": "Vernieuwen"
+  },
+  "stats": {
+    "visits": "Bezoeken",
+    "ai": "Via AI-assistenten",
+    "clicks": "Klikken vanuit Google",
+    "impressions": "Keer getoond in Google",
+    "before": "{{value}} in de {{days}} dagen ervoor",
+    "notCounting": "Nog niets geteld",
+    "noGoogle": "Search Console niet gekoppeld"
+  },
+  "visitors": {
+    "title": "Bezoekers",
+    "caption": "De eigen telling van de site, uit elke bron, sinds {{date}}. Geen cookies, geen persoonsgegevens.",
+    "captionOff": "De eigen telling van de site, uit elke bron. Geen cookies, geen persoonsgegevens.",
+    "empty": "Nog niets geteld.",
+    "emptyHint": "De teller draait alleen op leadawaker.com, nooit op app.leadawaker.com. Zodra hij daar live staat, zie je hier elk bezoek: Google, AI-assistenten zoals ChatGPT en Perplexity, LinkedIn, direct.",
+    "perDay": "Bezoeken per dag",
+    "summary": "{{visits}} bezoeken, {{views}} pagina's geopend",
+    "dayTitle": "{{date}}: {{visits}} bezoeken, {{views}} pagina's geopend",
+    "today": "Vandaag",
+    "quiet": "Geen bezoeken in deze periode.",
+    "sources": "Waar ze vandaan kwamen",
+    "direct": "Direct of onbekend",
+    "directHint": "Een getypt adres, een bladwijzer, een app, of een link die niet laat zien waar hij vandaan komt",
+    "pages": "Pagina's die ze openden",
+    "languages": "Taal van de pagina",
+    "devices": "Apparaat",
+    "timezones": "Tijdzone",
+    "unknown": "Onbekend",
+    "ownVisits": "Je eigen bezoeken tellen ook mee. Open dit één keer in elke browser die je gebruikt, dan word je niet meer meegeteld:"
+  },
+  "channel": {
+    "ai": "AI-assistent",
+    "search": "Zoekmachine",
+    "social": "Social",
+    "email": "E-mail",
+    "referral": "Andere site",
+    "campaign": "Link met tag"
+  },
+  "device": {
+    "mobile": "Telefoon",
+    "tablet": "Tablet",
+    "desktop": "Computer"
+  },
+  "search": {
+    "title": "Google Zoeken",
+    "caption": "Uit Search Console, {{start}} tot en met {{end}}. Google loopt ongeveer twee dagen achter.",
+    "perDay": "Getoond en geklikt per dag",
+    "position": "Gemiddelde positie {{value}}",
+    "positionNone": "Nog geen positie",
+    "dayTitle": "{{date}}: {{shown}} keer getoond, {{clicks}} keer geklikt",
+    "legendShown": "Getoond",
+    "legendClicked": "Geklikt",
+    "none": "Google heeft de site in deze periode niet getoond.",
+    "queries": "Zoekopdrachten waarbij je site werd getoond",
+    "queriesHidden": "Google verbergt zoekopdrachten die te zeldzaam zijn, dus de totalen kunnen hoger zijn dan deze lijst.",
+    "queriesEmpty": "Niets om te tonen. Google verbergt zoekopdrachten die te zeldzaam zijn.",
+    "pages": "Getoonde pagina's",
+    "countries": "Landen",
+    "col": {
+      "query": "Zoekopdracht",
+      "page": "Pagina",
+      "country": "Land",
+      "clicks": "Klikken",
+      "shown": "Getoond",
+      "position": "Positie"
+    },
+    "unavailable": {
+      "no_credentials": "De server heeft geen Google-login, dus Search Console kan niet worden gelezen.",
+      "no_access": "De Google-login van de server is verlopen of heeft geen toegang tot Search Console.",
+      "error": "Google gaf geen antwoord. Probeer het over een paar minuten opnieuw.",
+      "fix": "Oplossing: log op de server opnieuw in (gcloud auth application-default login) met de Search Console-scope."
+    }
+  },
+  "index": {
+    "title": "In de index van Google",
+    "caption": "Elke pagina uit je sitemap, en of Google hem heeft",
+    "summary": "{{indexed}} van {{total}} pagina's in Google",
+    "loading": "Google wordt per pagina gevraagd. Dat duurt de eerste keer ongeveer 20 seconden.",
+    "lastCrawl": "Gelezen {{date}}",
+    "neverCrawled": "Nooit gelezen",
+    "open": "Openen in Search Console",
+    "sitemap": "Sitemap",
+    "sitemapSubmitted": "verstuurd {{date}}",
+    "sitemapRead": "door Google gelezen {{date}}",
+    "sitemapPending": "wacht tot Google hem leest",
+    "sitemapProblems": "{{errors}} fouten, {{warnings}} waarschuwingen",
+    "sitemapMissing": "Er is geen sitemap naar Google gestuurd.",
+    "reason": {
+      "indexed": "In Google",
+      "unknown": "Google heeft hem nog niet gezien",
+      "discovered": "Gevonden, nog niet gelezen",
+      "crawled": "Gelezen, maar niet opgenomen",
+      "redirect": "Verwijst door",
+      "noindex": "Gemarkeerd om erbuiten te blijven",
+      "duplicate": "Gezien als kopie van een andere pagina",
+      "not_found": "Niet gevonden (404)",
+      "blocked": "Geblokkeerd door robots.txt",
+      "other": "Kon niet worden gecontroleerd"
+    },
+    "otherHosts": "Andere adressen die Google toont:",
+    "otherHostsHint": "Deze staan op je domein, maar zijn niet de openbare site. De app en de API vragen Google nu om weg te blijven, dus ze verdwijnen in de komende weken.",
+    "shown_one": "{{n}} keer getoond",
+    "shown_other": "{{n}} keer getoond"
+  }
+}

@@ -9,6 +9,7 @@ import {
   Calendar,
   CalendarDays,
   ScrollText,
+  ChartNoAxesColumn,
   MonitorPlay,
   BookOpen,
   ChevronLeft,
@@ -294,6 +295,7 @@ export function RightSidebar({
       testId: "nav-automations",
       ownerOnly: true,
     },
+    { href: `${prefix}/traffic`, label: t("sidebar.traffic"), labelKey: "Traffic", icon: ChartNoAxesColumn, testId: "nav-traffic", ownerOnly: true },
     // Browser-demo links and their sessions. ownerOnly for the same reason the
     // API behind it is: the list names every prospect who has been demoed to.
     {
@@ -590,7 +592,7 @@ export function RightSidebar({
             const sections = [
               { section: "engage", items: visibleNavItems.filter(it => ["Voice calls", "Conversations", "Calendar", "Leads"].includes(it.labelKey)) },
               { section: "admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
-              { section: "backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automation logs", "Demos"].includes(it.labelKey)) },
+              { section: "backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automation logs", "Traffic", "Demos"].includes(it.labelKey)) },
               { section: "outreach", items: visibleNavItems.filter(it => ["Prospect inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
             ];
             return sections.map((g) => {

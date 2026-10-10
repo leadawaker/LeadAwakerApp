@@ -1,0 +1,113 @@
+{
+  "page": {
+    "title": "Tráfego",
+    "subtitle": "Quem encontra o leadawaker.com, e como",
+    "period": "Período",
+    "days": "{{count}} dias",
+    "refresh": "Atualizar"
+  },
+  "stats": {
+    "visits": "Visitas",
+    "ai": "Vindas de assistentes de IA",
+    "clicks": "Cliques vindos do Google",
+    "impressions": "Vezes exibido no Google",
+    "before": "{{value}} nos {{days}} dias anteriores",
+    "notCounting": "Nada contado ainda",
+    "noGoogle": "Search Console não conectado"
+  },
+  "visitors": {
+    "title": "Visitantes",
+    "caption": "A contagem do próprio site, de todas as origens, desde {{date}}. Sem cookies, sem dados pessoais.",
+    "captionOff": "A contagem do próprio site, de todas as origens. Sem cookies, sem dados pessoais.",
+    "empty": "Nada contado ainda.",
+    "emptyHint": "O contador roda só no leadawaker.com, nunca no app.leadawaker.com. Assim que estiver no ar por lá, toda visita aparece aqui: Google, assistentes de IA como ChatGPT e Perplexity, LinkedIn, acesso direto.",
+    "perDay": "Visitas por dia",
+    "summary": "{{visits}} visitas, {{views}} páginas abertas",
+    "dayTitle": "{{date}}: {{visits}} visitas, {{views}} páginas abertas",
+    "today": "Hoje",
+    "quiet": "Nenhuma visita neste período.",
+    "sources": "De onde vieram",
+    "direct": "Direto ou desconhecido",
+    "directHint": "Endereço digitado, favorito, aplicativo ou um link que não mostra de onde veio",
+    "pages": "Páginas que abriram",
+    "languages": "Idioma da página",
+    "devices": "Dispositivo",
+    "timezones": "Fuso horário",
+    "unknown": "Desconhecido",
+    "ownVisits": "As suas próprias visitas também contam. Abra este link uma vez em cada navegador que você usa e ele deixa de contar você:"
+  },
+  "channel": {
+    "ai": "Assistente de IA",
+    "search": "Busca",
+    "social": "Rede social",
+    "email": "E-mail",
+    "referral": "Outro site",
+    "campaign": "Link com tag"
+  },
+  "device": {
+    "mobile": "Celular",
+    "tablet": "Tablet",
+    "desktop": "Computador"
+  },
+  "search": {
+    "title": "Busca do Google",
+    "caption": "Do Search Console, de {{start}} a {{end}}. O Google tem cerca de dois dias de atraso.",
+    "perDay": "Exibições e cliques por dia",
+    "position": "Posição média {{value}}",
+    "positionNone": "Ainda sem posição",
+    "dayTitle": "{{date}}: exibido {{shown}}, clicado {{clicks}}",
+    "legendShown": "Exibido",
+    "legendClicked": "Clicado",
+    "none": "O Google não exibiu o site neste período.",
+    "queries": "Buscas que mostraram o seu site",
+    "queriesHidden": "O Google esconde as buscas raras demais, então os totais podem ser maiores do que esta lista.",
+    "queriesEmpty": "Nada para listar. O Google esconde as buscas raras demais.",
+    "pages": "Páginas exibidas",
+    "countries": "Países",
+    "col": {
+      "query": "Busca",
+      "page": "Página",
+      "country": "País",
+      "clicks": "Cliques",
+      "shown": "Exibido",
+      "position": "Posição"
+    },
+    "unavailable": {
+      "no_credentials": "O servidor não tem um login do Google, então o Search Console não pode ser lido.",
+      "no_access": "O login do Google no servidor expirou ou não tem acesso ao Search Console.",
+      "error": "O Google não respondeu. Tente de novo em alguns minutos.",
+      "fix": "Para resolver, entre de novo no servidor (gcloud auth application-default login) com o escopo do Search Console."
+    }
+  },
+  "index": {
+    "title": "No índice do Google",
+    "caption": "Cada página do seu sitemap, e se o Google já tem",
+    "summary": "{{indexed}} de {{total}} páginas no Google",
+    "loading": "Perguntando ao Google sobre cada página. Leva uns 20 segundos na primeira vez.",
+    "lastCrawl": "Lida em {{date}}",
+    "neverCrawled": "Nunca lida",
+    "open": "Abrir no Search Console",
+    "sitemap": "Sitemap",
+    "sitemapSubmitted": "enviado em {{date}}",
+    "sitemapRead": "lido pelo Google em {{date}}",
+    "sitemapPending": "aguardando o Google ler",
+    "sitemapProblems": "{{errors}} erros, {{warnings}} avisos",
+    "sitemapMissing": "Nenhum sitemap foi enviado ao Google.",
+    "reason": {
+      "indexed": "No Google",
+      "unknown": "O Google ainda não viu",
+      "discovered": "Encontrada, ainda não lida",
+      "crawled": "Lida, mas deixada de fora",
+      "redirect": "Redireciona para outro lugar",
+      "noindex": "Marcada para ficar de fora",
+      "duplicate": "Vista como cópia de outra página",
+      "not_found": "Não encontrada (404)",
+      "blocked": "Bloqueada pelo robots.txt",
+      "other": "Não foi possível verificar"
+    },
+    "otherHosts": "Outros endereços que o Google está exibindo:",
+    "otherHostsHint": "Eles estão no seu domínio, mas não são o site público. O app e a API agora pedem ao Google para ficar de fora, então devem sumir nas próximas semanas.",
+    "shown_one": "exibido {{n}} vez",
+    "shown_other": "exibido {{n}} vezes"
+  }
+}

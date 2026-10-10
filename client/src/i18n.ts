@@ -25,6 +25,7 @@ import enProspects from "./locales/en/prospects.json";
 import enCadence from "./locales/en/cadence.json";
 import enTasks from "./locales/en/tasks.json";
 import enAutomation from "./locales/en/automation.json";
+import enTraffic from "./locales/en/traffic.json";
 import enDemos from "./locales/en/demos.json";
 import enVoiceCalls from "./locales/en/voiceCalls.json";
 import enPrompts from "./locales/en/prompts.json";
@@ -56,6 +57,7 @@ import ptProspects from "./locales/pt/prospects.json";
 import ptCadence from "./locales/pt/cadence.json";
 import ptTasks from "./locales/pt/tasks.json";
 import ptAutomation from "./locales/pt/automation.json";
+import ptTraffic from "./locales/pt/traffic.json";
 import ptDemos from "./locales/pt/demos.json";
 import ptVoiceCalls from "./locales/pt/voiceCalls.json";
 import ptPrompts from "./locales/pt/prompts.json";
@@ -87,6 +89,7 @@ import nlProspects from "./locales/nl/prospects.json";
 import nlCadence from "./locales/nl/cadence.json";
 import nlTasks from "./locales/nl/tasks.json";
 import nlAutomation from "./locales/nl/automation.json";
+import nlTraffic from "./locales/nl/traffic.json";
 import nlDemos from "./locales/nl/demos.json";
 import nlVoiceCalls from "./locales/nl/voiceCalls.json";
 import nlPrompts from "./locales/nl/prompts.json";
@@ -120,6 +123,7 @@ const resources = {
     cadence: enCadence,
     tasks: enTasks,
     automation: enAutomation,
+    traffic: enTraffic,
     demos: enDemos,
     voiceCalls: enVoiceCalls,
     prompts: enPrompts,
@@ -152,6 +156,7 @@ const resources = {
     cadence: ptCadence,
     tasks: ptTasks,
     automation: ptAutomation,
+    traffic: ptTraffic,
     demos: ptDemos,
     voiceCalls: ptVoiceCalls,
     prompts: ptPrompts,
@@ -184,6 +189,7 @@ const resources = {
     cadence: nlCadence,
     tasks: nlTasks,
     automation: nlAutomation,
+    traffic: nlTraffic,
     demos: nlDemos,
     voiceCalls: nlVoiceCalls,
     prompts: nlPrompts,
@@ -227,6 +233,7 @@ i18n
       "prospects",
       "tasks",
       "automation",
+      "traffic",
       "demos",
       "voiceCalls",
       "prompts",

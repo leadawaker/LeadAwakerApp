@@ -1,0 +1,113 @@
+{
+  "page": {
+    "title": "Traffic",
+    "subtitle": "Who finds leadawaker.com, and how",
+    "period": "Period",
+    "days": "{{count}} days",
+    "refresh": "Refresh"
+  },
+  "stats": {
+    "visits": "Visits",
+    "ai": "From AI assistants",
+    "clicks": "Clicks from Google",
+    "impressions": "Times shown in Google",
+    "before": "{{value}} in the {{days}} days before",
+    "notCounting": "Nothing counted yet",
+    "noGoogle": "Search Console not connected"
+  },
+  "visitors": {
+    "title": "Visitors",
+    "caption": "The site's own count, from every source, since {{date}}. No cookies, no personal data.",
+    "captionOff": "The site's own count, from every source. No cookies, no personal data.",
+    "empty": "Nothing counted yet.",
+    "emptyHint": "The counter runs on leadawaker.com only, never on app.leadawaker.com. Once it is live there, every visit shows up here: Google, AI assistants like ChatGPT and Perplexity, LinkedIn, direct.",
+    "perDay": "Visits per day",
+    "summary": "{{visits}} visits, {{views}} pages opened",
+    "dayTitle": "{{date}}: {{visits}} visits, {{views}} pages opened",
+    "today": "Today",
+    "quiet": "No visits in this period.",
+    "sources": "Where they came from",
+    "direct": "Direct or unknown",
+    "directHint": "A typed address, a bookmark, an app, or a link that hides where it came from",
+    "pages": "Pages they opened",
+    "languages": "Page language",
+    "devices": "Device",
+    "timezones": "Time zone",
+    "unknown": "Unknown",
+    "ownVisits": "Your own visits count too. Open this once in each browser you use and it leaves you out:"
+  },
+  "channel": {
+    "ai": "AI assistant",
+    "search": "Search",
+    "social": "Social",
+    "email": "Email",
+    "referral": "Other site",
+    "campaign": "Tagged link"
+  },
+  "device": {
+    "mobile": "Phone",
+    "tablet": "Tablet",
+    "desktop": "Computer"
+  },
+  "search": {
+    "title": "Google Search",
+    "caption": "From Search Console, {{start}} to {{end}}. Google runs about two days behind.",
+    "perDay": "Shown and clicked per day",
+    "position": "Average position {{value}}",
+    "positionNone": "No position yet",
+    "dayTitle": "{{date}}: shown {{shown}}, clicked {{clicks}}",
+    "legendShown": "Shown",
+    "legendClicked": "Clicked",
+    "none": "Google did not show the site in this period.",
+    "queries": "Searches that showed your site",
+    "queriesHidden": "Google hides searches that are too rare, so the totals can be higher than this list.",
+    "queriesEmpty": "None to list. Google hides searches that are too rare to show.",
+    "pages": "Pages shown",
+    "countries": "Countries",
+    "col": {
+      "query": "Search",
+      "page": "Page",
+      "country": "Country",
+      "clicks": "Clicks",
+      "shown": "Shown",
+      "position": "Position"
+    },
+    "unavailable": {
+      "no_credentials": "The server has no Google login, so Search Console cannot be read.",
+      "no_access": "The server's Google login has expired or has no Search Console access.",
+      "error": "Google did not answer. Try again in a few minutes.",
+      "fix": "To fix it, sign in again on the server (gcloud auth application-default login) with the Search Console scope."
+    }
+  },
+  "index": {
+    "title": "In Google's index",
+    "caption": "Each page of your sitemap, and whether Google has it",
+    "summary": "{{indexed}} of {{total}} pages in Google",
+    "loading": "Asking Google about each page. This takes about 20 seconds the first time.",
+    "lastCrawl": "Read {{date}}",
+    "neverCrawled": "Never read",
+    "open": "Open in Search Console",
+    "sitemap": "Sitemap",
+    "sitemapSubmitted": "sent {{date}}",
+    "sitemapRead": "read by Google {{date}}",
+    "sitemapPending": "waiting for Google to read it",
+    "sitemapProblems": "{{errors}} errors, {{warnings}} warnings",
+    "sitemapMissing": "No sitemap has been sent to Google.",
+    "reason": {
+      "indexed": "In Google",
+      "unknown": "Google has not seen it yet",
+      "discovered": "Found, not read yet",
+      "crawled": "Read, but left out",
+      "redirect": "Redirects elsewhere",
+      "noindex": "Marked to stay out",
+      "duplicate": "Seen as a copy of another page",
+      "not_found": "Not found (404)",
+      "blocked": "Blocked by robots.txt",
+      "other": "Could not check"
+    },
+    "otherHosts": "Other addresses Google is showing:",
+    "otherHostsHint": "These are on your domain but are not the public site. The app and the API now tell Google to stay out, so they should drop off over the coming weeks.",
+    "shown_one": "shown {{n}} time",
+    "shown_other": "shown {{n}} times"
+  }
+}

@@ -15,6 +15,11 @@ import { transformSync } from "esbuild";
 //      homepage is edited by hand often).
 //   2. Minified inline CSS and JS on every page in the directory. The homepage
 //      carries about 260 KB of both.
+//   3. The visit counter's script tag (client/public/site/visit.js, which feeds
+//      the CRM's Traffic page) on every page here and on the public pages that
+//      live in premium/. Added here and not in the sources because the
+//      homepages are edited by hand and regenerated per language; see
+//      COUNT_VISITS below.
 //
 // Run by hand against any directory to check a change:
 //   npx tsx script/build-site.ts /tmp/copy-of-site
@@ -23,6 +28,18 @@ const SITE_DIR = path.resolve(process.argv[2] || "dist/public/site");
 const ORIGIN = "https://www.leadawaker.com";
 const ORG_ID = `${ORIGIN}/#organization`;
 const WEBSITE_ID = `${ORIGIN}/#website`;
+
+// The visit counter is built and waiting, but OFF: the privacy policy
+// (client/public/premium/privacy.html, section 2) says the site runs "no other
+// tracking software" and only collects what a visitor actively gives us. The
+// counter is anonymous (no cookie, no IP kept, no visitor id), but that
+// sentence has to be reworded before it goes live. Set to true together with
+// that edit.
+const COUNT_VISITS = false;
+const COUNTER_TAG = '<script src="/site/visit.js" defer></script>';
+// Public pages outside site/ (/reactivate, /privacy-policy, /terms-of-service).
+const PREMIUM_DIR = path.resolve(SITE_DIR, "../premium");
+const PREMIUM_PAGES = ["index.html", "privacy.html", "terms.html"];
 
 // The homepages that get structured data. `service` is the name of the service
 // in that page's language; title, description and canonical URL are read from
@@ -201,6 +218,18 @@ function minifyInline(html: string, file: string): string {
   return out;
 }
 
+// Counting must never be the reason a deploy fails, so a page without a
+// </body> is skipped with a warning.
+function addCounter(html: string, file: string): string {
+  if (html.includes("/site/visit.js")) return html;
+  const at = html.lastIndexOf("</body>");
+  if (at === -1) {
+    console.warn(`build-site: WARNING ${file}: no </body>, visit counter not added`);
+    return html;
+  }
+  return `${html.slice(0, at)}${COUNTER_TAG}\n${html.slice(at)}`;
+}
+
 async function main() {
   const files = (await readdir(SITE_DIR)).filter((name) => name.endsWith(".html"));
   for (const file of Object.keys(HOMEPAGES)) {
@@ -211,8 +240,20 @@ async function main() {
     let html = await readFile(filePath, "utf-8");
     if (file in HOMEPAGES) html = addStructuredData(html, file);
     html = minifyInline(html, file);
+    if (COUNT_VISITS) html = addCounter(html, file);
     await writeFile(filePath, html);
   }
+  if (!COUNT_VISITS) return;
+  for (const file of PREMIUM_PAGES) {
+    const filePath = path.join(PREMIUM_DIR, file);
+    const html = await readFile(filePath, "utf-8").catch(() => null);
+    if (html === null) {
+      console.warn(`build-site: WARNING ${filePath} is missing, visit counter not added`);
+      continue;
+    }
+    await writeFile(filePath, addCounter(html, `premium/${file}`));
+  }
+  console.log(`build-site: visit counter added to ${files.length + PREMIUM_PAGES.length} pages`);
 }
 
 main().catch((err) => {

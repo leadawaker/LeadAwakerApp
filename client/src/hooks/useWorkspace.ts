@@ -62,7 +62,7 @@ const CLIENT_PAGES = ["contacts", "leads", "campaigns", "calendar", "billing", "
 const ALL_PAGES = [
   "contacts", "leads", "campaigns", "conversations",
   "calendar", "accounts", "tags", "prompt-library", "users",
-  "automation-logs", "settings", "billing",
+  "automation-logs", "traffic", "settings", "billing",
 ];
 
 export function useWorkspace(): WorkspaceState {

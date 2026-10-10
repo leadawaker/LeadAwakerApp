@@ -32,6 +32,7 @@ export const PAGE_ACCENTS: Record<string, { active: string; selected: string }> 
   "prompt-library":   LIGHT,
   tasks:              LIGHT,
   "automation-logs":  LIGHT,
+  traffic:            LIGHT,
 };
 
 /* ── Dark-mode accents ──────────────────────────────────────────────────── */
@@ -50,4 +51,5 @@ export const PAGE_ACCENTS_DARK: Record<string, { active: string; selected: strin
   "prompt-library":   DARK,
   tasks:              DARK,
   "automation-logs":  DARK,
+  traffic:            DARK,
 };
