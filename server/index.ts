@@ -118,12 +118,13 @@ app.use((req, res, next) => {
     "/pt/relatorio": "report-pt.html", "/pt/raio-x": "audit-pt.html",
   };
   for (const [route, file] of Object.entries(sitePages)) app.get(route, sendFile(path.join(publicDir, "site"), file));
-  // Landing-page variants of the previous homepage: /reactivate is database
-  // reactivation (the old root, moved 2026-10-02), /home is the home-improvement
-  // page, /solar is the dormant solar page, /uk /us force a market on the
-  // solar page (NL is its default market; /nl is now the Dutch homepage). config.jsx resolves all of these from location.pathname, so
-  // these must serve the same HTML rather than redirect. Mirrors vercel.json.
-  app.get(["/reactivate", "/home", "/solar", "/uk", "/us"], sendFile(premiumDir, "index.html"));
+  // The previous homepage (database reactivation), moved off / on 2026-10-02.
+  // config.jsx renders any path it doesn't recognise as its 'main' variant.
+  // Mirrors vercel.json.
+  app.get("/reactivate", sendFile(premiumDir, "index.html"));
+  // Its other variants (/home, /solar, /uk, /us) were retired on 2026-10-10 and
+  // redirect to the homepage, as in vercel.json's "redirects".
+  app.get(["/home", "/solar", "/uk", "/us"], (_req: Request, res: Response) => res.redirect(301, "/"));
   // Browser demo. The token stays in the path (the page reads it from
   // location.pathname), so this serves the file rather than redirecting.
   // Mirrors the /demo/:token rewrite in vercel.json.

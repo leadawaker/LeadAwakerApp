@@ -1,26 +1,91 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Every indexable page on leadawaker.com. URLs must match each page's <link rel="canonical">
+     (www host, no trailing slash). Add a page here when vercel.json gets a new public rewrite. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
         xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
   <url>
-    <loc>https://leadawaker.com/</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://leadawaker.com/" />
-    <xhtml:link rel="alternate" hreflang="pt" href="https://leadawaker.com/pt/" />
-    <xhtml:link rel="alternate" hreflang="nl" href="https://leadawaker.com/nl/" />
+    <loc>https://www.leadawaker.com/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.leadawaker.com/" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://www.leadawaker.com/nl" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://www.leadawaker.com/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.leadawaker.com/" />
   </url>
 
   <url>
-    <loc>https://leadawaker.com/about</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://leadawaker.com/about" />
-    <xhtml:link rel="alternate" hreflang="pt" href="https://leadawaker.com/pt/about" />
-    <xhtml:link rel="alternate" hreflang="nl" href="https://leadawaker.com/nl/about" />
+    <loc>https://www.leadawaker.com/nl</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.leadawaker.com/" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://www.leadawaker.com/nl" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://www.leadawaker.com/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.leadawaker.com/" />
   </url>
 
   <url>
-    <loc>https://leadawaker.com/services</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://leadawaker.com/services" />
-    <xhtml:link rel="alternate" hreflang="pt" href="https://leadawaker.com/pt/services" />
-    <xhtml:link rel="alternate" hreflang="nl" href="https://leadawaker.com/nl/services" />
+    <loc>https://www.leadawaker.com/pt</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.leadawaker.com/" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://www.leadawaker.com/nl" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://www.leadawaker.com/pt" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.leadawaker.com/" />
+  </url>
+
+  <url>
+    <loc>https://www.leadawaker.com/report</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.leadawaker.com/report" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://www.leadawaker.com/nl/rapport" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://www.leadawaker.com/pt/relatorio" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.leadawaker.com/report" />
+  </url>
+
+  <url>
+    <loc>https://www.leadawaker.com/nl/rapport</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.leadawaker.com/report" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://www.leadawaker.com/nl/rapport" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://www.leadawaker.com/pt/relatorio" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.leadawaker.com/report" />
+  </url>
+
+  <url>
+    <loc>https://www.leadawaker.com/pt/relatorio</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.leadawaker.com/report" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://www.leadawaker.com/nl/rapport" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://www.leadawaker.com/pt/relatorio" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.leadawaker.com/report" />
+  </url>
+
+  <url>
+    <loc>https://www.leadawaker.com/audit</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.leadawaker.com/audit" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://www.leadawaker.com/nl/lekcheck" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://www.leadawaker.com/pt/raio-x" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.leadawaker.com/audit" />
+  </url>
+
+  <url>
+    <loc>https://www.leadawaker.com/nl/lekcheck</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.leadawaker.com/audit" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://www.leadawaker.com/nl/lekcheck" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://www.leadawaker.com/pt/raio-x" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.leadawaker.com/audit" />
+  </url>
+
+  <url>
+    <loc>https://www.leadawaker.com/pt/raio-x</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://www.leadawaker.com/audit" />
+    <xhtml:link rel="alternate" hreflang="nl" href="https://www.leadawaker.com/nl/lekcheck" />
+    <xhtml:link rel="alternate" hreflang="pt-BR" href="https://www.leadawaker.com/pt/raio-x" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.leadawaker.com/audit" />
+  </url>
+
+  <url>
+    <loc>https://www.leadawaker.com/reactivate</loc>
+  </url>
+
+  <url>
+    <loc>https://www.leadawaker.com/privacy-policy</loc>
+  </url>
+
+  <url>
+    <loc>https://www.leadawaker.com/terms-of-service</loc>
   </url>
 
 </urlset>

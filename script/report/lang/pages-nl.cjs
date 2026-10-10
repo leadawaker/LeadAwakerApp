@@ -10,6 +10,8 @@ const common = [
 module.exports = {
   'report.html': [
     ...common,
+    ['<link rel="canonical" href="https://www.leadawaker.com/report">', '<link rel="canonical" href="https://www.leadawaker.com/nl/rapport">'],
+    ['<meta property="og:url" content="https://www.leadawaker.com/report">', '<meta property="og:url" content="https://www.leadawaker.com/nl/rapport">'],
     ['<title>The Report | Lead Awaker</title>', '<title>Het Rapport | Lead Awaker</title>'],
     ['content="Free report: the four places service businesses leak revenue, backed by research, with the fix for each leak. 25 pages, free."', 'content="Gratis rapport: de vier lekken waardoor dienstverleners omzet mislopen, onderbouwd met onderzoek, met de oplossing per lek. 25 pagina’s."'],
     ['content="The Report: four places your business leaks revenue"', 'content="Het Rapport: vier lekken waardoor je omzet misloopt"'],

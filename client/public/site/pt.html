@@ -17,7 +17,11 @@
 <meta property="og:description" content="A Sara atende seu telefone, o WhatsApp e o chat do site, de dia e de noite, e já marca o cliente direto na sua agenda.">
 <meta property="og:url" content="https://www.leadawaker.com/pt">
 <meta property="og:locale" content="pt_BR">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://www.leadawaker.com/site/img/og-pt.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.leadawaker.com/site/img/og-pt.jpg">
 <style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -2542,7 +2546,7 @@ footer img{height:24px;width:auto;display:block}
   wrap.hidden=false;
 })();
 </script>
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<script id="three-js" src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js" async></script>
 <script>
 (function(){
   var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -3012,7 +3016,11 @@ footer img{height:24px;width:auto;display:block}
   else{var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -15% 0px'});nums.forEach(function(n){io.observe(n)})}
 
   /* ---- spheres and tori (same materials as leadawaker.com): one set around the hero, a copy hovering around the booking block ---- */
-  if(typeof THREE==='undefined')return;
+  /* three.js (670 KB) loads async so it never holds up the page or the scripts
+     above; everything from here to the end of this function waits for it. */
+  var threeTag=document.getElementById('three-js');
+  if(typeof THREE!=='undefined')shapes();else if(threeTag)threeTag.addEventListener('load',shapes);
+  function shapes(){
   var small=window.innerWidth<760;
   var SHAPES=small?[
     {t:'torus',sx:-.18,sy:.28,ex:-.42,ey:-.5,s:150,tr:.2,rot:-14,tilt:72,yaw:18},
@@ -3070,6 +3078,7 @@ footer img{height:24px;width:auto;display:block}
   var cta=$('orbit-cta');
   if(book)orbit(cta,function(d,w,h){var c=cta.getBoundingClientRect(),r=book.getBoundingClientRect();
     return[r.left-c.left+r.width/2+d.ex*r.width,r.top-c.top+r.height/2+d.ey*r.height]},12);
+  }
 })();
 
 

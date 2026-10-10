@@ -1,0 +1,47 @@
+# Lead Awaker
+
+> Lead Awaker builds and runs "Sara", an AI receptionist for small and mid-sized service businesses. Sara answers the phone, WhatsApp and website chat day and night, answers questions from a brief written with the business owner, and books customers straight into the owner's calendar. Lead Awaker is based in 's-Hertogenbosch, the Netherlands, and works in English, Dutch and Brazilian Portuguese.
+
+Lead Awaker is a one-person company founded by Gabriel Fronza. He sets up every receptionist himself and is the direct contact for every client. Legal name on the site: LeadAwaker, KvK (Dutch Chamber of Commerce) 99366738. Contact: admin@leadawaker.com.
+
+## What the AI receptionist does
+
+- Phone: missed calls, after-hours calls or all calls forward to Sara. The business keeps its own number. She picks up straight away, answers questions, and books an appointment or a callback.
+- WhatsApp: customers send a question, a photo or a voice note. Sara replies in seconds and books them in.
+- Website chat: a chat widget in the business's own colours answers visitors and books a free slot. Visitors can type, send a photo or leave a voice note.
+- Calendar booking: she only offers times the owner is free and books into Google Calendar, Outlook and other calendar tools.
+- Urgent calls: the owner decides what counts as urgent. Sara rings the owner's mobile, briefs them in seconds and puts the caller through. Complaints go straight to the owner.
+- Memory: on the phone and on WhatsApp, Sara recognises returning customers and picks up where the last conversation ended.
+- Recaps: every call and chat is saved in the Lead Awaker dashboard with a transcript and a short recap. The owner also gets each recap by email or WhatsApp when the conversation ends.
+- Limits: she works from a brief. If the answer is not in her brief she takes a message and sends the question to the owner. She does not make up prices.
+
+## Who it is for
+
+Businesses where the owner or team is too busy working to answer the phone: trades and home services (plumbers, electricians, builders), car dealers, dental and medical practices, salons and barbers, gyms, hotels, law firms and similar appointment-based businesses.
+
+## Setup and pricing
+
+- Live in about 2 weeks: kick-off call (day 1), building the brief (days 2 to 5), quality tests (days 6 to 9), the owner tests her (days 10 to 12), switch on (day 14), then ongoing review and improvement.
+- Nothing goes live until the owner has tested her and signed off. She can be paused at any time.
+- Pricing: one fixed monthly fee based on call volume, confirmed in writing on the first call. No per-minute billing.
+- Languages: English, Dutch and Portuguese.
+- Data: conversations are stored on servers in the Netherlands. AI providers work under data processing agreements. The business can read or delete any conversation.
+
+## Other service: database reactivation
+
+Lead Awaker also reactivates old leads: an AI-run WhatsApp conversation re-contacts leads that went quiet (old quotes, enquiries that never booked) and books the interested ones into the calendar.
+
+## Pages
+
+- [AI receptionist (homepage, English)](https://www.leadawaker.com/): what Sara does, a recorded example call, setup timeline, FAQ
+- [AI-receptioniste (Nederlands)](https://www.leadawaker.com/nl): the same page in Dutch
+- [Recepcionista com IA (Português do Brasil)](https://www.leadawaker.com/pt): the same page in Brazilian Portuguese
+- [Database reactivation](https://www.leadawaker.com/reactivate): the reactivation service for old leads
+- [The Report](https://www.leadawaker.com/report): free 25-page report on the four places service businesses leak revenue (also [Dutch](https://www.leadawaker.com/nl/rapport) and [Portuguese](https://www.leadawaker.com/pt/relatorio))
+- [The Leak Audit](https://www.leadawaker.com/audit): a 2-minute calculator for what missed calls, cold quotes, unasked reviews and forgotten clients cost per year (also [Dutch](https://www.leadawaker.com/nl/lekcheck) and [Portuguese](https://www.leadawaker.com/pt/raio-x))
+- [Book a call with Gabriel](https://cal.com/leadawaker/quick-chat): 30 minutes, includes ringing the receptionist yourself
+
+## Legal
+
+- [Privacy Policy](https://www.leadawaker.com/privacy-policy)
+- [Terms & Conditions](https://www.leadawaker.com/terms-of-service)

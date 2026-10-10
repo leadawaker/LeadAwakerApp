@@ -1,0 +1,10 @@
+# Lead Awaker (https://www.leadawaker.com)
+# Search engines and AI crawlers (GPTBot, ClaudeBot, PerplexityBot, Google-Extended, ...)
+# are welcome on the public site. The CRM, the API and private client links are not for crawling.
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /platform
+Disallow: /p/
+
+Sitemap: https://www.leadawaker.com/sitemap.xml

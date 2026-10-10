@@ -31,6 +31,7 @@ PAIRS = common_pairs("nl", "/nl") + [
     ('Sara answers your phone, website chat and WhatsApp day and night, and books customers straight into your calendar.',
      'Sara beantwoordt je telefoon, websitechat en WhatsApp, dag en nacht, en plant klanten direct in je agenda.', 2),
     ('<meta property="og:url" content="https://www.leadawaker.com/nl">', '<meta property="og:url" content="https://www.leadawaker.com/nl">\n<meta property="og:locale" content="nl_NL">'),
+    ('/site/img/og-en.jpg', '/site/img/og-nl.jpg', 2),
     ('<nav class="nav" aria-label="Main">',
      '<nav class="nav" aria-label="Hoofdmenu">'),
     ('<a href="#phone">Phone</a>',

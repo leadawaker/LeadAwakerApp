@@ -1,7 +1,14 @@
 {
-  "buildCommand": "npx vite build && npx tsx script/build-premium.ts && cp dist/public/site/index.html dist/public/index.html",
+  "buildCommand": "npx vite build && npx tsx script/build-premium.ts && npx tsx script/build-site.ts && cp dist/public/site/index.html dist/public/index.html",
   "outputDirectory": "dist/public",
   "framework": null,
+  "redirects": [
+    {
+      "source": "/(home|solar|uk|us)",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/api/:path*",
@@ -21,18 +28,6 @@
     },
     {
       "source": "/reactivate",
-      "destination": "/premium/index.html"
-    },
-    {
-      "source": "/home",
-      "destination": "/premium/index.html"
-    },
-    {
-      "source": "/solar",
-      "destination": "/premium/index.html"
-    },
-    {
-      "source": "/(uk|us)",
       "destination": "/premium/index.html"
     },
     {

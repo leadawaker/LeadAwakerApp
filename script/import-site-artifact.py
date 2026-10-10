@@ -50,7 +50,11 @@ HEAD = f"""<!doctype html>
 <meta property="og:title" content="{TITLE}">
 <meta property="og:description" content="{DESCRIPTION}">
 <meta property="og:url" content="https://www.leadawaker.com/">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://www.leadawaker.com/site/img/og-en.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://www.leadawaker.com/site/img/og-en.jpg">
 """
 
 # Styles for the booking block's second button (the block is wine, so the

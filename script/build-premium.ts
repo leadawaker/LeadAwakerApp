@@ -33,15 +33,13 @@ const STANDALONE_PAGES = [...LEGAL_PAGES, "demo.html"];
 // wrong document rather than 404ing, so nobody notices until a prospect is
 // already looking at the wrong page.
 //
-// /home is not a separate file: config.jsx:761 resolves SITE_VARIANT from
-// location.pathname, which a Vercel rewrite preserves, so /home and / are the
-// same index.html rendering two different products.
+// /home, /solar, /uk and /us were retired on 2026-10-10: vercel.json now
+// redirects them to / and /reactivate is the only URL left on this page.
 const REWRITE_TARGETS = [
   // The previous homepage (database reactivation), moved off / on 2026-10-02
   // when client/public/site/ became the homepage. config.jsx renders any path
   // it doesn't recognise as the 'main' variant, which is what this shows.
   { source: "/reactivate", destination: "/premium/index.html" },
-  { source: "/home", destination: "/premium/index.html" },
   { source: "/terms-of-service", destination: "/premium/terms.html" },
   { source: "/privacy-policy", destination: "/premium/privacy.html" },
   // /demo/:token is the browser demo. Without this rewrite the catch-all serves

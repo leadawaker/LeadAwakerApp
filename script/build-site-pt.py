@@ -37,6 +37,7 @@ PAIRS = common_pairs("pt", "/pt") + [
     ('<meta property="og:url" content="https://www.leadawaker.com/pt">', '<meta property="og:url" content="https://www.leadawaker.com/pt">\n<meta property="og:locale" content="pt_BR">'),
 
     # ── nav ──
+    ('/site/img/og-en.jpg', '/site/img/og-pt.jpg', 2),
     ('<nav class="nav" aria-label="Main">', '<nav class="nav" aria-label="Principal">'),
     ('<a href="#phone">Phone</a>', '<a href="#phone">Telefone</a>', 2),
     ('<a href="#website">Website</a>', '<a href="#website">Site</a>'),
