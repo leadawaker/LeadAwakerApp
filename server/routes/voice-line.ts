@@ -4,7 +4,7 @@ import { storage } from "../storage";
 import { requireAuth, requireAgency } from "../auth";
 import { handleZodError, wrapAsync } from "./_helpers";
 import {
-  AFTER_HOURS, TRANSFER_MODES, TRANSFER_WAITING, VOICE_LOCALES, VoiceLineError,
+  AFTER_HOURS, HOLD_MUSIC, TRANSFER_MODES, TRANSFER_WAITING, VOICE_LOCALES, VoiceLineError,
 } from "../storage/voiceLines";
 
 // Account Workspace "Voice" tab (specs/voice-tab). Reads are open to the
@@ -26,6 +26,7 @@ const putBodySchema = z.object({
   transferNumber: clearableE164.optional(),
   transferName: z.string().trim().max(100).nullable().optional(),
   transferWaiting: z.enum(TRANSFER_WAITING).optional(),
+  transferHoldMusic: z.enum(HOLD_MUSIC).optional(),
   transferMode: z.enum(TRANSFER_MODES).optional(),
   officeSound: z.boolean().optional(),
   screening: z.object({
@@ -48,6 +49,9 @@ const putBodySchema = z.object({
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 
+/** The patch fields that can change which Telnyx route a number belongs on. */
+const WIRING_FIELDS = ["numberId", "phoneNumber", "transferNumber", "transferMode", "officeSound"] as const;
+
 export interface NumberWiring { number: string; wiring: "conference" | "direct" | null; changed?: boolean; error?: string }
 
 /**
@@ -56,12 +60,14 @@ export interface NumberWiring { number: string; wiring: "conference" | "direct" 
  * office sound, else direct. Never throws: a save that worked stays saved, and
  * the tab shows the wiring error instead.
  */
-export async function syncVoiceWiring(accountId: number): Promise<NumberWiring[] | { error: string }> {
+export async function syncVoiceWiring(
+  accountId: number, released: string[] = [],
+): Promise<NumberWiring[] | { error: string }> {
   try {
     const resp = await fetch(`${ENGINE_BASE}/voice/phone/wiring/sync`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
-      body: JSON.stringify({ account_id: accountId }),
+      body: JSON.stringify({ account_id: accountId, released }),
       signal: AbortSignal.timeout(20_000),
     });
     const data = await resp.json().catch(() => ({}));
@@ -103,11 +109,17 @@ export function registerVoiceLineRoutes(app: Express): void {
     const parsed = putBodySchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     try {
+      const touchesWiring = WIRING_FIELDS.some((k) => parsed.data[k] !== undefined);
+      const before = touchesWiring ? (await storage.getVoiceLine(accountId))?.number?.phoneNumber : undefined;
       const line = await storage.saveVoiceLine(accountId, parsed.data);
       if (!line) return res.status(404).json({ message: "Account not found" });
-      // Only when a real number is attached: there is nothing to wire otherwise.
-      const wiring = line.number ? await syncVoiceWiring(accountId) : [];
-      res.json({ ...line, wiring });
+      // A number swapped out or detached goes back to the direct route.
+      const released = before && before !== line.number?.phoneNumber ? [before] : [];
+      // Only saves that can move a number wait on the engine (Telnyx round trips).
+      const wiring = touchesWiring && (line.number || released.length)
+        ? await syncVoiceWiring(accountId, released)
+        : undefined;
+      res.json(wiring === undefined ? line : { ...line, wiring });
     } catch (err) {
       if (err instanceof VoiceLineError) return res.status(err.status).json({ message: err.message });
       throw err;

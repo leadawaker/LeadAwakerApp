@@ -123,6 +123,7 @@ function PendingInvitesSection({
   onResend: (u: AppUser) => void;
   onRevoke: (u: AppUser) => void;
 }) {
+  const { t } = useTranslation("settings");
   const [expanded, setExpanded] = useState(true);
   if (invites.length === 0) return null;
 
@@ -168,7 +169,7 @@ function PendingInvitesSection({
                 </div>
                 <div className="flex items-center gap-1.5 mt-1.5">
                   <button onClick={() => onResend(u)} disabled={busy} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium border border-amber-300 dark:border-amber-700 bg-amber-100/60 hover:bg-amber-200/60 text-amber-800 dark:text-amber-300 disabled:opacity-50 disabled:cursor-not-allowed">
-                    <Clock className={cn("w-2.5 h-2.5", resending && "animate-spin")} />{resending ? "Sending…" : "Resend"}
+                    <Clock className={cn("w-2.5 h-2.5", resending && "animate-spin")} />{resending ? t("team.resendingInvite") : t("team.resendInvite")}
                   </button>
                   <button onClick={() => onRevoke(u)} disabled={busy} className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-medium border border-red-200 dark:border-red-700/50 bg-red-50/60 hover:bg-red-100/60 text-red-600 dark:text-red-400 disabled:opacity-50 disabled:cursor-not-allowed">
                     <X className={cn("w-2.5 h-2.5", revoking && "animate-spin")} />{revoking ? "Revoking…" : "Revoke"}
@@ -422,15 +423,22 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to send invite");
-      setInviteResult({ token: data.invite_token, email: inviteEmail.trim() });
       if (data.user) setUsers(prev => [...prev, data.user]);
-      toast({ title: "Invite sent", description: `Invite created for ${inviteEmail.trim()} as ${inviteRole}` });
+      if (data.email_sent === false) {
+        // User row exists but nothing reached their inbox: close the popover so
+        // the pending invite (with its Resend button) is visible.
+        setInviteOpen(false);
+        toast({ title: t("team.inviteEmailFailedTitle"), description: t("team.inviteEmailFailedBody", { email: inviteEmail.trim() }), variant: "destructive" });
+      } else {
+        setInviteResult({ token: data.invite_token, email: inviteEmail.trim() });
+        toast({ title: t("team.inviteSentTitle"), description: t("team.inviteSentBody", { email: inviteEmail.trim(), role: inviteRole }) });
+      }
     } catch (err: any) {
-      toast({ title: "Invite failed", description: err.message, variant: "destructive" });
+      toast({ title: t("team.inviteFailedTitle"), description: err.message, variant: "destructive" });
     } finally {
       setInviteLoading(false);
     }
-  }, [inviteEmail, inviteRole, inviteAccountId]);
+  }, [inviteEmail, inviteRole, inviteAccountId, t]);
 
   const handleCopyToken = useCallback(async () => {
     if (!inviteResult) return;
@@ -464,12 +472,16 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
       const data = await res.json();
       if (!res.ok) throw new Error(data.message || "Failed to resend");
       if (data.user) setUsers(prev => prev.map(usr => usr.id === u.id ? { ...usr, ...data.user } : usr));
-      setResendResult({ userId: u.id, token: data.invite_token });
-      toast({ title: "Invite resent" });
+      if (data.email_sent === false) {
+        toast({ title: t("team.inviteEmailFailedTitle"), description: t("team.inviteEmailFailedBody", { email: u.email }), variant: "destructive" });
+      } else {
+        setResendResult({ userId: u.id, token: data.invite_token });
+        toast({ title: t("team.inviteResentTitle") });
+      }
     } catch (err: any) {
-      toast({ title: "Failed to resend invite", description: err.message, variant: "destructive" });
+      toast({ title: t("team.resendFailedTitle"), description: err.message, variant: "destructive" });
     } finally { setResendingUserId(null); }
-  }, [resendingUserId]);
+  }, [resendingUserId, t]);
 
   const handleRevokeInvite = useCallback(async (u: AppUser) => {
     if (revokingUserId === u.id) return;

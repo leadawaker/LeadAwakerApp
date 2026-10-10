@@ -51,10 +51,12 @@ export interface VoiceLine {
   transferNumber: string | null;
   transferName: string | null;
   transferWaiting: TransferWaiting;
+  /** A track id from holdMusic.ts: what the caller hears when `transferWaiting` is "hold". */
+  transferHoldMusic: string;
   transferMode: TransferMode;
   officeSound: boolean;
   screening: Screening;
-  /** Only on a PUT response: the engine's wiring sync, or its error. */
+  /** On a PUT that can move a number: the engine's wiring sync, or its error. useVoiceLine keeps the last one. */
   wiring?: NumberWiring[] | { error: string };
   greeting: string | null;
   pronunciation: PronunciationRow[] | null;
@@ -77,6 +79,7 @@ export interface VoiceLinePatch {
   transferNumber?: string | null;
   transferName?: string | null;
   transferWaiting?: TransferWaiting;
+  transferHoldMusic?: string;
   transferMode?: TransferMode;
   officeSound?: boolean;
   screening?: Partial<Screening>;

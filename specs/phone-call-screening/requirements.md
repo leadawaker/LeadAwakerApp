@@ -11,8 +11,11 @@ Follows `specs/phone-screened-transfer/`.
 3. Wiring follows the settings automatically, for every line, not by hand.
 4. Before ringing the owner, Sara asks once who is calling and what it is about.
 5. Mike Foroodi's spam rules, adapted: sales pitches, robocalls and abuse, each a
-   per-account switch, all on by default. Abuse: one warning, then end, number
-   blocked 14 days with an Unblock button. Silence stays on the existing timer.
+   per-account switch, all on by default. Abuse: one warning, then end. Two
+   strikes (decided 2026-10-08): the first abusive call from a number is only
+   noted ('warned'); a second within 30 days blocks it 14 days. Every strike
+   sends the account's users (and agency Owners/Admins) a `voice_abuse` CRM
+   notification. Unblock/Clear in the card. Silence stays on the existing timer.
 
 ## Settings (Account_Communication_Profile.setup)
 
@@ -45,8 +48,10 @@ Every call on the conference route is two Telnyx legs for its whole length.
 - `robocall` and `abuse` may end without her goodbye; `sales_pitch` still needs
   it (she is told to say it). Each is noted on the transcript
   (`[Call ended: robocall]`) and stored as `Voice_Calls.end_reason`.
-- `abuse` inserts `Voice_Blocked_Callers` (14 days); the phone door rejects a
-  blocked number with 486 before answering. A failed lookup lets the call in.
+- `abuse` inserts a `Voice_Blocked_Callers` row: reason `warned` (blocks
+  nothing, blocked_until = now) on the first strike, reason `abuse` (14 days)
+  on a second strike within 30 days. The phone door rejects a blocked number
+  with 486 before answering. A failed lookup lets the call in.
 - Sales rule is narrow: someone offering this business their own product, not
   someone asking about what this business offers. First wording listed example
   industries ("leads, marketing") and turned away a solar client asking about

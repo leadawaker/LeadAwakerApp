@@ -3,8 +3,10 @@ import { useTranslation } from "react-i18next";
 import { PhoneForwarded } from "lucide-react";
 import { VoiceCardShell, FieldLabel, ReadOnlyValue, SaveRow, helpStyle, inputStyle, useDraft } from "./voiceAtoms";
 import { Chip } from "../communication/wizardAtoms";
+import { HoldMusicPicker } from "./HoldMusicPicker";
+import { holdTrack } from "./holdMusic";
 import {
-  E164, TRANSFER_MODES, TRANSFER_WAITING, normalizePhone,
+  E164, TRANSFER_MODES, TRANSFER_WAITING, normalizePhone, wiringError,
   type VoiceLine, type VoiceLinePatch,
 } from "./voiceApi";
 
@@ -18,11 +20,14 @@ export function TransferCard({ line, canEdit, saving, onSave }: {
       number: line.transferNumber ?? "",
       name: line.transferName ?? "",
       waiting: line.transferWaiting ?? "sara",
+      holdMusic: holdTrack(line.transferHoldMusic),
     }),
     [line],
   );
   const { draft, setDraft, dirty, reset } = useDraft(server);
   const [error, setError] = useState<string | null>(null);
+  // Screened transfers need the conference route: say so when the move failed.
+  const wiring = wiringError(line);
 
   const submit = async () => {
     setError(null);
@@ -33,6 +38,7 @@ export function TransferCard({ line, canEdit, saving, onSave }: {
       transferNumber: number || null,
       transferName: draft.name.trim() || null,
       transferWaiting: draft.waiting,
+      transferHoldMusic: draft.holdMusic,
     });
     if (!ok) setError(t("common.saveFailed"));
   };
@@ -94,6 +100,19 @@ export function TransferCard({ line, canEdit, saving, onSave }: {
           ) : <ReadOnlyValue value={t(`transfer.waiting.${draft.waiting}`)} />}
           <p style={{ ...helpStyle, margin: "8px 0 0" }}>{t("transfer.waiting.help")}</p>
         </div>
+      )}
+      {draft.mode === "screened" && draft.waiting === "hold" && (
+        <div style={{ marginTop: 16 }}>
+          <FieldLabel>{t("transfer.holdMusic.label")}</FieldLabel>
+          {canEdit ? (
+            <HoldMusicPicker value={draft.holdMusic} onChange={(holdMusic) => setDraft((d) => ({ ...d, holdMusic }))} />
+          ) : <ReadOnlyValue value={t(`transfer.holdMusic.tracks.${draft.holdMusic}.title`)} />}
+        </div>
+      )}
+      {wiring && (
+        <p role="alert" style={{ ...helpStyle, margin: "12px 0 0", color: "var(--stage-lost)" }}>
+          {t("transfer.wiringFailed", { error: wiring })}
+        </p>
       )}
       {canEdit && <SaveRow dirty={dirty} saving={saving} error={error} onSave={submit} onReset={() => { setError(null); reset(); }} />}
     </VoiceCardShell>

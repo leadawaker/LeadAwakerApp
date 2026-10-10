@@ -554,7 +554,7 @@ export function registerConversationsRoutes(app: Express): void {
       return res.status(403).json({ message: "Forbidden" });
     }
     const prefs = await storage.getNotificationPreferences(userId, accountId);
-    if (!prefs) return res.json({ telegram_enabled: true, telegram_chat_id: null, push_enabled: true, email_enabled: true, type_overrides: {} });
+    if (!prefs) return res.json({ telegram_enabled: true, telegram_chat_id: null, push_enabled: true, email_enabled: false, type_overrides: {} });
     res.json({
       telegram_enabled: prefs.telegramEnabled,
       telegram_chat_id: prefs.telegramChatId,

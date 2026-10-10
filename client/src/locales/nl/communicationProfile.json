@@ -322,7 +322,12 @@
         "marin": "Natuurlijk, warm. Het best getest voor Nederlands.",
         "gleam": "Natuurlijk, helder en vrolijk.",
         "willow": "Natuurlijk, zachte Ierse toon.",
-        "bossa": "Natuurlijk, Braziliaans Portugees."
+        "bossa": "Natuurlijk, Braziliaans Portugees.",
+        "vesper": "Natuurlijk, man, Brits. De enige Britse stem van OpenAI.",
+        "stone": "Natuurlijk, man, Ierse toon.",
+        "meridian": "Natuurlijk, man, Noord-Amerikaans.",
+        "ripple": "Natuurlijk, man, Australische toon.",
+        "tempo": "Natuurlijk, man, Braziliaans Portugees."
       },
       "localeLabel": "Taal",
       "locales": {

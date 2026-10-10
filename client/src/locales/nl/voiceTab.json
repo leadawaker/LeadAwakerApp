@@ -89,6 +89,49 @@
       "hold": "Wachtmuziek",
       "help": "Voordat je wordt doorverbonden hoor je een korte samenvatting over de beller: druk 1 om het gesprek aan te nemen, of 2 en de receptionist plant een terugbelafspraak. Ondertussen blijft de beller met de receptionist praten of hoort wachtmuziek."
     },
+    "holdMusic": {
+      "label": "Muziekstuk",
+      "open": "Luisteren en kiezen",
+      "title": "Wachtmuziek",
+      "help": "Je telefoon gaat {{seconds}} seconden over, dus de meeste bellers horen alleen het gearceerde begin voordat je opneemt of de receptionist terugkomt.",
+      "phone": "Hoor het zoals aan de telefoon",
+      "loop": "Herhalen",
+      "choose": "Kiezen",
+      "chosen": "Gekozen",
+      "play": "{{title}} afspelen",
+      "pause": "{{title}} pauzeren",
+      "loadFailed": "Dit muziekstuk kon niet worden geladen.",
+      "tracks": {
+        "satie-gymnopedie-1": {
+          "title": "Gymnopédie nr. 1",
+          "by": "Erik Satie · piano solo"
+        },
+        "bach-air-g-string": {
+          "title": "Air op de G-snaar",
+          "by": "J.S. Bach · strijkers"
+        },
+        "pachelbel-canon-d": {
+          "title": "Canon in D",
+          "by": "Johann Pachelbel · strijkers"
+        },
+        "chopin-nocturne-op9-2": {
+          "title": "Nocturne op. 9 nr. 2",
+          "by": "Frédéric Chopin · piano solo"
+        },
+        "grieg-morning-mood": {
+          "title": "Ochtendstemming",
+          "by": "Edvard Grieg · orkest"
+        },
+        "vivaldi-winter-largo": {
+          "title": "De Winter: Largo",
+          "by": "Antonio Vivaldi · viool en strijkers"
+        },
+        "romance-anonimo-guitar": {
+          "title": "Romance Anónimo",
+          "by": "Anoniem · klassieke gitaar"
+        }
+      }
+    },
     "mode": {
       "label": "Hoe bellers worden doorverbonden",
       "screened": "Met aankondiging (druk 1)",
@@ -158,13 +201,15 @@
     },
     "abuse": {
       "label": "Misbruik beëindigen",
-      "help": "Na één rustige waarschuwing beëindigt ze het gesprek, en het nummer wordt 14 dagen geblokkeerd op deze lijn."
+      "help": "Na één rustige waarschuwing beëindigt ze het gesprek, en je krijgt een melding. Is hetzelfde nummer binnen 30 dagen opnieuw grensoverschrijdend, dan wordt het 14 dagen op deze lijn geblokkeerd."
     },
     "blocked": {
-      "label": "Geblokkeerde nummers",
-      "empty": "Er zijn geen nummers geblokkeerd.",
+      "label": "Geblokkeerde en gewaarschuwde nummers",
+      "empty": "Er zijn geen nummers geblokkeerd of gewaarschuwd.",
       "until": "tot {{date}}",
-      "unblock": "Deblokkeren"
+      "unblock": "Deblokkeren",
+      "warned": "beëindigd wegens misbruik op {{date}}, geblokkeerd als het opnieuw gebeurt",
+      "clear": "Wissen"
     }
   }
 }

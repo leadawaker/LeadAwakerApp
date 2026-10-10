@@ -31,7 +31,8 @@ export type NotificationType =
   | "lead_responded"
   | "lead_manual_takeover"
   | "critical_automation_failure"
-  | "campaign_finished";
+  | "campaign_finished"
+  | "voice_abuse";
 
 export interface Notification {
   id: number;
@@ -70,6 +71,7 @@ const NOTIFICATION_VARIANT: Record<string, "default" | "destructive" | "success"
   takeover: "destructive",
   lead_manual_takeover: "destructive",
   critical_automation_failure: "destructive",
+  voice_abuse: "destructive",
   message: "default",
   lead_responded: "default",
   system: "info",

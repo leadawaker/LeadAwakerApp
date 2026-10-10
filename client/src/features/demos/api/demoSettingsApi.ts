@@ -51,8 +51,11 @@ export interface VoiceDemoSettings {
   /** Locale id (en-GB, nl, pt-BR, ...) to voice id. An empty pick is removed. */
   defaultVoices?: Record<string, string>;
   passwords?: string[];
-  maxCallMinutes?: number;
+  /** null (on a save) clears it back to the engine's default. */
+  maxCallMinutes?: number | null;
   phoneAmbienceLevel?: "low" | "medium" | "high";
+  /** Numbers never greeted as returning callers (engine demo_settings.forgotten_numbers). */
+  forgetNumbers?: string[];
 }
 
 /** The demo phone number's route at Telnyx (engine telnyx_bridge.get_route). */
@@ -118,7 +121,7 @@ export function useSetPhoneJitter() {
 /** The locales and voices the engine actually offers, for the pickers. */
 export interface EngineVoiceOptions {
   locales: { id: string; label: string; voice: string; needs_listening_test?: boolean }[];
-  voices: { id: string; label: string }[];
+  voices: { id: string; label: string; gender?: "female" | "male" }[];
   max_call_minutes?: number;
 }
 

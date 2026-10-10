@@ -1,5 +1,6 @@
 // Unwanted calls (engine call_screening.py): one switch per kind she turns
-// away, plus the numbers blocked for abuse on this line, each liftable.
+// away, plus the numbers blocked for abuse on this line and those on a first
+// warning, each clearable.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -63,12 +64,14 @@ export function UnwantedCallsCard({ line, canEdit, saving, onSave }: {
               <div key={b.id} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
                 <span style={{ fontFamily: "var(--mono)", fontSize: 13.5, color: "var(--ink)" }}>{b.phone}</span>
                 <span style={{ fontSize: 12.5, color: "var(--mute)" }}>
-                  {t("screening.blocked.until", { date: until(b.blockedUntil) })}
+                  {b.reason === "warned"
+                    ? t("screening.blocked.warned", { date: until(b.createdAt) })
+                    : t("screening.blocked.until", { date: until(b.blockedUntil) })}
                 </span>
                 {canEdit && (
                   <button type="button" className="la-btn la-btn--soft" onClick={() => unblock.mutate(b.id)}
                     disabled={unblock.isPending}>
-                    {t("screening.blocked.unblock")}
+                    {t(b.reason === "warned" ? "screening.blocked.clear" : "screening.blocked.unblock")}
                   </button>
                 )}
               </div>

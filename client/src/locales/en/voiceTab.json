@@ -89,6 +89,49 @@
       "hold": "Hold music",
       "help": "Before you are connected you hear a short brief about the caller: press 1 to take the call, or 2 and the receptionist books a callback. Meanwhile the caller either keeps chatting with the receptionist or hears hold music."
     },
+    "holdMusic": {
+      "label": "Song",
+      "open": "Listen and choose",
+      "title": "Hold music",
+      "help": "Your phone rings for {{seconds}} seconds, so most callers only hear the shaded start before you pick up or the receptionist comes back.",
+      "phone": "Hear it like a phone call",
+      "loop": "Loop",
+      "choose": "Choose",
+      "chosen": "Chosen",
+      "play": "Play {{title}}",
+      "pause": "Pause {{title}}",
+      "loadFailed": "Could not load this track.",
+      "tracks": {
+        "satie-gymnopedie-1": {
+          "title": "Gymnopédie No. 1",
+          "by": "Erik Satie · solo piano"
+        },
+        "bach-air-g-string": {
+          "title": "Air on the G String",
+          "by": "J.S. Bach · strings"
+        },
+        "pachelbel-canon-d": {
+          "title": "Canon in D",
+          "by": "Johann Pachelbel · strings"
+        },
+        "chopin-nocturne-op9-2": {
+          "title": "Nocturne Op. 9 No. 2",
+          "by": "Frédéric Chopin · solo piano"
+        },
+        "grieg-morning-mood": {
+          "title": "Morning Mood",
+          "by": "Edvard Grieg · orchestra"
+        },
+        "vivaldi-winter-largo": {
+          "title": "Winter: Largo",
+          "by": "Antonio Vivaldi · violin and strings"
+        },
+        "romance-anonimo-guitar": {
+          "title": "Romance Anónimo",
+          "by": "Anonymous · classical guitar"
+        }
+      }
+    },
     "mode": {
       "label": "How callers are put through",
       "screened": "Screened (press 1)",
@@ -158,13 +201,15 @@
     },
     "abuse": {
       "label": "End abusive calls",
-      "help": "After one calm warning she ends the call, and the number is blocked on this line for 14 days."
+      "help": "After one calm warning she ends the call, and you get a notification. If the same number is abusive again within 30 days, it is blocked on this line for 14 days."
     },
     "blocked": {
-      "label": "Blocked numbers",
-      "empty": "No numbers are blocked.",
+      "label": "Blocked and warned numbers",
+      "empty": "No numbers are blocked or warned.",
       "until": "until {{date}}",
-      "unblock": "Unblock"
+      "unblock": "Unblock",
+      "warned": "ended for abuse on {{date}}, blocked if it happens again",
+      "clear": "Clear"
     }
   }
 }

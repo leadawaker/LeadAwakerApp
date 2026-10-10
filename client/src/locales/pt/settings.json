@@ -17,7 +17,16 @@
     "table": "Tabela",
     "back": "Voltar",
     "editProfile": "Editar perfil",
-    "title": "Equipe"
+    "title": "Equipe",
+    "inviteEmailFailedTitle": "E-mail de convite não enviado",
+    "inviteEmailFailedBody": "O convite para {{email}} foi criado, mas o e-mail não pôde ser enviado. Use Reenviar nos convites pendentes para tentar de novo.",
+    "inviteSentTitle": "Convite enviado",
+    "inviteSentBody": "Convite criado para {{email}} como {{role}}",
+    "inviteResentTitle": "Convite reenviado",
+    "inviteFailedTitle": "Falha ao enviar convite",
+    "resendFailedTitle": "Falha ao reenviar convite",
+    "resendInvite": "Reenviar",
+    "resendingInvite": "Enviando…"
   },
   "account": {
     "saved": "Salvo",

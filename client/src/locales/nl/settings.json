@@ -17,7 +17,16 @@
     "table": "Tabel",
     "back": "Terug",
     "editProfile": "Profiel bewerken",
-    "title": "Team"
+    "title": "Team",
+    "inviteEmailFailedTitle": "Uitnodigingsmail niet verzonden",
+    "inviteEmailFailedBody": "De uitnodiging voor {{email}} is aangemaakt, maar de e-mail kon niet worden verzonden. Gebruik Opnieuw versturen bij openstaande uitnodigingen om het nog eens te proberen.",
+    "inviteSentTitle": "Uitnodiging verzonden",
+    "inviteSentBody": "Uitnodiging aangemaakt voor {{email}} als {{role}}",
+    "inviteResentTitle": "Uitnodiging opnieuw verzonden",
+    "inviteFailedTitle": "Uitnodiging mislukt",
+    "resendFailedTitle": "Uitnodiging opnieuw verzenden mislukt",
+    "resendInvite": "Opnieuw versturen",
+    "resendingInvite": "Verzenden…"
   },
   "account": {
     "saved": "Opgeslagen",

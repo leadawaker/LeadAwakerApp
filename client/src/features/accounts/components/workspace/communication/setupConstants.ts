@@ -13,10 +13,28 @@ export const AFTER_HOURS = ["message", "callback", "ringHot"] as const;
 export const WA_NUMBER_CHOICE = ["new", "existing"] as const;
 export const WA_APP_TYPE = ["business", "personal", "unknown"] as const;
 
-// Natural (recorded) feminine voices the phone receptionist can use. Mirrors
-// FEMININE_VOICES in the engine's live_session_config.py, natural ones only:
-// a generated voice sounded synthetic on Dutch calls.
-export const VOICE_OPTIONS = ["marin", "gleam", "willow", "bossa"] as const;
+// Natural (recorded) voices the phone receptionist can use. Mirrors VOICES in
+// the engine's live_session_config.py, natural ones only: a generated voice
+// sounded synthetic on Dutch calls.
+export const FEMININE_VOICE_OPTIONS = ["marin", "gleam", "willow", "bossa"] as const;
+export const MASCULINE_VOICE_OPTIONS = ["vesper", "stone", "meridian", "ripple", "tempo"] as const;
+export const VOICE_OPTIONS = [...FEMININE_VOICE_OPTIONS, ...MASCULINE_VOICE_OPTIONS] as const;
+
+// The default names, mirroring DEFAULT_AGENT_NAME / MALE_AGENT_NAMES in the engine.
+export const DEFAULT_AGENT_NAME = "Sara";
+export const MALE_AGENT_NAMES: Record<string, string> = { en: "Harry", nl: "Daan", pt: "Pedro" };
+
+export const isMasculineVoice = (voice: string) => (MASCULINE_VOICE_OPTIONS as readonly string[]).includes(voice);
+
+// The name after a voice or language change: a default name follows the
+// voice's gender and language, a name the client typed themselves stays.
+export function nameForVoice(current: string, voice: string, locale: string): string {
+  const maleDefaults = Object.values(MALE_AGENT_NAMES);
+  const isDefault = !current || current === DEFAULT_AGENT_NAME || maleDefaults.includes(current);
+  if (!isDefault) return current;
+  if (isMasculineVoice(voice)) return MALE_AGENT_NAMES[locale.split("-")[0]] ?? MALE_AGENT_NAMES.en;
+  return maleDefaults.includes(current) ? DEFAULT_AGENT_NAME : current;
+}
 export const VOICE_LOCALES = ["nl", "en-GB", "en-US", "pt-BR"] as const;
 
 // GSM forwarding codes for a mobile line, by trigger. `{n}` is the AI number.
@@ -58,10 +76,12 @@ export const EMPTY_SETUP: ReceptionistSetup = {
 };
 
 // Merge a stored (possibly partial or older) setup over the empty shape, so a
-// field added later never arrives undefined.
+// field added later never arrives undefined. Keys the wizard does not edit
+// (the Voice tab's `screening`) ride along, so a wizard save keeps them.
 export function normalizeSetup(raw: unknown): ReceptionistSetup {
   const r = (raw && typeof raw === "object" ? raw : {}) as Partial<Record<keyof ReceptionistSetup, object>>;
   return {
+    ...r,
     handoff: { ...EMPTY_SETUP.handoff, ...(r.handoff ?? {}) },
     voice: { ...EMPTY_SETUP.voice, ...(r.voice ?? {}) },
     whatsapp: { ...EMPTY_SETUP.whatsapp, ...(r.whatsapp ?? {}) },

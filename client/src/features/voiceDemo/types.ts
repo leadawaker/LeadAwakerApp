@@ -132,7 +132,8 @@ export interface LocaleOption {
 export interface LiveOptions {
   default_locale: VoiceLocale;
   locales: LocaleOption[];
-  voices: { id: string; label: string }[];
+  /** A masculine voice makes the receptionist's default name the language's male one. */
+  voices: { id: string; label: string; gender?: "female" | "male" }[];
   /** How long a demo call may run, set on the Demos page. */
   max_call_minutes?: number;
 }

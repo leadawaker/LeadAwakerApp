@@ -26,6 +26,13 @@ export const VOICE_LOCALES = ["nl", "en-GB", "en-US", "pt-BR"] as const;
 export const AFTER_HOURS = ["message", "callback", "ringHot"] as const;
 /** What a caller hears while a screened transfer rings the owner. */
 export const TRANSFER_WAITING = ["sara", "hold"] as const;
+/** The hold music tracks: the ids of HOLD_TRACKS in the engine's hold_music.py, which serves the files. */
+export const HOLD_MUSIC = [
+  "satie-gymnopedie-1", "bach-air-g-string", "pachelbel-canon-d", "chopin-nocturne-op9-2",
+  "grieg-morning-mood", "vivaldi-winter-largo", "romance-anonimo-guitar",
+] as const;
+export type HoldMusic = (typeof HOLD_MUSIC)[number];
+export const DEFAULT_HOLD_MUSIC: HoldMusic = "satie-gymnopedie-1";
 /** Screened: the owner hears a brief and presses 1. Direct: connected on answer. Off: nobody is put through. */
 export const TRANSFER_MODES = ["screened", "direct", "off"] as const;
 /** Unwanted calls she turns away (engine call_screening.py). A switch never saved is on. */
@@ -45,6 +52,7 @@ export interface VoiceLine {
   transferNumber: string | null;
   transferName: string | null;
   transferWaiting: (typeof TRANSFER_WAITING)[number];
+  transferHoldMusic: HoldMusic;
   transferMode: (typeof TRANSFER_MODES)[number];
   /** Office sound under her voice (puts the number on the Telnyx conference route). */
   officeSound: boolean;
@@ -74,6 +82,7 @@ export interface VoiceLinePatch {
   transferNumber?: string | null;
   transferName?: string | null;
   transferWaiting?: (typeof TRANSFER_WAITING)[number];
+  transferHoldMusic?: HoldMusic;
   transferMode?: (typeof TRANSFER_MODES)[number];
   officeSound?: boolean;
   screening?: Partial<Screening>;
@@ -198,6 +207,7 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     transferNumber,
     transferName: text(handoff.name) || null,
     transferWaiting: text(handoff.waiting) === "hold" ? "hold" : "sara",
+    transferHoldMusic: HOLD_MUSIC.find((k) => k === text(handoff.holdMusic)) ?? DEFAULT_HOLD_MUSIC,
     transferMode,
     officeSound: voiceSetup.officeSound === true,
     screening,
@@ -302,6 +312,7 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   if (patch.transferNumber !== undefined) setHandoff("number", patch.transferNumber ?? "");
   if (patch.transferName !== undefined) setHandoff("name", patch.transferName ?? "");
   if (patch.transferWaiting !== undefined) setHandoff("waiting", patch.transferWaiting);
+  if (patch.transferHoldMusic !== undefined) setHandoff("holdMusic", patch.transferHoldMusic);
   if (patch.transferMode !== undefined) setHandoff("mode", patch.transferMode);
   if (patch.officeSound !== undefined) setVoice("officeSound", patch.officeSound);
   if (patch.screening !== undefined) {
@@ -391,26 +402,48 @@ async function saveVoiceLine(accountId: number, patch: VoiceLinePatch): Promise<
   return found ? getVoiceLine(accountId) : null;
 }
 
+/**
+ * reason "abuse": blocked until blockedUntil. reason "warned": a first abusive
+ * call, which blocks nothing but makes the next one within STRIKE_DAYS a block
+ * (engine call_screening.py; tools/db/voice_blocked_callers.py).
+ */
 export interface BlockedCaller { id: number; phone: string; reason: string; blockedUntil: string; createdAt: string }
 
-/** Numbers blocked on the account's line right now (abuse), newest first. */
+/** Must match the engine's call_screening.STRIKE_DAYS. */
+const STRIKE_DAYS = 30;
+
+/** Numbers blocked on the account's line right now, then numbers on a first warning, newest first. */
 async function listBlockedCallers(accountId: number): Promise<BlockedCaller[]> {
   const r = await db.execute(sql`
     SELECT id, phone, reason,
       to_char(blocked_until AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "blockedUntil",
       to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
-    FROM "p2mxx34fvbf3ll6"."Voice_Blocked_Callers"
-    WHERE accounts_id = ${accountId} AND unblocked_at IS NULL AND blocked_until > now()
-    ORDER BY created_at DESC
+    FROM "p2mxx34fvbf3ll6"."Voice_Blocked_Callers" b
+    WHERE accounts_id = ${accountId} AND unblocked_at IS NULL AND (
+      (reason <> 'warned' AND blocked_until > now())
+      OR (reason = 'warned' AND created_at > now() - make_interval(days => ${STRIKE_DAYS})
+          AND NOT EXISTS (
+            SELECT 1 FROM "p2mxx34fvbf3ll6"."Voice_Blocked_Callers" x
+            WHERE x.accounts_id = b.accounts_id AND x.phone = b.phone AND x.reason <> 'warned'
+              AND x.unblocked_at IS NULL AND x.blocked_until > now())
+          AND id = (
+            SELECT max(y.id) FROM "p2mxx34fvbf3ll6"."Voice_Blocked_Callers" y
+            WHERE y.accounts_id = b.accounts_id AND y.phone = b.phone AND y.reason = 'warned'
+              AND y.unblocked_at IS NULL))
+    )
+    ORDER BY (reason = 'warned'), created_at DESC
   `);
   return r.rows as unknown as BlockedCaller[];
 }
 
-/** Lift one block. False when it is not this account's, or already lifted. */
+/** Clear a number: lifts its block and its warnings, so it starts with a clean slate. */
 async function unblockCaller(accountId: number, blockId: number): Promise<boolean> {
   const r = await db.execute(sql`
     UPDATE "p2mxx34fvbf3ll6"."Voice_Blocked_Callers" SET unblocked_at = now()
-    WHERE id = ${blockId} AND accounts_id = ${accountId} AND unblocked_at IS NULL
+    WHERE accounts_id = ${accountId} AND unblocked_at IS NULL AND phone = (
+      SELECT phone FROM "p2mxx34fvbf3ll6"."Voice_Blocked_Callers"
+      WHERE id = ${blockId} AND accounts_id = ${accountId}
+    )
   `);
   return (r.rowCount ?? 0) > 0;
 }

@@ -217,6 +217,8 @@ export function useLiveCall() {
    * data channel opens, so it is in place by the time session.started fires.
    */
   const greetingRef = useRef<string>("");
+  /** The engine's greeting cue, in the call's language (English if absent). */
+  const cueRef = useRef<string>("");
   /** Set once the opening instruction has gone out, so it is sent only once. */
   const greetedRef = useRef(false);
   /** Set the moment she says anything, which is what tells us the greeting landed. */
@@ -360,7 +362,7 @@ export function useLiveCall() {
       type: "session.commentary.append",
       event_id: `${GREETING_EVENT_ID}_cue`,
       delegation_id: null,
-      content: "Begin the conversation now, following the instructions provided.",
+      content: cueRef.current || "Begin the conversation now, following the instructions provided.",
     });
     void relay({ type: "live.greeting_cued" });
   }, [relay, send]);
@@ -755,6 +757,7 @@ export function useLiveCall() {
         setSessionId(data.session_id ?? null);
         languageRef.current = data.language ?? "en";
         greetingRef.current = data.greeting ?? "";
+        cueRef.current = data.cue ?? "";
         setCompany(data.company ?? setup.companyName);
         await pc.setRemoteDescription({ type: "answer", sdp: data.sdp });
 

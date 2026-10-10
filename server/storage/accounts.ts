@@ -165,6 +165,17 @@ function rowToBoth(r: NicheVocabulary): Omit<NicheRowBoth, "niche"> {
   };
 }
 
+const isObj = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
+
+/** Stored setup with the incoming one over it: top-level keys kept, objects merged one level. */
+function mergeSetup(stored: Record<string, unknown>, incoming: Record<string, unknown>): Record<string, unknown> {
+  const out: Record<string, unknown> = { ...stored };
+  for (const [k, v] of Object.entries(incoming)) {
+    out[k] = isObj(v) && isObj(stored[k]) ? { ...(stored[k] as object), ...v } : v;
+  }
+  return out;
+}
+
 export const accountsStorage = {
   // ─── Accounts ───────────────────────────────────────────────────────
 
@@ -209,6 +220,10 @@ export const accountsStorage = {
     const now = new Date();
     const completedAt = data.status === "completed" ? now : (data.completedAt ?? existing?.completedAt ?? null);
     const payload = { ...data, accountsId: accountId, updatedAt: now, completedAt } as any;
+    // `setup` is shared with the Voice tab (storage/voiceLines.ts), which owns
+    // keys the wizard never sends (e.g. `screening`). Merge one level deep so a
+    // wizard save, even from an older bundle, cannot drop them.
+    if (data.setup && existing?.setup) payload.setup = mergeSetup(existing.setup, data.setup);
     if (existing) {
       const [row] = await db.update(accountCommunicationProfile)
         .set(payload).where(eq(accountCommunicationProfile.id, existing.id)).returning();
@@ -394,7 +409,6 @@ export const accountsStorage = {
     const [updated] = await db.update(users).set(updateData).where(eq(users.id, id)).returning();
     return updated;
   },
-};
 
   /**
    * Shallow-merge `patch` into the user's preferences JSON in ONE statement,
@@ -420,3 +434,4 @@ export const accountsStorage = {
       .returning();
     return updated;
   },
+};

@@ -51,12 +51,12 @@ export const NOTIF_TYPE_KEYS = [
 export function getDefaultNotifPrefs(): NotificationPreferences {
   const type_overrides: Record<string, { telegram: boolean; web_push: boolean; email: boolean }> = {};
   for (const t of NOTIF_TYPE_KEYS)
-    type_overrides[t.key] = { telegram: true, web_push: true, email: true };
+    type_overrides[t.key] = { telegram: true, web_push: true, email: false };
   return {
     telegram_enabled: false,
     telegram_chat_id: "",
     push_enabled: false,
-    email_enabled: true,
+    email_enabled: false, // email notifications are opt-in
     type_overrides,
   };
 }

@@ -20,6 +20,7 @@ import {
   Headphones,
   Workflow,
   Trash2,
+  ShieldBan,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotificationStream } from "@/hooks/useNotificationStream";
@@ -57,6 +58,7 @@ const TYPE_CONFIG: Record<string, { icon: typeof Bell; color: string; bgColor: s
   lead_manual_takeover:         { icon: Hand,           color: "text-orange-500",         bgColor: "bg-orange-500/10",    borderColor: "border-l-orange-500" },
   critical_automation_failure:  { icon: AlertOctagon,   color: "text-rose-600",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-600" },
   campaign_finished:            { icon: Flag,           color: "text-emerald-500",        bgColor: "bg-emerald-500/10",   borderColor: "border-l-emerald-500" },
+  voice_abuse:                  { icon: ShieldBan,      color: "text-rose-600",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-600" },
 
   // ── Legacy broad types (existing API) ──────────────────────────────────
   message:    { icon: MessageSquare,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
@@ -154,6 +156,7 @@ export function NotificationCenter({
     escalation: "system",
     automation: "system",
     critical_automation_failure: "system",
+    voice_abuse: "system",
   };
 
   // Client-side filter + cap at 50 items

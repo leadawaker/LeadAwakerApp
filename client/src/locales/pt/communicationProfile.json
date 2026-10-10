@@ -265,7 +265,12 @@
         "marin": "Natural, calorosa. A mais testada em holandês.",
         "gleam": "Natural, clara e animada.",
         "willow": "Natural, tom irlandês suave.",
-        "bossa": "Natural, português brasileiro."
+        "bossa": "Natural, português brasileiro.",
+        "vesper": "Natural, masculina, britânica. A única voz britânica da OpenAI.",
+        "stone": "Natural, masculina, tom irlandês.",
+        "meridian": "Natural, masculina, norte-americana.",
+        "ripple": "Natural, masculina, tom australiano.",
+        "tempo": "Natural, masculina, português brasileiro."
       },
       "localeLabel": "Idioma",
       "locales": {

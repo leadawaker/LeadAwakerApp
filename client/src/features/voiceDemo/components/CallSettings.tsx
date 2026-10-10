@@ -115,9 +115,17 @@ export function CallSettings({
               {copy.voiceDefault}
               {current?.voice ? ` (${current.voice})` : ""}
             </option>
-            {(options?.voices ?? []).map((v) => (
-              <option key={v.id} value={v.id}>{v.id} — {v.label}</option>
-            ))}
+            {(["female", "male"] as const).map((gender) => {
+              // A voice from an engine that names no gender is a woman's.
+              const voices = (options?.voices ?? []).filter((v) => (v.gender ?? "female") === gender);
+              return voices.length ? (
+                <optgroup key={gender} label={gender === "male" ? copy.voiceMale : copy.voiceFemale}>
+                  {voices.map((v) => (
+                    <option key={v.id} value={v.id}>{v.id} — {v.label}</option>
+                  ))}
+                </optgroup>
+              ) : null;
+            })}
           </select>
         </div>
 

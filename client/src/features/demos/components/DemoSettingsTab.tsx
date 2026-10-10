@@ -12,6 +12,7 @@ import { SERVICES } from "../services";
 import { PhoneAmbienceSettings } from "./PhoneAmbienceSettings";
 import { PhoneJitterSettings } from "./PhoneJitterSettings";
 import { PublicDemoSettings } from "./PublicDemoSettings";
+import { CommaListInput } from "./CommaListInput";
 import {
   apiAsset,
   useDemoSettings,
@@ -157,12 +158,18 @@ function VoiceSettings() {
 
   const onSave = async () => {
     if (!draft) return;
-    await save.mutateAsync({
-      defaultVoices: draft.defaultVoices ?? {},
-      passwords: draft.passwords ?? [],
-      maxCallMinutes: draft.maxCallMinutes,
-    });
-    setDraft(null);
+    try {
+      await save.mutateAsync({
+        defaultVoices: draft.defaultVoices ?? {},
+        passwords: draft.passwords ?? [],
+        // null clears a saved limit back to the engine's default.
+        maxCallMinutes: draft.maxCallMinutes ?? null,
+        forgetNumbers: draft.forgetNumbers ?? [],
+      });
+      setDraft(null);
+    } catch {
+      // The draft stays for another try; the reason shows under the button.
+    }
   };
 
   if (error) {
@@ -192,9 +199,16 @@ function VoiceSettings() {
               {/* Empty means the engine's own default, which is named here so
                   nobody has to guess what "default" sounds like. */}
               <option value="">{t("settings.voice.engineDefault", { voice: l.voice })}</option>
-              {(engine?.voices ?? []).map((v) => (
-                <option key={v.id} value={v.id}>{v.id} — {v.label}</option>
-              ))}
+              {(["female", "male"] as const).map((gender) => {
+                const voices = (engine?.voices ?? []).filter((v) => (v.gender ?? "female") === gender);
+                return voices.length ? (
+                  <optgroup key={gender} label={t(`settings.voice.${gender}`)}>
+                    {voices.map((v) => (
+                      <option key={v.id} value={v.id}>{v.id} — {v.label}</option>
+                    ))}
+                  </optgroup>
+                ) : null;
+              })}
             </select>
           </label>
         ))}
@@ -210,13 +224,26 @@ function VoiceSettings() {
         <span style={{ display: "block", fontSize: 12, color: "var(--mute)", margin: "2px 0 8px" }}>
           {t("settings.voice.passwordHint")}
         </span>
-        <input
+        <CommaListInput
           style={{ ...INPUT, width: "100%" }}
-          value={(current.passwords ?? []).join(", ")}
+          value={current.passwords ?? []}
           placeholder={t("settings.voice.passwordPlaceholder")}
-          onChange={(e) =>
-            patch({ passwords: e.target.value.split(",").map((p) => p.trim()).filter(Boolean) })
-          }
+          onChange={(passwords) => patch({ passwords })}
+        />
+      </label>
+
+      <label style={{ display: "block", marginTop: 16 }}>
+        <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+          {t("settings.voice.forgetTitle")}
+        </span>
+        <span style={{ display: "block", fontSize: 12, color: "var(--mute)", margin: "2px 0 8px" }}>
+          {t("settings.voice.forgetHint")}
+        </span>
+        <CommaListInput
+          style={{ ...INPUT, width: "100%" }}
+          value={current.forgetNumbers ?? []}
+          placeholder={t("settings.voice.forgetPlaceholder")}
+          onChange={(forgetNumbers) => patch({ forgetNumbers })}
         />
       </label>
 
@@ -233,7 +260,11 @@ function VoiceSettings() {
           max={30}
           style={{ ...INPUT, width: 90 }}
           value={current.maxCallMinutes ?? engine?.max_call_minutes ?? 5}
-          onChange={(e) => patch({ maxCallMinutes: Number(e.target.value) || undefined })}
+          onChange={(e) => {
+            const n = Math.round(Number(e.target.value));
+            // Empty means the engine default; anything else is kept in 1..30.
+            patch({ maxCallMinutes: e.target.value === "" || !n ? null : Math.min(30, Math.max(1, n)) });
+          }}
         />
       </label>
 

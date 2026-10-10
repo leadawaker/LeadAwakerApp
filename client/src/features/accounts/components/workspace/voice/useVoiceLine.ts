@@ -1,7 +1,8 @@
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   fetchUnassignedNumbers, fetchVoiceLine, putVoiceLine, voiceLineKey, UNASSIGNED_KEY,
-  type VoiceLinePatch,
+  type VoiceLine, type VoiceLinePatch,
 } from "./voiceApi";
 
 /** The account's voice line (GET) plus a save mutation (PUT) that returns the fresh line. */
@@ -14,17 +15,27 @@ export function useVoiceLine(accountId: number) {
     staleTime: 15 * 1000,
   });
 
+  // The last wiring sync's result. Only a PUT that can move a number carries
+  // one, so it is kept here: the GET refetch and unrelated saves must not hide
+  // a number left on the wrong route.
+  const [wiring, setWiring] = useState<VoiceLine["wiring"]>(undefined);
   const mutation = useMutation({
     mutationFn: (patch: VoiceLinePatch) => putVoiceLine(accountId, patch),
     onSuccess: (line) => {
+      if (line.wiring !== undefined) setWiring(line.wiring);
       qc.setQueryData(voiceLineKey(accountId), line);
       // Attaching or detaching a number changes which rows are still free.
       qc.invalidateQueries({ queryKey: UNASSIGNED_KEY });
     },
   });
 
+  const line = useMemo(
+    () => (query.data ? { ...query.data, wiring } : null),
+    [query.data, wiring],
+  );
+
   return {
-    line: query.data ?? null,
+    line,
     loading: query.isLoading,
     error: query.error as Error | null,
     saving: mutation.isPending,

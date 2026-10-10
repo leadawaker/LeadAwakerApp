@@ -6,7 +6,10 @@ import { useTranslation } from "react-i18next";
 import { Mic, Plus, X } from "lucide-react";
 import { Chip } from "../communication/wizardAtoms";
 import { AGENT_NAMES } from "../communication/profileConstants";
-import { AFTER_HOURS, VOICE_LOCALES, VOICE_OPTIONS, type PronunciationRow } from "../communication/setupConstants";
+import {
+  AFTER_HOURS, FEMININE_VOICE_OPTIONS, MASCULINE_VOICE_OPTIONS, VOICE_LOCALES, VOICE_OPTIONS, nameForVoice,
+  type PronunciationRow,
+} from "../communication/setupConstants";
 import { VoiceCardShell, FieldLabel, ReadOnlyValue, SaveRow, helpStyle, inputStyle, useDraft } from "./voiceAtoms";
 import type { AfterHoursMode, VoiceLine, VoiceLinePatch } from "./voiceApi";
 
@@ -32,6 +35,11 @@ const fromLine = (l: VoiceLine): AgentDraft => ({
 
 const withCurrent = (options: readonly string[], current: string) =>
   current && !options.includes(current) ? [...options, current] : [...options];
+
+const VOICE_GROUPS = [
+  { gender: "female", options: FEMININE_VOICE_OPTIONS },
+  { gender: "male", options: MASCULINE_VOICE_OPTIONS },
+] as const;
 
 export function AgentVoiceCard({ line, canEdit, saving, onSave }: {
   line: VoiceLine; canEdit: boolean; saving: boolean;
@@ -64,6 +72,14 @@ export function AgentVoiceCard({ line, canEdit, saving, onSave }: {
 
   const effectiveName = draft.agentNameCustom.trim() || (draft.agentName ? agentLabel(draft.agentName) : "");
 
+  // A default name (Sara, Harry, Daan, Pedro) follows the voice and language;
+  // a picked name chip or a typed name stays as it is.
+  const followName = (voice: string, locale: string) =>
+    draft.agentName && !draft.agentNameCustom.trim()
+      ? {}
+      : { agentNameCustom: nameForVoice(draft.agentNameCustom.trim(), voice, locale) };
+  const otherVoice = draft.voice && !(VOICE_OPTIONS as readonly string[]).includes(draft.voice) ? draft.voice : null;
+
   return (
     <VoiceCardShell card="agent" icon={<Mic size={17} />} title={t("voiceTab:agent.title")}>
       <p style={helpStyle}>{t("voiceTab:agent.help")}</p>
@@ -91,9 +107,16 @@ export function AgentVoiceCard({ line, canEdit, saving, onSave }: {
         <div>
           <FieldLabel>{cp("voiceSound.voiceLabel")}</FieldLabel>
           {canEdit ? (
-            <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
-              {withCurrent(VOICE_OPTIONS, draft.voice).map((k) => (
-                <Chip key={k} selected={draft.voice === k} onClick={() => set({ voice: k })} label={k.charAt(0).toUpperCase() + k.slice(1)} />
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              {VOICE_GROUPS.map(({ gender, options }) => (
+                <div key={gender}>
+                  <p style={{ ...helpStyle, margin: "0 0 6px" }}>{cp(`agentName.${gender}`)}</p>
+                  <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
+                    {[...options, ...(gender === "female" && otherVoice ? [otherVoice] : [])].map((k) => (
+                      <Chip key={k} selected={draft.voice === k} onClick={() => set({ voice: k, ...followName(k, draft.locale) })} label={k.charAt(0).toUpperCase() + k.slice(1)} />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           ) : <ReadOnlyValue value={draft.voice} />}
@@ -107,7 +130,7 @@ export function AgentVoiceCard({ line, canEdit, saving, onSave }: {
           {canEdit ? (
             <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
               {withCurrent(VOICE_LOCALES, draft.locale).map((k) => (
-                <Chip key={k} selected={draft.locale === k} onClick={() => set({ locale: k })} label={(VOICE_LOCALES as readonly string[]).includes(k) ? cp(`voiceSound.locales.${k}`) : k} />
+                <Chip key={k} selected={draft.locale === k} onClick={() => set({ locale: k, ...followName(draft.voice, k) })} label={(VOICE_LOCALES as readonly string[]).includes(k) ? cp(`voiceSound.locales.${k}`) : k} />
               ))}
             </div>
           ) : <ReadOnlyValue value={draft.locale} />}

@@ -322,7 +322,12 @@
         "marin": "Natural, warm. Best tested for Dutch.",
         "gleam": "Natural, bright and upbeat.",
         "willow": "Natural, soft Irish tone.",
-        "bossa": "Natural, Brazilian Portuguese."
+        "bossa": "Natural, Brazilian Portuguese.",
+        "vesper": "Natural, male, British. The only British voice OpenAI has.",
+        "stone": "Natural, male, Irish tone.",
+        "meridian": "Natural, male, North American.",
+        "ripple": "Natural, male, Australian tone.",
+        "tempo": "Natural, male, Brazilian Portuguese."
       },
       "localeLabel": "Language",
       "locales": {

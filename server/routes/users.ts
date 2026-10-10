@@ -11,6 +11,18 @@ import { handleZodError, wrapAsync, frontendBaseUrl } from "./_helpers";
 import { sendInviteEmail } from "../email";
 import crypto from "crypto";
 
+/** Send an invite email and report whether it actually went out, so the route
+ *  can tell the UI instead of claiming success. The invite link still works
+ *  either way (the admin can copy it from the invite dialog). */
+async function trySendInvite(params: Parameters<typeof sendInviteEmail>[0]): Promise<boolean> {
+  try {
+    return (await sendInviteEmail(params)) !== null;
+  } catch (err) {
+    console.error(`[email] Failed to send invite email to ${params.to}:`, err);
+    return false;
+  }
+}
+
 export function registerUsersRoutes(app: Express): void {
   // ─── Users ────────────────────────────────────────────────────────
   // (users routes relate to account management and invites)
@@ -144,18 +156,19 @@ export function registerUsersRoutes(app: Express): void {
         const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}`;
         console.log(`\nRE-INVITE EMAIL (dev mode)\nTo: ${email}\nRole: ${role}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
 
-        sendInviteEmail({
+        const emailSent = await trySendInvite({
           to: email,
           inviteLink,
           role,
           invitedBy: req.user?.email || "admin",
           lang,
-        }).catch((err) => console.error("[email] Failed to send re-invite email:", err));
+        });
 
         return res.status(200).json({
           user: safeUser,
           invite_token: inviteToken,
-          message: `Invite resent to ${email}`,
+          email_sent: emailSent,
+          message: emailSent ? `Invite resent to ${email}` : `Invite created for ${email}, but the email failed to send`,
         });
       }
 
@@ -174,7 +187,7 @@ export function registerUsersRoutes(app: Express): void {
         status: "Invited",
         accountsId: accountsId ? Number(accountsId) : null,
         preferences,
-        notificationEmail: true,
+        notificationEmail: false, // email notifications are opt-in
         notificationSms: false,
         createdAt: new Date(), // stamp Member Since at invite time (Date object, never ISO string)
       } as any);
@@ -185,18 +198,19 @@ export function registerUsersRoutes(app: Express): void {
       const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}`;
       console.log(`\nINVITE EMAIL (dev mode)\nTo: ${email}\nRole: ${role}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
 
-      sendInviteEmail({
+      const emailSent = await trySendInvite({
         to: email,
         inviteLink,
         role,
         invitedBy: req.user?.email || "admin",
         lang,
-      }).catch((err) => console.error("[email] Failed to send invite email:", err));
+      });
 
       res.status(201).json({
         user: safeUser,
         invite_token: inviteToken,
-        message: `Invite sent to ${email}`,
+        email_sent: emailSent,
+        message: emailSent ? `Invite sent to ${email}` : `Invite created for ${email}, but the email failed to send`,
       });
     } catch (err: any) {
       console.error("Error creating invite:", err);
@@ -247,18 +261,19 @@ export function registerUsersRoutes(app: Express): void {
       const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(user.email || "")}`;
       console.log(`\nRESENT INVITE (dev mode)\nTo: ${user.email}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
 
-      sendInviteEmail({
+      const emailSent = await trySendInvite({
         to: user.email || "",
         inviteLink,
         role: user.role || "Viewer",
         invitedBy: req.user?.email || "admin",
         lang,
-      }).catch((err) => console.error("[email] Failed to resend invite email:", err));
+      });
 
       res.json({
         user: safeUser,
         invite_token: inviteToken,
-        message: `Invite resent to ${user.email}`,
+        email_sent: emailSent,
+        message: emailSent ? `Invite resent to ${user.email}` : `Invite created for ${user.email}, but the email failed to send`,
       });
     } catch (err: any) {
       console.error("Error resending invite:", err);

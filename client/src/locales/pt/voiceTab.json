@@ -89,6 +89,49 @@
       "hold": "Música de espera",
       "help": "Antes de ser conectado, você ouve um breve resumo sobre quem está ligando: pressione 1 para atender, ou 2 e a recepcionista agenda um retorno. Enquanto isso, a pessoa continua conversando com a recepcionista ou ouve música de espera."
     },
+    "holdMusic": {
+      "label": "Música",
+      "open": "Ouvir e escolher",
+      "title": "Música de espera",
+      "help": "Seu telefone toca por {{seconds}} segundos, então a maioria das pessoas só ouve o trecho sombreado do início antes de você atender ou a recepcionista voltar.",
+      "phone": "Ouvir como numa ligação",
+      "loop": "Repetir",
+      "choose": "Escolher",
+      "chosen": "Escolhida",
+      "play": "Tocar {{title}}",
+      "pause": "Pausar {{title}}",
+      "loadFailed": "Não foi possível carregar esta música.",
+      "tracks": {
+        "satie-gymnopedie-1": {
+          "title": "Gymnopédie nº 1",
+          "by": "Erik Satie · piano solo"
+        },
+        "bach-air-g-string": {
+          "title": "Ária na Corda Sol",
+          "by": "J.S. Bach · cordas"
+        },
+        "pachelbel-canon-d": {
+          "title": "Cânone em Ré",
+          "by": "Johann Pachelbel · cordas"
+        },
+        "chopin-nocturne-op9-2": {
+          "title": "Noturno op. 9 nº 2",
+          "by": "Frédéric Chopin · piano solo"
+        },
+        "grieg-morning-mood": {
+          "title": "Manhã (Peer Gynt)",
+          "by": "Edvard Grieg · orquestra"
+        },
+        "vivaldi-winter-largo": {
+          "title": "O Inverno: Largo",
+          "by": "Antonio Vivaldi · violino e cordas"
+        },
+        "romance-anonimo-guitar": {
+          "title": "Romance Anônimo",
+          "by": "Anônimo · violão clássico"
+        }
+      }
+    },
     "mode": {
       "label": "Como as ligações são transferidas",
       "screened": "Com aviso (pressione 1)",
@@ -158,13 +201,15 @@
     },
     "abuse": {
       "label": "Encerrar ligações abusivas",
-      "help": "Depois de um aviso calmo, ela encerra a ligação e o número fica bloqueado nesta linha por 14 dias."
+      "help": "Depois de um aviso calmo ela encerra a ligação, e você recebe uma notificação. Se o mesmo número for abusivo de novo em até 30 dias, ele fica bloqueado nesta linha por 14 dias."
     },
     "blocked": {
-      "label": "Números bloqueados",
-      "empty": "Nenhum número bloqueado.",
+      "label": "Números bloqueados e avisados",
+      "empty": "Nenhum número bloqueado ou avisado.",
       "until": "até {{date}}",
-      "unblock": "Desbloquear"
+      "unblock": "Desbloquear",
+      "warned": "encerrada por abuso em {{date}}, bloqueado se acontecer de novo",
+      "clear": "Limpar"
     }
   }
 }

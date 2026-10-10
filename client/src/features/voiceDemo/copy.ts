@@ -30,6 +30,8 @@ export interface DemoCopy {
   phoneLabel: string;
   voiceLabel: string;
   voiceDefault: string;
+  voiceFemale: string;
+  voiceMale: string;
   ambienceLabel: string;
   ambienceHint: string;
   nightMode: string;
@@ -96,6 +98,8 @@ const EN: DemoCopy = {
   phoneLabel: "The number you are calling from",
   voiceLabel: "Voice",
   voiceDefault: "Default for this language",
+  voiceFemale: "Female",
+  voiceMale: "Male",
   ambienceLabel: "Office sound in the background",
   ambienceHint: "A quiet office behind her voice. Only you hear it, the recording does not have it.",
   nightMode: "Night mode",
@@ -163,6 +167,8 @@ const NL: DemoCopy = {
   phoneLabel: "Het nummer waarvandaan u belt",
   voiceLabel: "Stem",
   voiceDefault: "Standaard voor deze taal",
+  voiceFemale: "Vrouwelijk",
+  voiceMale: "Mannelijk",
   ambienceLabel: "Kantoorgeluid op de achtergrond",
   ambienceHint: "Een rustig kantoor achter haar stem. Alleen u hoort het, de opname heeft het niet.",
   nightMode: "Nachtmodus",
@@ -230,6 +236,8 @@ const PT: DemoCopy = {
   phoneLabel: "O número de onde você está ligando",
   voiceLabel: "Voz",
   voiceDefault: "Padrão para este idioma",
+  voiceFemale: "Feminina",
+  voiceMale: "Masculina",
   ambienceLabel: "Som de escritório ao fundo",
   ambienceHint: "Um escritório tranquilo atrás da voz dela. Só você ouve, a gravação não inclui.",
   nightMode: "Modo noturno",

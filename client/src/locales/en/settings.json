@@ -17,7 +17,16 @@
     "table": "Table",
     "back": "Back",
     "editProfile": "Edit Profile",
-    "title": "Team"
+    "title": "Team",
+    "inviteEmailFailedTitle": "Invite email not sent",
+    "inviteEmailFailedBody": "The invite for {{email}} was created, but the email failed to send. Use Resend under pending invites to try again.",
+    "inviteSentTitle": "Invite sent",
+    "inviteSentBody": "Invite created for {{email}} as {{role}}",
+    "inviteResentTitle": "Invite resent",
+    "inviteFailedTitle": "Invite failed",
+    "resendFailedTitle": "Failed to resend invite",
+    "resendInvite": "Resend",
+    "resendingInvite": "Sending…"
   },
   "account": {
     "saved": "Saved",

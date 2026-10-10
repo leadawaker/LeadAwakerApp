@@ -20,6 +20,7 @@ import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
 import { storage } from "../storage";
 import { syncVoiceWiring } from "./voice-line";
+import { toE164, type PhoneCountry } from "@shared/phoneE164";
 
 export const DEMO_AVATAR_DIR = path.resolve("uploads/demo-avatars");
 /** The bundled photo every widget demo uses until one is uploaded. */
@@ -219,21 +220,38 @@ export function registerDemoSettingsRoutes(app: Express) {
     // Stored as typed. The engine casefolds and strips accents on both sides,
     // so "Olá" and "ola" are the same word at the door.
     passwords: z.array(z.string().trim().min(1).max(60)).max(10).optional(),
-    maxCallMinutes: z.number().int().min(1).max(30).optional(),
+    // null clears it back to the engine's default.
+    maxCallMinutes: z.number().int().min(1).max(30).nullable().optional(),
     // How loud the office bed is on the phone's ambience route. Read by the
     // engine at the start of each call (telnyx_bridge.py).
     phoneAmbienceLevel: z.enum(["low", "medium", "high"]).optional(),
-    // Numbers Sara never remembers as returning callers, so a demo from your
-    // own phone always starts fresh. Stored as typed; the engine reads them as
-    // E.164 (Dutch when typed as 06-...).
+    // Numbers Sara never remembers as returning callers (on every line), so a
+    // demo from your own phone always starts fresh. Stored as E.164 (see
+    // FORGET_COUNTRIES): the engine compares them with the caller's number.
     forgetNumbers: z.array(z.string().trim().min(1).max(30)).max(20).optional(),
   });
+
+  // A number typed without +country code is read as Dutch, then British, then
+  // Brazilian: the markets the demo line serves.
+  const FORGET_COUNTRIES: PhoneCountry[] = ["NL", "GB", "BR"];
+  const forgetE164 = (raw: string) =>
+    FORGET_COUNTRIES.map((c) => toE164(raw, c)).find(Boolean) ?? null;
 
   app.put("/api/demo-settings/voice", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
     const parsed = voiceSchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
+    if (parsed.data.forgetNumbers) {
+      const bad = parsed.data.forgetNumbers.filter((n) => !forgetE164(n));
+      if (bad.length) {
+        return res.status(400).json({
+          message: `Not a phone number: ${bad.join(", ")}. Use international format, e.g. +31612345678.`,
+        });
+      }
+      parsed.data.forgetNumbers = Array.from(new Set(parsed.data.forgetNumbers.map((n) => forgetE164(n)!)));
+    }
     const current = await readSettings("voice");
-    const next = { ...current, ...parsed.data };
+    const next: Record<string, unknown> = { ...current, ...parsed.data };
+    if (next.maxCallMinutes === null) delete next.maxCallMinutes;
     // An empty pick means "use the engine's built-in default for that
     // language", so it is removed rather than stored as "".
     if (next.defaultVoices && typeof next.defaultVoices === "object") {

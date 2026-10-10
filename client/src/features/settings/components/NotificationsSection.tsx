@@ -216,14 +216,17 @@ export function NotificationsSection() {
   const getChannelValue = (override: NotificationPreferences["type_overrides"][string], ch: Channel): boolean => {
     if (ch === "telegram") return override.telegram ?? true;
     if (ch === "web_push") return override.web_push ?? true;
-    return override.email ?? true;
+    return override.email ?? false;
   };
 
   const setChannelValue = (key: string, ch: Channel, value: boolean) => {
     updateNotifPrefs((p) => {
-      const override = p.type_overrides[key] ?? { telegram: true, web_push: true, email: true };
+      const override = p.type_overrides[key] ?? { telegram: true, web_push: true, email: false };
       return {
         ...p,
+        // Email is opt-in globally: ticking one type's email box switches the
+        // email channel on, otherwise the server would never send it.
+        ...(ch === "email" && value ? { email_enabled: true } : {}),
         type_overrides: {
           ...p.type_overrides,
           [key]: { ...override, [ch]: value },
@@ -432,7 +435,7 @@ export function NotificationsSection() {
 
             <div className="space-y-0">
               {NOTIF_TYPE_KEYS.map((nt) => {
-                const override = notifPrefs.type_overrides[nt.key] ?? { telegram: true, web_push: true, email: true };
+                const override = notifPrefs.type_overrides[nt.key] ?? { telegram: true, web_push: true, email: false };
                 const Icon = nt.icon;
                 return (
                   <div
