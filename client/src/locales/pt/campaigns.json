@@ -618,11 +618,27 @@
       "title": "Persona de cliente ao vivo (somente leitura)",
       "note": "Esta persona atende chamadas reais de um cliente, por isso é gerenciada em Conta > Voz. Edições de demonstração não conseguem alterá-la.",
       "open": "Abrir Conta > Voz",
-      "menuNote": "Personas ao vivo não podem ser duplicadas nem excluídas aqui."
+      "menuNote": "Personas ao vivo não podem ser duplicadas nem excluídas aqui.",
+      "blank": "Não definido"
     },
     "fields": {
       "quoteSubject": "Do que era o orçamento",
-      "quoteWhen": "Quando o orçamento foi enviado"
+      "quoteWhen": "Quando o orçamento foi enviado",
+      "nicheLabel": "Rótulo do nicho",
+      "companyName": "Nome da empresa (padrão)",
+      "serviceName": "Serviço",
+      "usp": "O que os diferencia",
+      "description": "Descrição do negócio",
+      "kb": "Base de conhecimento",
+      "nicheQuestion": "Pergunta do nicho",
+      "scopingLadder": "Roteiro de escopo",
+      "questionBank": "Banco de perguntas",
+      "objections": "Objeções",
+      "firstMessage": "Primeira mensagem",
+      "openerPhrase": "Frase de abertura",
+      "whenLabel": "Referência de tempo",
+      "enquiryContext": "O que disseram quando entraram em contato",
+      "quoteContext": "O orçamento que têm em mãos"
     },
     "shot": {
       "title": "Imagem do site",
@@ -632,7 +648,8 @@
       "replace": "Substituir",
       "remove": "Remover",
       "tooLarge": "Essa imagem é muito grande.",
-      "failed": "Falha no envio."
+      "failed": "Falha no envio.",
+      "present": "Imagem definida"
     },
     "social": {
       "title": "Post do Instagram",
@@ -649,7 +666,105 @@
       "regenerateImage": "Nova imagem",
       "noImage": "Ainda sem imagem",
       "imagePending": "Gerando a imagem...",
-      "failed": "Algo deu errado."
+      "failed": "Algo deu errado.",
+      "writtenIn": "Escrito em: {{langs}}",
+      "notWritten": "Ainda não escrito",
+      "language": "Idioma do post"
+    },
+    "intro": "Cada demo que você cria para um prospect fica salva aqui como persona, para que a próxima demo do mesmo nicho comece de uma que você já leu e aprovou, em vez de uma geração nova. O nome da empresa é um padrão: troque por prospect ao enviar o link, e a persona salva continua como está.",
+    "searchPlaceholder": "Buscar personas...",
+    "loading": "Carregando...",
+    "vocabOnly": "SÓ PALAVRAS",
+    "noMatches": "Nenhuma persona corresponde a essa busca.",
+    "emptyLibrary": "Nenhuma persona salva ainda. Crie um link de demo para um prospect e a persona aparece aqui automaticamente.",
+    "back": "Voltar",
+    "editing": "Persona",
+    "saving": "Salvando...",
+    "delete": "Excluir",
+    "deleting": "Excluindo...",
+    "cancel": "Cancelar",
+    "empty": "(vazio)",
+    "confirmDeleteTitle": "Excluir esta persona?",
+    "confirmDeleteBody": "{{niche}} será removida da biblioteca. As demos já enviadas continuam funcionando: elas levam a própria cópia da persona.",
+    "moreActions": "Mais ações",
+    "duplicate": "Duplicar",
+    "duplicating": "Duplicando…",
+    "duplicateNamePrompt": "Nome da nova persona",
+    "duplicateFailed": "Não foi possível duplicar esta persona.",
+    "categoryLabel": "Categoria",
+    "emojiLabel": "Emoji",
+    "noCategory": "Sem categoria",
+    "newCategory": "Nova categoria…",
+    "newCategoryPlaceholder": "ex.: Bem-estar e Lazer",
+    "addCategory": "Adicionar",
+    "termsTitle": "Palavras",
+    "termsHint": "Elas são coladas direto na mensagem de abertura sem que um modelo as traduza, então cada idioma precisa das suas. Separe alternativas com vírgulas.",
+    "openerTitle": "Abertura",
+    "openerHint": "Enviada ao prospect exatamente como está escrita, só com as variáveis preenchidas. Nenhum modelo a vê antes, então cada idioma precisa da sua versão.",
+    "personaTitle": "Persona",
+    "personaHint": "A IA lê estes campos e escreve as respostas no idioma do lead, então inglês basta. Testado: uma base de conhecimento e um roteiro de escopo em inglês geraram holandês nativo.",
+    "terms": {
+      "project": "Projeto",
+      "proposal": "Orçamento",
+      "decision": "Decisão",
+      "advisor": "Consultor",
+      "visit": "Visita"
+    },
+    "close": "Fechar",
+    "autosave": "Salva enquanto você digita",
+    "viewsLabel": "Partes desta persona",
+    "views": {
+      "persona": "Persona",
+      "wording": "Redação",
+      "media": "Mídia"
+    },
+    "identityTitle": "Na biblioteca",
+    "identityHint": "Onde esta persona fica arquivada e o emoji com que aparece na lista.",
+    "companyNameHint": "Um padrão. Você pode trocar por prospect ao enviar o link.",
+    "filledIn": "Preenchido: {{langs}}",
+    "nothingFilled": "Nada preenchido ainda",
+    "personaLanguage": "Idioma da persona",
+    "groups": {
+      "business": "O negócio",
+      "lead": "O lead",
+      "conversation": "A conversa"
+    },
+    "hero": {
+      "title_one": "{{count}} persona na biblioteca",
+      "title_other": "{{count}} personas na biblioteca",
+      "blurb": "Cada demo que você cria fica salva aqui, para que a próxima do mesmo nicho comece de uma persona que você já leu e aprovou.",
+      "categories_one": "{{count}} categoria",
+      "categories_other": "{{count}} categorias",
+      "lastEdit": "Última alteração em {{date}}",
+      "written_one": "persona escrita",
+      "written_other": "personas escritas",
+      "wordsOnly_one": "só palavras",
+      "wordsOnly_other": "só palavras",
+      "live_one": "ao vivo",
+      "live_other": "ao vivo",
+      "coverage": "Escritas em",
+      "coverageNote": "Uma persona escrita em um idioma ainda responde no idioma do lead."
+    },
+    "langName": {
+      "en": "Inglês",
+      "nl": "Holandês",
+      "pt": "Português"
+    },
+    "wordsOnly": "só palavras",
+    "uncategorizedBlurb": "Ainda sem categoria.",
+    "countTitle_one": "{{count}} persona",
+    "countTitle_other": "{{count}} personas",
+    "emptyTitle": "Nenhuma persona ainda",
+    "emptyBody": "Crie um link de demo para um prospect e a persona aparece aqui automaticamente.",
+    "noMatchesTitle": "Nada encontrado",
+    "noMatchesLanguage": "Ainda não há personas escritas neste idioma.",
+    "filterLabel": "Filtrar por idioma",
+    "filterAll": "Todas",
+    "captions": {
+      "persona": "Persona",
+      "languages": "Idiomas",
+      "updated": "Alterada",
+      "id": "ID"
     }
   }
 }

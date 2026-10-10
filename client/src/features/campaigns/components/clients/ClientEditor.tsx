@@ -10,7 +10,7 @@
  *
  * Persona fields still show a SINGLE box (not one per language): a Client is
  * authored once, in one language (English by convention, but the
- * website-scrape flow writes directly in the demo's own language — Zonneplan
+ * website-scrape flow writes directly in the demo's own language: Zonneplan
  * is NL-only, Moniz de Sá PT-only). The box defaults to whichever language
  * actually has content instead of hardcoding "en", with a small toggle above
  * it to switch languages when more than one is filled in. Without this, a
@@ -18,148 +18,49 @@
  * reads it fine at runtime.
  *
  * Autosaves 1.5s after the last edit (mirrors useCampaignDetail.ts). Duplicate
- * and Delete live in the topbar's "..." menu (ClientActionsMenu.tsx), not here.
+ * and Delete live in the "..." menu (ClientActionsMenu.tsx), which the parent
+ * hands in as `actions` or keeps in its own topbar.
+ *
+ * The form is split over three views (persona, wording, media). All three stay
+ * mounted and the inactive ones are only hidden, so switching view never drops
+ * what was typed, including the Instagram post's own unsaved draft.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
-  TERM_GROUPS,
   useDemoClient,
+  useDemoClients,
   useUpdateDemoClient,
-  formatClientTitle,
   type ClientTextField,
   type DemoLang,
-  type DemoClientPatch,
-  type EditableDemoClient,
   type TermGroup,
 } from "../../api/demoClientsApi";
-import { CategorySelect } from "./CategorySelect";
+import { ClientPanelHeader } from "./ClientPanelHeader";
+import { IdentitySection, OpenerSection, PersonaSection, WordsSection } from "./ClientEditorSections";
 import { ClientScreenshot } from "./ClientScreenshot";
 import { SocialPostSection } from "./SocialPostSection";
 import { LiveClientView } from "./LiveClientView";
+import { LANGS } from "./clientDisplay";
+import { TEXT_FIELDS, buildDraft, buildPatch, draftsEqual, type Draft } from "./clientDraft";
 
-/** Long fields, in the order they read as a persona. `multiline` drives height. */
-const TEXT_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: number }> = [
-  { field: "nicheLabel", labelKey: "clients.fields.nicheLabel" },
-  { field: "companyNameTemplate", labelKey: "clients.fields.companyName" },
-  { field: "serviceName", labelKey: "clients.fields.serviceName" },
-  { field: "usp", labelKey: "clients.fields.usp", rows: 2 },
-  { field: "descriptionTemplate", labelKey: "clients.fields.description", rows: 3 },
-  { field: "kbTemplate", labelKey: "clients.fields.kb", rows: 6 },
-  { field: "nicheQuestion", labelKey: "clients.fields.nicheQuestion", rows: 2 },
-  { field: "enquiryContext", labelKey: "clients.fields.enquiryContext", rows: 2 },
-  { field: "quoteContext", labelKey: "clients.fields.quoteContext", rows: 5 },
-  { field: "scopingLadder", labelKey: "clients.fields.scopingLadder", rows: 8 },
-  { field: "questionBank", labelKey: "clients.fields.questionBank", rows: 4 },
-  { field: "objectionExamples", labelKey: "clients.fields.objections", rows: 4 },
-];
-
-/**
- * Fields that ARE substituted verbatim, so they get the per-language treatment.
- *
- * quoteSubject and quoteWhen are the two halves of the QUOTED opener, the one
- * campaign 60 sends to a lead who already has a price ("about the
- * {quote_subject} we quoted {quote_when}"). They belong here and not in
- * TEXT_FIELDS for the usual reason: no model sees them, they are pasted into
- * the sentence as typed. Leaving a slot empty is safe — the engine falls back
- * to the project term, then to the inquiry timeframe.
- */
-const OPENER_FIELDS: Array<{ field: ClientTextField; labelKey: string; rows?: number }> = [
-  { field: "firstMessage", labelKey: "clients.fields.firstMessage", rows: 3 },
-  { field: "openerPhrase", labelKey: "clients.fields.openerPhrase" },
-  { field: "whenLabel", labelKey: "clients.fields.whenLabel" },
-  { field: "quoteSubject", labelKey: "clients.fields.quoteSubject" },
-  { field: "quoteWhen", labelKey: "clients.fields.quoteWhen" },
-];
-
-const LANGS: DemoLang[] = ["en", "nl", "pt"];
-
-const labelStyle: React.CSSProperties = {
-  fontFamily: "Geist Mono, ui-monospace, monospace",
-  fontSize: 10,
-  letterSpacing: "0.13em",
-  textTransform: "uppercase",
-  color: "var(--mute-2)",
-  marginBottom: 6,
-  display: "block",
-};
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  fontSize: 13,
-  lineHeight: 1.5,
-  color: "var(--ink)",
-  background: "var(--input)",
-  border: "1px solid var(--line)",
-  borderRadius: "var(--r-input, 10px)",
-  padding: "9px 12px",
-  resize: "vertical",
-};
+type View = "persona" | "wording" | "media";
+const VIEWS: View[] = ["persona", "wording", "media"];
 
 interface ClientEditorProps {
   niche: string;
   onBack: () => void;
+  /** The "..." menu, when the parent wants it in the panel header. */
+  actions?: ReactNode;
 }
 
-/** Everything ClientEditor autosaves, as one flat draft object. */
-interface Draft {
-  text: Partial<Record<ClientTextField, Partial<Record<DemoLang, string>>>>;
-  terms: Partial<Record<TermGroup, Partial<Record<DemoLang, string>>>>;
-  category: string;
-  emoji: string;
-}
-
-function buildDraft(client: EditableDemoClient): Draft {
-  const terms: Draft["terms"] = {};
-  for (const group of TERM_GROUPS) {
-    terms[group] = {
-      en: (client.terms[group]?.en ?? []).join(", "),
-      nl: (client.terms[group]?.nl ?? []).join(", "),
-      pt: (client.terms[group]?.pt ?? []).join(", "),
-    };
-  }
-  return {
-    text: client.text,
-    terms,
-    category: client.category ?? "",
-    emoji: client.emoji ?? "",
-  };
-}
-
-/** "keuken, keukenproject" -> ["keuken", "keukenproject"]. */
-function splitTerms(raw: string | undefined): string[] {
-  return (raw ?? "")
-    .split(",")
-    .map((w) => w.trim())
-    .filter(Boolean);
-}
-
-function buildPatch(d: Draft): DemoClientPatch {
-  const patch: DemoClientPatch = {
-    text: d.text as DemoClientPatch["text"],
-    terms: {},
-    category: d.category.trim() || null,
-    emoji: d.emoji.trim() || null,
-  };
-  for (const group of TERM_GROUPS) {
-    patch.terms![group] = {
-      en: splitTerms(d.terms[group]?.en),
-      nl: splitTerms(d.terms[group]?.nl),
-      pt: splitTerms(d.terms[group]?.pt),
-    };
-  }
-  return patch;
-}
-
-function draftsEqual(a: Draft | null, b: Draft | null): boolean {
-  if (!a || !b) return a === b;
-  return JSON.stringify(a) === JSON.stringify(b);
-}
-
-export function ClientEditor({ niche, onBack }: ClientEditorProps) {
+export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
   const { t } = useTranslation("campaigns");
   const { data: client, isLoading } = useDemoClient(niche);
+  // The list is already cached, so the header can name the persona while its detail loads.
+  const { data: clients } = useDemoClients();
+  const summary = clients?.find((c) => c.niche === niche);
   const update = useUpdateDemoClient();
 
   const [draft, setDraft] = useState<Draft | null>(null);
@@ -169,6 +70,12 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
   // below whenever a different Client loads, defaulting to whichever
   // language its content actually lives in.
   const [personaLang, setPersonaLang] = useState<DemoLang>("en");
+  const [view, setView] = useState<View>("persona");
+  // The three views share one scroll area: each view, and each persona, starts at its top.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (bodyRef.current) bodyRef.current.scrollTop = 0;
+  }, [view, niche]);
 
   const draftRef = useRef(draft);
   draftRef.current = draft;
@@ -204,7 +111,7 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
         {
           onSuccess: () => {
             // Only reconcile `originalDraft` if we're still looking at the
-            // Client this save was for — the parent may have swapped `niche`
+            // Client this save was for: the parent may have swapped `niche`
             // in place (no remount) while this PATCH was in flight.
             if (nicheRef.current === savedNiche) setOriginalDraft(d);
             setSaving(false);
@@ -281,201 +188,83 @@ export function ClientEditor({ niche, onBack }: ClientEditorProps) {
   const setCategory = (value: string) => setDraft((d) => (d ? { ...d, category: value } : d));
   const setEmoji = (value: string) => setDraft((d) => (d ? { ...d, emoji: value } : d));
 
-  const languagesWithTerms = useMemo(
-    () => (draft ? LANGS.filter((l) => TERM_GROUPS.some((g) => (draft.terms[g]?.[l] ?? "").trim())) : []),
-    [draft],
-  );
-
-  const languagesWithPersona = useMemo(
-    () => (draft ? LANGS.filter((l) => TEXT_FIELDS.some(({ field }) => (draft.text[field]?.[l] ?? "").trim())) : []),
-    [draft],
-  );
-
   if (isLoading || !client || !draft) {
     return (
-      <div className="flex items-center justify-center" style={{ padding: 48, color: "var(--mute)" }}>
-        <Loader2 className="h-5 w-5 animate-spin" />
-      </div>
+      <>
+        {summary && <ClientPanelHeader client={summary} category={summary.category} actions={actions} onBack={onBack} />}
+        <div className="dp-panel-body">
+          <div className="dp-panel-inner" aria-busy>
+            <div className="h-[132px] bg-primary/10 rounded-xl animate-pulse" />
+            <div className="h-[420px] bg-primary/10 rounded-xl animate-pulse" />
+          </div>
+        </div>
+      </>
     );
   }
 
   // A live client's persona is managed in Account > Voice, never edited here.
   // Rendered after every hook above so the early return cannot change hook order.
   // The server also refuses PATCH/DELETE/duplicate on a live persona (409).
-  if (client.isLive) return <LiveClientView client={client} onBack={onBack} />;
+  if (client.isLive) return <LiveClientView client={client} onBack={onBack} actions={actions} />;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22, paddingBottom: 40 }}>
-
-      {/* ── Header ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <button className="la-btn la-btn--soft la-btn--icon" onClick={onBack} title={t("clients.back", "Back")}>
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div style={{ flex: 1, minWidth: 180 }}>
-          <div className="eyebrow wine">{t("clients.editing", "Persona")}</div>
-          <div className="serif italic" style={{ fontSize: 26, color: "var(--ink)", lineHeight: 1.25 }}>
-            {formatClientTitle(client)}
-          </div>
-        </div>
-        {saving && (
-          <span className="inline-flex items-center gap-1.5" style={{ fontSize: 12, color: "var(--mute)" }}>
-            <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-            {t("clients.saving", "Saving...")}
-          </span>
-        )}
-      </div>
-
-      {/* ── Identity: category + emoji ── */}
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ width: 240 }}>
-          <label style={labelStyle}>{t("clients.categoryLabel", "Category")}</label>
-          <CategorySelect value={draft.category} onChange={setCategory} />
-        </div>
-        <div style={{ width: 90 }}>
-          <label style={labelStyle}>{t("clients.emojiLabel", "Emoji")}</label>
-          <input
-            value={draft.emoji}
-            onChange={(e) => setEmoji(e.target.value)}
-            maxLength={8}
-            placeholder="🍳"
-            style={inputStyle}
-          />
-        </div>
-      </div>
-
-      {/* ── The site behind this Client's widget demo ── */}
-      <ClientScreenshot niche={niche} screenshot={client?.screenshot ?? null} />
-
-      {/* ── The Instagram post the Socials demo is built around ── */}
-      <SocialPostSection niche={niche} socialPost={client?.socialPost ?? null} socialImage={client?.socialImage ?? null} />
-
-      {/* ── Terms: the only genuinely per-language part ── */}
-      <section className="neu-raised" style={{ padding: 22, borderRadius: "var(--r-card)" }}>
-        <div className="eyebrow wine" style={{ marginBottom: 4 }}>{t("clients.termsTitle", "Words")}</div>
-        <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 16, lineHeight: 1.5 }}>
-          {t("clients.termsHint")}
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "110px repeat(3, 1fr)", gap: 10, alignItems: "center" }}>
-          <span />
-          {LANGS.map((l) => (
-            <span key={l} style={{ ...labelStyle, marginBottom: 0 }}>
-              {l.toUpperCase()}
-              {!languagesWithTerms.includes(l) && (
-                <span style={{ color: "var(--mute-2)", opacity: 0.6 }}> {t("clients.empty", "(empty)")}</span>
-              )}
+    <>
+      <ClientPanelHeader
+        client={{ ...client, emoji: draft.emoji.trim() || null }}
+        category={draft.category}
+        actions={actions}
+        onBack={onBack}
+        status={
+          saving ? (
+            <span className="inline-flex items-center gap-1.5" style={{ color: "var(--ink-soft)" }}>
+              <RefreshCw className="h-3 w-3 animate-spin" />
+              {t("clients.saving", "Saving...")}
             </span>
-          ))}
-          {TERM_GROUPS.map((group) => (
-            <ClientTermRow
-              key={group}
-              label={t(`clients.terms.${group}`)}
-              values={draft.terms[group] ?? {}}
-              onChange={(lang, v) => setTermSlot(group, lang, v)}
-            />
-          ))}
-        </div>
-      </section>
-
-      {/* ── Opener: substituted verbatim, so per-language too ── */}
-      <section className="neu-raised" style={{ padding: 22, borderRadius: "var(--r-card)" }}>
-        <div className="eyebrow wine" style={{ marginBottom: 4 }}>{t("clients.openerTitle", "Opener")}</div>
-        <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 16, lineHeight: 1.5 }}>
-          {t("clients.openerHint")}
-        </p>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {OPENER_FIELDS.map(({ field, labelKey, rows }) => (
-            <div key={field}>
-              <label style={labelStyle}>{t(labelKey)}</label>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10 }}>
-                {LANGS.map((l) => (
-                  <textarea
-                    key={l}
-                    value={draft.text[field]?.[l] ?? ""}
-                    onChange={(e) => setTextSlot(field, l, e.target.value)}
-                    rows={rows ?? 1}
-                    placeholder={l.toUpperCase()}
-                    style={inputStyle}
-                  />
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Everything the model reads: one language at a time ── */}
-      <section className="neu-raised" style={{ padding: 22, borderRadius: "var(--r-card)" }}>
-        <div className="eyebrow wine" style={{ marginBottom: 4 }}>{t("clients.personaTitle", "Persona")}</div>
-        <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 12, lineHeight: 1.5 }}>
-          {t("clients.personaHint")}
-        </p>
-        {/* Authored once, in whichever language it was written in (English by
-            convention, but a scraped Client may live in NL or PT only). This
-            switches which slot the boxes below show and edit; it never shows
-            three at once, unlike Words/Opener, because a Client's persona is
-            not normally written in more than one language at a time. */}
-        <div style={{ display: "flex", gap: 14, marginBottom: 16 }}>
-          {LANGS.map((l) => (
+          ) : (
+            <span>{t("clients.autosave")}</span>
+          )
+        }
+      >
+        <div className="la-seg la-seg--fill" role="tablist" aria-label={t("clients.viewsLabel")} style={{ maxWidth: 420 }}>
+          {VIEWS.map((v) => (
             <button
-              key={l}
+              key={v}
               type="button"
-              onClick={() => setPersonaLang(l)}
-              style={{
-                ...labelStyle,
-                marginBottom: 0,
-                background: "none",
-                border: "none",
-                padding: 0,
-                cursor: "pointer",
-                color: personaLang === l ? "var(--ink)" : "var(--mute-2)",
-                textDecoration: personaLang === l ? "underline" : "none",
-              }}
+              role="tab"
+              aria-selected={view === v}
+              className={cn("la-seg-btn", view === v && "on")}
+              onClick={() => setView(v)}
             >
-              {l.toUpperCase()}
-              {!languagesWithPersona.includes(l) && <span style={{ opacity: 0.6 }}> {t("clients.empty", "(empty)")}</span>}
+              {t(`clients.views.${v}`)}
             </button>
           ))}
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-          {TEXT_FIELDS.map(({ field, labelKey, rows }) => (
-            <div key={field}>
-              <label style={labelStyle}>{t(labelKey)}</label>
-              <textarea
-                value={draft.text[field]?.[personaLang] ?? ""}
-                onChange={(e) => setTextSlot(field, personaLang, e.target.value)}
-                rows={rows ?? 1}
-                style={inputStyle}
-              />
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  );
-}
+      </ClientPanelHeader>
 
-/** One term group across the three languages. */
-function ClientTermRow({
-  label,
-  values,
-  onChange,
-}: {
-  label: string;
-  values: Partial<Record<DemoLang, string>>;
-  onChange: (lang: DemoLang, value: string) => void;
-}) {
-  return (
-    <>
-      <span style={{ fontSize: 12, color: "var(--ink-soft)" }}>{label}</span>
-      {LANGS.map((l) => (
-        <input
-          key={l}
-          value={values[l] ?? ""}
-          onChange={(e) => onChange(l, e.target.value)}
-          style={{ ...inputStyle, padding: "7px 10px" }}
-        />
-      ))}
+      <div className="dp-panel-body" ref={bodyRef}>
+        {/* ── Everything the model reads, and where the persona is filed ── */}
+        <div className="dp-panel-inner" hidden={view !== "persona"}>
+          <IdentitySection category={draft.category} emoji={draft.emoji} onCategory={setCategory} onEmoji={setEmoji} />
+          <PersonaSection text={draft.text} lang={personaLang} onLang={setPersonaLang} onChange={setTextSlot} />
+        </div>
+
+        {/* ── Pasted as typed, so one slot per language ── */}
+        <div className="dp-panel-inner" hidden={view !== "wording"}>
+          <WordsSection terms={draft.terms} onChange={setTermSlot} />
+          <OpenerSection text={draft.text} onChange={setTextSlot} />
+        </div>
+
+        {/* ── What the widget and Instagram demos are dressed in ── */}
+        <div className="dp-panel-inner" hidden={view !== "media"}>
+          <ClientScreenshot key={`shot-${niche}`} niche={niche} screenshot={client?.screenshot ?? null} />
+          <SocialPostSection
+            key={`post-${niche}`}
+            niche={niche}
+            socialPost={client?.socialPost ?? null}
+            socialImage={client?.socialImage ?? null}
+          />
+        </div>
+      </div>
     </>
   );
 }

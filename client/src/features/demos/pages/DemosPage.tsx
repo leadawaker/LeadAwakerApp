@@ -45,11 +45,13 @@ function DemosContent() {
               className={cn("la-seg-btn", tab === x.key && "on")}
               style={{ padding: "8px 12px", fontSize: 11, letterSpacing: "0.13em" }}
               onClick={() => setTab(x.key)}
+              title={t(`tabs.${x.key}`)}
             >
               <span className="flex items-center">
                 <x.Icon size={13} />
               </span>
-              {t(`tabs.${x.key}`)}
+              {/* On a phone only the open tab keeps its label, so the four tabs fit the screen. */}
+              <span className={cn(tab !== x.key && "max-md:sr-only")}>{t(`tabs.${x.key}`)}</span>
             </button>
           ))}
         </div>
@@ -75,7 +77,7 @@ function DemosContent() {
           <DemoSettingsTab />
         ) : tab === "clients" ? (
           <div className="h-full min-h-0 overflow-hidden">
-            <ClientsTab selectedNiche={selectedClientNiche} onSelectNiche={setSelectedClientNiche} />
+            <ClientsTab selectedNiche={selectedClientNiche} onSelectNiche={setSelectedClientNiche} showActions />
           </div>
         ) : tab === "new" ? (
           <div className="h-full min-h-0 overflow-y-auto" style={{ padding: "22px 24px" }}>

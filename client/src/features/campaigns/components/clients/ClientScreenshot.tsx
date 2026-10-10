@@ -1,8 +1,9 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, Trash2, Upload } from "lucide-react";
+import { Loader2, MonitorSmartphone, Trash2, Upload } from "lucide-react";
 import { API_BASE } from "@/lib/apiUtils";
 import { useSetClientScreenshot } from "../../api/demoClientsApi";
+import { ClientSection } from "./ClientSection";
 
 /**
  * The homepage image the widget demo shows behind the chat bubble.
@@ -52,35 +53,22 @@ export function ClientScreenshot({ niche, screenshot }: { niche: string; screens
   };
 
   return (
-    <section className="neu-raised" style={{ padding: 22, borderRadius: "var(--r-card)" }}>
-      <div className="eyebrow wine" style={{ marginBottom: 4 }}>{t("clients.shot.title", "Website image")}</div>
-      <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 16, lineHeight: 1.5 }}>
-        {t("clients.shot.hint", "The page the widget demo sits on. Uploaded by hand for a persona with no website of its own.")}
-      </p>
-
-      <div style={{ display: "flex", alignItems: "flex-start", gap: 16, flexWrap: "wrap" }}>
-        <div
-          style={{
-            width: 220,
-            height: 124,
-            borderRadius: "var(--r-surface)",
-            overflow: "hidden",
-            flexShrink: 0,
-            background: "var(--card)",
-            border: "1px solid var(--line)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
+    <ClientSection
+      icon={MonitorSmartphone}
+      title={t("clients.shot.title", "Website image")}
+      blurb={t("clients.shot.hint", "The page the widget demo sits on. Uploaded by hand for a persona with no website of its own.")}
+      aside={<span className="dp-verdict">{screenshot ? t("clients.shot.present") : t("clients.shot.none", "No image yet")}</span>}
+    >
+      <div className="dp-media">
+        <div className="dp-thumb" style={{ width: 240, maxWidth: "100%", aspectRatio: "16 / 9" }}>
           {screenshot ? (
             <img
               src={`${API_BASE}/api/site-shot/${screenshot}`}
               alt={t("clients.shot.title", "Website image")}
-              style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top" }}
+              style={{ objectPosition: "top" }}
             />
           ) : (
-            <span style={{ fontSize: 12, color: "var(--mute-2)" }}>{t("clients.shot.none", "No image yet")}</span>
+            <span>{t("clients.shot.none", "No image yet")}</span>
           )}
         </div>
 
@@ -114,7 +102,7 @@ export function ClientScreenshot({ niche, screenshot }: { niche: string; screens
           )}
         </div>
       </div>
-      {error && <p style={{ marginTop: 10, fontSize: 12, color: "hsl(var(--destructive))" }}>{error}</p>}
-    </section>
+      {error && <p className="dp-error">{error}</p>}
+    </ClientSection>
   );
 }

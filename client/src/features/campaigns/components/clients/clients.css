@@ -1,0 +1,285 @@
+/* Demo personas library (Demos page, "Demo personas" tab).
+   Scoped `.dp-*` classes; colors are live tokens so dark mode follows.
+   Row hover, selection and the icon tile come from automation.css (`.am-*`),
+   which the components import next to this file. */
+
+/* ── shell: list column + detail panel ──────────────────────────────── */
+.dp-shell {
+  container: dp-shell / inline-size;
+  height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+.dp-frame {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+  max-width: 1386px;
+  margin-right: auto;
+}
+.dp-list {
+  container: dp-list / inline-size;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+}
+.dp-list-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 24px 40px;
+}
+.dp-panel {
+  container: dp-panel / inline-size;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--bg);
+  border-left: 1px solid var(--line);
+}
+/* A persona is open: the list steps aside into a rail, the editor gets the room. */
+.dp-shell.is-open .dp-list { flex: 0 0 340px; }
+.dp-shell.is-open .dp-list-inner { padding: 16px 14px 32px; gap: 14px; }
+.dp-shell.is-open .dp-hero, .dp-shell.is-open .dp-seg-count { display: none; }
+.dp-shell.is-open .dp-filters .la-seg-btn { padding: 6px 11px; }
+.dp-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.dp-search { flex: 1; min-width: 110px; display: flex; justify-content: flex-end; }
+.dp-back { display: none; }
+
+/* Too narrow for both: the editor takes the whole view, with a way back. */
+@container dp-shell (max-width: 860px) {
+  .dp-shell .dp-list-inner { padding: 14px 12px 32px; }
+  .dp-shell.is-open .dp-list { display: none; }
+  .dp-shell.is-open .dp-panel { border-left: none; }
+  .dp-back { display: inline-flex; }
+  .dp-close { display: none; }
+}
+
+/* ── hero: the library in one sentence ──────────────────────────────── */
+.dp-hero {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px 40px;
+  padding: 22px 24px;
+}
+.dp-hero-title {
+  margin: 0;
+  font-size: clamp(26px, 3.2vw, 36px);
+  line-height: 1.1;
+  color: var(--ink);
+}
+.dp-coverage { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 9px 12px; }
+.dp-coverage-track {
+  height: 6px;
+  border-radius: var(--r-pill);
+  background: var(--bg);
+  box-shadow: var(--sh-inset-super-crisp);
+  overflow: hidden;
+}
+.dp-coverage-fill {
+  height: 100%;
+  border-radius: var(--r-pill);
+  background: var(--wine);
+  transform-origin: left;
+  animation: dp-grow 520ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@keyframes dp-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.dp-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; background: var(--dp-dot); }
+.dp-dot--hollow { background: transparent; box-shadow: inset 0 0 0 2px var(--dp-dot); }
+
+/* ── rows ───────────────────────────────────────────────────────────── */
+.am-row.dp-row { grid-template-columns: 36px minmax(0, 1fr) 84px 72px 40px 16px; }
+.dp-captions {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr) 84px 72px 40px 16px;
+  gap: 14px;
+  padding: 0 18px;
+  margin-bottom: -8px;
+}
+.dp-captions span { font-family: var(--mono); font-size: 10px; color: var(--mute-2); white-space: nowrap; }
+.dp-emoji { font-size: 17px; line-height: 1; }
+.dp-title-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dp-title-line .am-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dp-live {
+  flex-shrink: 0;
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--good);
+  background: var(--good-tint);
+  border-radius: var(--r-pill);
+  padding: 2px 7px;
+}
+.dp-langs { display: flex; gap: 8px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.04em; white-space: nowrap; }
+.dp-langs .on { color: var(--ink-soft); font-weight: 600; }
+.dp-langs .off { color: var(--mute-2); opacity: 0.45; }
+.dp-langs--inline { display: none; }
+.dp-col-langs { display: flex; align-items: center; }
+.dp-section-blurb {
+  margin-top: 1px;
+  font-size: 12.5px;
+  color: var(--mute);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@container dp-list (max-width: 640px) {
+  .am-row.dp-row { grid-template-columns: 36px minmax(0, 1fr) 84px 16px; }
+  .dp-row .dp-col-when, .dp-row .dp-col-id, .dp-captions { display: none; }
+}
+/* The rail and phones: languages move under the name. */
+@container dp-list (max-width: 440px) {
+  .am-row.dp-row { grid-template-columns: 36px minmax(0, 1fr) 16px; gap: 12px; padding: 12px 14px; }
+  .dp-row .dp-col-langs { display: none; }
+  .dp-langs--inline { display: inline-flex; gap: 6px; margin-right: 8px; font-size: 10.5px; }
+  .dp-list .am-section-head { padding: 12px 14px; }
+}
+
+/* ── detail panel ───────────────────────────────────────────────────── */
+.dp-panel-head {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px 24px 14px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+/* Two classes on purpose: these adjust `.am-*` rules, and must win whichever stylesheet loads last. */
+.am-icon-tile.dp-head-tile { width: 44px; height: 44px; }
+.dp-head-tile .dp-emoji { font-size: 21px; }
+.dp-panel-title { font-size: 22px; line-height: 1.2; color: var(--ink); overflow-wrap: anywhere; }
+/* A scraped persona's niche can be a whole sentence: two lines, then cut. */
+.dp-panel-sub {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--mute);
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dp-panel-body { flex: 1; min-height: 0; overflow-y: auto; }
+.dp-panel-inner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 940px;
+  padding: 20px 24px 48px;
+}
+.dp-panel-inner[hidden] { display: none; }
+.dp-card-body { padding: 18px; }
+.am-section-head.dp-card-head { flex-wrap: wrap; }
+.dp-verdict { font-size: 12.5px; font-weight: 600; color: var(--mute); white-space: nowrap; }
+
+/* ── form pieces ────────────────────────────────────────────────────── */
+.dp-label {
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--mute);
+}
+.dp-help { margin: 6px 0 0; font-size: 12px; line-height: 1.5; color: var(--mute); }
+.la-input.dp-input {
+  padding: 9px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+  transition: box-shadow 150ms ease;
+}
+input.dp-input, textarea.dp-input { display: block; }
+/* Boxes grow with their text where the browser can do it, so a persona reads
+   without scrolling inside small boxes; `rows` stays the starting height. */
+textarea.dp-input {
+  field-sizing: content;
+  min-height: calc(var(--dp-rows, 1) * 1.5em + 18px);
+  max-height: 480px;
+}
+.la-input.dp-input:focus-visible { box-shadow: var(--sh-inset-crisp), 0 0 0 2px hsl(var(--ring) / 0.45); }
+.dp-group + .dp-group { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+.dp-group-title { margin-bottom: 14px; font-size: 13.5px; font-weight: 700; color: var(--ink-soft); }
+.dp-fields { display: flex; flex-direction: column; gap: 16px; }
+.dp-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+
+/* One language slot: the tag sits in a gutter so the text never runs under it. */
+.dp-slot { position: relative; min-width: 0; }
+.dp-slot-tag {
+  position: absolute;
+  top: 11px;
+  left: 11px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--mute-2);
+  pointer-events: none;
+}
+.dp-slot .la-input.dp-input { padding-left: 38px; }
+.dp-slot.is-filled .dp-slot-tag { color: var(--wine); }
+.dp-terms { display: grid; grid-template-columns: 104px repeat(3, minmax(0, 1fr)); gap: 10px 12px; align-items: center; }
+.dp-term-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
+
+.dp-media { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 18px; }
+.dp-thumb {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: var(--r-surface);
+  background: var(--bg);
+  box-shadow: var(--sh-inset-super-crisp);
+  font-size: 12px;
+  color: var(--mute-2);
+  text-align: center;
+}
+.dp-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.dp-error { margin: 10px 0 0; font-size: 12px; color: hsl(var(--destructive)); }
+
+@container dp-panel (max-width: 620px) {
+  .dp-panel-head { padding: 14px 16px 12px; }
+  .am-icon-tile.dp-head-tile { display: none; }
+  .dp-panel-inner { padding: 14px 12px 40px; }
+  .dp-trio { grid-template-columns: minmax(0, 1fr); }
+  .dp-terms { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .dp-term-label { margin-top: 10px; }
+  .dp-term-label:first-child { margin-top: 0; }
+  .dp-card-body { padding: 16px 14px; }
+}
+
+/* ── menu and select popovers ───────────────────────────────────────── */
+.dp-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: var(--r-button);
+  font-size: 13px;
+  color: var(--ink-soft);
+  text-align: left;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.dp-menu-item:hover { background: var(--wine-tint); color: var(--wine); }
+.dp-menu-item:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: -2px; }
+.dp-menu-item--danger { color: hsl(var(--destructive)); }
+.dp-menu-item--danger:hover { background: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dp-coverage-fill { animation: none; }
+}

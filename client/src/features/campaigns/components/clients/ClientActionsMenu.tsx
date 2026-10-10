@@ -2,16 +2,21 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MoreHorizontal, Copy, Trash2, ChevronLeft } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { IconBtn } from "@/components/ui/icon-btn";
 import { useDemoClient, useDuplicateDemoClient, useDeleteDemoClient } from "../../api/demoClientsApi";
+import "./clients.css";
 
 export function ClientActionsMenu({
   niche,
   onDeleted,
   onDuplicated,
+  variant = "topbar",
 }: {
   niche: string;
   onDeleted: () => void;
   onDuplicated: (newNiche: string) => void;
+  /** Where the trigger sits: a page topbar (square button) or the persona panel header (round, like its close button). */
+  variant?: "topbar" | "panel";
 }) {
   const { t } = useTranslation("campaigns");
   const { data: client } = useDemoClient(niche);
@@ -26,7 +31,7 @@ export function ClientActionsMenu({
 
   // Curated niche packs are listed and editable but not deletable: real
   // campaigns read their word lists. Duplicating one is still fine (it always
-  // creates a NEW, deletable row) — only Delete is gated.
+  // creates a NEW, deletable row): only Delete is gated.
   // A live persona (specs/voice-tab) is read-only here: no duplicate, no delete.
   const isLive = client?.isLive ?? false;
   const canDelete = (client?.isDemoClient ?? false) && !isLive;
@@ -76,9 +81,15 @@ export function ClientActionsMenu({
         }}
       >
         <PopoverTrigger asChild>
-          <button className="la-btn la-btn--soft la-btn--icon" title={t("clients.moreActions", "More actions")}>
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
+          {variant === "panel" ? (
+            <IconBtn title={t("clients.moreActions", "More actions")} aria-label={t("clients.moreActions", "More actions")}>
+              <MoreHorizontal className="h-4 w-4" />
+            </IconBtn>
+          ) : (
+            <button className="la-btn la-btn--soft la-btn--icon" title={t("clients.moreActions", "More actions")}>
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+          )}
         </PopoverTrigger>
         <PopoverContent align="end" className="w-72 p-3">
           {step === "menu" && (
@@ -89,14 +100,14 @@ export function ClientActionsMenu({
                     setNewNiche(`${niche} copy`);
                     setStep("duplicate");
                   }}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] hover:bg-muted/50 transition-colors"
+                  className="dp-menu-item"
                 >
                   <Copy className="h-3.5 w-3.5 shrink-0" />
                   {t("clients.duplicate", "Duplicate")}
                 </button>
               )}
               {isLive && (
-                <p className="px-2.5 py-2 text-[12px] text-muted-foreground">{t("clients.live.menuNote")}</p>
+                <p style={{ padding: "8px 10px", fontSize: 12.5, lineHeight: 1.5, color: "var(--mute)", margin: 0 }}>{t("clients.live.menuNote")}</p>
               )}
               {canDelete && (
                 <button
@@ -104,7 +115,7 @@ export function ClientActionsMenu({
                     setOpen(false);
                     setConfirmDelete(true);
                   }}
-                  className="w-full flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-left text-[13px] text-red-600 hover:bg-red-50 transition-colors"
+                  className="dp-menu-item dp-menu-item--danger"
                 >
                   <Trash2 className="h-3.5 w-3.5 shrink-0" />
                   {t("clients.delete", "Delete")}
@@ -123,7 +134,7 @@ export function ClientActionsMenu({
                 <ChevronLeft className="h-3 w-3" /> {t("clients.back", "Back")}
               </button>
               <div>
-                <label className="block text-[12px] font-medium mb-1">
+                <label className="dp-label" htmlFor="dp-duplicate-name">
                   {t("clients.duplicateNamePrompt", "Name for the new persona")}
                 </label>
                 <input
@@ -132,18 +143,17 @@ export function ClientActionsMenu({
                   value={newNiche}
                   onChange={(e) => setNewNiche(e.target.value)}
                   maxLength={300}
-                  className="w-full h-8 rounded-md border border-black/[0.125] bg-background px-2.5 text-[12px] outline-none focus:border-brand-indigo transition-colors"
+                  id="dp-duplicate-name"
+                  className="la-input dp-input"
                 />
               </div>
               {error && (
-                <div className="text-[11px] text-red-600 bg-red-50 border border-red-200 rounded-md px-2 py-1.5">
-                  {error}
-                </div>
+                <p className="dp-error" style={{ margin: 0 }}>{error}</p>
               )}
               <button
                 type="submit"
                 disabled={!newNiche.trim() || duplicate.isPending}
-                className="w-full h-9 rounded-full bg-brand-indigo text-white font-medium text-[13px] hover:opacity-90 disabled:opacity-50 transition-opacity"
+                className="la-btn la-btn--wine w-full disabled:opacity-50"
               >
                 {duplicate.isPending ? t("clients.duplicating", "Duplicating…") : t("clients.duplicate", "Duplicate")}
               </button>
@@ -180,8 +190,7 @@ function ConfirmDelete({
   const { t } = useTranslation("campaigns");
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center"
-      style={{ background: "rgba(0,0,0,0.4)" }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       onClick={onCancel}
     >
       <div

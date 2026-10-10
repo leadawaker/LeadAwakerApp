@@ -784,7 +784,8 @@
       "title": "Live client persona (read-only)",
       "note": "This persona answers real calls for a client, so it is managed in Account > Voice. Demo edits cannot change it.",
       "open": "Open Account > Voice",
-      "menuNote": "Live personas cannot be duplicated or deleted here."
+      "menuNote": "Live personas cannot be duplicated or deleted here.",
+      "blank": "Not set"
     },
     "noMatches": "No personas match that search.",
     "emptyLibrary": "No personas saved yet. Mint a demo link for a prospect and the persona lands here automatically.",
@@ -848,7 +849,8 @@
       "replace": "Replace",
       "remove": "Remove",
       "tooLarge": "That image is too large.",
-      "failed": "Upload failed."
+      "failed": "Upload failed.",
+      "present": "Image set"
     },
     "social": {
       "title": "Instagram post",
@@ -865,7 +867,66 @@
       "regenerateImage": "New image",
       "noImage": "No image yet",
       "imagePending": "Generating the image...",
-      "failed": "Something went wrong."
+      "failed": "Something went wrong.",
+      "writtenIn": "Written in: {{langs}}",
+      "notWritten": "Not written yet",
+      "language": "Post language"
+    },
+    "close": "Close",
+    "autosave": "Saves as you type",
+    "viewsLabel": "Parts of this persona",
+    "views": {
+      "persona": "Persona",
+      "wording": "Wording",
+      "media": "Media"
+    },
+    "identityTitle": "In the library",
+    "identityHint": "Where this persona is filed and the emoji it is listed with.",
+    "companyNameHint": "A default. You can override it per prospect when you send the link.",
+    "filledIn": "Filled in: {{langs}}",
+    "nothingFilled": "Nothing filled in yet",
+    "personaLanguage": "Persona language",
+    "groups": {
+      "business": "The business",
+      "lead": "The lead",
+      "conversation": "The conversation"
+    },
+    "hero": {
+      "title_one": "{{count}} persona in the library",
+      "title_other": "{{count}} personas in the library",
+      "blurb": "Every demo you mint is saved here, so the next one in the same niche starts from a persona you have already read and approved.",
+      "categories_one": "{{count}} category",
+      "categories_other": "{{count}} categories",
+      "lastEdit": "Last change {{date}}",
+      "written_one": "written persona",
+      "written_other": "written personas",
+      "wordsOnly_one": "words only",
+      "wordsOnly_other": "words only",
+      "live_one": "live",
+      "live_other": "live",
+      "coverage": "Written in",
+      "coverageNote": "A persona written in one language still replies in the lead's own."
+    },
+    "langName": {
+      "en": "English",
+      "nl": "Dutch",
+      "pt": "Portuguese"
+    },
+    "wordsOnly": "words only",
+    "uncategorizedBlurb": "Not filed under a category yet.",
+    "countTitle_one": "{{count}} persona",
+    "countTitle_other": "{{count}} personas",
+    "emptyTitle": "No personas yet",
+    "emptyBody": "Mint a demo link for a prospect and its persona lands here automatically.",
+    "noMatchesTitle": "Nothing matches",
+    "noMatchesLanguage": "No personas are written in this language yet.",
+    "filterLabel": "Filter by language",
+    "filterAll": "All",
+    "captions": {
+      "persona": "Persona",
+      "languages": "Languages",
+      "updated": "Changed",
+      "id": "ID"
     }
   }
 }

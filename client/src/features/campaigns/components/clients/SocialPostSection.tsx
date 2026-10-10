@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { ImageIcon, Loader2, RefreshCw, Save } from "lucide-react";
+import { Camera, ImageIcon, Loader2, RefreshCw, Save } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { API_BASE } from "@/lib/apiUtils";
 import {
   CLIENTS_KEY,
@@ -11,8 +12,9 @@ import {
   useRegenerateSocialPost,
   useSaveSocialPost,
 } from "../../api/demoClientsApi";
+import { ClientSection } from "./ClientSection";
+import { LANGS, rowsVar } from "./clientDisplay";
 
-const LANGS: DemoLang[] = ["en", "nl", "pt"];
 const EMPTY: SocialPostEdit = { caption: "", keyword: "", cta_line: "", dm_opener: "" };
 
 /**
@@ -68,62 +70,70 @@ export function SocialPostSection({
   const busy = save.isPending || regen.isPending;
 
   const field = (key: keyof SocialPostEdit, label: string, rows: number, help?: string) => (
-    <label style={{ display: "block", marginBottom: 12 }}>
-      <span style={{ display: "block", fontSize: 12, color: "var(--mute)", marginBottom: 4 }}>{label}</span>
+    <label style={{ display: "block" }}>
+      <span className="dp-label">{label}</span>
       <textarea
-        className="la-input"
+        className="la-input dp-input"
         rows={rows}
+        style={rowsVar(rows)}
         value={draft[key]}
         onChange={(e) => setDraft((d) => ({ ...d, [key]: e.target.value }))}
-        style={{ width: "100%", resize: "vertical" }}
       />
-      {help && <span style={{ display: "block", fontSize: 11, color: "var(--mute-2)", marginTop: 4 }}>{help}</span>}
+      {help && <span className="dp-help" style={{ display: "block" }}>{help}</span>}
     </label>
   );
 
-  return (
-    <section className="neu-raised" style={{ padding: 22, borderRadius: "var(--r-card)" }}>
-      <div className="eyebrow wine" style={{ marginBottom: 4 }}>{t("clients.social.title", "Instagram post")}</div>
-      <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 16, lineHeight: 1.5 }}>
-        {t("clients.social.hint", "The post the Instagram demo is built around. Written the first time a Socials link is minted in a language.")}
-      </p>
+  const written = LANGS.filter((l) => socialPost?.[l]);
 
-      <div style={{ display: "flex", gap: 16, flexWrap: "wrap", alignItems: "flex-start" }}>
-        <div style={{ width: 160, height: 160, borderRadius: "var(--r-surface)", overflow: "hidden", flexShrink: 0, background: "var(--card)", border: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+  return (
+    <ClientSection
+      icon={Camera}
+      title={t("clients.social.title", "Instagram post")}
+      blurb={t("clients.social.hint", "The post the Instagram demo is built around. Written the first time a Socials link is minted in a language.")}
+      aside={
+        <span className="dp-verdict">
+          {written.length
+            ? t("clients.social.writtenIn", { langs: written.map((l) => l.toUpperCase()).join(", ") })
+            : t("clients.social.notWritten")}
+        </span>
+      }
+    >
+      <div className="dp-media">
+        <div className="dp-thumb" style={{ width: 160, height: 160 }}>
           {socialImage ? (
-            <img src={`${API_BASE}/api/site-shot/${socialImage}`} alt={t("clients.social.title", "Instagram post")} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+            <img src={`${API_BASE}/api/site-shot/${socialImage}`} alt={t("clients.social.title", "Instagram post")} />
           ) : (
-            <span style={{ fontSize: 12, color: "var(--mute-2)", textAlign: "center", padding: 8 }}>
+            <span style={{ padding: 8 }}>
               {waitingFor !== undefined ? t("clients.social.imagePending", "Generating the image...") : t("clients.social.noImage", "No image yet")}
             </span>
           )}
         </div>
 
-        <div style={{ flex: 1, minWidth: 260 }}>
-          <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+        <div style={{ flex: 1, minWidth: 240 }}>
+          <div className="la-seg" role="tablist" aria-label={t("clients.social.language")} style={{ marginBottom: 14 }}>
             {LANGS.map((l) => (
-              <button key={l} type="button" className={`la-btn ${l === lang ? "la-btn--wine" : "la-btn--soft"}`} onClick={() => setLang(l)}>
+              <button key={l} type="button" role="tab" aria-selected={l === lang} className={cn("la-seg-btn", l === lang && "on")} onClick={() => setLang(l)}>
                 {l.toUpperCase()}
               </button>
             ))}
           </div>
 
           {current ? (
-            <>
+            <div className="dp-fields" style={{ gap: 14, marginBottom: 16 }}>
               {field("caption", t("clients.social.caption", "Caption"), 3)}
               {field("keyword", t("clients.social.keyword", "Comment word"), 1)}
               {field("cta_line", t("clients.social.cta", "Comment line under the post"), 2)}
               {field("dm_opener", t("clients.social.opener", "First DM"), 2, t("clients.social.openerHelp", "Keep {agent_name} and {company_name} in the text."))}
-            </>
+            </div>
           ) : (
-            <p style={{ fontSize: 13, color: "var(--mute)", marginBottom: 12 }}>
+            <p style={{ fontSize: 13.5, color: "var(--mute)", margin: "0 0 14px", lineHeight: 1.5 }}>
               {t("clients.social.none", "No Instagram post in this language yet.")}
             </p>
           )}
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
             {current && (
-              <button type="button" className="la-btn la-btn--soft" disabled={!dirty || busy}
+              <button type="button" className={cn("la-btn", dirty ? "la-btn--wine" : "la-btn--soft")} disabled={!dirty || busy}
                 onClick={() => void run(async () => {
                   const { client } = await save.mutateAsync({ language: lang, post: draft });
                   // The server normalizes some fields (keyword to uppercase
@@ -149,9 +159,9 @@ export function SocialPostSection({
               </button>
             )}
           </div>
-          {error && <p style={{ marginTop: 10, fontSize: 12, color: "hsl(var(--destructive))" }}>{error}</p>}
+          {error && <p className="dp-error">{error}</p>}
         </div>
       </div>
-    </section>
+    </ClientSection>
   );
 }

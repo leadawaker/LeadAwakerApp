@@ -1,5 +1,5 @@
 /**
- * The Clients library (specs/demo-persona-library) — a saved demo persona.
+ * The Clients library (specs/demo-persona-library): a saved demo persona.
  *
  * A Client IS a Niche_Vocabulary row. Named "Clients" in the UI because that is
  * what it represents to Gabriel: the prospect a demo is dressed up as.
@@ -52,25 +52,6 @@ export type ClientTextField = (typeof CLIENT_TEXT_FIELDS)[number];
  */
 export const TERM_GROUPS = ["project", "proposal", "decision", "advisor", "visit"] as const;
 export type TermGroup = (typeof TERM_GROUPS)[number];
-
-/**
- * "🍳 kitchens — Kitchens NL — Keukens BV — #12", dropping the label segment
- * when it equals niche (no custom label) and the company segment when empty.
- * Shared by ClientEditor's header and ClientsTab's grid cards (spec §4).
- */
-export function formatClientTitle(client: {
-  id: number;
-  niche: string;
-  label: string;
-  companyName: string;
-  emoji: string | null;
-}): string {
-  const parts = [client.niche];
-  if (client.label && client.label !== client.niche) parts.push(client.label);
-  if (client.companyName) parts.push(client.companyName);
-  const prefix = client.emoji ? `${client.emoji} ` : "";
-  return `${prefix}${parts.join(" — ")} — #${client.id}`;
-}
 
 export interface DemoClientSummary {
   id: number;

@@ -1,48 +1,79 @@
 /**
- * The Clients tab on the Campaigns page — the saved demo persona library
- * (specs/demo-persona-library/plan.md, phase 1).
+ * The demo persona library (specs/demo-persona-library/plan.md, phase 1),
+ * shown as the "Demo personas" tab of the Demos page and as the Clients tab
+ * of the Campaigns page.
  *
- * "Which Client is open" is controlled from CampaignListView (selectedNiche /
- * onSelectNiche), not local state here: the topbar's "..." menu
- * (ClientActionsMenu.tsx) needs to know which Client is open too, and it
- * lives in CampaignListView's shared topbar, a sibling of this tab's body.
+ * A list of personas grouped by category; opening one puts its editor beside
+ * the list (the list narrows to a rail), or over it when there is no room
+ * for both. That switch is a container query in clients.css, not a viewport
+ * check, because the Campaigns page gives this tab far less width than the
+ * Demos page does on the same screen.
+ *
+ * "Which Client is open" is controlled by the parent (selectedNiche /
+ * onSelectNiche), not local state here: on the Campaigns page the topbar's
+ * "..." menu (ClientActionsMenu.tsx) needs to know which Client is open too,
+ * and that topbar is a sibling of this tab's body. The Demos page has no such
+ * topbar slot, so it passes `showActions` and the menu sits in the panel header.
  */
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, Users, Loader2 } from "lucide-react";
-import { GroupHeader } from "@/components/crm/primitives/GroupHeader";
-import { useDemoClients, formatClientTitle, type DemoClientSummary } from "../../api/demoClientsApi";
+import { SearchX, UsersRound } from "lucide-react";
+import { SearchPill } from "@/components/ui/search-pill";
+import { cn } from "@/lib/utils";
+import { useDemoClients, type DemoClientSummary, type DemoLang } from "../../api/demoClientsApi";
+import { ClientActionsMenu } from "./ClientActionsMenu";
+import { ClientCategorySection } from "./ClientCategorySection";
 import { ClientEditor } from "./ClientEditor";
+import { ClientsHero } from "./ClientsHero";
+import { LANGS } from "./clientDisplay";
+import "@/features/automation/automation.css";
+import "./clients.css";
+
+type LangFilter = "all" | DemoLang;
 
 export function ClientsTab({
   selectedNiche,
   onSelectNiche,
+  showActions = false,
 }: {
   selectedNiche: string | null;
   onSelectNiche: (niche: string | null) => void;
+  /** Put the duplicate/delete menu in the panel header (for a parent with no topbar slot for it). */
+  showActions?: boolean;
 }) {
-  const { t } = useTranslation("campaigns");
+  const { t, i18n } = useTranslation("campaigns");
   const { data: clients, isLoading } = useDemoClients();
   const [search, setSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [lang, setLang] = useState<LangFilter>("all");
+  const listRef = useRef<HTMLDivElement>(null);
+
+  const all = clients ?? [];
+  const langCounts = useMemo(() => {
+    const counts: Record<LangFilter, number> = { all: all.length, en: 0, nl: 0, pt: 0 };
+    for (const c of all) for (const l of c.languages) counts[l] += 1;
+    return counts;
+  }, [clients]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const rows = clients ?? [];
-    if (!q) return rows;
-    return rows.filter(
-      (c) =>
+    return all.filter((c) => {
+      if (lang !== "all" && !c.languages.includes(lang)) return false;
+      if (!q) return true;
+      return (
         c.niche.toLowerCase().includes(q) ||
         c.label.toLowerCase().includes(q) ||
         c.companyName.toLowerCase().includes(q) ||
-        (c.category ?? "").toLowerCase().includes(q),
-    );
-  }, [clients, search]);
+        (c.category ?? "").toLowerCase().includes(q)
+      );
+    });
+  }, [clients, search, lang]);
 
-  // Grouped by category, alphabetical, "Uncategorized" last — the fix for a
-  // flat 23+ card grid nobody could scan. `key` is a stable, collision-proof
-  // group identity separate from the display `label`: a user can freely name
-  // a real category "Uncategorized" via CategorySelect's free-text create
-  // without colliding with the synthetic uncategorized bucket's React key.
+  // Grouped by category, alphabetical, "Uncategorized" last. `key` is a
+  // stable, collision-proof group identity separate from the display `label`:
+  // a user can freely name a real category "Uncategorized" via
+  // CategorySelect's free-text create without colliding with the synthetic
+  // uncategorized bucket's React key.
   const groups = useMemo(() => {
     const byCategory = new Map<string, DemoClientSummary[]>();
     for (const c of filtered) {
@@ -53,200 +84,117 @@ export function ClientsTab({
     const named = Array.from(byCategory.keys())
       .filter((k) => k !== "")
       .sort((a, b) => a.localeCompare(b))
-      .map((label) => ({ key: label, label, items: byCategory.get(label)! }));
+      .map((label) => ({ key: label, label, uncategorized: false, items: byCategory.get(label)! }));
     const uncategorized = byCategory.get("");
     if (uncategorized?.length) {
       named.push({
         key: "__uncategorized__",
         label: t("clients.noCategory", "Uncategorized"),
+        uncategorized: true,
         items: uncategorized,
       });
     }
     return named;
   }, [filtered, t]);
 
+  const categoryCount = useMemo(() => new Set(all.map((c) => (c.category ?? "").trim()).filter(Boolean)).size, [clients]);
+
+  const formatDate = useMemo(() => {
+    const fmt = new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "short" });
+    return (iso: string) => fmt.format(new Date(iso));
+  }, [i18n.language]);
+
+  // Opening a persona narrows the list to a rail, which moves every row:
+  // bring the open one back into view.
+  useEffect(() => {
+    if (!selectedNiche) return;
+    const row = Array.from(listRef.current?.querySelectorAll<HTMLElement>("[data-niche]") ?? []).find(
+      (el) => el.dataset.niche === selectedNiche,
+    );
+    row?.scrollIntoView({ block: "nearest" });
+  }, [selectedNiche]);
+
   return (
-    <div className="h-full overflow-y-auto min-h-0" style={{ padding: "22px 24px" }}>
-      <div className="max-w-[1386px] mr-auto">
-        {selectedNiche ? (
-          <ClientEditor niche={selectedNiche} onBack={() => onSelectNiche(null)} />
-        ) : (
-          <>
-            {/* ── Header ── */}
-            <div style={{ marginBottom: 20 }}>
-              <div className="eyebrow wine" style={{ marginBottom: 8 }}>
-                {t("clients.eyebrow", "Library")}
-              </div>
-              <div
-                className="serif italic"
-                style={{ fontSize: 40, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em", marginBottom: 10 }}
-              >
-                {t("clients.title", "Demo personas")}
-              </div>
-              <p style={{ fontSize: 14, color: "var(--mute)", maxWidth: 620, lineHeight: 1.55 }}>
-                {t("clients.intro")}
-              </p>
-            </div>
-
-            {/* ── Search ── */}
-            <div style={{ position: "relative", maxWidth: 320, marginBottom: 18 }}>
-              <Search
-                className="h-4 w-4"
-                style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--mute-2)" }}
-              />
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={t("clients.searchPlaceholder", "Search personas...")}
-                style={{
-                  width: "100%",
-                  fontSize: 13,
-                  color: "var(--ink)",
-                  background: "var(--input)",
-                  border: "1px solid var(--line)",
-                  borderRadius: "var(--r-input, 10px)",
-                  padding: "9px 12px 9px 34px",
-                }}
-              />
-            </div>
-
-            {/* ── Grouped list ── */}
+    <div className={cn("dp-shell", selectedNiche && "is-open")} data-testid="personas-tab">
+      <div className="dp-frame">
+        <div className="dp-list" ref={listRef}>
+          <div className="dp-list-inner">
             {isLoading ? (
-              <div className="flex items-center gap-2" style={{ color: "var(--mute)", padding: 24 }}>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span style={{ fontSize: 13 }}>{t("clients.loading", "Loading...")}</span>
-              </div>
-            ) : filtered.length === 0 ? (
-              <EmptyState hasClients={(clients ?? []).length > 0} />
+              <>
+                <div className="h-[168px] bg-primary/10 rounded-xl animate-pulse" />
+                {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-[220px] bg-primary/10 rounded-xl animate-pulse" />)}
+              </>
+            ) : all.length === 0 ? (
+              <EmptyState icon={UsersRound} title={t("clients.emptyTitle")} body={t("clients.emptyBody")} />
             ) : (
-              <div style={{ display: "flex", flexDirection: "column" }}>
-                {groups.map((g) => (
-                  <div key={g.key}>
-                    <GroupHeader label={g.label} count={g.items.length} />
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(auto-fill, minmax(268px, 1fr))",
-                        gap: 12,
-                        padding: "12px 0 20px",
-                      }}
-                    >
-                      {g.items.map((c) => (
-                        <ClientCard key={c.id} client={c} onOpen={() => onSelectNiche(c.niche)} />
-                      ))}
-                    </div>
+              <>
+                <ClientsHero clients={all} categories={categoryCount} />
+
+                <div className="dp-filters">
+                  <div className="la-seg la-seg--pill" role="tablist" aria-label={t("clients.filterLabel")}>
+                    {(["all", ...LANGS] as LangFilter[]).map((f) => (
+                      <button key={f} type="button" role="tab" aria-selected={lang === f} className={cn("la-seg-btn", lang === f && "on")} onClick={() => setLang(f)} data-testid={`personas-filter-${f}`}>
+                        {f === "all" ? t("clients.filterAll") : f.toUpperCase()} <span className="dp-seg-count" style={{ opacity: 0.7 }}>{langCounts[f]}</span>
+                      </button>
+                    ))}
                   </div>
+                  <div className="dp-search">
+                    <SearchPill value={search} onChange={setSearch} open={searchOpen || !!search} onOpenChange={setSearchOpen} placeholder={t("clients.searchPlaceholder", "Search personas...")} />
+                  </div>
+                </div>
+
+                {groups.length > 0 && (
+                  <div className="dp-captions" aria-hidden>
+                    <span /><span>{t("clients.captions.persona")}</span><span>{t("clients.captions.languages")}</span>
+                    <span style={{ textAlign: "right" }}>{t("clients.captions.updated")}</span><span style={{ textAlign: "right" }}>{t("clients.captions.id")}</span><span />
+                  </div>
+                )}
+                {groups.length === 0 && (
+                  <EmptyState icon={SearchX} title={t("clients.noMatchesTitle")} body={search.trim() ? t("clients.noMatches") : t("clients.noMatchesLanguage")} />
+                )}
+                {groups.map((g) => (
+                  <ClientCategorySection
+                    key={g.key}
+                    label={g.label}
+                    uncategorized={g.uncategorized}
+                    items={g.items}
+                    selectedNiche={selectedNiche}
+                    formatDate={formatDate}
+                    onSelect={onSelectNiche}
+                  />
                 ))}
-              </div>
+              </>
             )}
-          </>
+          </div>
+        </div>
+
+        {selectedNiche && (
+          <div className="dp-panel" data-testid="persona-panel">
+            <ClientEditor
+              niche={selectedNiche}
+              onBack={() => onSelectNiche(null)}
+              actions={showActions ? (
+                <ClientActionsMenu
+                  variant="panel"
+                  niche={selectedNiche}
+                  onDeleted={() => onSelectNiche(null)}
+                  onDuplicated={(newNiche) => onSelectNiche(newNiche)}
+                />
+              ) : undefined}
+            />
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function ClientCard({ client, onOpen }: { client: DemoClientSummary; onOpen: () => void }) {
-  const { t } = useTranslation("campaigns");
+function EmptyState({ icon: Icon, title, body }: { icon: typeof UsersRound; title: string; body: string }) {
   return (
-    <button
-      onClick={onOpen}
-      className="neu-raised"
-      style={{
-        textAlign: "left",
-        padding: 18,
-        borderRadius: "var(--r-card)",
-        border: "none",
-        cursor: "pointer",
-        background: "var(--paper)",
-        transition: "box-shadow 150ms, transform 150ms",
-        display: "flex",
-        flexDirection: "column",
-        gap: 8,
-      }}
-    >
-      <div
-        style={{
-          fontSize: 14,
-          fontWeight: 600,
-          color: "var(--ink)",
-          lineHeight: 1.35,
-          display: "-webkit-box",
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: "vertical" as const,
-          overflow: "hidden",
-          overflowWrap: "anywhere",
-        }}
-      >
-        {formatClientTitle(client)}
-      </div>
-      <div style={{ display: "flex", gap: 5, marginTop: 2, flexWrap: "wrap" }}>
-        {client.isLive && (
-          <span
-            style={{
-              fontFamily: "Geist Mono, ui-monospace, monospace",
-              fontSize: 9.5,
-              letterSpacing: "0.1em",
-              fontWeight: 700,
-              color: "var(--good)",
-              background: "var(--good-tint)",
-              borderRadius: 999,
-              padding: "2px 7px",
-            }}
-          >
-            {t("clients.live.badge")}
-          </span>
-        )}
-        {client.languages.length === 0 ? (
-          <span
-            style={{
-              fontFamily: "Geist Mono, ui-monospace, monospace",
-              fontSize: 9.5,
-              letterSpacing: "0.1em",
-              color: "var(--mute-2)",
-            }}
-          >
-            {t("clients.vocabOnly", "WORDS ONLY")}
-          </span>
-        ) : (
-          client.languages.map((l) => (
-            <span
-              key={l}
-              style={{
-                fontFamily: "Geist Mono, ui-monospace, monospace",
-                fontSize: 9.5,
-                letterSpacing: "0.1em",
-                color: "var(--wine)",
-                border: "1px solid var(--line)",
-                borderRadius: 999,
-                padding: "2px 7px",
-              }}
-            >
-              {l.toUpperCase()}
-            </span>
-          ))
-        )}
-      </div>
-    </button>
-  );
-}
-
-function EmptyState({ hasClients }: { hasClients: boolean }) {
-  const { t } = useTranslation("campaigns");
-  return (
-    <div
-      className="neu-inset"
-      style={{
-        padding: 40,
-        borderRadius: "var(--r-card)",
-        textAlign: "center",
-        color: "var(--mute)",
-      }}
-    >
-      <Users className="h-6 w-6" style={{ margin: "0 auto 12px", color: "var(--mute-2)" }} />
-      <p style={{ fontSize: 13.5, lineHeight: 1.6, maxWidth: 420, margin: "0 auto" }}>
-        {hasClients ? t("clients.noMatches") : t("clients.emptyLibrary")}
-      </p>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, padding: "64px 12px" }}>
+      <span className="am-icon-tile" style={{ width: 48, height: 48, color: "var(--mute)" }}><Icon className="h-5 w-5" /></span>
+      <div className="serif" style={{ fontSize: 20, color: "var(--ink)" }}>{title}</div>
+      <p style={{ fontSize: 13.5, color: "var(--mute)", maxWidth: 380, lineHeight: 1.55, margin: 0 }}>{body}</p>
     </div>
   );
 }
