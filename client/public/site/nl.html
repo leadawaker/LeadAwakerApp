@@ -1274,13 +1274,13 @@ footer img{height:24px;width:auto;display:block}
 .rm-chat{justify-self:stretch;display:grid;gap:6px;margin-top:5px;padding:12px 10px;border-radius:12px;background:var(--wa-bg);background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:14px 14px;font-size:13px;color:var(--wa-ink)}
 .rm-chat .wm{max-width:88%}
 /* remembered words change colour only: a change of weight would re-wrap the bubble mid-animation */
-.rm-chat mark{background:none;color:inherit;border-radius:4px;padding:0 2px;margin:0 -2px;transition:background .35s,color .35s}
-.rm-chat mark.on{background:rgba(94,34,48,.13);color:var(--wine)}
+.rm-card mark{background:none;color:inherit;border-radius:4px;padding:0 2px;margin:0 -2px;transition:background .35s,color .35s}
+.rm-card mark.on{background:rgba(94,34,48,.13);color:var(--wine)}
 /* what she learned on the phone call lights purple, like the phone icon; the appointment stays wine, like the calendar */
-.rm-card .m-tel.hit,.rm-chat mark.m-tel.on{background:rgba(124,58,237,.12);color:#6D28D9}
+.rm-card .m-tel.hit,.rm-card mark.m-tel.on{background:rgba(124,58,237,.12);color:#6D28D9}
 /* the appointment is warm orange, as bright as the phone and WhatsApp icons, and what she took from it lights the same colour */
 .rm-thread .ic.c-cal{background:#F28C28}
-.rm-card .m-cal.hit,.rm-chat mark.m-cal.on{background:rgba(234,88,12,.12);color:#C2410C}
+.rm-card .m-cal.hit,.rm-card mark.m-cal.on{background:rgba(234,88,12,.12);color:#C2410C}
 @media (max-width:600px){
   .rm-card{padding:16px 14px;gap:12px}.rm-thread>li{gap:11px;padding-bottom:14px}.rm-thread p{font-size:14px}
   /* the chat and the new booking use the full card width, under the icons */
@@ -1468,14 +1468,14 @@ footer img{height:24px;width:auto;display:block}
         <a href="#website">Website</a>
         <a href="/reactivate">Oude leads</a>
         <a class="js-login" href="/login">Inloggen</a>
-        <a class="btn nav-try ts-cta" href="#try-sara" hidden><i></i>Probeer Sara</a>
-        <a class="btn btn-wine js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Plan een gesprek</a>
+        <a class="btn nav-try ts-cta" href="#try-sara" hidden><i></i>Try Sara</a>
+        <a class="btn btn-wine js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Gesprek plannen</a>
         <div class="lang" id="lang"><button class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="lang-menu" aria-label="Taal: NL"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><b>NL</b><svg class="lang-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button><div class="lang-menu" id="lang-menu" hidden><a class="lang-sw" href="/" hreflang="en" lang="en">English</a><a class="lang-sw" href="/nl" hreflang="nl" lang="nl" aria-current="true">Nederlands</a><a class="lang-sw" href="/pt" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
         <button class="burger" type="button" aria-label="Menu openen" aria-expanded="false" aria-controls="mnav"><i></i></button>
       </div>
     </div>
     <div class="mnav" id="mnav" hidden>
-      <a class="ts-cta" href="#try-sara" hidden>Probeer Sara op je website</a>
+      <a class="ts-cta" href="#try-sara" hidden>Try Sara on your website</a>
       <a href="#phone">Telefoon</a>
       <a href="#whatsapp">WhatsApp</a>
       <a href="#website">Websitechat</a>
@@ -1584,8 +1584,8 @@ footer img{height:24px;width:auto;display:block}
   </section>
 
   <section class="creds" id="creds">
-    <p class="creds-h">Gebouwd door iemand die werkte met</p>
-    <div class="creds-rail"><ul class="creds-track"><li><img src="/site/img/logo-warnerbros.svg" alt="Warner Bros." style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li><img src="/site/img/logo-sega.svg" alt="Sega" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li><img src="/site/img/logo-saber.svg" alt="Saber Interactive" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li><img src="/site/img/logo-valve.svg" alt="Valve" style="height:24px" loading="lazy"><span>VR-gamejam, Londen</span></li><li aria-hidden="true"><img src="/site/img/logo-warnerbros.svg" alt="" style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li aria-hidden="true"><img src="/site/img/logo-sega.svg" alt="" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li aria-hidden="true"><img src="/site/img/logo-saber.svg" alt="" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li aria-hidden="true"><img src="/site/img/logo-valve.svg" alt="" style="height:24px" loading="lazy"><span>VR-gamejam, Londen</span></li><li aria-hidden="true"><img src="/site/img/logo-warnerbros.svg" alt="" style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li aria-hidden="true"><img src="/site/img/logo-sega.svg" alt="" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li aria-hidden="true"><img src="/site/img/logo-saber.svg" alt="" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li aria-hidden="true"><img src="/site/img/logo-valve.svg" alt="" style="height:24px" loading="lazy"><span>VR-gamejam, Londen</span></li><li aria-hidden="true"><img src="/site/img/logo-warnerbros.svg" alt="" style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li aria-hidden="true"><img src="/site/img/logo-sega.svg" alt="" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li aria-hidden="true"><img src="/site/img/logo-saber.svg" alt="" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li aria-hidden="true"><img src="/site/img/logo-valve.svg" alt="" style="height:24px" loading="lazy"><span>VR-gamejam, Londen</span></li></ul></div>
+    <p class="creds-h">Built by someone who has worked with</p>
+    <div class="creds-rail"><ul class="creds-track"><li><img src="/site/img/logo-warnerbros.svg" alt="Warner Bros." style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li><img src="/site/img/logo-sega.svg" alt="Sega" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li><img src="/site/img/logo-saber.svg" alt="Saber Interactive" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li><img src="/site/img/logo-valve.svg" alt="Valve" style="height:24px" loading="lazy"><span>VR game jam, London</span></li><li aria-hidden="true"><img src="/site/img/logo-warnerbros.svg" alt="" style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li aria-hidden="true"><img src="/site/img/logo-sega.svg" alt="" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li aria-hidden="true"><img src="/site/img/logo-saber.svg" alt="" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li aria-hidden="true"><img src="/site/img/logo-valve.svg" alt="" style="height:24px" loading="lazy"><span>VR game jam, London</span></li><li aria-hidden="true"><img src="/site/img/logo-warnerbros.svg" alt="" style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li aria-hidden="true"><img src="/site/img/logo-sega.svg" alt="" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li aria-hidden="true"><img src="/site/img/logo-saber.svg" alt="" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li aria-hidden="true"><img src="/site/img/logo-valve.svg" alt="" style="height:24px" loading="lazy"><span>VR game jam, London</span></li><li aria-hidden="true"><img src="/site/img/logo-warnerbros.svg" alt="" style="height:46px" loading="lazy"><span>Tom &amp; Jerry (2021)</span></li><li aria-hidden="true"><img src="/site/img/logo-sega.svg" alt="" style="height:30px" loading="lazy"><span>Creative Assembly</span></li><li aria-hidden="true"><img src="/site/img/logo-saber.svg" alt="" style="height:34px" loading="lazy"><span>Insurgency: Sandstorm</span></li><li aria-hidden="true"><img src="/site/img/logo-valve.svg" alt="" style="height:24px" loading="lazy"><span>VR game jam, London</span></li></ul></div>
   </section>
 
 
@@ -1811,19 +1811,19 @@ footer img{height:24px;width:auto;display:block}
           </div>
             </div>
             <div class="bk-mem" id="remembers">
-              <div class="vis rm-card" data-fit="1.1" role="img" aria-label="Illustratie: de geschiedenis van één klant bij een tandartspraktijk. Een telefoontje afgelopen dinsdag over een pijnlijke kies, een afspraak op donderdag en vandaag een WhatsApp-gesprek waarin de assistent vraagt of de kies nog gevoelig is en een gebitsreiniging inplant.">
-                <div class="lanes-top"><b><span class="m-tel" data-s="0">Michiel Visser</span></b><small>Tandartspraktijk De Linde</small></div>
+              <div class="vis rm-card" data-fit="1.1" role="img" aria-label="Illustratie: de geschiedenis van één klant bij een tandartspraktijk. Een telefoontje afgelopen dinsdag over een pijnlijke kies, een afspraak op donderdag en vandaag een WhatsApp-gesprek waarin de assistent vraagt of de kies nog gevoelig is en een gebitsreiniging inplant bij dezelfde tandarts.">
+                <div class="lanes-top"><b><span class="m-tel" data-s="0">Michiel Visser</span></b><small>Tandartspraktijk Lindenhof</small></div>
                 <ol class="rm-thread">
                   <li><i class="ic c-phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></i>
-                    <div><small>Afgelopen dinsdag · Telefoontje</small><p>“Mijn <span class="m-tel" data-s="1">kies</span> doet pijn als ik iets kouds drink.”</p><span class="rm-out">Sara plande een vulling in voor donderdag</span></div></li>
+                    <div><small>Afgelopen dinsdag · Telefoontje</small><p>“Mijn <span class="m-tel" data-s="1">kies</span> doet pijn als ik iets kouds drink.”</p><span class="rm-out">Sara plande een afspraak in voor donderdag</span></div></li>
                   <li><i class="ic c-cal"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>
-                    <div><small><span class="m-cal" data-s="2">Do · Afspraak</span></small><p>Kleine vulling, de pijn zakt binnen een paar dagen.</p></div></li>
+                    <div><small><span class="m-cal" data-s="2">Do · Afspraak</span></small><p>Vulling bij <span class="m-cal" data-s="3">tandarts Bakker</span>. Gevoelig voor kou, genoteerd.</p></div></li>
                   <li class="now"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i>
                     <div><small>Vandaag · WhatsApp</small>
                       <div class="rm-chat"><div class="wm me" data-k="q">Hoi, ik heb een korte vraag</div>
-                      <div class="wm biz" data-k="hi">Fijn dat je er weer bent, <mark class="m-tel">Michiel</mark>! Is je <mark class="m-tel">kies</mark> nog gevoelig sinds <mark class="m-cal">de afspraak van donderdag</mark>?</div>
+                      <div class="wm biz" data-k="hi">Hoi <mark class="m-tel">Michiel</mark>! Is je <mark class="m-tel">kies</mark> nog gevoelig sinds <mark class="m-cal">de afspraak van donderdag</mark>?</div>
                       <div class="wm me" data-k="re">Alles goed nu. Kan ik ook een gebitsreiniging inplannen?</div></div>
-                      <span class="rm-out rm-next"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Sara plande een gebitsreiniging in voor dinsdag</span></div></li>
+                      <span class="rm-out rm-next"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Sara plande een gebitsreiniging in bij <mark class="m-cal">tandarts Bakker</mark>, volgende dinsdag om 14:30</span></div></li>
                 </ol>
               </div>
             </div>
@@ -2415,8 +2415,8 @@ footer img{height:24px;width:auto;display:block}
           <h2>Eén bouwer. <em class="w">Elk detail.</em></h2>
           <div class="me-letter">
             <p class="me-hi">Hoi, ik ben Gabriel.</p>
-            <p>Twaalf jaar lang bouwde ik digitale systemen, voor mkb-bedrijven en voor studio’s als Warner Bros. en Sega.</p>
-            <p>Lead Awaker ben ik, en dat is bewust. Ik bouw je receptioniste zelf, en als je een vraag hebt, praat je met mij. Niets wordt doorgeschoven.</p>
+            <p>Ik bouw al twaalf jaar digitale systemen, voor mkb-bedrijven en voor studio’s als Warner Bros. en Sega.</p>
+            <p>Lead Awaker ben ik, en dat is bewust zo. Ik zet je receptioniste zelf op, en als je een vraag hebt, praat je met mij. Niets wordt doorgeschoven.</p>
             <div class="me-sign"><span class="me-script" aria-hidden="true">Gabriel</span><small>Gabriel Fronza, oprichter</small></div>
             <a class="btn btn-wine js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Plan een gesprek met Gabriel</a>
           </div>
@@ -2459,7 +2459,7 @@ footer img{height:24px;width:auto;display:block}
   </section>
 
   <!-- The Report: free lead magnet, a full-width wine bar right above the closing CTA. Links to the
-       opt-in page (/nl/rapport). Source of the PDF: script/report/ (node script/report/build.cjs). -->
+       opt-in page (/report). Source of the PDF: script/report/ (node script/report/build.cjs). -->
   <section id="report" aria-labelledby="rp-h">
     <style>
       #report{position:relative;z-index:1;background:linear-gradient(160deg,var(--wine-2) 0%,var(--wine-deep) 75%);color:var(--cream);overflow:hidden}
@@ -2484,15 +2484,15 @@ footer img{height:24px;width:auto;display:block}
       @media (prefers-reduced-motion:reduce){#report .rp-book{transition:none}}
     </style>
     <div class="wrap rp-in">
-      <a class="rp-book-wrap" href="/nl/rapport" aria-label="Ontvang Het Rapport"><span class="rp-book"><img src="/site/img/report-cover-nl.webp" alt="Omslag van Het Rapport" width="760" height="1075" loading="lazy"></span></a>
+      <a class="rp-book-wrap" href="/report" aria-label="Get The Report"><span class="rp-book"><img src="/site/img/report-cover.webp" alt="Cover of The Report" width="760" height="1075" loading="lazy"></span></a>
       <div class="rp-copy">
-        <span class="rp-eyebrow">Gratis rapport</span>
-        <h2 id="rp-h">Waar lekt jouw bedrijf <em>geld weg?</em></h2>
-        <p>De vier lekken die elk dienstverlenend bedrijf heeft, en hoe je ze dicht.</p>
+        <span class="rp-eyebrow">Free report</span>
+        <h2 id="rp-h">Where is your business <em>leaking money?</em></h2>
+        <p>The four leaks every service business has, and how to plug each one.</p>
       </div>
       <div class="rp-act">
-        <a class="rp-btn" href="/nl/rapport">Ontvang het gratis Rapport →</a>
-        <span class="rp-fine">25 pagina's · gratis</span>
+        <a class="rp-btn" href="/report">Get the free Report →</a>
+        <span class="rp-fine">25 pages · free</span>
       </div>
     </div>
   </section>
@@ -2503,7 +2503,7 @@ footer img{height:24px;width:auto;display:block}
       <div class="book">
         <h2>Hoor je receptioniste voordat je beslist</h2>
         <p>20 minuten. We laten Sara horen als receptioniste van jouw bedrijf. Vul bij het inplannen je website in.</p>
-        <div class="book-ctas"><a class="btn btn-light" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Kies een moment in de agenda</a><a class="btn btn-ghost-light ts-cta" href="#try-sara" hidden>Probeer haar op je eigen website</a></div>
+        <div class="book-ctas"><a class="btn btn-light" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Kies een moment in de agenda</a><a class="btn btn-ghost-light ts-cta" href="#try-sara" hidden>Try her on your website</a></div>
         <div class="cal-wrap" id="cal-wrap" hidden><div id="cal-inline"></div></div>
       </div>
     </div>

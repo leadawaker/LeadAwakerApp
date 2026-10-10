@@ -1281,13 +1281,13 @@ footer img{height:24px;width:auto;display:block}
 .rm-chat{justify-self:stretch;display:grid;gap:6px;margin-top:5px;padding:12px 10px;border-radius:12px;background:var(--wa-bg);background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:14px 14px;font-size:13px;color:var(--wa-ink)}
 .rm-chat .wm{max-width:88%}
 /* remembered words change colour only: a change of weight would re-wrap the bubble mid-animation */
-.rm-chat mark{background:none;color:inherit;border-radius:4px;padding:0 2px;margin:0 -2px;transition:background .35s,color .35s}
-.rm-chat mark.on{background:rgba(94,34,48,.13);color:var(--wine)}
+.rm-card mark{background:none;color:inherit;border-radius:4px;padding:0 2px;margin:0 -2px;transition:background .35s,color .35s}
+.rm-card mark.on{background:rgba(94,34,48,.13);color:var(--wine)}
 /* what she learned on the phone call lights purple, like the phone icon; the appointment stays wine, like the calendar */
-.rm-card .m-tel.hit,.rm-chat mark.m-tel.on{background:rgba(124,58,237,.12);color:#6D28D9}
+.rm-card .m-tel.hit,.rm-card mark.m-tel.on{background:rgba(124,58,237,.12);color:#6D28D9}
 /* the appointment is warm orange, as bright as the phone and WhatsApp icons, and what she took from it lights the same colour */
 .rm-thread .ic.c-cal{background:#F28C28}
-.rm-card .m-cal.hit,.rm-chat mark.m-cal.on{background:rgba(234,88,12,.12);color:#C2410C}
+.rm-card .m-cal.hit,.rm-card mark.m-cal.on{background:rgba(234,88,12,.12);color:#C2410C}
 @media (max-width:600px){
   .rm-card{padding:16px 14px;gap:12px}.rm-thread>li{gap:11px;padding-bottom:14px}.rm-thread p{font-size:14px}
   /* the chat and the new booking use the full card width, under the icons */
@@ -1818,19 +1818,19 @@ footer img{height:24px;width:auto;display:block}
           </div>
             </div>
             <div class="bk-mem" id="remembers">
-              <div class="vis rm-card" data-fit="1.1" role="img" aria-label="Illustration: one customer's history with a dental practice. A phone call last Tuesday about a sore tooth, an appointment on Thursday, and a WhatsApp chat today in which the assistant asks whether the tooth is still sensitive and books a cleaning.">
-                <div class="lanes-top"><b><span class="m-tel" data-s="0">Michael Reed</span></b><small>Brightside Dental</small></div>
+              <div class="vis rm-card" data-fit="1.1" role="img" aria-label="Illustration: one customer's history with a dental practice. A phone call last Tuesday about a sore tooth, an appointment on Thursday, and a WhatsApp chat today in which the assistant asks whether the tooth is still sensitive and books a cleaning with the same dentist.">
+                <div class="lanes-top"><b><span class="m-tel" data-s="0">Michael Reed</span></b><small>Brightsmile Dental</small></div>
                 <ol class="rm-thread">
                   <li><i class="ic c-phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></i>
-                    <div><small>Last Tuesday · Phone call</small><p>“My <span class="m-tel" data-s="1">back tooth</span> hurts when I drink something cold.”</p><span class="rm-out">Sara booked a filling for Thursday</span></div></li>
+                    <div><small>Last Tuesday · Phone call</small><p>“My <span class="m-tel" data-s="1">back tooth</span> hurts when I drink something cold.”</p><span class="rm-out">Sara booked an appointment for Thursday</span></div></li>
                   <li><i class="ic c-cal"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>
-                    <div><small><span class="m-cal" data-s="2">Thu · Appointment</span></small><p>Small filling, the pain should fade in a few days.</p></div></li>
+                    <div><small><span class="m-cal" data-s="2">Thu · Appointment</span></small><p>Filling with <span class="m-cal" data-s="3">Dr. Patel</span>. Sensitive to cold, noted.</p></div></li>
                   <li class="now"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i>
                     <div><small>Today · WhatsApp</small>
                       <div class="rm-chat"><div class="wm me" data-k="q">Hi, I have a quick question</div>
-                      <div class="wm biz" data-k="hi">Good to have you back, <mark class="m-tel">Michael</mark>! Is your <mark class="m-tel">back tooth</mark> still sensitive since <mark class="m-cal">Thursday’s appointment</mark>?</div>
+                      <div class="wm biz" data-k="hi">Hi <mark class="m-tel">Michael</mark>! Is your <mark class="m-tel">back tooth</mark> still sensitive since <mark class="m-cal">Thursday’s appointment</mark>?</div>
                       <div class="wm me" data-k="re">All good now. Could I book a cleaning too?</div></div>
-                      <span class="rm-out rm-next"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Sara booked a cleaning for Tuesday</span></div></li>
+                      <span class="rm-out rm-next"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Sara booked a cleaning with <mark class="m-cal">Dr. Patel</mark>, next Tue 14:30</span></div></li>
                 </ol>
               </div>
             </div>
