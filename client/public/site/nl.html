@@ -661,12 +661,22 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 .cal-open .btn-light{display:none}
 
 footer{padding-block:40px 56px}
-footer .wrap{display:flex;justify-content:space-between;align-items:center;gap:16px 28px;flex-wrap:wrap;font-size:14px;color:var(--mute);border-top:1px solid var(--line);padding-top:28px}
-.f-co{display:flex;flex-wrap:wrap;gap:6px 18px;align-items:center}
-.f-links{display:flex;gap:22px;flex-wrap:wrap}
+footer .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,3fr);gap:32px 48px;font-size:14px;color:var(--mute);border-top:1px solid var(--line);padding-top:36px}
+.f-brand{display:grid;gap:14px;align-content:start}
+.f-co{display:grid;gap:6px}
+.f-cols{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:24px}
+.f-col{display:grid;gap:10px;align-content:start}
+.f-col h4{margin:0 0 2px;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink)}
+.prob-audit{margin:28px 0 0;text-align:center;font-size:16px;color:var(--ink-soft)}
+.prob-audit a{color:var(--wine);font-weight:600;text-decoration:none;border-bottom:1.5px solid rgba(94,34,48,.35)}
+.prob-audit a:hover{border-bottom-color:var(--wine)}
+.f-copy{grid-column:1/-1;padding-top:20px;border-top:1px solid var(--line);font-size:13px}
+@media (max-width:860px){footer .wrap{grid-template-columns:minmax(0,1fr)}.f-cols{grid-template-columns:repeat(2,minmax(0,1fr))}}
 footer a{color:var(--ink-soft);text-decoration:none}
 footer a:hover{color:var(--wine);text-decoration:underline}
 footer img{height:24px;width:auto;display:block}
+/* the white LEAD letters vanish on the light footer: give the logo a thin dark outline */
+footer .f-brand img{height:28px;filter:drop-shadow(1px 0 0 #2B1117) drop-shadow(-1px 0 0 #2B1117) drop-shadow(0 1px 0 #2B1117) drop-shadow(0 -1px 0 #2B1117)}
 
 /* ---------- v3 ---------- */
 /* mobile menu */
@@ -1190,10 +1200,10 @@ footer img{height:24px;width:auto;display:block}
   -webkit-mask:none!important;mask:none!important;box-shadow:inset 0 -4px 10px rgba(0,0,0,.18),inset 0 3px 7px rgba(255,255,255,.6)!important}
 .looks .lo::before{content:"";position:absolute;inset:-28%;z-index:-1;display:block!important;background:var(--ox-swirl)!important;filter:blur(7px);animation:spin 18s linear infinite}
 .looks .lo::after{content:"";position:absolute;inset:0;border-radius:50%;display:block!important;background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.55),transparent 72%)}
-.looks .lo-eyes{position:absolute;left:50%;top:47%;z-index:1;display:flex!important;gap:9px;transform:translate(-50%,-50%)}
-.looks .lo-eyes i{position:static;display:block;width:6px;height:15px;border:0;border-radius:999px;background:var(--ox-eye,#111114)!important}
+.looks .lo-eyes{display:flex!important}
+.looks .lo-eyes i{position:static;border:0;background:var(--ox-eye,#111114)!important}
 .looks .lo-ico{display:none!important}
-@media (max-width:520px){.looks{padding:16px}.look-orb,.looks .lo{width:56px;height:56px}}
+@media (max-width:520px){.looks{padding:16px}.look-orb,.looks .lo{width:56px;height:56px}.looks .lo{--lo-s:56px}}
 .ox-silver{--ox-base:#d4d4d8;--ox-swirl:conic-gradient(#fafafa,#9a9aa2 12%,#f4f4f5 24%,#5a5a62 36%,#e4e4e7 48%,#d9c2a3 56%,#fff 64%,#7a7a82 76%,#b9c4cf 86%,#fafafa)}
 .ox-gold{--ox-base:#d9b97a;--ox-swirl:conic-gradient(#fff4dc,#b8893a 12%,#f6e2b4 24%,#7a5420 36%,#ecd29a 48%,#c99a4a 58%,#fff8e8 66%,#8f6428 78%,#e2c48a 88%,#fff4dc)}
 .ox-sky{--ox-base:#8EC1E0;--ox-swirl:conic-gradient(#eef8fd,#8ec1e0 14%,#c9e7f4 28%,#4f97c4 42%,#e3f2fa 56%,#a9d6ec 68%,#6aaed6 82%,#eef8fd)}
@@ -1299,6 +1309,7 @@ footer img{height:24px;width:auto;display:block}
 .btn-ghost-light{background:transparent;color:#F7F1E6;box-shadow:inset 0 0 0 1.5px rgba(244,239,227,.55)}
 .btn-ghost-light:hover{background:rgba(244,239,227,.08);transform:translateY(-1px)}
 .nav-links a{white-space:nowrap}
+@media (max-width:960px){.nav-links>a.js-login{display:none}}
 @media (max-width:1080px){.nav-links a[href="#phone"],.nav-links a[href="#website"],.nav-links a[href="#whatsapp"],.nav-links a[href="#calendar"]{display:none}}
 </style>
 <style id="sara-orb">
@@ -1549,6 +1560,7 @@ footer img{height:24px;width:auto;display:block}
         <a href="#channels">Product</a>
         <a href="#how">Zo werkt het</a>
         <a href="/nl/rapport">Het Rapport</a>
+        <a class="js-login" href="/login">Inloggen</a>
         <a class="btn nav-try ts-cta" href="#try-sara" hidden><i></i>Try Sara</a>
         <a class="btn btn-wine js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Gesprek plannen</a>
         <div class="lang" id="lang"><button class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="lang-menu" aria-label="Taal: NL"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><b>NL</b><svg class="lang-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button><div class="lang-menu" id="lang-menu" hidden><a class="lang-sw" href="/" hreflang="en" lang="en">English</a><a class="lang-sw" href="/nl" hreflang="nl" lang="nl" aria-current="true">Nederlands</a><a class="lang-sw" href="/pt" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
@@ -1680,6 +1692,7 @@ footer img{height:24px;width:auto;display:block}
           <button class="btn btn-neu sab-tog" type="button" aria-expanded="false">Laat horen wat de beller hoort</button>
         </figure>
       </div>
+      <p class="prob-audit">Wat kost dit jou? <a href="/nl/lekcheck">Doe de Lekcheck →</a></p>
     </div>
   </section>
 
@@ -2594,10 +2607,17 @@ footer img{height:24px;width:auto;display:block}
 
 <footer>
   <div class="wrap">
-    <img src="/site/img/836cc55c31a7.svg" alt="Lead Awaker">
-    <div class="f-co"><span>KvK 99366738</span><span>’s-Hertogenbosch, Nederland</span><a href="mailto:admin@leadawaker.com">admin@leadawaker.com</a></div>
-    <div class="f-links"><a class="js-login" href="/login">Inloggen</a><a href="/reactivate">Database-reactivatie</a><a href="/terms-of-service">Algemene voorwaarden</a><a href="/privacy-policy">Privacybeleid</a></div>
-    <span>© 2026 LeadAwaker</span>
+    <div class="f-brand">
+      <img src="/site/img/836cc55c31a7.svg" alt="Lead Awaker">
+      <div class="f-co"><span>KvK 99366738</span><span>’s-Hertogenbosch, Nederland</span><a href="mailto:admin@leadawaker.com">admin@leadawaker.com</a></div>
+    </div>
+    <nav class="f-cols" aria-label="Footer">
+      <div class="f-col"><h4>Product</h4><a href="#phone">Telefoon</a><a href="#whatsapp">WhatsApp</a><a href="#website">Websitechat</a><a href="#calendar">Afspraken inplannen</a></div>
+      <div class="f-col"><h4>Leren</h4><a href="#how">Zo werkt het</a><a href="/nl/rapport">Het Rapport</a><a href="/nl/lekcheck">Lekcheck</a><a href="#faq">Vragen</a></div>
+      <div class="f-col"><h4>Bedrijf</h4><a class="js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Gesprek plannen</a><a href="/reactivate">Database-reactivatie</a><a class="js-login" href="/login">Inloggen</a></div>
+      <div class="f-col"><h4>Juridisch</h4><a href="/terms-of-service">Algemene voorwaarden</a><a href="/privacy-policy">Privacybeleid</a></div>
+    </nav>
+    <span class="f-copy">© 2026 LeadAwaker</span>
   </div>
 </footer>
 
@@ -3182,7 +3202,44 @@ footer img{height:24px;width:auto;display:block}
     try{localStorage.setItem('la_site_lang',(a.getAttribute('hreflang')||'en').slice(0,2))}catch(e){}})});
 })();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=15" data-key="wk_KXOIfpmMfShAKcLjinezibMs" async></script>
+<script>
+/* Sara's faces on this page look at the cursor when it comes close: the same
+   --lo-gx / --lo-gy / .lo-watch contract the widget's own launcher uses
+   (server/widgetOrb.ts). One passive listener, work at most once a frame; a
+   cursor that rests is let go of. Mouse only. */
+(function(){
+  var mm=window.matchMedia;
+  if(!mm||!mm('(hover: hover) and (pointer: fine)').matches||mm('(prefers-reduced-motion: reduce)').matches)return;
+  var p=null,queued=false,rest=null;
+  function away(el){
+    if(!el.classList.contains('lo-watch')||el._away)return;
+    el.style.setProperty('--lo-gx','0');el.style.setProperty('--lo-gy','0');
+    el._away=setTimeout(function(){el._away=null;el.classList.remove('lo-watch')},260);
+  }
+  function tick(){
+    queued=false;
+    var faces=document.querySelectorAll('.lo:not(.lo-still)');
+    for(var i=0;i<faces.length;i++){
+      var el=faces[i],r=el.getBoundingClientRect();
+      if(!p||!r.width||r.bottom<0||r.top>window.innerHeight){away(el);continue}
+      var dx=p.x-(r.left+r.width/2),dy=p.y-(r.top+r.height/2),d=Math.sqrt(dx*dx+dy*dy);
+      if(d>Math.max(160,r.width*2.2)){away(el);continue}
+      var k=Math.min(1,d/(r.width*.9))/(d||1);
+      if(el._away){clearTimeout(el._away);el._away=null}
+      el.style.setProperty('--lo-gx',(dx*k).toFixed(3));el.style.setProperty('--lo-gy',(dy*k).toFixed(3));
+      el.classList.add('lo-watch');
+    }
+  }
+  document.addEventListener('pointermove',function(e){
+    if(e.pointerType&&e.pointerType!=='mouse')return;
+    p={x:e.clientX,y:e.clientY};
+    clearTimeout(rest);rest=setTimeout(function(){p=null;tick()},2400);
+    if(!queued){queued=true;requestAnimationFrame(tick)}
+  },{passive:true});
+  document.documentElement.addEventListener('mouseleave',function(){p=null;clearTimeout(rest);tick()});
+})();
+</script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=16" data-key="wk_KXOIfpmMfShAKcLjinezibMs" async></script>
 <script>
 (function(){
   var sec=document.getElementById('how');if(!sec)return;
