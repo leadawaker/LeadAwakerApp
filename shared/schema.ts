@@ -1030,6 +1030,11 @@ export const leads = nocodb.table("Leads", {
   hubspotContactId: text("hubspot_contact_id"),
   // When the lead was last pushed: a re-push only notes calls after it.
   hubspotPushedAt: timestamp("hubspot_pushed_at", { withTimezone: true }),
+  // The transport this lead is actually reachable on ('whatsapp' | 'sms'),
+  // written by the Python engine: after a WhatsApp-undeliverable fallback send
+  // succeeds on SMS, and on every Twilio inbound (the channel they replied on).
+  // NULL means "use the campaign's channel". Engine-owned: the CRM never writes it.
+  resolvedChannel: text("resolved_channel"),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),
@@ -1455,7 +1460,7 @@ export const notificationPreferences = nocodb.table("Notification_Preferences", 
   accountId: integer("account_id").notNull(),
   telegramEnabled: boolean("telegram_enabled").notNull().default(true),
   webPushEnabled: boolean("web_push_enabled").notNull().default(true),
-  emailEnabled: boolean("email_enabled").notNull().default(true),
+  emailEnabled: boolean("email_enabled").notNull().default(false), // opt-in: no email notifications unless the user turns them on
   telegramChatId: text("telegram_chat_id"),
   typeOverrides: json("type_overrides").notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -2023,6 +2028,7 @@ export const publicDemoRequests = nocodb.table("Public_Demo_Requests", {
   leadId: integer("lead_id"),
   persona: jsonb("persona"),                         // built site context, reused per domain
   companyName: text("company_name"),
+  logo: text("logo"),                                // the site's own icon as a data: URL, shown on the landing page's phone
   reason: text("reason"),                            // failure / block reason, internal only
   estCostEur: numeric("est_cost_eur", { precision: 8, scale: 4 }).notNull().default("0"),
   voiceSessions: integer("voice_sessions").notNull().default(0),

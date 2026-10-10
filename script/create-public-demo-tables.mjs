@@ -51,6 +51,7 @@ CREATE TABLE IF NOT EXISTS "${SCHEMA}"."Public_Demo_Requests" (
   "ready_at" timestamptz,
   "completed_at" timestamptz
 );
+ALTER TABLE "${SCHEMA}"."Public_Demo_Requests" ADD COLUMN IF NOT EXISTS "logo" text;
 CREATE INDEX IF NOT EXISTS "public_demo_requests_domain_idx" ON "${SCHEMA}"."Public_Demo_Requests" ("domain", "ready_at");
 CREATE INDEX IF NOT EXISTS "public_demo_requests_phone_idx" ON "${SCHEMA}"."Public_Demo_Requests" ("phone", "created_at");
 CREATE INDEX IF NOT EXISTS "public_demo_requests_ip_idx" ON "${SCHEMA}"."Public_Demo_Requests" ("ip_hash", "created_at");

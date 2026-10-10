@@ -43,10 +43,10 @@ export async function phoneRecentDemo(
 export async function domainCachedPersona(
   domain: string,
   language: string,
-): Promise<{ persona: Record<string, unknown>; companyName: string | null } | null> {
+): Promise<{ persona: Record<string, unknown>; companyName: string | null; logo: string | null } | null> {
   const { domainCacheDays } = await getPublicDemoSettings();
   const { rows } = await pool.query(
-    `SELECT persona, company_name FROM ${REQ}
+    `SELECT persona, company_name, logo FROM ${REQ}
      WHERE domain = $1 AND language = $2 AND persona IS NOT NULL
        AND status IN ('ready', 'completed')
        AND ready_at > now() - make_interval(days => $3)
@@ -54,7 +54,7 @@ export async function domainCachedPersona(
     [domain, language, domainCacheDays],
   );
   const r = rows[0];
-  return r ? { persona: r.persona, companyName: r.company_name } : null;
+  return r ? { persona: r.persona, companyName: r.company_name, logo: r.logo ?? null } : null;
 }
 
 export async function spendToday(): Promise<{ eur: number; built: number; alertSentAt: Date | null }> {

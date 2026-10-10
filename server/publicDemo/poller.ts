@@ -169,8 +169,9 @@ async function retention(): Promise<void> {
   }
   // Old demos: keep the counts, drop the personal and scraped data.
   await pool.query(
-    `UPDATE ${REQ} SET phone = NULL, persona = NULL, feedback = NULL
-     WHERE created_at < now() - interval '90 days' AND (phone IS NOT NULL OR persona IS NOT NULL OR feedback IS NOT NULL)`,
+    `UPDATE ${REQ} SET phone = NULL, persona = NULL, feedback = NULL, logo = NULL
+     WHERE created_at < now() - interval '90 days'
+       AND (phone IS NOT NULL OR persona IS NOT NULL OR feedback IS NOT NULL OR logo IS NOT NULL)`,
   );
   if (stale.rowCount) console.log(`[PublicDemoPoller] retention removed ${stale.rowCount} unverified request(s)`);
 }

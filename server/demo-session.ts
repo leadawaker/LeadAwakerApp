@@ -5,6 +5,9 @@ import { eq, isNotNull } from "drizzle-orm";
 import { runJson, type ClaudeModel, type GenProvider } from "./demoGenerator/providers";
 
 export const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
+// The WhatsApp receptionist ("Speed to Lead Demo"): answers whoever writes in,
+// instead of reopening an old enquiry like the DBR campaign above.
+export const SPEED_TO_LEAD_DEMO_CAMPAIGN_ID = 67;
 
 // Latest OpenAI mini model, shared by all demo/campaign generators in this file.
 // The un-dated alias auto-tracks new snapshots of this model; generation jumps
@@ -1017,6 +1020,11 @@ const DEMO_PAGE_ORIGIN = (process.env.DEMO_PAGE_ORIGIN || "https://leadawaker.co
  */
 export function buildDemoPageLink(params: { token: string }): string {
   return `${DEMO_PAGE_ORIGIN}/demo/${params.token}`;
+}
+
+/** The browser voice demo for a token, as a link a prospect can open anywhere. */
+export function buildVoiceDemoLink(params: { token: string }): string {
+  return `${DEMO_PAGE_ORIGIN}/voice-demo?token=${params.token}`;
 }
 
 export function buildWhatsAppLink(params: { token: string }): string {

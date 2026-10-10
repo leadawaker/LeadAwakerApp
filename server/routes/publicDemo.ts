@@ -16,7 +16,7 @@ import { pool } from "../db";
 import { requireAuth, requireAgency } from "../auth";
 import { wrapAsync, handleZodError } from "./_helpers";
 import {
-  UNIVERSAL_DEMO_CAMPAIGN_ID,
+  SPEED_TO_LEAD_DEMO_CAMPAIGN_ID,
   DEMO_WHATSAPP_NUMBER,
   buildWhatsAppLink,
   createPendingDemoLead,
@@ -89,9 +89,15 @@ function pollAllowed(ip: string): boolean {
   return e.n <= 120;
 }
 
-/** A plain chat link to the demo number, for after the token has been used. */
-function plainChatLink(): string {
-  return `https://wa.me/${DEMO_WHATSAPP_NUMBER.replace(/\D/g, "")}`;
+// The visitor's first message after "your receptionist is ready" is what
+// starts the WhatsApp chat (Sara answers it with her greeting), so the link
+// arrives with a greeting already typed.
+const CHAT_OPENERS: Record<string, string> = { en: "Hi", nl: "Hoi", pt: "Oi" };
+
+/** A chat link to the demo number, for after the token has been used. */
+function plainChatLink(language: string): string {
+  const text = CHAT_OPENERS[language] || CHAT_OPENERS.en;
+  return `https://wa.me/${DEMO_WHATSAPP_NUMBER.replace(/\D/g, "")}?text=${encodeURIComponent(text)}`;
 }
 
 async function availability(): Promise<{ available: boolean; reason?: "disabled" | "busy" }> {
@@ -175,7 +181,7 @@ export function registerPublicDemoRoutes(app: Express): void {
       token,
       firstName: "",
       language,
-      campaignId: UNIVERSAL_DEMO_CAMPAIGN_ID,
+      campaignId: SPEED_TO_LEAD_DEMO_CAMPAIGN_ID,
       source: PUBLIC_DEMO_SOURCE,
     });
     await pool.query(
@@ -220,8 +226,9 @@ export function registerPublicDemoRoutes(app: Express): void {
           ...base,
           status: "ready",
           companyName: r.company_name,
+          logo: r.logo || null,
           voiceUrl: `/voice-demo?token=${r.token}&embed=1`,
-          whatsappUrl: plainChatLink(),
+          whatsappUrl: plainChatLink(r.language),
           callNumber: settings.callNumber,
         });
       case "failed":

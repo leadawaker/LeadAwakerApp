@@ -1,11 +1,12 @@
 // Builds Sara for one verified public demo request: read the visitor's site,
 // generate the persona, put it on their demo lead, then ask the engine to
-// open the WhatsApp chat in character. Runs only after the phone is verified.
+// tell them on WhatsApp that she is ready (call number, browser link, how to
+// chat). Runs only after the phone is verified.
 import { eq } from "drizzle-orm";
 import { db, pool } from "../db";
 import { leads } from "@shared/schema";
 import { buildClientFromSite } from "../demoWebsiteClient";
-import type { DemoMarket } from "../demo-session";
+import { buildVoiceDemoLink, type DemoMarket } from "../demo-session";
 import type { DemoLang } from "../demo-clients";
 import { addSpend, domainCachedPersona } from "./limits";
 import { getPublicDemoSettings } from "./settings";
@@ -38,6 +39,16 @@ function marketFor(domain: string, phone: string | null): DemoMarket | undefined
   return undefined;
 }
 
+// The site's icon, as the engine found it (tools/site_logo.py): a small raster
+// image inlined as a data: URL. Checked again here because the landing page
+// puts whatever is stored straight into an <img>.
+const LOGO_RE = /^data:image\/(png|jpeg|webp|gif|x-icon);base64,[A-Za-z0-9+/]+=*$/;
+const LOGO_MAX_CHARS = 210_000;
+
+export function safeLogo(value: unknown): string | null {
+  return typeof value === "string" && value.length <= LOGO_MAX_CHARS && LOGO_RE.test(value) ? value : null;
+}
+
 function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([
     p,
@@ -53,9 +64,11 @@ export async function buildPublicDemo(token: string): Promise<void> {
 
   try {
     let persona: Record<string, unknown>;
+    let logo: string | null = null;
     const cached = await domainCachedPersona(req.domain, language);
     if (cached) {
       persona = cached.persona;
+      logo = safeLogo(cached.logo);
     } else {
       const settings = await getPublicDemoSettings();
       // Counted before the work, so a failing site still uses up budget and a
@@ -76,6 +89,7 @@ export async function buildPublicDemo(token: string): Promise<void> {
       );
       if (!result.ok) throw new Error(result.body.message);
       persona = result.ctx as unknown as Record<string, unknown>;
+      logo = safeLogo(result.scraped?.logo);
     }
 
     const companyName = String(persona.company_name || "").slice(0, 120) || null;
@@ -84,11 +98,11 @@ export async function buildPublicDemo(token: string): Promise<void> {
       .set({ demoNiche: JSON.stringify(persona), updatedAt: new Date() } as any)
       .where(eq(leads.id, req.lead_id));
     await pool.query(
-      `UPDATE ${REQ} SET persona = $1, company_name = $2, status = 'ready', ready_at = now() WHERE token = $3`,
-      [JSON.stringify(persona), companyName, token],
+      `UPDATE ${REQ} SET persona = $1, company_name = $2, logo = $3, status = 'ready', ready_at = now() WHERE token = $4`,
+      [JSON.stringify(persona), companyName, logo, token],
     );
     console.log(`[public-demo] ready: ${req.domain}${cached ? " (cached persona)" : ""}`);
-    await engineCall("opening", { lead_id: req.lead_id });
+    await engineCall("opening", { lead_id: req.lead_id, voice_url: buildVoiceDemoLink({ token }) });
   } catch (err) {
     const reason = (err as Error).message.slice(0, 500);
     console.error(`[public-demo] build failed for ${req.domain}:`, reason);
