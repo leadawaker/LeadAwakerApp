@@ -1309,19 +1309,41 @@ footer img{height:24px;width:auto;display:block}
 @media (max-width:1080px){.nav-links a[href="#phone"],.nav-links a[href="#website"],.nav-links a[href="#whatsapp"],.nav-links a[href="#calendar"]{display:none}}
 </style>
 <style id="sara-orb">
-.lo{--lo-s:40px;position:relative;display:inline-block;width:var(--lo-s);height:var(--lo-s);border-radius:50%;flex:0 0 auto;
+.lo{--lo-s:40px;--lo-ba:1;--lo-gd:24s;--lo-td:27s;--lo-jd:41s;--lo-bd:8.3s;position:relative;display:inline-block;width:var(--lo-s);height:var(--lo-s);border-radius:50%;flex:0 0 auto;
   overflow:hidden;isolation:isolate;background:#d4d4d8;vertical-align:middle;
   -webkit-mask:radial-gradient(circle closest-side,#000 84%,transparent 100%);mask:radial-gradient(circle closest-side,#000 84%,transparent 100%);
-  box-shadow:inset 0 calc(var(--lo-s)*-.07) calc(var(--lo-s)*.16) rgba(0,0,0,.2),inset 0 calc(var(--lo-s)*.05) calc(var(--lo-s)*.1) rgba(255,255,255,.75)}
+  box-shadow:inset 0 calc(var(--lo-s)*-.07) calc(var(--lo-s)*.16) rgba(0,0,0,.2),inset 0 calc(var(--lo-s)*.05) calc(var(--lo-s)*.1) rgba(255,255,255,.75);
+  animation:lo-breathe 5.3s ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
 .lo::before{content:"";position:absolute;inset:-28%;z-index:-1;
   background:conic-gradient(from 0deg,#fafafa,#9a9aa2 12%,#f4f4f5 24%,#5a5a62 36%,#e4e4e7 48%,#d9c2a3 56%,#fff 64%,#7a7a82 76%,#b9c4cf 86%,#fafafa);
   filter:blur(calc(var(--lo-s)*.12));animation:lo-swirl 48s linear infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
 .lo::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
   background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.8),transparent 72%)}
-.lo-eyes{position:absolute;left:50%;top:47%;z-index:1;display:flex;gap:calc(var(--lo-s)*.15);
-  transform:translate(-50%,-50%);animation:lo-look 12s ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms);transition:opacity .2s ease}
-.lo-eyes i{display:block;width:calc(var(--lo-s)*.095);height:calc(var(--lo-s)*.23);border-radius:999px;
-  background:var(--lo-eye,#111114);animation:lo-blink 5.4s ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
+/* The eyes' box is the whole orb, so a tilt or a squash turns about her face's
+   centre (47% down), not about the pair of eyes. Looking aside also turns that
+   box in 3D (--lo-p is the camera distance): the eye nearer the edge comes out
+   narrower and a little shorter, as it would on a ball. Resting, the turn
+   follows --lo-gx / --lo-gy; the idle gaze animates it. */
+.lo-eyes{position:absolute;inset:-3% 0 3%;z-index:1;display:flex;align-items:center;justify-content:center;gap:calc(var(--lo-s)*.1);
+  --lo-u:calc(var(--lo-s)/100);--lo-p:perspective(calc(var(--lo-s)*.6));
+  transform:var(--lo-p) rotateY(calc(var(--lo-gx,0)*30deg)) rotateX(calc(var(--lo-gy,0)*-11deg));
+  animation:lo-gaze var(--lo-gd) ease-in-out infinite,lo-dart var(--lo-gd) ease-in-out infinite,lo-tilt var(--lo-td) ease-in-out infinite;
+  animation-delay:calc(var(--lo-e,0) * -1ms);transition:opacity .2s ease,transform .22s cubic-bezier(.2,.8,.2,1)}
+/* Oval eyes. The smile is a mask: an arc rising from below eats each eye's
+   lower half. Resting, the arc sits under the eye; smiling moves it up
+   (mask-position), which animates on its own, no registered property needed. */
+.lo-eyes i{display:block;width:calc(var(--lo-s)*.135);height:calc(var(--lo-s)*.235);border-radius:50%;background:var(--lo-eye,#111114);
+  -webkit-mask:radial-gradient(ellipse 58% 24% at 50% 100%,transparent 96%,#000 100%) 50% 0/100% 300% no-repeat;
+  mask:radial-gradient(ellipse 58% 24% at 50% 100%,transparent 96%,#000 100%) 50% 0/100% 300% no-repeat;
+  translate:calc(var(--lo-gx,0)*var(--lo-s)*.12) calc(var(--lo-gy,0)*var(--lo-s)*.09);transition:translate .22s cubic-bezier(.2,.8,.2,1);
+  animation:lo-blink var(--lo-bd) ease-in-out infinite,lo-joy var(--lo-jd) ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
+.lo-fast .lo-eyes{animation:lo-ponder 3.4s ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
+.lo-watch .lo-eyes{animation:none}
+.lo-happy .lo-eyes i,.la-btn:hover .lo-eyes i{animation-name:lo-blink,lo-joy,lo-glee;animation-duration:var(--lo-bd),var(--lo-jd),.4s;
+  animation-timing-function:ease-in-out,ease-in-out,cubic-bezier(.3,1.5,.5,1);animation-iteration-count:infinite,infinite,1;
+  animation-fill-mode:none,none,forwards;animation-delay:calc(var(--lo-e,0) * -1ms),calc(var(--lo-e,0) * -1ms),0s}
+.lo.lo-hop{transform-origin:50% 85%;animation:lo-breathe 5.3s ease-in-out infinite,lo-hop .8s linear;
+  animation-delay:calc(var(--lo-e,0) * -1ms),calc(var(--lo-hd,0) * -1ms)}
 .lo-fast .lo::before{animation-duration:7s}
 .lo-tint{--lo-metal:conic-gradient(from 0deg,color-mix(in srgb,var(--lo-tint) 22%,#fff),color-mix(in srgb,var(--lo-tint) 72%,#4a4a4a) 12%,
   color-mix(in srgb,var(--lo-tint) 30%,#fff) 24%,color-mix(in srgb,var(--lo-tint) 70%,#1c1c1c) 36%,color-mix(in srgb,var(--lo-tint) 45%,#eee) 48%,
@@ -1337,23 +1359,80 @@ footer img{height:24px;width:auto;display:block}
 .lo-solid .lo::after{background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.4),transparent 72%),radial-gradient(34% 24% at 70% 84%,rgba(255,255,255,.22),transparent 72%)}
 .lo-solid .lo{background:radial-gradient(circle at 50% 30%,color-mix(in srgb,var(--lo-c) 82%,#fff),var(--lo-c) 60%,color-mix(in srgb,var(--lo-c) 85%,#000))}
 .lo-solid .lo::before{display:none}
+/* Gradient looks: a fixed palette instead of one colour. The moving layer is
+   two soft blobs that drift, not the metal's turning swirl, so the palette
+   keeps its top-to-bottom order. */
+.lo-grad .lo::before{inset:-12%;filter:blur(calc(var(--lo-s)*.09));animation:lo-drift 11s ease-in-out infinite alternate;animation-delay:calc(var(--lo-e,0) * -1ms)}
+.lo-grad .lo-fast .lo::before{animation-duration:3.5s}
+.lo-grad .lo::after{background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.45),transparent 72%)}
+.lo-grad .lo{box-shadow:inset 0 calc(var(--lo-s)*-.05) calc(var(--lo-s)*.14) rgba(40,10,90,.14),inset 0 calc(var(--lo-s)*.05) calc(var(--lo-s)*.1) rgba(255,255,255,.6)}
+/* Sunset: yellow at the top, through orange and pink, to a cool blue foot. */
+.lo-sunset .lo{background:linear-gradient(180deg,#ffd84a 0%,#ffb03a 26%,#ff8f5e 50%,#f78fc4 70%,#c9a3ff 86%,#9bdcff 100%)}
+.lo-sunset .lo::before{background:radial-gradient(42% 38% at 32% 26%,rgba(255,226,120,.85),transparent 72%),radial-gradient(46% 40% at 66% 78%,rgba(196,160,255,.8),transparent 72%)}
+/* Aurora: a pearl with violet, blue and cyan pooling in its lower half. */
+.lo-aurora .lo{background:radial-gradient(70% 26% at 50% 102%,rgba(255,255,255,.95),transparent 100%),radial-gradient(40% 34% at 22% 68%,#c24dff,transparent 100%),
+  radial-gradient(48% 34% at 54% 74%,#4c58ff,transparent 100%),radial-gradient(38% 36% at 86% 54%,#63e2ff,transparent 100%),linear-gradient(180deg,#fff 0%,#f1f3ff 45%,#dfe5ff 100%)}
+.lo-aurora .lo::before{background:radial-gradient(36% 30% at 30% 66%,rgba(214,90,255,.7),transparent 72%),radial-gradient(34% 30% at 74% 62%,rgba(90,220,255,.7),transparent 72%)}
 .lo-ico{position:absolute;inset:0;z-index:1;display:none;align-items:center;justify-content:center;color:var(--lo-eye,#111114);transition:opacity .2s ease}
 .lo-ico svg{width:46%;height:46%;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .lo-face-icon .lo-eyes{display:none}
 .lo-face-icon .lo-ico{display:flex}
-.lo-face-photo .lo{background:var(--lo-photo) center/cover no-repeat,#d4d4d8;box-shadow:none;-webkit-mask:none;mask:none}
+.lo-face-photo .lo{--lo-ba:0;background:var(--lo-photo) center/cover no-repeat,#d4d4d8;box-shadow:none;-webkit-mask:none;mask:none}
 .lo-face-photo .lo::before,.lo-face-photo .lo::after,.lo-face-photo .lo-eyes{display:none}
-.lo.lo-still::before,.lo.lo-still .lo-eyes,.lo.lo-still .lo-eyes i{animation:none}
+.lo.lo-still,.lo.lo-still::before,.lo.lo-still .lo-eyes,.lo.lo-still .lo-eyes i{animation:none}
 @keyframes lo-swirl{to{transform:rotate(360deg)}}
-@keyframes lo-blink{0%,92%,100%{transform:scaleY(1)}94.5%{transform:scaleY(.1)}97%{transform:scaleY(1)}}
-@keyframes lo-look{0%,16%{transform:translate(-50%,-50%)}22%,36%{transform:translate(-80%,-52%)}42%,54%{transform:translate(-50%,-50%)}
-  60%,72%{transform:translate(-22%,-62%)}78%,100%{transform:translate(-50%,-50%)}}
-@media (prefers-reduced-motion:reduce){.lo::before,.lo-eyes,.lo-eyes i{animation:none}}
+@keyframes lo-drift{0%{transform:translate(-4%,-3%) rotate(-9deg)}100%{transform:translate(4%,3%) rotate(9deg)}}
+@keyframes lo-breathe{0%,100%{scale:1}50%{scale:calc(1 + .012*var(--lo-ba)) calc(1 + .026*var(--lo-ba))}}
+/* Where she looks (units of 1% of her size): darts with a small overshoot, then
+   a hold with a slow drift, like real fixations. Mostly near the middle, now
+   and then far to a side or up/down a diagonal. The 3D turn goes with it. */
+@keyframes lo-gaze{0%,9%{translate:0 0;transform:var(--lo-p) rotateY(0deg) rotateX(0deg)}
+  9.7%{translate:calc(var(--lo-u)*-13) calc(var(--lo-u)*-1);transform:var(--lo-p) rotateY(-26deg) rotateX(1deg)}
+  10.4%,18%{translate:calc(var(--lo-u)*-11) calc(var(--lo-u)*-1);transform:var(--lo-p) rotateY(-22deg) rotateX(1deg)}
+  19.5%{translate:calc(var(--lo-u)*-10) 0;transform:var(--lo-p) rotateY(-20deg) rotateX(0deg)}
+  20.2%,28%{translate:calc(var(--lo-u)*1) calc(var(--lo-u)*1);transform:var(--lo-p) rotateY(2deg) rotateX(-1deg)}
+  28.7%{translate:calc(var(--lo-u)*17) calc(var(--lo-u)*-9);transform:var(--lo-p) rotateY(34deg) rotateX(9deg)}
+  29.4%,36%{translate:calc(var(--lo-u)*15) calc(var(--lo-u)*-8);transform:var(--lo-p) rotateY(30deg) rotateX(8deg)}
+  36.7%,38.2%{translate:calc(var(--lo-u)*4) calc(var(--lo-u)*3);transform:var(--lo-p) rotateY(8deg) rotateX(-3deg)}
+  38.9%,46%{translate:calc(var(--lo-u)*-7) calc(var(--lo-u)*3);transform:var(--lo-p) rotateY(-14deg) rotateX(-3deg)}
+  46.7%,55%{translate:0 0;transform:var(--lo-p) rotateY(0deg) rotateX(0deg)}
+  55.7%{translate:calc(var(--lo-u)*-17) calc(var(--lo-u)*7);transform:var(--lo-p) rotateY(-34deg) rotateX(-7deg)}
+  56.4%,62%{translate:calc(var(--lo-u)*-15) calc(var(--lo-u)*6);transform:var(--lo-p) rotateY(-30deg) rotateX(-6deg)}
+  62.7%,70%{translate:calc(var(--lo-u)*2) calc(var(--lo-u)*-1);transform:var(--lo-p) rotateY(4deg) rotateX(1deg)}
+  70.7%{translate:calc(var(--lo-u)*9) calc(var(--lo-u)*-11);transform:var(--lo-p) rotateY(18deg) rotateX(11deg)}
+  71.4%,78%{translate:calc(var(--lo-u)*8) calc(var(--lo-u)*-10);transform:var(--lo-p) rotateY(16deg) rotateX(10deg)}
+  78.7%,83%{translate:calc(var(--lo-u)*-3) 0;transform:var(--lo-p) rotateY(-6deg) rotateX(0deg)}
+  83.7%{translate:calc(var(--lo-u)*16) calc(var(--lo-u)*2);transform:var(--lo-p) rotateY(32deg) rotateX(-2deg)}
+  84.4%,90%{translate:calc(var(--lo-u)*14) calc(var(--lo-u)*1);transform:var(--lo-p) rotateY(28deg) rotateX(-1deg)}
+  90.7%,100%{translate:0 0;transform:var(--lo-p) rotateY(0deg) rotateX(0deg)}}
+/* The eyes squash a little mid-dart, in step with lo-gaze. */
+@keyframes lo-dart{0%,9%,9.7%,19.5%,20.2%,28%,28.7%,36%,36.7%,38.2%,38.9%,46%,46.7%,55%,55.7%,62%,62.7%,70%,70.7%,78%,78.7%,83%,83.7%,90%,90.7%,100%{scale:1}
+  9.35%,19.85%,28.35%,36.35%,38.55%,46.35%,55.35%,62.35%,70.35%,78.35%,83.35%,90.35%{scale:1.09 .91}}
+/* Now and then a curious tilt of the head. */
+@keyframes lo-tilt{0%,52%,63%,84%,91%,100%{rotate:0deg}55%,60%{rotate:7deg}86.5%,89%{rotate:-4deg}}
+/* Uneven blinks: close fast, open a touch slower, one of them doubled. */
+@keyframes lo-blink{0%,21%,23.8%,57%,59.8%,62%,64.8%,88%,90.8%,100%{scale:1}22.2%,58.2%,63.2%,89.2%{scale:1.12 .08}}
+@keyframes lo-joy{0%,63%,71.5%,100%{width:calc(var(--lo-s)*.135);height:calc(var(--lo-s)*.235);-webkit-mask-position:50% 0;mask-position:50% 0}
+  64.5%,70%{width:calc(var(--lo-s)*.185);height:calc(var(--lo-s)*.14);-webkit-mask-position:50% 100%;mask-position:50% 100%}}
+@keyframes lo-glee{to{width:calc(var(--lo-s)*.185);height:calc(var(--lo-s)*.14);-webkit-mask-position:50% 100%;mask-position:50% 100%}}
+/* Thinking: up and far to one side, then the other, head tilted with it. */
+@keyframes lo-ponder{0%,100%{translate:calc(var(--lo-u)*12) calc(var(--lo-u)*-10);rotate:-4deg;transform:var(--lo-p) rotateY(24deg) rotateX(10deg)}
+  40%{translate:calc(var(--lo-u)*10) calc(var(--lo-u)*-11);rotate:-4deg;transform:var(--lo-p) rotateY(20deg) rotateX(11deg)}
+  48%,88%{translate:calc(var(--lo-u)*-11) calc(var(--lo-u)*-10);rotate:4deg;transform:var(--lo-p) rotateY(-22deg) rotateX(10deg)}}
+/* A hop: crouch, spring up stretched, land squashed, settle. */
+@keyframes lo-hop{0%{translate:0 0;scale:1;animation-timing-function:ease-in}
+  15%{translate:0 0;scale:1.12 .86;animation-timing-function:cubic-bezier(.2,.7,.4,1)}
+  42%{translate:0 calc(var(--lo-s)*-.3);scale:.92 1.1;animation-timing-function:cubic-bezier(.6,0,.8,.4)}
+  64%{translate:0 0;scale:1.12 .88;animation-timing-function:ease-out}
+  82%{translate:0 0;scale:.97 1.03;animation-timing-function:ease-in-out}
+  100%{translate:0 0;scale:1}}
+@media (prefers-reduced-motion:reduce){.lo,.lo::before,.lo-eyes,.lo-eyes i,.lo-fast .lo-eyes,.lo.lo-hop,.lo-happy .lo-eyes i,.la-btn:hover .lo-eyes i{animation:none;transition:none}}
 
 /* The page styles bare <i> inside .wav, .launch and .ai-sara (status dot,
    launcher core, talking bars); her eyes are <i> too, so they are put back. */
-.lo .lo-eyes i{position:static;inset:auto;display:block;width:calc(var(--lo-s)*.095);height:calc(var(--lo-s)*.23);border:0;border-radius:999px;
-  box-shadow:none;background:var(--lo-eye,#111114);animation:lo-blink 5.4s ease-in-out infinite}
+.lo .lo-eyes i{position:static;inset:auto;display:block;width:calc(var(--lo-s)*.135);height:calc(var(--lo-s)*.235);border:0;border-radius:50%;
+  box-shadow:none;background:var(--lo-eye,#111114);
+  animation:lo-blink var(--lo-bd) ease-in-out infinite,lo-joy var(--lo-jd) ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
 .lo.lo-still .lo-eyes i{animation:none}
 .launch .lm{grid-area:1/1;position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;transition:opacity .3s}
 .launch .lm .lo{--lo-s:45px;-webkit-mask:none;mask:none}
@@ -1474,11 +1553,9 @@ footer img{height:24px;width:auto;display:block}
     <div class="nav-bar">
       <a class="logo" href="#top"><img src="/site/img/836cc55c31a7.svg" alt="Lead Awaker"></a>
       <div class="nav-links">
-        <a href="#phone">Phone</a>
-        <a href="#whatsapp">WhatsApp</a>
-        <a href="#website">Website</a>
-        <a href="/reactivate">Old leads</a>
-        <a class="js-login" href="/login">Log in</a>
+        <a href="#channels">Product</a>
+        <a href="#how">How it works</a>
+        <a href="/report">The Report</a>
         <a class="btn nav-try ts-cta" href="#try-sara" hidden><i></i>Try Sara</a>
         <a class="btn btn-wine js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Book a call</a>
         <div class="lang" id="lang"><button class="lang-btn" type="button" aria-haspopup="true" aria-expanded="false" aria-controls="lang-menu" aria-label="Language: EN"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.6 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.6-3.8-9S9.5 5.6 12 3z"/></svg><b>EN</b><svg class="lang-chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 10 5 5 5-5"/></svg></button><div class="lang-menu" id="lang-menu" hidden><a class="lang-sw" href="/" hreflang="en" lang="en" aria-current="true">English</a><a class="lang-sw" href="/nl" hreflang="nl" lang="nl">Nederlands</a><a class="lang-sw" href="/pt" hreflang="pt-BR" lang="pt-BR">Português</a></div></div>
@@ -1493,6 +1570,7 @@ footer img{height:24px;width:auto;display:block}
       <a href="#calendar">Calendar booking</a>
       <a href="#how">How it works</a>
       <a href="#faq">Questions</a>
+      <a href="/report">The Report</a>
       <span class="sep"></span>
       <a href="/reactivate">Database reactivation</a>
       <a class="js-login" href="/login">Log in</a>
@@ -2525,7 +2603,7 @@ footer img{height:24px;width:auto;display:block}
   <div class="wrap">
     <img src="/site/img/836cc55c31a7.svg" alt="Lead Awaker">
     <div class="f-co"><span>KvK 99366738</span><span>’s-Hertogenbosch, Netherlands</span><a href="mailto:admin@leadawaker.com">admin@leadawaker.com</a></div>
-    <div class="f-links"><a href="/reactivate">Database reactivation</a><a href="/terms-of-service">Terms &amp; Conditions</a><a href="/privacy-policy">Privacy Policy</a></div>
+    <div class="f-links"><a class="js-login" href="/login">Log in</a><a href="/reactivate">Database reactivation</a><a href="/terms-of-service">Terms &amp; Conditions</a><a href="/privacy-policy">Privacy Policy</a></div>
     <span>© 2026 LeadAwaker</span>
   </div>
 </footer>
@@ -3111,7 +3189,7 @@ footer img{height:24px;width:auto;display:block}
     try{localStorage.setItem('la_site_lang',(a.getAttribute('hreflang')||'en').slice(0,2))}catch(e){}})});
 })();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=14" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=15" data-key="wk_pNUlirtOPVBVkViwqXgsZmFq" async></script>
 <script>
 (function(){
   var sec=document.getElementById('how');if(!sec)return;
