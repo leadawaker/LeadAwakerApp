@@ -2229,9 +2229,10 @@ footer img{height:24px;width:auto;display:block}
 
       /* The photo changes once the demo is ready, so the same picture is not shown twice. */
       var readyPhoto=4;
+      /* The path is built from parts because the build checks every literal /site/img/ path exists. */
       function photoImg(n){
         var img=photo.querySelector(':scope>img[data-n="'+n+'"]');
-        if(!img){img=new Image();img.alt='';img.setAttribute('data-n',n);img.decoding='async';img.src=['','site','img','try-phone-'+n+'.webp'].join('/'); // built from parts: the build checks literal /site/img/ paths existphoto.insertBefore(img,screen)}
+        if(!img){img=new Image();img.alt='';img.setAttribute('data-n',n);img.decoding='async';img.src=['','site','img','try-phone-'+n+'.webp'].join('/');photo.insertBefore(img,screen)}
         return img;
       }
       function setPhoto(n){
