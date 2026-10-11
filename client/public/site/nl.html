@@ -1103,6 +1103,12 @@ footer .f-brand img{height:28px}
 #channels .hub-emma small{color:var(--on-wine-3)}
 #channels .av3{box-shadow:0 0 0 8px rgba(255,255,255,.08),0 24px 48px -24px rgba(0,0,0,.5)}
 #channels .av3::after{border-color:var(--on-wine)}
+/* Sara in "three front doors": rose metal, a soft outline round her and a ring
+   that swells out of it every 7.8s (the widget's own pulse, so one idea on both). */
+#channels .av3{--lo-tint:#c48b84;box-shadow:0 0 0 6px rgba(255,220,225,.16),0 0 26px rgba(214,120,140,.35),0 24px 48px -24px rgba(0,0,0,.5)}
+#channels .av3::after{inset:-6px;border:2px solid rgba(255,220,225,.6);opacity:0;animation:hub-pulse 7.8s ease-out infinite}
+@keyframes hub-pulse{0%{transform:scale(1);opacity:.55}33%,100%{transform:scale(1.4);opacity:0}}
+@media (prefers-reduced-motion:reduce){#channels .av3::after{animation:none}}
 #channels .hub-node{box-shadow:0 18px 36px -18px rgba(0,0,0,.5)}
 #channels .hub-node[aria-pressed="false"]{box-shadow:none}
 #channels :focus-visible{outline-color:var(--on-wine)}
@@ -1195,6 +1201,11 @@ footer .f-brand img{height:28px}
 .lb-gold{--lb-rim:conic-gradient(#fff4dc,#b8893a 12%,#f6e2b4 24%,#7a5420 36%,#ecd29a 48%,#c99a4a 58%,#fff8e8 66%,#8f6428 78%,#e2c48a 88%,#fff4dc);--lb-core:radial-gradient(120% 95% at 50% 0%,#303035,#0d0d0f 55%,#000);--lb-ink:#ecd29a}
 .lb-wine{--lb-rim:conic-gradient(#fafafa,#8a8a90 11%,#f4f4f5 21%,#35353a 33%,#e4e4e7 44%,#d9c2a3 52%,#fff 61%,#62626a 73%,#b9c4cf 82%,#ececef 91%,#fafafa);--lb-core:radial-gradient(120% 95% at 50% 0%,#8a3a4e,#5E2230 55%,#3E1520);--lb-ink:#F7F1E6}
 .lb-cream{--lb-rim:conic-gradient(#fbe7d9,#b06a3e 12%,#f0c7a8 24%,#6e3a1e 36%,#e2a77f 48%,#c47a4c 58%,#fff1e6 66%,#8a4a26 78%,#dca07a 88%,#fbe7d9);--lb-core:radial-gradient(120% 95% at 50% 0%,#fffdf8,#F4EFE3 60%,#e6dccb);--lb-ink:#5E2230}
+/* "Colour band" chat button: the widget's white band with her inside, in a soft grey glow. */
+.look.lb.lb-band{overflow:visible;box-shadow:0 0 22px 3px rgba(161,161,170,.7)}
+.lb-band{--lb-rim:#fff;--lb-core:radial-gradient(120% 95% at 50% 0%,#8a3a4e,#5E2230 55%,#3E1520);--lb-ink:#F7F1E6}
+.look.lb.lb-band::before{inset:0;animation:none}
+.look.lb.lb-band i{inset:8px}
 .looks .lo{--lo-s:64px;position:relative;display:block;width:64px;height:64px;border-radius:50%;overflow:hidden;isolation:isolate;background:var(--ox-base)!important;
   -webkit-mask:none!important;mask:none!important;box-shadow:inset 0 -4px 10px rgba(0,0,0,.18),inset 0 3px 7px rgba(255,255,255,.6)!important}
 .looks .lo::before{content:"";position:absolute;inset:-28%;z-index:-1;display:block!important;background:var(--ox-swirl)!important;filter:blur(7px);animation:spin 18s linear infinite}
@@ -1278,22 +1289,20 @@ footer .f-brand img{height:28px}
 .rm-thread small{font-size:11.5px;font-weight:700;color:var(--mute)}
 .rm-thread p{margin:0;font-size:15px;line-height:1.4;color:var(--ink-soft)}
 .rm-thread .ic{width:36px;height:36px}
-.rm-card [data-s]{border-radius:4px;padding:0 2px;margin:0 -2px;transition:background .35s,color .35s}
-.rm-card [data-s].hit{background:rgba(94,34,48,.13);color:var(--wine)}
-.rm-out{font-size:12px;font-weight:600;color:var(--wine);background:var(--wine-tint);border-radius:999px;padding:3px 9px;margin-top:3px}
+.rm-card [data-s]{text-decoration-line:underline;text-decoration-thickness:2px;text-underline-offset:3px;text-decoration-color:transparent;transition:text-decoration-color .35s}
+.rm-card [data-s].hit{text-decoration-color:#7C3AED}
+.rm-out{font-size:12px;font-weight:600;color:var(--mute);background:var(--bg-2);border-radius:999px;padding:3px 9px;margin-top:3px}
 .rm-next{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 11px 5px 9px;font-size:12.5px;opacity:0;transform:translateY(6px);transition:opacity .4s,transform .5s cubic-bezier(.2,.8,.2,1)}
 .rm-next.in{opacity:1;transform:none}
 .rm-next svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
 .rm-chat{justify-self:stretch;display:grid;gap:6px;margin-top:5px;padding:12px 10px;border-radius:12px;background:var(--wa-bg);background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:14px 14px;font-size:13px;color:var(--wa-ink)}
 .rm-chat .wm{max-width:88%}
-/* remembered words change colour only: a change of weight would re-wrap the bubble mid-animation */
-.rm-card mark{background:none;color:inherit;border-radius:4px;padding:0 2px;margin:0 -2px;transition:background .35s,color .35s}
-.rm-card mark.on{background:rgba(94,34,48,.13);color:var(--wine)}
-/* what she learned on the phone call lights purple, like the phone icon; the appointment stays wine, like the calendar */
-.rm-card .m-tel.hit,.rm-card mark.m-tel.on{background:rgba(124,58,237,.12);color:#6D28D9}
-/* the appointment is warm orange, as bright as the phone and WhatsApp icons, and what she took from it lights the same colour */
-.rm-thread .ic.c-cal{background:#F28C28}
-.rm-card .m-cal.hit,.rm-card mark.m-cal.on{background:rgba(234,88,12,.12);color:#C2410C}
+/* remembered words get an underline only: a change of weight would re-wrap the bubble mid-animation */
+.rm-card mark{background:none;color:inherit;text-decoration-line:underline;text-decoration-thickness:2px;text-underline-offset:3px;text-decoration-color:transparent;transition:text-decoration-color .35s}
+.rm-card mark.on{text-decoration-color:#7C3AED}
+/* the appointment is the quiet one: a grey icon, and its label underlines grey while her words in the chat underline purple */
+.rm-thread .ic.c-cal{background:var(--mute-2)}
+.rm-card .m-cal[data-s].hit{text-decoration-color:var(--mute-2)}
 @media (max-width:600px){
   .rm-card{padding:16px 14px;gap:12px}.rm-thread>li{gap:11px;padding-bottom:14px}.rm-thread p{font-size:14px}
   /* the chat and the new booking use the full card width, under the icons */
@@ -1323,13 +1332,17 @@ footer .f-brand img{height:28px}
 .lo::after{content:"";position:absolute;inset:0;border-radius:50%;pointer-events:none;
   background:radial-gradient(55% 42% at 34% 20%,rgba(255,255,255,.8),transparent 72%)}
 /* The eyes' box is the whole orb, so a tilt or a squash turns about her face's
-   centre (47% down), not about the pair of eyes. Looking aside also turns that
-   box in 3D (--lo-p is the camera distance): the eye nearer the edge comes out
-   narrower and a little shorter, as it would on a ball. Resting, the turn
-   follows --lo-gx / --lo-gy; the idle gaze animates it. */
+   centre (47% down), not about the pair of eyes. Looking somewhere is a real
+   turn of her head: the eyes sit in front of a pivot (--lo-in / --lo-out push
+   it back and out again) and turn about it, seen through a near camera
+   (--lo-p). So both eyes slide round towards the edge, and the one further
+   round comes out narrower and smaller. The pivot is deeper than her real
+   centre on purpose: a small angle then carries the eyes a long way, and they
+   stay full ovals instead of thinning to slivers at the edge. Resting, the turn
+   follows --lo-gx / --lo-gy; the idle gaze animates the same two angles. */
 .lo-eyes{position:absolute;inset:-3% 0 3%;z-index:1;display:flex;align-items:center;justify-content:center;gap:calc(var(--lo-s)*.1);
-  --lo-u:calc(var(--lo-s)/100);--lo-p:perspective(calc(var(--lo-s)*.6));
-  transform:var(--lo-p) rotateY(calc(var(--lo-gx,0)*30deg)) rotateX(calc(var(--lo-gy,0)*-11deg));
+  --lo-p:perspective(calc(var(--lo-s)*.8));--lo-in:translateZ(calc(var(--lo-s)*-.55));--lo-out:translateZ(calc(var(--lo-s)*.55));
+  transform:var(--lo-p) var(--lo-in) rotateY(calc(var(--lo-gx,0)*30deg)) rotateX(calc(var(--lo-gy,0)*-17deg)) var(--lo-out);
   animation:lo-gaze var(--lo-gd) ease-in-out infinite,lo-dart var(--lo-gd) ease-in-out infinite,lo-tilt var(--lo-td) ease-in-out infinite;
   animation-delay:calc(var(--lo-e,0) * -1ms);transition:opacity .2s ease,transform .22s cubic-bezier(.2,.8,.2,1)}
 /* Oval eyes. The smile is a mask: an arc rising from below eats each eye's
@@ -1338,7 +1351,6 @@ footer .f-brand img{height:28px}
 .lo-eyes i{display:block;width:calc(var(--lo-s)*.135);height:calc(var(--lo-s)*.235);border-radius:50%;background:var(--lo-eye,#111114);
   -webkit-mask:radial-gradient(ellipse 58% 24% at 50% 100%,transparent 96%,#000 100%) 50% 0/100% 300% no-repeat;
   mask:radial-gradient(ellipse 58% 24% at 50% 100%,transparent 96%,#000 100%) 50% 0/100% 300% no-repeat;
-  translate:calc(var(--lo-gx,0)*var(--lo-s)*.12) calc(var(--lo-gy,0)*var(--lo-s)*.09);transition:translate .22s cubic-bezier(.2,.8,.2,1);
   animation:lo-blink var(--lo-bd) ease-in-out infinite,lo-joy var(--lo-jd) ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
 .lo-fast .lo-eyes{animation:lo-ponder 3.4s ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
 .lo-watch .lo-eyes{animation:none}
@@ -1347,6 +1359,11 @@ footer .f-brand img{height:28px}
   animation-fill-mode:none,none,forwards;animation-delay:calc(var(--lo-e,0) * -1ms),calc(var(--lo-e,0) * -1ms),0s}
 .lo.lo-hop{transform-origin:50% 85%;animation:lo-breathe 5.3s ease-in-out infinite,lo-hop .8s linear;
   animation-delay:calc(var(--lo-e,0) * -1ms),calc(var(--lo-hd,0) * -1ms)}
+/* Calm: no wandering, tilting or breathing, just blinks (and a look at the
+   cursor when it comes close). For a face that sits beside text being read. */
+.lo.lo-calm,.lo.lo-calm .lo-eyes{animation:none}
+.lo.lo-calm .lo-eyes i{animation:lo-blink var(--lo-bd) ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
+.lo.lo-calm.lo-hop{animation:lo-hop .8s linear;animation-delay:calc(var(--lo-hd,0) * -1ms)}
 .lo-fast .lo::before{animation-duration:7s}
 .lo-tint{--lo-metal:conic-gradient(from 0deg,color-mix(in srgb,var(--lo-tint) 22%,#fff),color-mix(in srgb,var(--lo-tint) 72%,#4a4a4a) 12%,
   color-mix(in srgb,var(--lo-tint) 30%,#fff) 24%,color-mix(in srgb,var(--lo-tint) 70%,#1c1c1c) 36%,color-mix(in srgb,var(--lo-tint) 45%,#eee) 48%,
@@ -1386,28 +1403,28 @@ footer .f-brand img{height:28px}
 @keyframes lo-swirl{to{transform:rotate(360deg)}}
 @keyframes lo-drift{0%{transform:translate(-4%,-3%) rotate(-9deg)}100%{transform:translate(4%,3%) rotate(9deg)}}
 @keyframes lo-breathe{0%,100%{scale:1}50%{scale:calc(1 + .012*var(--lo-ba)) calc(1 + .026*var(--lo-ba))}}
-/* Where she looks (units of 1% of her size): darts with a small overshoot, then
-   a hold with a slow drift, like real fixations. Mostly near the middle, now
-   and then far to a side or up/down a diagonal. The 3D turn goes with it. */
-@keyframes lo-gaze{0%,9%{translate:0 0;transform:var(--lo-p) rotateY(0deg) rotateX(0deg)}
-  9.7%{translate:calc(var(--lo-u)*-13) calc(var(--lo-u)*-1);transform:var(--lo-p) rotateY(-26deg) rotateX(1deg)}
-  10.4%,18%{translate:calc(var(--lo-u)*-11) calc(var(--lo-u)*-1);transform:var(--lo-p) rotateY(-22deg) rotateX(1deg)}
-  19.5%{translate:calc(var(--lo-u)*-10) 0;transform:var(--lo-p) rotateY(-20deg) rotateX(0deg)}
-  20.2%,28%{translate:calc(var(--lo-u)*1) calc(var(--lo-u)*1);transform:var(--lo-p) rotateY(2deg) rotateX(-1deg)}
-  28.7%{translate:calc(var(--lo-u)*17) calc(var(--lo-u)*-9);transform:var(--lo-p) rotateY(34deg) rotateX(9deg)}
-  29.4%,36%{translate:calc(var(--lo-u)*15) calc(var(--lo-u)*-8);transform:var(--lo-p) rotateY(30deg) rotateX(8deg)}
-  36.7%,38.2%{translate:calc(var(--lo-u)*4) calc(var(--lo-u)*3);transform:var(--lo-p) rotateY(8deg) rotateX(-3deg)}
-  38.9%,46%{translate:calc(var(--lo-u)*-7) calc(var(--lo-u)*3);transform:var(--lo-p) rotateY(-14deg) rotateX(-3deg)}
-  46.7%,55%{translate:0 0;transform:var(--lo-p) rotateY(0deg) rotateX(0deg)}
-  55.7%{translate:calc(var(--lo-u)*-17) calc(var(--lo-u)*7);transform:var(--lo-p) rotateY(-34deg) rotateX(-7deg)}
-  56.4%,62%{translate:calc(var(--lo-u)*-15) calc(var(--lo-u)*6);transform:var(--lo-p) rotateY(-30deg) rotateX(-6deg)}
-  62.7%,70%{translate:calc(var(--lo-u)*2) calc(var(--lo-u)*-1);transform:var(--lo-p) rotateY(4deg) rotateX(1deg)}
-  70.7%{translate:calc(var(--lo-u)*9) calc(var(--lo-u)*-11);transform:var(--lo-p) rotateY(18deg) rotateX(11deg)}
-  71.4%,78%{translate:calc(var(--lo-u)*8) calc(var(--lo-u)*-10);transform:var(--lo-p) rotateY(16deg) rotateX(10deg)}
-  78.7%,83%{translate:calc(var(--lo-u)*-3) 0;transform:var(--lo-p) rotateY(-6deg) rotateX(0deg)}
-  83.7%{translate:calc(var(--lo-u)*16) calc(var(--lo-u)*2);transform:var(--lo-p) rotateY(32deg) rotateX(-2deg)}
-  84.4%,90%{translate:calc(var(--lo-u)*14) calc(var(--lo-u)*1);transform:var(--lo-p) rotateY(28deg) rotateX(-1deg)}
-  90.7%,100%{translate:0 0;transform:var(--lo-p) rotateY(0deg) rotateX(0deg)}}
+/* Where she looks, as a turn right and a tip up in degrees: darts with a small
+   overshoot, then a hold with a slow drift, like real fixations. Mostly near
+   the middle, now and then far round to a side or up/down a diagonal. */
+@keyframes lo-gaze{0%,9%{transform:var(--lo-p) var(--lo-in) rotateY(0deg) rotateX(0deg) var(--lo-out)}
+  9.7%{transform:var(--lo-p) var(--lo-in) rotateY(-19.5deg) rotateX(1.5deg) var(--lo-out)}
+  10.4%,18%{transform:var(--lo-p) var(--lo-in) rotateY(-16.5deg) rotateX(1.5deg) var(--lo-out)}
+  19.5%{transform:var(--lo-p) var(--lo-in) rotateY(-15deg) rotateX(0deg) var(--lo-out)}
+  20.2%,28%{transform:var(--lo-p) var(--lo-in) rotateY(1.5deg) rotateX(-1.5deg) var(--lo-out)}
+  28.7%{transform:var(--lo-p) var(--lo-in) rotateY(29deg) rotateX(11deg) var(--lo-out)}
+  29.4%,36%{transform:var(--lo-p) var(--lo-in) rotateY(25deg) rotateX(9.5deg) var(--lo-out)}
+  36.7%,38.2%{transform:var(--lo-p) var(--lo-in) rotateY(6deg) rotateX(-3.5deg) var(--lo-out)}
+  38.9%,46%{transform:var(--lo-p) var(--lo-in) rotateY(-11.5deg) rotateX(-3.5deg) var(--lo-out)}
+  46.7%,55%{transform:var(--lo-p) var(--lo-in) rotateY(0deg) rotateX(0deg) var(--lo-out)}
+  55.7%{transform:var(--lo-p) var(--lo-in) rotateY(-29deg) rotateX(-8deg) var(--lo-out)}
+  56.4%,62%{transform:var(--lo-p) var(--lo-in) rotateY(-25deg) rotateX(-6.5deg) var(--lo-out)}
+  62.7%,70%{transform:var(--lo-p) var(--lo-in) rotateY(3deg) rotateX(1.5deg) var(--lo-out)}
+  70.7%{transform:var(--lo-p) var(--lo-in) rotateY(13.5deg) rotateX(13.5deg) var(--lo-out)}
+  71.4%,78%{transform:var(--lo-p) var(--lo-in) rotateY(12deg) rotateX(12deg) var(--lo-out)}
+  78.7%,83%{transform:var(--lo-p) var(--lo-in) rotateY(-4.5deg) rotateX(0deg) var(--lo-out)}
+  83.7%{transform:var(--lo-p) var(--lo-in) rotateY(28deg) rotateX(-2deg) var(--lo-out)}
+  84.4%,90%{transform:var(--lo-p) var(--lo-in) rotateY(24.5deg) rotateX(-1.5deg) var(--lo-out)}
+  90.7%,100%{transform:var(--lo-p) var(--lo-in) rotateY(0deg) rotateX(0deg) var(--lo-out)}}
 /* The eyes squash a little mid-dart, in step with lo-gaze. */
 @keyframes lo-dart{0%,9%,9.7%,19.5%,20.2%,28%,28.7%,36%,36.7%,38.2%,38.9%,46%,46.7%,55%,55.7%,62%,62.7%,70%,70.7%,78%,78.7%,83%,83.7%,90%,90.7%,100%{scale:1}
   9.35%,19.85%,28.35%,36.35%,38.55%,46.35%,55.35%,62.35%,70.35%,78.35%,83.35%,90.35%{scale:1.09 .91}}
@@ -1418,10 +1435,10 @@ footer .f-brand img{height:28px}
 @keyframes lo-joy{0%,63%,71.5%,100%{width:calc(var(--lo-s)*.135);height:calc(var(--lo-s)*.235);-webkit-mask-position:50% 0;mask-position:50% 0}
   64.5%,70%{width:calc(var(--lo-s)*.185);height:calc(var(--lo-s)*.14);-webkit-mask-position:50% 100%;mask-position:50% 100%}}
 @keyframes lo-glee{to{width:calc(var(--lo-s)*.185);height:calc(var(--lo-s)*.14);-webkit-mask-position:50% 100%;mask-position:50% 100%}}
-/* Thinking: up and far to one side, then the other, head tilted with it. */
-@keyframes lo-ponder{0%,100%{translate:calc(var(--lo-u)*12) calc(var(--lo-u)*-10);rotate:-4deg;transform:var(--lo-p) rotateY(24deg) rotateX(10deg)}
-  40%{translate:calc(var(--lo-u)*10) calc(var(--lo-u)*-11);rotate:-4deg;transform:var(--lo-p) rotateY(20deg) rotateX(11deg)}
-  48%,88%{translate:calc(var(--lo-u)*-11) calc(var(--lo-u)*-10);rotate:4deg;transform:var(--lo-p) rotateY(-22deg) rotateX(10deg)}}
+/* Thinking: up and far round to one side, then the other, head tilted with it. */
+@keyframes lo-ponder{0%,100%{rotate:-4deg;transform:var(--lo-p) var(--lo-in) rotateY(21deg) rotateX(12deg) var(--lo-out)}
+  40%{rotate:-4deg;transform:var(--lo-p) var(--lo-in) rotateY(18deg) rotateX(13.5deg) var(--lo-out)}
+  48%,88%{rotate:4deg;transform:var(--lo-p) var(--lo-in) rotateY(-19.5deg) rotateX(12deg) var(--lo-out)}}
 /* A hop: crouch, spring up stretched, land squashed, settle. */
 @keyframes lo-hop{0%{translate:0 0;scale:1;animation-timing-function:ease-in}
   15%{translate:0 0;scale:1.12 .86;animation-timing-function:cubic-bezier(.2,.7,.4,1)}
@@ -1429,7 +1446,7 @@ footer .f-brand img{height:28px}
   64%{translate:0 0;scale:1.12 .88;animation-timing-function:ease-out}
   82%{translate:0 0;scale:.97 1.03;animation-timing-function:ease-in-out}
   100%{translate:0 0;scale:1}}
-@media (prefers-reduced-motion:reduce){.lo,.lo::before,.lo-eyes,.lo-eyes i,.lo-fast .lo-eyes,.lo.lo-hop,.lo-happy .lo-eyes i,.la-btn:hover .lo-eyes i{animation:none;transition:none}}
+@media (prefers-reduced-motion:reduce){.lo,.lo::before,.lo-eyes,.lo-eyes i,.lo-fast .lo-eyes,.lo.lo-hop,.lo.lo-calm .lo-eyes i,.lo.lo-calm.lo-hop,.lo-happy .lo-eyes i,.la-btn:hover .lo-eyes i{animation:none;transition:none}}
 
 /* The page styles bare <i> inside .wav, .launch and .ai-sara (status dot,
    launcher core, talking bars); her eyes are <i> too, so they are put back. */
@@ -1722,7 +1739,7 @@ footer .f-brand img{height:28px}
             <path data-ch="whatsapp" class="on" d="M24 50 C 34 50, 34 50, 44 50"/>
             <path data-ch="website" class="on" d="M24 50 C 34 50, 34 83, 44 83"/>
           </svg>
-          <div class="hub-emma"><span class="av3"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><b>Sara</b></div>
+          <div class="hub-emma"><span class="av3 lo-tint"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><b>Sara</b></div>
           <button type="button" class="hub-node" data-ch="phone" aria-pressed="true"><i class="ic c-phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></i><span><b>Telefoon</b><small>Neemt je gesprekken aan</small></span><em class="sw2"></em></button>
           <button type="button" class="hub-node" data-ch="whatsapp" aria-pressed="true"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i><span><b>WhatsApp</b><small>Beantwoordt berichten</small></span><em class="sw2"></em></button>
           <button type="button" class="hub-node" data-ch="website" aria-pressed="true"><i class="ic c-web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z"/></svg></i><span><b>Websitechat</b><small>Helpt bezoekers</small></span><em class="sw2"></em></button>
@@ -1791,7 +1808,7 @@ footer .f-brand img{height:28px}
             <h3>Nachtelijke bezoekers worden afspraken</h3>
             <p class="cost">Ze helpt bezoekers op je site en plant een vrij moment in. Bezoekers kunnen typen, een foto sturen of een spraakbericht inspreken.</p>
             <div class="looks" id="looks">
-              <div class="look-orb" aria-hidden="true"><span class="look ox-silver" data-name="Zilver" data-kind="Metaal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-gold" data-name="Goud" data-kind="Metaal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-copper" data-name="Koper" data-kind="Metaal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-rose" data-name="Roségoud" data-kind="Metaal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-sky" data-name="Hemelsblauw" data-kind="Kleurverloop"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-wine" data-name="Wijnrood" data-kind="Kleurverloop"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-sage" data-name="Salie" data-kind="Kleurverloop"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-violet" data-name="Violet" data-kind="Kleurverloop"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look lb lb-silver" data-name="Zilveren rand" data-kind="Chatknop"><i><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></i></span><span class="look lb lb-gold" data-name="Gouden rand" data-kind="Chatknop"><i><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></i></span><span class="look lb lb-wine" data-name="Wijnrood" data-kind="Chatknop"><i><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></i></span><span class="look lb lb-cream" data-name="Crème" data-kind="Chatknop"><i><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></i></span></div>
+              <div class="look-orb" aria-hidden="true"><span class="look ox-silver" data-name="Zilver" data-kind="Metaal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-gold" data-name="Goud" data-kind="Metaal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-copper" data-name="Koper" data-kind="Metaal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-rose" data-name="Roségoud" data-kind="Metaal"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-sky" data-name="Hemelsblauw" data-kind="Kleurverloop"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-wine" data-name="Wijnrood" data-kind="Kleurverloop"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-sage" data-name="Salie" data-kind="Kleurverloop"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look ox-violet" data-name="Violet" data-kind="Kleurverloop"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><span class="look lb lb-silver" data-name="Zilveren rand" data-kind="Chatknop"><i><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></i></span><span class="look lb lb-gold" data-name="Gouden rand" data-kind="Chatknop"><i><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></i></span><span class="look lb lb-wine" data-name="Wijnrood" data-kind="Chatknop"><i><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></i></span><span class="look lb lb-cream" data-name="Crème" data-kind="Chatknop"><i><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></i></span><span class="look lb lb-band" data-name="Kleurband" data-kind="Chatknop"><i><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></i></span></div>
               <div class="look-copy">
                 <p><b>Ze draagt jouw huisstijl.</b> Kies haar kleur, haar gezicht en de knop. Haar chatballonnen kleuren mee.</p>
                 <small class="look-now"><span id="look-kind">Metaal</span> · <span id="look-name">Zilver</span></small>
@@ -1917,7 +1934,7 @@ footer .f-brand img{height:28px}
                       <div class="rm-chat"><div class="wm me" data-k="q">Hoi, ik heb een korte vraag</div>
                       <div class="wm biz" data-k="hi">Hoi <mark class="m-tel">Michiel</mark>! Is je <mark class="m-tel">kies</mark> nog gevoelig sinds <mark class="m-cal">de afspraak van donderdag</mark>?</div>
                       <div class="wm me" data-k="re">Alles goed nu. Kan ik ook een gebitsreiniging inplannen?</div></div>
-                      <span class="rm-out rm-next"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Sara plande een gebitsreiniging in bij <mark class="m-cal">tandarts Bakker</mark>, volgende dinsdag om 14:30</span></div></li>
+                      <span class="rm-out rm-next"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Sara plande een gebitsreiniging in bij tandarts Bakker, volgende dinsdag om 14:30</span></div></li>
                 </ol>
               </div>
             </div>
@@ -3208,7 +3225,7 @@ footer .f-brand img{height:28px}
    cursor that rests is let go of. Mouse only. */
 (function(){
   var mm=window.matchMedia;
-  if(!mm||!mm('(hover: hover) and (pointer: fine)').matches||mm('(prefers-reduced-motion: reduce)').matches)return;
+  if(!mm||mm('(prefers-reduced-motion: reduce)').matches)return;
   var p=null,queued=false,rest=null;
   function away(el){
     if(!el.classList.contains('lo-watch')||el._away)return;
@@ -3238,7 +3255,7 @@ footer .f-brand img{height:28px}
   document.documentElement.addEventListener('mouseleave',function(){p=null;clearTimeout(rest);tick()});
 })();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=16" data-key="wk_KXOIfpmMfShAKcLjinezibMs" async></script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=18" data-key="wk_KXOIfpmMfShAKcLjinezibMs" async></script>
 <script>
 (function(){
   var sec=document.getElementById('how');if(!sec)return;

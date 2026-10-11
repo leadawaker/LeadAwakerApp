@@ -377,7 +377,16 @@
     "loadError": "Could not load reviews",
     "connectionError": "Could not check connection",
     "saved": "Review settings saved",
-    "saveError": "Could not save settings"
+    "saveError": "Could not save settings",
+    "accountLabel": "Account",
+    "accountHint": "Reviews are connected per account. Choose which one to set up.",
+    "timelineReceived": "Review received",
+    "timelineDrafted": "AI reply drafted",
+    "timelinePosted": "Reply posted on Google",
+    "oauthConnected": "Google Business Profile connected. Now choose a location.",
+    "oauthError": "Could not connect Google Business Profile",
+    "sampleAnalytics": "Sample data. These numbers do not come from your reviews yet.",
+    "previewSettings": "Preview. The settings below are not saved yet."
   },
   "knowledge": {
     "title": "Knowledge Base",
@@ -645,6 +654,10 @@
     "orbMetal": "Metal",
     "orbTinted": "Colour swirl",
     "orbSolid": "Solid colour",
+    "orbGradient": "Gradient",
+    "orbPalette": "Palette",
+    "grad_sunset": "Sunset",
+    "grad_aurora": "Aurora",
     "orbColor": "Colour",
     "orbEyes": "Eyes",
     "eyesAuto": "Auto",

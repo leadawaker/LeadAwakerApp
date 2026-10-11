@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Layers, ListFilter } from "lucide-react";
-import type { AutoRule, InboxSelection, Review } from "../types";
+import type { AutoRule, FeedbackItem, InboxSelection, Review } from "../types";
 import { repAutoPosts, repAgeHours, repDelayLabel } from "../utils";
-import { REP_DATA } from "../data";
+import { useTranslation } from "react-i18next";
 import {
   IconSpark, IconSort, IconChev,
   RepListCard,
@@ -13,15 +13,14 @@ import { RepFeedbackListCard, RepFeedbackDetail } from "./feedback";
 export type RepView = { key: string; label: string; count: number | null; spark?: boolean };
 
 // ── Derived lists (single source of truth for auto-post split) ───
-export function getRepInboxLists(auto: AutoRule, autoMode: boolean) {
-  const needsAll = REP_DATA.reviews.filter((r) => r.status === "needs");
+export function getRepInboxLists(reviews: Review[], auto: AutoRule, autoMode: boolean) {
+  const needsAll = reviews.filter((r) => r.status === "needs");
   const autoList = needsAll.filter((r) => autoMode && repAutoPosts(r, auto));
   const heldList = needsAll.filter((r) => !autoMode || !repAutoPosts(r, auto));
   return { needsAll, autoList, heldList, heldCount: heldList.length, autoCount: autoList.length };
 }
 
-export function getRepViews(autoMode: boolean, heldCount: number, autoCount: number): RepView[] {
-  const S = REP_DATA.summary;
+export function getRepViews(autoMode: boolean, heldCount: number, autoCount: number, repliedCount: number): RepView[] {
   return autoMode
     ? [
         { key: "needs", label: "Needs attention", count: heldCount },
@@ -29,8 +28,8 @@ export function getRepViews(autoMode: boolean, heldCount: number, autoCount: num
         { key: "all", label: "All activity", count: null },
       ]
     : [
-        { key: "needs", label: "Needs reply", count: S.needsReply },
-        { key: "replied", label: "Replied", count: S.replied },
+        { key: "needs", label: "Needs reply", count: heldCount },
+        { key: "replied", label: "Replied", count: repliedCount },
         { key: "all", label: "All activity", count: null },
       ];
 }
@@ -56,7 +55,7 @@ const REP_SORTS = [
 ] as const;
 
 // ── List item shape + grouping ───────────────────────────────────
-type RepItem = { kind: "review" | "feedback"; id: string; ref: Review | (typeof REP_DATA.feedback.intercepted)[0]; age: number };
+type RepItem = { kind: "review" | "feedback"; id: string; ref: Review | FeedbackItem; age: number };
 const ratingOf = (it: RepItem): number | null => ("rating" in it.ref ? it.ref.rating : null);
 
 function groupRepItems(items: RepItem[], group: string): { key: string; label: string | null; items: RepItem[] }[] {
@@ -89,7 +88,8 @@ function groupRepItems(items: RepItem[], group: string): { key: string; label: s
 }
 
 // ── Google not connected ─────────────────────────────────────────
-function RepConnectCard() {
+function RepConnectCard({ onConnect }: { onConnect?: () => void }) {
+  const { t } = useTranslation("accounts");
   return (
     <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: 40 }}>
       <div className="neu-raised" style={{ maxWidth: 440, borderRadius: "var(--r-panel)", background: "var(--card)", padding: "36px 34px", textAlign: "center" }}>
@@ -98,7 +98,7 @@ function RepConnectCard() {
         <p style={{ margin: "0 0 22px", fontSize: 13.5, lineHeight: 1.6, color: "var(--mute)" }}>
           Link your Google Business Profile to monitor incoming reviews and reply to them — with AI-drafted, human-approved responses — without leaving Lead Awaker.
         </p>
-        <button className="la-btn la-btn--wine la-btn--lg" style={{ margin: "0 auto" }}>Connect with Google</button>
+        <button onClick={onConnect} className="la-btn la-btn--wine la-btn--lg" style={{ margin: "0 auto" }}>{t("reviewResponse.connect")}</button>
         <div style={{ marginTop: 16, fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute-2)" }}>Read &amp; reply access · revoke anytime</div>
       </div>
     </div>
@@ -199,10 +199,17 @@ function RepGroupHeader({ label, count }: { label: string; count: number }) {
 }
 
 // ── Inbox tab ────────────────────────────────────────────────────
-export function RepInbox({ state, selection, setSelection, autoMode, auto, query, view, group, sort, filter }: { state: "connected" | "disconnected" | "caughtup"; selection: InboxSelection | null; setSelection: (s: InboxSelection | null) => void; autoMode: boolean; auto: AutoRule; query: string; view: string; group: string; sort: string; filter: string }) {
-  const D = REP_DATA;
-
-  const { autoList, heldList } = getRepInboxLists(auto, autoMode);
+export function RepInbox({ state, reviews, feedback, selection, setSelection, autoMode, auto, query, view, group, sort, filter, busyId, onPost, onSkip, onConnect }: {
+  state: "connected" | "disconnected" | "caughtup";
+  reviews: Review[]; feedback: FeedbackItem[];
+  selection: InboxSelection | null; setSelection: (s: InboxSelection | null) => void;
+  autoMode: boolean; auto: AutoRule; query: string; view: string; group: string; sort: string; filter: string;
+  busyId: string | null;
+  onPost: (reviewId: string, text: string) => void;
+  onSkip: (reviewId: string) => void;
+  onConnect: () => void;
+}) {
+  const { autoList, heldList } = useMemo(() => getRepInboxLists(reviews, auto, autoMode), [reviews, auto, autoMode]);
 
   const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 1600);
   useEffect(() => {
@@ -213,17 +220,17 @@ export function RepInbox({ state, selection, setSelection, autoMode, auto, query
   const narrow = vw < 920;
 
   const items = useMemo<RepItem[]>(() => {
-    const fbs = D.feedback.intercepted;
+    const fbs = feedback;
     let list: RepItem[] = [];
     if (view === "needs") list = heldList.map((r) => ({ kind: "review" as const, id: r.id, ref: r, age: repAgeHours(r.ago) }));
     else if (view === "autoreplied") list = autoList.map((r) => ({ kind: "review" as const, id: r.id, ref: r, age: repAgeHours(r.ago) }));
-    else if (view === "replied") list = D.reviews.filter((r) => r.status === "replied").map((r) => ({ kind: "review" as const, id: r.id, ref: r, age: repAgeHours(r.ago) }));
+    else if (view === "replied") list = reviews.filter((r) => r.status === "replied").map((r) => ({ kind: "review" as const, id: r.id, ref: r, age: repAgeHours(r.ago) }));
     else {
       list = [
         ...heldList.map((r) => ({ kind: "review" as const, id: r.id, ref: r, age: repAgeHours(r.ago) })),
         ...autoList.map((r) => ({ kind: "review" as const, id: r.id, ref: r, age: repAgeHours(r.ago) })),
         ...fbs.map((f) => ({ kind: "feedback" as const, id: f.id, ref: f, age: repAgeHours(f.ago) })),
-        ...D.reviews.filter((r) => r.status === "replied").map((r) => ({ kind: "review" as const, id: r.id, ref: r, age: repAgeHours(r.ago) })),
+        ...reviews.filter((r) => r.status === "replied").map((r) => ({ kind: "review" as const, id: r.id, ref: r, age: repAgeHours(r.ago) })),
       ];
     }
     if (query.trim()) {
@@ -240,14 +247,14 @@ export function RepInbox({ state, selection, setSelection, autoMode, auto, query
       ? ((ratingOf(a) ?? 0) - (ratingOf(b) ?? 0)) || (a.age - b.age)
       : a.age - b.age);
     return list;
-  }, [view, query, sort, filter, autoMode, JSON.stringify(auto)]);
+  }, [view, query, sort, filter, heldList, autoList, reviews, feedback]);
 
   const sections = useMemo(() => groupRepItems(items, group), [items, group]);
 
   const resolved = selection
     ? (selection.kind === "review"
-        ? D.reviews.find((r) => r.id === selection.id) ?? null
-        : D.feedback.intercepted.find((f) => f.id === selection.id) ?? null)
+        ? reviews.find((r) => r.id === selection.id) ?? null
+        : feedback.find((f) => f.id === selection.id) ?? null)
     : null;
   const resolvedAutoPosted = !!(resolved && selection?.kind === "review" && "status" in resolved && resolved.status === "needs" && autoMode && repAutoPosts(resolved as Review, auto));
 
@@ -262,7 +269,7 @@ export function RepInbox({ state, selection, setSelection, autoMode, auto, query
   if (state === "disconnected") {
     return (
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", background: "var(--bg)" }}>
-        <RepConnectCard />
+        <RepConnectCard onConnect={onConnect} />
       </div>
     );
   }
@@ -281,7 +288,7 @@ export function RepInbox({ state, selection, setSelection, autoMode, auto, query
                   {sec.items.map((it) =>
                     it.kind === "review"
                       ? <RepListCard key={it.id} review={it.ref as Review} active={!!(selection && selection.kind === "review" && selection.id === it.id)} onClick={() => setSelection({ kind: "review", id: it.id })} autoPosted={autoMode && "status" in it.ref && it.ref.status === "needs" && repAutoPosts(it.ref as Review, auto)} />
-                      : <RepFeedbackListCard key={it.id} item={it.ref as (typeof D.feedback.intercepted)[0]} active={!!(selection && selection.kind === "feedback" && selection.id === it.id)} onClick={() => setSelection({ kind: "feedback", id: it.id })} />
+                      : <RepFeedbackListCard key={it.id} item={it.ref as FeedbackItem} active={!!(selection && selection.kind === "feedback" && selection.id === it.id)} onClick={() => setSelection({ kind: "feedback", id: it.id })} />
                   )}
                 </div>
               </div>
@@ -305,8 +312,8 @@ export function RepInbox({ state, selection, setSelection, autoMode, auto, query
         {!resolved
           ? <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)" }}>Select a review</div>
           : selection?.kind === "review"
-            ? <RepReviewDetail review={resolved as Review} autoPosted={resolvedAutoPosted} autoDelay={auto.delay} />
-            : <RepFeedbackDetail item={resolved as (typeof D.feedback.intercepted)[0]} />}
+            ? <RepReviewDetail review={resolved as Review} autoPosted={resolvedAutoPosted} autoDelay={auto.delay} busy={busyId === (resolved as Review).id} onPost={onPost} onSkip={onSkip} />
+            : <RepFeedbackDetail item={resolved as FeedbackItem} />}
       </div>
     </div>
   );

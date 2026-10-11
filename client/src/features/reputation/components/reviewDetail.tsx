@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import type { Review, TimelineStep } from "../types";
 import { repRatingColor, repDelayLabel } from "../utils";
-import { REP_DATA } from "../data";
 import {
-  RIconExt, RIconRefresh, RIconFlag, RIconStarF, RIconEdit, RIconSend,
-  RIconNote, IconSpark, IconCheck,
+  RIconRefresh, RIconStarF, RIconEdit, RIconSend,
+  IconSpark, IconCheck,
   RepAvatar, RepStars, RepStatusPill, RepPlatformGlyph, RepLangBadge,
-  RepCard, RepLabel, TONE_ICONS,
+  RepCard, RepLabel,
 } from "./atoms";
 
 // ── AI Analysis sidebar (flat surface, sits right of the reply) ──
@@ -77,25 +77,15 @@ function RepAIAnalysis({ review }: { review: Review }) {
 }
 
 // ── AI Composer (flat panel — draft in an inset card, actions inline) ─
-function RepComposer({ review }: { review: Review }) {
-  const TONES = REP_DATA.tones;
-  const [tone, setTone] = useState(review.tone ?? "apologetic");
+function RepComposer({ review, busy, onPost, onSkip }: { review: Review; busy: boolean; onPost: (reviewId: string, text: string) => void; onSkip: (reviewId: string) => void }) {
+  const { t } = useTranslation("accounts");
   const [text, setText] = useState(review.draft ?? "");
-  const [thinking, setThinking] = useState(false);
   const [focused, setFocused] = useState(false);
-  const neg = review.rating <= 2;
 
+  // Reset on a new review, and pick the draft up when the engine finishes it.
   useEffect(() => {
     setText(review.draft ?? "");
-    setTone(review.tone ?? "apologetic");
-    setThinking(false);
-  }, [review.id]);
-
-  const regenerate = () => {
-    setThinking(true);
-    setText("");
-    setTimeout(() => { setText(review.draft ?? ""); setThinking(false); }, 1100);
-  };
+  }, [review.id, review.draft]);
 
   const len = text.length;
   const lenHint = len < 180 ? "Good length" : len < 320 ? "A touch long" : "Consider trimming";
@@ -113,49 +103,24 @@ function RepComposer({ review }: { review: Review }) {
 
       {/* the draft itself — inset card */}
       <div style={{ position: "relative", borderRadius: "var(--r-surface)", overflow: "hidden", background: "var(--bg)", boxShadow: focused ? "var(--sh-inset-crisp), inset 0 0 0 1.5px var(--wine)" : "var(--sh-inset-crisp)", transition: "box-shadow 130ms" }}>
-        {!thinking && (
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 13px 0" }}>
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute)" }}><RIconEdit size={11} />Editable draft</span>
-            <span style={{ fontFamily: "var(--mono)", fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", color: len < 320 ? "var(--mute-2)" : "var(--warn)" }}>{len} / 320</span>
-          </div>
-        )}
-        {thinking ? (
-          <div style={{ padding: "16px 15px" }}>
-            <div className="rep-shimmer" style={{ height: 12, borderRadius: "var(--r-pill)", marginBottom: 9, width: "96%" }} />
-            <div className="rep-shimmer" style={{ height: 12, borderRadius: "var(--r-pill)", marginBottom: 9, width: "88%" }} />
-            <div className="rep-shimmer" style={{ height: 12, borderRadius: "var(--r-pill)", width: "70%" }} />
-            <div style={{ marginTop: 12, display: "inline-flex", alignItems: "center", gap: 8, fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--wine)" }}>
-              <span className="rep-dots"><i></i><i></i><i></i></span> Drafting in {review.lang === "nl" ? "Dutch" : "English"}…
-            </div>
-          </div>
-        ) : (
-          <textarea value={text} onChange={(e) => setText(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} rows={5}
-            style={{ width: "100%", display: "block", border: "none", background: "transparent", outline: "none", resize: "none", fontFamily: "var(--sans)", fontSize: 13.5, lineHeight: 1.6, color: "var(--ink-soft)", padding: "10px 15px 13px" }} />
-        )}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, padding: "8px 13px 0" }}>
+          <span style={{ display: "inline-flex", alignItems: "center", gap: 7, fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute)" }}><RIconEdit size={11} />Editable draft</span>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 9.5, fontWeight: 700, letterSpacing: "0.04em", color: len < 320 ? "var(--mute-2)" : "var(--warn)" }}>{len} / 320</span>
+        </div>
+        <textarea value={text} onChange={(e) => setText(e.target.value)} onFocus={() => setFocused(true)} onBlur={() => setFocused(false)} rows={5}
+          placeholder={review.draft ? undefined : t("reviewResponse.drafting")}
+          style={{ width: "100%", display: "block", border: "none", background: "transparent", outline: "none", resize: "none", fontFamily: "var(--sans)", fontSize: 13.5, lineHeight: 1.6, color: "var(--ink-soft)", padding: "10px 15px 13px" }} />
       </div>
 
-      {/* tone + regenerate (icon) on the left, primary post action on the right */}
+      {/* skip on the left of the primary post action */}
       <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-        <div className="la-seg">
-          {TONES.map((t) => {
-            const TIc = TONE_ICONS[t.key];
-            return (
-              <button key={t.key} onClick={() => { setTone(t.key); regenerate(); }} className={`la-seg-btn${tone === t.key ? " on" : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-                {TIc && <TIc size={11} />}{t.label}
-              </button>
-            );
-          })}
-        </div>
-        <button onClick={regenerate} className="la-btn la-btn--inset la-btn--icon" title="Regenerate draft" aria-label="Regenerate draft"><RIconRefresh size={13} /></button>
         <div style={{ flex: 1 }} />
-        {neg && <button className="la-btn" style={{ color: "var(--wine)", background: "transparent", boxShadow: "none" }}><RIconFlag size={12} />Escalate to manager</button>}
-        <button className="la-btn" style={{ color: "var(--mute)", background: "transparent", boxShadow: "none", fontSize: 11 }}>Mark handled</button>
-        <button className="la-btn la-btn--wine"><RIconSend size={13} />Post reply</button>
+        <button onClick={() => onSkip(review.id)} disabled={busy} className="la-btn" style={{ color: "var(--mute)", background: "transparent", boxShadow: "none", fontSize: 11 }}>{t("reviewResponse.skip")}</button>
+        <button onClick={() => onPost(review.id, text)} disabled={busy || !text.trim()} className="la-btn la-btn--wine" style={{ opacity: busy || !text.trim() ? 0.5 : 1 }}><RIconSend size={13} />{t("reviewResponse.postReply")}</button>
       </div>
 
       <div style={{ display: "flex", alignItems: "center", gap: 10, fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.06em", color: "var(--mute-2)", flexWrap: "wrap" }}>
         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}><RepPlatformGlyph size={12} /> Posts publicly to Google as the business · {lenHint}</span>
-        <span style={{ display: "inline-flex", alignItems: "center", gap: 5, color: "var(--good)" }}><IconCheck size={11} />Edits saved automatically</span>
       </div>
     </div>
   );
@@ -178,7 +143,7 @@ function RepTimeline({ timeline }: { timeline: TimelineStep[] }) {
               <div style={{ fontSize: 12.5, fontWeight: 600, color: step.done ? "var(--ink)" : "var(--mute-2)" }}>{step.label}</div>
               <div style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)", letterSpacing: "0.06em", marginTop: 2 }}>
                 {step.done
-                  ? `${step.who && step.who !== "auto" ? step.who + " · " : step.who === "auto" ? "automatic · " : ""}${step.ago} ago`
+                  ? `${step.who && step.who !== "auto" ? step.who + " · " : step.who === "auto" ? "automatic · " : ""}${step.ago ? `${step.ago} ago` : "done"}`
                   : "pending"}
               </div>
             </div>
@@ -189,29 +154,19 @@ function RepTimeline({ timeline }: { timeline: TimelineStep[] }) {
   );
 }
 
-// ── Internal note + status — raised cards, sit with the panels above ─
+// ── Status timeline card ─────────────────────────────────────────
 function RepNoteAndStatus({ timeline }: { timeline: TimelineStep[] }) {
   return (
-    <div style={{ display: "flex", gap: 16, alignItems: "stretch", flexWrap: "wrap" }}>
-      <RepCard variant="raised" style={{ flex: "1 1 300px", minWidth: 0, borderRadius: "var(--r-surface)" }}
-        headLeft={<><span style={{ display: "flex", color: "var(--mute)" }}><RIconNote size={13} /></span><RepLabel>Internal note</RepLabel></>}>
-        <div style={{ padding: 14 }}>
-          <textarea className="neu-input" rows={3} placeholder="Private note — not posted publicly…"
-            style={{ width: "100%", resize: "none", fontSize: 12, lineHeight: 1.5, padding: "8px 11px", background: "var(--bg)" }} />
-        </div>
-      </RepCard>
-      <RepCard variant="raised" style={{ flex: "1 1 300px", minWidth: 0, borderRadius: "var(--r-surface)" }}
-        headLeft={<RepLabel>Status</RepLabel>}>
-        <div style={{ padding: 14 }}>
-          <RepTimeline timeline={timeline} />
-        </div>
-      </RepCard>
-    </div>
+    <RepCard variant="raised" style={{ borderRadius: "var(--r-surface)" }}
+      headLeft={<RepLabel>Status</RepLabel>}>
+      <div style={{ padding: 14 }}>
+        <RepTimeline timeline={timeline} />
+      </div>
+    </RepCard>
   );
 }
 
-// ── Review Detail pane ───────────────────────────────────────────
-export function RepReviewDetail({ review, autoPosted = false, autoDelay = "1h" }: { review: Review | null; autoPosted?: boolean; autoDelay?: string }) {
+export function RepReviewDetail({ review, autoPosted = false, autoDelay = "1h", busy = false, onPost, onSkip }: { review: Review | null; autoPosted?: boolean; autoDelay?: string; busy?: boolean; onPost: (reviewId: string, text: string) => void; onSkip: (reviewId: string) => void }) {
   if (!review) {
     return (
       <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", flexDirection: "column", gap: 12, color: "var(--mute-2)" }}>
@@ -247,7 +202,6 @@ export function RepReviewDetail({ review, autoPosted = false, autoDelay = "1h" }
               <span>{review.job}</span>
             </div>
           </div>
-          <a href="#" onClick={(e) => e.preventDefault()} className="la-btn la-btn--soft" style={{ flexShrink: 0 }}><RIconExt size={13} />View on Google</a>
         </div>
       </div>
 
@@ -261,11 +215,10 @@ export function RepReviewDetail({ review, autoPosted = false, autoDelay = "1h" }
         {replied && review.reply ? (
           <>
             <RepCard variant="raised" style={{ borderRadius: "var(--r-surface)" }}
-              headLeft={<><span style={{ display: "flex", color: "var(--good)" }}><IconCheck size={14} /></span><RepLabel color="var(--good)">Posted reply</RepLabel></>}
-              headRight={<button className="la-btn la-btn--soft"><RIconEdit size={12} />Edit reply</button>}>
+              headLeft={<><span style={{ display: "flex", color: "var(--good)" }}><IconCheck size={14} /></span><RepLabel color="var(--good)">Posted reply</RepLabel></>}>
               <div style={{ padding: "16px 18px" }}>
                 <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.6, color: "var(--ink-soft)" }}>{review.reply.text}</p>
-                <div style={{ marginTop: 12, fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", color: "var(--mute-2)", textTransform: "uppercase" }}>Posted by {review.reply.by} · {review.reply.ago} ago</div>
+                <div style={{ marginTop: 12, fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", color: "var(--mute-2)", textTransform: "uppercase" }}>{review.reply.by ? `Posted by ${review.reply.by}` : "Posted"}{review.reply.ago ? ` · ${review.reply.ago} ago` : ""}</div>
               </div>
             </RepCard>
           </>
@@ -292,7 +245,7 @@ export function RepReviewDetail({ review, autoPosted = false, autoDelay = "1h" }
           </>
         ) : (
           <div style={{ display: "flex", gap: 16, alignItems: "flex-start" }}>
-            <RepComposer review={review} />
+            <RepComposer review={review} busy={busy} onPost={onPost} onSkip={onSkip} />
             {review.analysis && <RepAIAnalysis review={review} />}
           </div>
         )}

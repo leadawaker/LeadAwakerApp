@@ -42,7 +42,8 @@ function orb(cls) {
     '<span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span>';
 }
 // Beside each message she just faces forward: a dozen blinking faces down the
-// thread would be a crowd, not a person.
+// thread would be a crowd, not a person. Only the newest one is awake (paint()
+// wakes it): it blinks, and it hops when her reply lands.
 var AI_AVATAR = '<div class="av av-orb">' + orb("lo-still") + "</div>";
 // While she writes, the face beside the typing dots is alive, its metal
 // spinning faster (.lo-fast on the panel while a reply is pending).
@@ -65,6 +66,8 @@ var API = DEMO
 var root = document.getElementById("root");
 var state = null;
 var pending = false;      // a turn is queued and we are waiting for the reply
+var aiSeen = -1;          // her messages at the last paint (-1: not painted yet)
+var hopAt = -1e9;         // when her newest reply landed
 var busy = false;         // a send is in flight
 var draft = "";
 var lastSig = "";
@@ -234,6 +237,12 @@ function paint() {
   // Same trick for the welcome intro (fade in, then a smile): time since the
   // panel was opened, so a repaint mid-intro does not replay it.
   document.documentElement.style.setProperty("--wi", String(Math.round(performance.now() - introAt)));
+  // A new reply from her starts a hop; --lo-hd (ms since it started) keeps a
+  // repaint from replaying it. The first paint is history, not news.
+  var aiCount = msgs.filter(function (m) { return m.role === "ai" && !m.human; }).length;
+  if (aiSeen > -1 && aiCount > aiSeen) hopAt = performance.now();
+  aiSeen = aiCount;
+  document.documentElement.style.setProperty("--lo-hd", String(Math.round(performance.now() - hopAt)));
   root.innerHTML =
     '<div class="wdg' + (welcome ? " is-welcome" : "") + (pending ? " lo-fast" : "") + '">' +
       headerHtml(agent, welcome) +
@@ -247,8 +256,61 @@ function paint() {
       (notice ? '<div class="wdg-notice" role="alert">' + esc(notice) + "</div>" : "") +
       '<div class="wdg-composer">' + composerHtml(done) + "</div>" +
     "</div>";
+  var faces = root.querySelectorAll(".row.ai .av-orb .lo");
+  var face = faces[faces.length - 1];
+  if (face) {
+    // Awake but calm: beside a message she only blinks, and glances at the
+    // cursor if it comes close. No looking around while someone is reading.
+    face.classList.remove("lo-still");
+    face.classList.add("lo-calm");
+    if (performance.now() - hopAt < 1000) face.classList.add("lo-hop");
+  }
+  lookAtPointer();
   wire(hadFocus || FINE_POINTER);
   scrollToEnd();
+}
+
+// She looks at the cursor when it comes close to her: the welcome orb, the
+// face beside the typing dots, the newest face in the thread (the still ones
+// stay still). One passive pointermove listener that only stores the position;
+// the work runs at most once a frame. A cursor that rests is let go of after a
+// moment, so she does not stare at a mouse parked next to her while the
+// visitor types. `--lo-gx` / `--lo-gy` and `.lo-watch` are read by the orb's
+// stylesheet (server/widgetOrb.ts).
+var ptr = null, ptrQueued = false, ptrRest = null;
+var FOLLOWS = !(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+function lookAway(el) {
+  if (!el.classList.contains("lo-watch") || el._away) return;
+  // Eyes glide back to the middle first, then the idle wander takes over.
+  el.style.setProperty("--lo-gx", "0");
+  el.style.setProperty("--lo-gy", "0");
+  el._away = setTimeout(function () { el._away = null; el.classList.remove("lo-watch"); }, 260);
+}
+function lookAtPointer() {
+  ptrQueued = false;
+  if (!FOLLOWS) return;
+  var faces = root.querySelectorAll(".lo:not(.lo-still)");
+  for (var i = 0; i < faces.length; i++) {
+    var el = faces[i], r = el.getBoundingClientRect();
+    var dx = ptr ? ptr.x - (r.left + r.width / 2) : 0, dy = ptr ? ptr.y - (r.top + r.height / 2) : 0;
+    var d = Math.sqrt(dx * dx + dy * dy);
+    if (!ptr || !r.width || d > Math.max(110, r.width * 1.9)) { lookAway(el); continue; }
+    var k = Math.min(1, d / (r.width * 0.9)) / (d || 1);
+    if (el._away) { clearTimeout(el._away); el._away = null; }
+    el.style.setProperty("--lo-gx", (dx * k).toFixed(3));
+    el.style.setProperty("--lo-gy", (dy * k).toFixed(3));
+    el.classList.add("lo-watch");
+  }
+}
+if (FOLLOWS) {
+  document.addEventListener("pointermove", function (e) {
+    if (e.pointerType && e.pointerType !== "mouse") return;
+    ptr = { x: e.clientX, y: e.clientY };
+    clearTimeout(ptrRest);
+    ptrRest = setTimeout(function () { ptr = null; lookAtPointer(); }, 2400);
+    if (!ptrQueued) { ptrQueued = true; requestAnimationFrame(lookAtPointer); }
+  }, { passive: true });
+  document.documentElement.addEventListener("mouseleave", function () { ptr = null; clearTimeout(ptrRest); lookAtPointer(); });
 }
 
 // Until the visitor has said anything, the panel is a welcome screen rather
@@ -663,3 +725,6 @@ if (!DEMO && !VISITOR) {
   paint();
   poll();
 }
+// Tell the launcher she has drawn: until it hears this it treats the panel as
+// not loaded and asks for it again (see armLoad in server/widgetPages.ts).
+try { parent.postMessage({ type: "la-widget-ready" }, "*"); } catch (e) {}

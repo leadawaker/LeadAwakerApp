@@ -80,7 +80,44 @@ WIDGET_JS = f"""<script>
   [].forEach.call(document.querySelectorAll('.js-login'),function(a){{a.textContent='Open app';a.href='/platform'}});
 }})();
 </script>
-<script src="https://api.leadawaker.com/widget/v1.js?v=14" data-key="{WIDGET_KEY}" async></script>
+<script>
+/* Sara's faces on this page look at the cursor when it comes close: the same
+   --lo-gx / --lo-gy / .lo-watch contract the widget's own launcher uses
+   (server/widgetOrb.ts). One passive listener, work at most once a frame; a
+   cursor that rests is let go of. Mouse only. */
+(function(){{
+  var mm=window.matchMedia;
+  if(!mm||mm('(prefers-reduced-motion: reduce)').matches)return;
+  var p=null,queued=false,rest=null;
+  function away(el){{
+    if(!el.classList.contains('lo-watch')||el._away)return;
+    el.style.setProperty('--lo-gx','0');el.style.setProperty('--lo-gy','0');
+    el._away=setTimeout(function(){{el._away=null;el.classList.remove('lo-watch')}},260);
+  }}
+  function tick(){{
+    queued=false;
+    var faces=document.querySelectorAll('.lo:not(.lo-still)');
+    for(var i=0;i<faces.length;i++){{
+      var el=faces[i],r=el.getBoundingClientRect();
+      if(!p||!r.width||r.bottom<0||r.top>window.innerHeight){{away(el);continue}}
+      var dx=p.x-(r.left+r.width/2),dy=p.y-(r.top+r.height/2),d=Math.sqrt(dx*dx+dy*dy);
+      if(d>Math.max(160,r.width*2.2)){{away(el);continue}}
+      var k=Math.min(1,d/(r.width*.9))/(d||1);
+      if(el._away){{clearTimeout(el._away);el._away=null}}
+      el.style.setProperty('--lo-gx',(dx*k).toFixed(3));el.style.setProperty('--lo-gy',(dy*k).toFixed(3));
+      el.classList.add('lo-watch');
+    }}
+  }}
+  document.addEventListener('pointermove',function(e){{
+    if(e.pointerType&&e.pointerType!=='mouse')return;
+    p={{x:e.clientX,y:e.clientY}};
+    clearTimeout(rest);rest=setTimeout(function(){{p=null;tick()}},2400);
+    if(!queued){{queued=true;requestAnimationFrame(tick)}}
+  }},{{passive:true}});
+  document.documentElement.addEventListener('mouseleave',function(){{p=null;clearTimeout(rest);tick()}});
+}})();
+</script>
+<script src="https://api.leadawaker.com/widget/v1.js?v=18" data-key="{WIDGET_KEY}" async></script>
 """
 
 
@@ -104,8 +141,9 @@ def _orb(cls: str = "") -> str:
 SARA_CSS = """
 /* The page styles bare <i> inside .wav, .launch and .ai-sara (status dot,
    launcher core, talking bars); her eyes are <i> too, so they are put back. */
-.lo .lo-eyes i{position:static;inset:auto;display:block;width:calc(var(--lo-s)*.095);height:calc(var(--lo-s)*.23);border:0;border-radius:999px;
-  box-shadow:none;background:var(--lo-eye,#111114);animation:lo-blink 5.4s ease-in-out infinite}
+.lo .lo-eyes i{position:static;inset:auto;display:block;width:calc(var(--lo-s)*.135);height:calc(var(--lo-s)*.235);border:0;border-radius:50%;
+  box-shadow:none;background:var(--lo-eye,#111114);
+  animation:lo-blink var(--lo-bd) ease-in-out infinite,lo-joy var(--lo-jd) ease-in-out infinite;animation-delay:calc(var(--lo-e,0) * -1ms)}
 .lo.lo-still .lo-eyes i{animation:none}
 .launch .lm{grid-area:1/1;position:relative;width:100%;height:100%;border-radius:50%;overflow:hidden;transition:opacity .3s}
 .launch .lm .lo{--lo-s:45px;-webkit-mask:none;mask:none}

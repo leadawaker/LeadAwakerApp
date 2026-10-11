@@ -24,7 +24,7 @@ export interface FrameConfig {
   avatar: string;
   language: string;
   maxTurns: number;
-  /** The orb face: 'metal' | 'tinted' | 'solid' (colour = accent), eyes 'auto' | 'black' | 'white'. */
+  /** The orb face: 'metal' | 'tinted' | 'solid' (colour = accent) | a gradient ('sunset' | 'aurora'), eyes 'auto' | 'black' | 'white'. */
   orbStyle?: string | null;
   orbEyes?: string | null;
   /** Metal only: a shade for the metal (gold, copper...); null keeps silver. */
@@ -33,7 +33,7 @@ export interface FrameConfig {
   orbFace?: string | null;
   /** The face photo's URL on our own origin, when orbFace is 'photo'. */
   orbPhoto?: string | null;
-  /** The launcher's rim: 'metal' (default) | 'pulse' | 'band' | 'none', and its colour. */
+  /** The launcher's rim: 'band' (default, white) | 'metal' | 'pulse' | 'none', and its colour. */
   orbRim?: string | null;
   orbRimColor?: string | null;
   /** What the launcher casts: 'shadow' | 'none' | 'glow', and its colour. */
@@ -112,10 +112,11 @@ export const LAUNCHER_CSS = `
 .la-root.lo-rim-pulse .la-btn::before{background:var(--lo-rim,#a1a1aa);animation:none}
 .la-root.lo-rim-pulse .la-core{inset:8px}
 .la-root.lo-rim-pulse .la-core .lo{--lo-s:44px}
-.la-root.lo-rim-pulse .la-btn::after{inset:-6px;background:none;filter:none;border:2px solid var(--lo-rim,#a1a1aa);opacity:.4;animation:la-pulse 2.6s ease-out infinite}
+.la-root.lo-rim-pulse .la-btn::after{inset:-6px;background:none;filter:none;border:2px solid var(--lo-rim,#a1a1aa);opacity:.4;animation:la-pulse 7.8s ease-out infinite}
 .la-root.lo-rim-pulse .la-btn:hover::after{opacity:.4}
-@keyframes la-pulse{0%{transform:scale(1);opacity:.45}100%{transform:scale(1.35);opacity:0}}
-.la-root.lo-rim-band .la-btn::before{background:var(--lo-rim,#a1a1aa);animation:none}
+/* One ring every 7.8s (3x rarer than before): it still swells over 2.6s, then rests. */
+@keyframes la-pulse{0%{transform:scale(1);opacity:.45}33%,100%{transform:scale(1.35);opacity:0}}
+.la-root.lo-rim-band .la-btn::before{background:var(--lo-rim,#fff);animation:none}
 .la-root.lo-rim-band .la-btn::after{display:none}
 /* The orb is 20% smaller than the metal one (44px of the 60px button), so the band stays the button's size and gets thicker. */
 .la-root.lo-rim-band .la-core{inset:8px}
@@ -149,6 +150,15 @@ export const LAUNCHER_CSS = `
   font:700 11px/16px -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,system-ui,sans-serif;text-align:center;display:none;z-index:3;
   animation:la-pop .35s cubic-bezier(.2,.8,.2,1)}
 @keyframes la-pop{from{transform:scale(.4)}to{transform:none}}
+/* A reply landed while the chat is closed: she hops (on translate/scale, so
+   the hover lift on transform still applies) and smiles while she does. */
+.la-btn.la-hop{animation:la-hop .8s linear}
+.la-btn.la-hop .lo-eyes i{animation:lo-glee .4s cubic-bezier(.3,1.5,.5,1) forwards}
+@keyframes la-hop{0%{translate:0 0;scale:1;animation-timing-function:ease-in}
+  15%{translate:0 0;scale:1.08 .9;animation-timing-function:cubic-bezier(.2,.7,.4,1)}
+  42%{translate:0 -16px;scale:.95 1.06;animation-timing-function:cubic-bezier(.6,0,.8,.4)}
+  64%{translate:0 0;scale:1.08 .92;animation-timing-function:ease-out}
+  82%{translate:0 0;scale:.98 1.02}100%{translate:0 0;scale:1}}
 @keyframes la-spin{to{transform:rotate(360deg)}}
 
 .la-teaser{position:var(--la-pos,fixed);bottom:calc(var(--la-gap) + 74px);right:var(--la-gap);width:216px;max-width:calc(100vw - 40px);
@@ -178,7 +188,7 @@ export const LAUNCHER_CSS = `
   .la-root.is-open .la-btn,.la-root.is-open .la-teaser{display:none}
 }
 @media (prefers-reduced-motion:reduce){
-  .la-btn::before,.la-btn::after,.la-glint,.la-root.lo-rim-pulse .la-btn::after{animation:none}
+  .la-btn::before,.la-btn::after,.la-glint,.la-root.lo-rim-pulse .la-btn::after,.la-btn.la-hop,.la-btn.la-hop .lo-eyes i{animation:none}
   .la-btn,.la-teaser,.la-core .la-i-x{transition:none}
   .la-panel.open{animation:none}
 }` + ORB_CSS;
@@ -219,8 +229,56 @@ const UNREAD_JS = String.raw`
     dotEl.textContent=unread>9?"9+":String(unread);
     dotEl.style.display="block";
     ding();
+    hop(dotEl.parentNode);
+  }
+  // She hops on the launcher when a reply arrives (restarted if one is mid-air).
+  var hopT=null;
+  function hop(btnEl){
+    if(!btnEl||!btnEl.classList)return;
+    btnEl.classList.remove("la-hop");void btnEl.offsetWidth;btnEl.classList.add("la-hop");
+    clearTimeout(hopT);hopT=setTimeout(function(){btnEl.classList.remove("la-hop");},1600);
   }
   function clearUnread(dotEl){unread=0;dotEl.style.display="none";}
+`;
+
+// Her eyes follow the cursor while it is near the launcher, shared by the
+// loader and the demo page. One passive pointermove listener that only stores
+// the position; the work (one getBoundingClientRect, two CSS variables) runs at
+// most once a frame. If the cursor rests she loses interest and goes back to
+// looking around. Mouse/trackpad only: a phone has no cursor to follow.
+const FOLLOW_JS = String.raw`
+  function armFollow(rootEl,btnEl,isOpen){
+    var mm=window.matchMedia;
+    if(!mm||mm("(prefers-reduced-motion: reduce)").matches)return;
+    var px=0,py=0,queued=false,on=false,rest=null;
+    // Looking away: her eyes glide back to the middle first, and only then
+    // does the idle wander take over, so there is no jump between the two.
+    var back=null;
+    function watch(v){
+      if(v===on)return;on=v;clearTimeout(back);
+      if(v){rootEl.classList.add("lo-watch");return;}
+      rootEl.style.setProperty("--lo-gx","0");rootEl.style.setProperty("--lo-gy","0");
+      back=setTimeout(function(){rootEl.classList.remove("lo-watch");},260);
+    }
+    function tick(){
+      queued=false;
+      if(isOpen())return watch(false);
+      var r=btnEl.getBoundingClientRect(),dx=px-(r.left+r.width/2),dy=py-(r.top+r.height/2),d=Math.sqrt(dx*dx+dy*dy);
+      if(d>380)return watch(false);
+      var k=Math.min(1,d/110)/(d||1);
+      rootEl.style.setProperty("--lo-gx",(dx*k).toFixed(3));
+      rootEl.style.setProperty("--lo-gy",(dy*k).toFixed(3));
+      watch(true);
+      clearTimeout(rest);
+      if(d>r.width/2)rest=setTimeout(function(){watch(false);},2400);
+    }
+    document.addEventListener("pointermove",function(e){
+      if(e.pointerType&&e.pointerType!=="mouse")return;
+      px=e.clientX;py=e.clientY;
+      if(!queued){queued=true;requestAnimationFrame(tick);}
+    },{passive:true});
+    document.documentElement.addEventListener("mouseleave",function(){watch(false);});
+  }
 `;
 
 // When the greeting teaser appears, shared by the loader and the demo page: once
@@ -258,6 +316,32 @@ const FIT_JS = String.raw`
     }
     if(vv){vv.addEventListener("resize",fit);vv.addEventListener("scroll",fit);}
     return fit;
+  }
+`;
+
+// The chat document reports in once it has drawn ("la-widget-ready"). If it has
+// not within a few seconds of being asked for (the server was mid-restart, the
+// connection dropped), the panel would sit there blank and white for good,
+// because the launcher only ever asked once. So it asks again: up to three
+// tries while the panel is open, and afresh the next time it is opened. A
+// retry carries a throwaway query, since the same URL with the same fragment
+// is not a navigation at all. Shared by the loader and the demo page.
+const LOAD_JS = String.raw`
+  function armLoad(panel,srcFor,isOpen){
+    var ready=false,loading=false,tries=0,t=null;
+    function load(){
+      tries++;loading=true;panel.src=srcFor(tries>1?"r="+tries:"");
+      clearTimeout(t);
+      t=setTimeout(function(){
+        if(ready)return;
+        if(isOpen()&&tries<3)load();else loading=false;
+      },8000);
+    }
+    return {
+      // True when it started (or is still doing) a load, false when she is already there.
+      open:function(){if(ready)return false;if(!loading){tries=0;load();}return true;},
+      ready:function(){ready=true;loading=false;clearTimeout(t);}
+    };
   }
 `;
 
@@ -316,8 +400,8 @@ export function renderFrameHtml(opts: { mode: "live"; config: FrameConfig } | { 
         tint: opts.config.orbTint, face: opts.config.orbFace, photo: opts.config.orbPhoto,
         rim: opts.config.orbRim, rimColor: opts.config.orbRimColor,
         shadow: opts.config.orbShadow, shadowColor: opts.config.orbShadowColor,
-      }, inkFor)
-    : orbLook({ style: accent ? "tinted" : "metal", color: accent }, inkFor);
+      })
+    : orbLook({ style: accent ? "tinted" : "metal", color: accent });
   // The visitor's bubbles: a colour picked for them, else her own colour when
   // she wears one, else the neutral near-black. Text flips to whatever reads.
   const pick = opts.mode === "live" ? opts.config.bubbleColor : null;
@@ -362,7 +446,7 @@ export function renderDemoPageHtml(o: {
 }): string {
   const l = lang2(o.language);
   const color = o.color && /^#[0-9a-f]{6}$/i.test(o.color) ? o.color : null;
-  const look = orbLook({ style: color ? "tinted" : "metal", color }, inkFor);
+  const look = orbLook({ style: color ? "tinted" : "metal", color });
   const tint = `${look.cls ? " " + look.cls : ""}" style="${look.vars}`;
   // The prospect's homepage IS the page: full width, scrolling like their real
   // site, with the launcher fixed to the viewport corner exactly where it would
@@ -401,14 +485,17 @@ ${o.shotUrl
   ${UNREAD_JS}
   ${TEASER_JS}
   ${FIT_JS}
+  ${FOLLOW_JS}
+  ${LOAD_JS}
   var dot=document.querySelector(".la-dot");
   var root=document.getElementById("la-root"),panel=document.getElementById("la-panel"),btn=document.getElementById("la-btn"),
       teaser=document.getElementById("la-teaser"),tx=document.getElementById("la-tx");
-  var loaded=false,open=false;
+  var open=false;
   var fit=armFit(panel,function(){return open;});
+  var chat=armLoad(panel,function(retry){return "/widget/frame?token=${encodeURIComponent(o.token)}${o.color ? `&c=${encodeURIComponent(o.color)}` : ""}"+(retry?"&"+retry:"");},function(){return open;});
   function toggle(){
     open=!open;
-    if(open&&!loaded){panel.src="/widget/frame?token=${encodeURIComponent(o.token)}${o.color ? `&c=${encodeURIComponent(o.color)}` : ""}";loaded=true;}
+    if(open)chat.open();
     panel.classList.toggle("open",open);
     root.classList.toggle("is-open",open);
     teaser.classList.remove("show");
@@ -416,6 +503,7 @@ ${o.shotUrl
     if(open){clearUnread(dot);primeAudio();}
   }
   btn.addEventListener("click",toggle);
+  armFollow(root,btn,function(){return open;});
   teaser.addEventListener("click",function(){if(!open)toggle();});
   tx.addEventListener("click",function(e){e.stopPropagation();teaser.classList.remove("show");});
   // Armed on every load here (no once-per-session memory like the loader): the
@@ -426,6 +514,7 @@ ${o.shotUrl
     setTimeout(function(){teaser.classList.remove("show");},TEASER_MS);
   });
   window.addEventListener("message",function(e){
+    if(e.data&&e.data.type==="la-widget-ready")chat.ready();
     if(e.data&&e.data.type==="la-widget-close"&&open)toggle();
     if(e.data&&e.data.type==="la-widget-unread"&&!open)showUnread(dot,e.data.count);
   });
@@ -440,7 +529,7 @@ ${o.shotUrl
 // embedded as JSON strings so the loader and the demo page cannot drift apart.
 export const LOADER_JS = String.raw`(function () {
   "use strict";
-  ` + UNREAD_JS + TEASER_JS + FIT_JS + String.raw`
+  ` + UNREAD_JS + TEASER_JS + FIT_JS + FOLLOW_JS + LOAD_JS + String.raw`
   var LAUNCHER_CSS = ` + JSON.stringify(LAUNCHER_CSS) + String.raw`;
   var BUTTON_INNER = ` + JSON.stringify(BUTTON_INNER) + String.raw`;
   var ICON_X = ` + JSON.stringify(ICON_X) + String.raw`;
@@ -506,13 +595,15 @@ export const LOADER_JS = String.raw`(function () {
   root.appendChild(btn);
   var dot = btn.querySelector(".la-dot");
 
-  var loaded = false, open = false;
+  var open = false;
   var fit = armFit(frame, function () { return open; });
+  var chat = armLoad(frame, function (retry) {
+    return origin + "/widget/frame?key=" + encodeURIComponent(key) + (retry ? "&" + retry : "") + "#v=" + encodeURIComponent(vid);
+  }, function () { return open; });
   function toggle() {
     open = !open;
-    if (open && !loaded) {
-      frame.src = origin + "/widget/frame?key=" + encodeURIComponent(key) + "#v=" + encodeURIComponent(vid);
-      loaded = true;
+    if (open && chat.open()) {
+      // First load, or a load that never arrived: armLoad has (re)asked for her.
     } else if (open) {
       // The frame replays its welcome intro (it already played it on its first load).
       try { frame.contentWindow.postMessage({ type: "la-widget-open" }, origin); } catch (e) {}
@@ -524,6 +615,7 @@ export const LOADER_JS = String.raw`(function () {
     if (open) { clearUnread(dot); hideTeaser(); primeAudio(); }
   }
   btn.addEventListener("click", toggle);
+  armFollow(root, btn, function () { return open; });
 
   // A small public handle so the host page can open the chat from its own
   // buttons (e.g. "Ask Sara now"). The ready event lets those buttons stay
@@ -581,6 +673,7 @@ export const LOADER_JS = String.raw`(function () {
   // The frame asks to be closed (its own X button) and reports unread replies.
   window.addEventListener("message", function (e) {
     if (e.origin !== origin || !e.data || typeof e.data !== "object") return;
+    if (e.data.type === "la-widget-ready") chat.ready();
     if (e.data.type === "la-widget-close" && open) toggle();
     // Only a closed panel dings: with the chat open, the reply on screen is the
     // notification, and a sound on top of every message is just noise.
@@ -599,7 +692,7 @@ export function renderLauncherPreviewHtml(cfg: FrameConfig, photo: string | null
     style: cfg.orbStyle, color: cfg.accent, eyes: cfg.orbEyes,
     tint: cfg.orbTint, face: cfg.orbFace, photo, rim: cfg.orbRim, rimColor: cfg.orbRimColor,
     shadow: cfg.orbShadow, shadowColor: cfg.orbShadowColor,
-  }, inkFor);
+  });
   return `<!doctype html><html><head><meta charset="utf-8"><style>${LAUNCHER_CSS}
 html,body{margin:0;height:100%;background:transparent}
 .la-root{--la-pos:absolute;--la-gap:0px;position:absolute;left:50%;top:50%;width:60px;height:60px;transform:translate(-50%,-50%)}
@@ -616,6 +709,6 @@ export function teaserMeta(cfg: FrameConfig) {
       tint: cfg.orbTint, face: cfg.orbFace, photo: cfg.orbPhoto,
       rim: cfg.orbRim, rimColor: cfg.orbRimColor,
       shadow: cfg.orbShadow, shadowColor: cfg.orbShadowColor,
-    }, inkFor),
+    }),
   };
 }

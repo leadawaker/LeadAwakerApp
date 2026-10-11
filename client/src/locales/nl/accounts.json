@@ -377,7 +377,16 @@
     "loadError": "Kon reviews niet laden",
     "connectionError": "Kon verbinding niet controleren",
     "saved": "Review-instellingen opgeslagen",
-    "saveError": "Kon instellingen niet opslaan"
+    "saveError": "Kon instellingen niet opslaan",
+    "accountLabel": "Account",
+    "accountHint": "Reviews worden per account gekoppeld. Kies welk account je wilt instellen.",
+    "timelineReceived": "Review ontvangen",
+    "timelineDrafted": "AI-antwoord opgesteld",
+    "timelinePosted": "Antwoord geplaatst op Google",
+    "oauthConnected": "Google Bedrijfsprofiel gekoppeld. Kies nu een locatie.",
+    "oauthError": "Google Bedrijfsprofiel koppelen is niet gelukt",
+    "sampleAnalytics": "Voorbeelddata. Deze cijfers komen nog niet uit je eigen reviews.",
+    "previewSettings": "Voorbeeld. De instellingen hieronder worden nog niet opgeslagen."
   },
   "knowledge": {
     "title": "Kennisbank",
@@ -645,6 +654,10 @@
     "orbMetal": "Metaal",
     "orbTinted": "Kleurwerveling",
     "orbSolid": "Effen kleur",
+    "orbGradient": "Verloop",
+    "orbPalette": "Palet",
+    "grad_sunset": "Zonsondergang",
+    "grad_aurora": "Aurora",
     "orbColor": "Kleur",
     "orbEyes": "Ogen",
     "eyesAuto": "Automatisch",

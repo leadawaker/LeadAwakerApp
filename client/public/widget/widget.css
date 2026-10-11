@@ -91,7 +91,8 @@
 .wdg-hero { position: relative; width: 112px; height: 136px; margin-bottom: 14px; }
 .wdg-hero .lo.wdg-hero-orb {
   --lo-s: 112px; position: absolute; top: 0; left: 0;
-  animation: wdg-float 5s ease-in-out infinite;
+  animation: wdg-float 5s ease-in-out infinite, lo-breathe 5.3s ease-in-out infinite;
+  animation-delay: 0s, calc(var(--lo-e, 0) * -1ms);
 }
 .wdg-hero-shadow {
   position: absolute; left: 24px; right: 24px; bottom: 2px; height: 10px; border-radius: 50%;
@@ -107,18 +108,20 @@
 .wdg-hi { animation: wdg-hi-in .9s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc((var(--wi, 100000) - 250) * -1ms); }
 @keyframes wdg-in { from { opacity: 0; transform: scale(.72); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 @keyframes wdg-hi-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-/* The smile: each eye widens, shortens and loses its lower half to an arc. */
-@property --lo-sm { syntax: "<number>"; inherits: false; initial-value: 0; }
+/* The smile: each eye widens, shortens and loses its lower half to an arc
+   (the mask that server/widgetOrb.ts gives every eye, moved up). Fill none: once
+   it is over, her own blinks and smiles carry on. */
 .wdg-hero .lo-eyes i {
-  -webkit-mask: radial-gradient(ellipse calc(var(--lo-sm) * 58%) calc(var(--lo-sm) * 72%) at 50% 100%, transparent 96%, #000 100%);
-  mask: radial-gradient(ellipse calc(var(--lo-sm) * 58%) calc(var(--lo-sm) * 72%) at 50% 100%, transparent 96%, #000 100%);
-  animation: lo-blink 5.4s ease-in-out infinite, wdg-smile 3.4s ease-in-out both;
-  animation-delay: calc(var(--lo-e, 0) * -1ms), calc(var(--wi, 100000) * -1ms);
+  animation-name: lo-blink, lo-joy, wdg-smile;
+  animation-duration: var(--lo-bd), var(--lo-jd), 3.4s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite, infinite, 1;
+  animation-delay: calc(var(--lo-e, 0) * -1ms), calc(var(--lo-e, 0) * -1ms), calc(var(--wi, 100000) * -1ms);
 }
 @keyframes wdg-smile {
-  0%, 26% { --lo-sm: 0; width: calc(var(--lo-s) * .095); height: calc(var(--lo-s) * .23); }
-  36%, 76% { --lo-sm: 1; width: calc(var(--lo-s) * .16); height: calc(var(--lo-s) * .14); }
-  88%, 100% { --lo-sm: 0; width: calc(var(--lo-s) * .095); height: calc(var(--lo-s) * .23); }
+  0%, 26% { -webkit-mask-position: 50% 0; mask-position: 50% 0; width: calc(var(--lo-s) * .135); height: calc(var(--lo-s) * .235); }
+  36%, 76% { -webkit-mask-position: 50% 100%; mask-position: 50% 100%; width: calc(var(--lo-s) * .185); height: calc(var(--lo-s) * .14); }
+  88%, 100% { -webkit-mask-position: 50% 0; mask-position: 50% 0; width: calc(var(--lo-s) * .135); height: calc(var(--lo-s) * .235); }
 }
 @media (prefers-reduced-motion: reduce) { .wdg-hero, .wdg-hi, .wdg-hero .lo-eyes i { animation: none; } }
 .wdg-hi {

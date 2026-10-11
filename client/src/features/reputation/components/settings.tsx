@@ -2,10 +2,10 @@ import { useState } from "react";
 import type { AutoRule, RepSettingsData, ToneKey } from "../types";
 import { repRuleSummary } from "../utils";
 import { REP_DATA } from "../data";
-import { RIconWA, RIconSms, RIconArrow, RIconStarF, RIconExt, IconSpark, IconCheck, IconGift, RepPlatformGlyph } from "./atoms";
+import { RIconWA, RIconSms, RIconArrow, RIconStarF, IconSpark, IconCheck, IconGift } from "./atoms";
 
 // ── Toggle switch ────────────────────────────────────────────────
-function RepToggle({ on, onChange, size = "md" }: { on: boolean; onChange: (v: boolean) => void; size?: "md" | "sm" }) {
+export function RepToggle({ on, onChange, size = "md" }: { on: boolean; onChange: (v: boolean) => void; size?: "md" | "sm" }) {
   const w = size === "sm" ? 38 : 46, h = size === "sm" ? 22 : 26, k = h - 6;
   return (
     <button onClick={() => onChange(!on)} aria-pressed={on} style={{ width: w, height: h, flexShrink: 0, border: "none", cursor: "pointer", padding: 0, borderRadius: "var(--r-pill)", position: "relative", transition: "background 180ms", background: on ? "var(--wine)" : "var(--bg)", boxShadow: on ? "var(--sh-raised-crisp), inset 0 1px 2px rgba(0,0,0,0.18)" : "var(--sh-inset-crisp)" }}>
@@ -15,7 +15,7 @@ function RepToggle({ on, onChange, size = "md" }: { on: boolean; onChange: (v: b
 }
 
 // ── Setting row ──────────────────────────────────────────────────
-function RepSettingRow({ title, desc, children, last }: { title: string; desc?: string; children?: React.ReactNode; last?: boolean }) {
+export function RepSettingRow({ title, desc, children, last }: { title: string; desc?: string; children?: React.ReactNode; last?: boolean }) {
   return (
     <div style={{ display: "flex", alignItems: "flex-start", gap: 18, padding: "15px 0", borderBottom: last ? "none" : "1px solid var(--line)" }}>
       <div style={{ flex: 1, minWidth: 0 }}>
@@ -28,7 +28,7 @@ function RepSettingRow({ title, desc, children, last }: { title: string; desc?: 
 }
 
 // ── Settings panel shell ─────────────────────────────────────────
-function RepSettingsPanel({ eyebrow, title, desc, children, accent }: { eyebrow: string; title: string; desc?: string; children: React.ReactNode; accent?: string }) {
+export function RepSettingsPanel({ eyebrow, title, desc, children, accent }: { eyebrow: string; title: string; desc?: string; children: React.ReactNode; accent?: string }) {
   return (
     <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", overflow: "hidden" }}>
       {accent && <div style={{ height: 3, background: accent }} />}
@@ -123,45 +123,10 @@ function RepTwoStep({ channel }: { channel: string }) {
   );
 }
 
-// ── Connection (the review source — moved off the inbox topbar) ──
-function RepConnectionPanel() {
-  const p = REP_DATA.platform;
-  const connected = p.state !== "disconnected";
-  return (
-    <RepSettingsPanel eyebrow="Connection" accent="var(--good)"
-      title="Google Business Profile"
-      desc="The review source for this account. Reviews sync from here into your inbox, and replies post back to Google as the business.">
-      <RepSettingRow title="Google" desc={connected ? `Connected · last sync ${p.lastSync}` : "Not connected yet"} last={p.future.length === 0}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-          <span style={{ display: "inline-flex", alignItems: "center", gap: 7 }}>
-            <RepPlatformGlyph size={18} />
-            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 8.5, fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: connected ? "var(--good)" : "var(--mute-2)" }}>
-              <span style={{ width: 5, height: 5, borderRadius: "50%", background: connected ? "var(--good)" : "var(--mute-2)" }} />{connected ? "Connected" : "Offline"}
-            </span>
-          </span>
-          {connected
-            ? <button className="la-btn la-btn--soft">Disconnect</button>
-            : <button className="la-btn la-btn--wine"><RIconExt size={13} />Connect</button>}
-        </div>
-      </RepSettingRow>
-      {p.future.length > 0 && (
-        <div style={{ marginTop: 12 }}>
-          <div className="eyebrow eyebrow-sm" style={{ marginBottom: 8 }}>More review platforms · coming soon</div>
-          <div style={{ display: "flex", gap: 7, flexWrap: "wrap" }}>
-            {p.future.map((f) => (
-              <span key={f} style={{ display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: "var(--r-flush)", padding: "5px 10px" }}>
-                {f}<span style={{ fontSize: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute-2)" }}>soon</span>
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-    </RepSettingsPanel>
-  );
-}
-
 // ── Settings tab ─────────────────────────────────────────────────
-export function RepSettings({ auto, setAuto }: { auto: AutoRule; setAuto: (a: AutoRule) => void }) {
+// `connection` is the live part (account, Google connection, saved switches).
+// Everything under `previewNote` is still local-only design state.
+export function RepSettings({ auto, setAuto, connection, previewNote }: { auto: AutoRule; setAuto: (a: AutoRule) => void; connection: React.ReactNode; previewNote: string }) {
   const init = REP_DATA.settings;
   const setA = (k: keyof AutoRule, v: AutoRule[keyof AutoRule]) => setAuto({ ...auto, [k]: v });
   const [reply, setReply] = useState(init.reply);
@@ -183,8 +148,10 @@ export function RepSettings({ auto, setAuto }: { auto: AutoRule; setAuto: (a: Au
     <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: 24, background: "var(--bg)" }}>
       <div style={{ maxWidth: 880, margin: "0 auto", display: "flex", flexDirection: "column", gap: 18 }}>
 
-        {/* 0 · Connection */}
-        <RepConnectionPanel />
+        {/* 0 · Connection (live) */}
+        {connection}
+
+        <div style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", background: "var(--warn-tint)", borderRadius: "var(--r-surface)", padding: "10px 14px" }}>{previewNote}</div>
 
         {/* 1 · Automation rule */}
         <RepSettingsPanel eyebrow="Step 2 · Automation rule" accent="var(--wine-grad)"

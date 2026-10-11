@@ -18,7 +18,7 @@ function Segmented<T extends string>({ value, options, onChange, disabled }: {
   disabled?: boolean;
 }) {
   return (
-    <div style={{ display: "inline-flex", alignSelf: "flex-start", padding: 3, gap: 2, borderRadius: "var(--r-button)", background: "var(--card)", border: "1px solid var(--line)", opacity: disabled ? 0.5 : 1 }}>
+    <div style={{ display: "inline-flex", flexWrap: "wrap", alignSelf: "flex-start", padding: 3, gap: 2, borderRadius: "var(--r-button)", background: "var(--card)", border: "1px solid var(--line)", opacity: disabled ? 0.5 : 1 }}>
       {options.map((o) => {
         const on = o.value === value;
         return (
@@ -51,6 +51,13 @@ const SHADES: { key: string; hex: string | null }[] = [
   { key: "bronze", hex: "#8c6a3f" },
 ];
 
+// Gradient palettes (orb_style holds the key). The swatch is a flat sketch of
+// the orb's own CSS in server/widgetOrb.ts.
+const GRADIENTS: { key: string; css: string }[] = [
+  { key: "sunset", css: "linear-gradient(180deg, #ffd84a 0%, #ffb03a 26%, #ff8f5e 50%, #f78fc4 70%, #c9a3ff 86%, #9bdcff 100%)" },
+  { key: "aurora", css: "radial-gradient(40% 34% at 22% 68%, #c24dff, transparent 100%), radial-gradient(48% 34% at 54% 74%, #4c58ff, transparent 100%), radial-gradient(38% 36% at 86% 54%, #63e2ff, transparent 100%), linear-gradient(180deg, #fff 0%, #f1f3ff 45%, #dfe5ff 100%)" },
+];
+
 const HEX = /^#[0-9a-fA-F]{6}$/;
 
 // A face photo, centre-cropped to a 256px square: small enough to live on the
@@ -76,7 +83,7 @@ function squarePhoto(file: File): Promise<string> {
   });
 }
 
-function Swatch({ hex, label, on, onClick }: { hex: string | null; label: string; on: boolean; onClick: () => void }) {
+function Swatch({ hex, css, label, on, onClick }: { hex: string | null; css?: string; label: string; on: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -87,7 +94,7 @@ function Swatch({ hex, label, on, onClick }: { hex: string | null; label: string
       style={{
         width: 30, height: 30, borderRadius: "50%", cursor: "pointer", padding: 0,
         border: on ? "2px solid var(--ink)" : "1px solid var(--line)",
-        background: hex
+        background: css ? css : hex
           ? `conic-gradient(from 20deg, color-mix(in srgb, ${hex} 25%, #fff), ${hex} 30%, color-mix(in srgb, ${hex} 70%, #222) 55%, color-mix(in srgb, ${hex} 30%, #fff) 80%, color-mix(in srgb, ${hex} 25%, #fff))`
           : "conic-gradient(from 20deg, #fafafa, #a1a1aa 30%, #52525b 55%, #e4e4e7 80%, #fafafa)",
       }}
@@ -100,11 +107,12 @@ export function WidgetAppearance({ cfg, onPatch }: {
   onPatch: (body: Partial<WidgetConfigRow>) => Promise<void>;
 }) {
   const { t } = useTranslation("accounts");
-  const style = (cfg.orbStyle || "metal") as "metal" | "tinted" | "solid";
+  const gradient = GRADIENTS.find((g) => g.key === cfg.orbStyle) || null;
+  const style = (gradient ? "gradient" : cfg.orbStyle || "metal") as "metal" | "tinted" | "solid" | "gradient";
   const eyes = (cfg.orbEyes || "auto") as "auto" | "black" | "white";
   const face = (cfg.orbFace || "eyes") as "eyes" | "icon" | "photo";
-  const rim = (cfg.orbRim || "metal") as "metal" | "pulse" | "band" | "none";
-  const [rimColor, setRimColor] = useState(cfg.orbRimColor || "#a1a1aa");
+  const rim = (cfg.orbRim || "band") as "metal" | "pulse" | "band" | "none";
+  const [rimColor, setRimColor] = useState(cfg.orbRimColor || (rim === "band" ? "#ffffff" : "#a1a1aa"));
   const shadow = (cfg.orbShadow || "shadow") as "shadow" | "none" | "glow";
   const [shadowColor, setShadowColor] = useState(cfg.orbShadowColor || (shadow === "glow" ? "#a1a1aa" : "#000000"));
   // Null = the visitor's bubbles follow her colour (near-black when she is metal).
@@ -140,6 +148,14 @@ export function WidgetAppearance({ cfg, onPatch }: {
   const pickRimColor = (hex: string) => { setRimColor(hex); if (HEX.test(hex)) settle({ orbRimColor: hex }); };
   const pickShadowColor = (hex: string) => { setShadowColor(hex); if (HEX.test(hex)) settle({ orbShadowColor: hex }); };
   const pickBubbleColor = (hex: string) => { setBubbleColor(hex); if (HEX.test(hex)) settle({ bubbleColor: hex }); };
+
+  // A gradient orb inside the turning metal rim is two looks at once, so
+  // picking one from the metal rim moves her to the white band.
+  const pickGradient = (key: string) => {
+    if (rim !== "metal") return save({ orbStyle: key });
+    setRimColor("#ffffff");
+    return save({ orbStyle: key, orbRim: "band", orbRimColor: "#ffffff" });
+  };
 
   const uploadPhoto = async (file: File) => {
     setPhotoError(false);
@@ -202,11 +218,12 @@ export function WidgetAppearance({ cfg, onPatch }: {
                 {label("orbStyle")}
                 <Segmented
                   value={style}
-                  onChange={(v) => void save({ orbStyle: v })}
+                  onChange={(v) => void (v === "gradient" ? pickGradient(GRADIENTS[0].key) : save({ orbStyle: v }))}
                   options={[
                     { value: "metal", label: t("websiteChat.orbMetal") },
                     { value: "tinted", label: t("websiteChat.orbTinted") },
                     { value: "solid", label: t("websiteChat.orbSolid") },
+                    { value: "gradient", label: t("websiteChat.orbGradient") },
                   ]}
                 />
               </div>
@@ -228,6 +245,16 @@ export function WidgetAppearance({ cfg, onPatch }: {
                         style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
                       />
                     </label>
+                  </div>
+                </div>
+              ) : style === "gradient" ? (
+                <div style={col}>
+                  {label("orbPalette")}
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                    {GRADIENTS.map((g) => (
+                      <Swatch key={g.key} hex={null} css={g.css} label={t(`websiteChat.grad_${g.key}`)} on={gradient?.key === g.key}
+                        onClick={() => void pickGradient(g.key)} />
+                    ))}
                   </div>
                 </div>
               ) : (

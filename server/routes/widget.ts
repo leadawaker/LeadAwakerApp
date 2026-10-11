@@ -14,7 +14,7 @@
 import express, { type Express, type Request, type Response } from "express";
 import { randomBytes, createHash } from "crypto";
 import path from "path";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import { db, pool } from "../db";
 import { widgetConfigs, campaigns as campaignsTable, accounts, nicheVocabulary, type WidgetConfig } from "@shared/schema";
@@ -23,6 +23,7 @@ import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
 import { captureSiteShot, shotExists, shotFileName, isPublicHttpUrl, SHOT_DIR } from "../siteShot";
 import { renderFrameHtml, renderDemoPageHtml, renderLauncherPreviewHtml, LOADER_JS, teaserMeta, type FrameConfig } from "../widgetPages";
+import { ORB_GRADIENTS } from "../widgetOrb";
 import { widgetDemoAvatarUrl, widgetColorFor, DEFAULT_WIDGET_AVATAR } from "./demoSettings";
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
@@ -48,6 +49,13 @@ const KEY_RE = /^wk_[A-Za-z0-9]{24}$/;
 const VISITOR_RE = /^[A-Za-z0-9]{8,40}$/;
 
 /** Mint a public widget key. Prefixed so it is recognisable in a page source. */
+// The fields that make up her look. A change to any of them is copied to the
+// account's other widgets (see the PATCH route).
+const LOOK_FIELDS = [
+  "accentColor", "orbStyle", "orbEyes", "orbTint", "orbFace", "orbRim", "orbRimColor",
+  "orbShadow", "orbShadowColor", "bubbleColor",
+] as const;
+
 function generateWidgetKey(): string {
   // base64url's "-" and "_" are stripped, which shortens the string; 18 bytes
   // left only 24 characters BEFORE stripping, so roughly half the keys came out
@@ -179,7 +187,7 @@ async function publicConfig(cfg: WidgetConfig): Promise<FrameConfig> {
     orbEyes: cfg.orbEyes || "auto",
     orbTint: cfg.orbTint || null,
     orbFace: cfg.orbFace || "eyes",
-    orbRim: cfg.orbRim || "metal",
+    orbRim: cfg.orbRim || "band",
     orbRimColor: cfg.orbRimColor || null,
     orbShadow: cfg.orbShadow || "shadow",
     orbShadowColor: cfg.orbShadowColor || null,
@@ -580,7 +588,7 @@ export function registerWidgetRoutes(app: Express) {
     allowedDomains: z.array(z.string().max(253)).max(20).optional(),
     greeting: z.string().max(400).optional(),
     accentColor: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
-    orbStyle: z.enum(["metal", "tinted", "solid"]).optional(),
+    orbStyle: z.enum(["metal", "tinted", "solid", ...ORB_GRADIENTS]).optional(),
     orbEyes: z.enum(["auto", "black", "white"]).optional(),
     orbTint: z.string().regex(/^#[0-9a-fA-F]{6}$/).nullable().optional(),
     orbFace: z.enum(["eyes", "icon", "photo"]).optional(),
@@ -645,6 +653,15 @@ export function registerWidgetRoutes(app: Express) {
     }
     const [row] = await db.update(widgetConfigs).set(patch).where(eq(widgetConfigs.id, id)).returning();
     if (!row) return res.status(404).json({ message: "Not found" });
+    // One account, one face: leadawaker.com has a widget per language (en, pt,
+    // nl) and they must look the same, so a look change lands on all of them.
+    const shared: Record<string, unknown> = {};
+    for (const k of LOOK_FIELDS) if (k in parsed.data) shared[k] = (parsed.data as Record<string, unknown>)[k];
+    if (typeof parsed.data.avatarUrl === "string" && parsed.data.avatarUrl.startsWith("data:")) shared.avatarUrl = parsed.data.avatarUrl;
+    if (Object.keys(shared).length) {
+      await db.update(widgetConfigs).set({ ...shared, updatedAt: new Date() })
+        .where(and(eq(widgetConfigs.accountsId, row.accountsId), ne(widgetConfigs.id, id)));
+    }
     res.json(row);
   }));
 

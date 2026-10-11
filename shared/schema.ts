@@ -1962,12 +1962,12 @@ export const widgetConfigs = nocodb.table("Widget_Configs", {
   accentColor: text("accent_color").default("#6B2737"),
   // The assistant's orb face. 'metal' ignores accentColor; 'tinted' swirls it,
   // 'solid' paints it flat. Eyes 'auto' pick whatever reads on the orb.
-  orbStyle: text("orb_style").default("metal"),   // 'metal' | 'tinted' | 'solid'
+  orbStyle: text("orb_style").default("metal"),   // 'metal' | 'tinted' | 'solid' | gradient: 'sunset' | 'aurora'
   orbEyes: text("orb_eyes").default("auto"),      // 'auto' | 'black' | 'white'
   orbTint: text("orb_tint"),                       // metal only: '#hex' for gold/copper/..., null = silver
   orbFace: text("orb_face").default("eyes"),      // 'eyes' | 'icon' | 'photo' (photo = avatarUrl)
-  orbRim: text("orb_rim").default("metal"),       // launcher rim: 'metal' | 'pulse' | 'band' | 'none'
-  orbRimColor: text("orb_rim_color"),             // pulse/band colour, null = soft grey
+  orbRim: text("orb_rim").default("band"),        // launcher rim: 'band' (white unless coloured) | 'metal' | 'pulse' | 'none'
+  orbRimColor: text("orb_rim_color"),             // pulse/band colour, null = white band / soft grey pulse
   orbShadow: text("orb_shadow").default("shadow"), // launcher: 'shadow' | 'none' | 'glow'
   orbShadowColor: text("orb_shadow_color"),       // null = black shadow / grey glow
   bubbleColor: text("bubble_color"),              // visitor bubbles: null = her colour (near-black when she is metal)

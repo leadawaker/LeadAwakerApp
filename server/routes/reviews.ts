@@ -44,13 +44,16 @@ export function registerReviewsRoutes(app: Express): void {
   // ─── OAuth: callback (browser redirect from Google; accountId in `state`) ──
   app.get("/api/reviews/oauth/google/callback", wrapAsync(async (req, res) => {
     const base = frontendBase(req);
-    const dest = (status: string, extra = "") => `${base}/platform/accounts?reviews=${status}${extra}`;
+    // Back to the Reputation page's Settings tab, on the account that was being connected.
+    let accountId: number | null | undefined;
+    const dest = (status: string, extra = "") =>
+      `${base}/platform/reputation?tab=settings&reviews=${status}${accountId ? `&account=${accountId}` : ""}${extra}`;
 
     const error = req.query.error as string;
     if (error) return res.redirect(dest("error", `&reason=${encodeURIComponent(error)}`));
 
     const code = req.query.code as string;
-    const accountId = consumeOAuthState(req, REVIEWS_OAUTH_FLOW, req.query.state);
+    accountId = consumeOAuthState(req, REVIEWS_OAUTH_FLOW, req.query.state);
     if (!code) return res.redirect(dest("error", "&reason=missing_code"));
     if (!accountId) return res.redirect(dest("error", "&reason=invalid_state"));
 

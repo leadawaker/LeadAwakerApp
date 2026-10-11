@@ -370,7 +370,16 @@
     "loadError": "Não foi possível carregar as avaliações",
     "connectionError": "Não foi possível verificar a conexão",
     "saved": "Configurações de avaliações salvas",
-    "saveError": "Não foi possível salvar as configurações"
+    "saveError": "Não foi possível salvar as configurações",
+    "accountLabel": "Conta",
+    "accountHint": "As avaliações são conectadas por conta. Escolha qual configurar.",
+    "timelineReceived": "Avaliação recebida",
+    "timelineDrafted": "Resposta da IA redigida",
+    "timelinePosted": "Resposta publicada no Google",
+    "oauthConnected": "Perfil da Empresa no Google conectado. Agora escolha um local.",
+    "oauthError": "Não foi possível conectar o Perfil da Empresa no Google",
+    "sampleAnalytics": "Dados de exemplo. Estes números ainda não vêm das suas avaliações.",
+    "previewSettings": "Prévia. As configurações abaixo ainda não são salvas."
   },
   "knowledge": {
     "title": "Base de Conhecimento",
@@ -596,6 +605,10 @@
     "orbMetal": "Metal",
     "orbTinted": "Cor em movimento",
     "orbSolid": "Cor sólida",
+    "orbGradient": "Gradiente",
+    "orbPalette": "Paleta",
+    "grad_sunset": "Pôr do sol",
+    "grad_aurora": "Aurora",
     "orbColor": "Cor",
     "orbEyes": "Olhos",
     "eyesAuto": "Automático",
