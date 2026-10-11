@@ -8,11 +8,12 @@ Manual steps that must be completed by a human.
 - [ ] **Decide on real voice booking for client lines.** Robben's phone AI says "booked" but nothing reaches his calendar (`voice/booking_tool.py` `_book()` is demo-only). This needs its own spec. Until it is fixed, the after-call message sends the booking link instead of a confirmation.
 - [ ] **Generate `CHANNEL_SECRETS_KEY`** (`openssl rand -base64 32`) and add the same value to `LeadAwakerApp/.env` and `automations/.env`. It encrypts each client's WhatsApp token and app secret.
 
-## Robben meeting (Monday)
+## Robben meeting (Monday 2026-10-12)
 
 - [ ] **Sign the contract and the verwerkersovereenkomst (DPA)** covering phone, WhatsApp and SMS messages to his customers.
 - [ ] **Get added as admin ("full control") to his Meta Business portfolio**, or have him create one, with 2FA on. Confirm who owns the Facebook page.
 - [ ] **Check that `073 - 88 87 88 3` is not on the WhatsApp or WhatsApp Business app.** If it is, it has to be deleted there first.
+- [ ] **Connect his calendar.** Ask which calendar he uses (Google is assumed, not confirmed). He connects it himself in his booking account on `cal.leadawaker.com` (user `robben-rosmalen`): send him the link and the login, and do it together on the call. Only the calendar's owner can approve Google's consent screen. A CRM login is not needed for this step.
 - [ ] **Agree the SMS sender name** (proposal: `Robben`, max 11 characters) and the WhatsApp display name (must match his brand, e.g. "Robben Rosmalen").
 - [ ] **Later, for Meta business verification (not needed to start):** a recent KvK extract (Dutch version). Unverified accounts can start up to 250 conversations a day; replies are not capped.
 
@@ -49,5 +50,5 @@ Manual steps that must be completed by a human.
   - the 18 `la_*` alert templates from `specs/client-recaps/`;
   - 6 `reception_*` templates (en, nl), submitted as an approval check only.
 
-  All were accepted as UTILITY. At first check, 6 were already approved: `la_lead_needs_reply` en and pt_BR, `la_appointment_booked` en, `la_appointment_cancelled` en, `la_daily_recap` en, `reception_call_booked` nl. The rest were pending. Script: `submit_templates_2026_10_10.py`.
+  All were accepted as UTILITY, and all 24 were APPROVED when checked on 2026-10-11. Script: `submit_templates_2026_10_10.py`.
 - A test alert (`la_lead_needs_reply`, en) was sent to Gabriel's WhatsApp `+55 47 7400-2162`; Meta accepted it. Its button points to `app.leadawaker.com/go/test0001`, which does not exist until client-recaps Phase 5 is built.

@@ -347,11 +347,20 @@ Overlap is small. Keep it for `Campaigns.ai_summary` (the Campaigns page reads i
 
 ## Out of Scope
 
-- Per-client WhatsApp sender numbers (alerts always come from Lead Awaker's number).
+- Per-client WhatsApp sender numbers in v1 (alerts come from Lead Awaker's number; see "Later: choose the sending number").
 - Real calendar booking from the phone line (flagged above; separate spec).
 - Weekly or monthly reports, AI-written recap prose.
 - Client self-serve editing of recipients (v1 is agency-edited; see open questions).
 - SMS as an alert channel.
+
+## Later: choose the sending number (asked by Gabriel, 2026-10-11)
+
+A per-account switch on the alerts settings: "Send alerts from: Lead Awaker / the client's own WhatsApp number". Not in v1.
+
+- Needs the client's own WhatsApp connection (`WhatsApp_Senders`, `specs/receptionist-channels/` Phase 2) and the six `la_*` templates approved on the client's WABA as well (the template card from Phase 4 can submit them).
+- The engine picks the sender per account when it sends; the ledger (`Client_Alert_Log`) records which number sent each alert, so the agency sees every alert either way.
+- Trade-offs of the client's own number: the sends are billed on the client's WABA, the owner's replies land in the client's customer inbox, and the footer "Lead Awaker" should be dropped from those templates.
+- Default stays Lead Awaker's number, because it works before the client has WhatsApp and for widget-only clients.
 
 ## Open questions for Gabriel
 

@@ -25,12 +25,12 @@ Phases 2, 3, 6 and 7 can be built in parallel once Phase 1 is done. Phase 4 need
 Goal: tables and columns for per-client WhatsApp senders, templates and follow-ups, and encrypted secrets readable by both Node and Python.
 
 ### Tasks
-- [ ] 1.1 Engine migration `automations/scripts/migrate_receptionist_channels.py` creating the `WhatsApp_Senders`, `WhatsApp_Templates` and `Call_Followup_Log` tables and the new `Voice_Calls` and `Accounts` columns (schemas below). Idempotent (`IF NOT EXISTS`). Run with the engine venv.
-- [ ] 1.2 Mirror the new tables and columns in `shared/schema.ts` (Drizzle), with a comment that the engine owns the migration. Add insert/select Zod types.
-- [ ] 1.3 AES-256-GCM secret box, one wire format, two implementations:
-  - [ ] 1.3a `automations/tools/secret_box.py` (`cryptography` 46 is installed): `seal(plain) -> str`, `open_(sealed) -> str`.
-  - [ ] 1.3b `server/lib/secretBox.ts` (`node:crypto`): `seal`, `open`.
-  - [ ] 1.3c Cross-check script `automations/scripts/check_secret_box.py`: seals a string in Python and decrypts it via `node -e` (and the reverse).
+- [x] 1.1 Engine migration `automations/scripts/migrate_receptionist_channels.py` creating the `WhatsApp_Senders`, `WhatsApp_Templates` and `Call_Followup_Log` tables and the new `Voice_Calls` and `Accounts` columns (schemas below). Idempotent (`IF NOT EXISTS`). Run with the engine venv.
+- [x] 1.2 Mirror the new tables and columns in `shared/schema.ts` (Drizzle), with a comment that the engine owns the migration. Add insert/select Zod types.
+- [x] 1.3 AES-256-GCM secret box, one wire format, two implementations:
+  - [x] 1.3a `automations/tools/secret_box.py` (`cryptography` 46 is installed): `seal(plain) -> str`, `open_(sealed) -> str`.
+  - [x] 1.3b `server/lib/secretBox.ts` (`node:crypto`): `seal`, `open`.
+  - [x] 1.3c Cross-check script `automations/scripts/check_secret_box.py`: seals a string in Python and decrypts it via `node -e` (and the reverse).
 
 ### Technical Details
 
@@ -293,7 +293,13 @@ Goal: widget bookings and callback requests carry the visitor's name and phone; 
   - Parse it next to `_SLOT_SELECTED_RE` in `src/automations/conversation/booking_execution.py` (or a sibling module) and strip it from the visible text.
   - Write `first_name`/`last_name` (split on the first space) when empty or a placeholder, and `phone` normalised with `to_e164` (default region NL) when empty. Never overwrite a real value.
   - It must run before slot booking in the same turn, so `slot_booking.py:920` (`attendee_name` from first/last name) and `attendee_phone` pick it up.
-- [ ] 7.2 Prompt 124 (Reception (text) v1.1): add the CONTACT signal to section 9 and to the two website-only steps (booking step 1, section 7). Edit through SQL with a before/after diff, and check that nobody has the prompt open in the CRM (autosave reverts SQL writes).
+- [ ] 7.1b Contact form in the widget (Gabriel, 2026-10-11: a small form beats typing details into the open chat) [complex]
+  - [ ] New AI signal `{{ASK_CONTACT}}`, website only. The engine strips it from the visible text and stores `form: "contact"` on that outbound message (Interactions metadata, or the field the widget poll already returns per message).
+  - [ ] `client/public/widget/widget.js` + `widget.css`: under a message with `form: "contact"`, render a small card with Name (required), Phone and Email (at least one of the two; phone first, `type="tel"`, `autocomplete` set on all three), and a submit button. After submit the card collapses to a one-line summary. The visitor can still ignore the card and type in the chat.
+  - [ ] Submit goes through the existing message endpoint (`POST /api/widget/:key/message`) with an extra `contact: {name, phone, email}` object. `server/routes/widget.ts` validates it (zod), normalises the phone to E.164 (default region NL), writes it to the lead under the 7.1 no-overwrite rules, and passes a readable message on to the engine ("Mark de Vries, 06 12345678") so the AI carries on with the booking or callback.
+  - [ ] Card labels in `client/public/widget/copy.js` for en, nl and pt (Brazilian).
+  - The `{{CONTACT}}` signal from 7.1 stays as the path for visitors who type their details instead.
+- [ ] 7.2 Prompt 124 (Reception (text) v1.1): add the CONTACT and ASK_CONTACT signals to section 9 and to the two website-only steps (booking step 1, section 7). In those steps the visitor may give a phone number or an email address; a phone number is preferred for a callback. Edit through SQL with a before/after diff, and check that nobody has the prompt open in the CRM (autosave reverts SQL writes).
 - [ ] 7.3 Handoff on first request for reception campaigns:
   - `src/automations/handoff_detector.py` (~97-110) returns a hard handoff with reason `human_request` on the first request when the campaign has `Campaigns.handoff_on_first_request = true` (new boolean, default false; add to the Phase 1 migration and `shared/schema.ts`).
   - Set it true on Robben's campaigns.

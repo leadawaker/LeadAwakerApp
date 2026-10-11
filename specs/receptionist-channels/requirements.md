@@ -11,7 +11,7 @@ This feature makes the receptionist one assistant across three doors (phone, Wha
 3. **SMS fallback via Telnyx** for numbers that are not on WhatsApp, as a one-way alphanumeric sender (for example `Robben`).
 4. **After-call WhatsApp follow-up**: 30 seconds after a phone call ends, the caller gets a WhatsApp message (booking confirmation, or the booking link), with SMS fallback.
 5. **Shared memory between phone and WhatsApp**: the text AI knows what was said on the last phone call, and the voice AI knows what was said on WhatsApp.
-6. **Website chat contact capture**: the name and phone number a widget visitor types are saved on the lead and on the calendar booking.
+6. **Website chat contact capture**: when Sophie asks for contact details, the widget shows a small form (name, plus phone or email) instead of relying on the open chat. What the visitor fills in or types is saved on the lead and on the calendar booking.
 7. **Immediate handoff on reception campaigns**: a first request for a person is a real handoff (callback), not the current "try to help first".
 
 Twilio is no longer the WhatsApp path for new clients (Gabriel's decision, 2026-10-10). The Twilio code stays in place but receives no new work.
@@ -24,7 +24,7 @@ Twilio is no longer the WhatsApp path for new clients (Gabriel's decision, 2026-
 - **Billing:** Gabriel's own card on the client's WABA (Meta Billing Hub), re-billed to the client. Spend is visible per client in WhatsApp Manager > Insights and in Billing Hub. Since 2026-10-01 each number gets 1,000 free service messages a month; templates are billed per message.
 - **SMS fallback:** Telnyx alphanumeric sender (one-way, max 11 characters, no NL registration). Because the recipient cannot reply, every SMS ends with how to reach the business (phone number and "or reply on WhatsApp").
 - **After-call follow-up timing and rules:** see "After-call follow-up rules" below.
-- **Alerts to the business owner** (handoff, callback, booking) come from Lead Awaker's own WhatsApp number and are specified separately in `specs/client-recaps/`. For the pilot, Robben's alerts go to Gabriel (+55 47 7400-2162). Every alert sent is logged and visible in the CRM.
+- **Alerts to the business owner** (handoff, callback, booking) come from Lead Awaker's own WhatsApp number and are specified separately in `specs/client-recaps/`. For the pilot, Robben's alerts go to Gabriel (+55 47 7400-2162). Every alert sent is logged and visible in the CRM, whichever number sends it. Sending alerts from the client's own WhatsApp number is a later, per-account option (see client-recaps, "Later: choose the sending number").
 
 ## After-call follow-up rules
 
@@ -74,7 +74,7 @@ NL bodies are in the catalog (`automations/src/automations/whatsapp_templates/ca
 - [ ] A WhatsApp send to a number that is not on WhatsApp falls back once to Telnyx SMS from the account's alphanumeric sender, and the lead's `resolved_channel` becomes `sms`.
 - [ ] 30 seconds after an eligible call, the caller gets the right follow-up, following every rule above; ineligible calls get nothing; each decision is written to Automation_Logs.
 - [ ] The text AI on WhatsApp can answer "what did we discuss on the phone?" correctly, and the voice AI greets a WhatsApp-only contact as known.
-- [ ] A widget visitor who types their name and phone has them saved on the lead (phone in E.164) and on the Cal.diy booking attendee.
+- [ ] When the AI asks a widget visitor for contact details, a form (name, phone or email) appears in the chat. Submitting it, or typing the details instead, saves them on the lead (phone in E.164) and on the Cal.diy booking attendee.
 - [ ] On a reception campaign, the first "I want to talk to a person" hands off immediately (lead paused for the AI, owner alerted).
 - [ ] Robben (account 53): WhatsApp campaign live on his 073, widget campaign 72 in Dutch, Voice_Numbers row pointed at his campaign, follow-up switched on.
 

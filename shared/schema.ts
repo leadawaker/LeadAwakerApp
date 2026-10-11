@@ -121,6 +121,10 @@ export const accounts = nocodb.table("Accounts", {
   // no existing lead. Explicit per account, exactly like missedCallCampaignId —
   // a stranger is never routed by guesswork. NULL = keep dropping strangers.
   inboundCampaignId: integer("inbound_campaign_id"),
+  // Receptionist channels (engine migrate_receptionist_channels.py): alphanumeric SMS sender (max 11
+  // characters, one-way) and the WhatsApp sent after each phone call.
+  smsSenderId: text("sms_sender_id"),
+  afterCallFollowupEnabled: boolean("after_call_followup_enabled").default(false),
   // Per-account email From-identity — see specs/channel-fallback (task #676 "step 8").
   // Fallback/opener email sends from the client's own domain (deliverability + brand) once their
   // domain is DNS-verified (SPF+DKIM+DMARC). A per-account DKIM keypair is generated server-side;
@@ -613,6 +617,8 @@ export const campaigns = nocodb.table("Campaigns", {
   aiModel: text("ai_model"),
   useAiBumps: boolean("use_ai_bumps"),
   maxBumps: bigint("max_bumps", { mode: "number" }).default(4),
+  // Reception campaigns hand off on the first "a person please" (engine migrate_receptionist_channels.py).
+  handoffOnFirstRequest: boolean("handoff_on_first_request").default(false),
   stopOnResponse: boolean("stop_on_response"),
   channel: text("channel").default("sms"),
   // Channel fallback (specs/channel-fallback): primary→fallback delivery routing.
@@ -876,6 +882,8 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
   // caller_hung_up | silence | time_limit | no_greeting | transferred | lost | abandoned.
   // Null on browser calls and rows from before the column.
   endReason: text("end_reason"),
+  // sales_pitch | robocall | abuse when the call was screened out (engine migrate_receptionist_channels.py).
+  screenedKind: text("screened_kind"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
@@ -961,6 +969,9 @@ export const leads = nocodb.table("Leads", {
   teamMembers: text("team_members"),
   manualTakeover: boolean("manual_takeover"),
   handoffReason: text("handoff_reason"),
+  // One-line summary of this lead's chats, read by the voice AI (engine migrate_receptionist_channels.py).
+  chatMemorySummary: text("chat_memory_summary"),
+  chatMemorySummaryAt: timestamp("chat_memory_summary_at", { withTimezone: true }),
   dncReason: text("dnc_reason"),
   priority: text("priority"),
   language: text("language"),
@@ -1997,6 +2008,73 @@ export const insertWidgetConfigSchema = createInsertSchema(widgetConfigs).omit({
 });
 export type WidgetConfig = typeof widgetConfigs.$inferSelect;
 export type InsertWidgetConfig = z.infer<typeof insertWidgetConfigSchema>;
+
+// ─── Receptionist channels ───────────────────────────────────────────────
+// Tables owned by the engine migration migrate_receptionist_channels.py
+// (specs/receptionist-channels/). Mirrored here for the CRM's reads and writes.
+
+// One Meta Cloud API sender per account. The *_enc columns are sealed with
+// server/lib/secretBox.ts and never leave the server.
+export const whatsappSenders = nocodb.table("WhatsApp_Senders", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  wabaId: text("waba_id").notNull(),
+  phoneNumberId: text("phone_number_id").notNull(),
+  displayPhoneNumber: text("display_phone_number"),
+  verifiedName: text("verified_name"),
+  nameStatus: text("name_status"),
+  qualityRating: text("quality_rating"),
+  appId: text("app_id").notNull(),
+  appSecretEnc: text("app_secret_enc").notNull(),
+  accessTokenEnc: text("access_token_enc").notNull(),
+  // pending | connected | error | disabled
+  status: text("status").notNull().default("pending"),
+  lastError: text("last_error"),
+  connectedAt: timestamp("connected_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const insertWhatsappSenderSchema = createInsertSchema(whatsappSenders).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  connectedAt: true,
+});
+export type WhatsappSender = typeof whatsappSenders.$inferSelect;
+export type InsertWhatsappSender = z.infer<typeof insertWhatsappSenderSchema>;
+
+// One row per catalog template and language, per account.
+export const whatsappTemplates = nocodb.table("WhatsApp_Templates", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  name: text("name").notNull(),
+  language: text("language").notNull(),
+  category: text("category"),
+  // not_submitted | PENDING | APPROVED | REJECTED | PAUSED | DISABLED
+  status: text("status").notNull().default("not_submitted"),
+  metaTemplateId: text("meta_template_id"),
+  rejectedReason: text("rejected_reason"),
+  catalogVersion: integer("catalog_version").notNull(),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+export type WhatsappTemplate = typeof whatsappTemplates.$inferSelect;
+
+// One decision per phone call: was a follow-up sent, and why or why not.
+export const callFollowupLog = nocodb.table("Call_Followup_Log", {
+  id: serial("id").primaryKey(),
+  voiceCallId: integer("voice_call_id").notNull(),
+  accountsId: integer("accounts_id").notNull(),
+  leadsId: integer("leads_id"),
+  decision: text("decision").notNull(),
+  reason: text("reason"),
+  kind: text("kind"),
+  channel: text("channel"),
+  providerMessageId: text("provider_message_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+export type CallFollowupLog = typeof callFollowupLog.$inferSelect;
 
 // Per-service settings for the Demos page's Settings tab, one row per service
 // key from client/src/features/demos/services.ts. Free-form jsonb because each
