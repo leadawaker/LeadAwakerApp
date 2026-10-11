@@ -5,6 +5,8 @@ import type { AccountRow, AccountDetail } from "./types";
 import { CalendarConnectCard, BookingPageCard, BookingLinkReadOnly, CustomBookingDomainCard } from "./CalendarConnectCard";
 import { MessagingCard, EmailSenderCard } from "./MessagingCards";
 import { WebsiteChatCard, InboundWhatsAppCard } from "./WebsiteChatCard";
+import { WhatsAppCloudCard } from "./whatsapp/WhatsAppCloudCard";
+import { WhatsAppTemplatesCard } from "./whatsapp/WhatsAppTemplatesCard";
 
 const cardStyle: React.CSSProperties = { borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" };
 
@@ -22,8 +24,12 @@ export function IntegrationsPanel({ account, d, onSave, fieldCols = 3, stacked =
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-      {/* ── Messaging & email ─────────────────────────────────────── */}
-      {!readOnly && (
+      {/* ── WhatsApp on the client's own number (specs/receptionist-channels) ── */}
+      {!readOnly && <WhatsAppCloudCard accountId={accountId} />}
+      {!readOnly && <WhatsAppTemplatesCard accountId={accountId} />}
+
+      {/* ── Twilio messaging: legacy, only for accounts that already have it ── */}
+      {!readOnly && d.twilio.connected && (
         <MessagingCard account={account} d={d} onSave={onSave} fieldCols={fieldCols} />
       )}
 

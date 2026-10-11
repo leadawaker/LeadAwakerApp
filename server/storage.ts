@@ -26,6 +26,7 @@ import { voiceCallersStorage } from "./storage/voiceCallers";
 import { voiceLinesStorage } from "./storage/voiceLines";
 import { voiceStatsStorage } from "./storage/voiceStats";
 import { siteVisitsStorage } from "./storage/siteVisits";
+import { whatsappSendersStorage } from "./storage/whatsappSenders";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -93,4 +94,5 @@ export const storage = {
   ...voiceLinesStorage,
   ...voiceStatsStorage,
   ...siteVisitsStorage,
+  ...whatsappSendersStorage,
 };

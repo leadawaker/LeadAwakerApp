@@ -45,6 +45,7 @@ import { registerPublicDemoRoutes } from "./publicDemo";
 import { registerReportOptinRoutes } from "./reportOptin";
 import { registerProposalRoutes } from "./proposals";
 import { registerTrafficRoutes } from "./traffic";
+import { registerWhatsappCloudRoutes } from "./whatsappCloud";
 import { startPublicDemoPoller } from "../publicDemo/poller";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
@@ -102,6 +103,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerReportOptinRoutes(app);
   registerProposalRoutes(app);
   registerTrafficRoutes(app);
+  registerWhatsappCloudRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)

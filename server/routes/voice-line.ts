@@ -14,6 +14,14 @@ const E164 = /^\+[1-9]\d{6,14}$/;
 const e164 = z.string().trim().regex(E164, "Must be an E.164 number, e.g. +31612345678");
 /** "" clears a number field, same as null. */
 const clearableE164 = z.preprocess((v) => (v === "" ? null : v), e164.nullable());
+// An SMS alphanumeric sender (engine telnyx_messaging.sanitize_sender_id):
+// letters, digits and single spaces, at most 11 characters, at least one letter.
+const SMS_SENDER = /^(?=.*[A-Za-z])[A-Za-z0-9]+(?: [A-Za-z0-9]+)*$/;
+const smsSender = z.preprocess(
+  (v) => (typeof v === "string" && v.trim() === "" ? null : v),
+  z.string().trim().max(11, "At most 11 characters")
+    .regex(SMS_SENDER, "Letters, digits and spaces only, with at least one letter").nullable(),
+);
 
 const putBodySchema = z.object({
   numberId: z.number().int().positive().nullable().optional(),
@@ -41,6 +49,8 @@ const putBodySchema = z.object({
   })).max(50).optional(),
   afterHours: z.enum(AFTER_HOURS).nullable().optional(),
   extraInstructions: z.string().max(1000, "Extra instructions are limited to 1000 characters").optional(),
+  followUpEnabled: z.boolean().optional(),
+  smsSenderId: smsSender.optional(),
   live: z.boolean().optional(),
 }).refine((b) => !(b.numberId !== undefined && b.phoneNumber !== undefined), {
   message: "Send either numberId or phoneNumber, not both",

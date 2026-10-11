@@ -18,6 +18,7 @@ import { setLang, browserLang, t } from "/premium/demo/copy.js";
 import { icon } from "/premium/demo/icons.js";
 import { setWidgetLang, w } from "./copy.js";
 import * as memo from "./voicememo.js";
+import * as contactForm from "./contactform.js";
 
 var voice = memo.voice;
 
@@ -230,6 +231,8 @@ function paint() {
 
   var done = !!(state && state.done);
   var hadFocus = !!(document.activeElement && document.activeElement.classList.contains("wdg-input"));
+  // The caret is in the contact form: it keeps it across this repaint.
+  var formFocus = !DEMO && contactForm.remember();
   var welcome = isWelcome(msgs, done);
   // Rebuilt orbs resume their animations where the old ones were (see --lo-e
   // in server/widgetOrb.ts) instead of every repaint restarting them.
@@ -266,7 +269,12 @@ function paint() {
     if (performance.now() - hopAt < 1000) face.classList.add("lo-hop");
   }
   lookAtPointer();
-  wire(hadFocus || FINE_POINTER);
+  wire(!formFocus && (hadFocus || FINE_POINTER));
+  // The contact form, under the message that asks for it. Live widget only:
+  // the demo surface has nowhere to send it.
+  if (!DEMO && !welcome) {
+    contactForm.mount(root, msgs, { done: done, busy: busy, submit: doSend, repaint: render });
+  }
   scrollToEnd();
 }
 
@@ -437,24 +445,28 @@ function failSend(err) {
   if (code === "daily_cap" || code === "rate_limited" || code === "finished") fatal = err.message;
 }
 
-function doSend() {
-  var text = (draft || "").trim();
+// `contact` is set when the contact form is what is being sent: its details
+// travel beside the text, and the composer's draft is left alone.
+function doSend(contact) {
+  var text = contact ? contact.text : (draft || "").trim();
   if (!text || busy) return;
   notice = "";
   busy = true;
-  pending = true;
+  // Once a colleague has the conversation nobody is about to type back.
+  pending = !(state && state.paused);
   epoch++;
-  draft = "";
+  if (!contact) draft = "";
 
   var local = localThread();
-  local.push({ id: "local-" + Date.now(), role: "visitor", text: text, at: new Date().toISOString() });
+  var localId = "local-" + Date.now();
+  local.push({ id: localId, role: "visitor", text: text, at: new Date().toISOString() });
   state = Object.assign({}, state || {}, { messages: local });
   render();
 
   api("/message", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify(withContext({ text: text })),
+    body: JSON.stringify(withContext(contact ? { text: text, contact: contact.data } : { text: text })),
   }).then(function () {
     busy = false;
     lastSig = "";
@@ -463,7 +475,11 @@ function doSend() {
     busy = false;
     pending = false;
     failSend(err);
-    if (!fatal) draft = text;   // give them their words back rather than losing them
+    if (contact) {
+      // Back to the open form, with what to fix; their bubble was never sent.
+      contactForm.failed(contact.id, err.body && err.body.field);
+      state.messages = state.messages.filter(function (m) { return m.id !== localId; });
+    } else if (!fatal) draft = text;   // give them their words back rather than losing them
     render();
   });
 }
@@ -702,6 +718,7 @@ function poll() {
     memo.adopt(state && state.messages, next);
     adoptPhotos(state && state.messages, next);
     state = next;
+    if (next.paused) pending = false;
     var sig = signature(next);
     if (sig !== lastSig) {
       lastSig = sig;

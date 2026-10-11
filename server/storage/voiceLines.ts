@@ -13,6 +13,7 @@ import {
   accounts,
   accountCommunicationProfile,
   voiceNumbers,
+  whatsappSenders,
   type AccountCommunicationProfile,
   type Accounts,
   type VoiceNumber,
@@ -61,6 +62,12 @@ export interface VoiceLine {
   pronunciation: PronunciationRow[];
   afterHours: (typeof AFTER_HOURS)[number] | null;
   extraInstructions: string;
+  /**
+   * The WhatsApp message after each call (engine after_call_followup.py).
+   * `whatsappConnected`: the account's own WhatsApp number can send; without
+   * it the switch saves but nothing goes out.
+   */
+  followUp: { enabled: boolean; smsSenderId: string | null; whatsappConnected: boolean };
   hours: { start: string | null; end: string | null; timezone: string | null };
   kbCount: number;
   readiness: {
@@ -90,6 +97,10 @@ export interface VoiceLinePatch {
   pronunciation?: PronunciationRow[];
   afterHours?: (typeof AFTER_HOURS)[number] | null;
   extraInstructions?: string;
+  /** Accounts.after_call_followup_enabled. */
+  followUpEnabled?: boolean;
+  /** Accounts.sms_sender_id: the name an SMS fallback is sent from, or null for none. */
+  smsSenderId?: string | null;
   /** Switch the attached number on (answers real calls) or off. On needs every readiness item. */
   live?: boolean;
 }
@@ -133,7 +144,9 @@ async function loadState(exec: DbLike, accountId: number) {
     SELECT count(*)::int AS n FROM "p2mxx34fvbf3ll6"."Account_Knowledge_Base" WHERE account_id = ${accountId}
   `);
   const kbCount = Number((kb.rows as { n: number }[])[0]?.n ?? 0);
-  return { account, profile, number, persona, kbCount };
+  const [sender] = await exec.select({ status: whatsappSenders.status }).from(whatsappSenders)
+    .where(eq(whatsappSenders.accountsId, accountId));
+  return { account, profile, number, persona, kbCount, whatsappConnected: sender?.status === "connected" };
 }
 
 type State = NonNullable<Awaited<ReturnType<typeof loadState>>>;
@@ -141,7 +154,7 @@ type State = NonNullable<Awaited<ReturnType<typeof loadState>>>;
 const hhmm = (t: string | null | undefined) => (t ? String(t).slice(0, 5) : null);
 
 function toVoiceLine(accountId: number, st: State): VoiceLine {
-  const { account, profile, number, persona, kbCount } = st;
+  const { account, profile, number, persona, kbCount, whatsappConnected } = st;
   const setup = obj(profile?.setup);
   const voiceSetup = obj(setup.voice);
   const handoff = obj(setup.handoff);
@@ -215,6 +228,11 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     pronunciation,
     afterHours,
     extraInstructions: typeof voiceSetup.extraInstructions === "string" ? voiceSetup.extraInstructions : "",
+    followUp: {
+      enabled: account.afterCallFollowupEnabled === true,
+      smsSenderId: text(account.smsSenderId) || null,
+      whatsappConnected,
+    },
     hours,
     kbCount,
     readiness: { items, ready: items.every((i) => i.ok) },
@@ -371,6 +389,14 @@ async function saveVoiceLine(accountId: number, patch: VoiceLinePatch): Promise<
 
     await applyProfile(tx, accountId, profile, patch);
     await applyNumber(tx, accountId, account, patch);
+
+    // The after-call follow-up lives on the account row, not in `setup`.
+    const followUp: Partial<typeof accounts.$inferInsert> = {};
+    if (patch.followUpEnabled !== undefined) followUp.afterCallFollowupEnabled = patch.followUpEnabled;
+    if (patch.smsSenderId !== undefined) followUp.smsSenderId = patch.smsSenderId;
+    if (Object.keys(followUp).length > 0) {
+      await tx.update(accounts).set(followUp).where(eq(accounts.id, accountId));
+    }
 
     // Re-read inside the transaction: the persona and mirrors follow the saved state.
     const [fresh] = await tx.select().from(accountCommunicationProfile)

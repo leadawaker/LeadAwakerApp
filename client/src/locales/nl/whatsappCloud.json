@@ -1,0 +1,131 @@
+{
+  "connect": {
+    "title": "WhatsApp-nummer",
+    "explainer": "Koppel het eigen WhatsApp-nummer van deze klant. Plak de vijf gegevens uit het Meta-bedrijfsaccount van de klant en druk op de knop. Daarna hoef je er Meta nooit meer voor te openen.",
+    "pill": {
+      "none": "Niet ingesteld",
+      "pending": "Nog niet getest",
+      "connected": "Gekoppeld",
+      "error": "Werkt niet",
+      "disabled": "Uitgeschakeld"
+    },
+    "fields": {
+      "wabaId": "WhatsApp Business-account-ID",
+      "phoneNumberId": "Telefoonnummer-ID",
+      "appId": "App-ID",
+      "appSecret": "App-geheim",
+      "accessToken": "Token van de systeemgebruiker"
+    },
+    "help": {
+      "wabaId": "In de Meta-app: WhatsApp, API-configuratie. Het staat naast het telefoonnummer.",
+      "phoneNumberId": "In de Meta-app: WhatsApp, API-configuratie, direct onder het telefoonnummer.",
+      "appId": "In de Meta-app: App-instellingen, Basis. Het is het eerste veld.",
+      "appSecret": "In de Meta-app: App-instellingen, Basis. Klik op Weergeven naast App-geheim.",
+      "accessToken": "In Meta Bedrijfsinstellingen: Gebruikers, Systeemgebruikers, Token genereren. Kies de token die nooit verloopt."
+    },
+    "secretSaved": "Opgeslagen. Laat leeg om het te houden.",
+    "saveAndTest": "Opslaan en verbinding testen",
+    "test": "Verbinding testen",
+    "testing": "Bezig met testen...",
+    "saving": "Bezig met opslaan...",
+    "edit": "Gegevens wijzigen",
+    "cancel": "Annuleren",
+    "missing": "Vul eerst alle vijf de gegevens in.",
+    "digitsOnly": "De drie ID's bestaan alleen uit cijfers, zonder spaties.",
+    "pendingNote": "Deze gegevens zijn opgeslagen maar nog niet getest. Er wordt niets vanaf dit nummer verstuurd tot de test slaagt.",
+    "ok": "Gekoppeld. Berichten kunnen nu vanaf dit nummer worden verstuurd.",
+    "facts": {
+      "number": "Nummer",
+      "verifiedName": "Getoonde naam",
+      "nameStatus": "Goedkeuring naam",
+      "quality": "Kwaliteit"
+    },
+    "nameStatus": {
+      "APPROVED": "Goedgekeurd",
+      "AVAILABLE_WITHOUT_REVIEW": "Goedgekeurd",
+      "PENDING_REVIEW": "In beoordeling bij Meta",
+      "DECLINED": "Afgewezen door Meta",
+      "EXPIRED": "Verlopen",
+      "NONE": "Niet ingediend"
+    },
+    "quality": {
+      "GREEN": "Hoog",
+      "YELLOW": "Gemiddeld",
+      "RED": "Laag",
+      "UNKNOWN": "Nog niet beoordeeld"
+    },
+    "metaSays": "Meta meldt: {{detail}}",
+    "errors": {
+      "no_sender": "Er zijn nog geen WhatsApp-gegevens opgeslagen voor dit account.",
+      "secrets_unreadable": "De opgeslagen token of het app-geheim kon niet worden gelezen. Plak beide opnieuw en sla op.",
+      "token_rejected": "Meta accepteert de token van de systeemgebruiker niet. Misschien is die verkeerd overgenomen of verlopen.",
+      "number_not_visible": "De token kan dit telefoonnummer-ID niet zien. Controleer het ID en of de systeemgebruiker toegang heeft tot het WhatsApp-account.",
+      "waba_not_visible": "De token kan dit WhatsApp Business-account-ID niet zien. Controleer het ID en of de systeemgebruiker er toegang toe heeft.",
+      "number_not_in_waba": "Dit telefoonnummer hoort niet bij dat WhatsApp Business-account. Controleer de twee ID's.",
+      "app_secret_mismatch": "Het app-ID en het app-geheim horen niet bij elkaar. Controleer beide onder App-instellingen, Basis.",
+      "meta_unreachable": "Meta was niet bereikbaar. Probeer het over een minuut opnieuw.",
+      "number_in_use": "Dit telefoonnummer-ID is al aan een ander account gekoppeld.",
+      "secrets_required": "De eerste keer zijn het app-geheim en de token allebei nodig.",
+      "engine_unavailable": "De automatiseringsmotor gaf geen antwoord. Probeer het over een minuut opnieuw.",
+      "unknown": "Er ging iets mis. Probeer het opnieuw."
+    },
+    "warnings": {
+      "app_not_subscribed": "Versturen werkt, maar binnenkomende berichten komen nog niet aan: de Meta-app is niet geabonneerd op dit WhatsApp-account.",
+      "webhook_unknown": "Er kon niet worden gecontroleerd of binnenkomende berichten aankomen. Versturen werkt.",
+      "app_unknown": "Het app-geheim kon nu niet worden gecontroleerd. Versturen werkt. Druk later nog eens op Verbinding testen."
+    }
+  },
+  "templates": {
+    "title": "Berichtsjablonen",
+    "explainer": "Op WhatsApp mag een bedrijf een gesprek alleen beginnen met een bericht dat Meta heeft goedgekeurd. Dit zijn de standaardberichten van de receptionist. Stuur ze hier naar Meta. Goedkeuring duurt meestal een paar minuten.",
+    "needsConnection": "Koppel en test eerst het WhatsApp-nummer. Daarna kunnen de berichten naar Meta.",
+    "submitAll": "Alles indienen",
+    "submitting": "Bezig met versturen...",
+    "refresh": "Vernieuwen",
+    "refreshing": "Bezig met controleren...",
+    "resubmit": "Opnieuw indienen",
+    "sampleNote": "Getoond met voorbeeldgegevens.",
+    "outdated": "Tekst gewijzigd sinds het indienen",
+    "rejectedReason": "Reden van Meta: {{reason}}",
+    "catalogUnavailable": "De berichtteksten konden nu niet worden geladen. De statussen hieronder zijn de laatst opgeslagen.",
+    "empty": "Er zijn nog geen berichten om te tonen.",
+    "status": {
+      "not_submitted": "Niet ingediend",
+      "pending": "In beoordeling",
+      "approved": "Goedgekeurd",
+      "rejected": "Afgewezen",
+      "paused": "Gepauzeerd",
+      "disabled": "Uitgeschakeld door Meta"
+    },
+    "names": {
+      "reception_call_booked": "Na een gesprek: afspraak bevestigd",
+      "reception_call_followup": "Na een gesprek: afspraaklink",
+      "reception_appointment_reminder": "Afspraakherinnering"
+    },
+    "languages": {
+      "en": "Engels",
+      "nl": "Nederlands",
+      "pt_BR": "Portugees (Brazilië)"
+    },
+    "reasons": {
+      "INVALID_FORMAT": "de opmaak van het bericht is niet toegestaan",
+      "TAG_CONTENT_MISMATCH": "de tekst past niet bij de gekozen categorie",
+      "PROMOTIONAL": "het leest als reclame",
+      "ABUSIVE_CONTENT": "het is in strijd met de inhoudsregels van WhatsApp",
+      "SCAM": "Meta ziet het als mogelijke oplichting"
+    },
+    "result": {
+      "submitted_one": "{{count}} bericht ter beoordeling naar Meta gestuurd.",
+      "submitted_other": "{{count}} berichten ter beoordeling naar Meta gestuurd.",
+      "nothing": "Alles staat al bij Meta. Er is niets te versturen.",
+      "refreshed": "Statussen bijgewerkt vanuit Meta.",
+      "failed": "Meta weigerde er {{count}}: {{error}}"
+    },
+    "errors": {
+      "no_sender": "Koppel eerst het WhatsApp-nummer.",
+      "not_connected": "Test eerst de WhatsApp-verbinding.",
+      "engine_unavailable": "De automatiseringsmotor gaf geen antwoord. Probeer het over een minuut opnieuw.",
+      "unknown": "Er ging iets mis. Probeer het opnieuw."
+    }
+  }
+}

@@ -211,5 +211,22 @@
       "warned": "beëindigd wegens misbruik op {{date}}, geblokkeerd als het opnieuw gebeurt",
       "clear": "Wissen"
     }
+  },
+  "followUp": {
+    "title": "Na het gesprek",
+    "help": "30 seconden na het einde van een gesprek krijgt de beller een WhatsApp-bericht van dit bedrijf met de link om een afspraak in te plannen.",
+    "switch": {
+      "label": "Stuur een WhatsApp na elk gesprek",
+      "on": "Aan",
+      "off": "Uit",
+      "help": "Alleen bellers met een Nederlands mobiel nummer krijgen een bericht. Verkoopgesprekken, robocalls, geblokkeerde bellers en mensen die geen contact willen krijgen niets. Dezelfde beller krijgt hooguit één link per dag."
+    },
+    "notConnected": "De berichten beginnen zodra WhatsApp voor dit account is gekoppeld.",
+    "sms": {
+      "label": "Afzendernaam voor sms",
+      "placeholder": "bijv. Robben",
+      "help": "Staat het nummer van de beller niet op WhatsApp, dan gaat hetzelfde bericht één keer als sms uit onder deze naam. Mensen kunnen er niet op antwoorden.",
+      "invalid": "Gebruik maximaal 11 letters, cijfers of spaties, met minstens één letter."
+    }
   }
 }

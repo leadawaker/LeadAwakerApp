@@ -224,6 +224,43 @@
   background-size: 200% 100%;
 }
 
+/* ── contact form ───────────────────────────────────────────────────── */
+/* A small card under the message in which she asks who she is talking to
+   (contactform.js). Indented to sit under her words, not under her face
+   (28px avatar + 8px gap), and pulled up so it reads as part of that message.
+   Built from the panel's own tokens: a card, a hairline, the composer's focus
+   ring and the confirm button. */
+.wdg-cf {
+  flex: 0 0 auto; align-self: flex-start;
+  width: min(300px, calc(100% - 36px));
+  margin: -4px 0 0 36px; padding: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+  background: var(--w-card); border: 1px solid var(--w-line); border-radius: 14px;
+  box-shadow: 0 1px 3px rgba(0,0,0,.07);
+}
+.wdg-cf-row { display: flex; flex-direction: column; gap: 4px; }
+.wdg-cf-row > span { font-size: 12px; line-height: 1.25; color: var(--w-mute); }
+.wdg-cf-in {
+  width: 100%; min-width: 0; box-sizing: border-box;
+  border: 1px solid var(--w-line); border-radius: 10px; outline: none;
+  padding: 8px 11px; background: var(--w-bg); color: var(--w-ink);
+  font: inherit; font-size: 14px; line-height: 20px;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+.wdg-cf-in:focus { border-color: var(--w-mute-2); background: var(--w-card); box-shadow: 0 0 0 3px rgba(24,24,27,.06); }
+.wdg-cf-hint { margin: 0; font-size: 12px; line-height: 1.4; color: var(--w-mute); }
+.wdg-cf .wdg-cf-err { margin: 0; padding: 7px 10px; border-radius: 10px; }
+.wdg-cf .wdg-cbtn { flex: 0 0 auto; margin-top: 2px; }
+.wdg-cf .wdg-cbtn:disabled { opacity: .4; cursor: default; }
+/* Sent: the card folds down to one quiet line. */
+.wdg-cf-done {
+  flex: 0 0 auto; align-self: flex-start;
+  margin: -6px 0 0 36px;
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; line-height: 1.4; color: var(--w-mute);
+}
+.wdg-cf-done svg { flex: 0 0 auto; color: var(--w-ok); }
+
 /* ── starter chips ───────────────────────────────────────────────────── */
 .wdg-chips {
   flex: 0 0 auto;

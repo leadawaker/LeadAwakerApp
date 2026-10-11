@@ -25,6 +25,7 @@ import { captureSiteShot, shotExists, shotFileName, isPublicHttpUrl, SHOT_DIR } 
 import { renderFrameHtml, renderDemoPageHtml, renderLauncherPreviewHtml, LOADER_JS, teaserMeta, type FrameConfig } from "../widgetPages";
 import { ORB_GRADIENTS } from "../widgetOrb";
 import { widgetDemoAvatarUrl, widgetColorFor, DEFAULT_WIDGET_AVATAR } from "./demoSettings";
+import { parseWidgetContact, contactMessage, saveWidgetContact, type WidgetContact } from "./widgetContact";
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 
@@ -428,13 +429,27 @@ export function registerWidgetRoutes(app: Express) {
     // Only a real turn costs money, so only a real turn counts against the IP
     // and spends the daily budget (after every cheap check has passed).
     const billable = req.method === "POST" && (segment === "message" || segment === "voice" || segment === "image");
+
+    // The contact form (name, plus phone or email) rides on a normal message.
+    // It is validated here and turned into the visitor's text, so the engine
+    // and the transcript read "Mark de Vries, 06 12345678" like a typed reply.
+    let contact: WidgetContact | null = null;
+    if (billable && segment === "message" && req.body?.contact != null) {
+      const parsed = parseWidgetContact(req.body.contact, cfg.language);
+      if (!parsed.ok) {
+        return res.status(400).json({ code: "bad_contact", field: parsed.field, message: "Check your details." });
+      }
+      contact = parsed.contact;
+    }
+    const contactText = contact ? contactMessage(contact) : null;
+
     if (billable) {
       const ip = String(req.ip || req.socket.remoteAddress || "unknown");
       if (!checkIpRate(ip)) {
         return res.status(429).json({ code: "rate_limited", message: "Too many requests. Try again later." });
       }
       if (segment === "message") {
-        const text = String(req.body?.text || "");
+        const text = contactText ?? String(req.body?.text || "");
         if (!text.trim()) return res.status(400).json({ code: "empty", message: "Say something first." });
         if (text.length > MAX_TEXT_CHARS) {
           return res.status(413).json({ code: "too_long", message: "That message is too long." });
@@ -445,9 +460,15 @@ export function registerWidgetRoutes(app: Express) {
       }
     }
 
-    const body = req.method === "POST"
+    const buildBody = (saved: boolean) => req.method === "POST"
       ? JSON.stringify({
           ...(req.body ?? {}),
+          // The form's payload stops here: the engine gets the readable text
+          // and whether the details are on the lead. Always overwritten, so a
+          // browser cannot claim a save that did not happen.
+          contact: undefined,
+          contactSaved: saved,
+          ...(contactText ? { text: contactText } : {}),
           // Pre-resolved by Express: the engine never reads widget config, so a
           // forged account or campaign in the request body cannot reach it.
           accountId: cfg.accountsId,
@@ -458,6 +479,7 @@ export function registerWidgetRoutes(app: Express) {
           maxTurns: cfg.maxTurnsPerVisitor ?? 30,
         })
       : undefined;
+    let body = buildBody(false);
 
     if (segment === "voice" && Buffer.byteLength(body ?? "") > MAX_VOICE_BYTES) {
       return res.status(413).json({ code: "audio_too_large", message: "That recording is too long." });
@@ -468,6 +490,11 @@ export function registerWidgetRoutes(app: Express) {
     if (billable && !(await consumeDailyMessage(cfg))) {
       return res.status(429).json({ code: "daily_cap", message: "This chat has reached today's limit." });
     }
+
+    // Saved before the turn is queued, so the AI (and a booking it makes in
+    // that turn) already reads the name and number off the lead.
+    const contactSaved = contact ? await saveWidgetContact(visitor, cfg.accountsId, contact) : false;
+    if (contactSaved) body = buildBody(true);
 
     // Rebuilt from validated values rather than forwarded, so req.query cannot
     // become a channel into the engine that the suffix allowlist does not cover.
@@ -498,6 +525,11 @@ export function registerWidgetRoutes(app: Express) {
         signal: AbortSignal.timeout(120_000),
       });
       const text = await upstream.text();
+      // No lead existed before this message (the engine creates it on the
+      // first one), so the details could not be saved up front. It exists now.
+      if (contact && !contactSaved && upstream.ok) {
+        await saveWidgetContact(visitor, cfg.accountsId, contact).catch(() => false);
+      }
       return res
         .status(upstream.status)
         .set("content-type", upstream.headers.get("content-type") || "application/json")

@@ -359,6 +359,7 @@ const ASSET_V = Date.now().toString(36);
 const FRAME_MODULES = [
   "/widget/copy.js",
   "/widget/voicememo.js",
+  "/widget/contactform.js",
   "/premium/demo/chat.js",
   "/premium/demo/format.js",
   "/premium/demo/copy.js",

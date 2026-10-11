@@ -59,6 +59,7 @@
       "calendar_booking": "Quando um agendamento é feito, movido ou cancelado",
       "customer_reply": "Quando um cliente responde",
       "phone_call": "Quando alguém liga",
+      "call_ended": "Quando uma ligação termina",
       "missed_call": "Quando uma chamada é perdida",
       "incoming_message": "Quando chega uma mensagem",
       "lead_replies": "Quando um lead responde",
@@ -80,6 +81,7 @@
     "reputation_handler": "Conversas de avaliação",
     "review_response": "Respostas a avaliações do Google",
     "voice_receptionist": "Recepcionista telefônica com IA",
+    "after_call_followup": "WhatsApp depois da ligação",
     "missed_call": "SMS após chamada perdida",
     "inbound_handler": "Mensagens recebidas",
     "ai_conversation": "Respostas da IA",
@@ -112,6 +114,7 @@
     "reputation_handler": "Trata as respostas aos pedidos de avaliação.",
     "review_response": "Redige respostas para novas avaliações do Google.",
     "voice_receptionist": "Atende o telefone pelo cliente.",
+    "after_call_followup": "Envia a quem ligou um WhatsApp com o link de agendamento 30 segundos depois da ligação, ou um SMS quando a pessoa não tem WhatsApp.",
     "missed_call": "Envia uma mensagem de volta quando o cliente perde a chamada.",
     "inbound_handler": "Recebe todas as mensagens e as encaminha.",
     "ai_conversation": "Escreve e envia a resposta da IA quando um lead responde.",
@@ -163,7 +166,8 @@
     "delivery_failed": "Mensagem não entregue",
     "call_handled": "Chamada atendida",
     "call_transferred": "Chamada atendida e transferida",
-    "call_failed": "Chamada falhou"
+    "call_failed": "Chamada falhou",
+    "sent_followup": "Mensagem pós-ligação enviada"
   },
   "outcome": {
     "success": "Deu certo",
@@ -313,6 +317,12 @@
     "campaign_not_found": "Campanha não encontrada",
     "atomic_claim_lost": "Outra execução pegou primeiro",
     "already_claimed_or_not_queued": "Já enviado ou fora da fila",
-    "abuse": "Pessoa abusiva na ligação"
+    "abuse": "Pessoa abusiva na ligação",
+    "whatsapp_not_connected": "O WhatsApp não está conectado nesta conta",
+    "template_not_approved": "Modelo do WhatsApp ainda não aprovado",
+    "session_expired_no_template": "Nenhum modelo do WhatsApp aprovado para enviar",
+    "no_booking_link": "Nenhum link de agendamento definido na campanha",
+    "not_on_whatsapp_no_sms": "O número não tem WhatsApp e o SMS não pôde ser enviado",
+    "send_failed": "Não foi possível enviar a mensagem"
   }
 }

@@ -47,6 +47,7 @@ export const AUTOMATION_CATALOGUE: AutomationEntry[] = [
   { id: "review_response", service: "reputation", trigger: every(300), scope: "account", audience: "client", jobId: "review_drafter", aliases: ["review_drafter"] },
   // Receptionist
   { id: "voice_receptionist", service: "receptionist", trigger: on("phone_call"), scope: "account", audience: "client" },
+  { id: "after_call_followup", service: "receptionist", trigger: on("call_ended"), scope: "account", audience: "client" },
   { id: "missed_call", service: "receptionist", trigger: on("missed_call"), scope: "account", audience: "client" },
   // Inbox
   { id: "inbound_handler", service: "inbox", trigger: on("incoming_message"), scope: "account", audience: "client", quietAfterHours: 72 },

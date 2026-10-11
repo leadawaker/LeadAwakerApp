@@ -211,5 +211,22 @@
       "warned": "encerrada por abuso em {{date}}, bloqueado se acontecer de novo",
       "clear": "Limpar"
     }
+  },
+  "followUp": {
+    "title": "Depois da ligação",
+    "help": "30 segundos depois que a ligação termina, quem ligou recebe uma mensagem no WhatsApp desta empresa com o link para agendar um horário.",
+    "switch": {
+      "label": "Enviar um WhatsApp depois de cada ligação",
+      "on": "Ligado",
+      "off": "Desligado",
+      "help": "Só quem liga de um celular holandês recebe a mensagem. Ligações de vendas, robocalls, números bloqueados e pessoas que pediram para não ser contatadas não recebem nada. A mesma pessoa recebe no máximo um link por dia."
+    },
+    "notConnected": "As mensagens começam assim que o WhatsApp desta conta for conectado.",
+    "sms": {
+      "label": "Nome do remetente do SMS",
+      "placeholder": "ex.: Robben",
+      "help": "Se o número de quem ligou não estiver no WhatsApp, a mesma mensagem é enviada uma vez por SMS com este nome. As pessoas não conseguem responder a ele.",
+      "invalid": "Use até 11 letras, números ou espaços, com pelo menos uma letra."
+    }
   }
 }

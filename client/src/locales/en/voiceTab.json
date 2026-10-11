@@ -211,5 +211,22 @@
       "warned": "ended for abuse on {{date}}, blocked if it happens again",
       "clear": "Clear"
     }
+  },
+  "followUp": {
+    "title": "After the call",
+    "help": "30 seconds after a call ends, the caller gets a WhatsApp message from this business with the link to plan an appointment.",
+    "switch": {
+      "label": "Send a WhatsApp after each call",
+      "on": "On",
+      "off": "Off",
+      "help": "Only callers with a Dutch mobile number get one. Sales calls, robocalls, blocked callers and people who asked not to be contacted get nothing. The same caller gets at most one link per day."
+    },
+    "notConnected": "Messages start once WhatsApp is connected for this account.",
+    "sms": {
+      "label": "Text message sender name",
+      "placeholder": "e.g. Robben",
+      "help": "If the caller's number is not on WhatsApp, the same message goes out once as a text message from this name. People cannot reply to it.",
+      "invalid": "Use up to 11 letters, digits or spaces, with at least one letter."
+    }
   }
 }

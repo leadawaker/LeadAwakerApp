@@ -1,0 +1,131 @@
+{
+  "connect": {
+    "title": "WhatsApp number",
+    "explainer": "Connect this client's own WhatsApp number. Paste the five values from the client's Meta business account and press the button. After that you never have to open Meta for it.",
+    "pill": {
+      "none": "Not set",
+      "pending": "Not tested yet",
+      "connected": "Connected",
+      "error": "Not working",
+      "disabled": "Switched off"
+    },
+    "fields": {
+      "wabaId": "WhatsApp Business account ID",
+      "phoneNumberId": "Phone number ID",
+      "appId": "App ID",
+      "appSecret": "App secret",
+      "accessToken": "System user token"
+    },
+    "help": {
+      "wabaId": "In the Meta app: WhatsApp, API Setup. It is listed next to the phone number.",
+      "phoneNumberId": "In the Meta app: WhatsApp, API Setup, right under the phone number.",
+      "appId": "In the Meta app: App settings, Basic. It is the first field.",
+      "appSecret": "In the Meta app: App settings, Basic. Press Show next to App secret.",
+      "accessToken": "In Meta Business settings: Users, System users, Generate token. Pick the one that never expires."
+    },
+    "secretSaved": "Saved. Leave empty to keep it.",
+    "saveAndTest": "Save and test connection",
+    "test": "Test connection",
+    "testing": "Testing...",
+    "saving": "Saving...",
+    "edit": "Change details",
+    "cancel": "Cancel",
+    "missing": "Fill in all five values first.",
+    "digitsOnly": "The three IDs are numbers only, without spaces.",
+    "pendingNote": "These details are saved but not tested yet. Nothing is sent from this number until the test passes.",
+    "ok": "Connected. Messages can now go out from this number.",
+    "facts": {
+      "number": "Number",
+      "verifiedName": "Name shown",
+      "nameStatus": "Name approval",
+      "quality": "Quality"
+    },
+    "nameStatus": {
+      "APPROVED": "Approved",
+      "AVAILABLE_WITHOUT_REVIEW": "Approved",
+      "PENDING_REVIEW": "In review at Meta",
+      "DECLINED": "Declined by Meta",
+      "EXPIRED": "Expired",
+      "NONE": "Not submitted"
+    },
+    "quality": {
+      "GREEN": "High",
+      "YELLOW": "Medium",
+      "RED": "Low",
+      "UNKNOWN": "Not rated yet"
+    },
+    "metaSays": "Meta says: {{detail}}",
+    "errors": {
+      "no_sender": "No WhatsApp details are saved for this account yet.",
+      "secrets_unreadable": "The saved token or app secret could not be read. Paste both again and save.",
+      "token_rejected": "Meta does not accept the system user token. It may be mistyped or expired.",
+      "number_not_visible": "The token cannot see this phone number ID. Check the ID, and that the system user has access to the WhatsApp account.",
+      "waba_not_visible": "The token cannot see this WhatsApp Business account ID. Check the ID, and that the system user has access to it.",
+      "number_not_in_waba": "This phone number is not part of that WhatsApp Business account. Check the two IDs.",
+      "app_secret_mismatch": "The app ID and the app secret do not belong together. Check both under App settings, Basic.",
+      "meta_unreachable": "Meta could not be reached. Try again in a minute.",
+      "number_in_use": "This phone number ID is already connected to another account.",
+      "secrets_required": "The app secret and the token are both needed the first time.",
+      "engine_unavailable": "The automation engine did not answer. Try again in a minute.",
+      "unknown": "Something went wrong. Try again."
+    },
+    "warnings": {
+      "app_not_subscribed": "Sending works, but incoming messages will not arrive yet: the Meta app is not subscribed to this WhatsApp account.",
+      "webhook_unknown": "Could not check whether incoming messages will arrive. Sending works.",
+      "app_unknown": "Could not check the app secret right now. Sending works. Press Test connection again later."
+    }
+  },
+  "templates": {
+    "title": "Message templates",
+    "explainer": "WhatsApp only lets a business start a conversation with a message Meta has approved. These are the standard receptionist messages. Send them to Meta here. Approval usually takes a few minutes.",
+    "needsConnection": "Connect and test the WhatsApp number first. Then the messages can be sent to Meta.",
+    "submitAll": "Submit all",
+    "submitting": "Sending...",
+    "refresh": "Refresh",
+    "refreshing": "Checking...",
+    "resubmit": "Resubmit",
+    "sampleNote": "Shown with example details.",
+    "outdated": "Text changed since it was sent",
+    "rejectedReason": "Meta's reason: {{reason}}",
+    "catalogUnavailable": "The message texts could not be loaded right now. The statuses below are the last ones saved.",
+    "empty": "No messages to show yet.",
+    "status": {
+      "not_submitted": "Not submitted",
+      "pending": "In review",
+      "approved": "Approved",
+      "rejected": "Rejected",
+      "paused": "Paused",
+      "disabled": "Switched off by Meta"
+    },
+    "names": {
+      "reception_call_booked": "After a call: appointment confirmed",
+      "reception_call_followup": "After a call: booking link",
+      "reception_appointment_reminder": "Appointment reminder"
+    },
+    "languages": {
+      "en": "English",
+      "nl": "Dutch",
+      "pt_BR": "Portuguese (Brazil)"
+    },
+    "reasons": {
+      "INVALID_FORMAT": "the layout of the message is not allowed",
+      "TAG_CONTENT_MISMATCH": "the text does not fit the chosen category",
+      "PROMOTIONAL": "it reads as advertising",
+      "ABUSIVE_CONTENT": "it breaks WhatsApp's content rules",
+      "SCAM": "it looks like a scam to Meta"
+    },
+    "result": {
+      "submitted_one": "{{count}} message sent to Meta for review.",
+      "submitted_other": "{{count}} messages sent to Meta for review.",
+      "nothing": "Everything is already at Meta. Nothing to send.",
+      "refreshed": "Statuses updated from Meta.",
+      "failed": "Meta refused {{count}}: {{error}}"
+    },
+    "errors": {
+      "no_sender": "Connect the WhatsApp number first.",
+      "not_connected": "Test the WhatsApp connection first.",
+      "engine_unavailable": "The automation engine did not answer. Try again in a minute.",
+      "unknown": "Something went wrong. Try again."
+    }
+  }
+}

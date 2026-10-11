@@ -59,6 +59,7 @@
       "calendar_booking": "Wanneer een afspraak is gemaakt, verplaatst of geannuleerd",
       "customer_reply": "Wanneer een klant antwoordt",
       "phone_call": "Wanneer iemand belt",
+      "call_ended": "Wanneer een gesprek eindigt",
       "missed_call": "Wanneer een oproep gemist wordt",
       "incoming_message": "Wanneer er een bericht binnenkomt",
       "lead_replies": "Wanneer een lead antwoordt",
@@ -80,6 +81,7 @@
     "reputation_handler": "Reviewgesprekken",
     "review_response": "Antwoorden op Google-reviews",
     "voice_receptionist": "AI-telefoonreceptionist",
+    "after_call_followup": "WhatsApp na het gesprek",
     "missed_call": "Sms na gemiste oproep",
     "inbound_handler": "Inkomende berichten",
     "ai_conversation": "AI-antwoorden",
@@ -112,6 +114,7 @@
     "reputation_handler": "Verwerkt de antwoorden op reviewverzoeken.",
     "review_response": "Schrijft conceptantwoorden op nieuwe Google-reviews.",
     "voice_receptionist": "Neemt de telefoon op voor de klant.",
+    "after_call_followup": "Stuurt bellers 30 seconden na een gesprek een WhatsApp met de boekingslink, of één sms als ze geen WhatsApp hebben.",
     "missed_call": "Stuurt mensen een sms terug als de klant hun oproep mist.",
     "inbound_handler": "Ontvangt elk inkomend bericht en stuurt het door.",
     "ai_conversation": "Schrijft en verstuurt het AI-antwoord als een lead reageert.",
@@ -163,7 +166,8 @@
     "delivery_failed": "Bericht niet afgeleverd",
     "call_handled": "Oproep beantwoord",
     "call_transferred": "Oproep beantwoord en doorverbonden",
-    "call_failed": "Oproep mislukt"
+    "call_failed": "Oproep mislukt",
+    "sent_followup": "Bericht na het gesprek verstuurd"
   },
   "outcome": {
     "success": "Gelukt",
@@ -310,6 +314,12 @@
     "campaign_not_found": "Campagne niet gevonden",
     "atomic_claim_lost": "Een andere run was eerder",
     "already_claimed_or_not_queued": "Al verstuurd of niet in de wachtrij",
-    "abuse": "Beledigende beller"
+    "abuse": "Beledigende beller",
+    "whatsapp_not_connected": "WhatsApp is niet gekoppeld voor dit account",
+    "template_not_approved": "WhatsApp-sjabloon nog niet goedgekeurd",
+    "session_expired_no_template": "Geen goedgekeurd WhatsApp-sjabloon om te versturen",
+    "no_booking_link": "Geen boekingslink ingesteld op de campagne",
+    "not_on_whatsapp_no_sms": "Nummer heeft geen WhatsApp en de sms kon niet worden verstuurd",
+    "send_failed": "Bericht kon niet worden verstuurd"
   }
 }

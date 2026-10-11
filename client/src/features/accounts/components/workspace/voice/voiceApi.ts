@@ -62,6 +62,8 @@ export interface VoiceLine {
   pronunciation: PronunciationRow[] | null;
   afterHours: AfterHoursMode | null;
   extraInstructions: string | null;
+  /** The WhatsApp message after each call. `whatsappConnected`: the account's own number can send. */
+  followUp: { enabled: boolean; smsSenderId: string | null; whatsappConnected: boolean };
   hours: { start: string | null; end: string | null; timezone: string | null };
   kbCount: number;
   readiness: { items: { key: ReadinessKey; ok: boolean }[]; ready: boolean };
@@ -87,6 +89,9 @@ export interface VoiceLinePatch {
   pronunciation?: PronunciationRow[];
   afterHours?: AfterHoursMode | null;
   extraInstructions?: string;
+  followUpEnabled?: boolean;
+  /** The name an SMS fallback is sent from; null for none. */
+  smsSenderId?: string | null;
   /** Switch the attached number on (real callers reach her) or off. */
   live?: boolean;
 }
@@ -108,6 +113,13 @@ export interface UnassignedNumber {
 }
 
 export const EXTRA_INSTRUCTIONS_MAX = 1000;
+
+/** An SMS sender name: at most 11 letters, digits or spaces, with at least one letter. */
+export const SMS_SENDER_MAX = 11;
+/** What the field lets through as you type: other characters are dropped, double spaces collapsed. */
+export const cleanSmsSender = (v: string) =>
+  v.replace(/[^A-Za-z0-9 ]/g, "").replace(/ {2,}/g, " ").replace(/^ /, "").slice(0, SMS_SENDER_MAX);
+export const validSmsSender = (v: string) => v === "" || /[A-Za-z]/.test(v);
 
 export const E164 = /^\+[1-9]\d{6,14}$/;
 /** "+31 6 1234-5678" -> "+31612345678" (E.164 never carries separators). */

@@ -1,0 +1,131 @@
+{
+  "connect": {
+    "title": "Número de WhatsApp",
+    "explainer": "Conecte o número de WhatsApp do próprio cliente. Cole os cinco dados da conta comercial do cliente na Meta e aperte o botão. Depois disso, você não precisa mais abrir a Meta para isso.",
+    "pill": {
+      "none": "Não configurado",
+      "pending": "Ainda não testado",
+      "connected": "Conectado",
+      "error": "Não está funcionando",
+      "disabled": "Desativado"
+    },
+    "fields": {
+      "wabaId": "ID da conta do WhatsApp Business",
+      "phoneNumberId": "ID do número de telefone",
+      "appId": "ID do aplicativo",
+      "appSecret": "Chave secreta do aplicativo",
+      "accessToken": "Token do usuário do sistema"
+    },
+    "help": {
+      "wabaId": "No aplicativo da Meta: WhatsApp, Configuração da API. Fica ao lado do número de telefone.",
+      "phoneNumberId": "No aplicativo da Meta: WhatsApp, Configuração da API, logo abaixo do número de telefone.",
+      "appId": "No aplicativo da Meta: Configurações do aplicativo, Básico. É o primeiro campo.",
+      "appSecret": "No aplicativo da Meta: Configurações do aplicativo, Básico. Clique em Mostrar ao lado da chave secreta.",
+      "accessToken": "Nas Configurações do negócio da Meta: Usuários, Usuários do sistema, Gerar token. Escolha o que nunca expira."
+    },
+    "secretSaved": "Salvo. Deixe em branco para manter.",
+    "saveAndTest": "Salvar e testar a conexão",
+    "test": "Testar a conexão",
+    "testing": "Testando...",
+    "saving": "Salvando...",
+    "edit": "Alterar dados",
+    "cancel": "Cancelar",
+    "missing": "Preencha primeiro os cinco dados.",
+    "digitsOnly": "Os três IDs têm apenas números, sem espaços.",
+    "pendingNote": "Estes dados foram salvos, mas ainda não foram testados. Nada é enviado deste número até o teste passar.",
+    "ok": "Conectado. As mensagens já podem sair deste número.",
+    "facts": {
+      "number": "Número",
+      "verifiedName": "Nome exibido",
+      "nameStatus": "Aprovação do nome",
+      "quality": "Qualidade"
+    },
+    "nameStatus": {
+      "APPROVED": "Aprovado",
+      "AVAILABLE_WITHOUT_REVIEW": "Aprovado",
+      "PENDING_REVIEW": "Em análise na Meta",
+      "DECLINED": "Recusado pela Meta",
+      "EXPIRED": "Expirado",
+      "NONE": "Não enviado"
+    },
+    "quality": {
+      "GREEN": "Alta",
+      "YELLOW": "Média",
+      "RED": "Baixa",
+      "UNKNOWN": "Ainda sem avaliação"
+    },
+    "metaSays": "A Meta informa: {{detail}}",
+    "errors": {
+      "no_sender": "Ainda não há dados de WhatsApp salvos para esta conta.",
+      "secrets_unreadable": "Não foi possível ler o token ou a chave secreta salvos. Cole os dois de novo e salve.",
+      "token_rejected": "A Meta não aceita o token do usuário do sistema. Ele pode ter sido digitado errado ou ter expirado.",
+      "number_not_visible": "O token não enxerga este ID de número de telefone. Confira o ID e se o usuário do sistema tem acesso à conta do WhatsApp.",
+      "waba_not_visible": "O token não enxerga este ID de conta do WhatsApp Business. Confira o ID e se o usuário do sistema tem acesso a ela.",
+      "number_not_in_waba": "Este número de telefone não faz parte dessa conta do WhatsApp Business. Confira os dois IDs.",
+      "app_secret_mismatch": "O ID do aplicativo e a chave secreta não combinam. Confira os dois em Configurações do aplicativo, Básico.",
+      "meta_unreachable": "Não foi possível falar com a Meta. Tente de novo em um minuto.",
+      "number_in_use": "Este ID de número de telefone já está conectado a outra conta.",
+      "secrets_required": "Na primeira vez, a chave secreta e o token são obrigatórios.",
+      "engine_unavailable": "O motor de automação não respondeu. Tente de novo em um minuto.",
+      "unknown": "Algo deu errado. Tente de novo."
+    },
+    "warnings": {
+      "app_not_subscribed": "O envio funciona, mas as mensagens recebidas ainda não vão chegar: o aplicativo da Meta não está inscrito nesta conta do WhatsApp.",
+      "webhook_unknown": "Não foi possível verificar se as mensagens recebidas vão chegar. O envio funciona.",
+      "app_unknown": "Não foi possível verificar a chave secreta agora. O envio funciona. Aperte Testar a conexão de novo mais tarde."
+    }
+  },
+  "templates": {
+    "title": "Modelos de mensagem",
+    "explainer": "No WhatsApp, uma empresa só pode iniciar uma conversa com uma mensagem aprovada pela Meta. Estas são as mensagens padrão da recepcionista. Envie para a Meta por aqui. A aprovação costuma levar alguns minutos.",
+    "needsConnection": "Conecte e teste primeiro o número de WhatsApp. Depois as mensagens podem ser enviadas para a Meta.",
+    "submitAll": "Enviar todos",
+    "submitting": "Enviando...",
+    "refresh": "Atualizar",
+    "refreshing": "Verificando...",
+    "resubmit": "Enviar de novo",
+    "sampleNote": "Exibido com dados de exemplo.",
+    "outdated": "Texto alterado desde o envio",
+    "rejectedReason": "Motivo da Meta: {{reason}}",
+    "catalogUnavailable": "Não foi possível carregar os textos das mensagens agora. Os status abaixo são os últimos salvos.",
+    "empty": "Ainda não há mensagens para mostrar.",
+    "status": {
+      "not_submitted": "Não enviado",
+      "pending": "Em análise",
+      "approved": "Aprovado",
+      "rejected": "Recusado",
+      "paused": "Pausado",
+      "disabled": "Desativado pela Meta"
+    },
+    "names": {
+      "reception_call_booked": "Depois da ligação: horário confirmado",
+      "reception_call_followup": "Depois da ligação: link de agendamento",
+      "reception_appointment_reminder": "Lembrete de agendamento"
+    },
+    "languages": {
+      "en": "Inglês",
+      "nl": "Holandês",
+      "pt_BR": "Português (Brasil)"
+    },
+    "reasons": {
+      "INVALID_FORMAT": "o formato da mensagem não é permitido",
+      "TAG_CONTENT_MISMATCH": "o texto não combina com a categoria escolhida",
+      "PROMOTIONAL": "parece propaganda",
+      "ABUSIVE_CONTENT": "fere as regras de conteúdo do WhatsApp",
+      "SCAM": "a Meta entende como possível golpe"
+    },
+    "result": {
+      "submitted_one": "{{count}} mensagem enviada para análise da Meta.",
+      "submitted_other": "{{count}} mensagens enviadas para análise da Meta.",
+      "nothing": "Tudo já está na Meta. Nada para enviar.",
+      "refreshed": "Status atualizados pela Meta.",
+      "failed": "A Meta recusou {{count}}: {{error}}"
+    },
+    "errors": {
+      "no_sender": "Conecte primeiro o número de WhatsApp.",
+      "not_connected": "Teste primeiro a conexão do WhatsApp.",
+      "engine_unavailable": "O motor de automação não respondeu. Tente de novo em um minuto.",
+      "unknown": "Algo deu errado. Tente de novo."
+    }
+  }
+}

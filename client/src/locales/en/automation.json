@@ -59,6 +59,7 @@
       "calendar_booking": "When a booking is made, moved or cancelled",
       "customer_reply": "When a customer replies",
       "phone_call": "When someone calls",
+      "call_ended": "When a call ends",
       "missed_call": "When a call is missed",
       "incoming_message": "When a message comes in",
       "lead_replies": "When a lead replies",
@@ -80,6 +81,7 @@
     "reputation_handler": "Review conversations",
     "review_response": "Google review replies",
     "voice_receptionist": "AI phone receptionist",
+    "after_call_followup": "After-call WhatsApp",
     "missed_call": "Missed-call text-back",
     "inbound_handler": "Incoming messages",
     "ai_conversation": "AI replies",
@@ -112,6 +114,7 @@
     "reputation_handler": "Handles the replies to review requests.",
     "review_response": "Drafts replies to new Google reviews.",
     "voice_receptionist": "Answers the phone for the client.",
+    "after_call_followup": "Sends callers a WhatsApp with the booking link 30 seconds after a call, or one SMS when they are not on WhatsApp.",
     "missed_call": "Texts people back when the client misses their call.",
     "inbound_handler": "Receives every incoming message and routes it.",
     "ai_conversation": "Writes and sends the AI reply when a lead answers.",
@@ -163,7 +166,8 @@
     "delivery_failed": "Message not delivered",
     "call_handled": "Answered a call",
     "call_transferred": "Answered and transferred a call",
-    "call_failed": "Call failed"
+    "call_failed": "Call failed",
+    "sent_followup": "Sent after-call message"
   },
   "outcome": {
     "success": "Worked",
@@ -310,6 +314,12 @@
     "campaign_not_found": "Campaign not found",
     "atomic_claim_lost": "Another run took it first",
     "already_claimed_or_not_queued": "Already sent or not waiting",
-    "abuse": "Abusive caller"
+    "abuse": "Abusive caller",
+    "whatsapp_not_connected": "WhatsApp is not connected for this account",
+    "template_not_approved": "WhatsApp template not approved yet",
+    "session_expired_no_template": "No approved WhatsApp template to send",
+    "no_booking_link": "No booking link set on the campaign",
+    "not_on_whatsapp_no_sms": "Number is not on WhatsApp and the SMS could not be sent",
+    "send_failed": "Message could not be sent"
   }
 }

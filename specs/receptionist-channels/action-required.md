@@ -6,7 +6,8 @@ Manual steps that must be completed by a human.
 
 - [ ] **Review and approve the spec** (`requirements.md`, `implementation-plan.md`).
 - [ ] **Decide on real voice booking for client lines.** Robben's phone AI says "booked" but nothing reaches his calendar (`voice/booking_tool.py` `_book()` is demo-only). This needs its own spec. Until it is fixed, the after-call message sends the booking link instead of a confirmation.
-- [ ] **Generate `CHANNEL_SECRETS_KEY`** (`openssl rand -base64 32`) and add the same value to `LeadAwakerApp/.env` and `automations/.env`. It encrypts each client's WhatsApp token and app secret.
+- [ ] **Add Lead Awaker's own Meta app secret** to `automations/.env` as `WHATSAPP_APP_SECRET` (Meta App Dashboard > App settings > Basic > App secret), then restart the engine. Do this BEFORE connecting the first client: saving the first client sender switches the webhook to checking signatures, and without this value Lead Awaker's own inbound WhatsApp would be rejected.
+- [x] **Generate `CHANNEL_SECRETS_KEY`** (done 2026-10-11, in both `.env` files)
 
 ## Robben meeting (Monday 2026-10-12)
 
@@ -32,6 +33,17 @@ Manual steps that must be completed by a human.
   6. Your own card in Billing Hub as the WABA payment method.
 - [ ] **Paste** WABA id, phone number id, app id, app secret and token into the new WhatsApp card on Robben's account page, click "Test connection", then "Submit all" for the templates (nl, en).
 - [ ] **OK the engine restarts** for Phases 2, 3, 5 and 6 (a restart drops live calls).
+
+## Going live (code is built, 2026-10-11)
+
+Everything in the engine is dormant until it restarts. Order matters:
+
+1. [ ] OK the engine restart (`./preflight.sh && pm2 restart leadawaker-engine --update-env`). Preflight passed on 2026-10-11.
+2. [ ] Only after the restart: write `prompt_124_reception_text_v1_2.txt` to Prompt_Library 124 (nobody may have the prompt open in the CRM). Before the restart it would show raw `{{ASK_CONTACT}}` text to visitors.
+3. [ ] Set `handoff_on_first_request = true` on campaign 72.
+4. [ ] Pick the wording in `voice_prompt_followup_line.md` (the "details follow on WhatsApp" line for the phone AI).
+5. [ ] Decide the SMS wording: the approved text says "Just reply to this message" and the closing line says "or reply on WhatsApp", but the SMS is one-way and goes to people without WhatsApp.
+6. [ ] The engine repo has this work uncommitted, mixed with other uncommitted voice work in the same files. Commit it together when that work is ready.
 
 ## After Implementation
 
