@@ -29,13 +29,10 @@ const ORIGIN = "https://www.leadawaker.com";
 const ORG_ID = `${ORIGIN}/#organization`;
 const WEBSITE_ID = `${ORIGIN}/#website`;
 
-// The visit counter is built and waiting, but OFF: the privacy policy
-// (client/public/premium/privacy.html, section 2) says the site runs "no other
-// tracking software" and only collects what a visitor actively gives us. The
-// counter is anonymous (no cookie, no IP kept, no visitor id), but that
-// sentence has to be reworded before it goes live. Set to true together with
-// that edit.
-const COUNT_VISITS = false;
+// The visit counter (client/public/site/visit.js) is anonymous: no cookie, no
+// IP kept, no visitor id. Section 2 of the privacy policy
+// (client/public/premium/privacy.html) describes it; keep the two in step.
+const COUNT_VISITS = true;
 const COUNTER_TAG = '<script src="/site/visit.js" defer></script>';
 // Public pages outside site/ (/reactivate, /privacy-policy, /terms-of-service).
 const PREMIUM_DIR = path.resolve(SITE_DIR, "../premium");
