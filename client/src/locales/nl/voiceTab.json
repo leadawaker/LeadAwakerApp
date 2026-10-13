@@ -229,12 +229,12 @@
   },
   "followUp": {
     "title": "Na het gesprek",
-    "help": "30 seconden na het einde van een gesprek krijgt de beller een WhatsApp-bericht van dit bedrijf met de link om een afspraak in te plannen.",
+    "help": "Tijdens het gesprek vraagt ze of ze de gegevens via WhatsApp mag sturen. Zegt de beller ja, dan komt 30 seconden na het einde van het gesprek een WhatsApp-bericht van dit bedrijf met de link om een afspraak in te plannen.",
     "switch": {
       "label": "Stuur een WhatsApp na elk gesprek",
       "on": "Aan",
       "off": "Uit",
-      "help": "Alleen bellers met een Nederlands mobiel nummer krijgen een bericht. Verkoopgesprekken, robocalls, geblokkeerde bellers en mensen die geen contact willen krijgen niets. Dezelfde beller krijgt hooguit één link per dag."
+      "help": "Alleen bellers met een mobiel nummer die ja zeggen krijgen een bericht, uit elk land. Bellers met een vast nummer krijgen de vraag niet. Verkoopgesprekken, robocalls, geblokkeerde bellers en mensen die geen contact willen krijgen niets. Dezelfde beller krijgt hooguit één link per dag."
     },
     "notConnected": "De berichten beginnen zodra WhatsApp voor dit account is gekoppeld.",
     "sms": {

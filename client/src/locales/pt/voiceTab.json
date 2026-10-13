@@ -229,12 +229,12 @@
   },
   "followUp": {
     "title": "Depois da ligação",
-    "help": "30 segundos depois que a ligação termina, quem ligou recebe uma mensagem no WhatsApp desta empresa com o link para agendar um horário.",
+    "help": "Durante a ligação, ela pergunta se pode mandar os detalhes pelo WhatsApp. Se a pessoa disser que sim, 30 segundos depois que a ligação termina chega uma mensagem desta empresa com o link para agendar um horário.",
     "switch": {
       "label": "Enviar um WhatsApp depois de cada ligação",
       "on": "Ligado",
       "off": "Desligado",
-      "help": "Só quem liga de um celular holandês recebe a mensagem. Ligações de vendas, robocalls, números bloqueados e pessoas que pediram para não ser contatadas não recebem nada. A mesma pessoa recebe no máximo um link por dia."
+      "help": "Só quem liga de um celular e diz que sim recebe a mensagem, de qualquer país. Quem liga de um telefone fixo não recebe a pergunta. Ligações de vendas, robocalls, números bloqueados e pessoas que pediram para não ser contatadas não recebem nada. A mesma pessoa recebe no máximo um link por dia."
     },
     "notConnected": "As mensagens começam assim que o WhatsApp desta conta for conectado.",
     "sms": {

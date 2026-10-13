@@ -229,12 +229,12 @@
   },
   "followUp": {
     "title": "After the call",
-    "help": "30 seconds after a call ends, the caller gets a WhatsApp message from this business with the link to plan an appointment.",
+    "help": "During the call, she asks whether she may send the details on WhatsApp. If the caller says yes, a message from this business with the link to plan an appointment arrives 30 seconds after the call ends.",
     "switch": {
       "label": "Send a WhatsApp after each call",
       "on": "On",
       "off": "Off",
-      "help": "Only callers with a Dutch mobile number get one. Sales calls, robocalls, blocked callers and people who asked not to be contacted get nothing. The same caller gets at most one link per day."
+      "help": "Only callers on a mobile number who say yes get one, from any country. Callers on a landline are not asked. Sales calls, robocalls, blocked callers and people who asked not to be contacted get nothing. The same caller gets at most one link per day."
     },
     "notConnected": "Messages start once WhatsApp is connected for this account.",
     "sms": {

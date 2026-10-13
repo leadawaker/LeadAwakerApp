@@ -32,9 +32,10 @@ Sent 30 seconds after a client-line phone call ends, when ALL of these hold:
 
 1. The account has after-call follow-up switched on (Voice tab).
 2. The call is on a client line (not the demo line, not a browser test, not a probe call).
-3. Caller ID is an E.164 Dutch mobile number (`+316…`). Withheld numbers, landlines and `+3197` M2M numbers are skipped. Foreign mobile numbers: skipped in v1.
+3. Caller ID is a mobile number: a Dutch one (`+316…`) or, since 2026-10-13, a foreign one (libphonenumber MOBILE, or FIXED_LINE_OR_MOBILE in countries such as the US where the two look the same). Withheld numbers, landlines (Dutch and foreign), `+3197` M2M numbers and invalid numbers are skipped, and Sophie does not ask those callers about WhatsApp at all.
 4. The call was not screened out (sales pitch, robocall, abuse), the caller is not blocked, the recap intent is not `do_not_contact`, and the lead is not opted out.
 5. The call had at least 2 caller turns (an immediate hang-up gets nothing).
+6. The caller said yes when Sophie asked whether she may send the details to this number on WhatsApp (the call recap's `whatsapp_consent` is `yes`). `no` skips with `consent_declined`; `not_asked`, or no recap, skips with `consent_not_asked`. This spoken yes is the opt-in Meta asks for before a business starts a WhatsApp conversation; the recap on the `Voice_Calls` row and the call transcript are its record. Added 2026-10-13.
 
 **Which message:**
 
@@ -44,7 +45,7 @@ Sent 30 seconds after a client-line phone call ends, when ALL of these hold:
 
 **Fallback:** if WhatsApp reports the number is not on WhatsApp (Cloud API error 131026, or the equivalent undeliverable status), send the same content once by SMS from the account's alphanumeric sender, ending with the business phone number.
 
-**Expectation in the call:** the voice prompt gets one line so Sophie says the details will follow on WhatsApp when it fits.
+**Expectation in the call:** the voice prompt gets one line so Sophie asks whether she may send the details to this number on WhatsApp when the caller has an appointment time or wants to plan one. The line is only in her prompt when a message can really go (rules 1 to 3 plus a connected sender), so she never asks for something that will not come.
 
 ## Templates
 
