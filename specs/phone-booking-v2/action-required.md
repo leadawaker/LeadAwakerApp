@@ -1,6 +1,6 @@
 # Phone booking v2: action required
 
-Built 2026-10-13 (all 12 tasks, each reviewed, plus a whole-feature review and one fix wave). Engine restarted 19:18 on the final code.
+Built 2026-10-13 (all 12 tasks, each reviewed, plus a whole-feature review and one fix wave, then the replace-cancel budget fix). The engine runs the final code.
 
 ## 1. Test call (callbacks): Gabriel
 
@@ -20,13 +20,13 @@ Expected: `check_availability` with a `date`, `book_appointment` with a `start`,
 
 The old test booking "Danique" (Wed 14 Oct 10:30, lead 1319) is still in your calendar. A call from +31617862359 will hear about it as an existing appointment. Delete it in Cal.diy when you no longer need it.
 
-## 2. Visits: keep OFF for Robben until this is fixed
+## 2. Visits for Robben: ready, waiting on the showroom address
 
-When a caller swaps a visit for a callback (or the other way round), the engine cancels the old appointment after booking the new one. That cancel has no time budget yet: up to 12 s for the cancel plus 12 s to read it back. The phone hangs up after 15 s of silence, so a slow Cal.diy can drop the caller. The calendar stays correct and a staff task is still created, but the caller never hears the answer.
+The last blocker is fixed (2026-10-13, engine c488134). When a caller swaps a visit for a callback, the cancel of the old appointment now stays within the 8 s budget and finishes in the background, so a slow Cal.diy no longer drops the caller.
 
-The fix is small: run that cancel under the remaining 8 s budget and let it settle in the background, the same way the plain cancel now works (`src/automations/voice/phone_cancel.py`). After that fix:
+Visits are still off for Robben because the showroom address is not confirmed. "Afrikalaan 17a, 5232 BD 's-Hertogenbosch" is only an open question in `specs/receptionist-channels/robben-number-request.md`, and a wrong address sends customers to the wrong place. Once the address is confirmed:
 
-1. Account 53, Integrations tab, Visits card: switch it on, set the name "Bezichtiging of proefrit", 60 minutes, and the address "Afrikalaan 17a, 5232 BD 's-Hertogenbosch". Visits are not offered until the address is filled in.
+1. Account 53, Integrations tab, Visits card: switch it on, set the name "Bezichtiging of proefrit", 60 minutes, and the confirmed address. Visits are not offered until the address is filled in.
 2. Check that `Calendar_Connections.caldiy_visit_event_type_id` is set for account 53.
 3. Make one test visit booking and read it back in Cal.diy. Confirm it has the visit's own length and the showroom address (the engine leaves the location out and relies on the event type's own).
 4. Live call: ask to come and see a car on a weekday morning (expect a 60-minute visit), then ask to be called instead (expect the visit replaced by a callback, and her saying so).
@@ -46,6 +46,5 @@ The fix is small: run that cancel under the remaining 8 s budget and let it sett
 
 ## 4. Repo state
 
-- **CRM repo.** CRM `main` holds this feature's last commits, which are not pushed. Pushing deploys leadawaker.com through Vercel.
-- **Engine repo.** The engine branch `feature/dbr-scoping-mode` has this feature's last commits, which are not pushed. The earlier ones went up with another session's push at 17:37.
+- **Pushed.** Everything is pushed (2026-10-13): CRM `main`, and in the engine both `main` and `feature/dbr-scoping-mode` (`main` fast-forwarded to the feature branch).
 - **Cal.diy script.** `/home/gabriel/caldiy/scripts/provision-leadawaker-user.ts` carries the visit provisioning, uncommitted on purpose: that repo already had your own local changes. The CRM's provisioning depends on it, so commit it with your Cal.diy changes.
