@@ -650,7 +650,8 @@
     "address": "Address",
     "addressPlaceholder": "Street 1, 1234 AB City",
     "addressNeeded": "Add the address, so the booking confirmation shows where to go.",
-    "saveFailed": "Save failed"
+    "saveFailed": "Save failed",
+    "loadFailed": "Could not load the visit settings. Reload the page to try again."
   },
   "availability": {
     "title": "Availability",

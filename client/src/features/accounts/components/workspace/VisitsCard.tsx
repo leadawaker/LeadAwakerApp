@@ -44,6 +44,7 @@ function toBody(d: Draft) {
 export function VisitsCard({ accountId }: Props) {
   const { t } = useTranslation("accounts");
   const [loaded, setLoaded] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   const [enabled, setEnabled] = useState(false);
   const [title, setTitle] = useState("");
   const [minutes, setMinutes] = useState(DEFAULT_LENGTH);
@@ -56,16 +57,28 @@ export function VisitsCard({ accountId }: Props) {
   const inFlight = useRef(false);
   const queued = useRef<Draft | null>(null);    // newest edit made during a save
   const savedTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const mounted = useRef(true);
+
+  // The panel mounts this card with key={accountId}, so state and refs are
+  // per account. A save that lands after the card is gone touches nothing.
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      clearTimeout(savedTimer.current);
+    };
+  }, []);
 
   // Always read the account fresh: the account object the panel holds can be
   // older than the last save, and saving defaults over real values would hurt.
+  // Every control stays disabled until this has loaded.
   useEffect(() => {
     let cancelled = false;
-    setLoaded(false);
     apiFetch(`/api/accounts/${accountId}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (cancelled || !data) return;
+        if (cancelled) return;
+        if (!data) { setLoadFailed(true); return; }
         const draft: Draft = {
           enabled: Boolean(data.visits_enabled),
           title: data.visit_title ?? "",
@@ -79,20 +92,21 @@ export function VisitsCard({ accountId }: Props) {
         savedKey.current = JSON.stringify(toBody(draft));
         setLoaded(true);
       })
-      .catch(() => {});
+      .catch(() => { if (!cancelled) setLoadFailed(true); });
     return () => { cancelled = true; };
   }, [accountId]);
 
-  useEffect(() => () => clearTimeout(savedTimer.current), []);
-
   async function save(draft: Draft) {
-    const body = toBody(draft);
-    const key = JSON.stringify(body);
-    if (key === savedKey.current) return;
+    // Queue first: an edit made during a save may equal the last accepted
+    // values, and the request already running would then be the last word.
+    // The re-save after it lands compares against what the server really has.
     if (inFlight.current) {
       queued.current = draft;
       return;
     }
+    const body = toBody(draft);
+    const key = JSON.stringify(body);
+    if (key === savedKey.current) return;
     inFlight.current = true;
     setSaving(true);
     setError(null);
@@ -104,17 +118,21 @@ export function VisitsCard({ accountId }: Props) {
       });
       if (!res.ok) throw new Error(await res.text());
       savedKey.current = key;
-      setJustSaved(true);
-      clearTimeout(savedTimer.current);
-      savedTimer.current = setTimeout(() => setJustSaved(false), 1500);
+      if (mounted.current) {
+        setJustSaved(true);
+        clearTimeout(savedTimer.current);
+        savedTimer.current = setTimeout(() => setJustSaved(false), 1500);
+      }
     } catch (err: any) {
-      setError(err?.message || t("visits.saveFailed"));
+      if (mounted.current) setError(err?.message || t("visits.saveFailed"));
     } finally {
       inFlight.current = false;
-      setSaving(false);
-      const next = queued.current;
-      queued.current = null;
-      if (next) void save(next);
+      if (mounted.current) {
+        setSaving(false);
+        const next = queued.current;
+        queued.current = null;
+        if (next) void save(next);
+      }
     }
   }
 
@@ -148,6 +166,9 @@ export function VisitsCard({ accountId }: Props) {
       <div style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 8, lineHeight: 1.5 }}>
         {t("visits.hint")}
       </div>
+      {loadFailed && (
+        <div style={{ marginTop: 10, fontSize: 12, color: "var(--wine)" }}>{t("visits.loadFailed")}</div>
+      )}
 
       {enabled && (
         <>
@@ -157,6 +178,7 @@ export function VisitsCard({ accountId }: Props) {
               className="neu-input"
               style={{ fontSize: 13, padding: "8px 11px", width: "100%" }}
               value={title}
+              disabled={!loaded}
               placeholder={t("visits.namePlaceholder")}
               onChange={(e) => setTitle(e.target.value)}
               onBlur={() => void save(current)}
@@ -169,6 +191,7 @@ export function VisitsCard({ accountId }: Props) {
               className="neu-input"
               style={{ fontSize: 13, padding: "9px 11px", width: "100%" }}
               value={minutes}
+              disabled={!loaded}
               onChange={(e) => { const v = Number(e.target.value); setMinutes(v); void save({ ...current, minutes: v }); }}
             >
               {LENGTHS.map((m) => (
@@ -183,6 +206,7 @@ export function VisitsCard({ accountId }: Props) {
               className="neu-input"
               style={{ fontSize: 13, padding: "8px 11px", width: "100%" }}
               value={address}
+              disabled={!loaded}
               placeholder={t("visits.addressPlaceholder")}
               onChange={(e) => setAddress(e.target.value)}
               onBlur={() => void save(current)}

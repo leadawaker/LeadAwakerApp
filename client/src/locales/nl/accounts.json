@@ -650,7 +650,8 @@
     "address": "Adres",
     "addressPlaceholder": "Straat 1, 1234 AB Plaats",
     "addressNeeded": "Vul het adres in, zodat de bevestiging laat zien waar het is.",
-    "saveFailed": "Opslaan mislukt"
+    "saveFailed": "Opslaan mislukt",
+    "loadFailed": "De bezoekinstellingen konden niet worden geladen. Laad de pagina opnieuw om het nog eens te proberen."
   },
   "availability": {
     "title": "Beschikbaarheid",

@@ -640,7 +640,8 @@
     "address": "Endereço",
     "addressPlaceholder": "Rua 1, Cidade",
     "addressNeeded": "Informe o endereço, para a confirmação mostrar aonde ir.",
-    "saveFailed": "Falha ao salvar"
+    "saveFailed": "Falha ao salvar",
+    "loadFailed": "Não foi possível carregar as configurações de visitas. Recarregue a página para tentar de novo."
   },
   "websiteChat": {
     "title": "Chat do site",

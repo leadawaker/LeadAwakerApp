@@ -104,7 +104,7 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
         {/* In-person visits besides the call (specs/phone-booking-v2). */}
         {!readOnly && (
           <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)" }}>
-            <VisitsCard accountId={accountId} />
+            <VisitsCard key={accountId} accountId={accountId} />
           </div>
         )}
         {/* Optional and folded; visible to clients too. */}
