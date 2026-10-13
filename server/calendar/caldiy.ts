@@ -46,6 +46,9 @@ export interface CaldiyCredentials {
   apiKey?: string;
   eventTypeId: number;
   eventTypeSlug: string;
+  /** Set only when the account has visits on; null when off (the Cal.diy type stays, hidden). */
+  visitEventTypeId?: number | null;
+  visitEventTypeSlug?: string | null;
 }
 
 /** Best-effort: provisions a Cal.diy page for an account. Returns null (and logs) on any failure. */
@@ -54,7 +57,7 @@ export async function provisionCaldiyForAccount(accountId: number): Promise<Cald
     const account = await storage.getAccountById(accountId);
     if (!account || !account.ownerEmail) return null;
 
-    const { stdout } = await execFile(
+    const { stdout, stderr } = await execFile(
       `${CALDIY}/provision-leadawaker.sh`,
       [],
       {
@@ -81,10 +84,17 @@ export async function provisionCaldiyForAccount(accountId: number): Promise<Cald
           LA_MEETING_TYPE: (account as any).meetingType || "phone_call",
           ...((account as any).callingNumber ? { LA_CALLING_NUMBER: (account as any).callingNumber } : {}),
           ...((account as any).twilioDefaultFromNumber ? { LA_WHATSAPP_NUMBER: (account as any).twilioDefaultFromNumber } : {}),
+          // Visits: an in-person event type (slug "visit") next to the call type.
+          LA_VISITS_ENABLED: (account as any).visitsEnabled ? "1" : "0",
+          LA_VISIT_TITLE: (account as any).visitTitle || "",
+          LA_VISIT_MINUTES: String((account as any).visitDurationMinutes || 60),
+          LA_VISIT_ADDRESS: (account as any).visitAddress || "",
         },
         timeout: 60000,
       },
     );
+    // The script's diagnostics (user, event types, webhooks) are "[provision]" lines on stderr.
+    if (stderr?.trim()) console.error(stderr.trimEnd());
     const creds = parseLastJsonLine<CaldiyCredentials>(stdout);
 
     await storage.upsertCalendarConnection({
@@ -100,6 +110,8 @@ export async function provisionCaldiyForAccount(accountId: number): Promise<Cald
       ...(creds.apiKey ? { caldiyApiKeyEncrypted: encryptSecret(creds.apiKey) } : {}),
       caldiyEventTypeId: creds.eventTypeId,
       caldiyEventTypeSlug: creds.eventTypeSlug,
+      caldiyVisitEventTypeId: creds.visitEventTypeId ?? null,
+      caldiyVisitEventTypeSlug: creds.visitEventTypeSlug ?? null,
     } as any);
 
     return creds;

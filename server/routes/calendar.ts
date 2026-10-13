@@ -331,6 +331,8 @@ export function registerCalendarRoutes(app: Express): void {
       baseUrl: CALDIY_ENGINE_BASE_URL,
       eventTypeId: conn.caldiyEventTypeId ?? null,
       eventTypeSlug: conn.caldiyEventTypeSlug ?? null,
+      visitEventTypeId: conn.caldiyVisitEventTypeId ?? null,
+      visitEventTypeSlug: conn.caldiyVisitEventTypeSlug ?? null,
     });
   }));
 

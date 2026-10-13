@@ -20,6 +20,9 @@ import { registerProspectsRoutes } from "./prospects";
 import { registerProspectsWhatsappRoutes } from "./prospectsWhatsapp";
 import { registerUsersRoutes } from "./users";
 
+/** Visit lengths (minutes) the CRM offers; the server rejects anything else. */
+const VISIT_DURATIONS = [30, 45, 60, 90, 120];
+
 export function registerAccountsRoutes(app: Express): void {
   // ─── Accounts ─────────────────────────────────────────────────────
   // Only the agency can manage accounts
@@ -91,6 +94,10 @@ export function registerAccountsRoutes(app: Express): void {
     if (typeof parsed.data.defaultCallDurationMinutes === "number") {
       parsed.data.defaultCallDurationMinutes = Math.min(240, Math.max(5, parsed.data.defaultCallDurationMinutes));
     }
+    // Visit length is one of the choices the CRM offers; anything else becomes the 60 minute default.
+    if (typeof parsed.data.visitDurationMinutes === "number" && !VISIT_DURATIONS.includes(parsed.data.visitDurationMinutes)) {
+      parsed.data.visitDurationMinutes = 60;
+    }
     const account = await storage.createAccount(parsed.data);
     provisionCaldiyForAccount(account.id!);
     res.status(201).json(toDbKeys(account as any, accounts));
@@ -116,6 +123,10 @@ export function registerAccountsRoutes(app: Express): void {
     if (typeof parsed.data.defaultCallDurationMinutes === "number") {
       parsed.data.defaultCallDurationMinutes = Math.min(240, Math.max(5, parsed.data.defaultCallDurationMinutes));
     }
+    // Visit length is one of the choices the CRM offers; anything else becomes the 60 minute default.
+    if (typeof parsed.data.visitDurationMinutes === "number" && !VISIT_DURATIONS.includes(parsed.data.visitDurationMinutes)) {
+      parsed.data.visitDurationMinutes = 60;
+    }
     // A human editing the daily send cap owns it from now on — the poller must not silently
     // overwrite it. "Reset to auto-sync" clears the flag explicitly via the same PATCH (by
     // sending whatsappMaxDailySendsIsManual: false alongside/instead), which this respects
@@ -129,9 +140,11 @@ export function registerAccountsRoutes(app: Express): void {
     if ("businessHoursStart" in parsed.data || "businessHoursEnd" in parsed.data || "openDays" in parsed.data) {
       void resyncCaldiySchedule(account.id!);
     }
-    // If meeting type, calling number, or call duration changed, re-provision so
-    // Cal.diy's EventType.locations / length / title stay in sync.
-    if ("meetingType" in parsed.data || "callingNumber" in parsed.data || "defaultCallDurationMinutes" in parsed.data) {
+    // If meeting type, calling number, call duration or any visit setting changed,
+    // re-provision so Cal.diy's EventType.locations / length / title stay in sync.
+    if ("meetingType" in parsed.data || "callingNumber" in parsed.data || "defaultCallDurationMinutes" in parsed.data
+        || "visitsEnabled" in parsed.data || "visitTitle" in parsed.data
+        || "visitDurationMinutes" in parsed.data || "visitAddress" in parsed.data) {
       void provisionCaldiyForAccount(account.id!);
     }
     res.json(toDbKeys(account as any, accounts));
@@ -254,6 +267,10 @@ export function registerAccountsRoutes(app: Express): void {
 
   app.get("/api/accounts/:id/communication-profile", requireAuth, wrapAsync(async (req, res) => {
     const accountId = Number(req.params.id);
+    // A client user reads only their own account (setup holds alert recipients).
+    if (req.user && req.user.accountsId !== 1 && req.user.accountsId !== accountId) {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     const profile = await storage.getCommunicationProfile(accountId);
     res.json(profile ? toDbKeys(profile as any, accountCommunicationProfile) : null);
   }));
