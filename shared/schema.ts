@@ -55,6 +55,12 @@ export const accounts = nocodb.table("Accounts", {
   minBookingNoticeHours: integer("min_booking_notice_hours").default(16),
   // Default call length in minutes when neither the lead nor campaign specifies one.
   defaultCallDurationMinutes: integer("default_call_duration_minutes").default(30),
+  // Visits (specs/phone-booking-v2): an in-person appointment at the business,
+  // its own Cal.diy event type ("visit"), offered by the phone receptionist.
+  visitsEnabled: boolean("visits_enabled").notNull().default(false),
+  visitTitle: text("visit_title"),
+  visitDurationMinutes: integer("visit_duration_minutes").notNull().default(60),
+  visitAddress: text("visit_address"),
   maxDailySends: bigint("max_daily_sends", { mode: "number" }),
   webhookSecret: text("webhook_secret"),
   slug: text("slug"),
@@ -817,6 +823,9 @@ export const interactions = nocodb.table("Interactions", {
   isRead: boolean("is_read").default(true),
   isTemplate: boolean("is_template").default(false),
   templateSid: text("template_sid"),
+  // The transport that carried this message: phone | whatsapp | sms | website | email | other.
+  // Engine-owned (tools/channels.py). NULL on rows the backfill could not classify.
+  channel: text("channel"),
 }, (t) => [
   index("interactions_leads_id_idx").on(t.leadsId),
   index("interactions_accounts_id_idx").on(t.accountsId),
@@ -1046,6 +1055,9 @@ export const leads = nocodb.table("Leads", {
   // succeeds on SMS, and on every Twilio inbound (the channel they replied on).
   // NULL means "use the campaign's channel". Engine-owned: the CRM never writes it.
   resolvedChannel: text("resolved_channel"),
+  // The channel that made the current booking: phone | whatsapp | sms | website | booking_page.
+  // Engine-owned. Kept on a rebook through the link.
+  bookingChannel: text("booking_channel"),
 }, (t) => [
   index("leads_accounts_id_idx").on(t.accountsId),
   index("leads_campaigns_id_idx").on(t.campaignsId),
@@ -1837,6 +1849,9 @@ export const calendarConnections = nocodb.table("Calendar_Connections", {
   // calendar_link slug matches caldiyEventTypeSlug (see resolve_account_credentials).
   caldiyEventTypeId: integer("caldiy_event_type_id"),
   caldiyEventTypeSlug: text("caldiy_event_type_slug"),
+  // caldiy: the account's "visit" event type, when visits are on (provisioning).
+  caldiyVisitEventTypeId: integer("caldiy_visit_event_type_id"),
+  caldiyVisitEventTypeSlug: text("caldiy_visit_event_type_slug"),
   icalUrl: text("ical_url"),                            // ical read-only feed
   // White-label booking domain (book.clientwebsite.com → Cloudflare Tunnel).
   // Stored on the account's `caldiy` connection row. status: pending | active.
@@ -2027,6 +2042,16 @@ export const whatsappSenders = nocodb.table("WhatsApp_Senders", {
   appId: text("app_id").notNull(),
   appSecretEnc: text("app_secret_enc").notNull(),
   accessTokenEnc: text("access_token_enc").notNull(),
+  // How the number was connected: app (also on the client's WhatsApp Business
+  // app) | new (Cloud API only, registered by us) | null (details pasted by hand).
+  onboardingMode: text("onboarding_mode"),
+  // The two-step PIN we chose when registering a "new" number. Sealed.
+  twoStepPinEnc: text("two_step_pin_enc"),
+  // Who the assistant answers: all | new_only (not the owner's own contacts) | off.
+  aiScope: text("ai_scope").notNull().default("all"),
+  // After the owner replies from the phone, hand back after this many hours (null: only by command).
+  resumeAfterHours: integer("resume_after_hours"),
+  resumeCommand: text("resume_command").notNull().default("/go"),
   // pending | connected | error | disabled
   status: text("status").notNull().default("pending"),
   lastError: text("last_error"),
@@ -2075,6 +2100,30 @@ export const callFollowupLog = nocodb.table("Call_Followup_Log", {
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });
 export type CallFollowupLog = typeof callFollowupLog.$inferSelect;
+
+// Client recaps and instant alerts (specs/client-recaps): the event ledger.
+// The engine owns this table and its migration
+// (automations/scripts/migrate_add_client_alert_log.py) and writes every row;
+// the CRM only reads it (the /go/:code link). deliveries: one entry per channel
+// and recipient, see automations/tools/db/client_alerts.py.
+export const clientAlertLog = nocodb.table("Client_Alert_Log", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  leadsId: integer("leads_id"),
+  voiceCallId: text("voice_call_id"),
+  kind: text("kind").notNull(),             // event | recap | reply | test | notice
+  eventType: text("event_type").notNull(),
+  dedupKey: text("dedup_key").notNull().unique(),
+  payload: jsonb("payload").$type<Record<string, unknown>>().notNull().default({}),
+  instant: boolean("instant").notNull().default(false),
+  deliveries: jsonb("deliveries").$type<Array<Record<string, unknown>>>().notNull().default([]),
+  linkCode: text("link_code").unique(),
+  windowStart: timestamp("window_start", { withTimezone: true }),
+  windowEnd: timestamp("window_end", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+export type ClientAlertLog = typeof clientAlertLog.$inferSelect;
 
 // Per-service settings for the Demos page's Settings tab, one row per service
 // key from client/src/features/demos/services.ts. Free-form jsonb because each
@@ -2157,3 +2206,40 @@ export const siteVisits = nocodb.table("Site_Visits", {
   index("site_visits_created_idx").on(t.createdAt),
 ]);
 export type SiteVisit = typeof siteVisits.$inferSelect;
+
+// A private link on which a client hands in what a phone carrier needs to
+// register a number in their name. The files go straight to Telnyx; only
+// their Telnyx ids and names are kept here.
+export const numberRequests = nocodb.table("Number_Requests", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  token: text("token").notNull().unique(),
+  // open | submitted
+  status: text("status").notNull().default("open"),
+  details: jsonb("details").$type<Record<string, string>>().notNull().default({}),
+  documents: jsonb("documents").$type<NumberRequestDocument[]>().notNull().default([]),
+  // What to order once the client submits: an area code ("73"), optionally a
+  // number Gabriel picked, and whether the order goes out by itself.
+  areaCode: text("area_code"),
+  preferredNumber: text("preferred_number"),
+  autoOrder: boolean("auto_order").notNull().default(false),
+  numberOrder: jsonb("number_order").$type<NumberRequestOrder>(),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+export interface NumberRequestDocument {
+  kind: "kvk" | "id" | "address";
+  telnyxDocumentId: string;
+  filename: string;
+  uploadedAt: string;
+}
+export interface NumberRequestOrder {
+  status: "placing" | "pending" | "success" | "failure";
+  phoneNumber: string | null;
+  orderId: string | null;
+  requirementGroupId: string | null;
+  error: string | null;
+  checkedAt: string;
+}
+export type NumberRequest = typeof numberRequests.$inferSelect;
