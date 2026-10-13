@@ -370,8 +370,8 @@ PAIRS = common_pairs("pt", "/pt") + [
 
     # ── book ──
     ('<h2>Ready to put Sara on your line?</h2>', '<h2>Pronto para colocar a Sara para atender?</h2>'),
-    ('<p>Book 20 minutes with Gabriel. We map your calls, your calendar and your handoff rules, and you leave with a clear setup plan.</p>',
-     '<p>Agende 20 minutos com o Gabriel. A gente mapeia suas ligações, sua agenda e quando a Sara transfere para você, e você sai com um plano claro de implantação.</p>'),
+    ('<p>Book 20 minutes with Gabriel. We map your calls, your calendar and your handoff rules, and tell you honestly whether Sara fits.</p>',
+     '<p>Agende 20 minutos com o Gabriel. A gente mapeia suas ligações, sua agenda e quando a Sara transfere para você, e te diz com sinceridade se a Sara faz sentido para o seu negócio.</p>'),
 
     # ── footer ──
     ('<span>’s-Hertogenbosch, Netherlands</span>', '<span>’s-Hertogenbosch, Holanda</span>'),
