@@ -47,6 +47,9 @@ Everything in the engine is dormant until it restarts. Order matters:
 
 ## After Implementation
 
+- [ ] **Known gap (2026-10-14): a reply from a number the caller gave lands on a new lead.** When a caller asks for the after-call WhatsApp on another number than they called from, the message goes there, but a reply from that number is matched by phone and becomes a new Leads row. The AI then answers without the call, the booking or the earlier chat. Fix later by linking the given number to the caller's lead (e.g. an alternate-phone lookup in the inbound lead resolution). Only matters once Robben's WhatsApp is connected, and only for callers who give another number.
+- [ ] **Decide `VOICE_BOOKING_IS_REAL`** (`automations/src/automations/voice/after_call_rules.py`). Phone bookings on Robben's line are real since phone booking v2 (2026-10-13: call `live_u1_EYchJp3oMf7FYCahAQmXqGzm0GjPEm8o` booked 15 Oct 11:00, Cal.diy raised `appointment_booked` with source `phone`), and client lines book only in real mode. While the flag is off, a caller who booked gets the "link to plan your appointment" message instead of the confirmation.
+
 - [ ] **Test with a fresh phone number** that is not a lead anywhere:
   1. A WhatsApp to 073 gets an AI reply from 073.
   2. A call to the 085 line with "do not book" gets the follow-up WhatsApp after about 30 seconds.

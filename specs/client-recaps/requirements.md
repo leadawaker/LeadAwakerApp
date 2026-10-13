@@ -59,6 +59,7 @@ Read the closed `Voice_Calls` row (only **Live** calls: port the `isDemoSql` rul
 | summary has intent `leave_message` | `callback_requested` |
 | `transfer_outcome = 'failed'` | `callback_requested` (they wanted a person and nobody picked up) |
 | `outcome = 'booked'` | `callback_requested` with "wants an appointment: {slot}" (see warning) |
+| `outcome = 'booked'` and summary has `leave_message` | `callback_requested` as well (2026-10-14): the booking alert does not carry the message, e.g. a WhatsApp she promised to pass on. When the caller gave a WhatsApp number on the call, the alert's "about" line ends with it. |
 | `outcome = 'transferred'`, `hung_up`, `other` | none, recap only |
 
 **Warning (found while writing this spec):** the phone door's booking is demo-only. `voice/booking_tool.py:277` `_book()` resolves a slot without touching any calendar, and `phone_call.py:293-307` tells the caller "booked". On Robben's live line a caller who books hears a confirmation, but nothing lands in his calendar. Until real voice booking exists, the alert must say "wants an appointment, please confirm", never "booked". When real voice booking is built it will fire the Cal.diy webhook, and the alert comes from there automatically.
