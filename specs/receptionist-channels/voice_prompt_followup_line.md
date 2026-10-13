@@ -1,6 +1,6 @@
 # Voice prompt line for the after-call WhatsApp (Phase 5, task 5.6)
 
-Status: PROPOSAL, waiting for Gabriel's approval. Nothing in `Prompt_Library` was changed.
+Status: LIVE since 2026-10-14. Rows 113, 115, 117, 119 and 121 carry `{handoff}{followup}` (copies of the old rows are in `Prompt_Versions`).
 
 ## What this is
 
@@ -55,6 +55,8 @@ The edit is live for real callers about 30 seconds after saving (the engine cach
 Do the edit in the CRM prompt editor, not by SQL (the editor's autosave can revert SQL writes).
 
 ## The sentence per language
+
+Updated 2026-10-14: the line also covers a caller who asks for a WhatsApp, and asks her to repeat back another mobile number they give (the recap's `whatsapp_number`, where the message then goes). On a client line where no message can follow, the placeholder gets the pass-it-on line instead (`_TEXT_OFF`): "If the caller asks for a WhatsApp message, say you will pass the request on to the team." Both live in `followup_line.py`, with an English version of each for the backend model. The table below is the 2026-10-13 wording; the code holds the current one.
 
 In the code now (`followup_line.py`, `_TEXT`):
 

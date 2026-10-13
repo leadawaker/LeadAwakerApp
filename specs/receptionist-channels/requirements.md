@@ -37,6 +37,10 @@ Sent 30 seconds after a client-line phone call ends, when ALL of these hold:
 5. The call had at least 2 caller turns (an immediate hang-up gets nothing).
 6. The caller said yes when Sophie asked whether she may send the details to this number on WhatsApp (the call recap's `whatsapp_consent` is `yes`). `no` skips with `consent_declined`; `not_asked`, or no recap, skips with `consent_not_asked`. This spoken yes is the opt-in Meta asks for before a business starts a WhatsApp conversation; the recap on the `Voice_Calls` row and the call transcript are its record. Added 2026-10-13.
 
+**Which number:** the caller ID, unless the caller gave another mobile number for WhatsApp during the call (recap `whatsapp_number`, international format). Then the message goes there, always as a template (the lead's open WhatsApp window belongs to the caller ID). A given number that is not a mobile is ignored. A withheld caller who gives a mobile number can get the message too. Added 2026-10-14.
+
+**Lent demo number:** the demo number (`voice_phone_demo_number`) counts as a client line while its `Voice_Numbers` row says `cost_owner = 'client'` (it is lent to Robben since 2026-10-12). This also lets that line raise the client's callback alerts.
+
 **Which message:**
 
 - Booking made or changed on this call: `reception_call_booked` (always sent, even if a follow-up went out earlier the same day, because it carries new information).
@@ -45,7 +49,7 @@ Sent 30 seconds after a client-line phone call ends, when ALL of these hold:
 
 **Fallback:** if WhatsApp reports the number is not on WhatsApp (Cloud API error 131026, or the equivalent undeliverable status), send the same content once by SMS from the account's alphanumeric sender, ending with the business phone number.
 
-**Expectation in the call:** the voice prompt gets one line so Sophie asks whether she may send the details to this number on WhatsApp when the caller has an appointment time or wants to plan one. The line is only in her prompt when a message can really go (rules 1 to 3 plus a connected sender), so she never asks for something that will not come.
+**Expectation in the call:** the voice prompt gets one line so Sophie asks whether she may send the details to this number on WhatsApp when the caller has an appointment time or wants to plan one. The line is only in her prompt when a message can really go (rules 1 to 3 plus a connected sender), so she never asks for something that will not come. On any other client-line call she gets the opposite line: if the caller asks for a WhatsApp, she says the request is passed on to the team (the recap files it as `leave_message`, which raises the client's callback alert). The backend model gets the same choice in English.
 
 ## Templates
 
