@@ -629,6 +629,19 @@
     "callingNumberHint": "Os leads verao este numero na confirmacao do agendamento para saber quem esta ligando.",
     "whatsappHint": "A ligacao agendada acontece pelo WhatsApp usando o seu numero de mensagens conectado."
   },
+  "visits": {
+    "title": "Visitas",
+    "enable": "Quem liga pode marcar uma visita",
+    "hint": "Um horário presencial no seu local, como uma visita ou um test drive. A recepcionista marca a visita quando a pessoa quer vir pessoalmente, e uma ligação quando ela prefere conversar por telefone.",
+    "name": "Nome da visita",
+    "namePlaceholder": "Visita ou test drive",
+    "length": "Duração",
+    "minutes": "{{count}} minutos",
+    "address": "Endereço",
+    "addressPlaceholder": "Rua 1, Cidade",
+    "addressNeeded": "Informe o endereço, para a confirmação mostrar aonde ir.",
+    "saveFailed": "Falha ao salvar"
+  },
   "websiteChat": {
     "title": "Chat do site",
     "subtitle": "Um assistente digital no site do próprio cliente.",

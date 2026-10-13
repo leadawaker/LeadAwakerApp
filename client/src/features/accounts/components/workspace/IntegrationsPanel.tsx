@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { MeetingTypeCard } from "./MeetingTypeCard";
+import { VisitsCard } from "./VisitsCard";
 import type { AccountRow, AccountDetail } from "./types";
 import { CalendarConnectCard, BookingPageCard, BookingLinkReadOnly, CustomBookingDomainCard } from "./CalendarConnectCard";
 import { WebsiteChatCard, InboundWhatsAppCard } from "./WebsiteChatCard";
@@ -98,6 +99,12 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
               meetingType={account.meeting_type}
               callingNumber={account.calling_number}
             />
+          </div>
+        )}
+        {/* In-person visits besides the call (specs/phone-booking-v2). */}
+        {!readOnly && (
+          <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)" }}>
+            <VisitsCard accountId={accountId} />
           </div>
         )}
         {/* Optional and folded; visible to clients too. */}

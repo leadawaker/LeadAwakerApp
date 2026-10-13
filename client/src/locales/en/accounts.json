@@ -639,6 +639,19 @@
     "callingNumberHintWhatsapp": "The advisor's number, sent to the lead as a contact card right after booking — separate from your connected chat number, since the person who calls is often not the same as the one texting.",
     "whatsappHint": "The booked call happens over WhatsApp, from the calling number above."
   },
+  "visits": {
+    "title": "Visits",
+    "enable": "Callers can book a visit",
+    "hint": "An in-person appointment at your place, such as a viewing or a test drive. The receptionist books it when a caller wants to come by, and a call when they want to talk by phone.",
+    "name": "Name of the visit",
+    "namePlaceholder": "Viewing or test drive",
+    "length": "Length",
+    "minutes": "{{count}} minutes",
+    "address": "Address",
+    "addressPlaceholder": "Street 1, 1234 AB City",
+    "addressNeeded": "Add the address, so the booking confirmation shows where to go.",
+    "saveFailed": "Save failed"
+  },
   "availability": {
     "title": "Availability",
     "openDays": "Open days",

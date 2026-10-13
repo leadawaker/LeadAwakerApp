@@ -93,8 +93,9 @@ export async function provisionCaldiyForAccount(accountId: number): Promise<Cald
         timeout: 60000,
       },
     );
-    // The script's diagnostics (user, event types, webhooks) are "[provision]" lines on stderr.
-    if (stderr?.trim()) console.error(stderr.trimEnd());
+    // The script's diagnostics (user, event types, webhooks) are "[provision]" lines on stderr:
+    // routine, so they go to the out log and keep the error log for real failures.
+    if (stderr?.trim()) console.log(stderr.trimEnd());
     const creds = parseLastJsonLine<CaldiyCredentials>(stdout);
 
     await storage.upsertCalendarConnection({

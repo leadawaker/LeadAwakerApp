@@ -639,6 +639,19 @@
     "callingNumberHintWhatsapp": "Het nummer van de adviseur, verstuurd als contactkaartje direct na het boeken — los van je gekoppelde chatnummer, want degene die belt is vaak niet dezelfde als degene die appt.",
     "whatsappHint": "Het geboekte gesprek vindt plaats via WhatsApp, vanaf het belnummer hierboven."
   },
+  "visits": {
+    "title": "Bezoeken",
+    "enable": "Bellers kunnen een bezoek inplannen",
+    "hint": "Een afspraak bij jou op locatie, zoals een bezichtiging of proefrit. De receptionist plant die in als een beller langs wil komen, en een belafspraak als iemand liever telefonisch praat.",
+    "name": "Naam van het bezoek",
+    "namePlaceholder": "Bezichtiging of proefrit",
+    "length": "Duur",
+    "minutes": "{{count}} minuten",
+    "address": "Adres",
+    "addressPlaceholder": "Straat 1, 1234 AB Plaats",
+    "addressNeeded": "Vul het adres in, zodat de bevestiging laat zien waar het is.",
+    "saveFailed": "Opslaan mislukt"
+  },
   "availability": {
     "title": "Beschikbaarheid",
     "openDays": "Open dagen",
