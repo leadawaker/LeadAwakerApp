@@ -1,18 +1,20 @@
   <!-- Public website demo (specs/public-website-demo). Live on every host:
        ?try=mock runs it on fake answers for design review, ?try=0 hides it.
        While shown, it also points the hero "Test her out" button here and shows
-       every .ts-cta button (nav "Try Sara", #book "Try her on your website").
+       every .ts-cta button (nav "Try Sara").
        All copy lives in COPY below (en/nl/pt), picked by <html lang>, so the
        /nl and /pt builds need no pairs for it.
-       The photos (img/try-phone*.webp, all 1024x1300) show a blank phone;
-       .ts-screen sits exactly on its screen, at the --sx/--sy/--sw/--sh of the
-       photo in use. Photo 1 is the pitch; once the demo is ready it changes to
-       photo 4 (one hand, close-up), so the same picture is not shown twice. -->
+       The pictures (img/try-avatar-*.webp, all 1065x1238) show a blank phone;
+       .ts-screen sits on its screen, at the --sx/--sy/--sw/--sh of the picture
+       in use. The avatars all share one screen position: they are cut by
+       script/site-sections/align-try-avatars.py, which also prints the numbers.
+       "builder" is the pitch; once the demo is ready it changes to "ready"
+       (one hand, close-up), so the same picture is not shown twice. -->
   <section class="band" id="try-sara" hidden>
     <style>
     #try-sara{padding-top:clamp(28px,4vw,56px);--tc:#F7F1E6;--tc-2:rgba(244,239,227,.84);--tc-3:rgba(244,239,227,.62);--tc-acc:#EBB9A8}
     #try-sara .ts-stage{position:relative;isolation:isolate;border-radius:28px;background:linear-gradient(155deg,var(--wine-2),var(--wine-deep) 72%);color:var(--tc);box-shadow:var(--sh-raised);
-      display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}
+      display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
     #try-sara .ts-stage::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;
       background:radial-gradient(50% 60% at 0% 0%,rgba(235,185,168,.16),transparent 70%),radial-gradient(40% 40% at 0% 100%,rgba(0,0,0,.25),transparent 70%)}
     #try-sara .ts-copy{display:grid;gap:22px;align-content:center;min-width:0;padding:clamp(28px,5vw,64px)}
@@ -25,6 +27,7 @@
     #try-sara .ts-lede{font-size:18px;color:var(--tc-2);max-width:26em}
     #try-sara .ts-state{display:grid;gap:16px;justify-items:start;min-width:0}
     #try-sara .ts-state[hidden]{display:none!important}
+    #try-sara [data-state=verify] h3{display:none}
     #try-sara h3{font-family:var(--serif);font-size:clamp(22px,2.4vw,28px);line-height:1.2;color:var(--tc)}
     #try-sara .ts-text{color:var(--tc-2);font-size:16px;max-width:30em}
     #try-sara .ts-small{color:var(--tc-3);font-size:13.5px;max-width:34em}
@@ -75,17 +78,22 @@
     #try-sara .ts-tips li{position:relative;padding-left:16px}
     #try-sara .ts-tips li::before{content:"";position:absolute;left:0;top:.55em;width:6px;height:6px;border-radius:50%;background:var(--wine)}
 
-    /* the photo: a craftsman holding up a phone that walks the demo with the visitor.
-       .ts-visual is a size container so .ts-photo can cover it like object-fit, keeping the screen aligned. */
-    #try-sara .ts-visual{position:relative;min-width:0;min-height:640px;container-type:size;overflow:hidden;border-radius:0 28px 28px 0}
-    #try-sara .ts-photo{position:absolute;bottom:0;left:50%;width:max(100cqw,calc(100cqh * 1024 / 1300));aspect-ratio:1024/1300;transform:translateX(-50%);
-      --sx:13.672%;--sy:30.462%;--sw:37.891%;--sh:67.154%;--ml:-3cqw;--mb:0cqw}
-    #try-sara .ts-photo[data-photo="4"]{--sx:31.333%;--sy:17.06%;--sw:37.556%;--sh:63.167%;--ml:-15.1cqw;--mb:-8cqw}
+    /* the picture: an avatar holding up a phone that walks the demo with the visitor.
+       .ts-fit is a size container so .ts-photo can cover it like object-fit, keeping the screen aligned. It fills
+       .ts-visual absolutely because cqh reads 0 inside a grid item whose height comes from stretching.
+       --ax is where the spare width is cut: 0 keeps the left edge (the phone), .5 keeps the middle.
+       --fill is how much of the height it covers: over 1 zooms in (phones), and the spare wall above the avatar is cut off.
+       The pictures carry their own wall up to the top, so only the left edge is faded into the panel. */
+    #try-sara .ts-visual{position:relative;min-width:0;min-height:640px;overflow:hidden;border-radius:0 28px 28px 0}
+    #try-sara .ts-fit{position:absolute;inset:0;container-type:size;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%);mask-image:linear-gradient(90deg,transparent,#000 5%)}
+    #try-sara .ts-photo{position:absolute;bottom:0;--pw:max(100cqw,calc(100cqh * var(--fill) * 1065 / 1238));left:calc((100cqw - var(--pw)) * var(--ax));width:var(--pw);aspect-ratio:1065/1238;
+      --sx:14.648%;--sy:43.7%;--sw:27.418%;--sh:47.981%;--sr:13%/6.4%;--ax:0;--fill:1}
+    #try-sara .ts-photo[data-photo="ready"]{--sx:34.836%;--sy:33.926%;--sw:30.423%;--sh:52.585%;--sr:9.3%/4.6%;--ax:.5}
     #try-sara .ts-photo>img{position:absolute;inset:0;display:block;width:100%;height:100%;opacity:0;transition:opacity .6s}
     #try-sara .ts-photo>img.on{opacity:1}
     #try-sara .ts-photo.swap .ts-screen{opacity:0}
-    #try-sara .ts-photo::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(62,21,32,.55),transparent 9%),linear-gradient(0deg,rgba(62,21,32,.35),transparent 14%)}
-    #try-sara .ts-screen{position:absolute;z-index:1;left:var(--sx);top:var(--sy);width:var(--sw);height:var(--sh);border-radius:10.3%/4.6%;overflow:hidden;container-type:inline-size;transition:opacity .3s;
+    #try-sara .ts-photo::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,rgba(62,21,32,.35),transparent 14%)}
+    #try-sara .ts-screen{position:absolute;z-index:1;left:var(--sx);top:var(--sy);width:var(--sw);height:var(--sh);border-radius:var(--sr);overflow:hidden;container-type:inline-size;transition:opacity .3s;
       display:grid;grid-template-rows:auto 1fr;color:#fff;font-family:inherit;
       background:radial-gradient(120% 60% at 50% 0%,rgba(110,38,56,.85),transparent 70%),linear-gradient(180deg,#2A1218,#0E0B0C 70%)}
     #try-sara .ts-screen::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(125deg,rgba(255,255,255,.1),transparent 30%)}
@@ -146,9 +154,9 @@
     #try-sara .ts-scan i:nth-child(2){width:84%;animation-delay:.2s}#try-sara .ts-scan i:nth-child(3){width:64%;animation-delay:.4s}
     @keyframes ts-shine{from{background-position:100% 0}to{background-position:0 0}}
     @media (max-width:900px){#try-sara .ts-stage{grid-template-columns:minmax(0,1fr)}
-      #try-sara .ts-visual{min-height:0;aspect-ratio:1/1.45;border-radius:0 0 28px 28px}
-      #try-sara .ts-photo{width:130cqw;left:var(--ml);bottom:var(--mb);transform:none}
-      #try-sara .ts-photo::after{background:linear-gradient(180deg,rgba(62,21,32,.7),transparent 12%)}}
+      #try-sara .ts-visual{min-height:0;aspect-ratio:1/1.2;border-radius:0 0 28px 28px}
+      #try-sara .ts-fit{-webkit-mask-image:linear-gradient(180deg,transparent,#000 9%);mask-image:linear-gradient(180deg,transparent,#000 9%)}
+      #try-sara .ts-photo{--ax:.56;--fill:1.24}}
     @media (max-width:560px){#try-sara .ts-stage{border-radius:22px}#try-sara .ts-visual{border-radius:0 0 22px 22px}#try-sara .ts-copy{padding:30px 20px 24px}
       #try-sara .ts-bar{flex-wrap:wrap;padding:6px}#try-sara .ts-bar input{flex:1 1 60%}#try-sara .ts-bar .btn{flex:1 1 100%}
       #try-sara .ts-actions{display:grid;width:100%}}
@@ -209,9 +217,9 @@
           <p class="ts-alt"><span data-t="alt"></span> <a class="js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener" data-t="altLink"></a></p>
         </div>
 
-        <div class="ts-visual" aria-hidden="true">
-          <div class="ts-photo" data-photo="1">
-            <img class="on" data-n="1" src="/site/img/try-phone.webp" width="1024" height="1300" alt="" loading="lazy" decoding="async">
+        <div class="ts-visual" aria-hidden="true"><div class="ts-fit">
+          <div class="ts-photo" data-photo="builder">
+            <img class="on" data-n="builder" src="/site/img/try-avatar-builder.webp" width="1065" height="1238" alt="" loading="lazy" decoding="async">
             <div class="ts-screen" data-scene="idle">
               <div class="ts-sb"><span>19:42</span><i class="ts-isl"></i><span class="ts-ic"><i></i><i></i><i></i><b></b></span></div>
               <div class="ts-scenes">
@@ -247,7 +255,7 @@
               </div>
             </div>
           </div>
-        </div>
+        </div></div>
       </div>
     </div>
     <div class="ts-modal" hidden role="dialog" aria-modal="true">
@@ -275,9 +283,8 @@
           submit:'Build my demo',
           alt:'Rather talk to Gabriel first?',altLink:'Book a call',
           incoming:'Incoming call',answeredBy:'Sara answering for',yourReceptionist:'Your new receptionist',answer:'Answer',decline:'Decline',
-          examples:[['Brightline Kitchens','Kitchens',1],['Sharp & Co Barbers','Barber','barber'],['Prestige Motors','Car dealership','car'],
-            ['Oak & Pine Builders','Construction','builder'],['Bright Smile Dental','Dental clinic','dental'],['Elm Street Electrical','Electrician','electrician'],
-            ['Spark Events','Event planner','events'],['Elm Street Medical','Medical practice','doctor'],['Iron Peak Gym','Gym','gym'],
+          examples:[['Oak & Pine Builders','Construction','builder'],['Studio Lune Hair','Hair salon','salon'],['Prestige Motors','Car dealership','car'],
+            ['Elm Street Medical','Medical practice','doctor'],['Spark Events','Event planner','events'],['Iron Peak Gym','Gym','gym'],
             ['Seaview Hotel','Hotel','hotel'],['Kessler & Shaw Law','Law firm','lawyer']],
           yours:'Your business',
           readyEyebrow:'Your demo is ready',tipsLabel:'How to test her',tipsTitle:'Get the most out of your demo',
@@ -303,9 +310,8 @@
           submit:'Maak mijn demo',
           alt:'Liever eerst met Gabriel praten?',altLink:'Plan een gesprek',
           incoming:'Inkomend gesprek',answeredBy:'Sara neemt op voor',yourReceptionist:'Je nieuwe receptioniste',answer:'Opnemen',decline:'Weigeren',
-          examples:[['Keukenstudio Vos','Keukens',1],['Barbershop Knip','Barbier','barber'],['Autobedrijf Visser','Autodealer','car'],
-            ['Bouwbedrijf Eikhout','Bouw','builder'],['Tandarts Lindenhof','Tandarts','dental'],['Elektro Jansen','Elektricien','electrician'],
-            ['Eventbureau Sfeer','Evenementen','events'],['Huisartsenpraktijk De Linde','Huisarts','doctor'],['Sportschool Kracht','Sportschool','gym'],
+          examples:[['Bouwbedrijf Eikhout','Bouw','builder'],['Kapsalon Knip','Kapsalon','salon'],['Autobedrijf Visser','Autodealer','car'],
+            ['Huisartsenpraktijk De Linde','Huisarts','doctor'],['Eventbureau Sfeer','Evenementen','events'],['Sportschool Kracht','Sportschool','gym'],
             ['Hotel De Duinen','Hotel','hotel'],['Advocatenkantoor Smit','Advocaat','lawyer']],
           yours:'Jouw bedrijf',
           readyEyebrow:'Je demo staat klaar',tipsLabel:'Zo test je haar',tipsTitle:'Haal het meeste uit je demo',
@@ -331,9 +337,8 @@
           submit:'Cria minha demo',
           alt:'Prefere falar com o Gabriel primeiro?',altLink:'Agendar uma conversa',
           incoming:'Chamada recebida',answeredBy:'Sara atendendo',yourReceptionist:'Sua nova recepcionista',answer:'Atender',decline:'Recusar',
-          examples:[['Marcenaria Ipê','Marcenaria',1],['Barbearia Navalha','Barbearia','barber'],['Concessionária Paulista','Concessionária','car'],
-            ['Construtora Aroeira','Construção','builder'],['Clínica Sorriso','Dentista','dental'],['Elétrica Bem-Te-Vi','Eletricista','electrician'],
-            ['Estúdio de Eventos Brilho','Eventos','events'],['Clínica Saúde Viva','Clínica médica','doctor'],['Academia Força','Academia','gym'],
+          examples:[['Construtora Aroeira','Construção','builder'],['Salão Bela Vista','Salão de beleza','salon'],['Concessionária Paulista','Concessionária','car'],
+            ['Clínica Saúde Viva','Clínica médica','doctor'],['Estúdio de Eventos Brilho','Eventos','events'],['Academia Força','Academia','gym'],
             ['Hotel Mar Azul','Hotel','hotel'],['Almeida Advogados','Advocacia','lawyer']],
           yours:'Sua empresa',
           readyEyebrow:'Sua demonstração está pronta',tipsLabel:'Como testar a Sara',tipsTitle:'Aproveite ao máximo a sua demonstração',
@@ -381,8 +386,8 @@
         if(own)setBiz(own,C.yours,true);else cycleT=setTimeout(cycle,900);
       });
       cycle();
-      // The costumes are fetched once the page has settled, so each swap is instant when its turn comes.
-      window.addEventListener('load',function(){setTimeout(function(){C.examples.forEach(function(e){if(e[2]&&e[2]!==1)photoImg(e[2])})},2500)});
+      // The avatars are fetched once the page has settled, so each swap is instant when its turn comes.
+      window.addEventListener('load',function(){setTimeout(function(){C.examples.forEach(function(e){if(e[2]&&e[2]!==basePhoto)photoImg(e[2])})},2500)});
 
       /* The headline: the pitch, until the demo has something of its own to say. */
       var h2=$('h2'),lede=$('.ts-lede'),eyebrow=$('.ts-eyebrow');
@@ -393,15 +398,15 @@
         h2.textContent='';h2.appendChild(document.createTextNode(parts[0]));h2.appendChild(em);h2.appendChild(document.createTextNode(parts[1]||''));
       }
 
-      /* The photo changes once the demo is ready, so the same picture is not shown twice. */
-      var readyPhoto=4;
+      /* The picture changes once the demo is ready, so the same one is not shown twice. */
+      var basePhoto='builder',readyPhoto='ready';
       /* The path is built from parts because the build checks every literal /site/img/ path exists. */
       function photoImg(n){
         var img=photo.querySelector(':scope>img[data-n="'+n+'"]');
-        if(!img){img=new Image();img.alt='';img.setAttribute('data-n',n);img.decoding='async';img.src=['','site','img','try-phone-'+n+'.webp'].join('/');photo.insertBefore(img,screen)}
+        if(!img){img=new Image();img.alt='';img.setAttribute('data-n',n);img.decoding='async';img.src=['','site','img','try-avatar-'+n+'.webp'].join('/');photo.insertBefore(img,screen)}
         return img;
       }
-      // quiet: the new photo has the phone in the same spot, so the screen stays and only the person fades.
+      // quiet: the new picture has the phone in the same spot, so the screen stays and only the avatar fades.
       function setPhoto(n,quiet){
         if(photo.getAttribute('data-photo')===String(n))return;
         var img=photoImg(n),go=function(){
@@ -438,8 +443,10 @@
       function show(state){
         $$('.ts-state').forEach(function(el){el.hidden=el.getAttribute('data-state')!==state});
         scene(state==='verify'||state==='building'||state==='ready'?state:'idle');
-        if(state!=='building'&&state!=='ready')headline(null);
-        setPhoto(state==='ready'?readyPhoto:1);
+        /* once the website is sent, the pitch makes way: the WhatsApp step becomes the headline */
+        if(state==='verify'){headline(null);h2.classList.add('sm');h2.textContent=C.verifyTitle;lede.hidden=true}
+        else if(state!=='building'&&state!=='ready')headline(null);
+        setPhoto(state==='ready'?readyPhoto:basePhoto);
         if(state==='building')photoImg(readyPhoto); // fetched while she reads, so the change is instant
         if(state!=='building')buildSteps(false);
       }

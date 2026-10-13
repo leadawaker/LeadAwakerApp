@@ -535,16 +535,16 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 @media (max-width:600px){.float{font-size:11px;padding:8px 10px}.float b{font-size:11.5px}.float.f1 span:not(.fdot){display:none}.float.f2{display:none}.fdot{width:24px;height:24px}.fdot::before{left:7px;top:6px}}
 /* photo band: one real person, one line, one notification */
 .pband{position:relative;margin:0;border-radius:24px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);background:var(--paper);box-shadow:0 30px 60px -34px rgba(60,40,15,.4);border:1px solid rgba(255,255,255,.7)}
-.pband img{display:block;width:100%;height:100%;min-height:clamp(300px,34vw,440px);object-fit:cover;object-position:72% 40%}
+.pband img{display:block;width:100%;height:100%;min-height:clamp(300px,34vw,440px);object-fit:cover;object-position:50% 50%}
 .pb-copy{display:grid;gap:12px;align-content:center;padding:32px clamp(24px,4vw,56px)}
 .pb-copy h2{font-size:clamp(34px,4vw,54px);line-height:1.05}
 .pb-copy p{font-size:17px;color:var(--ink-soft)}
-.float.fb{left:clamp(14px,2.4vw,28px);bottom:clamp(14px,2.4vw,28px);gap:10px;max-width:min(330px,50%)}
+.float.fb{left:21.5%;bottom:9%;gap:10px;max-width:min(330px,35%)}
 @media (max-width:760px){
   .pband{grid-template-columns:minmax(0,1fr)}
   .pband img{min-height:0;height:260px}
   .pb-copy{padding:20px 20px 24px}
-  .float.fb{top:170px;bottom:auto;max-width:80%}
+  .float.fb{left:34%;right:10px;top:214px;bottom:auto;max-width:none;transform:translateY(-50%)}
 }
 
 /* how it works */
@@ -618,7 +618,7 @@ section.band{padding-block:clamp(64px,9vw,112px)}
 @media (min-width:901px){.team.me{align-items:start;row-gap:18px}.me-r{display:contents}
   .me-r>*{grid-column:2;justify-self:start}.me-r>.me-letter{justify-self:stretch}
   .me-l{grid-column:1;grid-row:4}.me-letter{grid-row:4}.me-l .pc{margin:6px auto 0}}
-@media (max-width:900px){.team.me{grid-template-columns:minmax(0,1fr)}.me-l .pc{width:min(68%,330px);margin-top:14%}}
+@media (max-width:900px){.team.me{grid-template-columns:minmax(0,1fr)}.me-l .pc{width:min(76%,330px);margin-top:22%;padding-bottom:0;aspect-ratio:92/96}}
 
 /* nav: "Try Sara" sits next to "Book a demo" while the self-serve demo is shown */
 .nav-links .nav-try{background:transparent;color:var(--wine);box-shadow:inset 0 0 0 1.5px rgba(94,34,48,.42)}
@@ -1022,13 +1022,28 @@ footer .f-brand img{height:28px}
 @media (max-width:860px){
   .started:not(.tell) .callside .dev{display:none}
   .started:not(.tell) .callside{padding:12px 14px 0}
-  .started:not(.tell) .cbar{display:flex;align-items:center;gap:10px;width:100%;padding:10px 10px 10px 12px;border-radius:18px;background:#0B0B0C;color:#fff}
+  .started:not(.tell) .cbar{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;width:100%;padding:10px 10px 6px 16px;border-radius:18px;background:#0B0B0C;color:#fff}
+  /* the timeline: drag it to jump around the call */
+  .cb-seek{flex:0 0 100%;display:flex;align-items:center;gap:10px;padding-right:6px}
+  .cb-seek span{font-size:12px;color:rgba(255,255,255,.65)}
+  .cb-range{flex:1;min-width:0;height:30px;margin:0;padding:0;background:transparent;-webkit-appearance:none;appearance:none;cursor:pointer}
+  .cb-range::-webkit-slider-runnable-track{height:4px;border-radius:4px;background:linear-gradient(to right,#fff var(--p,0%),rgba(255,255,255,.28) var(--p,0%))}
+  .cb-range::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;margin-top:-6px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
+  .cb-range::-moz-range-track{height:4px;border-radius:4px;background:rgba(255,255,255,.28)}
+  .cb-range::-moz-range-progress{height:4px;border-radius:4px;background:#fff}
+  .cb-range::-moz-range-thumb{width:16px;height:16px;border:0;border-radius:50%;background:#fff}
+  /* the transcript reads newest first: the line being spoken is always the top one, right under the player */
+  .ln{order:calc(var(--i,0) * -1)}
+  .ln:not(.in){display:none}
+  .ln.in{animation:ln-new .4s cubic-bezier(.2,.8,.2,1)}
+  @keyframes ln-new{from{opacity:0;transform:translateY(-8px)}}
   .cbar>div{flex:1;min-width:0;display:grid}.cbar b{font-size:14px}.cbar small{font-size:12px;color:rgba(255,255,255,.65)}
   .cb-bars{display:flex;gap:3px;align-items:center;height:18px}
   .cb-bars i{width:3px;border-radius:2px;background:#9FE6B4;animation:talk2 .9s ease-in-out infinite}
   .cb-bars i:nth-child(2){animation-delay:.15s}.cb-bars i:nth-child(3){animation-delay:.3s}.cb-bars i:nth-child(4){animation-delay:.45s}
   .cbar .playbtn{width:42px;height:42px}.cbar .playbtn svg{width:18px;height:18px}
-  .started .lines{height:56vh;height:56svh}
+  .started .lines{height:360px}
+  .cb-spd{flex:none;min-width:44px;height:30px;padding:0 10px;border:0;border-radius:999px;background:rgba(255,255,255,.14);color:#fff;font:700 12.5px/1 var(--sans);cursor:pointer}
 }
 /* hero v7: entrance */
 .siri{transition:opacity .7s .2s}
@@ -1091,6 +1106,47 @@ footer .f-brand img{height:28px}
   .tsteps li span{width:18px;height:18px;font-size:10.5px}
 }
 .lines{position:relative}
+/* hero v13: on wide screens the call ends on the same phone, the transcript stays, and a player bar sits at the bottom */
+.lock,.pbar,.again2,.own-l2{display:none}
+.talk-r{display:flex;align-items:center;gap:12px}
+@media (min-width:861px){
+  .tell .console{grid-template-columns:330px minmax(0,1fr)}
+  .tell .callside{display:grid;opacity:1;transform:none}
+  .tell .talk{display:grid;opacity:1;animation:pop .65s .35s cubic-bezier(.2,.8,.2,1) both}
+  .tell .tellv{display:none}
+  .tell .ln.past p,.tell .ln.past .spk{opacity:1}
+  .talk-h{min-height:30px}
+  .tell .again2{display:inline-flex;border:0;background:var(--wine);color:#fff;font:inherit;font-size:12px;font-weight:700;padding:7px 14px;border-radius:999px;cursor:pointer}
+  .callside .dev-status,.callside .home-bar{z-index:2}
+  .callside .dev-status{position:relative}
+  .callside .dev-status .num{transition:opacity .4s}
+  .tell .callside .dev-status .num{opacity:0}
+  .lock{display:block;position:absolute;inset:0;z-index:1;padding:46px 16px 26px;background:linear-gradient(170deg,#3A1E28,#141013 60%);opacity:0;pointer-events:none;transition:opacity .5s}
+  .tell .lock{opacity:1;pointer-events:auto}
+  .lock .lk b{font-size:56px}
+  .lock .lk-n{transition-delay:.75s}
+  .lock .lk-n p{font-size:12.5px}
+  .tell .lock .lk-n{animation:notifp 1.5s 1.4s ease-out 2}
+  @keyframes notifp{0%{box-shadow:0 0 0 0 rgba(37,164,91,.6)}100%{box-shadow:0 0 0 12px rgba(37,164,91,0)}}
+  .own-l2{display:block;position:absolute;left:0;right:0;top:100%;margin-top:8px;text-align:center;opacity:0;transition:opacity .5s .4s}
+  .tell .own-l2{opacity:1}
+  .started .pbar{display:flex;align-items:center;gap:12px;padding:10px 18px;border-top:1px solid var(--line-2);animation:pop .6s .45s cubic-bezier(.2,.8,.2,1) both}
+  .pb-play{flex:none;width:34px;height:34px;padding:0;border-radius:50%;border:0;background:var(--wine);color:#fff;display:grid;place-items:center;cursor:pointer}
+  .pb-play svg{width:15px;height:15px;fill:currentColor}
+  .pb-play .i-pause,.playing .pb-play .i-play{display:none}.playing .pb-play .i-pause{display:block}
+  .pb-t{font-size:12px;font-weight:600;color:var(--mute);min-width:2.4em}
+  .pb-seek{flex:1;min-width:0;margin:0;accent-color:var(--wine);cursor:pointer}
+  .pctl{display:flex;align-items:center;gap:12px;margin-left:6px}
+  .spd{display:flex;padding:3px;border-radius:999px;background:var(--bg-2)}
+  .spd button{border:0;background:transparent;font:inherit;font-size:12px;font-weight:700;color:var(--mute);padding:5px 9px;border-radius:999px;cursor:pointer;transition:background .25s,color .25s}
+  .spd button[aria-pressed="true"]{background:var(--wine);color:#fff}
+  .vol{display:flex;align-items:center;gap:6px}
+  .vol button{border:0;background:transparent;color:var(--mute);width:28px;height:28px;padding:0;border-radius:50%;display:grid;place-items:center;cursor:pointer}
+  .vol button:hover{color:var(--wine)}
+  .vol svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .vol .v-x,.vol.off .v-w{display:none}.vol.off .v-x{display:block}
+  .vol input{width:64px;margin:0;accent-color:var(--wine);cursor:pointer}
+}
 /* channels on wine: "one receptionist, three front doors" and its three rows sit on their own full-width wine band */
 #channels{--on-wine:#F7F1E6;--on-wine-2:rgba(244,239,227,.84);--on-wine-3:rgba(244,239,227,.6);--on-wine-accent:#EBB9A8;
   padding-block:clamp(64px,8vw,104px)!important;color:var(--on-wine);
@@ -1116,6 +1172,30 @@ footer .f-brand img{height:28px}
 #channels .av3::after{inset:-6px;border:2px solid rgba(255,220,225,.6);opacity:0;animation:hub-pulse 7.8s ease-out infinite}
 @keyframes hub-pulse{0%{transform:scale(1);opacity:.55}33%,100%{transform:scale(1.4);opacity:0}}
 @media (prefers-reduced-motion:reduce){#channels .av3::after{animation:none}}
+/* Her hello when the section scrolls in: a speech balloon, then one notification she jumps at.
+   Played once (see the script); after that she only looks around. */
+/* she opens the website chat when clicked; above the door cards so her balloon is never under one */
+#channels .hub-emma{z-index:2;cursor:pointer;border-radius:16px}
+#channels .hub-emma:hover .av3{scale:1.05}
+#channels .av3{transition:scale .25s cubic-bezier(.3,1.5,.5,1)}
+.hub-hi,.hub-ping{position:absolute;z-index:3;pointer-events:none;opacity:0}
+.hub-hi{left:calc(50% + 16px);bottom:calc(100% - 12px);padding:8px 13px;border-radius:16px 16px 16px 4px;background:#FFFDF8;color:var(--ink);font:700 15px/1 var(--sans);white-space:nowrap;
+  box-shadow:0 12px 24px -12px rgba(0,0,0,.55);transform-origin:0 100%;transform:scale(.4) translateY(6px);transition:opacity .25s,transform .35s cubic-bezier(.3,1.5,.5,1)}
+.hub-hi.on{opacity:1;transform:none}
+.hub-ping{right:-3px;top:-3px;min-width:22px;height:22px;padding:0 6px;border-radius:999px;display:grid;place-items:center;background:#E5484D;color:#fff;font:800 12px/1 var(--sans);
+  box-shadow:0 0 0 2px #4A1A27;transform:scale(0);transition:opacity .2s,transform .35s cubic-bezier(.3,1.6,.5,1)}
+.hub-ping.on{opacity:1;transform:none}
+#channels .av3.hub-wave{animation:hub-wave .9s ease-in-out}
+#channels .av3.hub-hop{animation:hub-hop .8s linear}
+#channels .av3.hub-glad .lo-eyes i{animation:lo-glee .4s cubic-bezier(.3,1.5,.5,1) forwards}
+@keyframes hub-wave{0%,100%{rotate:0deg}20%{rotate:-12deg}45%{rotate:10deg}70%{rotate:-6deg}88%{rotate:3deg}}
+@keyframes hub-hop{0%{translate:0 0;scale:1;animation-timing-function:ease-in}
+  15%{translate:0 0;scale:1.1 .88;animation-timing-function:cubic-bezier(.2,.7,.4,1)}
+  42%{translate:0 -24px;scale:.94 1.08;animation-timing-function:cubic-bezier(.6,0,.8,.4)}
+  64%{translate:0 0;scale:1.1 .9;animation-timing-function:ease-out}
+  82%{translate:0 0;scale:.98 1.02;animation-timing-function:ease-in-out}
+  100%{translate:0 0;scale:1}}
+@media (max-width:480px){.hub-hi{left:calc(50% + 8px);bottom:calc(100% - 8px);font-size:13.5px;padding:7px 11px}.hub-ping{min-width:20px;height:20px;font-size:11px}}
 #channels .hub-node{box-shadow:0 18px 36px -18px rgba(0,0,0,.5)}
 #channels .hub-node[aria-pressed="false"]{box-shadow:none}
 #channels :focus-visible{outline-color:var(--on-wine)}
@@ -1243,9 +1323,9 @@ footer .f-brand img{height:28px}
 .bk-head.urg{opacity:0;transform:translateY(10px);pointer-events:none}
 .bk-sec[data-step="1"] .bk-head.cal{opacity:0;transform:translateY(-10px);pointer-events:none}
 .bk-sec[data-step="1"] .bk-head.urg{opacity:1;transform:none;pointer-events:auto}
-.bk-stage{position:relative;width:100%;max-width:1360px;display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:clamp(16px,2.4vw,28px);align-items:stretch}
+.bk-stage{position:relative;width:100%;max-width:1360px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(16px,2.4vw,28px);align-items:stretch}
 .bk-photo{margin:0;border-radius:16px;overflow:hidden;position:relative;background:var(--bg-2);box-shadow:var(--sh-float);transition:opacity .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
-.bk-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:66% 40%;display:block}
+.bk-photo img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:50% 50%;display:block}
 .bk-stage .wk{transition:opacity .5s,filter .5s,transform .6s cubic-bezier(.2,.8,.2,1)}
 .bk-stage .wk-body{height:clamp(170px,34vh,330px)}
 .bk-stage .wk-toast{margin-top:10px}
@@ -1260,6 +1340,7 @@ footer .f-brand img{height:28px}
 .bk-sticky .cal-int{justify-content:center}
 .bk-sec+.band{padding-top:clamp(64px,9vw,112px)!important}
 @media (max-height:820px){.bk-sticky .cal-int{display:none}.bk-stage .wk .ln-key{display:none}}
+@media (max-width:1100px){.bk-stage{grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr)}}
 @media (max-width:860px){.bk-stage{grid-template-columns:minmax(0,1fr)}.bk-photo{display:none}}
 @media (max-width:760px){
   .bk-head h2{font-size:28px}
@@ -1271,50 +1352,85 @@ footer .f-brand img{height:28px}
   .bk-sticky .cal-int{display:none}
   .bk-stage .wk .ln-key{display:none}
 }
-/* "she remembers": a third pane on the held stage. One customer's history fills in, the line turns wine as her memory
-   travels down to today's chat, her reply lights the words she kept (purple: from the call), and the chat ends in a new booking */
+/* "she remembers": a third pane on the held stage. Three moments with one customer, each its own card on a soft shape in
+   its channel's colour: the phone call, the appointment, today's WhatsApp chat. Her reply highlights what she kept, together
+   with the place it came from, and the chat ends in a new booking */
 .bk-sec[data-step]:not([data-step="0"]) .bk-head.cal{opacity:0;transform:translateY(-10px);pointer-events:none}
 .bk-sec[data-step]:not([data-step="0"]) .bk-stage .wk,.bk-sec[data-step]:not([data-step="0"]) .bk-photo{opacity:0;transform:scale(.96);pointer-events:none}
 .bk-sec[data-step]:not([data-step="0"]) .bk-sticky .cal-int{visibility:hidden}
 .bk-head.mem{opacity:0;transform:translateY(10px);pointer-events:none}
 .bk-head.mem.on{opacity:1;transform:none;pointer-events:auto}
-.bk-mem{position:absolute;left:50%;top:0;width:min(560px,100%);transform:translate(-50%,40px);z-index:3;display:grid;justify-items:center;opacity:0;pointer-events:none;
+/* the captions of the held stage are one sentence: they get the full width of the title block, so a last word never drops alone */
+.bk-head p{max-width:none;text-wrap:balance}
+.bk-mem{position:absolute;left:50%;top:0;bottom:0;width:min(1160px,100%);transform:translate(-50%,40px);z-index:3;display:grid;justify-items:center;align-content:start;align-content:safe center;opacity:0;pointer-events:none;
   transition:opacity .45s,transform .7s cubic-bezier(.2,.8,.2,1)}
 .bk-mem.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .bk-mem [data-fit]{zoom:var(--fz,.8)}
-.rm-card{width:min(540px,100%);box-sizing:border-box;text-align:left;display:grid;gap:16px;padding:24px 26px}
-.rm-card .lanes-top{margin:0}
-.rm-thread{list-style:none;margin:0;padding:0;display:grid}
-.rm-thread>li{position:relative;display:grid;grid-template-columns:36px minmax(0,1fr);gap:14px;padding-bottom:18px;opacity:0;transform:translateY(6px);transition:opacity .45s,transform .5s cubic-bezier(.2,.8,.2,1)}
-.rm-thread>li.in{opacity:1;transform:none}
-.rm-thread>li:last-child{padding-bottom:0}
-.rm-thread>li::before{content:"";position:absolute;left:17px;top:40px;bottom:2px;width:2px;border-radius:2px;background:var(--line);transform-origin:top;transform:scaleY(0);transition:transform .6s .25s,background .45s}
-.rm-thread>li.in::before{transform:none}
-.rm-thread>li.lit::before{background:var(--wine)}
-.rm-thread>li:last-child::before{display:none}
-.rm-thread>li>div{display:grid;gap:3px;justify-items:start;min-width:0;padding-top:1px}
-.rm-thread small{font-size:11.5px;font-weight:700;color:var(--mute)}
-.rm-thread p{margin:0;font-size:15px;line-height:1.4;color:var(--ink-soft)}
-.rm-thread .ic{width:36px;height:36px}
-.rm-card [data-s]{text-decoration-line:underline;text-decoration-thickness:2px;text-underline-offset:3px;text-decoration-color:transparent;transition:text-decoration-color .35s}
-.rm-card [data-s].hit{text-decoration-color:#7C3AED}
-.rm-out{font-size:12px;font-weight:600;color:var(--mute);background:var(--bg-2);border-radius:999px;padding:3px 9px;margin-top:3px}
-.rm-next{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:5px 11px 5px 9px;font-size:12.5px;opacity:0;transform:translateY(6px);transition:opacity .4s,transform .5s cubic-bezier(.2,.8,.2,1)}
+/* the padding keeps the shapes inside the box the script measures */
+.rm-row{list-style:none;margin:0;box-sizing:border-box;width:min(940px,100%);padding:28px 38px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.5fr);gap:58px;align-items:center;text-align:center}
+.rm-ev{position:relative;isolation:isolate;--rm:#7C3AED;--rm-ink:#6D28D9;--rm-tint:#F0EAFD;--rm-ring:rgba(124,58,237,.22);--rm-blob:#DACDF5;
+  opacity:0;transform:translateY(10px);transition:opacity .45s,transform .6s cubic-bezier(.2,.8,.2,1)}
+.rm-ev.in{opacity:1;transform:none}
+.rm-ev.t-cal{--rm:#8F7C60;--rm-ink:#6C5B43;--rm-tint:#F2EBDF;--rm-ring:rgba(143,124,96,.3);--rm-blob:#DDCBA9}
+.rm-ev.t-wa{--rm:#25D366;--rm-ink:#1B7A4E;--rm-tint:#DDF3E2;--rm-ring:rgba(31,138,91,.3);--rm-blob:#BFE3C8}
+/* two soft shapes per card, mostly covered by it; they grow in behind the card as it arrives */
+.rm-ev::before,.rm-ev::after{content:"";position:absolute;z-index:-1;background:var(--rm-blob);transform:scale(.55);transition:transform .9s cubic-bezier(.2,.8,.2,1) .08s}
+.rm-ev::before{inset:-26px -34px 20% 24%;border-radius:58% 42% 47% 53%/46% 58% 42% 54%}
+.rm-ev::after{inset:36% 28% -26px -32px;border-radius:45% 55% 60% 40%/55% 42% 58% 45%;opacity:.55}
+/* the appointment gets a shape of its own: one wide form showing on every side, and a pebble under the card */
+.rm-ev.t-cal::before{inset:-28px -22px -14px -20px;border-radius:46% 54% 38% 62%/58% 42% 58% 42%}
+.rm-ev.t-cal::after{inset:62% 40% -28px -4px;border-radius:50% 50% 46% 54%/56% 44% 56% 44%}
+.rm-ev.t-wa::before{inset:-26px -34px 30% 38%;border-radius:52% 48% 44% 56%/60% 46% 54% 40%}
+.rm-ev.t-wa::after{inset:44% 40% -26px -32px;border-radius:48% 52% 58% 42%/46% 58% 42% 54%}
+.rm-ev.in::before,.rm-ev.in::after{transform:none}
+.rm-c{position:relative;box-sizing:border-box;display:grid;justify-items:center;align-content:center;gap:3px;padding:20px 14px 16px}
+.rm-ev:not(.t-wa) .rm-c{min-height:200px}
+.rm-ico{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:var(--rm);color:#fff;margin-bottom:8px}
+.rm-ico svg,.rm-pill svg{fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.rm-ico svg{width:20px;height:20px}
+.rm-c b{font-size:15.5px;line-height:1.3;color:var(--ink)}
+.rm-c small{font-size:13px;line-height:1.5;font-weight:500;color:var(--mute)}
+.rm-pill{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;line-height:1.3;white-space:nowrap;
+  color:var(--rm-ink);background:var(--rm-tint);box-shadow:inset 0 0 0 1px var(--rm-ring)}
+.rm-pill svg{width:14px;height:14px}
+.rm-c.rm-wa{justify-items:stretch;gap:10px;padding:18px 12px 12px;text-align:left;color:var(--wa-ink);background:var(--wa-bg);background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:14px 14px}
+.rm-badge{position:absolute;left:-15px;top:-15px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#25D366;box-shadow:0 0 0 3px var(--white),0 10px 18px -8px rgba(20,60,35,.6)}
+.rm-badge svg{width:22px;height:22px}.rm-badge .wa-b{fill:#fff}.rm-badge .wa-h{fill:#25D366}
+.rm-chat{display:grid;gap:6px;font-size:13px}
+.rm-chat .wm{max-width:86%}
+.rm-next{justify-self:start;margin-top:0;opacity:0;transform:translateY(6px);transition:opacity .4s,transform .5s cubic-bezier(.2,.8,.2,1)}
 .rm-next.in{opacity:1;transform:none}
-.rm-next svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;flex:none}
-.rm-chat{justify-self:stretch;display:grid;gap:6px;margin-top:5px;padding:12px 10px;border-radius:12px;background:var(--wa-bg);background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:14px 14px;font-size:13px;color:var(--wa-ink)}
-.rm-chat .wm{max-width:88%}
-/* remembered words get an underline only: a change of weight would re-wrap the bubble mid-animation */
-.rm-card mark{background:none;color:inherit;text-decoration-line:underline;text-decoration-thickness:2px;text-underline-offset:3px;text-decoration-color:transparent;transition:text-decoration-color .35s}
-.rm-card mark.on{text-decoration-color:#7C3AED}
-/* the appointment is the quiet one: a grey icon, and its label underlines grey while her words in the chat underline purple */
-.rm-thread .ic.c-cal{background:var(--mute-2)}
-.rm-card .m-cal[data-s].hit{text-decoration-color:var(--mute-2)}
+/* remembered words get a highlight and nothing else: a change of weight or padding would re-wrap the bubble mid-animation.
+   Purple for what she learned on the call, sand for the appointment, each lighting together with its source card */
+.rm-row [data-s],.rm-row mark{color:inherit;background-color:transparent;border-radius:3px;box-shadow:0 0 0 2px transparent;-webkit-box-decoration-break:clone;box-decoration-break:clone;transition:background-color .4s,box-shadow .4s}
+.rm-row .m-tel.hit,.rm-row mark.m-tel.on{background-color:#E3D7FB;box-shadow:0 0 0 2px #E3D7FB}
+.rm-row .m-cal.hit,.rm-row mark.m-cal.on{background-color:#F1E0BE;box-shadow:0 0 0 2px #F1E0BE}
+@media (max-width:980px){
+  /* the call and the appointment share a row, the chat sits under them at full width */
+  .rm-row{width:min(520px,100%);grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:34px 30px;padding:20px 18px;align-items:stretch}
+  .rm-ev.t-wa{grid-column:1/-1}
+  .rm-c{height:100%}.rm-ev:not(.t-wa) .rm-c{min-height:0}
+  .rm-ev::before{inset:-16px -16px 22% 26%}.rm-ev::after{inset:38% 28% -16px -16px}
+  .rm-ev.t-cal::before{inset:-17px -15px -9px -14px}.rm-ev.t-cal::after{inset:62% 40% -17px -4px}
+  .rm-ev.t-wa::before{inset:-16px -16px 34% 44%}.rm-ev.t-wa::after{inset:46% 46% -16px -16px}
+}
 @media (max-width:600px){
-  .rm-card{padding:16px 14px;gap:12px}.rm-thread>li{gap:11px;padding-bottom:14px}.rm-thread p{font-size:14px}
-  /* the chat and the new booking use the full card width, under the icons */
-  .rm-thread>li.now .rm-chat{margin-left:-47px;margin-top:20px}
-  .rm-next{margin-left:-47px;font-size:12px}
+  /* phones: the three cards stack; the call and the appointment stay narrow and centred, as on desktop */
+  .rm-row{grid-template-columns:minmax(0,1fr);gap:26px;padding:16px 14px}
+  .rm-ev.t-wa{grid-column:auto}
+  .rm-ev:not(.t-wa){width:min(214px,100%);justify-self:center}
+  .rm-c{padding:13px 12px 12px}
+  .rm-ico{width:36px;height:36px;margin-bottom:5px}.rm-ico svg{width:17px;height:17px}
+  .rm-c b{font-size:14.5px}.rm-c small{font-size:12.5px}
+  .rm-pill{margin-top:8px;padding:4px 9px;gap:5px;font-size:11px}
+  .rm-pill svg{width:12px;height:12px}
+  .rm-next{margin-top:0}
+  .rm-c.rm-wa{padding:16px 10px 10px}
+  .rm-badge{left:-10px;top:-13px;width:34px;height:34px}.rm-badge svg{width:20px;height:20px}
+  .rm-chat .wm sub{display:none}
+  .rm-ev::before{inset:-14px -28px 20% 26%}.rm-ev::after{inset:38% 28% -14px -28px}
+  .rm-ev.t-cal::before{inset:-15px -24px -8px -22px}.rm-ev.t-cal::after{inset:62% 40% -15px -6px}
+  .rm-ev.t-wa::before{inset:-11px -11px 34% 44%}.rm-ev.t-wa::after{inset:46% 46% -11px -11px}
 }
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}html{scroll-behavior:auto}}
 </style>
@@ -1490,7 +1606,8 @@ footer .f-brand img{height:28px}
 .glt{position:relative;height:300vh;background:var(--paper)}
 .glt-pin{position:sticky;top:0;height:100vh;display:flex;flex-direction:column;justify-content:center;gap:clamp(24px,4vh,44px);overflow:hidden}
 .glt-head{margin-bottom:0}
-.glt-view{overflow:hidden}
+/* the padding is room for the lit circles' 8px glow, which the clip would otherwise cut off at the top */
+.glt-view{overflow:hidden;padding:12px 0;margin:-12px 0}
 .glt-track{position:relative;width:max-content;padding:0 max(24px,calc((100vw - 1180px)/2));will-change:transform}
 .glt-line{position:absolute;left:max(24px,calc((100vw - 1180px)/2));right:max(24px,calc((100vw - 1180px)/2));top:36px;height:2px;background:var(--line)}
 .glt-line i{position:absolute;inset:0 auto 0 0;width:0;background:var(--wine);transition:width .1s linear}
@@ -1646,17 +1763,19 @@ footer .f-brand img{height:28px}
                     </button>
                     <span class="play-l num" id="play-l">Play the call</span>
                   </div>
+                  <div class="lock" id="lock" aria-hidden="true"><div class="lk"><small>Tuesday</small><b class="num">19:43</b></div><div class="lk-n"><div class="n-top"><span class="n-app"></span>WhatsApp<time>now</time></div><b>Sara · Northgate Motors</b><p><span class="u">Booked</span> Gabriel, test drive Monday 15:00, 2023 Porsche Cayenne Coupé E-Hybrid. For family trips. Saw a cheaper one elsewhere, with three times the mileage.</p></div></div>
                   <i class="home-bar" aria-hidden="true"></i>
                 </div>
+                <span class="own-l own-l2" aria-hidden="true">Your phone</span>
               </div>
               <p class="idle-cap">Press play to hear Sara take a call from a buyer, after the showroom has closed.</p>
-              <div class="cbar"><span class="wav"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span><i></i></span><div><b>Sara · Northgate Motors</b><small class="num" id="cb-t">0:00</small></div><span class="cb-bars"><i></i><i></i><i></i><i></i></span><button class="playbtn cb-btn" id="cb-play" type="button" aria-label="Pause the call">
+              <div class="cbar"><div><b>Sara · Northgate Motors</b><small class="num" id="cb-t">0:00</small></div><span class="cb-bars"><i></i><i></i><i></i><i></i></span><button class="cb-spd num" id="cb-spd" type="button" aria-label="Playback speed">1x</button><button class="playbtn cb-btn" id="cb-play" type="button" aria-label="Pause the call">
                       <svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg>
                       <svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.2"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2"/></svg>
-                    </button></div>
+                    </button><span class="cb-seek"><input class="cb-range" id="cb-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Call timeline"><span class="num" id="cb-tot">0:00</span></span></div>
             </div>
             <div class="talk">
-              <div class="talk-h">Live transcript <small><i></i><span id="talk-state"></span></small></div>
+              <div class="talk-h">Live transcript <span class="talk-r"><small><i></i><span id="talk-state"></span></small><button class="again2" id="again2" type="button">Play the call again</button></span></div>
               <div class="lines" id="lines" aria-live="off"></div>
             </div>
             <div class="tellv" id="tellv" aria-hidden="true">
@@ -1695,6 +1814,13 @@ footer .f-brand img{height:28px}
               <div class="tell-btns"><button class="btn btn-neu again" id="again" type="button">Play the call again</button></div>
             </div>
           </div>
+          <div class="pbar" id="pbar">
+            <button class="pb-play" id="pb-play" type="button"><svg class="i-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.2-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5z"/></svg><svg class="i-pause" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="5" width="4.2" height="14" rx="1.2"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.2"/></svg></button>
+            <span class="pb-t num" id="pb-cur">0:00</span>
+            <input class="pb-seek" id="pb-seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="Call timeline">
+            <span class="pb-t num" id="pb-tot">0:00</span>
+            <div class="pctl" id="pctl"><div class="spd" role="group" aria-label="Playback speed"><button type="button" data-r="1" aria-pressed="true">1x</button><button type="button" data-r="1.5" aria-pressed="false">1.5x</button><button type="button" data-r="2" aria-pressed="false">2x</button></div><div class="vol"><button type="button" id="vol-b" aria-label="Mute"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3l4-3.5v12l-4-3.5H4z"/><path class="v-w" d="M15 9a4 4 0 0 1 0 6M17.6 6.4a8 8 0 0 1 0 11.2"/><path class="v-x" d="M15.5 9.5l5 5M20.5 9.5l-5 5"/></svg></button><input type="range" id="vol-r" min="0" max="1" step="0.05" value="1" aria-label="Volume"></div></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1722,7 +1848,7 @@ footer .f-brand img{height:28px}
   <section class="band pband-sec" style="padding-top:clamp(40px,6vw,72px)">
     <div class="wrap">
       <figure class="pband">
-        <img src="/site/img/73c7491aeac4.webp" alt="A craftsman in his workshop, checking a message on his phone" loading="lazy">
+        <img src="/site/img/busy-hands-workshop.webp" alt="A carpenter sawing at his workbench while his phone rings on the table behind him" loading="lazy">
         <figcaption class="pb-copy"><h2>Busy hands.<br><em class="w">Nothing missed.</em></h2><p>You build, fix and serve. Sara takes the calls.</p></figcaption>
         <div class="float fb"><span class="n-app"></span><div><b>Sara · while you were in the workshop</b><span>2 quotes requested · 1 visit booked</span></div></div>
       </figure>
@@ -1746,7 +1872,7 @@ footer .f-brand img{height:28px}
             <path data-ch="whatsapp" class="on" d="M24 50 C 34 50, 34 50, 44 50"/>
             <path data-ch="website" class="on" d="M24 50 C 34 50, 34 83, 44 83"/>
           </svg>
-          <div class="hub-emma"><span class="av3 lo-tint"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span></span><b>Sara</b></div>
+          <div class="hub-emma" role="button" tabindex="0" aria-label="Chat with Sara"><span class="av3 lo-tint"><span class="lo" aria-hidden="true"><span class="lo-eyes"><i></i><i></i></span><span class="lo-ico"><svg viewBox="0 0 24 24"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg></span></span><span class="hub-ping" aria-hidden="true">1</span></span><span class="hub-hi" aria-hidden="true" data-ask="Can I help you?">Hi!</span><b>Sara</b></div>
           <button type="button" class="hub-node" data-ch="phone" aria-pressed="true"><i class="ic c-phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></i><span><b>Phone</b><small>Answers your calls</small></span><em class="sw2"></em></button>
           <button type="button" class="hub-node" data-ch="whatsapp" aria-pressed="true"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i><span><b>WhatsApp</b><small>Answers messages</small></span><em class="sw2"></em></button>
           <button type="button" class="hub-node" data-ch="website" aria-pressed="true"><i class="ic c-web"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.4 2.6 3.6 5.6 3.6 9s-1.2 6.4-3.6 9c-2.4-2.6-3.6-5.6-3.6-9S9.6 5.6 12 3z"/></svg></i><span><b>Website chat</b><small>Answers visitors</small></span><em class="sw2"></em></button>
@@ -1900,7 +2026,7 @@ footer .f-brand img{height:28px}
             </div>
           </div>
           <div class="bk-stage" id="bk-stage">
-            <figure class="bk-photo"><img src="/site/img/e89805d5280e.webp" alt="A salon receptionist smiling at a customer across the front desk" loading="lazy"></figure>
+            <figure class="bk-photo"><img src="/site/img/appointments-reception.webp" alt="A receptionist helping a guest at the front desk" loading="lazy"></figure>
             <div class="vis wk" id="wk" role="img" aria-label="Illustration: a dental practice's week. Sara books six appointments into the free slots, from phone calls, website chats and WhatsApp messages.">
             <div class="lanes-top"><b>Brightsmile Dental · this week</b><small><span id="wk-count" class="num">6</span> booked by Sara</small></div>
             <div class="wk-head"><span></span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span></div>
@@ -1929,21 +2055,22 @@ footer .f-brand img{height:28px}
           </div>
             </div>
             <div class="bk-mem" id="remembers">
-              <div class="vis rm-card" data-fit="1.1" role="img" aria-label="Illustration: one customer's history with a dental practice. A phone call last Tuesday about a sore tooth, an appointment on Thursday, and a WhatsApp chat today in which the assistant asks whether the tooth is still sensitive and books a cleaning with the same dentist.">
-                <div class="lanes-top"><b><span class="m-tel" data-s="0">Michael Reed</span></b><small>Brightsmile Dental</small></div>
-                <ol class="rm-thread">
-                  <li><i class="ic c-phone"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></i>
-                    <div><small>Last Tuesday · Phone call</small><p>“My <span class="m-tel" data-s="1">back tooth</span> hurts when I drink something cold.”</p><span class="rm-out">Sara booked an appointment for Thursday</span></div></li>
-                  <li><i class="ic c-cal"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>
-                    <div><small><span class="m-cal" data-s="2">Thu · Appointment</span></small><p>Filling with <span class="m-cal" data-s="3">Dr. Patel</span>. Sensitive to cold, noted.</p></div></li>
-                  <li class="now"><i class="ic c-wa"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i>
-                    <div><small>Today · WhatsApp</small>
-                      <div class="rm-chat"><div class="wm me" data-k="q">Hi, I have a quick question</div>
-                      <div class="wm biz" data-k="hi">Hi <mark class="m-tel">Michael</mark>! Is your <mark class="m-tel">back tooth</mark> still sensitive since <mark class="m-cal">Thursday’s appointment</mark>?</div>
-                      <div class="wm me" data-k="re">All good now. Could I book a cleaning too?</div></div>
-                      <span class="rm-out rm-next"><svg aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Sara booked a cleaning with Dr. Patel, next Tue 14:30</span></div></li>
-                </ol>
-              </div>
+              <ol class="rm-row" data-fit="1.2" role="img" aria-label="Illustration: three moments with one customer of a dental practice. A phone call from a new contact, Michael, that ends in a booked appointment. The appointment on Thursday. And a WhatsApp chat today in which the assistant greets Michael by name, asks how the appointment on Thursday went and books a cleaning.">
+                <li class="rm-ev t-tel"><div class="vis rm-c">
+                  <i class="rm-ico"><svg viewBox="0 0 24 24"><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2z"/></svg></i>
+                  <b>Phone call</b><small>New contact: <span class="m-tel" data-s="0">“Michael”</span></small>
+                  <span class="rm-pill"><svg class="rm-lead" aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Appointment booked</span><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.4 12.3l2.4 2.4 4.8-5.2"/></svg></span></div></li>
+                <li class="rm-ev t-cal"><div class="vis rm-c">
+                  <i class="rm-ico"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg></i>
+                  <b>Appointment</b><small><span class="m-cal" data-s="1">Thu, 14:30</span></small><small>Dr. Patel</small>
+                  <span class="rm-pill"><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.4 12.3l2.4 2.4 4.8-5.2"/></svg><span>Completed</span></span></div></li>
+                <li class="rm-ev t-wa"><div class="vis rm-c rm-wa">
+                  <i class="rm-badge"><svg viewBox="0 0 24 24"><path class="wa-b" d="M12 2.4a9.6 9.6 0 0 0-8.3 14.5L2.4 21.6l4.8-1.3A9.6 9.6 0 1 0 12 2.4z"/><path class="wa-h" d="M8.7 7.1c.2-.4.4-.4.7-.4h.5c.2 0 .4.1.5.4l.8 1.9c.1.2.1.4 0 .6l-.5.7c-.1.2-.1.3 0 .5.6 1 1.4 1.8 2.3 2.3.2.1.4.1.5 0l.7-.8c.2-.2.4-.2.6-.1l1.9.9c.2.1.4.2.4.4 0 .5-.2 1.3-.8 1.8-.6.5-1.6.7-2.7.3-1.6-.6-3.2-1.9-4.3-3.5-.8-1.2-1.1-2.3-1-3.1.1-.6.4-1 .9-1.4z"/></svg></i>
+                  <div class="rm-chat"><div class="wm me" data-k="q">Hi, I have a quick question<sub>10:12 <span class="ticks">✓✓</span></sub></div>
+                  <div class="wm biz" data-k="hi">Hi <mark class="m-tel">Michael</mark>! Great to have you back, how did things go on <mark class="m-cal">Thursday’s appointment</mark>?<sub>10:14</sub></div>
+                  <div class="wm me" data-k="re">All good now. Could I book a cleaning too?<sub>10:16 <span class="ticks">✓✓</span></sub></div></div>
+                  <span class="rm-pill rm-next"><svg class="rm-lead" aria-hidden="true" viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2.5"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg><span>Cleaning booked · next Tue 14:30</span><svg aria-hidden="true" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8.4 12.3l2.4 2.4 4.8-5.2"/></svg></span></div></li>
+              </ol>
             </div>
           </div>
           <div class="cal-int"><span>Works with</span><b>Google Calendar</b><b>Outlook</b><b>and more</b></div>
@@ -1956,18 +2083,20 @@ footer .f-brand img{height:28px}
   <!-- Public website demo (specs/public-website-demo). Live on every host:
        ?try=mock runs it on fake answers for design review, ?try=0 hides it.
        While shown, it also points the hero "Test her out" button here and shows
-       every .ts-cta button (nav "Try Sara", #book "Try her on your website").
+       every .ts-cta button (nav "Try Sara").
        All copy lives in COPY below (en/nl/pt), picked by <html lang>, so the
        /nl and /pt builds need no pairs for it.
-       The photos (img/try-phone*.webp, all 1024x1300) show a blank phone;
-       .ts-screen sits exactly on its screen, at the --sx/--sy/--sw/--sh of the
-       photo in use. Photo 1 is the pitch; once the demo is ready it changes to
-       photo 4 (one hand, close-up), so the same picture is not shown twice. -->
+       The pictures (img/try-avatar-*.webp, all 1065x1238) show a blank phone;
+       .ts-screen sits on its screen, at the --sx/--sy/--sw/--sh of the picture
+       in use. The avatars all share one screen position: they are cut by
+       script/site-sections/align-try-avatars.py, which also prints the numbers.
+       "builder" is the pitch; once the demo is ready it changes to "ready"
+       (one hand, close-up), so the same picture is not shown twice. -->
   <section class="band" id="try-sara" hidden>
     <style>
     #try-sara{padding-top:clamp(28px,4vw,56px);--tc:#F7F1E6;--tc-2:rgba(244,239,227,.84);--tc-3:rgba(244,239,227,.62);--tc-acc:#EBB9A8}
     #try-sara .ts-stage{position:relative;isolation:isolate;border-radius:28px;background:linear-gradient(155deg,var(--wine-2),var(--wine-deep) 72%);color:var(--tc);box-shadow:var(--sh-raised);
-      display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr)}
+      display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr)}
     #try-sara .ts-stage::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;
       background:radial-gradient(50% 60% at 0% 0%,rgba(235,185,168,.16),transparent 70%),radial-gradient(40% 40% at 0% 100%,rgba(0,0,0,.25),transparent 70%)}
     #try-sara .ts-copy{display:grid;gap:22px;align-content:center;min-width:0;padding:clamp(28px,5vw,64px)}
@@ -1980,6 +2109,7 @@ footer .f-brand img{height:28px}
     #try-sara .ts-lede{font-size:18px;color:var(--tc-2);max-width:26em}
     #try-sara .ts-state{display:grid;gap:16px;justify-items:start;min-width:0}
     #try-sara .ts-state[hidden]{display:none!important}
+    #try-sara [data-state=verify] h3{display:none}
     #try-sara h3{font-family:var(--serif);font-size:clamp(22px,2.4vw,28px);line-height:1.2;color:var(--tc)}
     #try-sara .ts-text{color:var(--tc-2);font-size:16px;max-width:30em}
     #try-sara .ts-small{color:var(--tc-3);font-size:13.5px;max-width:34em}
@@ -2030,17 +2160,22 @@ footer .f-brand img{height:28px}
     #try-sara .ts-tips li{position:relative;padding-left:16px}
     #try-sara .ts-tips li::before{content:"";position:absolute;left:0;top:.55em;width:6px;height:6px;border-radius:50%;background:var(--wine)}
 
-    /* the photo: a craftsman holding up a phone that walks the demo with the visitor.
-       .ts-visual is a size container so .ts-photo can cover it like object-fit, keeping the screen aligned. */
-    #try-sara .ts-visual{position:relative;min-width:0;min-height:640px;container-type:size;overflow:hidden;border-radius:0 28px 28px 0}
-    #try-sara .ts-photo{position:absolute;bottom:0;left:50%;width:max(100cqw,calc(100cqh * 1024 / 1300));aspect-ratio:1024/1300;transform:translateX(-50%);
-      --sx:13.672%;--sy:30.462%;--sw:37.891%;--sh:67.154%;--ml:-3cqw;--mb:0cqw}
-    #try-sara .ts-photo[data-photo="4"]{--sx:31.333%;--sy:17.06%;--sw:37.556%;--sh:63.167%;--ml:-15.1cqw;--mb:-8cqw}
+    /* the picture: an avatar holding up a phone that walks the demo with the visitor.
+       .ts-fit is a size container so .ts-photo can cover it like object-fit, keeping the screen aligned. It fills
+       .ts-visual absolutely because cqh reads 0 inside a grid item whose height comes from stretching.
+       --ax is where the spare width is cut: 0 keeps the left edge (the phone), .5 keeps the middle.
+       --fill is how much of the height it covers: over 1 zooms in (phones), and the spare wall above the avatar is cut off.
+       The pictures carry their own wall up to the top, so only the left edge is faded into the panel. */
+    #try-sara .ts-visual{position:relative;min-width:0;min-height:640px;overflow:hidden;border-radius:0 28px 28px 0}
+    #try-sara .ts-fit{position:absolute;inset:0;container-type:size;-webkit-mask-image:linear-gradient(90deg,transparent,#000 5%);mask-image:linear-gradient(90deg,transparent,#000 5%)}
+    #try-sara .ts-photo{position:absolute;bottom:0;--pw:max(100cqw,calc(100cqh * var(--fill) * 1065 / 1238));left:calc((100cqw - var(--pw)) * var(--ax));width:var(--pw);aspect-ratio:1065/1238;
+      --sx:14.648%;--sy:43.7%;--sw:27.418%;--sh:47.981%;--sr:13%/6.4%;--ax:0;--fill:1}
+    #try-sara .ts-photo[data-photo="ready"]{--sx:34.836%;--sy:33.926%;--sw:30.423%;--sh:52.585%;--sr:9.3%/4.6%;--ax:.5}
     #try-sara .ts-photo>img{position:absolute;inset:0;display:block;width:100%;height:100%;opacity:0;transition:opacity .6s}
     #try-sara .ts-photo>img.on{opacity:1}
     #try-sara .ts-photo.swap .ts-screen{opacity:0}
-    #try-sara .ts-photo::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(90deg,rgba(62,21,32,.55),transparent 9%),linear-gradient(0deg,rgba(62,21,32,.35),transparent 14%)}
-    #try-sara .ts-screen{position:absolute;z-index:1;left:var(--sx);top:var(--sy);width:var(--sw);height:var(--sh);border-radius:10.3%/4.6%;overflow:hidden;container-type:inline-size;transition:opacity .3s;
+    #try-sara .ts-photo::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(0deg,rgba(62,21,32,.35),transparent 14%)}
+    #try-sara .ts-screen{position:absolute;z-index:1;left:var(--sx);top:var(--sy);width:var(--sw);height:var(--sh);border-radius:var(--sr);overflow:hidden;container-type:inline-size;transition:opacity .3s;
       display:grid;grid-template-rows:auto 1fr;color:#fff;font-family:inherit;
       background:radial-gradient(120% 60% at 50% 0%,rgba(110,38,56,.85),transparent 70%),linear-gradient(180deg,#2A1218,#0E0B0C 70%)}
     #try-sara .ts-screen::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(125deg,rgba(255,255,255,.1),transparent 30%)}
@@ -2101,9 +2236,9 @@ footer .f-brand img{height:28px}
     #try-sara .ts-scan i:nth-child(2){width:84%;animation-delay:.2s}#try-sara .ts-scan i:nth-child(3){width:64%;animation-delay:.4s}
     @keyframes ts-shine{from{background-position:100% 0}to{background-position:0 0}}
     @media (max-width:900px){#try-sara .ts-stage{grid-template-columns:minmax(0,1fr)}
-      #try-sara .ts-visual{min-height:0;aspect-ratio:1/1.45;border-radius:0 0 28px 28px}
-      #try-sara .ts-photo{width:130cqw;left:var(--ml);bottom:var(--mb);transform:none}
-      #try-sara .ts-photo::after{background:linear-gradient(180deg,rgba(62,21,32,.7),transparent 12%)}}
+      #try-sara .ts-visual{min-height:0;aspect-ratio:1/1.2;border-radius:0 0 28px 28px}
+      #try-sara .ts-fit{-webkit-mask-image:linear-gradient(180deg,transparent,#000 9%);mask-image:linear-gradient(180deg,transparent,#000 9%)}
+      #try-sara .ts-photo{--ax:.56;--fill:1.24}}
     @media (max-width:560px){#try-sara .ts-stage{border-radius:22px}#try-sara .ts-visual{border-radius:0 0 22px 22px}#try-sara .ts-copy{padding:30px 20px 24px}
       #try-sara .ts-bar{flex-wrap:wrap;padding:6px}#try-sara .ts-bar input{flex:1 1 60%}#try-sara .ts-bar .btn{flex:1 1 100%}
       #try-sara .ts-actions{display:grid;width:100%}}
@@ -2164,9 +2299,9 @@ footer .f-brand img{height:28px}
           <p class="ts-alt"><span data-t="alt"></span> <a class="js-book" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener" data-t="altLink"></a></p>
         </div>
 
-        <div class="ts-visual" aria-hidden="true">
-          <div class="ts-photo" data-photo="1">
-            <img class="on" data-n="1" src="/site/img/try-phone.webp" width="1024" height="1300" alt="" loading="lazy" decoding="async">
+        <div class="ts-visual" aria-hidden="true"><div class="ts-fit">
+          <div class="ts-photo" data-photo="builder">
+            <img class="on" data-n="builder" src="/site/img/try-avatar-builder.webp" width="1065" height="1238" alt="" loading="lazy" decoding="async">
             <div class="ts-screen" data-scene="idle">
               <div class="ts-sb"><span>19:42</span><i class="ts-isl"></i><span class="ts-ic"><i></i><i></i><i></i><b></b></span></div>
               <div class="ts-scenes">
@@ -2202,7 +2337,7 @@ footer .f-brand img{height:28px}
               </div>
             </div>
           </div>
-        </div>
+        </div></div>
       </div>
     </div>
     <div class="ts-modal" hidden role="dialog" aria-modal="true">
@@ -2230,9 +2365,8 @@ footer .f-brand img{height:28px}
           submit:'Build my demo',
           alt:'Rather talk to Gabriel first?',altLink:'Book a call',
           incoming:'Incoming call',answeredBy:'Sara answering for',yourReceptionist:'Your new receptionist',answer:'Answer',decline:'Decline',
-          examples:[['Brightline Kitchens','Kitchens',1],['Sharp & Co Barbers','Barber','barber'],['Prestige Motors','Car dealership','car'],
-            ['Oak & Pine Builders','Construction','builder'],['Bright Smile Dental','Dental clinic','dental'],['Elm Street Electrical','Electrician','electrician'],
-            ['Spark Events','Event planner','events'],['Elm Street Medical','Medical practice','doctor'],['Iron Peak Gym','Gym','gym'],
+          examples:[['Oak & Pine Builders','Construction','builder'],['Studio Lune Hair','Hair salon','salon'],['Prestige Motors','Car dealership','car'],
+            ['Elm Street Medical','Medical practice','doctor'],['Spark Events','Event planner','events'],['Iron Peak Gym','Gym','gym'],
             ['Seaview Hotel','Hotel','hotel'],['Kessler & Shaw Law','Law firm','lawyer']],
           yours:'Your business',
           readyEyebrow:'Your demo is ready',tipsLabel:'How to test her',tipsTitle:'Get the most out of your demo',
@@ -2258,9 +2392,8 @@ footer .f-brand img{height:28px}
           submit:'Maak mijn demo',
           alt:'Liever eerst met Gabriel praten?',altLink:'Plan een gesprek',
           incoming:'Inkomend gesprek',answeredBy:'Sara neemt op voor',yourReceptionist:'Je nieuwe receptioniste',answer:'Opnemen',decline:'Weigeren',
-          examples:[['Keukenstudio Vos','Keukens',1],['Barbershop Knip','Barbier','barber'],['Autobedrijf Visser','Autodealer','car'],
-            ['Bouwbedrijf Eikhout','Bouw','builder'],['Tandarts Lindenhof','Tandarts','dental'],['Elektro Jansen','Elektricien','electrician'],
-            ['Eventbureau Sfeer','Evenementen','events'],['Huisartsenpraktijk De Linde','Huisarts','doctor'],['Sportschool Kracht','Sportschool','gym'],
+          examples:[['Bouwbedrijf Eikhout','Bouw','builder'],['Kapsalon Knip','Kapsalon','salon'],['Autobedrijf Visser','Autodealer','car'],
+            ['Huisartsenpraktijk De Linde','Huisarts','doctor'],['Eventbureau Sfeer','Evenementen','events'],['Sportschool Kracht','Sportschool','gym'],
             ['Hotel De Duinen','Hotel','hotel'],['Advocatenkantoor Smit','Advocaat','lawyer']],
           yours:'Jouw bedrijf',
           readyEyebrow:'Je demo staat klaar',tipsLabel:'Zo test je haar',tipsTitle:'Haal het meeste uit je demo',
@@ -2286,9 +2419,8 @@ footer .f-brand img{height:28px}
           submit:'Cria minha demo',
           alt:'Prefere falar com o Gabriel primeiro?',altLink:'Agendar uma conversa',
           incoming:'Chamada recebida',answeredBy:'Sara atendendo',yourReceptionist:'Sua nova recepcionista',answer:'Atender',decline:'Recusar',
-          examples:[['Marcenaria Ipê','Marcenaria',1],['Barbearia Navalha','Barbearia','barber'],['Concessionária Paulista','Concessionária','car'],
-            ['Construtora Aroeira','Construção','builder'],['Clínica Sorriso','Dentista','dental'],['Elétrica Bem-Te-Vi','Eletricista','electrician'],
-            ['Estúdio de Eventos Brilho','Eventos','events'],['Clínica Saúde Viva','Clínica médica','doctor'],['Academia Força','Academia','gym'],
+          examples:[['Construtora Aroeira','Construção','builder'],['Salão Bela Vista','Salão de beleza','salon'],['Concessionária Paulista','Concessionária','car'],
+            ['Clínica Saúde Viva','Clínica médica','doctor'],['Estúdio de Eventos Brilho','Eventos','events'],['Academia Força','Academia','gym'],
             ['Hotel Mar Azul','Hotel','hotel'],['Almeida Advogados','Advocacia','lawyer']],
           yours:'Sua empresa',
           readyEyebrow:'Sua demonstração está pronta',tipsLabel:'Como testar a Sara',tipsTitle:'Aproveite ao máximo a sua demonstração',
@@ -2336,8 +2468,8 @@ footer .f-brand img{height:28px}
         if(own)setBiz(own,C.yours,true);else cycleT=setTimeout(cycle,900);
       });
       cycle();
-      // The costumes are fetched once the page has settled, so each swap is instant when its turn comes.
-      window.addEventListener('load',function(){setTimeout(function(){C.examples.forEach(function(e){if(e[2]&&e[2]!==1)photoImg(e[2])})},2500)});
+      // The avatars are fetched once the page has settled, so each swap is instant when its turn comes.
+      window.addEventListener('load',function(){setTimeout(function(){C.examples.forEach(function(e){if(e[2]&&e[2]!==basePhoto)photoImg(e[2])})},2500)});
 
       /* The headline: the pitch, until the demo has something of its own to say. */
       var h2=$('h2'),lede=$('.ts-lede'),eyebrow=$('.ts-eyebrow');
@@ -2348,15 +2480,15 @@ footer .f-brand img{height:28px}
         h2.textContent='';h2.appendChild(document.createTextNode(parts[0]));h2.appendChild(em);h2.appendChild(document.createTextNode(parts[1]||''));
       }
 
-      /* The photo changes once the demo is ready, so the same picture is not shown twice. */
-      var readyPhoto=4;
+      /* The picture changes once the demo is ready, so the same one is not shown twice. */
+      var basePhoto='builder',readyPhoto='ready';
       /* The path is built from parts because the build checks every literal /site/img/ path exists. */
       function photoImg(n){
         var img=photo.querySelector(':scope>img[data-n="'+n+'"]');
-        if(!img){img=new Image();img.alt='';img.setAttribute('data-n',n);img.decoding='async';img.src=['','site','img','try-phone-'+n+'.webp'].join('/');photo.insertBefore(img,screen)}
+        if(!img){img=new Image();img.alt='';img.setAttribute('data-n',n);img.decoding='async';img.src=['','site','img','try-avatar-'+n+'.webp'].join('/');photo.insertBefore(img,screen)}
         return img;
       }
-      // quiet: the new photo has the phone in the same spot, so the screen stays and only the person fades.
+      // quiet: the new picture has the phone in the same spot, so the screen stays and only the avatar fades.
       function setPhoto(n,quiet){
         if(photo.getAttribute('data-photo')===String(n))return;
         var img=photoImg(n),go=function(){
@@ -2393,8 +2525,10 @@ footer .f-brand img{height:28px}
       function show(state){
         $$('.ts-state').forEach(function(el){el.hidden=el.getAttribute('data-state')!==state});
         scene(state==='verify'||state==='building'||state==='ready'?state:'idle');
-        if(state!=='building'&&state!=='ready')headline(null);
-        setPhoto(state==='ready'?readyPhoto:1);
+        /* once the website is sent, the pitch makes way: the WhatsApp step becomes the headline */
+        if(state==='verify'){headline(null);h2.classList.add('sm');h2.textContent=C.verifyTitle;lede.hidden=true}
+        else if(state!=='building'&&state!=='ready')headline(null);
+        setPhoto(state==='ready'?readyPhoto:basePhoto);
         if(state==='building')photoImg(readyPhoto); // fetched while she reads, so the change is instant
         if(state!=='building')buildSteps(false);
       }
@@ -2596,7 +2730,7 @@ footer .f-brand img{height:28px}
       #report .rp-btn{display:inline-flex;align-items:center;gap:10px;min-height:54px;padding:16px 28px;border-radius:8px;background:var(--cream);color:var(--wine-deep);font:700 13px/1 var(--sans);letter-spacing:.06em;text-transform:uppercase;text-decoration:none;white-space:nowrap;transition:transform .18s;box-shadow:0 12px 24px -12px rgba(0,0,0,.45)}
       #report .rp-btn:hover{transform:translateY(-1px)}
       #report .rp-fine{font-size:13px;color:rgba(244,239,227,.62)}
-      #report + #book{padding-top:clamp(64px,9vw,112px)!important}
+      #report + #book{padding-top:clamp(112px,15vw,200px)!important}
       @media (max-width:900px){#report .rp-in{grid-template-columns:auto minmax(0,1fr)}#report .rp-act{grid-column:1/-1;justify-items:start}}
       @media (max-width:560px){#report .rp-in{grid-template-columns:1fr;justify-items:center;text-align:center}#report .rp-copy p{margin-inline:auto}#report .rp-act{justify-items:center}#report .rp-btn{white-space:normal}}
       @media (prefers-reduced-motion:reduce){#report .rp-book{transition:none}}
@@ -2619,9 +2753,9 @@ footer .f-brand img{height:28px}
     <div class="orbit-cta" id="orbit-cta" aria-hidden="true"></div>
     <div class="wrap">
       <div class="book">
-        <h2>Hear your receptionist before you decide</h2>
-        <p>20 minutes. We’ll show you Sara answering as the receptionist for your business. Add your website when you book.</p>
-        <div class="book-ctas"><a class="btn btn-light" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Pick a time in the calendar</a><a class="btn btn-ghost-light ts-cta" href="#try-sara" hidden>Try her on your website</a></div>
+        <h2>Ready to put Sara on your line?</h2>
+        <p>Book 20 minutes with Gabriel. We map your calls, your calendar and your handoff rules, and you leave with a clear setup plan.</p>
+        <div class="book-ctas"><a class="btn btn-light" href="https://cal.com/leadawaker/quick-chat" target="_blank" rel="noopener">Book a call</a></div>
         <div class="cal-wrap" id="cal-wrap" hidden><div id="cal-inline"></div></div>
       </div>
     </div>
@@ -2731,18 +2865,21 @@ footer .f-brand img{height:28px}
 
   /* ---- one audio output for the page: an <audio> element (plays with the iPhone's silent switch on),
      falling back to Web Audio if the element cannot play a blob ---- */
-  var audio={owner:null,el:null,ctx:null,src:null,startAt:0,mode:''};
+  var audio={owner:null,el:null,ctx:null,src:null,gain:null,startAt:0,off:0,rate:1,vol:1,mode:''};
   function audioStop(){if(audio.el){audio.el.onended=null;audio.el.pause()}if(audio.src){audio.src.onended=null;try{audio.src.stop()}catch(e){}audio.src=null}audio.mode='';audio.owner=null}
-  function audioTime(){if(audio.mode==='el')return audio.el.currentTime;if(audio.mode==='wa')return audio.ctx.currentTime-audio.startAt;return 0}
-  function audioPlay(owner,d,offset,onEnd){
-    var prev=audio.owner;audioStop();if(prev&&prev!==owner&&prev.stopped)prev.stopped();
+  function audioTime(){if(audio.mode==='el')return audio.el.currentTime;if(audio.mode==='wa')return audio.off+(audio.ctx.currentTime-audio.startAt)*audio.rate;return 0}
+  function audioRate(r){if(audio.mode==='wa'&&audio.src){audio.off=audioTime();audio.startAt=audio.ctx.currentTime;audio.src.playbackRate.value=r}audio.rate=r;if(audio.mode==='el')audio.el.defaultPlaybackRate=audio.el.playbackRate=r}
+  function audioVol(v){audio.vol=v;if(audio.el)audio.el.volume=v;if(audio.gain)audio.gain.gain.value=v}
+  function audioPlay(owner,d,offset,onEnd,rate){
+    var prev=audio.owner;audioStop();audio.rate=rate||1;if(prev&&prev!==owner&&prev.stopped)prev.stopped();
     audio.owner=owner;
     function viaWebAudio(){
       try{
         if(!audio.ctx){var C=window.AudioContext||window.webkitAudioContext;audio.ctx=new C()}
         var ctx=audio.ctx;ctx.resume&&ctx.resume();
-        function go(buf){d._buf=buf;if(audio.owner!==owner)return;var s=ctx.createBufferSource();s.buffer=buf;s.connect(ctx.destination);s.onended=function(){if(audio.src===s){audio.src=null;audio.mode='';onEnd()}};
-          s.start(0,offset);audio.src=s;audio.startAt=ctx.currentTime-offset;audio.mode='wa'}
+        function go(buf){d._buf=buf;if(audio.owner!==owner)return;var s=ctx.createBufferSource();s.buffer=buf;s.playbackRate.value=audio.rate;
+          if(!audio.gain){audio.gain=ctx.createGain();audio.gain.connect(ctx.destination)}audio.gain.gain.value=audio.vol;s.connect(audio.gain);s.onended=function(){if(audio.src===s){audio.src=null;audio.mode='';onEnd()}};
+          s.start(0,offset);audio.src=s;audio.off=offset;audio.startAt=ctx.currentTime;audio.mode='wa'}
         function bad(){owner.failed&&owner.failed()}
         if(d._buf)go(d._buf);else if(d.src)fetch(d.src).then(function(r){return r.arrayBuffer()}).then(function(b){ctx.decodeAudioData(b,go,bad)},bad);else ctx.decodeAudioData(mp3Bytes(d).buffer.slice(0),go,bad);
       }catch(e){owner.failed&&owner.failed()}
@@ -2753,6 +2890,7 @@ footer .f-brand img{height:28px}
     if(!audio.el)audio.el=new Audio();
     var el=audio.el;el.onerror=function(){if(audio.owner===owner&&audio.mode!=='wa'){d._noEl=true;audio.mode='';viaWebAudio()}};
     if(el.src!==d._url)el.src=d._url;
+    el.defaultPlaybackRate=el.playbackRate=audio.rate;el.volume=audio.vol;
     try{el.currentTime=offset}catch(e){}
     el.onended=function(){if(audio.owner===owner){audio.mode='';onEnd()}};
     audio.mode='el';
@@ -2761,44 +2899,55 @@ footer .f-brand img{height:28px}
 
   /* ---- hero: one call in four steps. It waits on play, ends on what Tom receives, and offers a replay ---- */
   var HD=callData('call-en'),END=HD.dur+.6;
-  var hero={d:HD,mode:'idle',origin:0,pausedAt:0,shown:-1,step:-1};
+  var hero={d:HD,mode:'idle',origin:0,pausedAt:0,shown:-1,step:-1,rate:1};
   var H={stage:$('stage'),call:$('call'),lines:$('lines'),status:$('sc-status'),play:$('play'),playL:$('play-l'),talk:$('talk-state'),again:$('again'),tellv:$('tellv'),ts:['t1','t2','t3','t4'].map($)};
-  H.lines.innerHTML=HD.lines.map(function(l){return '<div class="ln'+(l.who==='ai'?' ai':'')+'"><span class="spk">'+(l.who==='ai'?'Sara':'Gabriel')+'</span><p>'+l.text+'</p></div>'}).join('');
+  H.lines.innerHTML=HD.lines.map(function(l,i){return '<div class="ln'+(l.who==='ai'?' ai':'')+'" style="--i:'+i+'"><span class="spk">'+(l.who==='ai'?'Sara':'Gabriel')+'</span><p>'+l.text+'</p></div>'}).join('');
   H.lineEls=[].slice.call(H.lines.children);
+  var P={play:$('pb-play'),seek:$('pb-seek'),cur:$('pb-cur'),tot:$('pb-tot'),lock:$('lock'),drag:false};
+  if(P.seek){P.seek.max=HD.dur;P.tot.textContent=fmt(HD.lines[HD.lines.length-1].t1-HD.lines[0].t0)}
+  /* the phone-width player has its own timeline, in the black bar above the transcript */
+  var CS={seek:$('cb-seek'),tot:$('cb-tot'),spd:$('cb-spd'),drag:false};
+  if(CS.seek){CS.seek.max=HD.dur;CS.tot.textContent=fmt(HD.lines[HD.lines.length-1].t1-HD.lines[0].t0)}
   function running(){return hero.mode==='run'||hero.mode==='audio'}
   function heroT(){if(hero.mode==='idle')return 0;if(hero.mode==='paused')return hero.pausedAt;if(hero.mode==='done')return END+1;
-    if(hero.mode==='audio')return audioTime();return(performance.now()-hero.origin)/1000}
+    if(hero.mode==='audio')return audioTime();return(performance.now()-hero.origin)/1000*hero.rate}
   function heroRender(t){
     if(running()&&t>=END){if(hero.mode==='audio')audioStop();hero.mode='done'}
     var ls=HD.lines,first=ls[0].t0,call=hero.mode==='idle'||t<first-.05?'ring':t<HD.dur-.3?'live':'ended';
     H.status.textContent=call==='ring'?'Incoming call…':call==='live'?fmt(t-first):'Call ended · '+fmt(ls[ls.length-1].t1-first);
     var shown=-1;H.lineEls.forEach(function(el,i){var on=hero.mode!=='idle'&&t>=ls[i].t0-.05;if(on)shown=i;el.classList.toggle('in',on);el.classList.toggle('now',on&&t<=ls[i].t1+.1);el.classList.toggle('past',false)});
     H.lineEls.forEach(function(el,i){el.classList.toggle('past',i<shown)});
-    if(shown!==hero.shown){if(shown<hero.shown||shown<0)H.lines.scrollTop=0;else{var le=H.lineEls[shown],top=Math.max(0,le.offsetTop+le.offsetHeight-H.lines.clientHeight+12);if(H.lines.scrollTo)H.lines.scrollTo({top:top,behavior:reduce?'auto':'smooth'});else H.lines.scrollTop=top}hero.shown=shown}
+    if(shown!==hero.shown){if(shown<0)H.lines.scrollTop=0;else{var le=H.lineEls[shown],top=Math.max(0,le.offsetTop+le.offsetHeight-H.lines.clientHeight+12);if(H.lines.scrollTo)H.lines.scrollTo({top:top,behavior:reduce?'auto':'smooth'});else H.lines.scrollTop=top}hero.shown=shown}
     var step=hero.mode==='idle'?0:hero.mode==='done'?4:call==='ring'?1:t<ls[8].t0?2:3;
     if(step!==hero.step){hero.step=step;
       H.ts.forEach(function(el,j){el.classList.toggle('on',j===step-1);el.classList.toggle('done',j<step-1)});
-      H.call.classList.toggle('tell',step===4);H.tellv.setAttribute('aria-hidden',step===4?'false':'true')}
+      H.call.classList.toggle('tell',step===4);H.tellv.setAttribute('aria-hidden',step===4?'false':'true');if(P.lock)P.lock.setAttribute('aria-hidden',step===4?'false':'true')}
     H.call.classList.toggle('started',hero.mode!=='idle');
     H.playL.textContent=hero.mode==='idle'?(HD.mp3||HD.src?'Play the call with sound':'Play the call'):hero.mode==='paused'?'Paused · '+fmt(t-first):'';
     H.play.setAttribute('aria-label',running()?'Pause the call':'Play the call');
-    H.talk.textContent=running()?'Live':hero.mode==='paused'?'Paused':'';
+    H.talk.textContent=running()?'Live':hero.mode==='paused'?'Paused':hero.mode==='done'?H.status.textContent:'';
     $('cb-t').textContent=H.status.textContent;
+    if(P.seek){if(!P.drag)P.seek.value=Math.min(t,HD.dur);P.cur.textContent=fmt(Math.min(Math.max(0,t-first),ls[ls.length-1].t1-first));P.play.setAttribute('aria-label',H.play.getAttribute('aria-label'))}
+    if(CS.seek){if(!CS.drag)CS.seek.value=Math.min(t,HD.dur);CS.seek.style.setProperty('--p',(Math.min(Math.max(0,+CS.seek.value),HD.dur)/HD.dur*100).toFixed(2)+'%')}
+    if(CS.spd&&CS.spd._r!==hero.rate){CS.spd._r=hero.rate;CS.spd.textContent=hero.rate+'x'}
     H.stage.classList.toggle('playing',running());
     var prev=null;for(var i=0;i<ls.length;i++)if(ls[i].t1<=t)prev=i;
     return{call:hero.mode==='done'?'ended':call,thinking:running()&&prev!==null&&ls[prev].who==='caller'&&prev+1<ls.length&&t<ls[prev+1].t0};
   }
-  var heroOwner={stopped:function(){if(hero.mode==='audio'){hero.pausedAt=audioTime();hero.mode='paused'}},failed:function(){heroStart(0,true)}};
-  function heroEnded(){hero.mode='run';hero.origin=performance.now()-HD.dur*1000}
+  var heroOwner={stopped:function(){if(hero.mode==='audio'){hero.pausedAt=audioTime();hero.mode='paused'}},failed:function(){hero.silent=true;heroStart(0,true)}};
+  function heroEnded(){hero.mode='run';hero.origin=performance.now()-HD.dur*1000/hero.rate}
   function heroStart(from,silent){
-    if((HD.mp3||HD.src)&&!silent){hero.mode='audio';audioPlay(heroOwner,HD,from,heroEnded)}
-    else{hero.mode='run';hero.origin=performance.now()-from*1000}
+    if((HD.mp3||HD.src)&&!silent&&!hero.silent){hero.mode='audio';audioPlay(heroOwner,HD,from,heroEnded,hero.rate)}
+    else{hero.mode='run';hero.origin=performance.now()-from*1000/hero.rate}
   }
   /* first play: move the phone from the centre into its column with a FLIP, so it glides instead of jumping */
   function openCard(){
     if(H.call.classList.contains('started'))return;
     var dev=H.call.querySelector('.callside .dev'),a=dev.getBoundingClientRect();
     H.call.classList.add('started');
+    /* on a phone the handset gives way to the player bar and the transcript: bring the card up under the menu, so the bar, its timeline and the line being spoken are all in view */
+    if(window.matchMedia&&window.matchMedia('(max-width:860px)').matches){var nv=document.querySelector('.nav-shell'),dy=H.call.getBoundingClientRect().top-((nv?nv.getBoundingClientRect().bottom:0)+10);
+      if(Math.abs(dy)>4)window.scrollBy({top:dy,behavior:reduce?'auto':'smooth'})}
     var b=dev.getBoundingClientRect();
     if(reduce||!b.width||!dev.animate)return;
     dev.animate([{transform:'translate('+(a.left-b.left)+'px,'+(a.top-b.top)+'px)'},{transform:'none'}],{duration:800,easing:'cubic-bezier(.2,.8,.2,1)'});
@@ -2809,6 +2958,33 @@ footer .f-brand img{height:28px}
     heroStart(hero.mode==='paused'?hero.pausedAt:0);
   });
   $('cb-play').addEventListener('click',function(){H.play.click()});
+  /* the player bar: play, a timeline to jump around the call, speed and volume */
+  function heroSeek(t){
+    if(hero.mode==='idle')return;
+    if(hero.mode==='paused'){hero.pausedAt=t;return}
+    if(hero.mode==='audio'&&audio.mode==='el'){try{audio.el.currentTime=t}catch(e){}return}
+    heroStart(t);
+  }
+  /* its speed button steps 1x, 1.5x, 2x and round again, through the wide player's own speed buttons */
+  if(CS.spd)CS.spd.addEventListener('click',function(){var next={1:'1.5',1.5:'2',2:'1'}[hero.rate]||'1',b=document.querySelector('#pctl .spd button[data-r="'+next+'"]');if(b)b.click()});
+  if(CS.seek){
+    CS.seek.addEventListener('pointerdown',function(){CS.drag=true});
+    ['pointerup','pointercancel','change'].forEach(function(e){CS.seek.addEventListener(e,function(){CS.drag=false})});
+    CS.seek.addEventListener('input',function(){heroSeek(+CS.seek.value)});
+  }
+  if(P.seek){
+    P.seek.addEventListener('pointerdown',function(){P.drag=true});
+    ['pointerup','pointercancel','change'].forEach(function(e){P.seek.addEventListener(e,function(){P.drag=false})});
+    P.seek.addEventListener('input',function(){heroSeek(+P.seek.value)});
+    P.play.addEventListener('click',function(){if(hero.mode==='done')heroReplay();else H.play.click()});
+  }
+  (function(){var box=$('pctl');if(!box)return;var sp=[].slice.call(box.querySelectorAll('.spd button')),vb=$('vol-b'),vr=$('vol-r'),last=1;
+    sp.forEach(function(b){b.addEventListener('click',function(){var r=+b.getAttribute('data-r'),t=heroT();
+      if(hero.mode==='run')hero.origin=performance.now()-t*1000/r;hero.rate=r;if(hero.mode==='audio')audioRate(r);
+      sp.forEach(function(x){x.setAttribute('aria-pressed',x===b?'true':'false')})})});
+    function vol(v){audioVol(v);vr.value=v;vb.parentNode.classList.toggle('off',v===0);vb.setAttribute('aria-label',v===0?'Unmute':'Mute')}
+    vr.addEventListener('input',function(){var v=+vr.value;if(v>0)last=v;vol(v)});
+    vb.addEventListener('click',function(){vol(audio.vol>0?0:last)})})();
   /* the dashboard player: plays its own preview (bars move, time counts to 0:46), it does not restart the hero call */
   (function(){var cp=$('cp'),tx=cp.querySelector('small'),iv=0,s=0;
     function stop(){clearInterval(iv);iv=0;cp.classList.remove('on')}
@@ -2817,12 +2993,14 @@ footer .f-brand img{height:28px}
     H.again.addEventListener('click',stop)})();
   (function(){var t=$('dash-tog');if(!t)return;function set(on){H.call.classList.toggle('dash-on',on);t.setAttribute('aria-expanded',on?'true':'false');t.textContent=on?'Back to your phone':'See it in the LeadAwaker platform'}
     t.addEventListener('click',function(){set(!H.call.classList.contains('dash-on'))});H.again.addEventListener('click',function(){set(false)})})();
-  H.again.addEventListener('click',function(){
+  function heroReplay(){
     var from=H.call.querySelector('.dev.own').getBoundingClientRect();
     hero.shown=-1;H.lines.scrollTop=0;heroStart(0);hero.step=-1;H.call.classList.remove('tell','dash-on');
     var dev=H.call.querySelector('.callside .dev'),to=dev.getBoundingClientRect();
-    if(!reduce&&to.width&&dev.animate)dev.animate([{transform:'translate('+(from.left-to.left)+'px,'+(from.top-to.top)+'px)'},{transform:'none'}],{duration:800,easing:'cubic-bezier(.2,.8,.2,1)'});
-  });
+    if(!reduce&&from.width&&to.width&&dev.animate)dev.animate([{transform:'translate('+(from.left-to.left)+'px,'+(from.top-to.top)+'px)'},{transform:'none'}],{duration:800,easing:'cubic-bezier(.2,.8,.2,1)'});
+  }
+  H.again.addEventListener('click',heroReplay);
+  if($('again2'))$('again2').addEventListener('click',heroReplay);
 
   /* ---- "she rings you": the briefing the owner hears ---- */
   var R={d:callData('call-ring'),say:$('os-say'),play:$('play2'),label:$('play2-l'),box:$('ophone'),mode:'rest'};
@@ -2912,6 +3090,49 @@ footer .f-brand img{height:28px}
     var rb=document.querySelector('[data-replay="sc"]');if(rb)rb.addEventListener('click',run);
   })();
 
+  /* ---- "three front doors": Sara says hi once when the section scrolls in, does a double take at one
+     notification and jumps, and after that only looks around. She also glances at a door you switch. ---- */
+  var hubReact=null;
+  (function(){
+    var box=document.querySelector('.hub-emma');if(!box)return;
+    /* a click on her opens the website chat (the widget's public handle) */
+    function chat(){if(window.LeadAwakerWidget&&window.LeadAwakerWidget.open)window.LeadAwakerWidget.open()}
+    box.addEventListener('click',chat);
+    box.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();chat()}});
+    if(reduce||!('IntersectionObserver' in window))return;
+    var av=box.querySelector('.av3'),lo=box.querySelector('.lo'),hi=box.querySelector('.hub-hi'),ping=box.querySelector('.hub-ping');if(!av||!lo||!hi||!ping)return;
+    var busy=false,timers=[],letGo=0,HI=hi.textContent,ASK=hi.getAttribute('data-ask')||HI;
+    function at(ms,fn){timers.push(setTimeout(fn,ms))}
+    /* _act tells the cursor-follow script at the end of the page to leave her eyes alone */
+    function look(x,y){clearTimeout(letGo);lo._act=true;if(lo._away){clearTimeout(lo._away);lo._away=null}
+      lo.style.setProperty('--lo-gx',x);lo.style.setProperty('--lo-gy',y);lo.classList.add('lo-watch')}
+    function free(){lo.style.setProperty('--lo-gx','0');lo.style.setProperty('--lo-gy','0');
+      clearTimeout(letGo);letGo=setTimeout(function(){lo._act=false;lo.classList.remove('lo-watch')},260)}
+    function move(c){av.classList.remove('hub-hop','hub-wave');void av.offsetWidth;av.classList.add(c)}
+    function glad(on){av.classList.toggle('hub-glad',on)}
+    function say(txt){hi.textContent=txt;hi.classList.add('on')}
+    /* until she is seen she holds still, looking straight out, so the first sight of her is her looking at you */
+    look('0','0');busy=true;
+    function hello(){
+      at(150,function(){glad(true);move('hub-wave');say(HI)});
+      at(2600,function(){hi.classList.remove('on');glad(false)});
+      at(3400,free);
+      at(5400,function(){ping.classList.add('on')});
+      at(5650,function(){look('.75','-.8')});
+      at(6000,function(){look('0','0')});
+      at(6300,function(){look('.75','-.8');move('hub-hop')});
+      at(7500,function(){ping.classList.remove('on')});
+      at(7700,function(){look('0','0');glad(true)});
+      at(8600,function(){glad(false)});
+      at(9400,function(){say(ASK)});
+      at(12400,function(){hi.classList.remove('on')});
+      at(13000,function(){free();busy=false})}
+    var io=new IntersectionObserver(function(es){if(!es[0].isIntersecting)return;io.disconnect();hello()},{threshold:.6});io.observe(box);
+    hubReact=function(n){if(busy)return;var on=n.getAttribute('aria-pressed')==='true',y={phone:'-.75',whatsapp:'0',website:'.75'}[n.dataset.ch]||'0';
+      timers.forEach(clearTimeout);timers=[];look('1',y);glad(on);if(on)move('hub-hop');
+      at(on?1100:900,function(){glad(false);free()})};
+  })();
+
   /* ---- channel picker: switches light the line to each channel and dim the rows below ---- */
   (function(){
     var nodes=[].slice.call(document.querySelectorAll('.hub-node')),sum=$('hub-sum');if(!nodes.length)return;
@@ -2921,7 +3142,7 @@ footer .f-brand img{height:28px}
         var path=document.querySelector('.hub-lines path[data-ch="'+ch+'"]');if(path)path.classList.toggle('on',p);
         var row=document.querySelector('.prob.ch[data-ch="'+ch+'"]');if(row)row.classList.toggle('off',!p)});
       sum.innerHTML=on.length?'Sara answers your <b>'+list(on)+'</b>':'Sara is switched off. <b>Pick at least one.</b>'}
-    nodes.forEach(function(n){n.addEventListener('click',function(){n.setAttribute('aria-pressed',n.getAttribute('aria-pressed')==='true'?'false':'true');sync()})});
+    nodes.forEach(function(n){n.addEventListener('click',function(){n.setAttribute('aria-pressed',n.getAttribute('aria-pressed')==='true'?'false':'true');sync();if(hubReact)hubReact(n)})});
     sync();
   })();
 
@@ -3063,30 +3284,30 @@ footer .f-brand img{height:28px}
     var wrapEl=$('bk-scroll'),stage=$('bk-stage');if(!wrapEl||!stage)return;
     var sec=$('calendar'),ph=$('ophone'),mem=$('remembers'),heads=[].slice.call(sec.querySelectorAll('.bk-head')),cur=-1,N=heads.length;
     /* the phone or card on screen gets all the height left between the top of the stage and the bottom of the screen.
-       It is measured at full size: a card that fills the width gets taller as it gets bigger, so any other starting point can overshoot */
-    function fit(el,owner,prop){if(!el)return;owner.style.setProperty(prop,1);var h=el.getBoundingClientRect().height;if(!h)return;
+       It is measured at full size: a card that fills the width gets taller as it gets bigger, so any other starting point can overshoot.
+       It also never grows past the width it has, or its contents would be squeezed */
+    function fit(el,owner,prop){if(!el)return;owner.style.setProperty(prop,1);var box=el.getBoundingClientRect(),h=box.height;if(!h)return;
       var bottom=driven?sec.querySelector('.bk-sticky').getBoundingClientRect().bottom:window.innerHeight,small=window.innerWidth<=600;
-      owner.style.setProperty(prop,Math.max(small?.7:.5,Math.min(small?1:+el.dataset.fit||.95,(bottom-stage.getBoundingClientRect().top-(small?8:16))/h)).toFixed(3))}
+      owner.style.setProperty(prop,Math.max(small?.7:.5,Math.min(small?1:+el.dataset.fit||.95,owner.clientWidth/box.width,(bottom-stage.getBoundingClientRect().top-(small?8:16))/h)).toFixed(3))}
     function fitCur(){if(cur===1)fit(ph,sec,'--ph-z');else if(cur===2&&mem)fit(mem.querySelector('[data-fit]'),mem,'--fz')}
     var driven=!reduce&&window.CSS&&CSS.supports&&CSS.supports('position','sticky');
     if(driven)wrapEl.classList.add('driven');
-    /* one customer's history fills in, the line turns wine as her memory travels down to today's chat, her reply lights
-       the words she kept (and where they came from), and the chat ends in a new booking */
+    /* three moments with one customer arrive as separate cards, then today's chat plays: her reply highlights the words
+       she kept (and the card they came from), and the chat ends in a new booking */
     var lis=[],K={},marks=[],src=[],tm=[];
-    if(mem){lis=[].slice.call(mem.querySelectorAll('.rm-thread>li'));[].forEach.call(mem.querySelectorAll('[data-k]'),function(e){K[e.dataset.k]=e});
+    if(mem){lis=[].slice.call(mem.querySelectorAll('.rm-ev'));[].forEach.call(mem.querySelectorAll('[data-k]'),function(e){K[e.dataset.k]=e});
       K.next=mem.querySelector('.rm-next');marks=[].slice.call(mem.querySelectorAll('mark'));src=marks.map(function(m,i){return mem.querySelector('[data-s="'+i+'"]')})}
     function thread(on){
-      tm.forEach(clearTimeout);tm=[];lis.forEach(function(l){l.classList.remove('in','lit')});for(var k in K)K[k].classList.remove('in');
+      tm.forEach(clearTimeout);tm=[];lis.forEach(function(l){l.classList.remove('in')});for(var k in K)K[k].classList.remove('in');
       marks.forEach(function(m){m.classList.remove('on')});src.forEach(function(s){if(s)s.classList.remove('hit')});
       if(!on)return;
       function at(ms,f){tm.push(setTimeout(f,ms))}
       function show(k){return function(){K[k].classList.add('in')}}
-      lis.forEach(function(l,i){at(300+i*900,function(){l.classList.add('in')})});
-      at(2600,show('q'));
-      at(3200,function(){lis[0].classList.add('lit')});at(3650,function(){lis[1].classList.add('lit')});
-      at(4200,show('hi'));
-      marks.forEach(function(m,i){at(4800+i*550,function(){m.classList.add('on');if(src[i])src[i].classList.add('hit')})});
-      at(7000,show('re'));at(8100,show('next'));
+      lis.forEach(function(l,i){at(300+i*800,function(){l.classList.add('in')})});
+      at(2500,show('q'));
+      at(3500,show('hi'));
+      marks.forEach(function(m,i){at(4300+i*750,function(){m.classList.add('on');if(src[i])src[i].classList.add('hit')})});
+      at(6300,show('re'));at(7400,show('next'));
     }
     function set(i){if(i===cur)return;cur=i;sec.dataset.step=i;
       heads.forEach(function(h,j){h.classList.toggle('on',j===i)});
@@ -3115,7 +3336,22 @@ footer .f-brand img{height:28px}
     function arc(){AL=[0];for(var j=1;j<=AN;j++){var t=j/AN*Math.PI*2;AL[j]=AL[j-1]+Math.sqrt(Math.pow(rx*Math.sin(t),2)+Math.pow(ry*Math.cos(t),2))}}
     function ang(f){if(!even)return f*Math.PI*2;f=f-Math.floor(f);var L=f*AL[AN],lo=0,hi=AN;while(hi-lo>1){var m=(lo+hi)>>1;if(AL[m]<L)lo=m;else hi=m}
       return(lo+(L-AL[lo])/Math.max(1e-6,AL[hi]-AL[lo]))/AN*Math.PI*2}
-    function draw(now){var f0=(now-t0)/TURN;
+    /* her eyes: she follows one card for a few seconds, looks ahead, gets interested in another, then just
+       looks around, on a loop. Each step is [what, where on the ring the card is picked (in units of pi,
+       0 = right, .5 = front), how long]. Cards travel right to left across the front, and the ring is flat,
+       so her eyes only sweep visibly while a card crosses the front: every pick is the card about to do that. */
+    var face=orb.querySelector('.lo'),PLAN=[['follow',.36,4600],['ahead',0,1300],['follow',.36,4000],['ahead',0,900],['idle',0,5200],['follow',.36,4400],['ahead',0,1100],['idle',0,6000]],
+        G={ph:-1,until:0,mode:'idle',card:0,last:-1};
+    function gaze(now,f0){
+      if(!face||reduce)return;
+      if(now>=G.until){G.ph=(G.ph+1)%PLAN.length;var p=PLAN[G.ph];G.until=now+p[2];G.mode=p[0];
+        if(G.mode==='follow'){var best=0,bd=99;for(var i=0;i<n;i++){if(i===G.last)continue;var d=Math.abs(ang(f0+i/n)%(Math.PI*2)-p[1]*Math.PI);if(d<bd){bd=d;best=i}}G.card=G.last=best}
+        if(G.mode==='idle'){face._act=false;face.classList.remove('lo-watch')}}
+      if(G.mode==='idle')return;
+      var x=0,y=0;if(G.mode==='follow'){var a=ang(f0+G.card/n),dx=Math.cos(a)*rx,dy=Math.sin(a)*ry,l=Math.sqrt(dx*dx+dy*dy)/.9||1;x=dx/l;y=dy/l}
+      face._act=true;if(face._away){clearTimeout(face._away);face._away=null}
+      face.style.setProperty('--lo-gx',x.toFixed(3));face.style.setProperty('--lo-gy',y.toFixed(3));face.classList.add('lo-watch')}
+    function draw(now){var f0=(now-t0)/TURN;gaze(now,f0);
       for(var i=0;i<n;i++){var a=ang(f0+i/n),z=Math.sin(a),c=cards[i],k=.95+ks*z,
           hw=sz[i][0]*k/2,mx=Math.max(hw+6,Math.min(W-hw-6,cx+Math.cos(a)*rx)),
           x=mx-sz[i][0]/2,y=cy+z*ry-sz[i][1]/2;
@@ -3128,7 +3364,7 @@ footer .f-brand img{height:28px}
     window.addEventListener('resize',function(){measure();draw(performance.now())});
     if(reduce||!('IntersectionObserver' in window))return;
     new IntersectionObserver(function(es){var v=es[0].isIntersecting;
-      if(v&&!vis){vis=true;raf=requestAnimationFrame(loop)}else if(!v&&vis){vis=false;cancelAnimationFrame(raf)}},{threshold:0}).observe(stage);
+      if(v&&!vis){vis=true;G.ph=-1;G.until=0;raf=requestAnimationFrame(loop)}else if(!v&&vis){vis=false;cancelAnimationFrame(raf)}},{threshold:0}).observe(stage);
   })();
 
   /* ---- big numbers rise in when they scroll into view (already visible at rest) ---- */
@@ -3243,7 +3479,7 @@ footer .f-brand img{height:28px}
     queued=false;
     var faces=document.querySelectorAll('.lo:not(.lo-still)');
     for(var i=0;i<faces.length;i++){
-      var el=faces[i],r=el.getBoundingClientRect();
+      var el=faces[i],r;if(el._act)continue;r=el.getBoundingClientRect();
       if(!p||!r.width||r.bottom<0||r.top>window.innerHeight){away(el);continue}
       var dx=p.x-(r.left+r.width/2),dy=p.y-(r.top+r.height/2),d=Math.sqrt(dx*dx+dy*dy);
       if(d>Math.max(160,r.width*2.2)){away(el);continue}
