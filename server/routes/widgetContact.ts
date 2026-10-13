@@ -2,15 +2,9 @@
 // Phase 7). The form is shown when the AI asks who it is talking to; what the
 // visitor fills in arrives on the normal message endpoint as an extra
 // `contact` object and is handled here, so routes/widget.ts stays a proxy.
-//
-// The no-overwrite rules mirror the engine's, which applies them when a visitor
-// types their details instead (automations/src/automations/conversation/
-// contact_capture.py). Keep the two in step.
 import { z } from "zod";
-import { pool } from "../db";
+import { storage } from "../storage";
 import { toE164, type PhoneCountry } from "@shared/phoneE164";
-
-const LEADS_TABLE = '"p2mxx34fvbf3ll6"."Leads"';
 
 const contactSchema = z.object({
   name: z.string().trim().min(1).max(80),
@@ -79,17 +73,10 @@ export function contactMessage(contact: WidgetContact): string {
 }
 
 /**
- * Write the contact to the visitor's lead. Returns false when the visitor has
- * no lead yet (the engine creates it on the first message).
- *
- * A real value already on the lead is never overwritten, and the database
- * decides that, in one statement, so two submits cannot race each other:
- *   - first_name is written only when it is empty, a placeholder ("Website
- *     visitor"), or just a number (the voice line stores the caller's number
- *     there until a name is known). The name is split on the first space.
- *   - last_name goes with it, and only when last_name is empty too.
- *   - phone (E.164) is written only when the lead has no phone.
- *   - Email is written only when the lead has no email.
+ * Write the contact to the visitor's lead, never over a real value already
+ * there (storage/leads.ts `fillLeadContact`). The name is split on the first
+ * space. Returns false when the visitor has no lead yet (the engine creates it
+ * on the first message).
  */
 export async function saveWidgetContact(
   visitor: string,
@@ -97,25 +84,10 @@ export async function saveWidgetContact(
   contact: WidgetContact,
 ): Promise<boolean> {
   const space = contact.name.indexOf(" ");
-  const first = space === -1 ? contact.name : contact.name.slice(0, space);
-  const last = space === -1 ? "" : contact.name.slice(space + 1).trim();
-  const nameIsEmpty = `(
-    COALESCE(btrim(first_name), '') = ''
-    OR lower(btrim(first_name)) IN ('website visitor', 'lead', 'unknown')
-    OR first_name !~ '[^0-9 +().-]'
-  )`;
-  const { rowCount } = await pool.query(
-    `UPDATE ${LEADS_TABLE} SET
-        first_name = CASE WHEN ${nameIsEmpty} THEN $3 ELSE first_name END,
-        last_name = CASE WHEN ${nameIsEmpty} AND $4 <> '' AND COALESCE(btrim(last_name), '') = ''
-                         THEN $4 ELSE last_name END,
-        phone = CASE WHEN $5::text IS NOT NULL AND COALESCE(btrim(phone), '') = ''
-                     THEN $5 ELSE phone END,
-        "Email" = CASE WHEN $6::text IS NOT NULL AND COALESCE(btrim("Email"), '') = ''
-                       THEN $6 ELSE "Email" END,
-        updated_at = NOW()
-      WHERE channel_identifier = $1 AND "Accounts_id" = $2`,
-    [`web:${visitor}`, accountId, first, last, contact.phone, contact.email],
-  );
-  return (rowCount ?? 0) > 0;
+  return storage.fillLeadContact(`web:${visitor}`, accountId, {
+    firstName: space === -1 ? contact.name : contact.name.slice(0, space),
+    lastName: space === -1 ? "" : contact.name.slice(space + 1).trim(),
+    phone: contact.phone,
+    email: contact.email,
+  });
 }

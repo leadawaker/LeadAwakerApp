@@ -345,10 +345,8 @@ export function RightSidebar({
         data-testid="mobile-bottom-bar"
       >
         {([
-          // Owner keeps the services hub; admins/clients land on Campaigns instead.
-          isOwner
-            ? { key: "home", href: `${prefix}/home`, icon: Home, label: t("sidebar.home"), testId: "mobile-nav-home" }
-            : { key: "campaigns", href: `${prefix}/campaigns`, icon: Megaphone, label: t("sidebar.reactivation"), testId: "mobile-nav-campaigns" },
+          // Home is the first slot for every role.
+          { key: "home", href: `${prefix}/home`, icon: Home, label: t("sidebar.home"), testId: "mobile-nav-home" },
           // Agency = Conversations inbox; clients go straight to Leads (/chat redirects them there anyway).
           isAgencyUser
             ? { key: "conversations", href: `${prefix}/chat`, icon: MessageSquare, label: t("sidebar.conversations"), testId: "mobile-nav-conversations" }
@@ -503,19 +501,16 @@ export function RightSidebar({
             </DropdownMenu>
           )}
 
-          {/* Home — the hub landing page. Owner-only: other services are parked,
-              so admins/clients go straight to Campaigns. */}
-          {isOwner && (
-            <Link
-              href={`${prefix}/home`}
-              className={`la-nav-item ${isActive(`${prefix}/home`) ? "active" : ""}`}
-              data-testid="link-home"
-              data-active={isActive(`${prefix}/home`) || undefined}
-            >
-              <span className="icon"><Home size={16} /></span>
-              {t("sidebar.home")}
-            </Link>
-          )}
+          {/* Home: the dashboard landing page, shown to every role. */}
+          <Link
+            href={`${prefix}/home`}
+            className={`la-nav-item ${isActive(`${prefix}/home`) ? "active" : ""}`}
+            data-testid="link-home"
+            data-active={isActive(`${prefix}/home`) || undefined}
+          >
+            <span className="icon"><Home size={16} /></span>
+            {t("sidebar.home")}
+          </Link>
 
           {/* Services group — each row is a service the agency runs. Reactivation
               sits on top (→ Campaigns dashboard). Reputation is live (mock

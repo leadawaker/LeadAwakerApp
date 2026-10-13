@@ -79,8 +79,8 @@ function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: stri
 }
 
 /**
- * Route guard for the owner-only services hub (Home). Non-reactivation
- * services are parked, so admins and clients go straight to Campaigns.
+ * Route guard for Owner-only pages (Automation Logs, Traffic, Demos).
+ * Everyone else is sent to Campaigns.
  */
 function OwnerOnly({ children, prefix }: { children: ReactElement; prefix: string }) {
   const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
@@ -248,10 +248,8 @@ export default function AppArea() {
           {/* Unified CRM routes — agency vs client behaviour is derived from the
               user's role/session, no longer from the URL prefix. */}
           <Route path="/platform"><LandingRedirect /></Route>
-          <Route path="/platform/dashboard" component={() => <Redirect to="/platform/campaigns" />} />
-          <Route path="/platform/home">
-            <OwnerOnly prefix="/platform"><HomePage /></OwnerOnly>
-          </Route>
+          <Route path="/platform/dashboard" component={() => <Redirect to="/platform/home" />} />
+          <Route path="/platform/home"><HomePage /></Route>
           {/* Conversations / Contacts split: same workspace component, two modes.
               Conversations = chat threads only; Contacts = directory (table + pipeline). */}
           <Route path="/platform/conversations"><Redirect to="/platform/chat" /></Route>

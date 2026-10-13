@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { pool } from "../db";
 import { registerAuthRoutes } from "../auth";
-import { verifySmtp, sendInviteEmail, sendRawEmail, escapeHtml, renderEmailLayout, renderEmailText, emailDetails } from "../email";
+import { verifySmtp, sendInviteEmail, sendRawEmail, escapeHtml, renderEmailLayout, renderEmailText } from "../email";
+import { emailDetails } from "../emailComponents";
 import { requireAgency } from "../auth";
 
 // ─── Contact form guards ─────────────────────────────────────────────────

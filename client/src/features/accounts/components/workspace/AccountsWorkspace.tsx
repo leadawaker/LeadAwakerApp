@@ -21,7 +21,7 @@ import type { NewAccountForm } from "../AccountCreateDialog";
 import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "communication", "voice", "automations"];
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "communication", "voice", "alerts", "automations"];
 
 interface Props {
   accounts: AccountRow[];

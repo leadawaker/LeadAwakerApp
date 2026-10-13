@@ -67,3 +67,68 @@ export async function launchWhatsAppEmbeddedSignup(): Promise<{ wabaId: string; 
     );
   });
 }
+
+// ── Direct onboarding on Lead Awaker's own app (Tech Provider, no Twilio) ──────
+// The config is "WhatsApp Business app onboarding" (coexistence): the client's
+// number stays on the WhatsApp Business app on their phone and also works
+// through the Cloud API. Meta answers twice: the session details by postMessage
+// (which account and number were shared) and a short-lived code in FB.login's
+// callback, which the server exchanges for the client's token.
+const META_COEX_CONFIG_ID = import.meta.env.VITE_META_WHATSAPP_COEX_CONFIG_ID ?? "1438404178389195";
+const FINISH_EVENTS = ["FINISH", "FINISH_ONLY_WABA", "FINISH_WHATSAPP_BUSINESS_APP_ONBOARDING"];
+
+export interface WhatsAppConnectResult { code: string; wabaId: string; phoneNumberId: string | null }
+
+/**
+ * "app": the client's number stays on their WhatsApp Business app (coexistence).
+ * "new": a number that only the Cloud API uses; Meta verifies it in the window.
+ * Same Meta configuration for both: the mode is the featureType passed here.
+ */
+export type WhatsAppConnectMode = "app" | "new";
+
+export async function launchWhatsAppConnect(mode: WhatsAppConnectMode): Promise<WhatsAppConnectResult> {
+  if (!META_APP_ID) throw new Error("Meta App ID is not configured (VITE_META_APP_ID)");
+  await loadFacebookSdk();
+
+  return new Promise((resolve, reject) => {
+    let session: { wabaId: string; phoneNumberId: string | null } | null = null;
+    let failure: string | null = null;
+    const onMessage = (event: MessageEvent) => {
+      let host = "";
+      try { host = new URL(event.origin).hostname; } catch { return; }
+      if (!/(^|\.)facebook\.com$/.test(host)) return;
+      let msg: any;
+      try { msg = typeof event.data === "string" ? JSON.parse(event.data) : event.data; } catch { return; }
+      if (msg?.type !== "WA_EMBEDDED_SIGNUP") return;
+      if (FINISH_EVENTS.includes(msg.event) && msg.data?.waba_id) {
+        session = { wabaId: String(msg.data.waba_id), phoneNumberId: msg.data.phone_number_id ? String(msg.data.phone_number_id) : null };
+      } else if (msg.event === "ERROR") {
+        failure = msg.data?.error_message || null;
+      }
+    };
+    window.addEventListener("message", onMessage);
+
+    window.FB.login(
+      (response: any) => {
+        // The session message can land just after the popup closes.
+        setTimeout(() => {
+          window.removeEventListener("message", onMessage);
+          const code = response?.authResponse?.code;
+          if (code && session) resolve({ code, ...session });
+          else if (!code) reject(new Error(failure || "WhatsApp signup was cancelled"));
+          else reject(new Error(failure || "WhatsApp signup was not completed"));
+        }, 1500);
+      },
+      {
+        config_id: META_COEX_CONFIG_ID,
+        response_type: "code",
+        override_default_response_type: true,
+        extras: {
+          setup: {},
+          sessionInfoVersion: "3",
+          ...(mode === "app" ? { featureType: "whatsapp_business_app_onboarding" } : {}),
+        },
+      },
+    );
+  });
+}

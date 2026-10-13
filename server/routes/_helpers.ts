@@ -78,3 +78,23 @@ export function getPagination(req: Request) {
   const order = (req.query.order as string) === "asc" ? "asc" as const : "desc" as const;
   return { page, limit, sort, order };
 }
+
+/**
+ * Parse :id as an account id, and keep a user of a client account to their
+ * own account (agency users, accountsId 1, reach every account). No session
+ * user means the internal API key was let in: agency-level. Sends the 400/403
+ * itself and returns null.
+ */
+export function accountIdFor(req: Request, res: Response): number | null {
+  const accountId = Number(req.params.id);
+  if (!Number.isInteger(accountId) || accountId <= 0) {
+    res.status(400).json({ message: "Invalid account id" });
+    return null;
+  }
+  const user = req.user;
+  if (user && user.accountsId !== 1 && user.accountsId !== accountId) {
+    res.status(403).json({ message: "Forbidden" });
+    return null;
+  }
+  return accountId;
+}

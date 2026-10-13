@@ -131,7 +131,7 @@ function InvitePopover({ accountId, onAssigned }: { accountId: number; onAssigne
   );
 }
 
-export function TeamPanel({ team, loading, accountId, onRefresh, inset = false, naked = false }: { team: TeamMemberData[]; loading?: boolean; accountId: number; onRefresh?: () => void; inset?: boolean; naked?: boolean }) {
+export function TeamPanel({ team, loading, accountId, onRefresh, inset = false, naked = false, eyebrow = "03" }: { team: TeamMemberData[]; loading?: boolean; accountId: number; onRefresh?: () => void; inset?: boolean; naked?: boolean; eyebrow?: string }) {
   const { t } = useTranslation("accounts");
   const [, setLocation] = useLocation();
 
@@ -144,7 +144,7 @@ export function TeamPanel({ team, loading, accountId, onRefresh, inset = false, 
   };
 
   return (
-    <Panel eyebrow="03" title={t("panels.team")} count={t("metrics.nMembers", { count: team.length })} inset={inset} naked={naked}
+    <Panel eyebrow={eyebrow} title={t("panels.team")} count={t("metrics.nMembers", { count: team.length })} inset={inset} naked={naked}
       action={<InvitePopover accountId={accountId} onAssigned={() => onRefresh?.()} />}>
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>

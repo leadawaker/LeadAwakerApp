@@ -141,7 +141,11 @@
       "criticalAutomationFailure": "Falha Critica de Automacao",
       "campaignFinished": "Campanha Concluida",
       "demoReplied": "Resposta na Demo",
-      "publicDemoLead": "Lead da Demo do Site"
+      "publicDemoLead": "Lead da Demo do Site",
+      "bookingRescheduled": "Agendamento Remarcado",
+      "bookingCancelled": "Agendamento Cancelado",
+      "callbackRequested": "Pedido de Retorno",
+      "dailyRecap": "Resumo do Dia"
     }
   },
   "hub": {

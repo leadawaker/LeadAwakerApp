@@ -11,7 +11,7 @@ import { join } from "path";
 const DEFAULT_TG_TOKEN = process.env.TELEGRAM_BOT_TOKEN ?? "";
 
 /** WhatsApp Cloud accepts OGG/Opus for voice notes, not the browser's webm/opus. */
-function isWhatsAppChannel(campaignChannel: string, channelIdentifier: string): boolean {
+export function isWhatsAppChannel(campaignChannel: string, channelIdentifier: string): boolean {
   return (
     campaignChannel === "whatsapp" ||
     campaignChannel === "whatsapp_cloud" ||

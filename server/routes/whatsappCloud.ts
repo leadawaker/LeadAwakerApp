@@ -1,8 +1,9 @@
-import type { Express, Request, Response } from "express";
+import type { Express } from "express";
 import { z } from "zod";
+import { randomInt } from "crypto";
 import { storage } from "../storage";
 import { requireAgency } from "../auth";
-import { getEngineUrl, handleZodError, wrapAsync } from "./_helpers";
+import { accountIdFor, getEngineUrl, handleZodError, wrapAsync } from "./_helpers";
 import { WhatsappSenderError } from "../storage/whatsappSenders";
 
 // Per-client WhatsApp on Meta's Cloud API (specs/receptionist-channels Phase 4):
@@ -21,6 +22,101 @@ const senderBodySchema = z.object({
   appId: metaId("App id"),
   appSecret: secret,
   accessToken: secret,
+}).strict();
+
+const connectBodySchema = z.object({
+  code: z.string().trim().min(10).max(2000),
+  wabaId: metaId("WhatsApp Business account id"),
+  phoneNumberId: metaId("Phone number id").nullable().optional(),
+  // app: the number stays on the client's WhatsApp Business app. new: Cloud API only.
+  mode: z.enum(["app", "new"]),
+}).strict();
+
+// Lead Awaker's own Meta app, the one Embedded Signup runs on. Its id is public
+// (the browser SDK embeds it); its secret only ever lives here.
+const META_APP_ID = process.env.META_APP_ID || process.env.VITE_META_APP_ID || "1431602527965445";
+const GRAPH = "https://graph.facebook.com/v21.0";
+
+class MetaConnectError extends Error {
+  constructor(public code: string, message: string) { super(message); }
+}
+
+async function graph(path: string, token: string | null, init?: RequestInit): Promise<Record<string, any>> {
+  let resp: globalThis.Response;
+  try {
+    resp = await fetch(`${GRAPH}/${path}`, {
+      ...init,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      signal: AbortSignal.timeout(20_000),
+    });
+  } catch {
+    throw new MetaConnectError("meta_unreachable", "Meta could not be reached");
+  }
+  const data = (await resp.json().catch(() => ({}))) as Record<string, any>;
+  if (!resp.ok) throw new MetaConnectError("meta_refused", data?.error?.message || `Meta answered ${resp.status}`);
+  return data;
+}
+
+/**
+ * Finish Embedded Signup: swap the popup's code for the client's token, find
+ * the number when Meta did not name it, and subscribe our app to the client's
+ * account so its messages reach the engine's webhook.
+ */
+async function finishSignup(accountId: number, mode: "app" | "new", code: string, wabaId: string, phoneNumberId?: string | null) {
+  const appSecret = process.env.META_APP_SECRET || "";
+  if (!appSecret) throw new MetaConnectError("app_secret_missing", "META_APP_SECRET is not set on the server");
+  const q = new URLSearchParams({ client_id: META_APP_ID, client_secret: appSecret, code });
+  const accessToken = String((await graph(`oauth/access_token?${q}`, null)).access_token || "");
+  if (!accessToken) throw new MetaConnectError("meta_refused", "Meta returned no token");
+
+  let numberId = phoneNumberId || "";
+  if (!numberId) {
+    const numbers = (await graph(`${wabaId}/phone_numbers?fields=id`, accessToken)).data;
+    if (!Array.isArray(numbers) || numbers.length !== 1) {
+      throw new MetaConnectError("number_unclear", "The WhatsApp account has no number, or more than one");
+    }
+    numberId = String(numbers[0].id);
+  }
+  // Before anything at Meta changes: a number on another account must keep
+  // its PIN, and the one-time history sync must not be spent on a failed connect.
+  const takenBy = await storage.whatsappNumberTakenBy(numberId);
+  if (takenBy != null && takenBy !== accountId) {
+    throw new WhatsappSenderError(409, "number_in_use", "This phone number id is already connected to another account");
+  }
+  await graph(`${wabaId}/subscribed_apps`, accessToken, { method: "POST" });
+
+  // A number that is only on the Cloud API has to be registered, with a
+  // two-step PIN we choose here. A number on the WhatsApp Business app is
+  // registered already and must be left alone.
+  // A number that stays on the WhatsApp Business app: ask Meta for the owner's
+  // contacts and chat history now. Meta allows this once, within 24 hours; the
+  // engine marks those customers as the owner's own (whatsapp_coexistence.py).
+  if (mode === "app") {
+    for (const syncType of ["smb_app_state_sync", "history"]) {
+      try {
+        await graph(`${numberId}/smb_app_data`, accessToken, {
+          method: "POST",
+          body: new URLSearchParams({ messaging_product: "whatsapp", sync_type: syncType }),
+        });
+      } catch (err) {
+        console.warn(`[whatsapp-connect] ${syncType} sync not started:`, err instanceof Error ? err.message : err);
+      }
+    }
+  }
+
+  let twoStepPin: string | undefined;
+  if (mode === "new") {
+    twoStepPin = String(randomInt(0, 1_000_000)).padStart(6, "0");
+    const q2 = new URLSearchParams({ messaging_product: "whatsapp", pin: twoStepPin });
+    await graph(`${numberId}/register?${q2}`, accessToken, { method: "POST" });
+  }
+  return { wabaId, phoneNumberId: numberId, appId: META_APP_ID, appSecret, accessToken, onboardingMode: mode, twoStepPin };
+}
+
+const behaviourSchema = z.object({
+  aiScope: z.enum(["all", "new_only", "off"]).optional(),
+  resumeAfterHours: z.number().int().min(1).max(720).nullable().optional(),
+  resumeCommand: z.string().trim().min(2).max(20).regex(/^\S+$/).optional(),
 }).strict();
 
 const submitBodySchema = z.object({
@@ -71,14 +167,6 @@ function toRow(r: Record<string, any>) {
 
 const rowsOf = (data: Record<string, any>) => (Array.isArray(data.rows) ? data.rows.map(toRow) : undefined);
 
-function accountIdFor(req: Request, res: Response): number | null {
-  const accountId = Number(req.params.id);
-  if (!Number.isInteger(accountId) || accountId <= 0) {
-    res.status(400).json({ message: "Invalid account id" });
-    return null;
-  }
-  return accountId;
-}
 
 export function registerWhatsappCloudRoutes(app: Express): void {
   app.get("/api/accounts/:id/whatsapp-sender", requireAgency, wrapAsync(async (req, res) => {
@@ -94,8 +182,35 @@ export function registerWhatsappCloudRoutes(app: Express): void {
     if (!parsed.success) return handleZodError(res, parsed.error);
     if (!(await storage.getAccountById(accountId))) return res.status(404).json({ message: "Account not found" });
     try {
-      res.json({ sender: await storage.saveWhatsappSender(accountId, parsed.data) });
+      res.json({ sender: await storage.saveWhatsappSender(accountId, { ...parsed.data, onboardingMode: null }) });
     } catch (err) {
+      if (err instanceof WhatsappSenderError) return res.status(err.status).json({ message: err.message, code: err.code });
+      throw err;
+    }
+  }));
+
+  app.put("/api/accounts/:id/whatsapp-sender/behaviour", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
+    const parsed = behaviourSchema.safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const sender = await storage.saveWhatsappBehaviour(accountId, parsed.data);
+    if (!sender) return res.status(404).json({ message: "No WhatsApp number connected" });
+    res.json({ sender });
+  }));
+
+  // Meta's Embedded Signup popup finished in the browser: no values to paste.
+  app.post("/api/accounts/:id/whatsapp-sender/connect", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
+    const parsed = connectBodySchema.safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    if (!(await storage.getAccountById(accountId))) return res.status(404).json({ message: "Account not found" });
+    try {
+      const input = await finishSignup(accountId, parsed.data.mode, parsed.data.code, parsed.data.wabaId, parsed.data.phoneNumberId);
+      res.json({ sender: await storage.saveWhatsappSender(accountId, input) });
+    } catch (err) {
+      if (err instanceof MetaConnectError) return res.status(422).json({ message: err.message, code: err.code });
       if (err instanceof WhatsappSenderError) return res.status(err.status).json({ message: err.message, code: err.code });
       throw err;
     }

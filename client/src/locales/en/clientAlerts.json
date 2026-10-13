@@ -1,0 +1,127 @@
+{
+  "common": {
+    "saveFailed": "Could not save. Try again.",
+    "loadFailed": "Could not load the recap and alert settings."
+  },
+  "readOnly": "Lead Awaker manages these settings for you. Ask your contact at Lead Awaker to change them.",
+  "notConfigured": "Recaps and alerts are not set up for this account yet. Add a recipient or change any setting to switch the daily recap on.",
+  "recap": {
+    "title": "Daily recap",
+    "help": "One message a day with the calls, chats and bookings, and what is waiting on the team. Nothing is sent on a day without activity.",
+    "enabled": "Send a daily recap",
+    "enabledHelp": "Sent once a day at the time below, in the account's timezone.",
+    "time": "Send at",
+    "timezone": "Timezone",
+    "channels": "Recap channels"
+  },
+  "language": {
+    "label": "Language",
+    "auto": "Same as the account",
+    "nl": "Dutch",
+    "en": "English",
+    "pt": "Portuguese (Brazil)"
+  },
+  "channels": {
+    "crm": "In the CRM",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
+    "crmHelpRecap": "A notification for the client's own users in Lead Awaker.",
+    "emailHelpRecap": "The full recap with names and times, to every email recipient.",
+    "whatsappHelpRecap": "The day's numbers and a button, sent from Lead Awaker's WhatsApp number.",
+    "crmHelpAlerts": "A notification for the client's users and the Lead Awaker team.",
+    "emailHelpAlerts": "Every detail of the event, to every email recipient.",
+    "whatsappHelpAlerts": "A short message with a button, sent from Lead Awaker's WhatsApp number."
+  },
+  "instant": {
+    "title": "Instant alerts",
+    "help": "Sent the moment something happens that cannot wait for the daily recap.",
+    "channels": "Alert channels",
+    "includePhone": "Show the caller's number in WhatsApp",
+    "includePhoneHelp": "So the team can call back straight from the message. Off: the number is only in Lead Awaker and the email."
+  },
+  "types": {
+    "daily_recap": {
+      "label": "Daily recap",
+      "help": ""
+    },
+    "appointment_booked": {
+      "label": "New appointment",
+      "help": "A customer booked through the phone, a chat or the booking page."
+    },
+    "appointment_rescheduled": {
+      "label": "Appointment moved",
+      "help": "A customer moved their appointment to another time."
+    },
+    "appointment_cancelled": {
+      "label": "Appointment cancelled",
+      "help": "Only when the customer cancelled, not when the team did."
+    },
+    "callback_requested": {
+      "label": "Callback request",
+      "help": "A caller asked for a call back, left a message, or a transfer was not picked up."
+    },
+    "lead_needs_reply": {
+      "label": "Reply needed",
+      "help": "The assistant paused a chat and a person needs to answer. At most once per customer per day."
+    }
+  },
+  "quiet": {
+    "title": "Quiet hours",
+    "enabled": "Hold WhatsApp alerts at night",
+    "help": "WhatsApp alerts raised in these hours are sent when they end. Email and the CRM are never held.",
+    "from": "From",
+    "to": "Until"
+  },
+  "recipients": {
+    "title": "Recipients",
+    "help": "Who gets the recaps and alerts. A name is needed for WhatsApp, it opens every message.",
+    "emailTitle": "Email",
+    "whatsappTitle": "WhatsApp",
+    "name": "Name",
+    "email": "Email address",
+    "number": "WhatsApp number",
+    "remove": "Remove",
+    "addEmail": "Add email",
+    "addWhatsapp": "Add WhatsApp number",
+    "suggest": "Add {{name}} ({{number}})",
+    "consent": "Agreed to receive WhatsApp updates from Lead Awaker",
+    "noConsent": "Not messaged until agreed",
+    "optedOut": "Sent STOP",
+    "resubscribe": "They asked to get updates again",
+    "badEmail": "One of the email addresses is not valid.",
+    "nameRequired": "Every WhatsApp number needs a name.",
+    "saveFailed": "Could not save the recipients. Check the numbers and try again."
+  },
+  "test": {
+    "title": "Send a test",
+    "help": "Sends a sample with made-up details to this account's recipients through the real path.",
+    "type": "What to send",
+    "email": "Send test email",
+    "whatsapp": "Send test WhatsApp",
+    "sent_one": "Test sent to {{count}} recipient.",
+    "sent_other": "Test sent to {{count}} recipients.",
+    "failed": "The test did not go out: {{error}}",
+    "errors": {
+      "no_recipients": "Add a recipient first (WhatsApp needs a ticked consent box).",
+      "engine_unavailable": "The automation engine did not answer. Try again in a minute.",
+      "engine_not_restarted": "The automation engine has not been restarted with this feature yet."
+    }
+  },
+  "wizard": {
+    "channelsLabel": "Send the recap and alerts by",
+    "email": "Email",
+    "whatsapp": "WhatsApp",
+    "emailPlaceholder": "name@company.com",
+    "whatsappTo": "Send WhatsApp updates to {{name}} on {{number}}",
+    "whatsappNoNumber": "Add the handoff number above to send WhatsApp updates.",
+    "consent": "{{name}} agreed to receive WhatsApp updates from Lead Awaker",
+    "saveFailed": "The recap settings could not be saved.",
+    "team": "team"
+  },
+  "go": {
+    "loading": "Opening Lead Awaker...",
+    "notFound": "This link does not open anything for you.",
+    "notFoundHelp": "It may belong to another account, or the item was removed.",
+    "open": "Open Lead Awaker"
+  }
+}

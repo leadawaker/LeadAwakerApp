@@ -141,7 +141,11 @@
       "criticalAutomationFailure": "Kritieke Automatiseringsfout",
       "campaignFinished": "Campagne Voltooid",
       "demoReplied": "Demo-reactie",
-      "publicDemoLead": "Websitedemo-lead"
+      "publicDemoLead": "Websitedemo-lead",
+      "bookingRescheduled": "Afspraak verzet",
+      "bookingCancelled": "Afspraak geannuleerd",
+      "callbackRequested": "Terugbelverzoek",
+      "dailyRecap": "Dagoverzicht"
     }
   },
   "hub": {

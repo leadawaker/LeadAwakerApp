@@ -49,74 +49,94 @@ Returns `{ path: "/platform/leads", selectLeadId: 123 }` (or the voice calls / c
 
 ## Phase 1: Data model
 
-- [ ] **1.1** Engine migration `automations/scripts/migrate_add_client_alert_log.py`: table `Client_Alert_Log` (columns in requirements), unique index on `dedup_key`, unique on `link_code`, index on `(accounts_id, created_at)`, GIN not needed.
-- [ ] **1.2** Add `clientAlertLog` to `shared/schema.ts` (read-only use in Express, engine owns writes) with a comment that the engine owns the migration.
-- [ ] **1.3** Types: `AlertSettings` in a new `shared/clientAlerts.ts` (alert type keys, channel keys, defaults, `normalizeAlertSettings()`), imported by server and client. Keep under 150 lines.
+- [x] **1.1** Engine migration `automations/scripts/migrate_add_client_alert_log.py`: table `Client_Alert_Log` (columns in requirements), unique index on `dedup_key`, unique on `link_code`, index on `(accounts_id, created_at)`, GIN not needed.
+- [x] **1.2** Add `clientAlertLog` to `shared/schema.ts` (read-only use in Express, engine owns writes) with a comment that the engine owns the migration.
+- [x] **1.3** Types: `AlertSettings` in a new `shared/clientAlerts.ts` (alert type keys, channel keys, defaults, `normalizeAlertSettings()`), imported by server and client. Keep under 150 lines.
 
 ## Phase 2: Engine core (`automations/src/automations/client_alerts/`)
 
 Each file under 300 lines.
 
-- [ ] **2.1** `settings.py`: load `Account_Communication_Profile.setup` + `Accounts.timezone/language/name`, normalise with defaults, resolve language, list eligible recipients (opted in, not opted out). Cache 60s.
-- [ ] **2.2** `tools/db/client_alerts.py`: `claim_event(dedup_key, ...) -> id | None` (`ON CONFLICT DO NOTHING RETURNING id`), `claim_delivery(id, idx)` (atomic jsonb `pending` to `sending`), `finish_delivery(...)`, `last_recap_window_end(account)`, `events_in_window(...)`, `open_handoffs(...)`, `find_by_message_id(...)`, link-code generator (8 chars, `secrets`).
-- [ ] **2.3** `copy.py`: per-language strings (source labels, reasons, fallbacks, date formatting with 24h clock and short weekday). Pure functions, unit-testable.
-- [ ] **2.4** `templates.py`: per type, build the ordered variable list, sanitise each value (strip newlines/tabs, collapse 4+ spaces, trim, cap 80, never empty), template name + Meta language code (`nl`, `en`, `pt_BR`).
-- [ ] **2.5** Extend `tools/whatsapp_cloud.py` `send_template_message`: add `button_url_suffix` (URL button component, index 0), optional `phone_number_id`, and return the Meta error code. Keep the existing signature working (no other callers today).
-- [ ] **2.6** `dispatch.py`: `record_event(account_id, event_type, dedup_key, payload, lead_id=None, call_id=None, instant_eligible=True)`: claim row; if claimed and the type is on, fan out to channels: CRM via `notify()` (email forced off, recipients as in requirements), WhatsApp per recipient (hold as `held` in quiet hours), email in one call to Express. Never raises; wraps everything in `AsyncLogStep("client_alerts", ...)`. Fire-and-forget entry `schedule_event(...)` that wraps it in `asyncio.create_task`.
-- [ ] **2.7** `live_calls.py`: Python port of `isDemoSql` (`server/storage/voiceCallsSql.ts:22`) as one SQL predicate, with a comment that both must change together.
-- [ ] **2.8** Add the new notification types to `DEFAULT_TYPE_CHANNELS` (`tools/notification_service.py:26`): `booking_rescheduled`, `booking_cancelled`, `callback_requested`, `daily_recap`, all `email: False`.
-- [ ] **2.9** `recap.py`: `run()` for the scheduler. For each account with recap on and at least one channel: compute local time, check the send rule (at or past `recapTime`, under +3h, no row for local date), build the window, gather counts and lists, apply the zero-activity rule (write a `skipped` row so the window advances), else dispatch on recap channels.
-- [ ] **2.10** `sweeper.py`: every 5 min: release `held` WhatsApp deliveries whose quiet hours ended; retry `failed` transient deliveries (5/15/45 min, max 3); mark `sending` older than 10 min as `unknown`; raise the once-a-day agency failure notification.
-- [ ] **2.11** Register `client_recap` (IntervalTrigger 300s) and `client_alerts_sweeper` (IntervalTrigger 300s) in `src/scheduler/jobs.py`.
-- [ ] **2.12** Internal engine route `POST /internal/client-alerts/test` (internal key) for the CRM test button.
-- [ ] **2.13** Global kill switches in `src/config.py`: `client_alerts_enabled` (default true for CRM/email), `client_alerts_whatsapp_enabled` (default false until templates approved). Respect `settings.dry_run`.
+- [x] **2.1** `settings.py`: load `Account_Communication_Profile.setup` + `Accounts.timezone/language/name`, normalise with defaults, resolve language, list eligible recipients (opted in, not opted out). Cache 60s.
+- [x] **2.2** `tools/db/client_alerts.py`: `claim_event(dedup_key, ...) -> id | None` (`ON CONFLICT DO NOTHING RETURNING id`), `claim_delivery(id, idx)` (atomic jsonb `pending` to `sending`), `finish_delivery(...)`, `last_recap_window_end(account)`, `events_in_window(...)`, `open_handoffs(...)`, `find_by_message_id(...)`, link-code generator (8 chars, `secrets`).
+- [x] **2.3** `copy.py`: per-language strings (source labels, reasons, fallbacks, date formatting with 24h clock and short weekday). Pure functions, unit-testable.
+- [x] **2.4** `templates.py`: per type, build the ordered variable list, sanitise each value (strip newlines/tabs, collapse 4+ spaces, trim, cap 80, never empty), template name + Meta language code (`nl`, `en`, `pt_BR`).
+- [x] **2.5** Extend `tools/whatsapp_cloud.py` `send_template_message`: add `button_url_suffix` (URL button component, index 0), optional `phone_number_id`, and return the Meta error code. Keep the existing signature working (no other callers today).
+- [x] **2.6** `dispatch.py`: `record_event(account_id, event_type, dedup_key, payload, lead_id=None, call_id=None, instant_eligible=True)`: claim row; if claimed and the type is on, fan out to channels: CRM via `notify()` (email forced off, recipients as in requirements), WhatsApp per recipient (hold as `held` in quiet hours), email in one call to Express. Never raises; wraps everything in `AsyncLogStep("client_alerts", ...)`. Fire-and-forget entry `schedule_event(...)` that wraps it in `asyncio.create_task`.
+- [x] **2.7** `live_calls.py`: Python port of `isDemoSql` (`server/storage/voiceCallsSql.ts:22`) as one SQL predicate, with a comment that both must change together.
+- [x] **2.8** Add the new notification types to `DEFAULT_TYPE_CHANNELS` (`tools/notification_service.py:26`): `booking_rescheduled`, `booking_cancelled`, `callback_requested`, `daily_recap`, all `email: False`.
+- [x] **2.9** `recap.py`: `run()` for the scheduler. For each account with recap on and at least one channel: compute local time, check the send rule (at or past `recapTime`, under +3h, no row for local date), build the window, gather counts and lists, apply the zero-activity rule (write a `skipped` row so the window advances), else dispatch on recap channels.
+- [x] **2.10** `sweeper.py`: every 5 min: release `held` WhatsApp deliveries whose quiet hours ended; retry `failed` transient deliveries (5/15/45 min, max 3); mark `sending` older than 10 min as `unknown`; raise the once-a-day agency failure notification.
+- [x] **2.11** Register `client_recap` (IntervalTrigger 300s) and `client_alerts_sweeper` (IntervalTrigger 300s) in `src/scheduler/jobs.py`.
+- [x] **2.12** Internal engine route `POST /internal/client-alerts/test` (internal key) for the CRM test button.
+- [x] **2.13** Global kill switches in `src/config.py`: `client_alerts_enabled` (default true for CRM/email), `client_alerts_whatsapp_enabled` (default false until templates approved). Respect `settings.dry_run`.
 
 ## Phase 3: Engine hooks
 
-- [ ] **3.1** `booking_routes.py` `_handle_booking`: after the update-state block (`:616-668`), before the `engine_booked` return (`:678`): `schedule_event` as `appointment_rescheduled` if `is_rebook` (`:580`) else `appointment_booked`. Source: `engine_booked` gives chat (WhatsApp or website by channel), otherwise booking page. Skip demo campaigns.
-- [ ] **3.2** Remove the old notify block at `:1047-1098` (its CRM role moves into 3.1, now also covering in-chat bookings). Keep the agency recipients identical.
-- [ ] **3.3** `_handle_reschedule`: after `apply_event_tags` at `:1238`, `schedule_event` `appointment_rescheduled` with the new start.
-- [ ] **3.4** `_handle_cancellation`: before `:1363`, when not `is_client_cancel`, `schedule_event` `appointment_cancelled` with the time from the lead snapshot (read before it is cleared).
-- [ ] **3.5** `tools/db/voice_calls.py` `close_out_call` (`:239`): after `finalize_outcome`, call `client_alerts.on_call_closed(call_id)` in its own try (never raises). It reads the row, applies the live-call rule and the mapping table (callback, leave_message, failed transfer, voice "booking" as a request to confirm).
-- [ ] **3.6** `inbound_handler.py` `notify_manual_takeover` (`:814`): add `trigger: str = "smart_handoff"`; pass `"input_guardrail"` from `ai_conversation.py:347`, `"output_guardrail"` from `:710` and `voice_live.py:292`. Record `lead_needs_reply` (instant) for smart handoff, `guardrail_pause` (recap only) otherwise. Widen its CRM recipients from owner-only to all Viewer users (via `record_event`).
-- [ ] **3.7** `whatsapp_cloud_routes.py`: early branch after the VIP check (`:342`): sender is an opted-in alert recipient, not VIP, no demo token: hand to `client_alerts.replies.handle(...)` (STOP handling, `client_reply` row, agency notify, one auto-reply per 24h) and return before the lead pipeline.
-- [ ] **3.8** `_process_status_updates` (`:298`): map status by message id onto the delivery (`delivered`, `read`, `failed` with error code).
-- [ ] **3.9** `nightly_summary.py`: skip the `notify` call (`:209-229`) when the account's daily recap is on. Summary storage unchanged.
+- [x] **3.1** `booking_routes.py` `_handle_booking`: after the update-state block (`:616-668`), before the `engine_booked` return (`:678`): `schedule_event` as `appointment_rescheduled` if `is_rebook` (`:580`) else `appointment_booked`. Source: `engine_booked` gives chat (WhatsApp or website by channel), otherwise booking page. Skip demo campaigns.
+- [x] **3.2** Remove the old notify block at `:1047-1098` (its CRM role moves into 3.1, now also covering in-chat bookings). Keep the agency recipients identical.
+- [x] **3.3** `_handle_reschedule`: after `apply_event_tags` at `:1238`, `schedule_event` `appointment_rescheduled` with the new start.
+- [x] **3.4** `_handle_cancellation`: before `:1363`, when not `is_client_cancel`, `schedule_event` `appointment_cancelled` with the time from the lead snapshot (read before it is cleared).
+- [x] **3.5** `tools/db/voice_calls.py` `close_out_call` (`:239`): after `finalize_outcome`, call `client_alerts.on_call_closed(call_id)` in its own try (never raises). It reads the row, applies the live-call rule and the mapping table (callback, leave_message, failed transfer, voice "booking" as a request to confirm).
+- [x] **3.6** `inbound_handler.py` `notify_manual_takeover` (`:814`): add `trigger: str = "smart_handoff"`; pass `"input_guardrail"` from `ai_conversation.py:347`, `"output_guardrail"` from `:710` and `voice_live.py:292`. Record `lead_needs_reply` (instant) for smart handoff, `guardrail_pause` (recap only) otherwise. Widen its CRM recipients from owner-only to all Viewer users (via `record_event`).
+- [x] **3.7** `whatsapp_cloud_routes.py`: early branch after the VIP check (`:342`): sender is an opted-in alert recipient, not VIP, no demo token: hand to `client_alerts.replies.handle(...)` (STOP handling, `client_reply` row, agency notify, one auto-reply per 24h) and return before the lead pipeline.
+- [x] **3.8** `_process_status_updates` (`:298`): map status by message id onto the delivery (`delivered`, `read`, `failed` with error code).
+- [x] **3.9** `nightly_summary.py`: skip the `notify` call (`:209-229`) when the account's daily recap is on. Summary storage unchanged.
 
 ## Phase 4: Express
 
-- [ ] **4.1** Coordinate with the `server/email.ts` restyle: it must export its branded layout (e.g. `renderBrandedEmail({ heading, bodyHtml, ctaLabel, ctaUrl, footerHtml })`) and accept an optional `idempotencyKey` on delivery. Do not edit `email.ts` while the restyle is in flight; add these two exports after it lands.
-- [ ] **4.2** `server/clientAlerts/emailCopy.ts`: subjects and body strings for the 6 types in en/nl/pt (strings live here, not in client locales, because they are server-rendered; same pattern as the invite TRANSLATIONS in `email.ts`).
-- [ ] **4.3** `server/clientAlerts/renderAlertEmail.ts` and `renderRecapEmail.ts`: build HTML + text from the payload, escape every value with `escapeHtml`, use the shared layout. Recap sections: headline, appointments, waiting on you, calls, conversations, tomorrow.
-- [ ] **4.4** `server/routes/clientAlerts.ts`: the internal email endpoint (validate with Zod, internal key only), alert-settings GET/PATCH, test endpoint, `GET /api/go/:code`. Register in `server/routes/index.ts`.
-- [ ] **4.5** `server/storage/clientAlerts.ts`: read/merge `setup.alerts` and `setup.handoff.recap/recapTime`, E.164 normalisation, `optedInAt` set with `new Date()`, lookup by link code. Expose through the `storage` barrel.
-- [ ] **4.6** Add the new notification types to the Express side where types are listed (`client/src/features/settings/types.ts` `NOTIF_TYPE_KEYS` and icons in `NotificationCenter.tsx`), with i18n keys in en/nl/pt.
+- [x] **4.1** Coordinate with the `server/email.ts` restyle: it must export its branded layout (e.g. `renderBrandedEmail({ heading, bodyHtml, ctaLabel, ctaUrl, footerHtml })`) and accept an optional `idempotencyKey` on delivery. Do not edit `email.ts` while the restyle is in flight; add these two exports after it lands.
+- [x] **4.2** `server/clientAlerts/emailCopy.ts`: subjects and body strings for the 6 types in en/nl/pt (strings live here, not in client locales, because they are server-rendered; same pattern as the invite TRANSLATIONS in `email.ts`).
+- [x] **4.3** `server/clientAlerts/renderAlertEmail.ts` and `renderRecapEmail.ts`: build HTML + text from the payload, escape every value with `escapeHtml`, use the shared layout. Recap sections: headline, appointments, waiting on you, calls, conversations, tomorrow.
+- [x] **4.4** `server/routes/clientAlerts.ts`: the internal email endpoint (validate with Zod, internal key only), alert-settings GET/PATCH, test endpoint, `GET /api/go/:code`. Register in `server/routes/index.ts`.
+- [x] **4.5** `server/storage/clientAlerts.ts`: read/merge `setup.alerts` and `setup.handoff.recap/recapTime`, E.164 normalisation, `optedInAt` set with `new Date()`, lookup by link code. Expose through the `storage` barrel.
+- [x] **4.6** Add the new notification types to the Express side where types are listed (`client/src/features/settings/types.ts` `NOTIF_TYPE_KEYS` and icons in `NotificationCenter.tsx`), with i18n keys in en/nl/pt.
 
 ## Phase 5: Client
 
-- [ ] **5.1** New lazy page `/go/:code` (in `client/src/App.tsx`, React.lazy): calls `/api/go/:code`, sets `setPersistedSelection("selected-lead-id", id)` (as `NotificationCenter.tsx:214` does) or the voice-call selection, then navigates. Not logged in: login, then back to the same URL.
-- [ ] **5.2** Check the Voice Calls page can preselect a call from persisted selection; add a `selected-voice-call-id` key if missing.
-- [ ] **5.3** `RecapsAlertsCard.tsx` (new, under `features/accounts/components/workspace/alerts/`): recap on/off + time, timezone shown read-only from the account, channel matrix (recap and alerts x CRM, email, WhatsApp), instant toggles per type, quiet hours, phone-in-WhatsApp switch, language select, recipient lists (email; WhatsApp with name, number, consent checkbox, opted-out badge), "Suggest the handoff contact" one-click from `setup.handoff.number`, "Send test" per channel. Read-only for clients. Split into small components to stay under 300 lines each.
-- [ ] **5.4** Place the card: new workspace tab `alerts` ("Recaps & alerts") next to Voice in `OverviewTab.tsx` `TabContent` and the tab list type.
-- [ ] **5.5** Wizard: in `ServiceSteps.tsx` `handoffRules` (`:107-136`), under the existing recap time, add channel chips (email, WhatsApp), one email field, and "Send WhatsApp updates to {handoff number}" with a consent tick. Saves through the same merge route so `setup.alerts` is created with defaults. Wizard summary (`ProfileSummary.tsx:188`) shows channels.
-- [ ] **5.6** i18n: all new strings in `client/src/locales/{en,nl,pt}/` (new namespace `clientAlerts`), Brazilian Portuguese.
+- [x] **5.1** New lazy page `/go/:code` (in `client/src/App.tsx`, React.lazy): calls `/api/go/:code`, sets `setPersistedSelection("selected-lead-id", id)` (as `NotificationCenter.tsx:214` does) or the voice-call selection, then navigates. Not logged in: login, then back to the same URL.
+- [x] **5.2** Check the Voice Calls page can preselect a call from persisted selection; add a `selected-voice-call-id` key if missing.
+- [x] **5.3** `RecapsAlertsCard.tsx` (new, under `features/accounts/components/workspace/alerts/`): recap on/off + time, timezone shown read-only from the account, channel matrix (recap and alerts x CRM, email, WhatsApp), instant toggles per type, quiet hours, phone-in-WhatsApp switch, language select, recipient lists (email; WhatsApp with name, number, consent checkbox, opted-out badge), "Suggest the handoff contact" one-click from `setup.handoff.number`, "Send test" per channel. Read-only for clients. Split into small components to stay under 300 lines each.
+- [x] **5.4** Place the card: new workspace tab `alerts` ("Recaps & alerts") next to Voice in `OverviewTab.tsx` `TabContent` and the tab list type.
+- [x] **5.5** Wizard: in `ServiceSteps.tsx` `handoffRules` (`:107-136`), under the existing recap time, add channel chips (email, WhatsApp), one email field, and "Send WhatsApp updates to {handoff number}" with a consent tick. Saves through the same merge route so `setup.alerts` is created with defaults. Wizard summary (`ProfileSummary.tsx:188`) shows channels.
+- [x] **5.6** i18n: all new strings in `client/src/locales/{en,nl,pt}/` (new namespace `clientAlerts`), Brazilian Portuguese.
 
 ## Phase 6: Rollout
 
-- [ ] **6.1** Gabriel submits the 6 templates x 3 languages (see action-required.md). Wait for UTILITY approval of all 18.
+- [x] **6.1** Gabriel submits the 6 templates x 3 languages (see action-required.md). Wait for UTILITY approval of all 18.
 - [ ] **6.2** Configure Robben: recipients, consent confirmed, language nl, recap 18:00, email + WhatsApp.
 - [ ] **6.3** Run the test plan below with `client_alerts_whatsapp_enabled=false` first (CRM + email only), then flip it on.
 - [ ] **6.4** Watch the first three recaps in Automation Logs and the delivery statuses.
 
+## Built 2026-10-12 (what differs from the plan above)
+
+Code is on disk in both repos, not committed. CRM side is live (Express auto-reload). Engine side passes preflight but is NOT running until the engine restarts.
+
+- **Templates:** the 18 `la_*` templates were already approved on 2026-10-11 by the receptionist-channels work (`specs/receptionist-channels/submit_templates_2026_10_10.py`); `templates.py` sends exactly those names, languages (`nl`, `en`, `pt_BR`), variable order and the `/go/{{1}}` URL button. Nothing resubmitted.
+- **2.5:** `tools/whatsapp_cloud.send_template_message` already had `components`, `phone_number_id` and `error_code` (receptionist-channels Phase 2), so it was reused unchanged with `build_template_components(values, url_button_suffix=link_code)`.
+- **2.6/2.9 file layout:** `client_alerts/` = `settings.py`, `copy.py`, `templates.py`, `dispatch.py`, `crm.py`, `email_client.py`, `events.py` (all hooks), `live_calls.py`, `recap.py` + `recap_data.py`, `sweeper.py`, `replies.py`, `statuses.py`, `test_send.py`. Ledger DB access in `tools/db/client_alerts.py`. Internal route `src/webhooks/client_alerts_internal_routes.py`.
+- **Recap only for configured accounts:** the recap job runs for accounts that have a `setup.alerts` block (any save in the Recaps & alerts tab or the wizard picker creates it). Without this every account with `setup.handoff.recap = true` (the wizard default, incl. account 1) would start getting recaps. Instant CRM alerts (bookings, callbacks) run for every account, as the booking notification did.
+- **Handoffs (3.6):** `takeover_notify.py` (receptionist-channels 7.4) already sends the in-app takeover notification to the account's users plus agency Owners/Admins. So `lead_needs_reply` keeps that as its CRM channel (the ledger delivery is marked `skipped: sent_by_takeover_notify`) and only adds email + WhatsApp. `notify_manual_takeover` got `trigger=` (smart_handoff | input_guardrail | output_guardrail). The widget's `contact_received` re-notification raises no new alert.
+- **Phone bookings (decision 5):** no "please confirm" variant. Real voice bookings go through Cal.diy with metadata `booked_via=phone` (voice-real-booking agent), so they alert from the booking webhook as `appointment_booked` "Booked through: phone call". A call with `outcome=booked` raises no callback. When a real phone booking fails, `voice/real_booking.py` calls `client_alerts.events.schedule_phone_callback(...)` (same dedup key `callback:call:{call_id}` as the call-close hook).
+- **Demo traffic:** bookings on demo campaigns/leads go to the CRM only (agency still gets its toast) and are kept out of recaps; demo handoffs and non-client lines raise nothing.
+- **Live-call rule:** `live_calls.py` ports `isDemoSql` (recap counts). The call-close hook uses receptionist-channels' `after_call_rules.line_kind(...) == "client"`, which is stricter (probe calls, agency line).
+- **Recipients for alerts in the CRM** = Viewer users of the account + agency Owner/Admin (same as the old booking block); the recap CRM notification = Viewer users only.
+- **Email:** one renderer `server/clientAlerts/renderEmail.ts` (alerts + recap) instead of two files; copy in `emailCopy.ts`. `server/email.ts` got an optional `idempotencyKey` (Resend `Idempotency-Key`). The footer is plain text (the layout's footer takes no link).
+- **Recap logging:** recap steps log under workflow `client_recap` (catalogue entry with job health), alerts under `client_alerts`.
+- **Test sends** are ledger rows of kind `test` (never counted in a recap). The test route allows WhatsApp even while `CLIENT_ALERTS_WHATSAPP_ENABLED=false` (explicit agency action, own recipients only).
+- **Wizard save safety:** `upsertCommunicationProfile` now always keeps the stored `setup.alerts`; only `PATCH /api/accounts/:id/alert-settings` writes it.
+- **/go/:code:** top-level lazy route `pages/GoLink.tsx`. Logged-out users go to `/login` and come back (`login.html` honours `sessionStorage.leadawaker_return_to` for `/go/<8 chars>` only). Leads go to `/platform/leads` with the lead preselected; calls go to `/platform/voice-calls` (new one-shot key `selected-voice-call-id`, switches an Owner to the Live scope). The daily recap link opens the Leads page (there is no recap page in the CRM).
+- **Not built / open:** 6.2 to 6.4 (rollout), the integration test plan, and email rendering checks in Outlook / dark mode. `GET /api/accounts/:id/communication-profile` had no account check (a client user could read any account's `setup`, now including alert recipients); fixed: client users get 403 for other accounts.
+
 ## Test plan
 
 **Unit (engine, pytest):**
-- [ ] `templates.py`: every variable sanitised (newline, tab, 5 spaces, 200 chars, empty), count matches the template, never at body start or end.
-- [ ] `copy.py`: date formatting nl/en/pt in Europe/Amsterdam across the DST change (2026-10-25) and in America/Sao_Paulo.
-- [ ] Recap send rule: 17:59 no, 18:00 yes, 18:05 second tick no (row exists), 21:01 no (past catch-up), recap time in a DST gap still fires.
+- [x] `templates.py`: every variable sanitised (newline, tab, 5 spaces, 200 chars, empty), count matches the template, never at body start or end.
+- [x] `copy.py`: date formatting nl/en/pt in Europe/Amsterdam across the DST change (2026-10-25) and in America/Sao_Paulo.
+- [x] Recap send rule: 17:59 no, 18:00 yes, 18:05 second tick no (row exists), 21:01 no (past catch-up), recap time in a DST gap still fires.
 - [ ] Zero-activity day writes a `skipped` row and the next window starts at its end.
-- [ ] Dedup: two concurrent `record_event` with one key, exactly one dispatch.
-- [ ] Voice mapping table: each outcome and intent maps as specified; demo calls ignored.
+- [x] Dedup: two concurrent `record_event` with one key, exactly one dispatch.
+- [x] Voice mapping table: each outcome and intent maps as specified; demo calls ignored.
 
 **Integration (staging data on a test account, never Robben's leads):**
 - [ ] Create a test account with Gabriel's email and number as recipients.

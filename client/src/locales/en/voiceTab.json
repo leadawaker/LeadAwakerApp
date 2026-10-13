@@ -57,6 +57,20 @@
       "on": "Soft office sound under the receptionist's voice",
       "off": "Off",
       "help": "Callers hear a quiet office in the background. Only the caller hears it, and it stops when you take a transferred call."
+    },
+    "summaryNone": "No number attached yet",
+    "summaryHelp": "The number, the client's documents and Go live are on the Integrations tab.",
+    "summaryManage": "Manage in Integrations",
+    "region": {
+      "label": "Call region",
+      "help": "Where this line's calls are handled. Pick the one closest to the client's callers: every part of a call then stays in that region, which keeps the sound clean. For Brazil, the United States is the closest.",
+      "options": {
+        "Europe": "Europe",
+        "US": "United States",
+        "Canada": "Canada",
+        "Australia": "Australia",
+        "Middle East": "Middle East"
+      }
     }
   },
   "persona": {
@@ -74,7 +88,8 @@
     "title": "Receptionist voice",
     "help": "How the receptionist introduces itself and sounds on the phone.",
     "name": "Receptionist name",
-    "pronunciation": "Pronunciation"
+    "pronunciation": "Pronunciation",
+    "intake": "What the team wants to know before an appointment"
   },
   "transfer": {
     "title": "Transfer",
@@ -228,5 +243,147 @@
       "help": "If the caller's number is not on WhatsApp, the same message goes out once as a text message from this name. People cannot reply to it.",
       "invalid": "Use up to 11 letters, digits or spaces, with at least one letter."
     }
+  },
+  "numberDocs": {
+    "card": {
+      "title": "Documents for their own number",
+      "help": "A Dutch phone number has to be registered in the client's own company name. Send the client this private link: they fill in the company details and upload the documents, which go straight to the phone carrier (Telnyx).",
+      "create": "Create the link",
+      "createNew": "Start a new request",
+      "link": "Link for the client",
+      "copy": "Copy",
+      "copied": "Copied",
+      "waiting": "Waiting for the client to send it.",
+      "submitted": "The client has sent everything.",
+      "documents": "Documents at Telnyx"
+    },
+    "page": {
+      "title": "A phone number for {{company}}",
+      "intro": "Your AI receptionist gets her own phone number, registered in your company's name. The phone carrier is required by Dutch law to check who a number belongs to. It takes about three minutes.",
+      "privacy": "Telnyx is the licensed telecom carrier that provides your number, and the one required to check these documents. They go straight to Telnyx over a secure connection; Lead Awaker stores no copy and they are only used to register your number.",
+      "detailsTitle": "Company details",
+      "documentsTitle": "Documents",
+      "documentsHelp": "PDF, JPG or PNG, up to 10 MB each. A clear photo taken with your phone is fine.",
+      "fields": {
+        "legalName": "Official company name",
+        "kvkNumber": "KvK number",
+        "representative": "Your full name",
+        "contactPhone": "Phone number",
+        "street": "Street and number",
+        "postalCode": "Postcode",
+        "city": "City"
+      },
+      "docs": {
+        "kvk": {
+          "title": "KvK extract",
+          "help": "A recent extract from the Chamber of Commerce (kvk.nl)."
+        },
+        "id": {
+          "title": "Passport or ID card",
+          "help": "Of the person who represents the company. You may cover the BSN."
+        },
+        "address": {
+          "title": "Proof of address",
+          "help": "An energy, internet or phone bill for the company address, no older than 3 months."
+        }
+      },
+      "upload": "Choose file",
+      "replace": "Replace",
+      "uploading": "Uploading…",
+      "send": "Submit",
+      "invalid": "This link is not valid. Ask Lead Awaker for a new one.",
+      "done": {
+        "title": "Thank you, everything has arrived",
+        "body": "We will now request your number. You do not need to do anything else; we will let you know when it is ready."
+      },
+      "errors": {
+        "tooLarge": "This file is larger than 10 MB.",
+        "fileType": "Please choose a PDF, JPG or PNG file.",
+        "upload": "The upload did not go through. Please try again.",
+        "save": "Sending did not work. Please try again.",
+        "detailsMissing": "Please fill in all the company details.",
+        "documentsMissing": "Please upload all three documents."
+      },
+      "secure": "Secure connection",
+      "steps": {
+        "details": "Company details",
+        "documents": "Documents",
+        "send": "Send"
+      },
+      "footer": "Lead Awaker · AI receptionists for local businesses",
+      "minutes": "About 3 minutes",
+      "carrierLabel": "Number registration by",
+      "carrierTitle": "Who is Telnyx?"
+    },
+    "plan": {
+      "title": "Which number to order",
+      "areaCode": "Area code",
+      "find": "Show numbers in stock",
+      "areaHelp": "Telnyx only accepts an area code that matches the client's address (073 for Den Bosch).",
+      "none": "No numbers in stock for this area code right now.",
+      "anyNumber": "Any free number in this area code",
+      "price": "${{upfront}} once, ${{monthly}}/month",
+      "picked": "Picked:",
+      "auto": "Order this number the moment the client submits",
+      "autoHelp": "If the picked number is gone by then, the first free one in the same area code is ordered. Telnyx then checks the documents, which took two days for our own 073.",
+      "orderNow": "Order the number now"
+    },
+    "order": {
+      "title": "Number order at Telnyx",
+      "status": {
+        "placing": "Ordering…",
+        "pending": "Waiting for Telnyx's check",
+        "success": "Approved",
+        "failure": "Turned down"
+      },
+      "help": {
+        "placing": "",
+        "pending": "Telnyx is checking the client's documents. This card checks again every time it opens.",
+        "success": "The number is the client's. Attach it to start using it, then go live when it is ready.",
+        "failure": ""
+      },
+      "attach": "Attach to this account",
+      "failed": "The order did not go through: {{error}}"
+    }
+  },
+  "notice": {
+    "label": "Recording notice",
+    "on": "Callers hear this line before the receptionist answers",
+    "off": "Off",
+    "help": "Calls are recorded, and callers have to be told before the call starts. A short recorded line in a different voice does that.",
+    "routeOnly": "Plays on lines with a screened transfer or the office sound switched on.",
+    "edit": "Edit line",
+    "title": "Recording notice",
+    "standardTag": "Standard line",
+    "customTag": "Your own line",
+    "current": "What callers hear now",
+    "play": "Play",
+    "pause": "Pause",
+    "text": "The line",
+    "textHelp": "One short sentence. {{count}} of {{max}} characters.",
+    "voice": "Voice",
+    "voiceHelp": "Press play to hear each voice say the standard line. Listening is free.",
+    "female": "female",
+    "male": "male",
+    "speed": "Speed",
+    "generate": "Generate clip",
+    "generating": "Making the clip…",
+    "draft": "Your draft, {{seconds}} seconds",
+    "use": "Use this clip",
+    "reset": "Back to the standard line",
+    "failed": "That did not work. Try again.",
+    "loadFailed": "This clip could not be played.",
+    "standard": {
+      "nl": "Voor kwaliteit en training nemen we dit gesprek op.",
+      "en-GB": "Calls are recorded to help us improve our service.",
+      "en-US": "To help us serve you better, this call is recorded.",
+      "pt-BR": "Para melhorar nosso atendimento, esta ligação é gravada.",
+      "pt-PT": "Para melhorarmos o nosso serviço, esta chamada é gravada."
+    },
+    "makers": {
+      "openai": "OpenAI voices",
+      "google": "Google voices"
+    },
+    "unsaved": "Not saved yet. Press Generate clip, listen to it, then Use this clip to save it."
   }
 }

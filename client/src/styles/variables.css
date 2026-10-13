@@ -62,6 +62,13 @@
     hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) + 4%)),
     hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) - 5%)));
 
+  /* Home dashboard banner: a dark chapter opener, identical in light and dark mode. */
+  --home-banner-night: #1A0E11;
+  --home-banner-oxblood: #3E1520;
+  --home-banner-wine: #6E2638;
+  --home-banner-text: #F7F1E6;
+  --home-banner-accent: #EBB9A8;
+
   /* ── Grounds & surfaces, derived ── */
   --background: var(--ground-page);
   --bg-main: var(--ground-page);

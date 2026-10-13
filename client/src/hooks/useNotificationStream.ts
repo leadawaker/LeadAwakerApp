@@ -32,7 +32,12 @@ export type NotificationType =
   | "lead_manual_takeover"
   | "critical_automation_failure"
   | "campaign_finished"
-  | "voice_abuse";
+  | "voice_abuse"
+  | "booking_rescheduled"
+  | "booking_cancelled"
+  | "callback_requested"
+  | "daily_recap"
+  | "client_reply";
 
 export interface Notification {
   id: number;
@@ -62,6 +67,11 @@ interface CountResponse {
 const NOTIFICATION_VARIANT: Record<string, "default" | "destructive" | "success" | "info"> = {
   booking: "success",
   booking_confirmed: "success",
+  booking_rescheduled: "info",
+  booking_cancelled: "destructive",
+  callback_requested: "destructive",
+  daily_recap: "info",
+  client_reply: "info",
   campaign: "info",
   campaign_finished: "info",
   task: "default",

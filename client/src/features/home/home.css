@@ -1,124 +1,57 @@
-/* Home Hub — scoped interaction + reveal styles.
-   Ported from the Claude Design mockup's <style> block. The `.home-*` hover/
-   animation classes live only here (the utility classes .row/.eyebrow/.rule/
-   .la-btn/.dot already exist in the global design system). Tokens are the live
-   project tokens, so dark mode follows automatically. `--sh-raised-tall` does
-   not exist in the live project, so the badge-hover shadow uses
-   `--sh-raised-large`. */
-
-/* ── small inset mono chip (service tags) ───────────────────────────── */
-.home-tag {
+/* Home dashboard (specs/home-dashboard). */
+.home-banner {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: 208px;
+  padding: 28px 32px;
+  border-radius: var(--r-card);
+  overflow: hidden;
+  color: var(--home-banner-text);
+  background: linear-gradient(100deg, var(--home-banner-night) 0%, var(--home-banner-oxblood) 58%, var(--home-banner-wine) 100%);
+}
+.home-banner__art {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 62%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  /* Fade the picture into the dark on the left so the number stays readable. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 55%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 55%);
+}
+.home-banner__text { position: relative; max-width: 56%; }
+.home-banner__eyebrow {
   font-family: var(--mono);
-  font-size: 9px;
-  font-weight: 600;
-  letter-spacing: 0.13em;
+  font-size: 11px;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  white-space: nowrap;
-  padding: 3px 9px;
-  border-radius: var(--r-flush);
-  background: var(--surface);
-  box-shadow: var(--sh-inset-crisp);
-  flex-shrink: 0;
+  color: var(--home-banner-accent);
 }
+.home-banner__value {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 76px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  margin-top: 10px;
+}
+.home-banner__sentence { font-family: var(--serif); font-size: 19px; margin-top: 6px; }
+.home-banner__trend { display: flex; align-items: center; gap: 4px; font-size: 13px; margin-top: 12px; color: var(--home-banner-accent); }
 
-/* ── card + tile hovers ──────────────────────────────────────────────── */
-.home-card {
-  transition: box-shadow 140ms, transform 140ms;
-}
-.home-card:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sh-raised-large);
-}
-.home-quick {
-  transition: transform 120ms, box-shadow 120ms;
-}
-.home-quick:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sh-raised-medium) !important;
-}
-.home-quick:active {
-  transform: translateY(0);
-  box-shadow: var(--sh-inset-crisp) !important;
-}
-.home-quick:hover span:last-child {
-  color: var(--wine);
-}
-.home-needs-row:hover,
-.home-act-row:hover {
-  background: var(--wine-tint);
-}
-.home-addbtn:hover {
-  background: var(--wine-tint) !important;
-}
-.home-open:hover {
-  gap: 9px !important;
-}
-.home-openbtn {
-  transition: transform 120ms, box-shadow 120ms;
-}
-.home-openbtn:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--sh-raised-medium) !important;
-}
-.home-openbtn:active {
-  transform: translateY(0);
-  box-shadow: var(--sh-inset-crisp) !important;
-}
+.home-bar { height: 6px; border-radius: 999px; background: var(--wine-tint); overflow: hidden; }
+.home-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--wine); transition: width 400ms ease; }
 
-/* ── north-star clickable header (mascot/badge + service name) ───────── */
-.home-nsopen .ns-name {
-  transition: color 140ms;
-}
-.home-nsopen .ns-mascot {
-  transition: transform 200ms cubic-bezier(0.22, 0.7, 0.25, 1);
-}
-.home-nsopen:hover .ns-mascot {
-  transform: translateY(-3px) scale(1.02);
-}
-.home-nsopen:hover .ns-name {
-  color: var(--wine);
-}
-.home-nsopen:focus-visible {
-  outline: none;
-}
-.home-nsopen:focus-visible .ns-name {
-  color: var(--wine);
-}
+.home-row { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--line); }
+.home-row:last-child { border-bottom: 0; }
+button.home-row { width: 100%; text-align: left; background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
+button.home-row:hover { background: var(--wine-tint); }
 
-/* ── microanimations (resting state is always visible; JS adds `.shown`) ─ */
-@media (prefers-reduced-motion: no-preference) {
-  .home-stage .home-rise {
-    opacity: 0;
-    transform: translateY(16px);
-    transition: opacity 0.6s cubic-bezier(0.22, 0.7, 0.25, 1),
-      transform 0.6s cubic-bezier(0.22, 0.7, 0.25, 1);
-  }
-  .home-stage.shown .home-rise {
-    opacity: 1;
-    transform: none;
-  }
-
-  /* sparkline draws itself in once revealed */
-  .home-stage .spark-draw {
-    stroke-dasharray: 2000;
-    stroke-dashoffset: 2000;
-    transition: stroke-dashoffset 1s cubic-bezier(0.4, 0.1, 0.2, 1) 0.3s;
-  }
-  .home-stage.shown .spark-draw {
-    stroke-dashoffset: 0;
-  }
-  .home-stage .spark-area {
-    opacity: 0;
-    transition: opacity 0.5s ease 0.7s;
-  }
-  .home-stage.shown .spark-area {
-    opacity: 1;
-  }
-
-  .home-open svg {
-    transition: transform 160ms;
-  }
-  .home-open:hover svg {
-    transform: translateX(3px);
-  }
+@media (max-width: 767px) {
+  .home-banner { min-height: 150px; padding: 20px; }
+  .home-banner__art { width: 100%; opacity: 0.45; }
+  .home-banner__text { max-width: 100%; }
+  .home-banner__value { font-size: 54px; }
+  .home-banner__sentence { font-size: 16px; }
 }

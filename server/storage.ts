@@ -27,6 +27,16 @@ import { voiceLinesStorage } from "./storage/voiceLines";
 import { voiceStatsStorage } from "./storage/voiceStats";
 import { siteVisitsStorage } from "./storage/siteVisits";
 import { whatsappSendersStorage } from "./storage/whatsappSenders";
+import { clientAlertsStorage } from "./storage/clientAlerts";
+import { numberRequestsStorage } from "./storage/numberRequests";
+import { homeServicesStorage } from "./storage/homeServices";
+import { homeOverviewStorage } from "./storage/homeOverview";
+import { homePhoneStorage } from "./storage/homePhone";
+import { homeMessagingStorage } from "./storage/homeMessaging";
+import { homeWebsiteStorage } from "./storage/homeWebsite";
+import { homeReactivationStorage } from "./storage/homeReactivation";
+import { homeReputationStorage } from "./storage/homeReputation";
+import { homeSocialStorage } from "./storage/homeSocial";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -95,4 +105,14 @@ export const storage = {
   ...voiceStatsStorage,
   ...siteVisitsStorage,
   ...whatsappSendersStorage,
+  ...clientAlertsStorage,
+  ...numberRequestsStorage,
+  ...homeServicesStorage,
+  ...homeOverviewStorage,
+  ...homePhoneStorage,
+  ...homeMessagingStorage,
+  ...homeWebsiteStorage,
+  ...homeReactivationStorage,
+  ...homeReputationStorage,
+  ...homeSocialStorage,
 };

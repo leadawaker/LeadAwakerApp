@@ -27,8 +27,9 @@ CRM routes are registered in `pages/app.tsx`; top-level routes in `App.tsx`. **E
 | Prompt Library | `features/prompts/pages/PromptsPage.tsx` | Imported directly in app.tsx |
 | AI Agents | `features/ai-agents/pages/AgentsPage.tsx` + `AgentChatPage.tsx` | Imported directly in app.tsx |
 | Automation Logs | `pages/AutomationLogs.tsx` | Automations overview (service groups, health, diary panel) — agency admin only |
+| Home | `features/home/pages/HomePage.tsx` | `/platform/home`, every role, default landing. Tabs Overview, Phone, WhatsApp, Website, Reactivation, Reputation, Social (clients see only the ones their services allow); each tab is its own lazy chunk in `features/home/tabs/`. Data from `features/home/api/homeApi.ts` (`/api/home/*`, server pins clients to their account); helpers in `features/home/lib/{homeFormat,openCall}.ts`; shared parts in `features/home/components/{HomeBanner,StatRow,BarList,DayChart,RowList,EmptyState}.tsx`; styles in `features/home/home.css`. Server and shared files: see Home Dashboard |
 | Traffic | `features/traffic/pages/TrafficPage.tsx` | `/platform/traffic`, Owner only: the public site's visitors + Google Search Console (see Traffic Feature) |
-| Settings | `pages/Settings.tsx` | Thin composition; sections live in `features/settings/components/{ProfileSection,NotificationsSection,DashboardSection,SettingsMobileHub,SettingsFields}.tsx` + `features/settings/types.ts` |
+| Settings | `pages/Settings.tsx` | Thin composition; sections live in `features/settings/components/{ProfileSection,NotificationsSection,SettingsMobileHub,SettingsFields}.tsx` + `features/settings/types.ts` |
 | Docs | `pages/Docs.tsx` | In-app Operator Manual + Client Guide |
 | Lead Detail (standalone) | `pages/LeadDetail.tsx` | Full-page lead view |
 | Prospect Detail (standalone) | `pages/ProspectDetail.tsx` | Full-page prospect view |
@@ -72,7 +73,6 @@ The marketing site (leadawaker.com landing) is static files in `client/public/pr
 | SupportChat | `SupportChat.tsx` | Support chat trigger/launcher |
 | AgendaWidget | `AgendaWidget.tsx` | Calendar upcoming-items widget |
 | ActivityFeed | `ActivityFeed.tsx` | Timeline feed for detail panels |
-| BookedCallsKpi | `BookedCallsKpi.tsx` | KPI card component |
 | DateRangeFilter | `DateRangeFilter.tsx` | Shared date range filter |
 | SearchModal | `SearchModal.tsx` | Global search modal |
 | DbStatusIndicator | `DbStatusIndicator.tsx` | 34px circle + status dot badge |
@@ -275,7 +275,6 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 | useSupportChat | `useSupportChat.ts` | Support chat widget state |
 | useChatDoodle | `useChatDoodle.ts` | Chat doodle canvas state |
 | usePersistedSelection | `usePersistedSelection.ts` | Persist selected lead/campaign |
-| useDashboardWidgetPrefs | `useDashboardWidgetPrefs.ts` | Widget preferences storage |
 | useDashboardRefreshInterval | `useDashboardRefreshInterval.ts` | Dashboard refresh timer |
 | use-toast | `use-toast.ts` | Toast notifications |
 
@@ -345,6 +344,21 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 | automationTypes | `shared/automationTypes.ts` | Overview / diary / per-client response types |
 | server automations | `server/automations/*` | Health rules, per-client gates, overview and per-client builders |
 | automationDiary | `server/storage/automationDiary.ts` | Diary read/write storage (90-day retention) |
+
+---
+
+## Home Dashboard (`features/home/` + server)
+
+Client files are in the Home row of the pages table above. Server and shared files:
+
+| Component | File | Notes |
+|-----------|------|-------|
+| routes | `server/routes/home.ts`, `server/routes/homeScope.ts` | Eight `GET /api/home/{services,overview,phone,whatsapp,website,reactivation,reputation,social}`; `homeScope` resolves account + period (clients, view-as and any user off account 1 are locked to their own account; junk period falls back to `month`). Tests: `homeScope.test.ts` |
+| Home storage | `server/storage/home{Services,Overview,Phone,Messaging,Website,Reactivation,Reputation,Social}.ts` | One `getHome*` method each (spread into the `storage` barrel) |
+| homeSql | `server/storage/homeSql.ts` | Shared SQL fragments (live lead, live call, receptionist stream, needs callback, human reply), table names, period bounds in the account timezone. Fixed aliases: `i` Interactions, `l` Leads, `c` Campaigns, `vc` Voice_Calls |
+| homePeriod | `shared/homePeriod.ts` | Period to date range (`periodDates`, `eachDay`, `todayIn`, `isHomePeriod`). Tests: `homePeriod.test.ts` |
+| homeTypes | `shared/homeTypes.ts` | Response shapes for the eight endpoints, `HomePeriod`, `HomeChannel`, `HomeTab` |
+| interactionChannel | `server/storage/interactionChannel.ts` | `manualReplyChannel`: the `Interactions.channel` stamp for a reply typed in the CRM (the engine stamps its own rows). Tests: `interactionChannel.test.ts` |
 
 ---
 

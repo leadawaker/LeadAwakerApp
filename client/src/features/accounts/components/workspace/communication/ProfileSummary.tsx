@@ -1,10 +1,12 @@
 import { useTranslation } from "react-i18next";
+import { normalizeAlertSettings } from "@shared/clientAlerts";
+import { useAlertSettings } from "../alerts/alertsApi";
 import type { LucideIcon } from "lucide-react";
 import {
   Sparkles, SlidersHorizontal, Eye, Quote, Bot, MessageSquareWarning, Handshake,
   Banknote, Wallet, Truck, ShieldCheck, HelpCircle, Award, AlertTriangle,
   CheckCircle2, XCircle, CalendarClock, Phone,
-  LayoutGrid, Boxes, UserRound, BellRing, PhoneForwarded, AudioLines, SpellCheck, Moon,
+  LayoutGrid, Boxes, UserRound, BellRing, PhoneForwarded, AudioLines, SpellCheck, ClipboardList, Moon,
   Globe, MessageCircle, Link2,
 } from "lucide-react";
 import {
@@ -12,6 +14,7 @@ import {
   type ProfileAnswers, type PreferredWordGroup, type FactValues, type SectionKey,
 } from "./profileConstants";
 import type { QAGrids } from "./useOnboardingFacts";
+import { normalizeIntake } from "@shared/voiceIntake";
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -53,6 +56,7 @@ const STEP_ICON: Record<string, LucideIcon> = {
   voiceForwarding: PhoneForwarded,
   voiceSound: AudioLines,
   voicePronunciation: SpellCheck,
+  voiceIntake: ClipboardList,
   voiceAfterHours: Moon,
   widgetSetup: Globe,
   whatsappNumber: MessageCircle,
@@ -85,6 +89,7 @@ const STEP_COLOR: Record<string, string> = {
   voiceForwarding: "var(--stage-contacted)",
   voiceSound: "var(--stage-responded)",
   voicePronunciation: "var(--stage-new)",
+  voiceIntake: "var(--stage-qualified)",
   voiceAfterHours: "var(--stage-multi)",
   widgetSetup: "var(--stage-new)",
   whatsappNumber: "var(--stage-booked)",
@@ -103,11 +108,16 @@ const SECTION_COLUMNS: SectionKey[][][] = [
 const DAY_ORDER = [1, 2, 3, 4, 5, 6, 0];
 const hhmm = (v: string | null) => (v ? v.slice(0, 5) : "");
 
-export function ProfileSummary({ answers, facts, grids, booking, onEditStep }: {
+export function ProfileSummary({ accountId, answers, facts, grids, booking, onEditStep }: {
+  accountId?: number;
   answers: ProfileAnswers; facts: FactValues; grids: QAGrids; booking?: BookingSnapshot | null; onEditStep?: (stepIndex: number) => void;
 }) {
+  // The recap and its channels are saved apart from the wizard's answers
+  // (alert settings route): read them live, the answers hold the copy from page load.
+  const { settings: alertSettings } = useAlertSettings(accountId ?? 0);
   const { t } = useTranslation("communicationProfile");
   const { t: tAccounts } = useTranslation("accounts");
+  const { t: tAlerts } = useTranslation("clientAlerts");
   const notSet = t("summary.notSet");
 
   function label(key: string, kind: string) {
@@ -185,7 +195,20 @@ export function ProfileSummary({ answers, facts, grids, booking, onEditStep }: {
         return join([handoff.name.trim(), handoff.number.trim()]);
       case "handoffRules":
         if (!handoff.ringWhen) return notSet;
-        return join([q(`options.${handoff.ringWhen}.label`), handoff.recap ? `${q("recapLabel")} ${handoff.recapTime}` : null]);
+        {
+          // Recap channels live in setup.alerts (Recaps & alerts tab / wizard picker).
+          const alerts = alertSettings?.alerts ?? normalizeAlertSettings((answers.setup as unknown as Record<string, unknown>).alerts);
+          const recapOn = alertSettings?.recap.enabled ?? handoff.recap;
+          const recapTime = alertSettings?.recap.time ?? handoff.recapTime;
+          const chans = (["email", "whatsapp"] as const)
+            .filter((c) => alerts.channels.recap[c] || alerts.channels.alerts[c])
+            .map((c) => tAlerts(`wizard.${c}`)).join(" + ");
+          return join([
+            q(`options.${handoff.ringWhen}.label`),
+            recapOn ? `${q("recapLabel")} ${recapTime}` : null,
+            recapOn && chans ? chans : null,
+          ]);
+        }
       case "voiceForwarding":
         if (!voice.lines.length) return notSet;
         return join([
@@ -198,6 +221,10 @@ export function ProfileSummary({ answers, facts, grids, booking, onEditStep }: {
       case "voicePronunciation": {
         const rows = voice.pronunciation.filter((r) => r.word.trim());
         return rows.length ? rows.map((r) => r.word.trim()).join(", ") : notSet;
+      }
+      case "voiceIntake": {
+        const items = normalizeIntake(voice.intake);
+        return items ? items.split("\n").join(" / ") : notSet;
       }
       case "voiceAfterHours":
         return voice.afterHours ? q(`options.${voice.afterHours}.label`) : notSet;

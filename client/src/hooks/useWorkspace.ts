@@ -136,6 +136,17 @@ export function useWorkspace(): WorkspaceState {
     localStorage.setItem(KEY, String(currentAccountIdState));
   }, [currentAccountIdState, isAgencyUser]);
 
+  // A stored selection can outlive its account (deleted since, or picked in an
+  // older session). Drop it back to agency mode: otherwise pages that filter by
+  // this id come up empty while the switcher shows some other account.
+  useEffect(() => {
+    if (!isAgencyUser || currentAccountIdState === 0 || accountsList.length === 0) return;
+    if (accountsList.some((a) => a.id === currentAccountIdState)) return;
+    setCurrentAccountIdState(0);
+    localStorage.setItem(KEY, "0");
+    localStorage.removeItem(SELECTED_KEY);
+  }, [isAgencyUser, currentAccountIdState, accountsList]);
+
   const setCurrentAccountId = (id: number) => {
     if (isAgencyUser) {
       setCurrentAccountIdState(id);
@@ -161,7 +172,7 @@ export function useWorkspace(): WorkspaceState {
     // 0 = "All Accounts" / Agency mode — no specific account selected
     if (currentAccountIdState === 0) return null;
     if (accountsList.length > 0) {
-      return accountsList.find((a) => a.id === currentAccountIdState) ?? accountsList[0];
+      return accountsList.find((a) => a.id === currentAccountIdState) ?? null;
     }
     // Fallback for non-agency users who don't fetch accounts
     return ownAccount ?? {

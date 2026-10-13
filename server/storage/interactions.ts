@@ -104,9 +104,39 @@ import {
 
 import type { NotificationItem, ProspectsListParams } from "./types";
 import { prospectsStorage } from "./prospects";
+import { manualReplyChannel } from "./interactionChannel";
 
 // Safety cap for no-arg full-table fetches that feed global views / AI tools.
 const MAX_UNPAGINATED_ROWS = 5000;
+
+// The dashboard channel for a message to this lead, or null when there is no lead
+// or the transport is not one the CRM sends on. Never throws: a failed lookup must
+// not stop the message from being saved.
+async function resolveLeadMessageChannel(leadsId: unknown): Promise<string | null> {
+  if (typeof leadsId !== "number") return null;
+  try {
+    const [lead] = await db
+      .select({
+        channelIdentifier: leads.channelIdentifier,
+        campaignsId: leads.campaignsId,
+      })
+      .from(leads)
+      .where(eq(leads.id, leadsId));
+    if (!lead) return null;
+    let campaignChannel: string | null = null;
+    if (lead.campaignsId != null) {
+      const [campaign] = await db
+        .select({ channel: campaigns.channel })
+        .from(campaigns)
+        .where(eq(campaigns.id, lead.campaignsId));
+      campaignChannel = campaign?.channel ?? null;
+    }
+    return manualReplyChannel(lead, campaignChannel);
+  } catch (err) {
+    console.warn("[interactions] could not work out the message channel:", err);
+    return null;
+  }
+}
 
 export const interactionsStorage = {
   // ─── Interactions ───────────────────────────────────────────────────
@@ -245,10 +275,14 @@ export const interactionsStorage = {
 
   async createInteraction(data: InsertInteractions): Promise<Interactions> {
     const now = new Date();
+    // A person's reply to a lead carries no channel from the caller: work it out
+    // from the lead so the Home dashboard counts it under the right transport.
+    const channel = (data as any).channel ?? (await resolveLeadMessageChannel((data as any).leadsId));
     const [row] = await db.insert(interactions).values({
       createdAt: now,
       updatedAt: now,
       ...data,
+      ...(channel ? { channel } : {}),
     } as any).returning();
     return row;
   },

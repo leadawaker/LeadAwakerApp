@@ -112,18 +112,20 @@ export function CatTag({ color, label, big }: { color: string; label: string; bi
 }
 
 // ── Stat card (port of BStat) ──────────────────────────────────────────────────
-export function StatCard({ label, value, sub, accent, icon, flat }: {
+export function StatCard({ label, value, sub, accent, icon, flat, filled }: {
   label: ReactNode; value: ReactNode; sub?: ReactNode; accent?: string; icon?: ReactNode; flat?: boolean;
+  /** Wine-filled variant (Home dashboard). Ignores `accent`. */
+  filled?: boolean;
 }) {
   return (
-    <div className={flat ? "" : "neu-raised"} style={{ flex: "1 1 0", minWidth: 0, padding: "16px 18px", borderRadius: "var(--r-card)", position: "relative", overflow: "hidden", ...(flat ? { background: "transparent", border: "1px solid var(--line)" } : {}) }}>
-      {accent && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: accent }} />}
+    <div className={flat ? "" : "neu-raised"} style={{ flex: "1 1 0", minWidth: 0, padding: "16px 18px", borderRadius: "var(--r-card)", position: "relative", overflow: "hidden", ...(flat ? { background: "transparent", border: "1px solid var(--line)" } : {}), ...(filled ? { background: "var(--wine-grad)" } : {}) }}>
+      {accent && !filled && <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: accent }} />}
       <div className="row" style={{ justifyContent: "space-between", gap: 8 }}>
-        <span className="eyebrow eyebrow-sm">{label}</span>
-        {icon && <span style={{ color: accent || "var(--mute-2)", display: "flex" }}>{icon}</span>}
+        <span className="eyebrow eyebrow-sm" style={filled ? { color: "var(--home-banner-accent)" } : undefined}>{label}</span>
+        {icon && <span style={{ color: filled ? "var(--home-banner-accent)" : accent || "var(--mute-2)", display: "flex" }}>{icon}</span>}
       </div>
-      <div className="serif" style={{ fontSize: 32, color: "var(--ink)", lineHeight: 1.05, marginTop: 8, letterSpacing: "-0.01em" }}>{value}</div>
-      {sub && <div style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 5 }}>{sub}</div>}
+      <div className="serif" style={{ fontSize: 32, color: filled ? "var(--home-banner-text)" : "var(--ink)", lineHeight: 1.05, marginTop: 8, letterSpacing: "-0.01em" }}>{value}</div>
+      {sub && <div style={{ fontSize: 11.5, color: filled ? "var(--home-banner-accent)" : "var(--mute)", marginTop: 5 }}>{sub}</div>}
     </div>
   );
 }

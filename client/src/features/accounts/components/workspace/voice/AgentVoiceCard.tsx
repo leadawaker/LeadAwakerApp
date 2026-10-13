@@ -1,4 +1,5 @@
-// Agent name, voice, language, greeting, pronunciation and after-hours behaviour.
+// Agent name, voice, language, greeting, pronunciation, what to ask before an
+// appointment, and after-hours behaviour.
 // Options and labels are the onboarding wizard's (setupConstants + the
 // communicationProfile namespace), so the tab and the wizard cannot drift.
 import { useMemo, useState } from "react";
@@ -10,6 +11,7 @@ import {
   AFTER_HOURS, FEMININE_VOICE_OPTIONS, MASCULINE_VOICE_OPTIONS, VOICE_LOCALES, VOICE_OPTIONS, nameForVoice,
   type PronunciationRow,
 } from "../communication/setupConstants";
+import { IntakeEditor } from "../communication/IntakeEditor";
 import { VoiceCardShell, FieldLabel, ReadOnlyValue, SaveRow, helpStyle, inputStyle, useDraft } from "./voiceAtoms";
 import type { AfterHoursMode, VoiceLine, VoiceLinePatch } from "./voiceApi";
 
@@ -20,6 +22,7 @@ interface AgentDraft {
   locale: string;
   greeting: string;
   pronunciation: PronunciationRow[];
+  intake: string;
   afterHours: AfterHoursMode | "";
 }
 
@@ -30,6 +33,7 @@ const fromLine = (l: VoiceLine): AgentDraft => ({
   locale: l.locale ?? "",
   greeting: l.greeting ?? "",
   pronunciation: l.pronunciation ?? [],
+  intake: l.intake ?? "",
   afterHours: l.afterHours ?? "",
 });
 
@@ -65,6 +69,7 @@ export function AgentVoiceCard({ line, canEdit, saving, onSave }: {
       locale: draft.locale || null,
       greeting: draft.greeting,
       pronunciation: draft.pronunciation.filter((r) => r.word.trim() && r.sayAs.trim()),
+      intake: draft.intake,
       afterHours: draft.afterHours || null,
     });
     if (!ok) setFailed(true);
@@ -188,6 +193,16 @@ export function AgentVoiceCard({ line, canEdit, saving, onSave }: {
           ) : draft.pronunciation.length ? (
             <ReadOnlyValue value={draft.pronunciation.map((r) => `${r.word} → ${r.sayAs}`).join("\n")} />
           ) : <ReadOnlyValue />}
+        </div>
+
+        <div>
+          <FieldLabel>{t("voiceTab:agent.intake")}</FieldLabel>
+          {canEdit ? (
+            <>
+              <p style={helpStyle}>{cp("voiceIntake.help")}</p>
+              <IntakeEditor value={draft.intake} onChange={(intake) => set({ intake })} />
+            </>
+          ) : <ReadOnlyValue value={draft.intake} />}
         </div>
 
         <div>

@@ -88,6 +88,54 @@
     "creating": "Creating...",
     "cancel": "Cancel"
   },
+  "integrationGroups": {
+    "messaging": {
+      "title": "Messaging",
+      "help": "How customers message this business, and which assistant answers.",
+      "short": "WhatsApp",
+      "hint": "Not connected"
+    },
+    "website": {
+      "title": "Website",
+      "help": "The chat window on the client's own site.",
+      "short": "Website chat",
+      "hint": "No site set"
+    },
+    "bookings": {
+      "title": "Calendar and bookings",
+      "help": "Where appointments land, and the page customers book on.",
+      "short": "Calendar",
+      "hint": "No calendar linked"
+    },
+    "phone": {
+      "title": "Phone",
+      "help": "The number the assistant answers on, and the paperwork for a number in the client's name.",
+      "short": "Phone",
+      "hint": "No number attached"
+    },
+    "state": {
+      "phone": {
+        "on": "Live",
+        "pending": "Not live yet",
+        "off": "Not set"
+      },
+      "messaging": {
+        "on": "Connected",
+        "pending": "Needs testing",
+        "off": "Not set"
+      },
+      "website": {
+        "on": "Live",
+        "pending": "Switched off",
+        "off": "Not set"
+      },
+      "bookings": {
+        "on": "Linked",
+        "pending": "Booking page only",
+        "off": "Not set"
+      }
+    }
+  },
   "sections": {
     "basicInfo": "Basic Information",
     "contact": "Contact",
@@ -188,7 +236,7 @@
     "syncInstagram": "Sync Instagram Contacts",
     "syncingContacts": "Syncing contacts...",
     "syncFailed": "Sync failed",
-    "selectExecution": "Select an execution to view its pipeline",
+    "selectExecution": "Select an account to see its details",
     "cropLogo": "Crop Logo",
     "cropDescription": "Drag to reposition · use slider to zoom",
     "saveLogo": "Save Logo",
@@ -428,8 +476,9 @@
       "overview": "Overview",
       "integrations": "Integrations",
       "knowledge": "Company Intel",
-      "communication": "Communication",
+      "communication": "Onboarding",
       "voice": "Phone line",
+      "alerts": "Recaps & alerts",
       "automations": "Automations"
     },
     "createAccount": "Create account",
@@ -493,7 +542,9 @@
       "createNew": "Create contract"
     },
     "preflightReady": "Ready to activate",
-    "preflightNotReady": "Not ready to activate"
+    "preflightNotReady": "Not ready to activate",
+    "voiceNotes": "WhatsApp voice notes",
+    "voiceNotesHelp": "The voice and speaking style of the voice notes the assistant sends on WhatsApp, per language."
   },
   "calendar": {
     "title": "Calendar",
@@ -699,5 +750,45 @@
     "title": "WhatsApp from new contacts",
     "subtitle": "Who answers when someone messages this number for the first time.",
     "off": "Nobody (messages ignored)"
+  },
+  "services": {
+    "title": "Services",
+    "campaignUsage_one": "{{count}} campaign, {{active}} active",
+    "campaignUsage_other": "{{count}} campaigns, {{active}} active",
+    "whatsappMode": {
+      "app": "also on the client's phone",
+      "new": "assistant only",
+      "manual": "entered by hand"
+    },
+    "rows": {
+      "phone": "Phone receptionist",
+      "whatsapp": "WhatsApp",
+      "website": "Website chat",
+      "campaigns": "Text campaigns"
+    },
+    "state": {
+      "phone": {
+        "on": "Live",
+        "pending": "Not live yet",
+        "off": "Not set up"
+      },
+      "whatsapp": {
+        "on": "Connected",
+        "pending": "Needs testing",
+        "off": "Not set up"
+      },
+      "website": {
+        "on": "Live",
+        "pending": "Switched off",
+        "off": "Not set up"
+      },
+      "campaigns": {
+        "on": "Running",
+        "pending": "None active",
+        "off": "None"
+      }
+    },
+    "phoneUsage_one": "{{count}} call this month, {{bookings}} booked",
+    "phoneUsage_other": "{{count}} calls this month, {{bookings}} booked"
   }
 }

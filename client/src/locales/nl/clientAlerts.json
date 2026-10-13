@@ -1,0 +1,127 @@
+{
+  "common": {
+    "saveFailed": "Opslaan lukte niet. Probeer het opnieuw.",
+    "loadFailed": "De instellingen voor overzichten en meldingen konden niet worden geladen."
+  },
+  "readOnly": "Lead Awaker beheert deze instellingen voor je. Vraag je contactpersoon bij Lead Awaker om ze te wijzigen.",
+  "notConfigured": "Overzichten en meldingen zijn voor dit account nog niet ingesteld. Voeg een ontvanger toe of wijzig een instelling om het dagoverzicht aan te zetten.",
+  "recap": {
+    "title": "Dagoverzicht",
+    "help": "Eén bericht per dag met de telefoontjes, chats en afspraken, en wat er op het team wacht. Op een dag zonder activiteit wordt niets verstuurd.",
+    "enabled": "Stuur een dagoverzicht",
+    "enabledHelp": "Eén keer per dag op de tijd hieronder, in de tijdzone van het account.",
+    "time": "Versturen om",
+    "timezone": "Tijdzone",
+    "channels": "Kanalen voor het overzicht"
+  },
+  "language": {
+    "label": "Taal",
+    "auto": "Zoals het account",
+    "nl": "Nederlands",
+    "en": "Engels",
+    "pt": "Portugees (Brazilië)"
+  },
+  "channels": {
+    "crm": "In het CRM",
+    "email": "E-mail",
+    "whatsapp": "WhatsApp",
+    "crmHelpRecap": "Een melding voor de eigen gebruikers van de klant in Lead Awaker.",
+    "emailHelpRecap": "Het volledige overzicht met namen en tijden, naar elke e-mailontvanger.",
+    "whatsappHelpRecap": "De cijfers van de dag en een knop, verstuurd vanaf het WhatsApp-nummer van Lead Awaker.",
+    "crmHelpAlerts": "Een melding voor de gebruikers van de klant en het team van Lead Awaker.",
+    "emailHelpAlerts": "Alle details van de gebeurtenis, naar elke e-mailontvanger.",
+    "whatsappHelpAlerts": "Een kort bericht met een knop, verstuurd vanaf het WhatsApp-nummer van Lead Awaker."
+  },
+  "instant": {
+    "title": "Directe meldingen",
+    "help": "Gaan direct uit wanneer er iets gebeurt dat niet tot het dagoverzicht kan wachten.",
+    "channels": "Kanalen voor meldingen",
+    "includePhone": "Toon het nummer van de beller in WhatsApp",
+    "includePhoneHelp": "Zo kan het team direct vanuit het bericht terugbellen. Uit: het nummer staat alleen in Lead Awaker en in de e-mail."
+  },
+  "types": {
+    "daily_recap": {
+      "label": "Dagoverzicht",
+      "help": ""
+    },
+    "appointment_booked": {
+      "label": "Nieuwe afspraak",
+      "help": "Een klant boekte via de telefoon, een chat of de boekingspagina."
+    },
+    "appointment_rescheduled": {
+      "label": "Afspraak verzet",
+      "help": "Een klant heeft de afspraak naar een ander moment verzet."
+    },
+    "appointment_cancelled": {
+      "label": "Afspraak geannuleerd",
+      "help": "Alleen als de klant annuleerde, niet als het team dat deed."
+    },
+    "callback_requested": {
+      "label": "Terugbelverzoek",
+      "help": "Een beller wil teruggebeld worden, liet een bericht achter, of een doorverbinding werd niet opgenomen."
+    },
+    "lead_needs_reply": {
+      "label": "Reactie nodig",
+      "help": "De assistent heeft een chat gepauzeerd en een medewerker moet antwoorden. Maximaal één keer per klant per dag."
+    }
+  },
+  "quiet": {
+    "title": "Stille uren",
+    "enabled": "WhatsApp-meldingen 's nachts vasthouden",
+    "help": "WhatsApp-meldingen in deze uren gaan uit zodra ze voorbij zijn. E-mail en het CRM worden nooit vastgehouden.",
+    "from": "Van",
+    "to": "Tot"
+  },
+  "recipients": {
+    "title": "Ontvangers",
+    "help": "Wie de overzichten en meldingen krijgt. Voor WhatsApp is een naam nodig, die opent elk bericht.",
+    "emailTitle": "E-mail",
+    "whatsappTitle": "WhatsApp",
+    "name": "Naam",
+    "email": "E-mailadres",
+    "number": "WhatsApp-nummer",
+    "remove": "Verwijderen",
+    "addEmail": "E-mail toevoegen",
+    "addWhatsapp": "WhatsApp-nummer toevoegen",
+    "suggest": "{{name}} ({{number}}) toevoegen",
+    "consent": "Akkoord met WhatsApp-updates van Lead Awaker",
+    "noConsent": "Geen berichten tot er akkoord is",
+    "optedOut": "Stuurde STOP",
+    "resubscribe": "Wil de updates weer ontvangen",
+    "badEmail": "Een van de e-mailadressen klopt niet.",
+    "nameRequired": "Elk WhatsApp-nummer heeft een naam nodig.",
+    "saveFailed": "De ontvangers konden niet worden opgeslagen. Controleer de nummers en probeer het opnieuw."
+  },
+  "test": {
+    "title": "Test versturen",
+    "help": "Stuurt een voorbeeld met verzonnen gegevens via de echte route naar de ontvangers van dit account.",
+    "type": "Wat versturen",
+    "email": "Test-e-mail sturen",
+    "whatsapp": "Test-WhatsApp sturen",
+    "sent_one": "Test verstuurd naar {{count}} ontvanger.",
+    "sent_other": "Test verstuurd naar {{count}} ontvangers.",
+    "failed": "De test is niet verstuurd: {{error}}",
+    "errors": {
+      "no_recipients": "Voeg eerst een ontvanger toe (voor WhatsApp moet het akkoord aangevinkt zijn).",
+      "engine_unavailable": "De automation-engine reageerde niet. Probeer het over een minuut opnieuw.",
+      "engine_not_restarted": "De automation-engine is nog niet herstart met deze functie."
+    }
+  },
+  "wizard": {
+    "channelsLabel": "Overzicht en meldingen versturen via",
+    "email": "E-mail",
+    "whatsapp": "WhatsApp",
+    "emailPlaceholder": "naam@bedrijf.nl",
+    "whatsappTo": "WhatsApp-updates sturen naar {{name}} op {{number}}",
+    "whatsappNoNumber": "Vul hierboven het overdrachtsnummer in om WhatsApp-updates te sturen.",
+    "consent": "{{name}} gaat akkoord met WhatsApp-updates van Lead Awaker",
+    "saveFailed": "De instellingen voor het overzicht konden niet worden opgeslagen.",
+    "team": "team"
+  },
+  "go": {
+    "loading": "Lead Awaker wordt geopend...",
+    "notFound": "Deze link opent niets voor jou.",
+    "notFoundHelp": "Hij hoort misschien bij een ander account, of het item is verwijderd.",
+    "open": "Lead Awaker openen"
+  }
+}

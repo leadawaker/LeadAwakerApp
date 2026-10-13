@@ -292,6 +292,13 @@
       "add": "Adicionar palavra",
       "remove": "Remover"
     },
+    "voiceIntake": {
+      "label": "O que a equipe quer saber antes de um agendamento",
+      "short": "Antes do agendamento",
+      "help": "Um item por linha, até 6. A recepcionista pergunta só o que a pessoa ainda não contou, com as próprias palavras, antes de oferecer um horário.",
+      "placeholder": "Qual carro interessa\nSe tem carro para dar na troca (marca, ano, quilometragem)\nSe vai comprar à vista ou financiar\nQuando quer pegar o carro",
+      "overLimit": "Só os {{items}} primeiros itens são usados, cada um com até {{chars}} caracteres."
+    },
     "voiceAfterHours": {
       "label": "O que acontece com ligações fora do horário?",
       "short": "Fora do horário",

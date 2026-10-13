@@ -49,9 +49,12 @@ export default function AccountsPage() {
 
   // ── Data ───────────────────────────────────────────────────────────────────
   const { rows: allRows, loading, fetchData, handleInlineUpdate, handleCreateRow } = useAccountsData(undefined);
+  // Agency users always see every account here: this page is where they pick
+  // one, so narrowing it to the nav bar switcher's account left a single icon
+  // and no way back from this page. The switcher's account is preselected instead.
   const rows = useMemo(
-    () => (currentAccountId > 0 ? allRows.filter((r) => (r.id ?? r.Id) === currentAccountId) : allRows),
-    [allRows, currentAccountId],
+    () => (currentAccountId > 0 && !isAgencyUser ? allRows.filter((r) => (r.id ?? r.Id) === currentAccountId) : allRows),
+    [allRows, currentAccountId, isAgencyUser],
   );
 
   // ── Persisted selection ────────────────────────────────────────────────────
@@ -68,8 +71,19 @@ export default function AccountsPage() {
   // - Mobile agency: stay list-first, user taps to open.
   useEffect(() => {
     if (isMobile && isAgencyUser) return;
-    if (!selectedAccount && rows.length > 0) setSelectedAccount(rows[0] as AccountRow);
-  }, [rows, selectedAccount, setSelectedAccount, isMobile, isAgencyUser]);
+    if (!selectedAccount && rows.length > 0) {
+      const switched = rows.find((r) => (r.id ?? r.Id) === currentAccountId);
+      setSelectedAccount((switched ?? rows[0]) as AccountRow);
+    }
+  }, [rows, selectedAccount, setSelectedAccount, isMobile, isAgencyUser, currentAccountId]);
+
+  // Picking an account in the nav bar switcher opens it here too.
+  useEffect(() => {
+    if (!isAgencyUser || currentAccountId <= 0) return;
+    const switched = rows.find((r) => (r.id ?? r.Id) === currentAccountId);
+    if (switched) setSelectedAccount(switched as AccountRow);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentAccountId, isAgencyUser]);
 
   // ── Breadcrumb ─────────────────────────────────────────────────────────────
   const { setCrumb } = useBreadcrumb();

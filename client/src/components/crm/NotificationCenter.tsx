@@ -21,6 +21,11 @@ import {
   Workflow,
   Trash2,
   ShieldBan,
+  CalendarClock,
+  CalendarX,
+  PhoneCall,
+  Newspaper,
+  Reply,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNotificationStream } from "@/hooks/useNotificationStream";
@@ -59,6 +64,12 @@ const TYPE_CONFIG: Record<string, { icon: typeof Bell; color: string; bgColor: s
   critical_automation_failure:  { icon: AlertOctagon,   color: "text-rose-600",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-600" },
   campaign_finished:            { icon: Flag,           color: "text-emerald-500",        bgColor: "bg-emerald-500/10",   borderColor: "border-l-emerald-500" },
   voice_abuse:                  { icon: ShieldBan,      color: "text-rose-600",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-600" },
+  // Client alerts (specs/client-recaps)
+  booking_rescheduled:          { icon: CalendarClock,  color: "text-[#DA9426]",          bgColor: "bg-[#DA9426]/10",     borderColor: "border-l-[#DA9426]" },
+  booking_cancelled:            { icon: CalendarX,      color: "text-rose-500",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-500" },
+  callback_requested:           { icon: PhoneCall,      color: "text-orange-500",         bgColor: "bg-orange-500/10",    borderColor: "border-l-orange-500" },
+  daily_recap:                  { icon: Newspaper,      color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
+  client_reply:                 { icon: Reply,          color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
 
   // ── Legacy broad types (existing API) ──────────────────────────────────
   message:    { icon: MessageSquare,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
@@ -150,6 +161,11 @@ export function NotificationCenter({
     booking: "bookings",
     booking_confirmed: "bookings",
     booking_reminder: "bookings",
+    booking_rescheduled: "bookings",
+    booking_cancelled: "bookings",
+    callback_requested: "messages",
+    client_reply: "messages",
+    daily_recap: "system",
     campaign: "system",
     campaign_finished: "system",
     system: "system",

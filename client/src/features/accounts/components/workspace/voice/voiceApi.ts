@@ -55,11 +55,16 @@ export interface VoiceLine {
   transferHoldMusic: string;
   transferMode: TransferMode;
   officeSound: boolean;
+  region: VoiceRegion;
+  /** The recorded "this call is recorded" line before she answers. `custom` null: the standard line. */
+  recordingNotice: { enabled: boolean; custom: RecordingNoticeCustom | null };
   screening: Screening;
   /** On a PUT that can move a number: the engine's wiring sync, or its error. useVoiceLine keeps the last one. */
   wiring?: NumberWiring[] | { error: string };
   greeting: string | null;
   pronunciation: PronunciationRow[] | null;
+  /** What the team wants to know before an appointment, one item per line; "" when not set. */
+  intake: string | null;
   afterHours: AfterHoursMode | null;
   extraInstructions: string | null;
   /** The WhatsApp message after each call. `whatsappConnected`: the account's own number can send. */
@@ -84,9 +89,13 @@ export interface VoiceLinePatch {
   transferHoldMusic?: string;
   transferMode?: TransferMode;
   officeSound?: boolean;
+  region?: VoiceRegion;
+  recordingNotice?: boolean;
   screening?: Partial<Screening>;
   greeting?: string | null;
   pronunciation?: PronunciationRow[];
+  /** Trimmed and cut to 6 lines of 120 characters by the server. */
+  intake?: string;
   afterHours?: AfterHoursMode | null;
   extraInstructions?: string;
   followUpEnabled?: boolean;
@@ -95,6 +104,22 @@ export interface VoiceLinePatch {
   /** Switch the attached number on (real callers reach her) or off. */
   live?: boolean;
 }
+
+export type NoticeVoice = "nova" | "sage" | "ash" | "onyx" | "kore" | "aoede" | "puck" | "charon";
+/** Where Telnyx places a line's call legs (engine telnyx_bridge.py REGIONS). */
+export const VOICE_REGIONS = ["Europe", "US", "Canada", "Australia", "Middle East"] as const;
+export type VoiceRegion = (typeof VOICE_REGIONS)[number];
+
+export interface RecordingNoticeCustom {
+  text: string;
+  voice: NoticeVoice;
+  speed: number;
+  seconds: number;
+  v: number;
+}
+
+/** A rendered draft: the same fields plus where to hear it. */
+export type RecordingNoticeDraft = RecordingNoticeCustom & { url: string };
 
 export interface VoiceStats {
   month: string;
@@ -179,6 +204,32 @@ export async function fetchBlockedCallers(accountId: number): Promise<BlockedCal
 export async function unblockCaller(accountId: number, blockId: number): Promise<void> {
   const res = await apiFetch(`/api/accounts/${accountId}/voice/blocked/${blockId}`, { method: "DELETE" });
   if (!res.ok) throw await readError(res, "Failed to unblock");
+}
+
+export async function draftRecordingNotice(
+  accountId: number, body: { text: string; voice: NoticeVoice; speed: number },
+): Promise<RecordingNoticeDraft> {
+  const res = await apiFetch(`/api/accounts/${accountId}/voice/recording-notice/draft`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw await readError(res, "Failed to make the clip");
+  return res.json();
+}
+
+/** Make the last draft the clip callers hear; returns the fresh line. */
+export async function applyRecordingNotice(accountId: number): Promise<VoiceLine> {
+  const res = await apiFetch(`/api/accounts/${accountId}/voice/recording-notice/apply`, { method: "POST" });
+  if (!res.ok) throw await readError(res, "Failed to save the clip");
+  return res.json();
+}
+
+/** Back to the standard line; returns the fresh line. */
+export async function resetRecordingNotice(accountId: number): Promise<VoiceLine> {
+  const res = await apiFetch(`/api/accounts/${accountId}/voice/recording-notice`, { method: "DELETE" });
+  if (!res.ok) throw await readError(res, "Failed to reset the clip");
+  return res.json();
 }
 
 /** The wiring error of a save, if the engine could not wire every number. */

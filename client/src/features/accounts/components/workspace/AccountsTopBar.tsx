@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import {
   Filter, Check, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
   PanelLeft, PanelLeftClose, MoreHorizontal, Trash2,
-  Building2, Link2, MessagesSquare, Phone, Zap,
+  Building2, Link2, MessagesSquare, Phone, Zap, BellRing,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -23,6 +23,7 @@ const TAB_ICONS: Record<WorkspaceTab, ReactNode> = {
   integrations: <Link2 size={13} />,
   communication: <MessagesSquare size={13} />,
   voice: <Phone size={13} />,
+  alerts: <BellRing size={13} />,
   automations: <Zap size={13} />,
 };
 const SORT_OPTIONS: AccountSortBy[] = ["recent", "name_asc", "name_desc"];

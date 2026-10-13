@@ -13,6 +13,10 @@ export interface WhatsappSender {
   appId: string;
   hasAppSecret: boolean;
   hasToken: boolean;
+  onboardingMode: "app" | "new" | null;
+  aiScope: "all" | "new_only" | "off";
+  resumeAfterHours: number | null;
+  resumeCommand: string;
   displayPhoneNumber: string | null;
   verifiedName: string | null;
   nameStatus: string | null;
@@ -123,7 +127,19 @@ export function useWhatsappSender(accountId: number) {
       qc.invalidateQueries({ queryKey: templatesKey(accountId) });
     },
   });
-  return { sender: query.data ?? null, loading: query.isLoading, loadError: query.error as Error | null, save, test };
+  // Meta's signup popup answered: the server swaps the code for the client's
+  // token and stores the sender, so nothing has to be pasted by hand.
+  const connect = useMutation({
+    mutationFn: (input: { mode: "app" | "new"; code: string; wabaId: string; phoneNumberId: string | null }) =>
+      call<{ sender: WhatsappSender }>(`${base(accountId)}/whatsapp-sender/connect`, "POST", input).then((r) => r.sender),
+    onSuccess: put,
+  });
+  const behaviour = useMutation({
+    mutationFn: (patch: Partial<Pick<WhatsappSender, "aiScope" | "resumeAfterHours" | "resumeCommand">>) =>
+      call<{ sender: WhatsappSender }>(`${base(accountId)}/whatsapp-sender/behaviour`, "PUT", patch).then((r) => r.sender),
+    onSuccess: put,
+  });
+  return { sender: query.data ?? null, loading: query.isLoading, loadError: query.error as Error | null, save, test, connect, behaviour };
 }
 
 /** The catalog rows with their status, plus submit (all, or one row) and refresh. */

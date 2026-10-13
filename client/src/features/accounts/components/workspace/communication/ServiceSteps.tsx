@@ -10,8 +10,11 @@ import {
   SERVICES, VOICE_LINES, FORWARD_WHEN, RING_WHEN, AFTER_HOURS, WA_NUMBER_CHOICE, WA_APP_TYPE,
   VOICE_OPTIONS, VOICE_LOCALES, MOBILE_FORWARD_CODES, type ReceptionistSetup,
 } from "./setupConstants";
+import { IntakeEditor } from "./IntakeEditor";
 import { WebsiteChatCard, InboundWhatsAppCard } from "../WebsiteChatCard";
 import { MessagingCard } from "../MessagingCards";
+import { WizardAlertChannels } from "../alerts/WizardAlertChannels";
+import { WizardRecap } from "../alerts/WizardRecap";
 import type { AccountRow, AccountDetail } from "../types";
 
 // Recommended picks (badge only, never preselected).
@@ -121,20 +124,31 @@ export function ServiceStep({ stepKey, services, onServicesChange, setup, onSetu
           <div>
             <Label>{q("recapLabel")}</Label>
             <p style={help}>{q("recapHelp")}</p>
-            <div style={{ display: "flex", gap: 9, alignItems: "center", flexWrap: "wrap" }}>
-              <Chip selected={handoff.recap} onClick={() => onSetupChange("handoff", { recap: true })} label={q("recapOn")} />
-              <Chip selected={!handoff.recap} onClick={() => onSetupChange("handoff", { recap: false })} label={q("recapOff")} />
-              {handoff.recap && (
-                <input
-                  type="time"
-                  value={handoff.recapTime}
-                  onChange={(e) => onSetupChange("handoff", { recapTime: e.target.value })}
-                  aria-label={q("recapTime")}
-                  className="neu-inset-crisp"
-                  style={{ ...inputStyle, width: 120 }}
-                />
-              )}
-            </div>
+            {accountId ? (
+              <WizardRecap
+                accountId={accountId}
+                labels={{ on: q("recapOn"), off: q("recapOff"), time: q("recapTime") }}
+                onLocal={(patch) => onSetupChange("handoff", patch)}
+              />
+            ) : (
+              <div style={{ display: "flex", gap: 9, alignItems: "center", flexWrap: "wrap" }}>
+                <Chip selected={handoff.recap} onClick={() => onSetupChange("handoff", { recap: true })} label={q("recapOn")} />
+                <Chip selected={!handoff.recap} onClick={() => onSetupChange("handoff", { recap: false })} label={q("recapOff")} />
+                {handoff.recap && (
+                  <input
+                    type="time"
+                    value={handoff.recapTime}
+                    onChange={(e) => onSetupChange("handoff", { recapTime: e.target.value })}
+                    aria-label={q("recapTime")}
+                    className="neu-inset-crisp"
+                    style={{ ...inputStyle, width: 120 }}
+                  />
+                )}
+              </div>
+            )}
+            {handoff.recap && accountId ? (
+              <WizardAlertChannels accountId={accountId} handoffName={handoff.name} handoffNumber={handoff.number} />
+            ) : null}
           </div>
         </div>
       );
@@ -277,6 +291,14 @@ export function ServiceStep({ stepKey, services, onServicesChange, setup, onSetu
         </div>
       );
     }
+
+    case "voiceIntake":
+      return (
+        <div>
+          <p style={help}>{q("help")}</p>
+          <IntakeEditor value={voice.intake} onChange={(intake) => onSetupChange("voice", { intake })} />
+        </div>
+      );
 
     case "voiceAfterHours":
       return (

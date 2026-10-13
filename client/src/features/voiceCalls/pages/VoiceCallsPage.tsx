@@ -23,18 +23,31 @@ function initialView(): VoiceView {
   return readPref(VIEW_KEY) === "callers" ? "callers" : "calls";
 }
 
+/** A call opened from a client alert link (/go/:code): read once, then cleared. */
+function consumeCallDeepLink(): string | null {
+  try {
+    const id = localStorage.getItem("selected-voice-call-id");
+    if (id) localStorage.removeItem("selected-voice-call-id");
+    return id;
+  } catch {
+    return null;
+  }
+}
+
 function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }) {
+  const [deepLinkCall] = useState(consumeCallDeepLink);
   // The server decides: only an Owner (not impersonating) gets `demo`.
   const isOwner = capabilities.demo;
-  const [savedScope, setSavedScope] = useState<VoiceScope | null>(initialScope);
+  const [savedScope, setSavedScope] = useState<VoiceScope | null>(() => (deepLinkCall ? "live" : initialScope()));
   const scope: VoiceScope = isOwner ? savedScope ?? "demo" : "live";
   const [accountPick, setAccountPick] = useState<number | undefined>(undefined);
   const accountId = scope === "live" ? accountPick : undefined;
   const { masked, toggle } = usePresenting(isOwner);
 
   const { data: calls = [], isLoading, error } = useVoiceCalls(scope, accountId);
-  const [selection, setSelection] = useState<string | null>(null);
-  const [view, setView] = useState<VoiceView>(initialView);
+  const [selection, setSelection] = useState<string | null>(deepLinkCall);
+  // A link to one call opens the calls list, whatever view was used last.
+  const [view, setView] = useState<VoiceView>(() => (deepLinkCall ? "calls" : initialView()));
   const callersQuery = useVoiceCallers(scope, accountId, view === "callers");
   const [callerSelection, setCallerSelection] = useState<string | null>(null);
   const [options, setOptionsState] = useState<ListOptions>({ query: "", outcomes: [], statuses: [], languages: [], sort: "recent", group: "date" });

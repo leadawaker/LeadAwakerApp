@@ -1,82 +1,148 @@
 {
   "title": "Início",
-  "today": "Hoje",
-  "greeting": {
-    "morning": "Bom dia",
-    "afternoon": "Boa tarde",
-    "evening": "Boa noite"
+  "greeting": { "morning": "Bom dia", "afternoon": "Boa tarde", "evening": "Boa noite" },
+  "tabs": { "overview": "Visão geral", "phone": "Telefone", "whatsapp": "WhatsApp", "website": "Site", "reactivation": "Reativação", "reputation": "Reputação", "social": "Redes sociais" },
+  "period": { "label": "Período", "month": "Este mês", "7d": "Últimos 7 dias", "30d": "Últimos 30 dias", "last_month": "Mês passado" },
+  "vs": { "month": "em relação ao mês passado", "7d": "em relação aos 7 dias anteriores", "30d": "em relação aos 30 dias anteriores", "last_month": "em relação ao mês anterior" },
+  "channel": { "phone": "Telefone", "whatsapp": "WhatsApp", "sms": "SMS", "website": "Site", "booking_page": "Página de agendamento", "unknown": "Desconhecido" },
+  "allAccounts": "Todas as contas",
+  "loading": "Carregando",
+  "unknownContact": "Contato desconhecido",
+  "errorTitle": "Algo deu errado",
+  "error": "Não foi possível carregar esses números. Tente de novo em instantes.",
+  "empty": {
+    "noServicesTitle": "Sua recepcionista está sendo configurada",
+    "noServicesClient": "Assim que o seu primeiro serviço entrar no ar, os números aparecem aqui.",
+    "noServicesAgency": "Esta conta ainda não tem nenhum serviço ativo. Configure um no espaço de trabalho da conta.",
+    "noData": "Ainda não há nada neste período."
   },
-  "greetingSub": "Veja o que está acontecendo em todos os seus serviços.",
-  "pulse": {
+  "overview": {
+    "banner": "conversas atendidas",
+    "tiles": { "bookings": "Agendamentos", "callbacks": "Retornos pedidos", "newContacts": "Novos contatos", "waiting": "Esperando por você", "waitingSub": "Precisa da sua atenção", "waitingNone": "Tudo em dia" },
+    "byChannel": "Por canal",
+    "conversations": "Conversas",
     "bookings": "Agendamentos",
-    "sent": "Mensagens enviadas",
+    "smsNote": "mensagens enviadas, só como reserva",
+    "perDay": "Conversas por dia",
+    "attention": "Precisa de atenção",
+    "attentionEmpty": "Ninguém está esperando por você.",
+    "attentionKind": { "callback": "Pediu que você ligasse de volta", "transfer_failed": "A transferência para o escritório falhou", "handoff": "Aguardando resposta de uma pessoa" },
+    "activity": "Atividade recente",
+    "activityEmpty": "Ainda não há atividade neste período.",
+    "activityKind": { "booked": "Horário agendado", "call": "Ligação atendida", "transferred": "Ligação transferida para o escritório", "chat_started": "Nova conversa iniciada", "followup_sent": "Mensagem de acompanhamento enviada após a ligação" },
+    "unknownCaller": "Pessoa desconhecida",
+    "visitor": "Visitante do site"
+  },
+  "phone": {
+    "banner": "ligações atendidas",
+    "tiles": { "calls": "Ligações", "booked": "Agendadas", "transferred": "Transferidas", "transfersFailed_one": "{{count}} falhou", "transfersFailed_other": "{{count}} falharam", "avgLength": "Duração média" },
+    "perDay": "Ligações por dia",
+    "outcomes": "Resultados",
+    "outcome": { "booked": "Agendada", "callback": "Retorno", "transferred": "Transferida", "hung_up": "Desligou", "other": "Outro" },
+    "outOfHours": "das ligações chegaram fora do horário comercial",
+    "screened_one": "ligação de vendas ou robô barrada",
+    "screened_other": "ligações de vendas e robôs barradas",
+    "recent": "Ligações recentes",
+    "recentEmpty": "Ainda não há ligações neste período."
+  },
+  "whatsapp": {
+    "banner": "conversas no WhatsApp",
+    "tiles": {
+      "conversations": "Conversas",
+      "messages": "Mensagens",
+      "messagesSub": "{{in}} recebidas, {{out}} enviadas",
+      "bookings": "Agendamentos",
+      "handedOff": "Passadas para uma pessoa"
+    },
+    "perDay": "Conversas por dia",
+    "followUps_one": "acompanhamento enviado após uma ligação",
+    "followUps_other": "acompanhamentos enviados após ligações",
+    "sms": {
+      "title": "Plano B por SMS",
+      "note": "Enviado por SMS quando o número não tem WhatsApp. Só de ida.",
+      "sent": "Enviadas",
+      "delivered": "Entregues",
+      "failed": "Com falha",
+      "share": "{{pct}}% dos acompanhamentos após ligações foram por SMS"
+    },
+    "sender": {
+      "title": "Seu número de WhatsApp",
+      "connected": "Conectado",
+      "notConnected": "Não conectado",
+      "quality": "Qualidade: {{rating}}"
+    },
+    "recent": "Conversas recentes",
+    "recentEmpty": "Ainda não há conversas no WhatsApp neste período."
+  },
+  "website": {
+    "banner": "chats iniciados no seu site",
+    "tiles": {
+      "chats": "Chats iniciados",
+      "contacts": "Contatos captados",
+      "rate": "Taxa de captação",
+      "rateNone": "Ainda sem chats",
+      "bookings": "Agendamentos"
+    },
+    "perDay": "Chats por dia",
+    "recent": "Chats recentes",
+    "recentEmpty": "Ainda não há chats no site neste período."
+  },
+  "reactivation": {
+    "banner": "agendamentos de leads antigos",
+    "tiles": {
+      "contacted": "Leads contatados",
+      "replyRate": "Taxa de resposta",
+      "replyRateNone": "Ainda sem envios",
+      "bookings": "Agendamentos",
+      "costPerBooking": "Custo por agendamento",
+      "costNone": "Indisponível"
+    },
+    "allCampaigns": "Todas as campanhas",
+    "campaign": "Campanha",
+    "perDay": "Respostas e agendamentos por dia",
     "replies": "Respostas",
-    "reviews": "Avaliações"
-  },
-  "services": {
-    "open": "Abrir",
-    "reactivation": {
-      "name": "Reativação",
-      "northLabel": "Agendamentos marcados",
-      "delta": "+20% vs 7d",
-      "support1": "Taxa de resposta",
-      "support2": "Campanhas ativas"
-    },
-    "reputation": {
-      "name": "Reputação",
-      "northLabel": "Nota média",
-      "delta": "+0,3 vs 30d",
-      "support1": "Avaliações geradas",
-      "support2": "Solicitações enviadas"
-    },
-    "speed": {
-      "name": "Resposta Rápida",
-      "northLabel": "Resposta mediana",
-      "delta": "−18s vs 7d",
-      "support1": "Novos leads hoje",
-      "support2": "Agendados / recebidos"
-    },
-    "nurture": {
-      "name": "Nutrição"
-    }
-  },
-  "needs": {
-    "title": "Requer atenção",
-    "viewAll": "Ver tudo",
-    "action": "Abrir conversa",
-    "empty": "Nada requer sua atenção agora.",
-    "samples": {
-      "negFeedback": { "title": "Feedback negativo interceptado", "snippet": "“A equipe atrasou e deixou bagunça.”" },
-      "hotInbound": { "title": "Resposta quente aguardando", "snippet": "“Ótimo, quais são os próximos passos?”" },
-      "aiHandoff": { "title": "IA transferiu para um humano", "snippet": "Pontuação do lead 78" },
-      "stalledLead": { "title": "Lead parado: sem resposta", "snippet": "Visto pela última vez há 2d" },
-      "reviewRisk": { "title": "Risco de avaliação 1 estrela", "snippet": "Insatisfeito com o serviço" }
-    }
-  },
-  "activity": {
-    "title": "Atividade recente",
-    "allServices": "Todos os serviços",
-    "samples": {
-      "newReview": { "title": "Nova avaliação 5 estrelas publicada", "meta": "“Ótimo trabalho no telhado!”" },
-      "bookingConfirmed": { "title": "Agendamento confirmado", "meta": "Inspeção de telhado · 10:00" },
-      "replyReceived": { "title": "Resposta recebida", "meta": "“Parece bom, vamos fazer.”" },
-      "campaignSent": { "title": "Campanha enviada", "meta": "Leads inativos · Reativação" },
-      "sequenceSent": { "title": "Mensagem de sequência enviada", "meta": "Sequência de nutrição · Dia 3" }
-    }
-  },
-  "quick": {
-    "title": "Ações rápidas",
+    "pipeline": "Pipeline",
+    "pipelineEmpty": "Ainda não há leads nessas campanhas.",
+    "openCampaign": "Abrir campanha",
     "newCampaign": "Nova campanha",
     "importLeads": "Importar leads",
-    "newSequence": "Nova sequência"
+    "status": {"New": "Novo", "Contacted": "Contatado", "Responded": "Respondeu", "MultipleResponses": "Múltiplas Respostas", "Qualified": "Qualificado", "Booked": "Chamada Agendada", "Closed": "Fechado", "Lost": "Perdido", "DND": "Não Perturbe", "Unknown": "Desconhecido"}
   },
-  "explore": {
-    "title": "Explorar serviços",
-    "blurb": "Adicione mais poder ao seu CRM.",
-    "add": "Adicionar este serviço",
-    "upsell": {
-      "voice": { "name": "Recepcionista IA", "blurb": "Deixe a IA atender suas ligações e agendar serviços sem usar as mãos." },
-      "referral": { "name": "Motor de Indicações", "blurb": "Transforme serviços concluídos em um fluxo constante de indicações." }
-    }
+  "reputation": {
+    "banner": "novas avaliações no Google",
+    "tiles": {
+      "avgRating": "Nota média",
+      "avgNone": "Ainda sem avaliações",
+      "replied": "Respostas publicadas",
+      "awaiting": "Aguardando sua resposta",
+      "awaitingSub": "Abrir a caixa de avaliações",
+      "awaitingNone": "Tudo respondido", "awaitingClient": "Ainda não respondida",
+      "requests": "Pedidos de avaliação enviados"
+    },
+    "ratings": "Notas",
+    "stars_one": "{{count}} estrela",
+    "stars_other": "{{count}} estrelas",
+    "perDay": "Avaliações por dia",
+    "recent": "Avaliações recentes",
+    "recentEmpty": "Ainda não há avaliações neste período.",
+    "replied": "Respondida",
+    "notReplied": "Sem resposta ainda",
+    "anonymous": "Anônimo",
+    "notConnected": "As avaliações do Google ainda não estão conectadas. Conecte seu Perfil da Empresa no Google para ver as avaliações aqui."
+  },
+  "social": {
+    "banner": "conversas vindas do Instagram",
+    "tiles": {
+      "conversations": "Conversas",
+      "messages": "Mensagens",
+      "messagesSub": "{{in}} recebidas, {{out}} enviadas",
+      "bookings": "Agendamentos",
+      "bookingRate": "Taxa de agendamento",
+      "rateNone": "Ainda sem conversas"
+    },
+    "perDay": "Conversas por dia",
+    "recent": "Conversas recentes",
+    "recentEmpty": "Ainda não há conversas no Instagram neste período.",
+    "notConnected": "Nenhuma conta do Instagram está conectada ainda."
   }
 }

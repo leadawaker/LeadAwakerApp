@@ -21,7 +21,7 @@ export const RING_SECONDS = 20;
 
 // Cloudflare caches these for hours by full URL. Bump the version when a
 // track's file is replaced, so nobody is played the cached old one.
-const TRACKS_VERSION = 1;
+const TRACKS_VERSION = 2;
 export const holdTrackUrl = (id: string) => `${ENGINE_BASE_URL}/voice/phone/hold/${id}.mp3?v=${TRACKS_VERSION}`;
 
 /** A saved id that is still on the list, else the default. */

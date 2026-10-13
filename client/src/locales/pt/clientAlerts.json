@@ -1,0 +1,127 @@
+{
+  "common": {
+    "saveFailed": "Não deu para salvar. Tente de novo.",
+    "loadFailed": "Não foi possível carregar as configurações de resumos e alertas."
+  },
+  "readOnly": "O Lead Awaker cuida dessas configurações para você. Fale com seu contato no Lead Awaker para alterá-las.",
+  "notConfigured": "Resumos e alertas ainda não estão configurados nesta conta. Adicione um destinatário ou altere qualquer opção para ativar o resumo do dia.",
+  "recap": {
+    "title": "Resumo do dia",
+    "help": "Uma mensagem por dia com as ligações, conversas e agendamentos, e o que está esperando a equipe. Nada é enviado num dia sem atividade.",
+    "enabled": "Enviar um resumo do dia",
+    "enabledHelp": "Enviado uma vez por dia no horário abaixo, no fuso horário da conta.",
+    "time": "Enviar às",
+    "timezone": "Fuso horário",
+    "channels": "Canais do resumo"
+  },
+  "language": {
+    "label": "Idioma",
+    "auto": "Igual ao da conta",
+    "nl": "Holandês",
+    "en": "Inglês",
+    "pt": "Português (Brasil)"
+  },
+  "channels": {
+    "crm": "No CRM",
+    "email": "E-mail",
+    "whatsapp": "WhatsApp",
+    "crmHelpRecap": "Uma notificação para os usuários do próprio cliente no Lead Awaker.",
+    "emailHelpRecap": "O resumo completo com nomes e horários, para cada destinatário de e-mail.",
+    "whatsappHelpRecap": "Os números do dia e um botão, enviados pelo WhatsApp do Lead Awaker.",
+    "crmHelpAlerts": "Uma notificação para os usuários do cliente e para a equipe do Lead Awaker.",
+    "emailHelpAlerts": "Todos os detalhes do evento, para cada destinatário de e-mail.",
+    "whatsappHelpAlerts": "Uma mensagem curta com um botão, enviada pelo WhatsApp do Lead Awaker."
+  },
+  "instant": {
+    "title": "Alertas imediatos",
+    "help": "Enviados na hora quando acontece algo que não pode esperar o resumo do dia.",
+    "channels": "Canais dos alertas",
+    "includePhone": "Mostrar o número de quem ligou no WhatsApp",
+    "includePhoneHelp": "Assim a equipe retorna a ligação direto da mensagem. Desligado: o número fica só no Lead Awaker e no e-mail."
+  },
+  "types": {
+    "daily_recap": {
+      "label": "Resumo do dia",
+      "help": ""
+    },
+    "appointment_booked": {
+      "label": "Novo agendamento",
+      "help": "Um cliente agendou pelo telefone, por uma conversa ou pela página de agendamento."
+    },
+    "appointment_rescheduled": {
+      "label": "Agendamento remarcado",
+      "help": "Um cliente mudou o agendamento para outro horário."
+    },
+    "appointment_cancelled": {
+      "label": "Agendamento cancelado",
+      "help": "Só quando o cliente cancelou, não quando a equipe cancelou."
+    },
+    "callback_requested": {
+      "label": "Pedido de retorno",
+      "help": "Alguém ligou e pediu retorno, deixou um recado, ou uma transferência não foi atendida."
+    },
+    "lead_needs_reply": {
+      "label": "Resposta necessária",
+      "help": "A assistente pausou uma conversa e uma pessoa precisa responder. No máximo uma vez por cliente por dia."
+    }
+  },
+  "quiet": {
+    "title": "Horário de silêncio",
+    "enabled": "Segurar alertas de WhatsApp à noite",
+    "help": "Alertas de WhatsApp nesse horário saem quando ele termina. E-mail e CRM nunca ficam retidos.",
+    "from": "Das",
+    "to": "Até"
+  },
+  "recipients": {
+    "title": "Destinatários",
+    "help": "Quem recebe os resumos e alertas. Para o WhatsApp é preciso um nome, que abre cada mensagem.",
+    "emailTitle": "E-mail",
+    "whatsappTitle": "WhatsApp",
+    "name": "Nome",
+    "email": "Endereço de e-mail",
+    "number": "Número de WhatsApp",
+    "remove": "Remover",
+    "addEmail": "Adicionar e-mail",
+    "addWhatsapp": "Adicionar número de WhatsApp",
+    "suggest": "Adicionar {{name}} ({{number}})",
+    "consent": "Concordou em receber atualizações do Lead Awaker pelo WhatsApp",
+    "noConsent": "Sem mensagens até concordar",
+    "optedOut": "Enviou STOP",
+    "resubscribe": "Pediu para voltar a receber",
+    "badEmail": "Um dos endereços de e-mail não é válido.",
+    "nameRequired": "Cada número de WhatsApp precisa de um nome.",
+    "saveFailed": "Não deu para salvar os destinatários. Confira os números e tente de novo."
+  },
+  "test": {
+    "title": "Enviar um teste",
+    "help": "Envia um exemplo com dados inventados para os destinatários desta conta, pelo caminho real.",
+    "type": "O que enviar",
+    "email": "Enviar e-mail de teste",
+    "whatsapp": "Enviar WhatsApp de teste",
+    "sent_one": "Teste enviado para {{count}} destinatário.",
+    "sent_other": "Teste enviado para {{count}} destinatários.",
+    "failed": "O teste não foi enviado: {{error}}",
+    "errors": {
+      "no_recipients": "Adicione um destinatário primeiro (no WhatsApp, a caixa de consentimento precisa estar marcada).",
+      "engine_unavailable": "O motor de automação não respondeu. Tente de novo em um minuto.",
+      "engine_not_restarted": "O motor de automação ainda não foi reiniciado com esta função."
+    }
+  },
+  "wizard": {
+    "channelsLabel": "Enviar o resumo e os alertas por",
+    "email": "E-mail",
+    "whatsapp": "WhatsApp",
+    "emailPlaceholder": "nome@empresa.com.br",
+    "whatsappTo": "Enviar atualizações por WhatsApp para {{name}} no {{number}}",
+    "whatsappNoNumber": "Preencha o número de transferência acima para enviar atualizações por WhatsApp.",
+    "consent": "{{name}} concordou em receber atualizações do Lead Awaker pelo WhatsApp",
+    "saveFailed": "Não deu para salvar as configurações do resumo.",
+    "team": "equipe"
+  },
+  "go": {
+    "loading": "Abrindo o Lead Awaker...",
+    "notFound": "Este link não abre nada para você.",
+    "notFoundHelp": "Ele pode ser de outra conta, ou o item foi removido.",
+    "open": "Abrir o Lead Awaker"
+  }
+}

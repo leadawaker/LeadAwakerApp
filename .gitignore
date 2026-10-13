@@ -120,3 +120,4 @@ login.png
 client/public/images/*.png
 __pycache__/
 /proposals/
+script/home/img/

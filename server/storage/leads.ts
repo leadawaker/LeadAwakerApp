@@ -235,4 +235,44 @@ export const leadsStorage = {
       .where(eq(leadScoreHistory.leadsId, leadId))
       .orderBy(desc(leadScoreHistory.createdAt));
   },
+
+  /**
+   * Fill in a lead's name, phone and email from a contact form, by channel
+   * identifier. Returns false when no such lead exists yet.
+   *
+   * A real value already on the lead is never overwritten, and the database
+   * decides that, in one statement, so two submits cannot race each other:
+   *   - first_name is written only when it is empty, a placeholder ("Website
+   *     visitor"), or just a number (the voice line stores the caller's number
+   *     there until a name is known);
+   *   - last_name goes with it, and only when last_name is empty too;
+   *   - phone and Email are written only when the lead has none.
+   * The same rules as the engine's contact_capture.py, which applies them when
+   * a visitor types their details instead. Keep the two in step.
+   */
+  async fillLeadContact(
+    channelIdentifier: string,
+    accountId: number,
+    contact: { firstName: string; lastName: string; phone: string | null; email: string | null },
+  ): Promise<boolean> {
+    const nameIsEmpty = `(
+      COALESCE(btrim(first_name), '') = ''
+      OR lower(btrim(first_name)) IN ('website visitor', 'lead', 'unknown')
+      OR first_name !~ '[^0-9 +().-]'
+    )`;
+    const { rowCount } = await pool.query(
+      `UPDATE "p2mxx34fvbf3ll6"."Leads" SET
+          first_name = CASE WHEN ${nameIsEmpty} THEN $3 ELSE first_name END,
+          last_name = CASE WHEN ${nameIsEmpty} AND $4 <> '' AND COALESCE(btrim(last_name), '') = ''
+                           THEN $4 ELSE last_name END,
+          phone = CASE WHEN $5::text IS NOT NULL AND COALESCE(btrim(phone), '') = ''
+                       THEN $5 ELSE phone END,
+          "Email" = CASE WHEN $6::text IS NOT NULL AND COALESCE(btrim("Email"), '') = ''
+                         THEN $6 ELSE "Email" END,
+          updated_at = NOW()
+        WHERE channel_identifier = $1 AND "Accounts_id" = $2`,
+      [channelIdentifier, accountId, contact.firstName, contact.lastName, contact.phone, contact.email],
+    );
+    return (rowCount ?? 0) > 0;
+  },
 };

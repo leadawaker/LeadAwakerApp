@@ -1,4 +1,4 @@
-import { CheckCircle, Clock, AlertTriangle, CalendarCheck, MessageSquareWarning, Bot, Megaphone, MonitorPlay, Globe } from "lucide-react";
+import { CheckCircle, Clock, AlertTriangle, CalendarCheck, MessageSquareWarning, Bot, Megaphone, MonitorPlay, Globe, CalendarClock, CalendarX, PhoneCall, Newspaper } from "lucide-react";
 
 // ── User profile type ────────────────────────────────────────────────
 export type UserProfile = {
@@ -36,6 +36,10 @@ export const NOTIF_TYPE_KEYS = [
   { key: "task_due_soon", labelKey: "notifications.types.taskDueSoon", icon: Clock },
   { key: "task_overdue", labelKey: "notifications.types.taskOverdue", icon: AlertTriangle },
   { key: "booking_confirmed", labelKey: "notifications.types.bookingConfirmed", icon: CalendarCheck },
+  { key: "booking_rescheduled", labelKey: "notifications.types.bookingRescheduled", icon: CalendarClock },
+  { key: "booking_cancelled", labelKey: "notifications.types.bookingCancelled", icon: CalendarX },
+  { key: "callback_requested", labelKey: "notifications.types.callbackRequested", icon: PhoneCall },
+  { key: "daily_recap", labelKey: "notifications.types.dailyRecap", icon: Newspaper },
   { key: "lead_responded", labelKey: "notifications.types.leadResponded", icon: MessageSquareWarning },
   { key: "lead_manual_takeover", labelKey: "notifications.types.leadManualTakeover", icon: Bot },
   { key: "critical_automation_failure", labelKey: "notifications.types.criticalAutomationFailure", icon: AlertTriangle },

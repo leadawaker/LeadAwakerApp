@@ -1,7 +1,7 @@
 {
   "connect": {
     "title": "Número de WhatsApp",
-    "explainer": "Conecte o número de WhatsApp do próprio cliente. Cole os cinco dados da conta comercial do cliente na Meta e aperte o botão. Depois disso, você não precisa mais abrir a Meta para isso.",
+    "explainer": "Conecte o número de WhatsApp do próprio cliente. Escolha com o cliente como ele quer trabalhar; nos dois casos ele entra com o Facebook na janela da Meta e não é preciso colar nada.",
     "pill": {
       "none": "Não configurado",
       "pending": "Ainda não testado",
@@ -38,7 +38,8 @@
       "number": "Número",
       "verifiedName": "Nome exibido",
       "nameStatus": "Aprovação do nome",
-      "quality": "Qualidade"
+      "quality": "Qualidade",
+      "mode": "Configurado como"
     },
     "nameStatus": {
       "APPROVED": "Aprovado",
@@ -67,12 +68,47 @@
       "number_in_use": "Este ID de número de telefone já está conectado a outra conta.",
       "secrets_required": "Na primeira vez, a chave secreta e o token são obrigatórios.",
       "engine_unavailable": "O motor de automação não respondeu. Tente de novo em um minuto.",
-      "unknown": "Algo deu errado. Tente de novo."
+      "unknown": "Algo deu errado. Tente de novo.",
+      "app_secret_missing": "Falta no servidor o segredo do app da Lead Awaker na Meta (META_APP_SECRET).",
+      "meta_refused": "A Meta recusou a conexão.",
+      "number_unclear": "A conta do WhatsApp não tem número, ou tem mais de um. Preencha os dados à mão.",
+      "signup_cancelled": "A janela da Meta foi fechada antes de terminar."
     },
     "warnings": {
       "app_not_subscribed": "O envio funciona, mas as mensagens recebidas ainda não vão chegar: o aplicativo da Meta não está inscrito nesta conta do WhatsApp.",
       "webhook_unknown": "Não foi possível verificar se as mensagens recebidas vão chegar. O envio funciona.",
       "app_unknown": "Não foi possível verificar a chave secreta agora. O envio funciona. Aperte Testar a conexão de novo mais tarde."
+    },
+    "meta": "Conectar com a Meta",
+    "metaBusy": "Aguardando a Meta…",
+    "manual": "Preencher os dados à mão",
+    "manualHelp": "Para um cliente que criou o próprio app na Meta: cole os cinco valores da conta empresarial dele na Meta.",
+    "options": {
+      "app": {
+        "title": "Manter o WhatsApp no celular dele",
+        "body": "A assistente responde no número que o cliente já usa no app WhatsApp Business.",
+        "points": {
+          "a": "O cliente vê todas as conversas no celular, inclusive as respostas da assistente",
+          "b": "Ele pode responder um cliente direto pelo WhatsApp",
+          "c": "O que ele mesmo digita não custa nada"
+        },
+        "needs": "Requer: o número está no app WhatsApp Business (não no WhatsApp comum), e o celular é aberto pelo menos a cada duas semanas."
+      },
+      "new": {
+        "title": "Um número separado para a assistente",
+        "body": "Um número que só a assistente usa. Não fica no celular de ninguém.",
+        "points": {
+          "a": "O WhatsApp do cliente continua privado e intocado",
+          "b": "As conversas são lidas e respondidas no CRM",
+          "c": "Funciona com telefone fixo ou número novo"
+        },
+        "needs": "Requer: um número que ainda não está no WhatsApp e que recebe SMS ou ligação com o código."
+      }
+    },
+    "modeName": {
+      "app": "Também no celular do cliente",
+      "new": "Só a assistente",
+      "manual": "Preenchido à mão"
     }
   },
   "templates": {
@@ -127,5 +163,32 @@
       "engine_unavailable": "O motor de automação não respondeu. Tente de novo em um minuto.",
       "unknown": "Algo deu errado. Tente de novo."
     }
+  },
+  "behaviour": {
+    "title": "Como a assistente responde",
+    "saveFailed": "Não foi possível salvar. Tente de novo.",
+    "scopeLabel": "Quem a assistente responde",
+    "scope": {
+      "all": {
+        "title": "Todos",
+        "help": "Toda conversa neste número recebe resposta."
+      },
+      "new_only": {
+        "title": "Só contatos novos",
+        "help": "Quem já está no celular ou nas conversas do cliente fica com o cliente."
+      },
+      "off": {
+        "title": "Ninguém",
+        "help": "As mensagens ficam no CRM; ninguém recebe resposta automática."
+      }
+    },
+    "takeoverLabel": "Quando o cliente responde pelo celular",
+    "takeoverHelp": "Uma resposta pelo app do WhatsApp do cliente pausa a assistente naquela conversa. Ela volta quando o cliente manda o comando abaixo na conversa, ou depois do tempo de espera.",
+    "commandLabel": "Devolver com",
+    "autoLabel": "ou automaticamente",
+    "never": "nunca (só o comando)",
+    "afterHours_one": "depois de {{count}} hora de silêncio",
+    "afterHours_other": "depois de {{count}} horas de silêncio",
+    "commandVisible": "O cliente final também vê “{{command}}” na conversa: o WhatsApp envia tudo o que o cliente digita. Desligar a assunção manual na conversa no CRM devolve sem que ninguém veja."
   }
 }

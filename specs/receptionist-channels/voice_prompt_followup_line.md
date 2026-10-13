@@ -61,7 +61,7 @@ Option A is the wording from the implementation plan. It is what the code holds 
 | en-GB, en-US | When you have given the caller a time or a link, you can mention that the details will follow on WhatsApp. |
 | nl | Als je de beller een tijd of een link hebt gegeven, kun je zeggen dat de gegevens via WhatsApp volgen. |
 | pt-BR | Quando você tiver passado um horário ou um link, pode dizer que os detalhes chegam pelo WhatsApp. |
-| pt-PT | Quando tiver dado uma hora ou um link, pode dizer que os detalhes seguem por WhatsApp. |
+
 
 Option B is recommended for v1. Reason: on the phone she cannot give a link, and in v1 a voice booking on a client line is not real yet, so the message every caller gets is the link to plan an appointment. Option A can lead her to say "the details of your appointment will follow" and the caller then receives a booking link instead of a confirmation. Option B says what really arrives.
 
@@ -70,7 +70,7 @@ Option B is recommended for v1. Reason: on the phone she cannot give a link, and
 | en-GB, en-US | When the caller wants an appointment, you can say that a WhatsApp message with the link to plan it follows right after the call. |
 | nl | Als de beller een afspraak wil, kun je zeggen dat er direct na het gesprek een WhatsApp-bericht volgt met de link om die in te plannen. |
 | pt-BR | Quando a pessoa quiser marcar um horário, você pode dizer que logo depois da ligação chega uma mensagem no WhatsApp com o link para agendar. |
-| pt-PT | Quando a pessoa quiser marcar uma hora, pode dizer que logo a seguir à chamada chega uma mensagem no WhatsApp com o link para agendar. |
+
 
 To switch to option B, change the four strings in `followup_line.py` (`_TEXT`). When real voice booking on client lines exists and `VOICE_BOOKING_IS_REAL` is turned on, go back to option A or a wording that covers both.
 

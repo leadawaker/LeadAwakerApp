@@ -349,6 +349,13 @@
       "add": "Add word",
       "remove": "Remove"
     },
+    "voiceIntake": {
+      "label": "What the team wants to know before an appointment",
+      "short": "Before an appointment",
+      "help": "One item per line, up to 6. The receptionist asks only what the caller hasn't told her yet, in her own words, before offering an appointment.",
+      "placeholder": "Which car it is about\nWhether there is a trade-in (make, year, mileage)\nWhether they buy or lease\nWhen they want to drive it",
+      "overLimit": "Only the first {{items}} items are used, each up to {{chars}} characters."
+    },
     "voiceAfterHours": {
       "label": "What happens with calls outside opening hours?",
       "short": "After hours",

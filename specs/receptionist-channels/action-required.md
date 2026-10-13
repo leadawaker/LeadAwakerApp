@@ -42,7 +42,7 @@ Everything in the engine is dormant until it restarts. Order matters:
 2. [ ] Only after the restart: write `prompt_124_reception_text_v1_2.txt` to Prompt_Library 124 (nobody may have the prompt open in the CRM). Before the restart it would show raw `{{ASK_CONTACT}}` text to visitors.
 3. [ ] Set `handoff_on_first_request = true` on campaign 72.
 4. [ ] Pick the wording in `voice_prompt_followup_line.md` (the "details follow on WhatsApp" line for the phone AI).
-5. [ ] Decide the SMS wording: the approved text says "Just reply to this message" and the closing line says "or reply on WhatsApp", but the SMS is one-way and goes to people without WhatsApp.
+5. [x] SMS wording (2026-10-12): the SMS drops the template's "reply to this message" sentence and ends with "Questions or changes? Call {phone}." (`tools/channel_fallback.py`).
 6. [ ] The engine repo has this work uncommitted, mixed with other uncommitted voice work in the same files. Commit it together when that work is ready.
 
 ## After Implementation

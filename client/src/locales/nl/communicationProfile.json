@@ -349,6 +349,13 @@
       "add": "Woord toevoegen",
       "remove": "Verwijderen"
     },
+    "voiceIntake": {
+      "label": "Wat het team wil weten vóór een afspraak",
+      "short": "Vóór een afspraak",
+      "help": "Eén punt per regel, maximaal 6. De receptionist vraagt alleen wat de beller nog niet heeft verteld, in eigen woorden, voordat ze een afspraak aanbiedt.",
+      "placeholder": "Om welke auto het gaat\nOf er een inruilauto is (merk, bouwjaar, kilometerstand)\nOf de klant zelf koopt of leaset\nWanneer de klant wil rijden",
+      "overLimit": "Alleen de eerste {{items}} punten worden gebruikt, elk tot {{chars}} tekens."
+    },
     "voiceAfterHours": {
       "label": "Wat gebeurt er met gesprekken buiten openingstijden?",
       "short": "Buiten openingstijden",

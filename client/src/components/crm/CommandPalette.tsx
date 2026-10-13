@@ -81,7 +81,7 @@ export function CommandPalette() {
 
   // Navigation items
   const allNavItems: NavItem[] = useMemo(() => [
-    { href: `${prefix}/home`, labelKey: "sidebar.home", icon: Home, keywords: "home hub dashboard services", ownerOnly: true },
+    { href: `${prefix}/home`, labelKey: "sidebar.home", icon: Home, keywords: "home dashboard receptionist overview" },
     { href: `${prefix}/campaigns`, labelKey: "sidebar.reactivation", icon: Megaphone, keywords: "campaigns messages outreach drip reactivation" },
     // Speed to Lead links only for agency users (clients see it as "Soon" in the nav).
     { href: `${prefix}/speed-to-lead`, labelKey: "sidebar.speedToLead", icon: Send, keywords: "speed to lead fast response new leads", serviceKey: "speed", agencyOnly: true },

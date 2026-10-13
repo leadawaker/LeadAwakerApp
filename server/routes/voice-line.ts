@@ -1,10 +1,11 @@
-import type { Express, Request, Response } from "express";
+import type { Express } from "express";
 import { z } from "zod";
 import { storage } from "../storage";
 import { requireAuth, requireAgency } from "../auth";
-import { handleZodError, wrapAsync } from "./_helpers";
+import { accountIdFor, handleZodError, wrapAsync } from "./_helpers";
 import {
-  AFTER_HOURS, HOLD_MUSIC, TRANSFER_MODES, TRANSFER_WAITING, VOICE_LOCALES, VoiceLineError,
+  AFTER_HOURS, HOLD_MUSIC, NOTICE_SPEEDS, NOTICE_VOICES, TRANSFER_MODES, TRANSFER_WAITING, VOICE_LOCALES,
+  VOICE_REGIONS, VoiceLineError, type RecordingNoticeCustom,
 } from "../storage/voiceLines";
 
 // Account Workspace "Voice" tab (specs/voice-tab). Reads are open to the
@@ -37,6 +38,8 @@ const putBodySchema = z.object({
   transferHoldMusic: z.enum(HOLD_MUSIC).optional(),
   transferMode: z.enum(TRANSFER_MODES).optional(),
   officeSound: z.boolean().optional(),
+  region: z.enum(VOICE_REGIONS).optional(),
+  recordingNotice: z.boolean().optional(),
   screening: z.object({
     sales: z.boolean().optional(),
     robocalls: z.boolean().optional(),
@@ -47,6 +50,8 @@ const putBodySchema = z.object({
     word: z.string().max(80),
     sayAs: z.string().max(120),
   })).max(50).optional(),
+  // Trimmed and cut to 6 lines of 120 characters on save (storage/voiceLines.ts).
+  intake: z.string().max(5000).optional(),
   afterHours: z.enum(AFTER_HOURS).nullable().optional(),
   extraInstructions: z.string().max(1000, "Extra instructions are limited to 1000 characters").optional(),
   followUpEnabled: z.boolean().optional(),
@@ -88,21 +93,33 @@ export async function syncVoiceWiring(
   }
 }
 
-/** Parse :id and enforce the same account access check as booking-stats. */
-function accountIdFor(req: Request, res: Response): number | null {
-  const accountId = Number(req.params.id);
-  if (!Number.isInteger(accountId) || accountId <= 0) {
-    res.status(400).json({ message: "Invalid account id" });
-    return null;
+const noticeDraftSchema = z.object({
+  text: z.string().trim().min(8).max(200),
+  voice: z.enum(NOTICE_VOICES),
+  speed: z.number().refine((n) => (NOTICE_SPEEDS as readonly number[]).includes(n), "Unknown speed"),
+}).strict();
+
+/** The engine renders and keeps the notice clips (recording_notice.py). Throws VoiceLineError with its message. */
+async function noticeEngine<T>(path: "draft" | "apply", body: Record<string, unknown>): Promise<T> {
+  let resp: globalThis.Response;
+  try {
+    resp = await fetch(`${ENGINE_BASE}/voice/phone/notice/${path}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(75_000),
+    });
+  } catch (err) {
+    throw new VoiceLineError(502, err instanceof Error ? err.message : String(err));
   }
-  // No session user means requireAuth admitted the internal API key (agency-level).
-  const user = req.user;
-  if (user && user.accountsId !== 1 && user.accountsId !== accountId) {
-    res.status(403).json({ message: "Forbidden" });
-    return null;
+  const data = await resp.json().catch(() => ({}));
+  if (!resp.ok) {
+    const detail = (data as { detail?: unknown }).detail;
+    throw new VoiceLineError(resp.status === 422 ? 422 : 502, typeof detail === "string" ? detail : `engine ${resp.status}`);
   }
-  return accountId;
+  return data as T;
 }
+
 
 export function registerVoiceLineRoutes(app: Express): void {
   app.get("/api/accounts/:id/voice", requireAuth, wrapAsync(async (req, res) => {
@@ -134,6 +151,47 @@ export function registerVoiceLineRoutes(app: Express): void {
       if (err instanceof VoiceLineError) return res.status(err.status).json({ message: err.message });
       throw err;
     }
+  }));
+
+  // The recording notice editor: a draft to listen to, then "use this one".
+  app.post("/api/accounts/:id/voice/recording-notice/draft", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
+    const parsed = noticeDraftSchema.safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    const line = await storage.getVoiceLine(accountId);
+    if (!line) return res.status(404).json({ message: "Account not found" });
+    try {
+      res.json(await noticeEngine<RecordingNoticeCustom & { url: string }>("draft", {
+        account_id: accountId, ...parsed.data, locale: line.locale ?? "en-GB",
+      }));
+    } catch (err) {
+      if (err instanceof VoiceLineError) return res.status(err.status).json({ message: err.message });
+      throw err;
+    }
+  }));
+
+  app.post("/api/accounts/:id/voice/recording-notice/apply", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
+    try {
+      const { text, voice, speed, seconds, v } = await noticeEngine<RecordingNoticeCustom>("apply", { account_id: accountId });
+      const line = await storage.saveVoiceLine(accountId, { recordingNoticeCustom: { text, voice, speed, seconds, v } });
+      if (!line) return res.status(404).json({ message: "Account not found" });
+      res.json(line);
+    } catch (err) {
+      if (err instanceof VoiceLineError) return res.status(err.status).json({ message: err.message });
+      throw err;
+    }
+  }));
+
+  // Back to the standard line in the line's own language.
+  app.delete("/api/accounts/:id/voice/recording-notice", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
+    const line = await storage.saveVoiceLine(accountId, { recordingNoticeCustom: null });
+    if (!line) return res.status(404).json({ message: "Account not found" });
+    res.json(line);
   }));
 
   app.get("/api/accounts/:id/voice-stats", requireAuth, wrapAsync(async (req, res) => {

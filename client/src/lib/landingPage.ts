@@ -19,7 +19,7 @@ export type LandingOption = NavGate & {
  * bar entry, so the picker never offers a page the nav hides.
  */
 export const LANDING_OPTIONS: LandingOption[] = [
-  { href: "/platform/home", labelKey: "sidebar.home", ownerOnly: true },
+  { href: "/platform/home", labelKey: "sidebar.home" },
   { href: "/platform/campaigns", labelKey: "sidebar.reactivation" },
   { href: "/platform/speed-to-lead", labelKey: "sidebar.speedToLead", serviceKey: "speed", agencyOnly: true },
   { href: "/platform/reputation", labelKey: "sidebar.reputation", serviceKey: "reputation" },
@@ -44,9 +44,9 @@ export function getAllowedLandingOptions(ctx: NavGateContext = readNavGateContex
   return LANDING_OPTIONS.filter((o) => isNavItemVisible(o, ctx));
 }
 
-/** Default landing: Owner gets the Home hub, everyone else Reactivation. */
-export function defaultLandingPath(ctx: NavGateContext = readNavGateContext()): string {
-  return ctx.isOwner ? "/platform/home" : "/platform/campaigns";
+/** Default landing: the Home dashboard, for every role. */
+export function defaultLandingPath(_ctx: NavGateContext = readNavGateContext()): string {
+  return "/platform/home";
 }
 
 /** True once the session has written the preference (even an empty one). */

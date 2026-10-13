@@ -49,6 +49,8 @@ export const AUTOMATION_CATALOGUE: AutomationEntry[] = [
   { id: "voice_receptionist", service: "receptionist", trigger: on("phone_call"), scope: "account", audience: "client" },
   { id: "after_call_followup", service: "receptionist", trigger: on("call_ended"), scope: "account", audience: "client" },
   { id: "missed_call", service: "receptionist", trigger: on("missed_call"), scope: "account", audience: "client" },
+  { id: "client_alerts", service: "receptionist", trigger: on("client_event"), scope: "account", audience: "client", jobId: "client_alerts_sweeper", aliases: ["client_alerts_sweeper"] },
+  { id: "client_recap", service: "receptionist", trigger: every(300), scope: "account", audience: "client", jobId: "client_recap" },
   // Inbox
   { id: "inbound_handler", service: "inbox", trigger: on("incoming_message"), scope: "account", audience: "client", quietAfterHours: 72 },
   { id: "ai_conversation", service: "inbox", trigger: on("lead_replies"), scope: "campaign", audience: "client", quietAfterHours: 72 },

@@ -22,6 +22,7 @@ import {
   getLivePersona, localeLanguage, pickSlot, upsertLivePersona,
   type DbLike, type Tx,
 } from "./voicePersona";
+import { normalizeIntake } from "@shared/voiceIntake";
 
 export const VOICE_LOCALES = ["nl", "en-GB", "en-US", "pt-BR"] as const;
 export const AFTER_HOURS = ["message", "callback", "ringHot"] as const;
@@ -42,6 +43,28 @@ export type Screening = Record<(typeof SCREENING_KINDS)[number], boolean>;
 
 export interface PronunciationRow { word: string; sayAs: string }
 
+/** The engine's notice voices (four OpenAI, four Google) and speeds (recording_notice.py VOICES / SPEEDS). */
+export const NOTICE_VOICES = ["nova", "sage", "ash", "onyx", "kore", "aoede", "puck", "charon"] as const;
+/** Where Telnyx places a line's call legs and conference (engine telnyx_bridge.py REGIONS). */
+export const VOICE_REGIONS = ["Europe", "US", "Canada", "Australia", "Middle East"] as const;
+export const NOTICE_SPEEDS = [1, 1.25, 1.5] as const;
+
+export interface RecordingNoticeCustom {
+  text: string;
+  voice: (typeof NOTICE_VOICES)[number];
+  speed: number;
+  seconds: number;
+  /** Changes with every applied clip: it goes into the clip's URL. */
+  v: number;
+}
+
+function noticeCustom(value: unknown): RecordingNoticeCustom | null {
+  const c = value as Partial<RecordingNoticeCustom> | null;
+  if (!c || typeof c !== "object" || typeof c.text !== "string" || typeof c.v !== "number") return null;
+  if (typeof c.seconds !== "number" || !NOTICE_VOICES.includes(c.voice as never)) return null;
+  return { text: c.text, voice: c.voice as RecordingNoticeCustom["voice"], speed: Number(c.speed) || 1, seconds: c.seconds, v: c.v };
+}
+
 export interface VoiceLine {
   accountId: number;
   number: { id: number; phoneNumber: string; enabled: boolean; status: "not_set" | "pending" | "live" } | null;
@@ -57,9 +80,15 @@ export interface VoiceLine {
   transferMode: (typeof TRANSFER_MODES)[number];
   /** Office sound under her voice (puts the number on the Telnyx conference route). */
   officeSound: boolean;
+  /** Where the line's calls are handled: every leg of a call sits in this one region. */
+  region: (typeof VOICE_REGIONS)[number];
+  /** The recorded "this call is recorded" line before she answers (engine recording_notice.py). */
+  recordingNotice: { enabled: boolean; custom: RecordingNoticeCustom | null };
   screening: Screening;
   greeting: string;
   pronunciation: PronunciationRow[];
+  /** What the team wants to know before an appointment: one item per line, "" when not set (shared/voiceIntake.ts). */
+  intake: string;
   afterHours: (typeof AFTER_HOURS)[number] | null;
   extraInstructions: string;
   /**
@@ -92,9 +121,15 @@ export interface VoiceLinePatch {
   transferHoldMusic?: HoldMusic;
   transferMode?: (typeof TRANSFER_MODES)[number];
   officeSound?: boolean;
+  region?: (typeof VOICE_REGIONS)[number];
+  recordingNotice?: boolean;
+  /** The account's own clip, as the engine applied it; null goes back to the standard line. Not on the PUT body. */
+  recordingNoticeCustom?: RecordingNoticeCustom | null;
   screening?: Partial<Screening>;
   greeting?: string;
   pronunciation?: PronunciationRow[];
+  /** Normalised on save: trimmed, at most 6 lines of 120 characters. */
+  intake?: string;
   afterHours?: (typeof AFTER_HOURS)[number] | null;
   extraInstructions?: string;
   /** Accounts.after_call_followup_enabled. */
@@ -223,9 +258,15 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     transferHoldMusic: HOLD_MUSIC.find((k) => k === text(handoff.holdMusic)) ?? DEFAULT_HOLD_MUSIC,
     transferMode,
     officeSound: voiceSetup.officeSound === true,
+    region: VOICE_REGIONS.find((r) => r === voiceSetup.region) ?? "Europe",
+    recordingNotice: {
+      enabled: voiceSetup.recordingNotice !== false,
+      custom: noticeCustom(voiceSetup.recordingNoticeCustom),
+    },
     screening,
     greeting: typeof voiceSetup.greeting === "string" ? voiceSetup.greeting : "",
     pronunciation,
+    intake: normalizeIntake(voiceSetup.intake),
     afterHours,
     extraInstructions: typeof voiceSetup.extraInstructions === "string" ? voiceSetup.extraInstructions : "",
     followUp: {
@@ -325,6 +366,7 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   if (patch.locale !== undefined) setVoice("locale", patch.locale);
   if (patch.greeting !== undefined) setVoice("greeting", patch.greeting);
   if (patch.pronunciation !== undefined) setVoice("pronunciation", patch.pronunciation);
+  if (patch.intake !== undefined) setVoice("intake", normalizeIntake(patch.intake));
   if (patch.afterHours !== undefined) setVoice("afterHours", patch.afterHours);
   if (patch.extraInstructions !== undefined) setVoice("extraInstructions", patch.extraInstructions);
   if (patch.transferNumber !== undefined) setHandoff("number", patch.transferNumber ?? "");
@@ -333,6 +375,9 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   if (patch.transferHoldMusic !== undefined) setHandoff("holdMusic", patch.transferHoldMusic);
   if (patch.transferMode !== undefined) setHandoff("mode", patch.transferMode);
   if (patch.officeSound !== undefined) setVoice("officeSound", patch.officeSound);
+  if (patch.region !== undefined) setVoice("region", patch.region);
+  if (patch.recordingNotice !== undefined) setVoice("recordingNotice", patch.recordingNotice);
+  if (patch.recordingNoticeCustom !== undefined) setVoice("recordingNoticeCustom", patch.recordingNoticeCustom);
   if (patch.screening !== undefined) {
     setup.screening = { ...obj(setup.screening), ...patch.screening };
     setupTouched = true;

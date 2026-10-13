@@ -1,9 +1,15 @@
 import nodemailer from "nodemailer";
 
-/** Hosted PNG of the brand wordmark, flattened onto the card colour. Must be an
- *  absolute https URL: Gmail blocks SVG and data URIs. The Pi serves
- *  client/public live, so app.leadawaker.com works without a Vercel deploy. */
-const EMAIL_LOGO_URL = process.env.EMAIL_LOGO_URL || "https://app.leadawaker.com/site/img/email-logo.png";
+/** Hosted email images (client/public/site/img/email). Must be absolute https
+ *  URLs: Gmail blocks SVG and data URIs. The Pi serves client/public live, so
+ *  app.leadawaker.com works without a Vercel deploy. */
+export const EMAIL_ASSET_BASE = process.env.EMAIL_ASSET_BASE || "https://app.leadawaker.com/site/img/email";
+/** Bump when an image changes under the same name: Gmail's image proxy and
+ *  Cloudflare both cache by URL. */
+const EMAIL_ASSET_VERSION = "9";
+export const emailAsset = (file: string) => `${EMAIL_ASSET_BASE}/${file}?v=${EMAIL_ASSET_VERSION}`;
+/** Wordmark PNG: the homepage logo (white LEAD with its soft shadow), transparent. */
+const EMAIL_LOGO_URL = process.env.EMAIL_LOGO_URL || emailAsset("logo.png");
 const SITE_URL = "https://www.leadawaker.com";
 
 const transporter = nodemailer.createTransport({
@@ -40,6 +46,8 @@ interface Outgoing {
   text: string;
   html?: string;
   replyTo?: string;
+  /** Resend only (kept 24h): a retry with the same key cannot send twice. */
+  idempotencyKey?: string;
 }
 
 export interface DeliveryResult {
@@ -47,20 +55,37 @@ export interface DeliveryResult {
   id?: string;
 }
 
+/** `maybeSent`: a timeout, a 5xx, or 409 (the same key still in flight). The email may be out. */
+class ResendError extends Error {
+  constructor(message: string, public maybeSent: boolean) { super(message); }
+}
+
 async function deliverViaResend(msg: Outgoing): Promise<DeliveryResult> {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: JSON.stringify({
-      from: process.env.RESEND_FROM || "Lead Awaker <onboarding@resend.dev>",
-      to: [msg.to],
-      subject: msg.subject,
-      text: msg.text,
-      html: msg.html,
-      reply_to: msg.replyTo || undefined,
-    }),
-  });
-  if (!res.ok) throw new Error(`Resend ${res.status}: ${await res.text()}`);
+  let res: Response;
+  try {
+    res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+        "Content-Type": "application/json",
+        ...(msg.idempotencyKey ? { "Idempotency-Key": msg.idempotencyKey } : {}),
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM || "Lead Awaker <onboarding@resend.dev>",
+        to: [msg.to],
+        subject: msg.subject,
+        text: msg.text,
+        html: msg.html,
+        reply_to: msg.replyTo || undefined,
+      }),
+      signal: AbortSignal.timeout(15_000),
+    });
+  } catch (err: any) {
+    throw new ResendError(`Resend unreachable: ${err?.message ?? err}`, true);
+  }
+  if (!res.ok) {
+    throw new ResendError(`Resend ${res.status}: ${await res.text()}`, res.status === 409 || res.status >= 500);
+  }
   const data = (await res.json().catch(() => ({}))) as { id?: string };
   console.log(`[email] Resend sent id=${data.id ?? "unknown"} to=${msg.to}`);
   return { provider: "resend", id: data.id };
@@ -88,6 +113,9 @@ async function deliver(msg: Outgoing): Promise<DeliveryResult> {
   } catch (resendErr: any) {
     console.error(`[email] Resend failed for ${msg.to}: ${resendErr.message}`);
     if (!smtpConfigured()) throw resendErr;
+    // With a key the caller retries through Resend, which dedupes. SMTP would
+    // send a second copy of an email Resend may already have sent.
+    if (msg.idempotencyKey && resendErr instanceof ResendError && resendErr.maybeSent) throw resendErr;
     try {
       const result = await deliverViaSmtp(msg);
       console.warn(`[email] Delivered to ${msg.to} via SMTP fallback after Resend failure`);
@@ -101,25 +129,37 @@ async function deliver(msg: Outgoing): Promise<DeliveryResult> {
 
 // ─── Branded layout ──────────────────────────────────────────────────────
 // One layout for every transactional email. Colours and fonts mirror the
-// homepage (client/public/site): paper background, deep wine accent, Playfair
-// Display headings, Manrope body. Email-client safe: tables, inline styles,
-// web-safe font fallbacks, light only (no reliance on dark mode).
+// homepage (client/public/site): bone surfaces, deep wine accent, Playfair
+// Display for titles only, Manrope for everything else. Email-client safe:
+// tables, inline styles, web-safe font fallbacks, light only (no reliance on
+// dark mode).
 
 export const EMAIL_THEME = {
-  bg: "#F3EFE8",
-  card: "#FDFCF9", // the logo PNG (homepage logo in its nav pill) is flattened onto this colour
-  surface: "#F6F1EA",
-  line: "#E7E0D4",
+  bg: "#CEC5B5", // dark cream around the email; image corners are flattened onto it
+  body: "#F3EFE7", // the email itself (bone); the footer image fades into it
+  card: "#FDFCFA", // section cards, a shade off white
+  head: "#E5DDCF", // header panel, lighter than the page; the header image fades into it
+  surface: "#F6F2EC", // tinted rows inside a card
+  line: "#E8E2D7",
   ink: "#1F1A14",
   inkSoft: "#3A322A",
   mute: "#6C6354",
   mute2: "#948A77",
   wine: "#5E2230",
+  wineDeep: "#4E1B27", // headings
+  edge: "#BFB6A5", // outline of the email on the dark cream background
   onWine: "#F7F1E6",
   sans: "Manrope,'Helvetica Neue',Helvetica,Arial,sans-serif",
   serif: "'Playfair Display',Georgia,'Times New Roman',serif",
 } as const;
 const T = EMAIL_THEME;
+
+/** Header and footer illustrations. Instant alerts use their own set so they
+ *  do not look like the daily recap. */
+const EMAIL_ART = {
+  default: { side: "header-side.jpg", strip: "header-strip.jpg", footer: "footer.jpg" },
+  alert: { side: "alert-header-side.jpg", strip: "alert-header-strip.jpg", footer: "alert-footer.jpg" },
+} as const;
 
 export interface EmailCta {
   label: string;
@@ -133,49 +173,75 @@ export interface EmailLayoutOptions {
   eyebrow?: string;
   /** Plain text, escaped here. */
   heading: string;
+  /** Line under the heading in the header panel (plain text, escaped here). */
+  subheading?: string;
+  /** Date shown in small capitals at the bottom of the header (plain text). */
+  dateText?: string;
+  /** Which illustrations to use (default: the recap set). */
+  art?: keyof typeof EMAIL_ART;
   /** Trusted HTML: escape every dynamic value before passing it in. Build it
-   *  from emailParagraph / emailDetails so the styling stays consistent. */
+   *  from emailParagraph and the blocks in emailComponents.ts so the styling stays consistent. */
   bodyHtml: string;
   cta?: EmailCta;
   /** Small print at the bottom of the card (plain text, escaped here). */
   footerNote?: string;
+  /** Link under the small print, e.g. to the email settings. */
+  footerLink?: EmailCta;
   /** Value for the html lang attribute. */
   lang?: string;
 }
 
 /** Body paragraph in the brand style. `html` must already be escaped. */
 export function emailParagraph(html: string, opts: { muted?: boolean } = {}): string {
-  const size = opts.muted ? 14 : 15;
+  const size = opts.muted ? 13 : 14.5;
   const color = opts.muted ? T.mute : T.inkSoft;
   return `<p style="margin:0 0 16px;font-family:${T.sans};font-size:${size}px;line-height:1.65;color:${color};">${html}</p>`;
 }
 
-/** Label/value block (contact details, recap figures). `valueHtml` must
- *  already be escaped; labels are escaped here. */
-export function emailDetails(rows: Array<{ label: string; valueHtml: string }>): string {
-  const body = rows
-    .map(
-      (r, i) => `<tr>
-  <td valign="top" style="padding:${i === 0 ? 14 : 8}px 16px ${i === rows.length - 1 ? 14 : 8}px;width:110px;font-family:${T.sans};font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;line-height:20px;color:${T.mute2};">${escapeHtml(r.label)}</td>
-  <td valign="top" style="padding:${i === 0 ? 14 : 8}px 16px ${i === rows.length - 1 ? 14 : 8}px 0;font-family:${T.sans};font-size:15px;line-height:1.55;color:${T.ink};">${r.valueHtml}</td>
-</tr>`,
-    )
-    .join("\n");
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${T.surface}" style="margin:4px 0 16px;background-color:${T.surface};border-radius:10px;">
-${body}
-</table>`;
-}
-
-/** Bulletproof button: the colour sits on the cell, so it survives clients
- *  that strip padding or backgrounds from links. */
+/** Bulletproof pill button, centred: the colour sits on the cell, so it
+ *  survives clients that strip padding or backgrounds from links. */
 function emailButton(cta: EmailCta): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0">
+  return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
   <tr>
-    <td align="center" bgcolor="${T.wine}" style="border-radius:8px;background-color:${T.wine};">
-      <a href="${escapeHtml(cta.url)}" target="_blank" style="display:inline-block;padding:14px 26px;font-family:${T.sans};font-size:15px;font-weight:600;line-height:20px;color:${T.onWine};text-decoration:none;border:1px solid ${T.wine};border-radius:8px;">${escapeHtml(cta.label)}</a>
+    <td align="center" bgcolor="${T.wine}" style="border-radius:999px;background-color:${T.wine};">
+      <a href="${escapeHtml(cta.url)}" target="_blank" style="display:block;padding:12px 34px;font-family:${T.sans};font-size:13.5px;font-weight:600;line-height:20px;color:${T.onWine};text-decoration:none;border:1px solid ${T.wine};border-radius:999px;">${escapeHtml(cta.label)}&nbsp;&nbsp;&rarr;</a>
     </td>
   </tr>
 </table>`;
+}
+
+/** Header panel: logo, eyebrow, heading, subheading and date as live text on
+ *  the left, the illustration (its left edge fades into the panel colour) on
+ *  the right. Phones get a wide strip of the same illustration above the text. */
+function emailHeader(opts: EmailLayoutOptions): string {
+  const art = EMAIL_ART[opts.art ?? "default"];
+  const eyebrow = opts.eyebrow
+    ? `<p style="margin:0 0 7px;font-family:${T.sans};font-size:10px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;line-height:1.4;color:${T.mute};">${escapeHtml(opts.eyebrow)}</p>`
+    : "";
+  const sub = opts.subheading
+    ? `<p style="margin:8px 0 0;font-family:${T.sans};font-size:10px;line-height:1.55;color:${T.mute};">${escapeHtml(opts.subheading)}</p>`
+    : "";
+  const date = opts.dateText
+    ? `<p style="margin:14px 0 0;font-family:${T.sans};font-size:7.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;line-height:12px;color:${T.mute2};">${escapeHtml(opts.dateText)}</p>`
+    : "";
+  return `<tr><td class="la-show-sm" style="display:none;max-height:0;overflow:hidden;mso-hide:all;font-size:0;line-height:0;">
+  <img src="${emailAsset(art.strip)}" width="638" alt="" style="display:block;width:100%;max-width:638px;height:auto;border:0;border-radius:13px 13px 0 0;">
+</td></tr>
+<tr><td class="la-head-wrap" bgcolor="${T.head}" style="background-color:${T.head};border-radius:13px 13px 0 0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+    <td class="la-head" valign="middle" style="padding:22px 0 22px 30px;">
+      <a href="${SITE_URL}" target="_blank" style="text-decoration:none;"><img src="${EMAIL_LOGO_URL}" width="150" height="26" alt="Lead Awaker" style="display:block;width:150px;max-width:150px;height:auto;border:0;"></a>
+      <div style="height:26px;line-height:26px;font-size:26px;">&nbsp;</div>
+      ${eyebrow}
+      <h1 class="la-h1" style="margin:0;font-family:${T.serif};font-size:34px;line-height:1.1;font-weight:600;letter-spacing:-.015em;color:${T.wineDeep};">${escapeHtml(opts.heading)}</h1>
+      ${sub}
+      ${date}
+    </td>
+    <td class="la-hide-sm" width="330" valign="top" style="width:330px;border-radius:0 13px 0 0;font-size:0;line-height:0;">
+      <img src="${emailAsset(art.side)}" width="330" height="240" alt="" style="display:block;width:330px;height:240px;border:0;border-radius:0 13px 0 0;">
+    </td>
+  </tr></table>
+</td></tr>`;
 }
 
 export function renderEmailLayout(opts: EmailLayoutOptions): string {
@@ -184,15 +250,16 @@ export function renderEmailLayout(opts: EmailLayoutOptions): string {
   const preheader = opts.preheader
     ? `<div style="display:none;max-height:0;max-width:0;overflow:hidden;opacity:0;mso-hide:all;font-size:1px;line-height:1px;color:${T.bg};">${escapeHtml(opts.preheader)}${"&#847;&zwnj;&nbsp;".repeat(40)}</div>`
     : "";
-  const eyebrow = opts.eyebrow
-    ? `<p style="margin:0 0 10px;font-family:${T.sans};font-size:12px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;line-height:1.4;color:${T.wine};">${escapeHtml(opts.eyebrow)}</p>`
-    : "";
   const cta = opts.cta
-    ? `<tr><td class="la-pad" style="padding:8px 40px 8px;">${emailButton(opts.cta)}</td></tr>`
+    ? `<tr><td class="la-pad" style="padding:12px 28px 4px;">${emailButton(opts.cta)}</td></tr>`
     : "";
   const footerNote = opts.footerNote
-    ? `<tr><td class="la-pad" style="padding:24px 40px 0;"><p style="margin:0;padding-top:20px;border-top:1px solid ${T.line};font-family:${T.sans};font-size:12.5px;line-height:1.6;color:${T.mute2};">${escapeHtml(opts.footerNote)}</p></td></tr>`
+    ? `<p style="margin:0 0 8px;font-family:${T.sans};font-size:11px;line-height:1.6;color:${T.mute2};">${escapeHtml(opts.footerNote)}</p>`
     : "";
+  const footerLink = opts.footerLink
+    ? `<p style="margin:0 0 10px;font-family:${T.sans};font-size:11px;font-weight:600;line-height:1.6;"><a href="${escapeHtml(opts.footerLink.url)}" target="_blank" style="color:${T.wine};text-decoration:underline;">${escapeHtml(opts.footerLink.label)}</a></p>`
+    : "";
+  const footerArt = EMAIL_ART[opts.art ?? "default"].footer;
 
   return `<!DOCTYPE html>
 <html lang="${escapeHtml(opts.lang || "en")}" xmlns="http://www.w3.org/1999/xhtml">
@@ -204,16 +271,26 @@ export function renderEmailLayout(opts: EmailLayoutOptions): string {
 <meta name="supported-color-schemes" content="light">
 <title>${heading}</title>
 <!--[if !mso]><!-->
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--<![endif]-->
 <style>
   :root { color-scheme: light; supported-color-schemes: light; }
   body { margin:0; padding:0; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; }
   img { border:0; outline:none; text-decoration:none; -ms-interpolation-mode:bicubic; }
   a { color:${T.wine}; }
-  @media only screen and (max-width:620px) {
-    .la-pad { padding-left:24px !important; padding-right:24px !important; }
-    .la-h1 { font-size:24px !important; }
+  @media only screen and (max-width:660px) {
+    .la-outer { padding:12px 8px !important; }
+    .la-pad { padding-left:14px !important; padding-right:14px !important; }
+    .la-head { padding:20px 18px 24px !important; }
+    .la-h1 { font-size:30px !important; }
+    .la-head-wrap { border-radius:0 !important; }
+    .la-hide-sm { display:none !important; width:0 !important; }
+    .la-show-sm { display:block !important; max-height:none !important; overflow:visible !important; }
+    .la-tile-row { display:block !important; text-align:center !important; }
+    .la-tile { display:inline-block !important; box-sizing:border-box !important; width:30.5% !important; height:92px !important; margin:0 1% 7px !important; vertical-align:top !important; text-align:left !important; }
+    .la-tgap { display:none !important; }
+    .la-col { display:block !important; width:auto !important; }
+    .la-gap { display:block !important; width:auto !important; height:14px !important; line-height:14px !important; }
   }
 </style>
 </head>
@@ -221,37 +298,33 @@ export function renderEmailLayout(opts: EmailLayoutOptions): string {
 ${preheader}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${T.bg}" style="background-color:${T.bg};">
   <tr>
-    <td align="center" style="padding:32px 12px;">
-      <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;">
+    <td class="la-outer" align="center" style="padding:28px 12px;">
+      <!--[if mso]><table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;">
         <tr>
-          <td bgcolor="${T.card}" style="background-color:${T.card};border:1px solid ${T.line};border-radius:14px;padding-bottom:36px;">
+          <td bgcolor="${T.body}" style="background-color:${T.body};border:1px solid ${T.edge};border-radius:14px;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              ${emailHeader(opts)}
               <tr>
-                <td class="la-pad" style="padding:34px 40px 0;">
-                  <a href="${SITE_URL}" target="_blank" style="text-decoration:none;"><img src="${EMAIL_LOGO_URL}" width="210" height="52" alt="Lead Awaker" style="display:block;width:210px;max-width:210px;height:auto;border:0;"></a>
-                </td>
-              </tr>
-              <tr>
-                <td class="la-pad" style="padding:26px 40px 0;">
-                  <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td bgcolor="${T.wine}" style="width:32px;height:2px;line-height:2px;font-size:2px;background-color:${T.wine};">&nbsp;</td></tr></table>
-                </td>
-              </tr>
-              <tr>
-                <td class="la-pad" style="padding:24px 40px 8px;">
-                  ${eyebrow}
-                  <h1 class="la-h1" style="margin:0 0 18px;font-family:${T.serif};font-size:28px;line-height:1.2;font-weight:400;letter-spacing:-.01em;color:${T.ink};">${heading}</h1>
+                <td class="la-pad" style="padding:26px 28px 14px;">
                   ${opts.bodyHtml}
                 </td>
               </tr>
               ${cta}
-              ${footerNote}
+              <tr>
+                <td class="la-pad" align="center" style="padding:26px 28px 8px;">
+                  <div style="border-top:1px solid ${T.line};height:20px;line-height:20px;font-size:20px;">&nbsp;</div>
+                  ${footerNote}
+                  ${footerLink}
+                  <p style="margin:0;font-family:${T.sans};font-size:11px;line-height:1.6;color:${T.mute2};"><strong style="font-weight:700;color:${T.mute};">Lead Awaker</strong> &middot; <a href="${SITE_URL}" target="_blank" style="color:${T.mute2};text-decoration:none;">leadawaker.com</a></p>
+                </td>
+              </tr>
+              <tr>
+                <td style="font-size:0;line-height:0;border-radius:0 0 13px 13px;">
+                  <img src="${emailAsset(footerArt)}" width="638" alt="" style="display:block;width:100%;max-width:638px;height:auto;border:0;border-radius:0 0 13px 13px;">
+                </td>
+              </tr>
             </table>
-          </td>
-        </tr>
-        <tr>
-          <td align="center" style="padding:20px 24px 0;font-family:${T.sans};font-size:12px;line-height:1.6;color:${T.mute2};">
-            Lead Awaker &middot; <a href="${SITE_URL}" target="_blank" style="color:${T.mute};text-decoration:underline;">leadawaker.com</a>
           </td>
         </tr>
       </table>
@@ -269,10 +342,12 @@ export function renderEmailText(opts: {
   bodyText: string;
   cta?: EmailCta;
   footerNote?: string;
+  footerLink?: EmailCta;
 }): string {
   const parts = [opts.heading, opts.bodyText.trim()];
   if (opts.cta) parts.push(`${opts.cta.label}: ${opts.cta.url}`);
   if (opts.footerNote) parts.push(opts.footerNote);
+  if (opts.footerLink) parts.push(`${opts.footerLink.label}: ${opts.footerLink.url}`);
   parts.push(`Lead Awaker\n${SITE_URL}`);
   return parts.join("\n\n") + "\n";
 }
@@ -352,6 +427,7 @@ export async function sendRawEmail(opts: {
   text: string;
   html?: string;
   replyTo?: string;
+  idempotencyKey?: string;
 }): Promise<DeliveryResult> {
   return deliver(opts);
 }

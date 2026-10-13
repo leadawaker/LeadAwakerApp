@@ -624,7 +624,14 @@
       if (rememberEl.checked) localStorage.setItem('leadawaker_remember_me', 'true');
       else localStorage.removeItem('leadawaker_remember_me');
 
-      window.location.href = '/platform';
+      // Back to the alert link that sent the user here (/go/:code), if any.
+      let next = '/platform';
+      try {
+        const back = sessionStorage.getItem('leadawaker_return_to') || '';
+        sessionStorage.removeItem('leadawaker_return_to');
+        if (/^\/go\/[A-Za-z0-9]{8}(\?to=settings)?$/.test(back)) next = back;
+      } catch (_) {}
+      window.location.href = next;
     } catch (_) {
       showError('Network error — please try again');
     } finally {

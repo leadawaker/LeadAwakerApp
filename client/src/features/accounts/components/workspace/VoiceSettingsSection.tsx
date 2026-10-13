@@ -98,22 +98,29 @@ function VoiceRow({ v, vs, account, t }: {
   );
 }
 
-export function VoiceSettingsSection({ account, voices, onSave, stacked = false }: {
+/**
+ * The voice and speaking style of the voice notes the assistant sends on
+ * WhatsApp (Accounts.tts_voice_id_* / tts_style_*). `card`: on its own in a
+ * card, with the WhatsApp title and a line of help, instead of as the last
+ * section of a larger panel.
+ */
+export function VoiceSettingsSection({ account, voices, onSave, stacked = false, card = false }: {
   account: AccountRow;
   voices: VoiceSlot[];
   onSave: (field: string, value: string, opts?: { silent?: boolean }) => Promise<void>;
   stacked?: boolean;
+  card?: boolean;
 }) {
   const { t } = useTranslation("accounts");
   const [expanded, setExpanded] = useState(false);
   const vs = useVoiceSettings(account.Id ?? account.id ?? 0, onSave);
 
   return (
-    <div style={{ marginTop: 4, paddingTop: 18, borderTop: "1px solid var(--line)" }}>
+    <div style={card ? undefined : { marginTop: 4, paddingTop: 18, borderTop: "1px solid var(--line)" }}>
       <div className="row" style={{ justifyContent: "space-between", marginBottom: expanded ? 12 : 0 }}>
         <div className="row" style={{ gap: 9 }}>
           <span style={{ color: "var(--wine)", display: "flex" }}><Mic size={16} /></span>
-          <h4 className="serif" style={{ margin: 0, fontSize: 18, color: "var(--ink-soft)", fontWeight: 400 }}>{t("panels.voiceClone")}</h4>
+          <h4 className="serif" style={{ margin: 0, fontSize: 18, color: "var(--ink-soft)", fontWeight: 400 }}>{t(card ? "panels.voiceNotes" : "panels.voiceClone")}</h4>
         </div>
         <button
           onClick={() => setExpanded((v) => !v)}
@@ -122,8 +129,9 @@ export function VoiceSettingsSection({ account, voices, onSave, stacked = false 
           {expanded ? <ChevronDown size={15} /> : <ChevronRight size={15} />}
         </button>
       </div>
+      {card && <p style={{ fontSize: 12.5, color: "var(--mute)", margin: "8px 0 0", lineHeight: 1.5 }}>{t("panels.voiceNotesHelp")}</p>}
       {expanded && (
-        <div style={{ display: "grid", gridTemplateColumns: stacked ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
+        <div style={{ display: "grid", marginTop: card ? 12 : 0, gridTemplateColumns: stacked ? "1fr" : "repeat(auto-fit, minmax(240px, 1fr))", gap: 10 }}>
           {voices.map((v) => <VoiceRow key={v.lang} v={v} vs={vs} account={account} t={t} />)}
         </div>
       )}

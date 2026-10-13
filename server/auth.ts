@@ -162,7 +162,7 @@ function resolveLoginEmail(email: string): string {
   return EMAIL_ALIASES[lower] ?? lower;
 }
 
-function isValidInternalKey(key: string | undefined): boolean {
+export function isValidInternalKey(key: string | undefined): boolean {
   if (!INTERNAL_API_KEY || !key) return false;
   const a = Buffer.from(key);
   const b = Buffer.from(INTERNAL_API_KEY);

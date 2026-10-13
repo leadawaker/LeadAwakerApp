@@ -1,7 +1,7 @@
 {
   "connect": {
     "title": "WhatsApp-nummer",
-    "explainer": "Koppel het eigen WhatsApp-nummer van deze klant. Plak de vijf gegevens uit het Meta-bedrijfsaccount van de klant en druk op de knop. Daarna hoef je er Meta nooit meer voor te openen.",
+    "explainer": "Koppel het eigen WhatsApp-nummer van deze klant. Kies samen met de klant hoe hij wil werken; in beide gevallen logt hij in met Facebook in het venster van Meta en hoeft er niets geplakt te worden.",
     "pill": {
       "none": "Niet ingesteld",
       "pending": "Nog niet getest",
@@ -38,7 +38,8 @@
       "number": "Nummer",
       "verifiedName": "Getoonde naam",
       "nameStatus": "Goedkeuring naam",
-      "quality": "Kwaliteit"
+      "quality": "Kwaliteit",
+      "mode": "Ingesteld als"
     },
     "nameStatus": {
       "APPROVED": "Goedgekeurd",
@@ -67,12 +68,47 @@
       "number_in_use": "Dit telefoonnummer-ID is al aan een ander account gekoppeld.",
       "secrets_required": "De eerste keer zijn het app-geheim en de token allebei nodig.",
       "engine_unavailable": "De automatiseringsmotor gaf geen antwoord. Probeer het over een minuut opnieuw.",
-      "unknown": "Er ging iets mis. Probeer het opnieuw."
+      "unknown": "Er ging iets mis. Probeer het opnieuw.",
+      "app_secret_missing": "Op de server ontbreekt het Meta-appgeheim van Lead Awaker (META_APP_SECRET).",
+      "meta_refused": "Meta heeft de koppeling geweigerd.",
+      "number_unclear": "Het WhatsApp-account heeft geen nummer, of meer dan één. Vul de gegevens met de hand in.",
+      "signup_cancelled": "Het venster van Meta is gesloten voordat het klaar was."
     },
     "warnings": {
       "app_not_subscribed": "Versturen werkt, maar binnenkomende berichten komen nog niet aan: de Meta-app is niet geabonneerd op dit WhatsApp-account.",
       "webhook_unknown": "Er kon niet worden gecontroleerd of binnenkomende berichten aankomen. Versturen werkt.",
       "app_unknown": "Het app-geheim kon nu niet worden gecontroleerd. Versturen werkt. Druk later nog eens op Verbinding testen."
+    },
+    "meta": "Koppelen met Meta",
+    "metaBusy": "Wachten op Meta…",
+    "manual": "Gegevens met de hand invullen",
+    "manualHelp": "Voor een klant die een eigen Meta-app heeft gebouwd: plak de vijf waarden uit het Meta-bedrijfsaccount.",
+    "options": {
+      "app": {
+        "title": "WhatsApp op de eigen telefoon houden",
+        "body": "De assistent antwoordt op het nummer dat de klant al gebruikt in de WhatsApp Business-app.",
+        "points": {
+          "a": "De klant ziet elk gesprek op zijn telefoon, ook de antwoorden van de assistent",
+          "b": "Hij kan een klant zelf antwoorden vanuit WhatsApp",
+          "c": "Wat hij zelf typt kost niets"
+        },
+        "needs": "Nodig: het nummer staat op de WhatsApp Business-app (niet de gewone WhatsApp), en de telefoon wordt minstens elke twee weken geopend."
+      },
+      "new": {
+        "title": "Een apart nummer voor de assistent",
+        "body": "Een nummer dat alleen de assistent gebruikt. Het staat op niemands telefoon.",
+        "points": {
+          "a": "De eigen WhatsApp van de klant blijft privé en ongemoeid",
+          "b": "Gesprekken lees en beantwoord je in het CRM",
+          "c": "Werkt met een vast nummer of een nieuw nummer"
+        },
+        "needs": "Nodig: een nummer dat nog niet op WhatsApp staat en een sms of een oproep voor de code kan ontvangen."
+      }
+    },
+    "modeName": {
+      "app": "Ook op de telefoon van de klant",
+      "new": "Alleen de assistent",
+      "manual": "Met de hand ingevuld"
     }
   },
   "templates": {
@@ -127,5 +163,32 @@
       "engine_unavailable": "De automatiseringsmotor gaf geen antwoord. Probeer het over een minuut opnieuw.",
       "unknown": "Er ging iets mis. Probeer het opnieuw."
     }
+  },
+  "behaviour": {
+    "title": "Hoe de assistent antwoordt",
+    "saveFailed": "Opslaan is niet gelukt. Probeer het opnieuw.",
+    "scopeLabel": "Wie de assistent antwoordt",
+    "scope": {
+      "all": {
+        "title": "Iedereen",
+        "help": "Elk gesprek op dit nummer krijgt antwoord."
+      },
+      "new_only": {
+        "title": "Alleen nieuwe contacten",
+        "help": "Mensen die al in de telefoon of chats van de klant staan, blijven bij de klant."
+      },
+      "off": {
+        "title": "Niemand",
+        "help": "Berichten komen in het CRM; niemand krijgt automatisch antwoord."
+      }
+    },
+    "takeoverLabel": "Als de klant zelf antwoordt vanaf de telefoon",
+    "takeoverHelp": "Een antwoord vanuit de WhatsApp-app van de klant zet de assistent in dat gesprek op pauze. Hij neemt het weer over als de klant onderstaand commando in het gesprek stuurt, of na de wachttijd.",
+    "commandLabel": "Teruggeven met",
+    "autoLabel": "of automatisch",
+    "never": "nooit (alleen het commando)",
+    "afterHours_one": "na {{count}} uur stilte",
+    "afterHours_other": "na {{count}} uur stilte",
+    "commandVisible": "De klant ziet “{{command}}” ook in het gesprek: WhatsApp verstuurt alles wat de klant typt. Handmatige overname uitzetten bij het gesprek in het CRM geeft het terug zonder dat de klant iets ziet."
   }
 }

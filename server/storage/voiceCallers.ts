@@ -262,6 +262,8 @@ export const voiceCallersStorage = {
         direction: "internal",
         content: input.content,
         aiGenerated: false,
+        // A note for the team, not a message: kept out of every conversation count.
+        channel: "other",
       } as typeof interactions.$inferInsert)
       .returning({ createdAt: interactions.createdAt, who: interactions.who });
     return {

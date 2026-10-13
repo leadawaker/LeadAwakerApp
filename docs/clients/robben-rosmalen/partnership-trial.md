@@ -4,7 +4,7 @@
 
 ## Who
 
-- **Lead Awaker**, run by Gabriel Fronza, KvK [number], [address] ("Lead Awaker")
+- **Lead Awaker**, run by Gabriel Fronza, KvK 99366738, Christiaan Huygensweg 32, 's-Hertogenbosch ("Lead Awaker")
 - **Robben Rosmalen**, represented by Thijs Robben, KvK [number], Afrikalaan 17a, 's-Hertogenbosch ("Robben Rosmalen")
 
 ## What we are trying
@@ -48,7 +48,7 @@ The trial runs for **3 months**, from [start date] to [end date].
 
 - **The assistant can make mistakes.** Prices and availability it mentions are information, not a binding offer. The final deal is always made by Robben Rosmalen.
 - **Callers are told** they are speaking with an AI assistant and that the call may be recorded.
-- **The data is Robben Rosmalen's.** Call recordings, transcripts and caller details are only used to run the assistant. They are not shared with anyone else and are deleted when the trial ends without a follow-up, unless Robben Rosmalen asks to keep them. We sign a short processing agreement (verwerkersovereenkomst) for this.
+- **The data is Robben Rosmalen's.** Call recordings, transcripts and caller details are only used to run the assistant. They are not shared with anyone else and are deleted when the trial ends without a follow-up, unless Robben Rosmalen asks to keep them. We sign a short processing agreement (verwerkersovereenkomst) for this: `processing-agreement.md`.
 - **Showing the results.** Lead Awaker may only use Robben Rosmalen's name or results (for example as a case study) with Thijs's permission.
 
 ## Stopping early

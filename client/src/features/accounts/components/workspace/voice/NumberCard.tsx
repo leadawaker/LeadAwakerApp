@@ -5,6 +5,8 @@ import { VoiceCardShell, FieldLabel, helpStyle, inputStyle } from "./voiceAtoms"
 import { useUnassignedNumbers } from "./useVoiceLine";
 import { GoLiveControl } from "./GoLiveControl";
 import { OfficeSoundSwitch } from "./OfficeSoundSwitch";
+import { RecordingNoticeControl } from "./RecordingNoticeControl";
+import { RegionSelect } from "./RegionSelect";
 import { E164, normalizePhone, type NumberStatus, type VoiceLine, type VoiceLinePatch } from "./voiceApi";
 
 const STATUS_TONE: Record<NumberStatus, { bg: string; fg: string }> = {
@@ -74,6 +76,8 @@ export function NumberCard({ line, canEdit, saving, onSave }: {
         </div>
         {canEdit && <GoLiveControl line={line} saving={saving} onSave={onSave} />}
         {line.number && <OfficeSoundSwitch line={line} canEdit={canEdit} saving={saving} onSave={onSave} />}
+        {line.number && <RecordingNoticeControl line={line} canEdit={canEdit} saving={saving} onSave={onSave} />}
+        {line.number && <RegionSelect line={line} canEdit={canEdit} saving={saving} onSave={onSave} />}
       </div>
 
       {canEdit && (

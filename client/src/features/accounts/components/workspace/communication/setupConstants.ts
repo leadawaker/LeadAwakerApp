@@ -59,6 +59,8 @@ export interface ReceptionistSetup {
     locale: string | null;
     greeting: string;
     pronunciation: PronunciationRow[];
+    /** What the team wants to know before an appointment, one item per line (shared/voiceIntake.ts). */
+    intake: string;
     afterHours: string | null;
   };
   whatsapp: { numberChoice: string | null; appType: string | null };
@@ -69,7 +71,7 @@ export const EMPTY_SETUP: ReceptionistSetup = {
   handoff: { name: "", number: "", ringWhen: null, recap: true, recapTime: "18:00" },
   voice: {
     lines: [], landlineNumber: "", landlineProvider: "", mobileNumber: "", forwardWhen: ["noAnswer"],
-    voice: null, locale: null, greeting: "", pronunciation: [], afterHours: null,
+    voice: null, locale: null, greeting: "", pronunciation: [], intake: "", afterHours: null,
   },
   whatsapp: { numberChoice: null, appType: null },
   stock: { feedUrl: "", notes: "" },
@@ -107,6 +109,7 @@ export const SERVICE_STEPS: Partial<Record<ServiceKey, StepDef[]>> = {
     { key: "voiceForwarding", kind: "custom", section: "voice" },
     { key: "voiceSound", kind: "custom", section: "voice" },
     { key: "voicePronunciation", kind: "custom", section: "voice" },
+    { key: "voiceIntake", kind: "custom", section: "voice" },
     { key: "voiceAfterHours", kind: "custom", section: "voice" },
   ],
   widget: [{ key: "widgetSetup", kind: "custom", section: "widget" }],

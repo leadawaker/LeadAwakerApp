@@ -12,6 +12,7 @@ import { whatsappSenders, whatsappTemplates, type WhatsappSender, type WhatsappT
 import { seal } from "../lib/secretBox";
 
 export type WhatsappSenderStatus = "pending" | "connected" | "error" | "disabled";
+export type AiScope = "all" | "new_only" | "off";
 
 /** What the CRM may show about a sender. No secrets. */
 export interface WhatsappSenderPublic {
@@ -21,6 +22,11 @@ export interface WhatsappSenderPublic {
   appId: string;
   hasAppSecret: boolean;
   hasToken: boolean;
+  /** "app": also on the client's WhatsApp Business app. "new": Cloud API only. null: pasted by hand. */
+  onboardingMode: "app" | "new" | null;
+  aiScope: AiScope;
+  resumeAfterHours: number | null;
+  resumeCommand: string;
   displayPhoneNumber: string | null;
   verifiedName: string | null;
   nameStatus: string | null;
@@ -42,6 +48,10 @@ export interface WhatsappSenderInput {
   appSecret?: string;
   /** Empty or missing keeps the stored token. */
   accessToken?: string;
+  /** Set by the Meta signup flow; a hand-entered save clears it. */
+  onboardingMode?: "app" | "new" | null;
+  /** The two-step PIN chosen when a "new" number was registered. */
+  twoStepPin?: string;
 }
 
 export class WhatsappSenderError extends Error {
@@ -66,6 +76,10 @@ function toPublic(row: WhatsappSender): WhatsappSenderPublic {
     appId: row.appId,
     hasAppSecret: !!row.appSecretEnc,
     hasToken: !!row.accessTokenEnc,
+    onboardingMode: row.onboardingMode === "app" || row.onboardingMode === "new" ? row.onboardingMode : null,
+    aiScope: (["all", "new_only", "off"].includes(row.aiScope) ? row.aiScope : "all") as AiScope,
+    resumeAfterHours: row.resumeAfterHours ?? null,
+    resumeCommand: row.resumeCommand || "/go",
     displayPhoneNumber: row.displayPhoneNumber,
     verifiedName: row.verifiedName,
     nameStatus: row.nameStatus,
@@ -95,9 +109,8 @@ export const whatsappSendersStorage = {
     const appSecret = input.appSecret?.trim() || "";
     const accessToken = input.accessToken?.trim() || "";
 
-    const [taken] = await db.select({ accountsId: whatsappSenders.accountsId })
-      .from(whatsappSenders).where(eq(whatsappSenders.phoneNumberId, input.phoneNumberId));
-    if (taken && taken.accountsId !== accountId) {
+    const takenBy = await whatsappSendersStorage.whatsappNumberTakenBy(input.phoneNumberId);
+    if (takenBy != null && takenBy !== accountId) {
       throw new WhatsappSenderError(409, "number_in_use", "This phone number id is already connected to another account");
     }
 
@@ -112,6 +125,8 @@ export const whatsappSendersStorage = {
         appId: input.appId,
         appSecretEnc: seal(appSecret),
         accessTokenEnc: seal(accessToken),
+        onboardingMode: input.onboardingMode ?? null,
+        twoStepPinEnc: input.twoStepPin ? seal(input.twoStepPin) : null,
         status: "pending",
       }).returning();
       return toPublic(created);
@@ -130,6 +145,11 @@ export const whatsappSendersStorage = {
       appId: input.appId,
       ...(appSecret ? { appSecretEnc: seal(appSecret) } : {}),
       ...(accessToken ? { accessTokenEnc: seal(accessToken) } : {}),
+      ...(numberChanged || input.onboardingMode !== undefined ? { onboardingMode: input.onboardingMode ?? null } : {}),
+      // A PIN belongs to one number: a new number keeps only a PIN set on it.
+      ...(input.twoStepPin
+        ? { twoStepPinEnc: seal(input.twoStepPin) }
+        : numberChanged ? { twoStepPinEnc: null } : {}),
       ...(numberChanged
         ? { displayPhoneNumber: null, verifiedName: null, nameStatus: null, qualityRating: null }
         : {}),
@@ -138,6 +158,20 @@ export const whatsappSendersStorage = {
       updatedAt: new Date(),
     }).where(eq(whatsappSenders.id, existing.id)).returning();
     return toPublic(updated);
+  },
+
+  /** The account a Meta phone number id is connected to, if any. */
+  async whatsappNumberTakenBy(phoneNumberId: string): Promise<number | null> {
+    const [taken] = await db.select({ accountsId: whatsappSenders.accountsId })
+      .from(whatsappSenders).where(eq(whatsappSenders.phoneNumberId, phoneNumberId));
+    return taken?.accountsId ?? null;
+  },
+
+  /** How the assistant behaves on the client's number. The engine reads it on the next message. */
+  async saveWhatsappBehaviour(accountId: number, patch: { aiScope?: AiScope; resumeAfterHours?: number | null; resumeCommand?: string }): Promise<WhatsappSenderPublic | null> {
+    const [row] = await db.update(whatsappSenders).set({ ...patch, updatedAt: new Date() })
+      .where(eq(whatsappSenders.accountsId, accountId)).returning();
+    return row ? toPublic(row) : null;
   },
 
   /** Stored template rows of the account (the catalog itself lives in the engine). */

@@ -4,6 +4,7 @@
 // wizard: a failure is logged and the profile save stands on its own.
 import { queryClient } from "@/lib/queryClient";
 import { E164, normalizePhone, putVoiceLine, voiceLineKey, type AfterHoursMode, type VoiceLinePatch } from "../voice/voiceApi";
+import { normalizeIntake } from "@shared/voiceIntake";
 import type { ProfileAnswers } from "./profileConstants";
 
 /** The voice fields the wizard collects, or null when the client has no voice service. */
@@ -15,6 +16,7 @@ export function buildVoicePatch(answers: ProfileAnswers): VoiceLinePatch | null 
     agentNameCustom: answers.agentNameCustom.trim() || null,
     greeting: voice.greeting,
     pronunciation: voice.pronunciation.filter((r) => r.word.trim() && r.sayAs.trim()),
+    intake: normalizeIntake(voice.intake),
     transferName: handoff.name.trim() || null,
   };
   if (voice.voice) patch.voice = voice.voice;

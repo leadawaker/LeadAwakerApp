@@ -88,6 +88,54 @@
     "creating": "Criando...",
     "cancel": "Cancelar"
   },
+  "integrationGroups": {
+    "messaging": {
+      "title": "Mensagens",
+      "help": "Como os clientes mandam mensagem para esta empresa, e qual assistente responde.",
+      "short": "WhatsApp",
+      "hint": "Não conectado"
+    },
+    "website": {
+      "title": "Site",
+      "help": "A janela de chat no site do próprio cliente.",
+      "short": "Chat do site",
+      "hint": "Nenhum site definido"
+    },
+    "bookings": {
+      "title": "Agenda e agendamentos",
+      "help": "Onde os agendamentos chegam, e a página em que os clientes marcam.",
+      "short": "Agenda",
+      "hint": "Nenhuma agenda vinculada"
+    },
+    "phone": {
+      "title": "Telefone",
+      "help": "O número em que a assistente atende, e os documentos para um número no nome do cliente.",
+      "short": "Telefone",
+      "hint": "Nenhum número vinculado"
+    },
+    "state": {
+      "phone": {
+        "on": "No ar",
+        "pending": "Ainda não está no ar",
+        "off": "Não definido"
+      },
+      "messaging": {
+        "on": "Conectado",
+        "pending": "Falta testar",
+        "off": "Não definido"
+      },
+      "website": {
+        "on": "No ar",
+        "pending": "Desligado",
+        "off": "Não definido"
+      },
+      "bookings": {
+        "on": "Vinculada",
+        "pending": "Só página de agendamento",
+        "off": "Não definido"
+      }
+    }
+  },
   "sections": {
     "basicInfo": "Informacoes Basicas",
     "contact": "Contato",
@@ -182,7 +230,7 @@
     "syncInstagram": "Sincronizar Contatos Instagram",
     "syncingContacts": "Sincronizando contatos...",
     "syncFailed": "Falha na sincronizacao",
-    "selectExecution": "Selecione uma execução para ver seu pipeline",
+    "selectExecution": "Selecione uma conta para ver os detalhes",
     "cropLogo": "Recortar Logo",
     "cropDescription": "Arraste para reposicionar · use o slider para zoom",
     "saveLogo": "Salvar Logo",
@@ -421,8 +469,9 @@
       "overview": "Visão geral",
       "integrations": "Integrações",
       "knowledge": "Intel da Empresa",
-      "communication": "Comunicação",
+      "communication": "Onboarding",
       "voice": "Linha telefônica",
+      "alerts": "Resumos e alertas",
       "automations": "Automações"
     },
     "createAccount": "Criar conta",
@@ -484,7 +533,9 @@
       "createNew": "Criar contrato"
     },
     "preflightReady": "Pronta para ativar",
-    "preflightNotReady": "Ainda não pronta para ativar"
+    "preflightNotReady": "Ainda não pronta para ativar",
+    "voiceNotes": "Áudios no WhatsApp",
+    "voiceNotesHelp": "A voz e o jeito de falar dos áudios que a assistente envia pelo WhatsApp, por idioma."
   },
   "calendar": {
     "title": "Agenda",
@@ -650,5 +701,45 @@
     "title": "WhatsApp de novos contatos",
     "subtitle": "Quem responde quando alguém manda mensagem para este número pela primeira vez.",
     "off": "Ninguém (mensagens ignoradas)"
+  },
+  "services": {
+    "title": "Serviços",
+    "campaignUsage_one": "{{count}} campanha, {{active}} ativa",
+    "campaignUsage_other": "{{count}} campanhas, {{active}} ativas",
+    "whatsappMode": {
+      "app": "também no celular do cliente",
+      "new": "só a assistente",
+      "manual": "preenchido à mão"
+    },
+    "rows": {
+      "phone": "Recepcionista por telefone",
+      "whatsapp": "WhatsApp",
+      "website": "Chat do site",
+      "campaigns": "Campanhas de texto"
+    },
+    "state": {
+      "phone": {
+        "on": "No ar",
+        "pending": "Ainda não está no ar",
+        "off": "Não configurado"
+      },
+      "whatsapp": {
+        "on": "Conectado",
+        "pending": "Falta testar",
+        "off": "Não configurado"
+      },
+      "website": {
+        "on": "No ar",
+        "pending": "Desligado",
+        "off": "Não configurado"
+      },
+      "campaigns": {
+        "on": "Rodando",
+        "pending": "Nenhuma ativa",
+        "off": "Nenhuma"
+      }
+    },
+    "phoneUsage_one": "{{count}} ligação este mês, {{bookings}} com agendamento",
+    "phoneUsage_other": "{{count}} ligações este mês, {{bookings}} com agendamento"
   }
 }

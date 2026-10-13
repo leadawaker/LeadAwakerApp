@@ -88,6 +88,54 @@
     "creating": "Aanmaken...",
     "cancel": "Annuleren"
   },
+  "integrationGroups": {
+    "messaging": {
+      "title": "Berichten",
+      "help": "Hoe klanten dit bedrijf een bericht sturen, en welke assistent antwoordt.",
+      "short": "WhatsApp",
+      "hint": "Niet gekoppeld"
+    },
+    "website": {
+      "title": "Website",
+      "help": "Het chatvenster op de eigen site van de klant.",
+      "short": "Websitechat",
+      "hint": "Geen site ingesteld"
+    },
+    "bookings": {
+      "title": "Agenda en afspraken",
+      "help": "Waar afspraken terechtkomen, en de pagina waarop klanten boeken.",
+      "short": "Agenda",
+      "hint": "Geen agenda gekoppeld"
+    },
+    "phone": {
+      "title": "Telefoon",
+      "help": "Het nummer waarop de assistent opneemt, en de documenten voor een nummer op naam van de klant.",
+      "short": "Telefoon",
+      "hint": "Geen nummer gekoppeld"
+    },
+    "state": {
+      "phone": {
+        "on": "Live",
+        "pending": "Nog niet live",
+        "off": "Niet ingesteld"
+      },
+      "messaging": {
+        "on": "Gekoppeld",
+        "pending": "Nog testen",
+        "off": "Niet ingesteld"
+      },
+      "website": {
+        "on": "Live",
+        "pending": "Uitgeschakeld",
+        "off": "Niet ingesteld"
+      },
+      "bookings": {
+        "on": "Gekoppeld",
+        "pending": "Alleen boekingspagina",
+        "off": "Niet ingesteld"
+      }
+    }
+  },
   "sections": {
     "basicInfo": "Basisinformatie",
     "contact": "Contact",
@@ -188,7 +236,7 @@
     "syncInstagram": "Instagram Contacten Synchroniseren",
     "syncingContacts": "Contacten synchroniseren...",
     "syncFailed": "Synchronisatie mislukt",
-    "selectExecution": "Selecteer een uitvoering om de pipeline te bekijken",
+    "selectExecution": "Selecteer een account om de details te bekijken",
     "cropLogo": "Logo bijsnijden",
     "cropDescription": "Sleep om te herpositioneren · gebruik de schuifregelaar om te zoomen",
     "saveLogo": "Logo opslaan",
@@ -428,8 +476,9 @@
       "overview": "Overzicht",
       "integrations": "Integraties",
       "knowledge": "Bedrijfsintel",
-      "communication": "Communicatie",
+      "communication": "Onboarding",
       "voice": "Telefoonlijn",
+      "alerts": "Overzichten & meldingen",
       "automations": "Automatiseringen"
     },
     "createAccount": "Account aanmaken",
@@ -493,7 +542,9 @@
       "createNew": "Contract aanmaken"
     },
     "preflightReady": "Klaar om te activeren",
-    "preflightNotReady": "Nog niet te activeren"
+    "preflightNotReady": "Nog niet te activeren",
+    "voiceNotes": "WhatsApp-spraakberichten",
+    "voiceNotesHelp": "De stem en spreekstijl van de spraakberichten die de assistent via WhatsApp stuurt, per taal."
   },
   "calendar": {
     "title": "Agenda",
@@ -699,5 +750,45 @@
     "title": "WhatsApp van nieuwe contacten",
     "subtitle": "Wie antwoordt als iemand dit nummer voor het eerst appt.",
     "off": "Niemand (berichten genegeerd)"
+  },
+  "services": {
+    "title": "Diensten",
+    "campaignUsage_one": "{{count}} campagne, {{active}} actief",
+    "campaignUsage_other": "{{count}} campagnes, {{active}} actief",
+    "whatsappMode": {
+      "app": "ook op de telefoon van de klant",
+      "new": "alleen de assistent",
+      "manual": "met de hand ingevuld"
+    },
+    "rows": {
+      "phone": "Telefoonreceptionist",
+      "whatsapp": "WhatsApp",
+      "website": "Websitechat",
+      "campaigns": "Tekstcampagnes"
+    },
+    "state": {
+      "phone": {
+        "on": "Live",
+        "pending": "Nog niet live",
+        "off": "Niet ingesteld"
+      },
+      "whatsapp": {
+        "on": "Gekoppeld",
+        "pending": "Nog testen",
+        "off": "Niet ingesteld"
+      },
+      "website": {
+        "on": "Live",
+        "pending": "Uitgeschakeld",
+        "off": "Niet ingesteld"
+      },
+      "campaigns": {
+        "on": "Actief",
+        "pending": "Geen actief",
+        "off": "Geen"
+      }
+    },
+    "phoneUsage_one": "{{count}} gesprek deze maand, {{bookings}} geboekt",
+    "phoneUsage_other": "{{count}} gesprekken deze maand, {{bookings}} geboekt"
   }
 }

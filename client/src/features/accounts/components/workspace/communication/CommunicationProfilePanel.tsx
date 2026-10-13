@@ -111,7 +111,7 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
           <button className="la-btn la-btn--wine" style={{ marginTop: 6 }} onClick={() => setCelebrate(false)}>{t("done.button")}</button>
         </div>
       ) : showSummary ? (
-        <ProfileSummary answers={profile!.answers} facts={factValues} grids={grids} booking={booking} onEditStep={readOnly ? undefined : openEditAt} />
+        <ProfileSummary accountId={accountId} answers={profile!.answers} facts={factValues} grids={grids} booking={booking} onEditStep={readOnly ? undefined : openEditAt} />
       ) : readOnly ? (
         <div style={{ padding: "24px 0", textAlign: "center", color: "var(--mute-2)", fontSize: 12.5, fontStyle: "italic" }}>No profile set up yet.</div>
       ) : (

@@ -158,7 +158,7 @@ Goal: one SMS from the account's alphanumeric sender when WhatsApp cannot delive
   - Text: strip WhatsApp formatting (reuse `sms_text_from_whatsapp()` from `channel_fallback.py`), cap at 612 chars (4 segments).
 - [x] 3.2 Telnyx status webhook route `POST /webhooks/telnyx/messaging` in a new `src/webhooks/telnyx_messaging_routes.py`, registered in `src/main.py`. It verifies the Telnyx ed25519 signature (`telnyx-signature-ed25519`, `telnyx-timestamp`, public key env `TELNYX_PUBLIC_KEY`) and updates the Interaction status by message id.
 - [x] 3.3 `tools/channel_fallback.py`: a new entry `fallback_to_telnyx_sms(lead, interaction_id, text)`, called from Phase 2.7 on 131026 and from Phase 5.
-  - Appends the reach-us line, built from `Accounts.phone` or the KB phone: EN "Questions? Call {phone} or reply on WhatsApp." / NL "Vragen? Bel {phone} of stuur een WhatsApp." / PT "Dúvidas? Ligue {phone} ou mande um WhatsApp."
+  - Appends the reach-us line, built from `Accounts.phone` or the KB phone: EN "Questions or changes? Call {phone}." / NL "Vragen of iets wijzigen? Bel {phone}." / PT "Dúvidas ou mudanças? Ligue {phone}." The template's closing "reply to this message" sentence is cut first (2026-10-12).
   - Sets `Leads.resolved_channel='sms'` and logs `channel_fallback` like the Twilio path.
   - Only once per send (claim on the interaction id).
 - [x] 3.4 Config in `src/config.py`: `telnyx_messaging_profile_id`, `telnyx_public_key`, and kill switch `telnyx_sms_enabled` (default false).

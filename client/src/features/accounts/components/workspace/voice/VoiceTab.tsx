@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { useVoiceLine } from "./useVoiceLine";
 import { ReadinessChecklist } from "./ReadinessChecklist";
 import { VoiceStatsRow } from "./VoiceStatsRow";
-import { NumberCard } from "./NumberCard";
+import { NumberSummaryCard } from "./NumberSummaryCard";
 import { PersonaCard } from "./PersonaCard";
 import { AgentVoiceCard } from "./AgentVoiceCard";
 import { TransferCard } from "./TransferCard";
@@ -15,7 +15,9 @@ import { ExtraInstructionsCard } from "./ExtraInstructionsCard";
 import { HoursCard, KnowledgeCard } from "./ReuseCards";
 import { TestCard } from "./TestCard";
 
-export function VoiceTab({ accountId, readOnly = false }: { accountId: number; readOnly?: boolean }) {
+export function VoiceTab({ accountId, readOnly = false, onOpenIntegrations }: {
+  accountId: number; readOnly?: boolean; onOpenIntegrations?: () => void;
+}) {
   const { t } = useTranslation("voiceTab");
   const { line, loading, error, saving, save, refetch } = useVoiceLine(accountId);
   const canEdit = !readOnly;
@@ -45,7 +47,7 @@ export function VoiceTab({ accountId, readOnly = false }: { accountId: number; r
       {canEdit && <TestCard line={line} />}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 380px), 1fr))", gap: 22, alignItems: "start" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
-          <NumberCard {...card} />
+          <NumberSummaryCard line={line} onManage={canEdit ? onOpenIntegrations : undefined} />
           <PersonaCard {...card} />
           <TransferCard {...card} />
           <HoursCard line={line} canEdit={canEdit} onChanged={onChanged} />

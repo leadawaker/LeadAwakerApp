@@ -57,6 +57,20 @@
       "on": "Som suave de escritório sob a voz da recepcionista",
       "off": "Desligado",
       "help": "Quem liga ouve um escritório tranquilo ao fundo. Só quem liga ouve, e o som para quando você atende uma ligação transferida."
+    },
+    "summaryNone": "Nenhum número vinculado ainda",
+    "summaryHelp": "O número, os documentos do cliente e a ativação ficam na aba Integrações.",
+    "summaryManage": "Gerenciar em Integrações",
+    "region": {
+      "label": "Região das ligações",
+      "help": "Onde as ligações desta linha são processadas. Escolha a região mais próxima de quem liga para o cliente: todas as partes da ligação ficam nessa região, e isso mantém o som limpo. Para o Brasil, a mais próxima é Estados Unidos.",
+      "options": {
+        "Europe": "Europa",
+        "US": "Estados Unidos",
+        "Canada": "Canadá",
+        "Australia": "Austrália",
+        "Middle East": "Oriente Médio"
+      }
     }
   },
   "persona": {
@@ -74,7 +88,8 @@
     "title": "Voz da recepcionista",
     "help": "Como a recepcionista se apresenta e soa ao telefone.",
     "name": "Nome da recepcionista",
-    "pronunciation": "Pronúncia"
+    "pronunciation": "Pronúncia",
+    "intake": "O que a equipe quer saber antes de um agendamento"
   },
   "transfer": {
     "title": "Transferência",
@@ -228,5 +243,147 @@
       "help": "Se o número de quem ligou não estiver no WhatsApp, a mesma mensagem é enviada uma vez por SMS com este nome. As pessoas não conseguem responder a ele.",
       "invalid": "Use até 11 letras, números ou espaços, com pelo menos uma letra."
     }
+  },
+  "numberDocs": {
+    "card": {
+      "title": "Documentos para o número próprio",
+      "help": "Um número de telefone holandês precisa estar registrado no nome da empresa do cliente. Envie este link privado ao cliente: ele preenche os dados da empresa e envia os documentos, que vão direto para a operadora (Telnyx).",
+      "create": "Criar o link",
+      "createNew": "Iniciar um novo pedido",
+      "link": "Link para o cliente",
+      "copy": "Copiar",
+      "copied": "Copiado",
+      "waiting": "Aguardando o cliente enviar.",
+      "submitted": "O cliente já enviou tudo.",
+      "documents": "Documentos na Telnyx"
+    },
+    "page": {
+      "title": "Um número de telefone para {{company}}",
+      "intro": "Sua recepcionista de IA ganha um número de telefone próprio, registrado no nome da sua empresa. A operadora é obrigada por lei a verificar de quem é cada número. Leva uns três minutos.",
+      "privacy": "A Telnyx é a operadora de telecomunicações licenciada que fornece o seu número, e quem precisa conferir estes documentos. Eles vão direto para a Telnyx por uma conexão segura; a Lead Awaker não guarda cópia e eles são usados apenas para registrar o seu número.",
+      "detailsTitle": "Dados da empresa",
+      "documentsTitle": "Documentos",
+      "documentsHelp": "PDF, JPG ou PNG, até 10 MB cada. Uma foto nítida tirada com o celular serve.",
+      "fields": {
+        "legalName": "Nome oficial da empresa",
+        "kvkNumber": "Número KvK",
+        "representative": "Seu nome completo",
+        "contactPhone": "Telefone",
+        "street": "Rua e número",
+        "postalCode": "CEP",
+        "city": "Cidade"
+      },
+      "docs": {
+        "kvk": {
+          "title": "Extrato da KvK",
+          "help": "Um extrato recente da Câmara de Comércio (kvk.nl)."
+        },
+        "id": {
+          "title": "Passaporte ou documento de identidade",
+          "help": "Da pessoa que representa a empresa. Você pode cobrir o BSN."
+        },
+        "address": {
+          "title": "Comprovante de endereço",
+          "help": "Uma conta de luz, internet ou telefone no endereço da empresa, com no máximo 3 meses."
+        }
+      },
+      "upload": "Escolher arquivo",
+      "replace": "Substituir",
+      "uploading": "Enviando…",
+      "send": "Enviar",
+      "invalid": "Este link não é válido. Peça um novo à Lead Awaker.",
+      "done": {
+        "title": "Obrigado, chegou tudo",
+        "body": "Agora vamos solicitar o seu número. Você não precisa fazer mais nada; avisamos quando estiver pronto."
+      },
+      "errors": {
+        "tooLarge": "Este arquivo tem mais de 10 MB.",
+        "fileType": "Escolha um arquivo PDF, JPG ou PNG.",
+        "upload": "O envio não funcionou. Tente de novo.",
+        "save": "Não foi possível enviar. Tente de novo.",
+        "detailsMissing": "Preencha todos os dados da empresa.",
+        "documentsMissing": "Envie os três documentos."
+      },
+      "secure": "Conexão segura",
+      "steps": {
+        "details": "Dados da empresa",
+        "documents": "Documentos",
+        "send": "Enviar"
+      },
+      "footer": "Lead Awaker · recepcionistas de IA para negócios locais",
+      "minutes": "Cerca de 3 minutos",
+      "carrierLabel": "Registro do número por",
+      "carrierTitle": "Quem é a Telnyx?"
+    },
+    "plan": {
+      "title": "Qual número pedir",
+      "areaCode": "DDD",
+      "find": "Mostrar números disponíveis",
+      "areaHelp": "A Telnyx só aceita um código de área que combine com o endereço do cliente (073 para Den Bosch).",
+      "none": "Não há números disponíveis com este código de área agora.",
+      "anyNumber": "Qualquer número livre neste código de área",
+      "price": "${{upfront}} uma vez, ${{monthly}}/mês",
+      "picked": "Escolhido:",
+      "auto": "Pedir este número assim que o cliente enviar",
+      "autoHelp": "Se o número escolhido já tiver acabado, o primeiro livre com o mesmo código é pedido. Depois a Telnyx confere os documentos; para o nosso 073 isso levou dois dias.",
+      "orderNow": "Pedir o número agora"
+    },
+    "order": {
+      "title": "Pedido do número na Telnyx",
+      "status": {
+        "placing": "Pedindo…",
+        "pending": "Aguardando a verificação da Telnyx",
+        "success": "Aprovado",
+        "failure": "Recusado"
+      },
+      "help": {
+        "placing": "",
+        "pending": "A Telnyx está conferindo os documentos do cliente. Este cartão verifica de novo sempre que abre.",
+        "success": "O número é do cliente. Vincule para começar a usar, e ative quando estiver pronto.",
+        "failure": ""
+      },
+      "attach": "Vincular a esta conta",
+      "failed": "O pedido não deu certo: {{error}}"
+    }
+  },
+  "notice": {
+    "label": "Aviso de gravação",
+    "on": "Quem liga ouve esta frase antes de a recepcionista atender",
+    "off": "Desligado",
+    "help": "As ligações são gravadas, e quem liga precisa saber disso antes de a conversa começar. Uma frase curta gravada, em outra voz, resolve isso.",
+    "routeOnly": "Toca nas linhas com transferência com triagem ou com o som de escritório ligado.",
+    "edit": "Editar frase",
+    "title": "Aviso de gravação",
+    "standardTag": "Frase padrão",
+    "customTag": "Sua própria frase",
+    "current": "O que quem liga ouve agora",
+    "play": "Reproduzir",
+    "pause": "Pausar",
+    "text": "A frase",
+    "textHelp": "Uma frase curta. {{count}} de {{max}} caracteres.",
+    "voice": "Voz",
+    "voiceHelp": "Aperte reproduzir para ouvir cada voz dizer a frase padrão. Ouvir não custa nada.",
+    "female": "feminina",
+    "male": "masculina",
+    "speed": "Velocidade",
+    "generate": "Gerar áudio",
+    "generating": "Gerando o áudio…",
+    "draft": "Seu rascunho, {{seconds}} segundos",
+    "use": "Usar este áudio",
+    "reset": "Voltar para a frase padrão",
+    "failed": "Não deu certo. Tente de novo.",
+    "loadFailed": "Não foi possível reproduzir este áudio.",
+    "standard": {
+      "nl": "Voor kwaliteit en training nemen we dit gesprek op.",
+      "en-GB": "Calls are recorded to help us improve our service.",
+      "en-US": "To help us serve you better, this call is recorded.",
+      "pt-BR": "Para melhorar nosso atendimento, esta ligação é gravada.",
+      "pt-PT": "Para melhorarmos o nosso serviço, esta chamada é gravada."
+    },
+    "makers": {
+      "openai": "Vozes da OpenAI",
+      "google": "Vozes do Google"
+    },
+    "unsaved": "Ainda não foi salvo. Aperte Gerar áudio, ouça e depois Usar este áudio para salvar."
   }
 }

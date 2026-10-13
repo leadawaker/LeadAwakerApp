@@ -1,13 +1,16 @@
 // Connect a client's own WhatsApp number (Meta Cloud API) from the account
 // page. Spec: specs/receptionist-channels, Phase 4.
 //
-// Five values go in, "Save and test connection" stores them and asks Meta
-// whether they work. The two secrets are write-only: the server never sends
-// them back, so their inputs are always empty and an empty input keeps the
-// stored value.
+// The usual way is "Connect with Meta": Meta's signup window opens, the client
+// logs in and links the number on their WhatsApp Business app, and the server
+// stores the details itself. Entering the five values by hand stays for a
+// client with their own Meta app. The two secrets are write-only: the server
+// never sends them back, so their inputs are always empty and an empty input
+// keeps the stored value.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { MessageCircle, Check, X, Loader2, RefreshCw } from "lucide-react";
+import { MessageCircle, Check, X, Loader2, RefreshCw, Link2, ChevronDown, ChevronRight, Smartphone, Bot } from "lucide-react";
+import { launchWhatsAppConnect, type WhatsAppConnectMode } from "../embeddedSignup";
 import { PanelAction, EditButton } from "../atoms";
 import { IconTile, SectionHead } from "../integrationsAtoms";
 import { CARD_STYLE, EXPLAINER, Fact, MONO_LABEL, Note, TonePill, type Tone } from "./whatsappAtoms";
@@ -32,16 +35,19 @@ function formFrom(sender: WhatsappSender | null): SenderInput {
 
 export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
   const { t } = useTranslation("whatsappCloud");
-  const { sender, loading, save, test } = useWhatsappSender(accountId);
+  const { sender, loading, save, test, connect } = useWhatsappSender(accountId);
   const [editing, setEditing] = useState(false);
+  const [manual, setManual] = useState(false);
+  const [metaOpen, setMetaOpen] = useState<WhatsAppConnectMode | null>(null);
   const [form, setForm] = useState<SenderInput>(EMPTY);
   const [formError, setFormError] = useState<string | null>(null);
   const [result, setResult] = useState<TestResult | null>(null);
 
   if (loading) return null;
 
-  const busy = save.isPending || test.isPending;
+  const busy = save.isPending || test.isPending || connect.isPending || !!metaOpen;
   const showForm = !sender || editing;
+  const manualOpen = manual;
   const errorText = (code: string | null | undefined, fallback?: string | null) =>
     t(`connect.errors.${code || "unknown"}`, { defaultValue: fallback || t("connect.errors.unknown") });
   const thrownText = (err: unknown) =>
@@ -51,6 +57,19 @@ export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
     setFormError(null);
     try { setResult(await test.mutateAsync()); }
     catch (err) { setResult(null); setFormError(thrownText(err)); }
+  };
+
+  const connectWithMeta = async (mode: WhatsAppConnectMode) => {
+    setFormError(null); setResult(null); setMetaOpen(mode);
+    try {
+      const signup = await launchWhatsAppConnect(mode);
+      await connect.mutateAsync({ mode, ...signup });
+    } catch (err) {
+      setMetaOpen(null);
+      return setFormError(err instanceof WhatsappApiError ? errorText(err.code, err.message) : t("connect.errors.signup_cancelled"));
+    }
+    setMetaOpen(null); setForm(EMPTY); setEditing(false);
+    await runTest();
   };
 
   const startEdit = () => { setForm(formFrom(sender)); setFormError(null); setEditing(true); };
@@ -92,7 +111,51 @@ export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
       {showForm ? (
         <form onSubmit={(e) => { e.preventDefault(); void submit(); }} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
           <p style={EXPLAINER}>{t("connect.explainer")}</p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px 18px" }}>
+          {/* Two ways to connect, the client's choice. Both open Meta's own window. */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))", gap: 14 }}>
+            {(["app", "new"] as const).map((mode) => (
+              <div key={mode} className="neu-inset-crisp" style={{ borderRadius: 12, padding: "16px 18px", display: "flex", flexDirection: "column", gap: 10 }} data-testid={`whatsapp-option-${mode}`}>
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  <IconTile>{mode === "app" ? <Smartphone size={17} style={{ color: "var(--mute-2)" }} /> : <Bot size={17} style={{ color: "var(--mute-2)" }} />}</IconTile>
+                  <span style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{t(`connect.options.${mode}.title`)}</span>
+                </div>
+                <p style={{ ...EXPLAINER, margin: 0 }}>{t(`connect.options.${mode}.body`)}</p>
+                <ul style={{ margin: 0, padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 5 }}>
+                  {(["a", "b", "c"] as const).map((k) => (
+                    <li key={k} style={{ display: "flex", gap: 7, alignItems: "baseline", fontSize: 12, color: "var(--ink-soft)", lineHeight: 1.45 }}>
+                      <Check size={11} style={{ color: "var(--good)", flexShrink: 0 }} />
+                      {t(`connect.options.${mode}.points.${k}`)}
+                    </li>
+                  ))}
+                </ul>
+                <span style={{ fontSize: 11.5, color: "var(--mute)", lineHeight: 1.45 }}>{t(`connect.options.${mode}.needs`)}</span>
+                <div style={{ marginTop: "auto", paddingTop: 4 }}>
+                  <button type="button" className={`la-btn ${mode === "app" ? "la-btn--wine" : "la-btn--soft"}`} disabled={busy} onClick={() => void connectWithMeta(mode)} data-testid={`whatsapp-connect-${mode}`}>
+                    {metaOpen === mode ? <Loader2 size={12} className="animate-spin" /> : <Link2 size={12} />}
+                    {metaOpen === mode ? t("connect.metaBusy") : t("connect.meta")}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+          {sender && !manualOpen && (
+            <div>
+              <PanelAction onClick={() => { setEditing(false); setFormError(null); }} disabled={busy} icon={<X size={12} />}>
+                {t("connect.cancel")}
+              </PanelAction>
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={() => setManual(!manualOpen)}
+            aria-expanded={manualOpen}
+            style={{ display: "flex", alignItems: "center", gap: 6, background: "none", border: 0, padding: 0, cursor: "pointer", fontSize: 12, color: "var(--mute)", alignSelf: "flex-start" }}
+          >
+            {manualOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+            {t("connect.manual")}
+          </button>
+          {manualOpen && <p style={{ ...EXPLAINER, margin: 0 }}>{t("connect.manualHelp")}</p>}
+          {manualOpen && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px 18px" }}>
             {[...ID_FIELDS, ...SECRET_FIELDS].map((key) => {
               const isSecret = key === "appSecret" || key === "accessToken";
               const stored = key === "appSecret" ? sender?.hasAppSecret : key === "accessToken" ? sender?.hasToken : false;
@@ -116,9 +179,9 @@ export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
                 </label>
               );
             })}
-          </div>
-          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-            <button type="submit" className="la-btn la-btn--wine" disabled={busy}>
+          </div>}
+          {manualOpen && <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+            <button type="submit" className="la-btn la-btn--soft" disabled={busy}>
               {busy ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}
               {save.isPending ? t("connect.saving") : test.isPending ? t("connect.testing") : t("connect.saveAndTest")}
             </button>
@@ -127,7 +190,7 @@ export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
                 {t("connect.cancel")}
               </PanelAction>
             )}
-          </div>
+          </div>}
           {formError && <Note tone="bad">{formError}</Note>}
         </form>
       ) : sender && (
@@ -138,6 +201,7 @@ export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
                 {sender.displayPhoneNumber && <span style={{ fontFamily: "var(--mono)" }}>{sender.displayPhoneNumber}</span>}
               </Fact>
               <Fact label={t("connect.facts.verifiedName")}>{sender.verifiedName}</Fact>
+              <Fact label={t("connect.facts.mode")}>{t(`connect.modeName.${sender.onboardingMode ?? "manual"}`)}</Fact>
               <Fact label={t("connect.facts.nameStatus")}>
                 {sender.nameStatus && t(`connect.nameStatus.${sender.nameStatus}`, { defaultValue: sender.nameStatus })}
               </Fact>

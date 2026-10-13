@@ -109,6 +109,7 @@ import {
   type NicheWordGroups,
   EMPTY_NICHE_GROUPS,
 } from "@shared/schema";
+import { normalizeIntake } from "@shared/voiceIntake";
 
 import type { NotificationItem, ProspectsListParams } from "./types";
 
@@ -216,22 +217,42 @@ export const accountsStorage = {
     accountId: number,
     data: Partial<InsertAccountCommunicationProfile>,
   ): Promise<AccountCommunicationProfile> {
-    const existing = await this.getCommunicationProfile(accountId);
-    const now = new Date();
-    const completedAt = data.status === "completed" ? now : (data.completedAt ?? existing?.completedAt ?? null);
-    const payload = { ...data, accountsId: accountId, updatedAt: now, completedAt } as any;
-    // `setup` is shared with the Voice tab (storage/voiceLines.ts), which owns
-    // keys the wizard never sends (e.g. `screening`). Merge one level deep so a
-    // wizard save, even from an older bundle, cannot drop them.
-    if (data.setup && existing?.setup) payload.setup = mergeSetup(existing.setup, data.setup);
-    if (existing) {
-      const [row] = await db.update(accountCommunicationProfile)
-        .set(payload).where(eq(accountCommunicationProfile.id, existing.id)).returning();
+    // One read-then-write under a row lock, like the alert settings route:
+    // without it a save landing between the two could be written over.
+    return db.transaction(async (tx) => {
+      const [existing] = await tx.select().from(accountCommunicationProfile)
+        .where(eq(accountCommunicationProfile.accountsId, accountId)).for("update");
+      const now = new Date();
+      const completedAt = data.status === "completed" ? now : (data.completedAt ?? existing?.completedAt ?? null);
+      const payload = { ...data, accountsId: accountId, updatedAt: now, completedAt } as any;
+      // `setup` is shared with the Voice tab (storage/voiceLines.ts), which owns
+      // keys the wizard never sends (e.g. `screening`). Merge one level deep so a
+      // wizard save, even from an older bundle, cannot drop them.
+      // The alert settings route (storage/clientAlerts.ts) owns `setup.alerts`
+      // and the recap switch and time in `setup.handoff`: a wizard holding an
+      // older copy must not write recipients, consent stamps or the time back.
+      // Leaving them out of the incoming setup is enough, the merge keeps what is stored.
+      if (data.setup) {
+        const { alerts: _alerts, ...incoming } = data.setup as Record<string, unknown>;
+        if (existing?.setup && isObj(incoming.handoff)) {
+          const { recap: _recap, recapTime: _recapTime, ...handoff } = incoming.handoff as Record<string, unknown>;
+          incoming.handoff = handoff;
+        }
+        // The intake list has limits the engine relies on (shared/voiceIntake.ts).
+        if (isObj(incoming.voice) && "intake" in incoming.voice) {
+          incoming.voice = { ...incoming.voice, intake: normalizeIntake(incoming.voice.intake) };
+        }
+        payload.setup = existing?.setup ? mergeSetup(existing.setup, incoming) : incoming;
+      }
+      if (existing) {
+        const [row] = await tx.update(accountCommunicationProfile)
+          .set(payload).where(eq(accountCommunicationProfile.id, existing.id)).returning();
+        return row;
+      }
+      const [row] = await tx.insert(accountCommunicationProfile)
+        .values({ ...payload, createdAt: now }).returning();
       return row;
-    }
-    const [row] = await db.insert(accountCommunicationProfile)
-      .values({ ...payload, createdAt: now }).returning();
-    return row;
+    });
   },
 
   // ─── Niche Vocabulary ───────────────────────────────────────────────

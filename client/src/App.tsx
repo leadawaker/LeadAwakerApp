@@ -31,6 +31,8 @@ const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
 const Accounts = lazy(() => import("@/pages/Accounts"));
 const NotFound = lazy(() => import("@/pages/not-found"));
+const GoLink = lazy(() => import("@/pages/GoLink"));
+const NumberDocs = lazy(() => import("@/pages/NumberDocs"));
 
 /* ------------------------------------------------------------------ */
 /* Language setup                                                      */
@@ -126,6 +128,8 @@ function AppRoutes() {
       <Route path="/voice-demo" component={VoiceDemo} />
       <Route path="/review-demo" component={ReviewDemo} />
       <Route path="/accept-invite" component={AcceptInvite} />
+      <Route path="/go/:code" component={GoLink} />
+      <Route path="/number-docs/:token" component={NumberDocs} />
       <Route path="/platform" component={AppArea} />
       <Route path="/platform/:rest*" component={AppArea} />
       {/* Legacy CRM prefixes — redirect to the unified /platform area */}
@@ -232,7 +236,11 @@ function Router() {
     // Standalone demo surface: sent to prospects as a bare link, so it renders
     // without the marketing navbar/footer.
     location.startsWith("/voice-demo") ||
-    location.startsWith("/review-demo");
+    location.startsWith("/review-demo") ||
+    // A client's private upload page: its own branded shell, nothing around it.
+    location.startsWith("/number-docs/") ||
+    // The button in an alert email: a bare redirect card, then the CRM.
+    location.startsWith("/go/");
 
   /* Legal pages render standalone (premium-styled, self-contained) —
      no legacy marketing Navbar/Footer. */

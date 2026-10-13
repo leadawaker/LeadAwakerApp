@@ -1,7 +1,7 @@
 {
   "connect": {
     "title": "WhatsApp number",
-    "explainer": "Connect this client's own WhatsApp number. Paste the five values from the client's Meta business account and press the button. After that you never have to open Meta for it.",
+    "explainer": "Connect this client's own WhatsApp number. Pick with the client how they want to work; either way they log in with Facebook in Meta's window and nothing has to be pasted.",
     "pill": {
       "none": "Not set",
       "pending": "Not tested yet",
@@ -38,7 +38,8 @@
       "number": "Number",
       "verifiedName": "Name shown",
       "nameStatus": "Name approval",
-      "quality": "Quality"
+      "quality": "Quality",
+      "mode": "Set up as"
     },
     "nameStatus": {
       "APPROVED": "Approved",
@@ -67,12 +68,47 @@
       "number_in_use": "This phone number ID is already connected to another account.",
       "secrets_required": "The app secret and the token are both needed the first time.",
       "engine_unavailable": "The automation engine did not answer. Try again in a minute.",
-      "unknown": "Something went wrong. Try again."
+      "unknown": "Something went wrong. Try again.",
+      "app_secret_missing": "The server is missing Lead Awaker's Meta app secret (META_APP_SECRET).",
+      "meta_refused": "Meta refused the connection.",
+      "number_unclear": "The WhatsApp account has no number, or more than one. Enter the details by hand.",
+      "signup_cancelled": "The Meta window was closed before it finished."
     },
     "warnings": {
       "app_not_subscribed": "Sending works, but incoming messages will not arrive yet: the Meta app is not subscribed to this WhatsApp account.",
       "webhook_unknown": "Could not check whether incoming messages will arrive. Sending works.",
       "app_unknown": "Could not check the app secret right now. Sending works. Press Test connection again later."
+    },
+    "meta": "Connect with Meta",
+    "metaBusy": "Waiting for Meta…",
+    "manual": "Enter the details by hand",
+    "manualHelp": "For a client who built their own Meta app: paste the five values from their Meta business account.",
+    "options": {
+      "app": {
+        "title": "Keep WhatsApp on their phone",
+        "body": "The assistant answers on the number the client already uses in the WhatsApp Business app.",
+        "points": {
+          "a": "The client sees every chat on their phone, the assistant's replies included",
+          "b": "They can answer a customer themselves from WhatsApp",
+          "c": "What they type themselves costs nothing"
+        },
+        "needs": "Needs: the number is on the WhatsApp Business app (not the normal WhatsApp), and the phone is opened at least every two weeks."
+      },
+      "new": {
+        "title": "A separate number for the assistant",
+        "body": "A number that only the assistant uses. It is not on anyone's phone.",
+        "points": {
+          "a": "The client's own WhatsApp stays private and untouched",
+          "b": "Chats are read and answered in the CRM",
+          "c": "Works with a landline or a new number"
+        },
+        "needs": "Needs: a number that is not on WhatsApp yet and can take an SMS or a call for the code."
+      }
+    },
+    "modeName": {
+      "app": "Also on the client's phone",
+      "new": "Assistant only",
+      "manual": "Entered by hand"
     }
   },
   "templates": {
@@ -127,5 +163,32 @@
       "engine_unavailable": "The automation engine did not answer. Try again in a minute.",
       "unknown": "Something went wrong. Try again."
     }
+  },
+  "behaviour": {
+    "title": "How the assistant answers",
+    "saveFailed": "Could not save. Try again.",
+    "scopeLabel": "Who the assistant answers",
+    "scope": {
+      "all": {
+        "title": "Everyone",
+        "help": "Every chat on this number gets an answer."
+      },
+      "new_only": {
+        "title": "Only new contacts",
+        "help": "People already in the client's phone or chats stay with the client."
+      },
+      "off": {
+        "title": "Nobody",
+        "help": "Messages are stored in the CRM; nobody gets an automatic answer."
+      }
+    },
+    "takeoverLabel": "When the client replies from their phone",
+    "takeoverHelp": "A reply from the client's WhatsApp app pauses the assistant in that chat. It takes over again when the client sends the command below in the chat, or after the waiting time.",
+    "commandLabel": "Hand back with",
+    "autoLabel": "or automatically",
+    "never": "never (only the command)",
+    "afterHours_one": "after {{count}} hour of silence",
+    "afterHours_other": "after {{count}} hours of silence",
+    "commandVisible": "The customer sees “{{command}}” in the chat too: WhatsApp sends everything the client types. Turning manual takeover off on the conversation in the CRM hands back without the customer seeing anything."
   }
 }

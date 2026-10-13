@@ -57,6 +57,20 @@
       "on": "Zacht kantoorgeluid onder de stem van de receptionist",
       "off": "Uit",
       "help": "Bellers horen een rustig kantoor op de achtergrond. Alleen de beller hoort het, en het stopt zodra je een doorverbonden gesprek aanneemt."
+    },
+    "summaryNone": "Nog geen nummer gekoppeld",
+    "summaryHelp": "Het nummer, de documenten van de klant en Live gaan staan op het tabblad Integraties.",
+    "summaryManage": "Beheren in Integraties",
+    "region": {
+      "label": "Belregio",
+      "help": "Waar de gesprekken van deze lijn worden afgehandeld. Kies de regio die het dichtst bij de bellers van de klant ligt: elk deel van een gesprek blijft dan in die regio, en dat houdt het geluid schoon. Voor Brazilië is de Verenigde Staten het dichtstbij.",
+      "options": {
+        "Europe": "Europa",
+        "US": "Verenigde Staten",
+        "Canada": "Canada",
+        "Australia": "Australië",
+        "Middle East": "Midden-Oosten"
+      }
     }
   },
   "persona": {
@@ -74,7 +88,8 @@
     "title": "Stem van de receptionist",
     "help": "Hoe de receptionist zich voorstelt en klinkt aan de telefoon.",
     "name": "Naam van de receptionist",
-    "pronunciation": "Uitspraak"
+    "pronunciation": "Uitspraak",
+    "intake": "Wat het team wil weten vóór een afspraak"
   },
   "transfer": {
     "title": "Doorverbinden",
@@ -228,5 +243,147 @@
       "help": "Staat het nummer van de beller niet op WhatsApp, dan gaat hetzelfde bericht één keer als sms uit onder deze naam. Mensen kunnen er niet op antwoorden.",
       "invalid": "Gebruik maximaal 11 letters, cijfers of spaties, met minstens één letter."
     }
+  },
+  "numberDocs": {
+    "card": {
+      "title": "Documenten voor het eigen nummer",
+      "help": "Een Nederlands telefoonnummer moet op naam van het bedrijf van de klant staan. Stuur de klant deze privélink: daar vult hij de bedrijfsgegevens in en uploadt hij de documenten. Die gaan rechtstreeks naar de telefoonaanbieder (Telnyx).",
+      "create": "Link aanmaken",
+      "createNew": "Nieuwe aanvraag starten",
+      "link": "Link voor de klant",
+      "copy": "Kopiëren",
+      "copied": "Gekopieerd",
+      "waiting": "Wachten tot de klant het verstuurt.",
+      "submitted": "De klant heeft alles verstuurd.",
+      "documents": "Documenten bij Telnyx"
+    },
+    "page": {
+      "title": "Een telefoonnummer voor {{company}}",
+      "intro": "Je AI-receptionist krijgt een eigen telefoonnummer, op naam van jouw bedrijf. De telefoonaanbieder is wettelijk verplicht te controleren van wie een nummer is. Het kost ongeveer drie minuten.",
+      "privacy": "Telnyx is de erkende telecomaanbieder die je nummer levert, en degene die deze documenten moet controleren. Ze gaan via een beveiligde verbinding rechtstreeks naar Telnyx; Lead Awaker bewaart geen kopie en ze worden alleen gebruikt om je nummer te registreren.",
+      "detailsTitle": "Bedrijfsgegevens",
+      "documentsTitle": "Documenten",
+      "documentsHelp": "PDF, JPG of PNG, maximaal 10 MB per bestand. Een duidelijke foto met je telefoon is prima.",
+      "fields": {
+        "legalName": "Officiële bedrijfsnaam",
+        "kvkNumber": "KvK-nummer",
+        "representative": "Je volledige naam",
+        "contactPhone": "Telefoonnummer",
+        "street": "Straat en huisnummer",
+        "postalCode": "Postcode",
+        "city": "Plaats"
+      },
+      "docs": {
+        "kvk": {
+          "title": "KvK-uittreksel",
+          "help": "Een recent uittreksel van de Kamer van Koophandel (kvk.nl)."
+        },
+        "id": {
+          "title": "Paspoort of ID-kaart",
+          "help": "Van degene die het bedrijf vertegenwoordigt. Het BSN mag je afdekken."
+        },
+        "address": {
+          "title": "Adresbewijs",
+          "help": "Een energie-, internet- of telefoonrekening op het bedrijfsadres, niet ouder dan 3 maanden."
+        }
+      },
+      "upload": "Bestand kiezen",
+      "replace": "Vervangen",
+      "uploading": "Bezig met uploaden…",
+      "send": "Versturen",
+      "invalid": "Deze link is niet geldig. Vraag Lead Awaker om een nieuwe.",
+      "done": {
+        "title": "Bedankt, alles is binnen",
+        "body": "We vragen nu je nummer aan. Je hoeft verder niets te doen; je hoort van ons zodra het klaar is."
+      },
+      "errors": {
+        "tooLarge": "Dit bestand is groter dan 10 MB.",
+        "fileType": "Kies een PDF-, JPG- of PNG-bestand.",
+        "upload": "Het uploaden is niet gelukt. Probeer het opnieuw.",
+        "save": "Het versturen is niet gelukt. Probeer het opnieuw.",
+        "detailsMissing": "Vul alle bedrijfsgegevens in.",
+        "documentsMissing": "Upload alle drie de documenten."
+      },
+      "secure": "Beveiligde verbinding",
+      "steps": {
+        "details": "Bedrijfsgegevens",
+        "documents": "Documenten",
+        "send": "Versturen"
+      },
+      "footer": "Lead Awaker · AI-receptionisten voor lokale bedrijven",
+      "minutes": "Ongeveer 3 minuten",
+      "carrierLabel": "Nummerregistratie door",
+      "carrierTitle": "Wie is Telnyx?"
+    },
+    "plan": {
+      "title": "Welk nummer bestellen",
+      "areaCode": "Netnummer",
+      "find": "Toon beschikbare nummers",
+      "areaHelp": "Telnyx accepteert alleen een netnummer dat bij het adres van de klant past (073 voor Den Bosch).",
+      "none": "Er zijn nu geen nummers beschikbaar met dit netnummer.",
+      "anyNumber": "Een willekeurig vrij nummer met dit netnummer",
+      "price": "${{upfront}} eenmalig, ${{monthly}}/maand",
+      "picked": "Gekozen:",
+      "auto": "Bestel dit nummer zodra de klant verstuurt",
+      "autoHelp": "Is het gekozen nummer dan weg, dan wordt het eerste vrije nummer met hetzelfde netnummer besteld. Telnyx controleert daarna de documenten; voor ons eigen 073 duurde dat twee dagen.",
+      "orderNow": "Nummer nu bestellen"
+    },
+    "order": {
+      "title": "Nummerbestelling bij Telnyx",
+      "status": {
+        "placing": "Bezig met bestellen…",
+        "pending": "Wacht op controle door Telnyx",
+        "success": "Goedgekeurd",
+        "failure": "Afgewezen"
+      },
+      "help": {
+        "placing": "",
+        "pending": "Telnyx controleert de documenten van de klant. Deze kaart kijkt opnieuw elke keer dat hij opent.",
+        "success": "Het nummer is van de klant. Koppel het om het te gebruiken, en ga live als alles klaar is.",
+        "failure": ""
+      },
+      "attach": "Aan dit account koppelen",
+      "failed": "De bestelling is niet gelukt: {{error}}"
+    }
+  },
+  "notice": {
+    "label": "Opnamemelding",
+    "on": "Bellers horen deze zin voordat de receptionist opneemt",
+    "off": "Uit",
+    "help": "Gesprekken worden opgenomen, en dat moet een beller weten voordat het gesprek begint. Een korte opgenomen zin in een andere stem regelt dat.",
+    "routeOnly": "Speelt op lijnen met gescreend doorverbinden of het kantoorgeluid aan.",
+    "edit": "Zin aanpassen",
+    "title": "Opnamemelding",
+    "standardTag": "Standaardzin",
+    "customTag": "Je eigen zin",
+    "current": "Wat bellers nu horen",
+    "play": "Afspelen",
+    "pause": "Pauzeren",
+    "text": "De zin",
+    "textHelp": "Eén korte zin. {{count}} van {{max}} tekens.",
+    "voice": "Stem",
+    "voiceHelp": "Druk op afspelen om elke stem de standaardzin te horen zeggen. Luisteren kost niets.",
+    "female": "vrouw",
+    "male": "man",
+    "speed": "Snelheid",
+    "generate": "Fragment maken",
+    "generating": "Fragment wordt gemaakt…",
+    "draft": "Je concept, {{seconds}} seconden",
+    "use": "Dit fragment gebruiken",
+    "reset": "Terug naar de standaardzin",
+    "failed": "Dat lukte niet. Probeer het opnieuw.",
+    "loadFailed": "Dit fragment kon niet worden afgespeeld.",
+    "standard": {
+      "nl": "Voor kwaliteit en training nemen we dit gesprek op.",
+      "en-GB": "Calls are recorded to help us improve our service.",
+      "en-US": "To help us serve you better, this call is recorded.",
+      "pt-BR": "Para melhorar nosso atendimento, esta ligação é gravada.",
+      "pt-PT": "Para melhorarmos o nosso serviço, esta chamada é gravada."
+    },
+    "makers": {
+      "openai": "Stemmen van OpenAI",
+      "google": "Stemmen van Google"
+    },
+    "unsaved": "Nog niet opgeslagen. Druk op Fragment maken, luister, en kies dan Dit fragment gebruiken om op te slaan."
   }
 }

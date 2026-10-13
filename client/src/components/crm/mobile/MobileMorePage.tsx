@@ -126,11 +126,11 @@ export function MobileMorePage({
   const cycleTheme = () => setThemeMode(THEME_CYCLE[(themeIndex + 1) % THEME_CYCLE.length].mode);
 
   // Nav items grouped like the desktop nav bar (Services, Engage, Admin, Backend).
-  // Reactivation stays agency-only here: clients have it in the bottom bar.
+  // Reactivation is shown to everyone: Home holds the first bottom-bar slot, so this is the clients' way to Campaigns.
   type Item = NavGate & { label: string; href: string; icon: LucideIcon };
   const visible = (items: Item[]) => items.filter((it) => isNavItemVisible(it, navCtx));
   const serviceItems = visible([
-    { label: t("sidebar.reactivation"), href: `${prefix}/campaigns`, icon: Megaphone, agencyOnly: true },
+    { label: t("sidebar.reactivation"), href: `${prefix}/campaigns`, icon: Megaphone },
     { label: t("sidebar.speedToLead"), href: `${prefix}/speed-to-lead`, icon: Send, agencyOnly: true, serviceKey: "speed" },
     { label: t("sidebar.reputation"), href: `${prefix}/reputation`, icon: Star, serviceKey: "reputation" },
     { label: t("sidebar.missedCalls"), href: `${prefix}/missed-calls`, icon: PhoneMissed, serviceKey: "missedcall" },

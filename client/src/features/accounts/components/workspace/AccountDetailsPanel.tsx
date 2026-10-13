@@ -27,7 +27,8 @@ function EditArea({ value, onChange, placeholder, rows = 3 }: { value: string; o
   return <textarea className="neu-input" style={{ ...inputStyle, resize: "vertical", lineHeight: 1.5, fontFamily: "var(--sans)" }} rows={rows} value={value} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} />;
 }
 
-export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, style, readOnly = false }: {
+export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, style, readOnly = false, eyebrow = "01" }: {
+  eyebrow?: string;
   account: AccountRow;
   onSave: (field: string, value: string) => Promise<void>;
   cols?: 1 | 2;
@@ -116,7 +117,7 @@ export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, 
   );
 
   return (
-    <Panel eyebrow="01" title={t("panels.accountDetails")} action={action} inset={inset} style={style}>
+    <Panel eyebrow={eyebrow} title={t("panels.accountDetails")} action={action} inset={inset} style={style}>
       {cols === 2
         ? <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 30 }}>{ColA}{ColB}</div>
         : <div>{ColA}<div style={{ height: 10 }} />{ColB}</div>}
