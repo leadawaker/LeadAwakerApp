@@ -649,7 +649,7 @@
     "minutes": "{{count}} minuten",
     "address": "Adres",
     "addressPlaceholder": "Straat 1, 1234 AB Plaats",
-    "addressNeeded": "Vul het adres in, zodat de bevestiging laat zien waar het is.",
+    "addressNeeded": "Bellers krijgen geen bezoeken aangeboden zolang het adres leeg is.",
     "saveFailed": "Opslaan mislukt",
     "loadFailed": "De bezoekinstellingen konden niet worden geladen. Laad de pagina opnieuw om het nog eens te proberen."
   },

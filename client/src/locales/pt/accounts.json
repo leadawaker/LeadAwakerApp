@@ -639,7 +639,7 @@
     "minutes": "{{count}} minutos",
     "address": "Endereço",
     "addressPlaceholder": "Rua 1, Cidade",
-    "addressNeeded": "Informe o endereço, para a confirmação mostrar aonde ir.",
+    "addressNeeded": "Enquanto o endereço estiver vazio, a recepcionista não oferece visitas a quem liga.",
     "saveFailed": "Falha ao salvar",
     "loadFailed": "Não foi possível carregar as configurações de visitas. Recarregue a página para tentar de novo."
   },
