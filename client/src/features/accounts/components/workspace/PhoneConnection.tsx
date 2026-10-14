@@ -4,6 +4,7 @@
 import { useVoiceLine } from "./voice/useVoiceLine";
 import { NumberCard } from "./voice/NumberCard";
 import { NumberDocsCard } from "./voice/NumberDocsCard";
+import { RecordingNoticeCard } from "./voice/RecordingNoticeControl";
 
 export function PhoneConnection({ accountId }: { accountId: number }) {
   const { line, saving, save } = useVoiceLine(accountId);
@@ -11,6 +12,7 @@ export function PhoneConnection({ accountId }: { accountId: number }) {
   return (
     <>
       <NumberCard line={line} canEdit saving={saving} onSave={save} />
+      {line.number && <RecordingNoticeCard line={line} saving={saving} onSave={save} />}
       <NumberDocsCard
         accountId={accountId}
         language={line.locale}
