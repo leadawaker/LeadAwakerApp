@@ -11,6 +11,8 @@ Manual steps that must be completed by a human.
 
 ## Robben meeting (Monday 2026-10-12)
 
+> **Superseded 2026-10-13.** The meeting moved to Wednesday 2026-10-14; the current list is `docs/clients/robben-rosmalen/wednesday-meeting.md`. The number is now a 073 ordered through the upload page (not an 085), and WhatsApp connects through "Connect with Meta" on the WhatsApp card (no admin access, system user or pasted token needed). The 073 line no longer has to stay off the WhatsApp Business app: the "keep it on his phone" option needs it there. Phone bookings on client lines are real since phone booking v2, so the "real voice booking" item above is done apart from the `VOICE_BOOKING_IS_REAL` flag.
+
 - [ ] **Sign the contract and the verwerkersovereenkomst (DPA)** covering phone, WhatsApp and SMS messages to his customers.
 - [ ] **Get added as admin ("full control") to his Meta Business portfolio**, or have him create one, with 2FA on. Confirm who owns the Facebook page.
 - [ ] **Check that `073 - 88 87 88 3` is not on the WhatsApp or WhatsApp Business app.** If it is, it has to be deleted there first.

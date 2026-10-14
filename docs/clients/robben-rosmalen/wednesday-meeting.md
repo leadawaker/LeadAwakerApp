@@ -4,11 +4,20 @@ Updated 2026-10-13, after the upload link, the automatic number order and the tw
 
 The goal: leave with the agreement signed, his number ordered, WhatsApp connected the way he prefers, and Thijs knowing exactly how his phone works with Sophie. Forwarding goes live only once Telnyx has approved his own number (about two days after he submits his documents).
 
+**Status on Wednesday morning (checked 2026-10-14 11:55):**
+- Upload link: opened by nobody yet. No details, no documents, auto-order still off. Plan on filling it in together (step 3).
+- WhatsApp: nothing connected yet, and "Connect with Meta" has never run against Meta. Have plan B ready (below).
+- Since 2026-10-13, phone bookings on 073 851 9847 are real (exact slots, move and cancel). Test call 1887 booked "Danique" today at 10:30 in his Cal.diy: cancel it if it is still there.
+- Since 2026-10-14, after a call Sophie asks the caller "may I send the details on WhatsApp?". Nothing is sent until his WhatsApp is connected, so connecting it today switches this on.
+- Transfers on the test line still ring Gabriel (+31 6 84 44 63 49). His own mobile goes back in the Voice tab at go-live.
+- Showroom address: Gabriel has it. Enter it in Integrations > Visits and switch visits on, then make one test visit booking.
+- His knowledge base now says cars are delivered with a full service, and a new APK is not included in the price (it wrongly said "no APK needed").
+
 ## Before Wednesday (Gabriel, in the CRM and docs)
 
 **Paperwork**
-- [ ] Fill the blanks in `partnership-trial.md`: Robben's KvK number and the start and end dates. Lead Awaker's details are filled in. Print two copies.
-- [ ] Check `processing-agreement.md` (the DPA), drafted 2026-10-12. Open points: the Telnyx entity and region, and accepting Groq's and Resend's data processing terms. Print two copies.
+- [ ] Fill the blanks in `partnership-trial.md`: Robben's legal name, KvK number, and the start and end dates. Lead Awaker's details are filled in. Print two copies.
+- [ ] Check `processing-agreement.md` (the DPA), drafted 2026-10-12. Telnyx is set to Frankfurt (checked 2026-10-14). Open point: accept Groq's and Resend's data processing terms. Print two copies.
 - [ ] Call Thijs: ask him to try Sophie on 073 851 9847, and tell him you come by on Wednesday.
 - [ ] Send him the upload link right after the call (message in `specs/receptionist-channels/robben-number-request.md`). If he submits today, Telnyx's two-day check is running before you arrive.
 - [ ] Before sending: on his account, Integrations > Phone > "Documents for their own number", press "Show numbers in stock", pick a number if you care which one, and switch on "Order this number the moment the client submits". The area code is already set to 073.
@@ -18,7 +27,8 @@ The goal: leave with the agreement signed, his number ordered, WhatsApp connecte
 - [ ] Decide whether to keep the 3 browser test calls under "Recent test calls". They are useful to show him how a call looks.
 - [ ] Alerts and recaps: add Thijs as a recipient (email, and WhatsApp once he opts in). Today only Gabriel gets them.
 - [ ] Phone line tab: check that every readiness item is green. Check the handoff settings with his answers on Wednesday.
-- [ ] Do one test run of "Connect with Meta" with a number of your own before Wednesday. Neither button has been run against Meta yet.
+- [ ] Do one test run of "Connect with Meta" with a number of your own before Wednesday. Neither button has been run against Meta yet. **Plan B** if Meta's window fails at his office: skip WhatsApp today, write down the error, and connect it remotely later. Nothing else depends on it.
+- [ ] Decide `VOICE_BOOKING_IS_REAL` (`specs/receptionist-channels/action-required.md`). While it is off, a caller who booked gets a "plan your appointment" link on WhatsApp instead of a confirmation.
 - [ ] Create his CRM login (client user, none exists yet), so it is ready to hand over at the end of the meeting.
 - [ ] Delete the redundant Voice_Numbers row 2 (`browser-test:robben`) once his own number is attached.
 - [ ] Stock: check the feed (`robbenrosmalen.nl/aanbod/feed/`) still matches his site, so Sophie names the right cars when he tests.
@@ -48,6 +58,9 @@ The goal: leave with the agreement signed, his number ordered, WhatsApp connecte
     - Can she name prices?
     - Trade-in: what does she promise?
     - What should she never say?
+12. The four questions Sophie asks before booking: are they the right ones? (Phone line tab > Receptionist voice > "What the team wants to know before an appointment".)
+13. How much notice he needs before an appointment. Set to 8 hours on 2026-10-14; check that suits him.
+14. Meta will most likely ask for a payment method on his WhatsApp account during the connection, because WhatsApp bills him directly for the messages a business starts (the after-call message). Replies within 24 hours of a customer's message are free. Have his business card at hand. If Meta bills Lead Awaker instead, the fees go on the monthly invoice (the contract says so).
 
 ## What to teach him
 
@@ -64,7 +77,8 @@ The goal: leave with the agreement signed, his number ordered, WhatsApp connecte
 **How Sophie behaves**
 - She speaks Dutch, says she is a digital assistant, and keeps answers short.
 - She knows the stock from his website and the details in his account.
-- She books viewings and test drives in his calendar.
+- She books viewings and test drives in his calendar, at exact free times. A caller can also move or cancel their own appointment by phone.
+- After a call to a mobile number, she asks whether she may send the details on WhatsApp, and only sends them on a yes.
 - She takes a message when she cannot help.
 - Passed-on calls: his phone rings, he hears who it is and why, and presses 1 to take the call.
 - After each call he gets a recap: the caller, what they wanted, and what was agreed.
@@ -72,7 +86,7 @@ The goal: leave with the agreement signed, his number ordered, WhatsApp connecte
 **WhatsApp, if he keeps it on his phone**
 - Sophie answers his WhatsApp chats; he sees everything in his own app.
 - When he replies to a customer himself, Sophie goes quiet in that chat.
-- To hand a chat back to her, he sends `/go` in that chat. The customer sees that message too, so the quieter way is to let it hand back by itself after the waiting time you set (2, 4 or 24 hours).
+- To hand a chat back to her, he sends `/go` in that chat. The customer sees that message too, so the quieter way is to let it hand back by itself after the waiting time you set (2, 4 or 24 hours), or to hand it back in the CRM chat. The default is "never", so set the waiting time together (4 hours is a good start).
 - He has to open WhatsApp on that phone at least every two weeks, or Meta drops the link.
 
 **How to give feedback**

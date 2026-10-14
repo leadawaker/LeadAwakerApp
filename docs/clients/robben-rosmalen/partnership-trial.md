@@ -4,15 +4,17 @@
 
 ## Who
 
-- **Lead Awaker**, run by Gabriel Fronza, KvK 99366738, Christiaan Huygensweg 32, 's-Hertogenbosch ("Lead Awaker")
-- **Robben Rosmalen**, represented by Thijs Robben, KvK [number], Afrikalaan 17a, 's-Hertogenbosch ("Robben Rosmalen")
+- **Lead Awaker**, Gabriel Barbosa Fronza ("Gabriel"), trading as Lead Awaker, KvK 99366738, Christiaan Huygensweg 32, 's-Hertogenbosch ("Lead Awaker")
+- **Robben Rosmalen B.V.**, represented by Thijs Robben, KvK 95648976, Afrikalaan 17a, 5232 BD 's-Hertogenbosch ("Robben Rosmalen")
 
 ## What we are trying
 
 Lead Awaker sets up an AI voice assistant that answers Robben Rosmalen's phone calls. The assistant:
 
 - answers questions about the cars in stock (model, year, mileage, price), using the stock that is shown on robbenrosmalen.nl
-- answers general questions (opening hours, address, trade-in, private and business lease through POAA)
+- answers general questions (opening hours, address, private and business lease through POAA)
+- for a trade-in, notes the car's details and sets up a moment with Thijs; the trade-in value is only discussed by Thijs
+- books viewings and test drives in Robben Rosmalen's calendar, and lets callers move or cancel them
 - takes down the caller's name, number and question when it cannot help
 - passes serious buyers on to Thijs (by transferring the call or sending a message)
 
@@ -27,7 +29,8 @@ The trial runs for **3 months**, from [start date] to [end date].
 ## What it costs
 
 - **Lead Awaker's work is free during the trial.** Setup, building and adjustments cost nothing.
-- **Robben Rosmalen pays only the running costs**, at cost price with no markup: the phone number, call minutes, AI usage and WhatsApp message fees.
+- **Robben Rosmalen pays only the running costs**, at cost price with no markup: the phone number, call minutes, SMS and AI usage.
+- **WhatsApp message fees** are billed by Meta directly to Robben Rosmalen's WhatsApp account. If Meta bills them to Lead Awaker instead, they go on the monthly invoice at cost.
 - Lead Awaker sends **one invoice per month** with a clear overview of these costs.
 - We expect these costs to be around **€40 per month** (excluding VAT). If they look likely to go above **€75 in a month**, Lead Awaker asks first, before spending more.
 
@@ -48,7 +51,8 @@ The trial runs for **3 months**, from [start date] to [end date].
 
 - **The assistant can make mistakes.** Prices and availability it mentions are information, not a binding offer. The final deal is always made by Robben Rosmalen.
 - **Callers are told** they are speaking with an AI assistant and that the call may be recorded.
-- **The data is Robben Rosmalen's.** Call recordings, transcripts and caller details are only used to run the assistant. They are not shared with anyone else and are deleted when the trial ends without a follow-up, unless Robben Rosmalen asks to keep them. We sign a short processing agreement (verwerkersovereenkomst) for this: `processing-agreement.md`.
+- **The data is Robben Rosmalen's.** Call recordings, transcripts and caller details are only used to run the assistant. They are not shared with anyone else and are deleted within 30 days when the trial ends without a follow-up, unless Robben Rosmalen asks for an export first. We sign a short processing agreement (verwerkersovereenkomst) for this: `processing-agreement.md`.
+- **The phone number is Robben Rosmalen's.** It is registered in Robben Rosmalen's name. When the trial ends, Robben Rosmalen can take it over (Lead Awaker helps move it) or Lead Awaker cancels it.
 - **Showing the results.** Lead Awaker may only use Robben Rosmalen's name or results (for example as a case study) with Thijs's permission.
 
 ## Stopping early
@@ -64,7 +68,7 @@ At the end of the 3 months we sit down together and look at the results. Then:
 
 ## Liability
 
-We both act in good faith. If something goes wrong, we first try to solve it together. Lead Awaker is not liable for indirect damage such as lost sales. Any liability of Lead Awaker is limited to the amounts Robben Rosmalen paid under this agreement.
+We both act in good faith. If something goes wrong, we first try to solve it together. Lead Awaker is not liable for indirect damage such as lost sales. Any liability of Lead Awaker is limited to the amounts Robben Rosmalen paid under this agreement, except in case of intent or gross negligence.
 
 Dutch law applies to this agreement.
 
@@ -72,6 +76,6 @@ Dutch law applies to this agreement.
 
 | | Lead Awaker | Robben Rosmalen |
 |---|---|---|
-| Name | Gabriel Fronza | Thijs Robben |
+| Name | Gabriel Barbosa Fronza | Thijs Robben |
 | Date | | |
 | Signature | | |

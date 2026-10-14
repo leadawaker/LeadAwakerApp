@@ -1,80 +1,40 @@
-# Robben: what to ask for his AI phone number
+# Robben: his own number and WhatsApp
 
-Checked 2026-10-12 against Telnyx's live requirements and stock.
+Updated 2026-10-14. Everything below runs from his account in the CRM (Accounts id 53).
 
-## First, the one thing to understand
+## The number
 
-Callers never see the new number. They keep calling his numbers as they do today: the general line `073 - 88 87 88 3` and Thijs's mobile `06 81 76 47 63`. Those numbers forward to the new one. So the choice between 085 and 073 is about paperwork and stock, not about how it looks to his customers.
+- **Choice: 073** (Den Bosch). In stock, $1 up front + $1 a month, needs documents. 085 is also possible (no documents), but Telnyx has none in stock, so it has to be requested.
+- Callers never see this number. His 073 line and his mobile forward to it.
 
-Both types can be a forwarding target. A forward from a Dutch mobile to an 085 or 073 number is billed as an ordinary national call, which most bundles include. He should check his own plan.
+**Steps**
+1. Integrations > Phone > "Documents for their own number": pick a number ("Show numbers in stock") and switch on "Order this number the moment the client submits".
+2. He fills in his upload page (3 minutes): company details, KvK extract, ID copy, a bill for the Den Bosch address under 3 months old. Files go straight to Telnyx.
+   Get his link with "Copy link" on that same card (it is private, so it stays out of this repo).
+3. His Submit places the order. Telnyx checks it in about two days.
+4. When approved, the same card shows "Attach to this account". Press it, put his mobile back as the transfer number on the Phone line tab, and set the forwarding.
+5. Switch the lent number 073 851 9847 back to Lead Awaker's Sara.
 
-## 085, 073 or 097?
+## WhatsApp
 
-All three are registered in **his** company's name. For 085 and 097 Gabriel can fill in the form himself, because no documents are needed.
+Integrations > Messaging > WhatsApp card > "Connect with Meta". He logs in with Facebook in Meta's window and picks one:
+- **Keep it on his phone:** the number must be on the WhatsApp Business app. He scans a QR code. His own replies pause Sophie in that chat.
+- **A separate number:** a number not on WhatsApp yet. Meta sends a code by SMS or voice call.
 
-| | 085 (national) | 073 (Den Bosch) | 097 (Dutch "machine" number) |
-|---|---|---|---|
-| What Telnyx needs | Company legal name, a contact name and phone number, and any Dutch address. **No documents.** | KvK extract, ID of a representative, and proof of an address in the 073 area that is less than 3 months old. | A contact name and phone number, and an address. **No documents.** |
-| In stock at Telnyx today | **None.** We have to ask Telnyx to source one. | Yes, for example +31 73 851 9861 ($1 up front, $1 a month). | Yes, for example +31 97 010 285 309 ($2 up front, $3 a month). |
-| Can be forwarded to | Yes | Yes | Yes, but some Dutch mobile plans charge 097 outside the bundle or block it. Check with his provider first. |
-| Receives SMS | No | No | Yes |
+Then, on the "How the assistant answers" card: who Sophie answers, and the hand-back time (4 hours).
 
-**Decision (2026-10-13):** go with 073. It is in stock, the upload page and the automatic order are built for it, and his Den Bosch address matches the area code. 085 stays an option for later clients if Telnyx gets stock.
+No documents for Meta to start. Meta's business verification (KvK extract) is optional, done later by him in his own Meta account, and only raises sending limits.
 
-## WhatsApp and Meta's code call
+## Forwarding (only once his own number is attached)
 
-Meta verifies the number that goes **on WhatsApp**, not the new AI number. Since 2026-10-12 the WhatsApp card (Integrations > Messaging) offers two ways, both through Meta's own window:
+- Mobile: `**004*<his new number>#` forwards missed calls only. Check with `*#61#`, switch off with `##004#`.
+- 073 line: if it is VoIP, set it in his provider's portal.
 
-- **Keep WhatsApp on his phone:** the number must already be on the WhatsApp Business app. No code call is needed; he scans a QR code in the app.
-- **A separate number for the assistant:** a number that is not on WhatsApp yet. Meta sends a code by SMS or voice call. For a landline choose "voice call"; he picks up and reads out the 6-digit code. If that line already forwards to Sophie, the code is in the call transcript instead.
+## Message to send
 
-Meta's own paperwork (business verification, with a KvK extract) is not part of our pages. He does it inside his Meta business account, and it is not needed to start.
-
-## What to ask him
-
-**For the number (Telnyx):**
-1. The full legal company name, exactly as in KvK (for example "Robben Rosmalen B.V."), and the KvK number.
-2. Who represents the company (full name), and a phone number Telnyx can reach.
-3. Is Afrikalaan 17a, 5232 BD 's-Hertogenbosch the registered address?
-4. Only if we go for 073:
-   - A recent KvK extract (PDF from kvk.nl).
-   - A colour copy of the representative's passport or ID card. Front and back for an ID card. He may black out the BSN.
-   - An energy, internet or phone bill for the Den Bosch address, less than 3 months old.
-
-**For forwarding:**
-
-5. Who is the provider of `073 - 88 87 88 3`, and is it a fixed line or VoIP (a web portal)? On VoIP, forwarding is set in the portal, not with a code.
-6. Who is the provider of his mobile?
-7. Which calls should Sara take? The options are:
-   - only the calls he misses;
-   - also after hours;
-   - everything on the general line.
-
-**On the Wednesday list (`docs/clients/robben-rosmalen/wednesday-meeting.md`):**
-
-8. Contract and verwerkersovereenkomst (DPA).
-9. His WhatsApp choice, and his Facebook login for Meta's window.
-10. Which calendar he uses.
-11. The SMS sender name and the WhatsApp display name.
-
-## How he hands the documents in
-
-He uses a private upload page. His link (created 2026-10-13, area code 073 already set):
-
-https://app.leadawaker.com/number-docs/wKHUNaLwrjkx0LIsplpfwbe-?lang=nl
-
-- He fills in the company details and uploads the three documents. The files go straight to Telnyx; we keep no copy.
-- On his account under Integrations > Phone you can pick the number and switch on "Order this number the moment the client submits". With that on, his Submit places the order in his company's name. Without it, you press "Order the number now" afterwards.
-- Telnyx then checks the documents (two days for our own 073). When it is approved, the card shows "Attach to this account".
-- This page handles Telnyx only. It does not send anything to Meta.
-
-## Ready-to-send message
-
-> Hi Thijs! Good news: your AI receptionist is ready to try. You can call her today on 073 851 9847, and she answers as Robben Rosmalen. Please try her out and tell me what you think, good and bad.
+> Hi Thijs! Your AI receptionist is ready to try: call 073 851 9847 and she answers as Robben Rosmalen. Tell me what you think, good and bad.
 >
-> To put her on your own lines, she gets a phone number in your company's name. The phone carrier has to check who the number belongs to, so please fill in this page (about 3 minutes, your documents go straight to the carrier):
-> https://app.leadawaker.com/number-docs/wKHUNaLwrjkx0LIsplpfwbe-?lang=nl
+> To put her on your own lines she gets a number in your company's name. Please fill in this page (about 3 minutes, your documents go straight to the phone carrier):
+> [his upload link]
 >
-> You will need a recent KvK extract, a copy of your passport or ID card, and an energy, internet or phone bill for the Den Bosch address (no older than 3 months).
->
-> On Wednesday I'd like to come by to sign the agreement and set up your phone and WhatsApp together. Does that work for you?
+> You need a recent KvK extract, a copy of your passport or ID card, and an energy, internet or phone bill for the Den Bosch address (under 3 months old).

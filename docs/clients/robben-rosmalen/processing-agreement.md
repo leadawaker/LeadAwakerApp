@@ -4,8 +4,8 @@ This agreement belongs to the Partnership Trial Agreement between Lead Awaker an
 
 ## 1. Who
 
-- **Robben Rosmalen**, represented by Thijs Robben, KvK [number], Afrikalaan 17a, 5232 BD 's-Hertogenbosch. The **controller**: Robben Rosmalen decides why and how its customers' data is used.
-- **Lead Awaker**, Gabriel Barbosa Fronza (trading as Lead Awaker), KvK 99366738, Christiaan Huygensweg 32, 's-Hertogenbosch. The **processor**: Lead Awaker handles the data only on Robben Rosmalen's behalf.
+- **Robben Rosmalen B.V.**, represented by Thijs Robben, KvK 95648976, Afrikalaan 17a, 5232 BD 's-Hertogenbosch. The **controller**: Robben Rosmalen decides why and how its customers' data is used.
+- **Lead Awaker**, Gabriel Barbosa Fronza ("Gabriel"), trading as Lead Awaker, KvK 99366738, Christiaan Huygensweg 32, 's-Hertogenbosch. The **processor**: Lead Awaker handles the data only on Robben Rosmalen's behalf.
 
 ## 2. What the processing is for
 
@@ -44,7 +44,7 @@ The assistant does not ask for special categories of personal data (such as heal
 Lead Awaker:
 
 1. processes the data only to carry out the trial, and on Robben Rosmalen's instructions. If an instruction would break the law, Lead Awaker says so;
-2. keeps the data confidential. Only Gabriel Fronza, and anyone who later works for Lead Awaker under a confidentiality obligation, has access;
+2. keeps the data confidential. Only Gabriel, and anyone who later works for Lead Awaker under a confidentiality obligation, has access;
 3. secures the data with appropriate measures (see section 6);
 4. helps Robben Rosmalen when a customer wants to see, correct or delete their data, or objects. Lead Awaker passes on any such request it receives directly within 5 working days;
 5. helps Robben Rosmalen with security questions, data breaches and, if one is needed, a privacy impact assessment (DPIA);
@@ -57,7 +57,7 @@ To run the assistant, Lead Awaker uses these services. Robben Rosmalen agrees to
 | Service | What for | Where |
 |---|---|---|
 | OpenAI Ireland Ltd. | The AI that speaks and writes the answers | EU (European data residency) |
-| Telnyx | Phone numbers, call routing, SMS | [to confirm: Telnyx entity and region] |
+| Telnyx LLC and Telnyx Ireland Limited | Phone numbers, call routing, SMS | EU: call records and recordings stored in Germany; some processing in the US (EU-US Data Privacy Framework and Standard Contractual Clauses) |
 | Meta Platforms Ireland Ltd. | Sending and receiving WhatsApp messages | EU, with transfers to the US |
 | Groq, Inc. | Reading photos customers send, and short supporting AI tasks | US |
 | Resend | Emailing conversation summaries to Robben Rosmalen | US |
@@ -82,7 +82,7 @@ Lead Awaker protects the data with, among other things:
 
 - encrypted connections (HTTPS and TLS) for all traffic, including calls between the phone network and the AI;
 - personal logins for the CRM. Robben Rosmalen's login only shows Robben Rosmalen's data;
-- access to the server only for Gabriel Fronza;
+- access to the server only for Gabriel;
 - regular updates of the server and software;
 - telling callers at the start that they are speaking with a digital assistant.
 
