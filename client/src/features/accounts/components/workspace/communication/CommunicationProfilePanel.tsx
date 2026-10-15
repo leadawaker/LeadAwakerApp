@@ -14,7 +14,8 @@ import type { AccountRow, AccountDetail } from "../types";
 export function CommunicationProfilePanel({ accountId, niche, accountName, accountLogoUrl, fill = true, fillHeight = false, readOnly = false, onWizardActiveChange, account, detail, onSaveAccount }: { accountId: number; niche?: string | null; accountName?: string; accountLogoUrl?: string | null; fill?: boolean; fillHeight?: boolean; readOnly?: boolean; onWizardActiveChange?: (active: boolean) => void; account?: AccountRow; detail?: AccountDetail; onSaveAccount?: (field: string, value: string) => Promise<void> }) {
   const { t } = useTranslation("communicationProfile");
   const { profile, loading, saving, save } = useCommunicationProfile(accountId);
-  const { values: factValues, grids, loading: factsLoading, saveAll } = useOnboardingFacts(accountId);
+  // New fact entries are titled in the receptionist's language.
+  const { values: factValues, grids, loading: factsLoading, saveAll } = useOnboardingFacts(accountId, profile?.setup?.voice?.locale);
   const [editing, setEditing] = useState(false);
   const [startStep, setStartStep] = useState(0);
   const [celebrate, setCelebrate] = useState(false);

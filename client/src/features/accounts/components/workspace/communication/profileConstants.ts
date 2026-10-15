@@ -118,15 +118,20 @@ export type StyleField =
 
 export const STEPS_WITH_EXAMPLES: StyleField[] = [];
 
-// ── Fixed facts → KB entries (matched by category + title, NOT translated). ──
-export interface FactDef { category: string; title: string }
+// ── Fixed facts → KB entries, matched by category + title. ──────────────────
+// The title is stored in the receptionist's language (a Dutch client's
+// knowledge base is Dutch), so each fact is found by its title in any of the
+// app's languages. A new entry gets the title for `lang`; an existing one
+// keeps the title it has.
+export type FactLang = "en" | "nl" | "pt";
+export interface FactDef { category: string; titles: Record<FactLang, string> }
 export const FACT_DEFS: Record<string, FactDef> = {
-  negotiation: { category: "pricing", title: "Negotiation room" },
-  financing: { category: "pricing", title: "Financing" },
-  installments: { category: "pricing", title: "Installments" },
-  deliveryTime: { category: "services", title: "Delivery time" },
-  guarantees: { category: "policies", title: "Guarantees & warranty" },
-  sensitiveTopics: { category: "policies", title: "Sensitive topics" },
+  negotiation: { category: "pricing", titles: { en: "Negotiation room", nl: "Onderhandelingsruimte", pt: "Margem de negociação" } },
+  financing: { category: "pricing", titles: { en: "Financing", nl: "Financiering", pt: "Financiamento" } },
+  installments: { category: "pricing", titles: { en: "Installments", nl: "Betalen in termijnen", pt: "Parcelamento" } },
+  deliveryTime: { category: "services", titles: { en: "Delivery time", nl: "Levertijd", pt: "Prazo de entrega" } },
+  guarantees: { category: "policies", titles: { en: "Guarantees & warranty", nl: "Garantie", pt: "Garantia" } },
+  sensitiveTopics: { category: "policies", titles: { en: "Sensitive topics", nl: "Gevoelige onderwerpen", pt: "Assuntos sensíveis" } },
 };
 
 export const FACTS_WITH_NOPE = ["negotiation", "financing", "installments", "deliveryTime", "guarantees"];

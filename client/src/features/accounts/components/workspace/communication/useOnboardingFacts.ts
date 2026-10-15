@@ -1,18 +1,26 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/apiUtils";
-import { FACT_DEFS, QA_CATEGORY, type FactValues, type QARow } from "./profileConstants";
+import { FACT_DEFS, QA_CATEGORY, type FactDef, type FactLang, type FactValues, type QARow } from "./profileConstants";
 
 // Onboarding facts are written to the existing Knowledge Base.
-// - Fixed facts (FACT_DEFS) map to one KB entry each, matched by (category, title).
+// - Fixed facts (FACT_DEFS) map to one KB entry each, matched by category and
+//   the fact's title in any language (see FACT_DEFS).
 // - Q&A grids (objections, FAQ) are KB entries in their own category, by id.
 interface KBEntry { id: number; category: string; title: string; content: string }
 export type QAGrids = Record<string, QARow[]>; // keyed by step key (objections | faq)
 
-function matchEntry(entries: KBEntry[], category: string, title: string) {
-  return entries.find((e) => e.category === category && e.title === title);
+function matchEntry(entries: KBEntry[], def: FactDef) {
+  const titles = Object.values(def.titles);
+  return entries.find((e) => e.category === def.category && titles.includes(e.title));
 }
 
-export function useOnboardingFacts(accountId: number) {
+function factLang(locale?: string | null): FactLang {
+  const l = (locale ?? "").slice(0, 2);
+  return l === "nl" || l === "pt" ? l : "en";
+}
+
+export function useOnboardingFacts(accountId: number, locale?: string | null) {
+  const lang = factLang(locale);
   const [entries, setEntries] = useState<KBEntry[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -34,7 +42,7 @@ export function useOnboardingFacts(accountId: number) {
   const values: FactValues = {};
   for (const id of Object.keys(FACT_DEFS)) {
     const def = FACT_DEFS[id];
-    values[id] = matchEntry(entries, def.category, def.title)?.content ?? "";
+    values[id] = matchEntry(entries, def)?.content ?? "";
   }
 
   // Q&A grid rows per step key.
@@ -58,10 +66,10 @@ export function useOnboardingFacts(accountId: number) {
     for (const id of Object.keys(FACT_DEFS)) {
       const def = FACT_DEFS[id];
       const content = (factValues[id] ?? "").trim();
-      const existing = matchEntry(entries, def.category, def.title);
+      const existing = matchEntry(entries, def);
       if (!content) { if (existing) await del(existing.id); continue; }
-      if (existing) { if (existing.content !== content) await patch(existing.id, { category: def.category, title: def.title, content }); }
-      else await post({ category: def.category, title: def.title, content });
+      if (existing) { if (existing.content !== content) await patch(existing.id, { category: def.category, title: existing.title, content }); }
+      else await post({ category: def.category, title: def.titles[lang], content });
     }
     // Q&A grids.
     for (const stepKey of Object.keys(QA_CATEGORY)) {
@@ -78,7 +86,7 @@ export function useOnboardingFacts(accountId: number) {
       }
     }
     await fetchEntries();
-  }, [accountId, entries, fetchEntries]);
+  }, [accountId, entries, fetchEntries, lang]);
 
   return { values, grids, loading, saveAll };
 }
