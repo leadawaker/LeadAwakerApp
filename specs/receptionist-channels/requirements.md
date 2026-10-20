@@ -86,7 +86,7 @@ NL bodies are in the catalog (`automations/src/automations/whatsapp_templates/ca
 ## Dependencies and related work
 
 - `specs/client-recaps/` (alerts and daily recap to the business owner, from Lead Awaker's number). Its 18 `la_*` templates were submitted on 2026-10-10. Build it alongside this spec; Phase 7 here relies on its `lead_needs_reply` / `callback_requested` alerts.
-- **Real voice booking on client lines is a blocker for `reception_call_booked`.** `automations/src/automations/voice/booking_tool.py` `_book()` books only into the demo diary; on Robben's line, callers hear "booked" and nothing reaches his calendar (found 2026-10-09, see client-recaps). Until a separate spec fixes it, the follow-up treats a voice "booking" as a request and sends `reception_call_followup`.
+- **Resolved 2026-10-16:** phone booking v2 made client-line bookings real and `VOICE_BOOKING_IS_REAL` is on. Original note: **Real voice booking on client lines is a blocker for `reception_call_booked`.** `automations/src/automations/voice/booking_tool.py` `_book()` books only into the demo diary; on Robben's line, callers hear "booked" and nothing reaches his calendar (found 2026-10-09, see client-recaps). Until a separate spec fixes it, the follow-up treats a voice "booking" as a request and sends `reception_call_followup`.
 - `specs/voice-caller-memory/` (caller memory, extended in Phase 6).
 - `specs/website-widget/` (widget; Phase 7 adds contact capture).
 - Existing channel fallback: `automations/tools/channel_fallback.py`, `Leads.resolved_channel`.
