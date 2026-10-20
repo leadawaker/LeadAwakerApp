@@ -1,4 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { parseInstagramReturn, stripInstagramParams } from "@/features/social/lib/socialState";
+import type { ConnectionGroup } from "./ConnectionsOverview";
 import { useMarkVisited } from "@/features/home/onboarding/useOnboarding";
 import { useTranslation } from "react-i18next";
 import { Building2, Plus } from "lucide-react";
@@ -141,6 +145,23 @@ export function AccountsWorkspace(p: Props) {
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
   }, []);
 
+  // After the Instagram connect flow the server redirects back with ?instagram=connected or
+  // ?instagram=error&reason=… (server/routes/social.ts). Open Integrations on the Social group,
+  // say how it went, refresh the card, and strip the params.
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [integrationsGroup, setIntegrationsGroup] = useState<ConnectionGroup | undefined>(undefined);
+  useEffect(() => {
+    const result = parseInstagramReturn(window.location.search);
+    if (!result) return;
+    setTab("integrations");
+    setIntegrationsGroup("social");
+    if (result.kind === "connected") toast({ title: t("social.connect.toastConnected") });
+    else toast({ title: t("social.connect.toastFailed"), description: t(`social.connect.errors.${result.reason}`), variant: "destructive" });
+    queryClient.invalidateQueries({ queryKey: ["social-status"] }); // every account's status (socialStatusKey prefix)
+    window.history.replaceState(null, "", window.location.pathname + stripInstagramParams(window.location.search));
+  }, []);
+
   // Deep link: /platform/accounts?tab=voice opens that tab (used by the Demos
   // page's "managed in Account > Voice" link). Stripped once applied.
   const pickTab = (k: WorkspaceTab) => { lastDeepTab = null; setTab(k); };
@@ -210,6 +231,7 @@ export function AccountsWorkspace(p: Props) {
         isMobile
         readOnly={!isAdmin}
         onOpenTab={pickTab}
+        integrationsGroup={integrationsGroup}
         data={{
           account, d, accountId, onSave: p.onSave,
           campaigns: detailData.campaigns,
@@ -429,6 +451,7 @@ export function AccountsWorkspace(p: Props) {
                   tab={tab}
                   isMobile={false}
                   readOnly={!isAdmin}
+                  integrationsGroup={integrationsGroup}
                   onOpenTab={pickTab}
                   data={{
                     account, d, accountId, onSave: p.onSave,

@@ -133,7 +133,18 @@
         "on": "Gekoppeld",
         "pending": "Alleen boekingspagina",
         "off": "Niet ingesteld"
+      },
+      "social": {
+        "on": "Gekoppeld",
+        "pending": "Actie nodig",
+        "off": "Niet ingesteld"
       }
+    },
+    "social": {
+      "title": "Social media",
+      "help": "Het Instagram-account van de klant, waar geplande Reels op verschijnen.",
+      "short": "Instagram",
+      "hint": "Niet gekoppeld"
     }
   },
   "sections": {
@@ -870,5 +881,37 @@
     "savedDesc": "Je wijzigingen zijn doorgevoerd.",
     "error": "Openingstijden opslaan mislukt",
     "errorDesc": "Probeer het opnieuw."
+  },
+  "social": {
+    "connect": {
+      "title": "Instagram",
+      "connected": "Gekoppeld",
+      "notConnected": "Niet gekoppeld",
+      "needsAttention": "Actie nodig",
+      "requirement": "Hiervoor is een zakelijk of creator-account op Instagram nodig. Je logt zelf in bij Instagram, Lead Awaker ziet het wachtwoord nooit.",
+      "connectButton": "Instagram koppelen",
+      "reconnectButton": "Opnieuw koppelen",
+      "renews": "Gekoppeld · wordt automatisch verlengd",
+      "disconnect": "Ontkoppelen",
+      "disconnectConfirm": "Dit Instagram-account ontkoppelen? Geplande posts gaan pas weer de deur uit als het opnieuw gekoppeld is.",
+      "disconnectYes": "Ja, ontkoppelen",
+      "cancel": "Annuleren",
+      "disconnectFailed": "Ontkoppelen is niet gelukt. Probeer het opnieuw.",
+      "attentionHelp": "de koppeling heeft een nieuwe login nodig voordat er posts uit kunnen.",
+      "askManager": "Een manager van dit account kan Instagram koppelen.",
+      "enableTitle": "Social media voor dit account",
+      "enableHelp": "Toont de groep en het tabblad Social aan de eigen gebruikers van de klant.",
+      "enableFailed": "Opslaan is niet gelukt. Probeer het opnieuw.",
+      "toastConnected": "Instagram gekoppeld",
+      "toastFailed": "Instagram is niet gekoppeld",
+      "errors": {
+        "access_denied": "De toestemmingen zijn op Instagram geweigerd. Koppel opnieuw en sta ze allemaal toe.",
+        "missing_code": "Instagram heeft geen inlogcode teruggestuurd. Probeer het opnieuw.",
+        "invalid_state": "De inloglink is verlopen. Begin opnieuw vanaf deze pagina.",
+        "not_professional": "Dit is een persoonlijk Instagram-account. Zet het in de Instagram-app om naar zakelijk of creator en koppel opnieuw.",
+        "already_connected": "Dit Instagram-account is al aan een ander account gekoppeld.",
+        "failed": "Er ging iets mis bij het koppelen. Probeer het opnieuw."
+      }
+    }
   }
 }
