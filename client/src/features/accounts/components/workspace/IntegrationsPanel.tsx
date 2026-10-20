@@ -12,6 +12,8 @@ import { WhatsAppBehaviourCard } from "./whatsapp/WhatsAppBehaviourCard";
 import { PhoneConnection } from "./PhoneConnection";
 import { VoiceSettingsSection } from "./VoiceSettingsSection";
 import { ConnectionsOverview, groupAnchorId, type ConnectionGroup } from "./ConnectionsOverview";
+import { InstagramConnectCard, useSocialStatus } from "@/features/social/components/InstagramConnectCard";
+import { integrationGroupsFor } from "@/features/social/lib/socialState";
 
 const cardStyle: React.CSSProperties = { borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" };
 
@@ -32,34 +34,39 @@ function Group({ index, group, children }: { index: number; group: ConnectionGro
 }
 
 // ── Main panel ─────────────────────────────────────────────────────────────────
-// What is connected, in four families: the phone number, WhatsApp, the chat on
-// the client's website, and where appointments land. A menu of the four (with
+// What is connected, in five families: the phone number, WhatsApp, the chat on
+// the client's website, where appointments land, and Instagram. A menu of the four (with
 // each one's state) opens one family at a time: a column on the left on
-// desktop, a 2x2 grid on top on a phone. How the assistant behaves on a call is
-// the Phone line tab. A client login (readOnly) sees bookings only, no menu.
-export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnly = false }: {
+// desktop, a 2-column grid on top on a phone. How the assistant behaves on a call is
+// the Phone line tab. A client login (readOnly) sees bookings, plus Social once the
+// agency switched it on for the account (the client logs in to Instagram itself), no menu.
+export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnly = false, initialGroup }: {
   account: AccountRow;
   d: AccountDetail;
   onSave: (field: string, value: string) => Promise<void>;
   fieldCols?: number;
   stacked?: boolean;
   readOnly?: boolean;
+  /** Opened first (agency): the Social group after the Instagram connect flow returns. */
+  initialGroup?: ConnectionGroup;
 }) {
   const { t: tc } = useTranslation("crm");
   const accountId = account.Id ?? account.id ?? 0;
-  const [open, setOpen] = useState<ConnectionGroup>(readOnly ? "bookings" : "phone");
-  const shown = readOnly ? "bookings" : open;
+  const [open, setOpen] = useState<ConnectionGroup>(() => (!readOnly && initialGroup) || (readOnly ? "bookings" : "phone"));
+  const { data: social } = useSocialStatus(accountId);
+  const clientGroups = integrationGroupsFor({ isAgency: false, socialEnabled: social?.enabled === true });
+  const isShown = (g: ConnectionGroup) => (readOnly ? clientGroups.includes(g) : open === g);
 
   const groups = (
     <div style={{ display: "flex", flexDirection: "column", gap: 34, minWidth: 0 }}>
       {readOnly && <RequestChangeNote area={tc("requestChange.areas.integrations")} />}
-      {shown === "phone" && (
+      {isShown("phone") && (
         <Group index={1} group="phone">
           <PhoneConnection accountId={accountId} />
         </Group>
       )}
 
-      {shown === "messaging" && (
+      {isShown("messaging") && (
         <Group index={2} group="messaging">
           {/* WhatsApp on the client's own number (specs/receptionist-channels) */}
           <WhatsAppCloudCard accountId={accountId} />
@@ -77,14 +84,14 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
         </Group>
       )}
 
-      {shown === "website" && (
+      {isShown("website") && (
         <Group index={3} group="website">
           {/* specs/website-widget */}
           <WebsiteChatCard accountId={accountId} />
         </Group>
       )}
 
-      {shown === "bookings" && (
+      {isShown("bookings") && (
       <Group index={readOnly ? 1 : 4} group="bookings">
         {/* Calendar first, the booking page second: one under the other, in that order. */}
         <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
@@ -119,6 +126,12 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
           <CustomBookingDomainCard accountId={accountId} noBorder website={account.website ? String(account.website) : null} />
         </div>
       </Group>
+      )}
+
+      {isShown("social") && (
+        <Group index={readOnly ? 2 : 5} group="social">
+          <InstagramConnectCard accountId={accountId} />
+        </Group>
       )}
     </div>
   );

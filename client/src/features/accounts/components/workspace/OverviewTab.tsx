@@ -8,6 +8,9 @@ import { ServicesPanel } from "./ServicesPanel";
 import { ContractsPanel } from "./ContractsPanel";
 import { InvoicesPanel } from "./InvoicesPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
+import { SocialTab } from "@/features/social/components/SocialTab";
+import { DEFAULT_TIMEZONE } from "@shared/socialPosts";
+import type { ConnectionGroup } from "./ConnectionsOverview";
 import { CommunicationProfilePanel } from "./communication/CommunicationProfilePanel";
 import { CallNotes } from "./communication/CallNotes";
 import { OnboardingEntry, BackToOverview } from "./communication/OnboardingEntry";
@@ -164,16 +167,18 @@ function OverviewWithOnboarding({ data, isMobile, readOnly, onOpenTab }: {
   );
 }
 
-export function TabContent({ tab, isMobile, data, readOnly = false, onOpenTab }: {
+export function TabContent({ tab, isMobile, data, readOnly = false, onOpenTab, integrationsGroup }: {
   tab: WorkspaceTab; isMobile: boolean; data: OverviewData; readOnly?: boolean;
   onOpenTab?: (t: WorkspaceTab) => void;
+  /** The Integrations group to open first (Social, after the Instagram connect flow). */
+  integrationsGroup?: ConnectionGroup;
 }) {
   // While the onboarding wizard is on screen, the Company Intel panel below it
   // is hidden so the call stays focused on one thing at a time.
   const [commWizardActive, setCommWizardActive] = useState(false);
   if (tab === "overview") return <OverviewWithOnboarding data={data} isMobile={isMobile} readOnly={readOnly} onOpenTab={onOpenTab} />;
   if (tab === "integrations") return (
-    <IntegrationsPanel account={data.account} d={data.d} onSave={data.onSave} fieldCols={isMobile ? 1 : 3} stacked={isMobile} readOnly={readOnly} />
+    <IntegrationsPanel account={data.account} d={data.d} onSave={data.onSave} fieldCols={isMobile ? 1 : 3} stacked={isMobile} readOnly={readOnly} initialGroup={integrationsGroup} />
   );
   if (tab === "communication") return (
     <div style={{ display: "flex", flexDirection: "column", gap: 22 }}>
@@ -184,6 +189,7 @@ export function TabContent({ tab, isMobile, data, readOnly = false, onOpenTab }:
   );
   if (tab === "voice") return <VoiceTab accountId={data.accountId} readOnly={readOnly} stacked={isMobile} onOpenIntegrations={onOpenTab ? () => onOpenTab("integrations") : undefined} />;
   if (tab === "chat") return <ChatTab accountId={data.accountId} inboundCampaignId={data.account.inbound_campaign_id} readOnly={readOnly} stacked={isMobile} onOpenIntegrations={onOpenTab ? () => onOpenTab("integrations") : undefined} />;
+  if (tab === "social") return <SocialTab accountId={data.accountId} timeZone={String(data.account.timezone || DEFAULT_TIMEZONE)} />;
   if (tab === "alerts") return <AlertsTab accountId={data.accountId} stacked={isMobile} />;
   if (tab === "automations") return <ClientAutomationsTab accountId={data.accountId} onOpenTab={onOpenTab} />;
   return null;

@@ -7,7 +7,7 @@
  * Posts: every post route writes through updateSocialPostIf, a conditional
  * UPDATE that loses (returns null) when the post moved on meanwhile.
  */
-import { and, desc, eq, inArray, ne, or, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lte, ne, or, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import {
   accounts,
@@ -95,10 +95,13 @@ export const socialStorage = {
     return row;
   },
 
-  async setSocialConnectionStatus(id: number, status: SocialConnectionStatus, lastError: string | null): Promise<void> {
-    await db.update(socialConnections)
+  /** false when nothing changed: a disconnected connection stays disconnected (a disconnect wins over a refresh in flight). */
+  async setSocialConnectionStatus(id: number, status: SocialConnectionStatus, lastError: string | null): Promise<boolean> {
+    const rows = await db.update(socialConnections)
       .set({ status, lastError, updatedAt: new Date() })
-      .where(eq(socialConnections.id, id));
+      .where(and(eq(socialConnections.id, id), ne(socialConnections.status, "disconnected")))
+      .returning({ id: socialConnections.id });
+    return rows.length > 0;
   },
 
   /** Wipes the token and marks the connection disconnected. Scheduled posts fail at their own publish time. */
@@ -176,23 +179,58 @@ export const socialStorage = {
   },
 
   /**
-   * UPDATE ... WHERE id = $1 AND status IN (...) [AND approval_status IN (...)] RETURNING *.
+   * UPDATE ... WHERE id = $1 AND status IN (...) [AND approval_status IN (...)] [AND caption / video unchanged] RETURNING *.
    * null when nothing matched: the publisher or another user changed the post first, and this write loses.
    */
   async updateSocialPostIf(
     postId: number,
     allowedStatuses: SocialPostStatus[],
     fields: Partial<InsertSocialPost>,
-    opts: { approvalStatuses?: ApprovalStatus[] } = {},
+    opts: {
+      approvalStatuses?: ApprovalStatus[];
+      content?: { caption: string; videoPublicId: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
+    } = {},
   ): Promise<SocialPost | null> {
     if (allowedStatuses.length === 0) return null;
     const conds: SQL[] = [eq(socialPosts.id, postId), inArray(socialPosts.status, allowedStatuses)];
     if (opts.approvalStatuses?.length) conds.push(inArray(socialPosts.approvalStatus, opts.approvalStatuses));
+    if (opts.content) {
+      conds.push(eq(socialPosts.caption, opts.content.caption));
+      conds.push(opts.content.videoPublicId === null ? isNull(socialPosts.videoPublicId) : eq(socialPosts.videoPublicId, opts.content.videoPublicId));
+      if (opts.content.scheduledAt) conds.push(eq(socialPosts.scheduledAt, opts.content.scheduledAt));
+      if (opts.content.shareToFeed !== undefined) conds.push(eq(socialPosts.shareToFeed, opts.content.shareToFeed));
+      if (opts.content.isAiGenerated !== undefined) conds.push(eq(socialPosts.isAiGenerated, opts.content.isAiGenerated));
+    }
     const [row] = await db.update(socialPosts)
       .set({ ...fields, updatedAt: new Date() })
       .where(and(...conds))
       .returning();
     return row ?? null;
+  },
+
+  /** Publisher: scheduled posts whose time has come, oldest first. */
+  async listDueSocialPosts(now: Date): Promise<SocialPost[]> {
+    return db.select().from(socialPosts)
+      .where(and(eq(socialPosts.status, "scheduled"), lte(socialPosts.scheduledAt, now)))
+      .orderBy(asc(socialPosts.scheduledAt), asc(socialPosts.id));
+  },
+
+  /** Publisher: posts with a container being processed (also what a restart leaves behind). */
+  async listPublishingSocialPosts(): Promise<SocialPost[]> {
+    return db.select().from(socialPosts).where(eq(socialPosts.status, "publishing")).orderBy(asc(socialPosts.id));
+  },
+
+  /** Publisher: posts still waiting for approval within 24 h of their time, not reminded yet. */
+  async listPostsNeedingReminder(now: Date): Promise<SocialPost[]> {
+    return db.select().from(socialPosts)
+      .where(and(
+        eq(socialPosts.status, "scheduled"),
+        eq(socialPosts.requiresApproval, true),
+        eq(socialPosts.approvalStatus, "pending"),
+        isNull(socialPosts.approvalReminderSentAt),
+        gt(socialPosts.scheduledAt, now),
+        lte(socialPosts.scheduledAt, new Date(now.getTime() + 24 * 3_600_000)),
+      ));
   },
 
   /** Display names for user ids: the full name, else the email. Unknown ids are left out. */

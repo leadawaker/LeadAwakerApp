@@ -52,7 +52,10 @@ import { registerNumberRequestRoutes } from "./numberRequests";
 import { registerClientAlertsRoutes } from "./clientAlerts";
 import { registerHomeRoutes } from "./home";
 import { registerSocialRoutes } from "./social";
+import { registerSocialPostRoutes } from "./socialPosts";
 import { startPublicDemoPoller } from "../publicDemo/poller";
+import { startSocialPublisher } from "../social/publisher";
+import { startSocialTokenRefresher } from "../social/tokenRefresher";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
@@ -117,6 +120,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerClientAlertsRoutes(app);
   registerHomeRoutes(app);
   registerSocialRoutes(app);
+  registerSocialPostRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)
@@ -133,6 +137,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   startReviewPoller();              // Reputation v2: Google review ingest + auto-post (20min)
   startDemoReplyNotifier();         // a prospect replied to a demo for the first time (60s)
   startPublicDemoPoller();          // landing-page website demos: call task, budget, retention (60s)
+  startSocialPublisher();           // Instagram: publish due Reels (60s)
+  startSocialTokenRefresher();      // Instagram: token refresh + upload cleanup (6h)
 
   return httpServer;
 }

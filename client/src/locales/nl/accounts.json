@@ -133,7 +133,18 @@
         "on": "Gekoppeld",
         "pending": "Alleen boekingspagina",
         "off": "Niet ingesteld"
+      },
+      "social": {
+        "on": "Gekoppeld",
+        "pending": "Actie nodig",
+        "off": "Niet ingesteld"
       }
+    },
+    "social": {
+      "title": "Social media",
+      "help": "Het Instagram-account van de klant, waar geplande Reels op verschijnen.",
+      "short": "Instagram",
+      "hint": "Niet gekoppeld"
     }
   },
   "sections": {
@@ -480,7 +491,8 @@
       "voice": "Telefoon",
       "chat": "Chat",
       "alerts": "Meldingen",
-      "automations": "Automatiseringen"
+      "automations": "Automatiseringen",
+      "social": "Social"
     },
     "createAccount": "Account aanmaken",
     "compactPanel": "Paneel verkleinen",
@@ -870,5 +882,136 @@
     "savedDesc": "Je wijzigingen zijn doorgevoerd.",
     "error": "Openingstijden opslaan mislukt",
     "errorDesc": "Probeer het opnieuw."
+  },
+  "social": {
+    "connect": {
+      "title": "Instagram",
+      "connected": "Gekoppeld",
+      "notConnected": "Niet gekoppeld",
+      "needsAttention": "Actie nodig",
+      "requirement": "Hiervoor is een zakelijk of creator-account op Instagram nodig. Je logt zelf in bij Instagram, Lead Awaker ziet het wachtwoord nooit.",
+      "connectButton": "Instagram koppelen",
+      "reconnectButton": "Opnieuw koppelen",
+      "renews": "Gekoppeld · wordt automatisch verlengd",
+      "disconnect": "Ontkoppelen",
+      "disconnectConfirm": "Dit Instagram-account ontkoppelen? Geplande posts gaan pas weer de deur uit als het opnieuw gekoppeld is.",
+      "disconnectYes": "Ja, ontkoppelen",
+      "cancel": "Annuleren",
+      "disconnectFailed": "Ontkoppelen is niet gelukt. Probeer het opnieuw.",
+      "attentionHelp": "De koppeling heeft een nieuwe login nodig voordat er posts uit kunnen.",
+      "askManager": "Een manager van dit account kan Instagram koppelen.",
+      "enableTitle": "Social media voor dit account",
+      "enableHelp": "Toont de groep en het tabblad Social aan de eigen gebruikers van de klant.",
+      "enableFailed": "Opslaan is niet gelukt. Probeer het opnieuw.",
+      "toastConnected": "Instagram gekoppeld",
+      "toastFailed": "Instagram is niet gekoppeld",
+      "errors": {
+        "access_denied": "De toestemmingen zijn op Instagram geweigerd. Koppel opnieuw en sta ze allemaal toe.",
+        "missing_code": "Instagram heeft geen inlogcode teruggestuurd. Probeer het opnieuw.",
+        "invalid_state": "De inloglink is verlopen. Begin opnieuw vanaf deze pagina.",
+        "not_professional": "Dit is een persoonlijk Instagram-account. Zet het in de Instagram-app om naar zakelijk of creator en koppel opnieuw.",
+        "already_connected": "Dit Instagram-account is al aan een ander account gekoppeld.",
+        "failed": "Er ging iets mis bij het koppelen. Probeer het opnieuw."
+      },
+      "attentionHelpNamed": "@{{username}}: de koppeling heeft een nieuwe login nodig voordat er posts uit kunnen.",
+      "loading": "Instagram-status laden"
+    },
+    "posts": {
+      "title": "Geplande Reels",
+      "subtitle": "Video's die nog op Instagram moeten verschijnen, en de video's die al online staan.",
+      "subtitleConnected": "Plaatst op @{{username}} op Instagram.",
+      "newPost": "Nieuwe post",
+      "loading": "Posts laden",
+      "loadFailed": "De posts konden niet worden geladen. Probeer het opnieuw.",
+      "emptyAgency": "Nog geen posts. Upload een video om de eerste Reel in te plannen.",
+      "emptyClient": "Nog geen posts. Nieuwe video's verschijnen hier zodat je ze kunt goedkeuren.",
+      "sections": {
+        "needs_approval": "Goedkeuring nodig",
+        "upcoming": "Gepland",
+        "held": "Tegengehouden",
+        "failed": "Mislukt",
+        "published": "Geplaatst"
+      },
+      "badge": {
+        "needs_approval": "Wacht op goedkeuring",
+        "upcoming": "Gepland",
+        "held": "Tegengehouden",
+        "failed": "Mislukt",
+        "published": "Geplaatst",
+        "publishing": "Wordt geplaatst"
+      },
+      "previewLabel": "Voorbeeld van de video",
+      "noCaption": "Geen bijschrift",
+      "approvedBy": "Goedgekeurd door {{name}}",
+      "waivedBy": "Goedkeuring overgeslagen door {{name}}",
+      "rejectedNote": "Afgekeurd: \"{{note}}\"",
+      "rejectedNoNote": "Afgekeurd, zonder opmerking.",
+      "heldHelp": "Het tijdstip is verstreken zonder goedkeuring, dus de post is niet geplaatst. Kies een nieuw tijdstip om hem opnieuw in te plannen.",
+      "viewOnInstagram": "Bekijken op Instagram",
+      "actions": {
+        "approve": "Goedkeuren",
+        "reject": "Afkeuren",
+        "reschedule": "Nieuw tijdstip kiezen",
+        "edit": "Bewerken",
+        "retry": "Nu opnieuw proberen",
+        "cancel": "Post annuleren"
+      },
+      "rejectNoteLabel": "Wat moet er anders? (optioneel)",
+      "rejectNotePlaceholder": "Bijvoorbeeld: gebruik een ander bijschrift",
+      "cancelConfirm": "Deze post annuleren? De video wordt verwijderd en de post gaat niet de deur uit.",
+      "rejectYes": "Afkeuren",
+      "cancelYes": "Ja, post annuleren",
+      "back": "Terug",
+      "sheet": {
+        "newTitle": "Nieuwe Reel",
+        "editTitle": "Reel bewerken",
+        "rescheduleTitle": "Nieuw tijdstip kiezen",
+        "video": "Video",
+        "chooseVideo": "Video kiezen",
+        "replaceVideo": "Video vervangen",
+        "videoHelp": "MP4 of MOV, tot 100 MB, van 3 seconden tot 15 minuten. 9:16 ziet er het best uit.",
+        "uploading": "Video uploaden",
+        "caption": "Bijschrift",
+        "when": "Datum en tijd ({{zone}})",
+        "date": "Datum",
+        "time": "Tijd",
+        "shareToFeed": "Ook in de feed tonen",
+        "shareToFeedHelp": "De Reel verschijnt ook in het raster van het profiel.",
+        "isAiGenerated": "Markeren als AI-gegenereerd",
+        "isAiGeneratedHelp": "Instagram toont een AI-label bij de Reel.",
+        "requiresApproval": "Klant moet goedkeuren",
+        "requiresApprovalHelp": "Wordt pas geplaatst als een manager van het account goedkeurt.",
+        "save": "Wijzigingen opslaan",
+        "schedule": "Inplannen",
+        "cancel": "Annuleren"
+      },
+      "errors": {
+        "not_editable": "Deze post wordt al geplaatst en kan niet meer worden gewijzigd.",
+        "changed": "Deze post is intussen gewijzigd. Bekijk de nieuwe versie en probeer het opnieuw.",
+        "in_past": "Kies een tijdstip in de toekomst.",
+        "invalid_time": "Kies een geldige datum en tijd.",
+        "not_connected": "Koppel eerst Instagram voor dit account.",
+        "not_allowed": "Deze post kan niet meer worden goedgekeurd of afgekeurd.",
+        "not_failed": "Alleen een mislukte post kan opnieuw worden geprobeerd.",
+        "not_enabled": "Social media staat niet aan voor dit account.",
+        "upload_missing": "De video is niet gevonden. Upload hem opnieuw.",
+        "upload_used": "Deze video wordt al door een andere post gebruikt. Upload hem opnieuw.",
+        "aborted": "Het uploaden is halverwege gestopt. Probeer het opnieuw.",
+        "too_long": "Het bijschrift is langer dan 2.200 tekens.",
+        "too_many_hashtags": "Instagram staat maximaal 30 hashtags toe.",
+        "too_many_mentions": "Instagram staat maximaal 20 @-vermeldingen toe.",
+        "format": "Dit bestand is geen MP4- of MOV-video.",
+        "video_codec": "De video moet H.264 of HEVC zijn.",
+        "audio_codec": "Het geluid moet AAC zijn.",
+        "audio_rate": "De samplefrequentie van het geluid mag maximaal 48 kHz zijn.",
+        "duration_short": "De video moet minstens 3 seconden duren.",
+        "duration_long": "De video mag maximaal 15 minuten duren.",
+        "fps": "De video moet tussen 23 en 60 beelden per seconde hebben.",
+        "width": "De video mag maximaal 1920 pixels breed zijn.",
+        "size": "De video is groter dan 100 MB.",
+        "failed": "Er ging iets mis. Probeer het opnieuw."
+      },
+      "failedHelp": "Instagram heeft deze post niet geplaatst."
+    }
   }
 }

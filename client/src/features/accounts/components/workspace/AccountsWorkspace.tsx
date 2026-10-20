@@ -1,4 +1,10 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import { parseInstagramReturn, stripInstagramParams } from "@/features/social/lib/socialState";
+import { showSocialTab } from "@/features/social/lib/posts";
+import { useSocialStatus } from "@/features/social/components/InstagramConnectCard";
+import type { ConnectionGroup } from "./ConnectionsOverview";
 import { useMarkVisited } from "@/features/home/onboarding/useOnboarding";
 import { useTranslation } from "react-i18next";
 import { Building2, Plus } from "lucide-react";
@@ -26,7 +32,7 @@ import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
 // Onboarding ("communication") has no tab: it opens from a button on Overview.
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "voice", "chat", "alerts", "automations"];
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "voice", "chat", "social", "alerts", "automations"];
 
 interface Props {
   accounts: AccountRow[];
@@ -118,6 +124,14 @@ export function AccountsWorkspace(p: Props) {
   const accountId = account ? (account.Id ?? account.id ?? 0) : 0;
 
   const detailData = useAccountDetailData(accountId);
+
+  // Social shows for agency always, for client users once the agency switched it on.
+  const { data: socialStatus, isFetched: socialFetched } = useSocialStatus(accountId);
+  const socialVisible = showSocialTab({ isAgency: isAgencyUser, enabled: socialStatus?.enabled === true });
+  const tabs = useMemo(() => (socialVisible ? visibleTabs : visibleTabs.filter((k) => k !== "social")), [visibleTabs, socialVisible]);
+  useEffect(() => {
+    if (tab === "social" && !socialVisible && socialFetched) setTab("overview");
+  }, [tab, socialVisible, socialFetched]);
   const d = useMemo(() => (account ? toAccountDetail(account, t) : null), [account, t]);
   // Header figures that point at the tabs (calls, phone line, WhatsApp, alerts).
   const metrics = useHeaderMetrics(accountId);
@@ -141,9 +155,34 @@ export function AccountsWorkspace(p: Props) {
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
   }, []);
 
+  // After the Instagram connect flow the server redirects back with ?instagram=connected or
+  // ?instagram=error&reason=… (server/routes/social.ts). Open Integrations on the Social group,
+  // say how it went, refresh the card, and strip the params.
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [integrationsGroup, setIntegrationsGroup] = useState<ConnectionGroup | undefined>(undefined);
+  useEffect(() => {
+    const result = parseInstagramReturn(window.location.search);
+    if (!result) return;
+    setTab("integrations");
+    setIntegrationsGroup("social");
+    if (result.kind === "connected") toast({ title: t("social.connect.toastConnected") });
+    else toast({ title: t("social.connect.toastFailed"), description: t(`social.connect.errors.${result.reason}`), variant: "destructive" });
+    queryClient.invalidateQueries({ queryKey: ["social-status"] }); // every account's status (socialStatusKey prefix)
+    window.history.replaceState(null, "", window.location.pathname + stripInstagramParams(window.location.search));
+  }, []);
+  // The Social group opens first once, for the account the flow returned to; switching accounts drops it.
+  const returnAccountRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!integrationsGroup) { returnAccountRef.current = null; return; }
+    if (!accountId) return; // the account list is still loading
+    if (returnAccountRef.current === null) returnAccountRef.current = accountId;
+    else if (returnAccountRef.current !== accountId) setIntegrationsGroup(undefined);
+  }, [integrationsGroup, accountId]);
+
   // Deep link: /platform/accounts?tab=voice opens that tab (used by the Demos
   // page's "managed in Account > Voice" link). Stripped once applied.
-  const pickTab = (k: WorkspaceTab) => { lastDeepTab = null; setTab(k); };
+  const pickTab = (k: WorkspaceTab) => { lastDeepTab = null; setIntegrationsGroup(undefined); setTab(k); };
 
   // The tab itself is read from the URL when the state is created. The param is
   // stripped only once an account has loaded, so a remount before that re-reads it.
@@ -185,7 +224,7 @@ export function AccountsWorkspace(p: Props) {
   // ── Shared mobile detail blocks (used by the client page + the agency sheet) ──
   const mobileTabSeg = (
     <div className={`la-seg la-seg--fill${isClient ? " la-seg--touch" : ""}`} style={{ overflowX: "auto", scrollbarWidth: "none" }}>
-      {visibleTabs.map((k) => (
+      {tabs.map((k) => (
         <button
           key={k}
           onClick={() => pickTab(k)}
@@ -210,6 +249,7 @@ export function AccountsWorkspace(p: Props) {
         isMobile
         readOnly={!isAdmin}
         onOpenTab={pickTab}
+        integrationsGroup={integrationsGroup}
         data={{
           account, d, accountId, onSave: p.onSave,
           campaigns: detailData.campaigns,
@@ -320,7 +360,7 @@ export function AccountsWorkspace(p: Props) {
       />
       <AccountsTopBar
         tab={tab}
-        tabs={visibleTabs}
+        tabs={tabs}
         onTabChange={pickTab}
         showTabs={!isNarrow}
         count={p.count}
@@ -429,6 +469,7 @@ export function AccountsWorkspace(p: Props) {
                   tab={tab}
                   isMobile={false}
                   readOnly={!isAdmin}
+                  integrationsGroup={integrationsGroup}
                   onOpenTab={pickTab}
                   data={{
                     account, d, accountId, onSave: p.onSave,

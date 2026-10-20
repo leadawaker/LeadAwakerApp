@@ -16,6 +16,9 @@ import {
   type ProbeResult,
 } from "./media";
 
+// ffmpeg-backed tests run where ffmpeg exists (the Pi); elsewhere they are skipped, not failed.
+const NEEDS_FFMPEG = { skip: (() => { try { execFileSync("ffmpeg", ["-version"], { stdio: "ignore" }); return false; } catch { return "ffmpeg not installed"; } })() };
+
 const tmp = mkdtempSync(join(tmpdir(), "social-media-"));
 after(() => rmSync(tmp, { recursive: true, force: true }));
 
@@ -68,7 +71,7 @@ test("streamToFileWithLimit settles when the source was gone before it started (
   assert.equal(existsSync(dest), false);
 });
 
-test("probe + faststart on a real 4 s clip", async () => {
+test("probe + faststart on a real 4 s clip", NEEDS_FFMPEG, async () => {
   const f = join(tmp, "clip.mp4");
   execFileSync("ffmpeg", ["-y", "-f", "lavfi", "-i", "testsrc=size=108x192:rate=30", "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=44100", "-t", "4", "-c:v", "libx264", "-c:a", "aac", f], { stdio: "ignore" });
   await remuxFaststart(f);

@@ -25,10 +25,16 @@ export function defaultIgDeps(): IgDeps {
 }
 
 export class IgApiError extends Error {
-  constructor(message: string, public code?: number, public kind?: "not_professional" | "http") {
+  constructor(message: string, public code?: number, public kind?: "not_professional" | "http" | "network") {
     super(message);
     this.name = "IgApiError";
   }
+}
+
+/** Worth trying again: the request never got an answer, a 5xx, or Meta's "temporary" error codes 1 and 2. */
+export function isTransientIgError(err: unknown): boolean {
+  if (!(err instanceof IgApiError)) return true;
+  return err.kind === "network" || err.code === 1 || err.code === 2;
 }
 
 export function stripCodeSuffix(code: string): string {
@@ -52,13 +58,14 @@ async function call(deps: IgDeps, url: string, init?: RequestInit): Promise<any>
   try {
     res = await deps.fetch(url, { ...init, signal: AbortSignal.timeout(20_000) });
   } catch (e: any) {
-    throw new IgApiError(`Instagram request failed: ${e?.name === "TimeoutError" ? "timeout" : "network error"}`, undefined, "http");
+    throw new IgApiError(`Instagram request failed: ${e?.name === "TimeoutError" ? "timeout" : "network error"}`, undefined, "network");
   }
   let data: any = null;
   try { data = await res.json(); } catch { /* non-JSON body */ }
   if (!res.ok || data?.error) {
     const err = data?.error;
-    throw new IgApiError(err?.message ?? err?.error_message ?? `Instagram API error (HTTP ${res.status})`, err?.code, "http");
+    const kind = res.status >= 500 && !err?.code ? "network" : "http";
+    throw new IgApiError(err?.message ?? err?.error_message ?? `Instagram API error (HTTP ${res.status})`, err?.code, kind);
   }
   return data;
 }

@@ -133,7 +133,18 @@
         "on": "Vinculada",
         "pending": "Só página de agendamento",
         "off": "Não definido"
+      },
+      "social": {
+        "on": "Conectado",
+        "pending": "Precisa de atenção",
+        "off": "Não definido"
       }
+    },
+    "social": {
+      "title": "Redes sociais",
+      "help": "A conta do Instagram do cliente, onde os Reels agendados são publicados.",
+      "short": "Instagram",
+      "hint": "Não conectado"
     }
   },
   "sections": {
@@ -473,7 +484,8 @@
       "voice": "Telefone",
       "chat": "Chat",
       "alerts": "Alertas",
-      "automations": "Automações"
+      "automations": "Automações",
+      "social": "Social"
     },
     "createAccount": "Criar conta",
     "compactPanel": "Compactar painel",
@@ -817,9 +829,140 @@
     "message": "Oi! Você pode adicionar um registro DNS para a nossa página de agendamento?\n\nTipo: CNAME\nNome: {{name}}\nValor: {{target}}\n\nAssim {{domain}} mostra a nossa página de agendamento. Obrigado!"
   },
   "clientHoursToast": {
-    "saved": "Hor\u00e1rio de funcionamento salvo",
-    "savedDesc": "Suas altera\u00e7\u00f5es j\u00e1 est\u00e3o valendo.",
-    "error": "N\u00e3o foi poss\u00edvel salvar o hor\u00e1rio de funcionamento",
+    "saved": "Horário de funcionamento salvo",
+    "savedDesc": "Suas alterações já estão valendo.",
+    "error": "Não foi possível salvar o horário de funcionamento",
     "errorDesc": "Tente novamente."
+  },
+  "social": {
+    "connect": {
+      "title": "Instagram",
+      "connected": "Conectado",
+      "notConnected": "Não conectado",
+      "needsAttention": "Precisa de atenção",
+      "requirement": "É preciso uma conta comercial ou de criador no Instagram. O login é feito direto no Instagram, a Lead Awaker nunca vê a senha.",
+      "connectButton": "Conectar Instagram",
+      "reconnectButton": "Conectar de novo",
+      "renews": "Conectado · renova automaticamente",
+      "disconnect": "Desconectar",
+      "disconnectConfirm": "Desconectar esta conta do Instagram? Os posts agendados só serão publicados depois que ela for conectada de novo.",
+      "disconnectYes": "Sim, desconectar",
+      "cancel": "Cancelar",
+      "disconnectFailed": "Não foi possível desconectar. Tente de novo.",
+      "attentionHelp": "A conexão precisa de um novo login antes que os posts possam ser publicados.",
+      "askManager": "Um gerente desta conta pode conectar o Instagram.",
+      "enableTitle": "Redes sociais para esta conta",
+      "enableHelp": "Mostra o grupo e a aba Social para os próprios usuários do cliente.",
+      "enableFailed": "Não foi possível salvar. Tente de novo.",
+      "toastConnected": "Instagram conectado",
+      "toastFailed": "O Instagram não foi conectado",
+      "errors": {
+        "access_denied": "As permissões foram recusadas no Instagram. Conecte de novo e permita todas.",
+        "missing_code": "O Instagram não devolveu um código de login. Tente de novo.",
+        "invalid_state": "O link de login expirou. Comece de novo a partir desta página.",
+        "not_professional": "Esta é uma conta pessoal do Instagram. Mude para conta comercial ou de criador no app do Instagram e conecte de novo.",
+        "already_connected": "Esta conta do Instagram já está conectada a outra conta.",
+        "failed": "Algo deu errado ao conectar. Tente de novo."
+      },
+      "attentionHelpNamed": "@{{username}}: a conexão precisa de um novo login antes que os posts possam ser publicados.",
+      "loading": "Carregando o status do Instagram"
+    },
+    "posts": {
+      "title": "Reels agendados",
+      "subtitle": "Vídeos que ainda vão para o Instagram, e os que já estão no ar.",
+      "subtitleConnected": "Publicando em @{{username}} no Instagram.",
+      "newPost": "Novo post",
+      "loading": "Carregando os posts",
+      "loadFailed": "Não foi possível carregar os posts. Tente de novo.",
+      "emptyAgency": "Nenhum post ainda. Envie um vídeo para agendar o primeiro Reel.",
+      "emptyClient": "Nenhum post ainda. Os novos vídeos aparecem aqui para você aprovar.",
+      "sections": {
+        "needs_approval": "Aguardando aprovação",
+        "upcoming": "Agendados",
+        "held": "Retidos",
+        "failed": "Com falha",
+        "published": "Publicados"
+      },
+      "badge": {
+        "needs_approval": "Aguardando aprovação",
+        "upcoming": "Agendado",
+        "held": "Retido",
+        "failed": "Falhou",
+        "published": "Publicado",
+        "publishing": "Publicando"
+      },
+      "previewLabel": "Prévia do vídeo",
+      "noCaption": "Sem legenda",
+      "approvedBy": "Aprovado por {{name}}",
+      "waivedBy": "Aprovação dispensada por {{name}}",
+      "rejectedNote": "Recusado: \"{{note}}\"",
+      "rejectedNoNote": "Recusado, sem comentário.",
+      "heldHelp": "O horário passou sem aprovação, então o post não foi publicado. Escolha um novo horário para agendar de novo.",
+      "viewOnInstagram": "Ver no Instagram",
+      "actions": {
+        "approve": "Aprovar",
+        "reject": "Recusar",
+        "reschedule": "Escolher novo horário",
+        "edit": "Editar",
+        "retry": "Tentar de novo agora",
+        "cancel": "Cancelar post"
+      },
+      "rejectNoteLabel": "O que deve mudar? (opcional)",
+      "rejectNotePlaceholder": "Por exemplo: usar outra legenda",
+      "cancelConfirm": "Cancelar este post? O vídeo é apagado e o post não será publicado.",
+      "rejectYes": "Recusar",
+      "cancelYes": "Sim, cancelar post",
+      "back": "Voltar",
+      "sheet": {
+        "newTitle": "Novo Reel",
+        "editTitle": "Editar Reel",
+        "rescheduleTitle": "Escolher novo horário",
+        "video": "Vídeo",
+        "chooseVideo": "Escolher vídeo",
+        "replaceVideo": "Trocar vídeo",
+        "videoHelp": "MP4 ou MOV, até 100 MB, de 3 segundos a 15 minutos. O formato 9:16 fica melhor.",
+        "uploading": "Enviando o vídeo",
+        "caption": "Legenda",
+        "when": "Data e horário ({{zone}})",
+        "date": "Data",
+        "time": "Horário",
+        "shareToFeed": "Mostrar também no feed",
+        "shareToFeedHelp": "O Reel aparece também na grade do perfil.",
+        "isAiGenerated": "Marcar como gerado por IA",
+        "isAiGeneratedHelp": "O Instagram mostra um selo de IA no Reel.",
+        "requiresApproval": "Cliente precisa aprovar",
+        "requiresApprovalHelp": "Só é publicado depois que um gerente da conta aprovar.",
+        "save": "Salvar alterações",
+        "schedule": "Agendar",
+        "cancel": "Cancelar"
+      },
+      "errors": {
+        "not_editable": "Este post já está sendo publicado e não pode mais ser alterado.",
+        "changed": "Este post foi alterado nesse meio-tempo. Confira a nova versão e tente de novo.",
+        "in_past": "Escolha um horário no futuro.",
+        "invalid_time": "Escolha uma data e um horário válidos.",
+        "not_connected": "Conecte o Instagram desta conta primeiro.",
+        "not_allowed": "Este post não pode mais ser aprovado ou recusado.",
+        "not_failed": "Só um post com falha pode ser tentado de novo.",
+        "not_enabled": "As redes sociais não estão ativadas para esta conta.",
+        "upload_missing": "O vídeo não foi encontrado. Envie de novo.",
+        "upload_used": "Este vídeo já está em outro post. Envie de novo.",
+        "aborted": "O envio parou no meio. Tente de novo.",
+        "too_long": "A legenda tem mais de 2.200 caracteres.",
+        "too_many_hashtags": "O Instagram permite no máximo 30 hashtags.",
+        "too_many_mentions": "O Instagram permite no máximo 20 menções com @.",
+        "format": "Este arquivo não é um vídeo MP4 ou MOV.",
+        "video_codec": "O vídeo precisa ser H.264 ou HEVC.",
+        "audio_codec": "O áudio precisa ser AAC.",
+        "audio_rate": "A taxa de amostragem do áudio deve ser de no máximo 48 kHz.",
+        "duration_short": "O vídeo precisa ter pelo menos 3 segundos.",
+        "duration_long": "O vídeo pode ter no máximo 15 minutos.",
+        "fps": "O vídeo precisa ter entre 23 e 60 quadros por segundo.",
+        "width": "O vídeo pode ter no máximo 1920 pixels de largura.",
+        "size": "O vídeo tem mais de 100 MB.",
+        "failed": "Algo deu errado. Tente de novo."
+      },
+      "failedHelp": "O Instagram não publicou este post."
+    }
   }
 }

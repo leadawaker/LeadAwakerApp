@@ -1,6 +1,7 @@
 // Pure rules behind the scheduled-post routes: what a new post or an edit writes, who may approve
 // or reject, how request bodies are read, and what the client is shown. No database and no files:
 // server/routes/socialPosts.ts does the I/O. Spec: docs/superpowers/specs/2026-10-19-instagram-connect-and-publishing-design.md
+import { createHash } from "node:crypto";
 import type { InsertSocialPost, SocialPost } from "@shared/schema";
 import {
   approvalAfterEdit,
@@ -176,6 +177,8 @@ export function canReject(p: ApprovalView): boolean {
 /** What the client gets for a post (client type SocialPostView). Never a file path. */
 export interface SocialPostView {
   id: number;
+  /** contentVersion(): sent back with Approve and Reject. */
+  version: string;
   section: PostListSection;
   status: SocialPostStatus;
   approvalStatus: ApprovalStatus;
@@ -193,6 +196,14 @@ export interface SocialPostView {
   isAiGenerated: boolean;
 }
 
+/**
+ * What a Manager approves: the video and the caption. The client sends it back with Approve, so an
+ * agency edit that landed after the Manager loaded the list is refused (409 changed), not approved unseen.
+ */
+export function contentVersion(p: Pick<SocialPost, "videoPublicId" | "caption">): string {
+  return createHash("sha256").update(`${p.videoPublicId ?? ""}\n${p.caption}`).digest("hex").slice(0, 16);
+}
+
 export function mediaPath(publicId: string, ext: string): string {
   return `/media/social/${publicId}.${ext}`;
 }
@@ -206,6 +217,7 @@ export function toPostView(p: SocialPost, names: ReadonlyMap<number, string>): S
   const nameOf = (id: number | null) => (id == null ? null : names.get(id) ?? null);
   return {
     id: p.id,
+    version: contentVersion(p),
     section,
     status,
     approvalStatus,

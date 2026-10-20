@@ -1,17 +1,19 @@
 // The Integrations tab's menu: one tile per connection with its state and the
 // one fact that matters (the number, the site, the calendar). A tile opens its
 // group. On desktop the tiles stand in a column beside the open group ("rail"),
-// on a phone they sit in a 2x2 grid above it. Agency only: each tile reads the
+// on a phone they sit in a 2-column grid above it. Agency only: each tile reads the
 // same data its cards do.
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { CalendarDays, Globe, MessageCircle, Phone } from "lucide-react";
+import { CalendarDays, Globe, Instagram, MessageCircle, Phone } from "lucide-react";
 import { useWhatsappSender } from "./whatsapp/whatsappApi";
 import { useVoiceLine } from "./voice/useVoiceLine";
 import { fetchWidgetConfigs } from "../../api/widgetApi";
 import { fetchCalendarConnections } from "../../api/calendarApi";
+import { useSocialStatus } from "@/features/social/components/InstagramConnectCard";
+import { instagramTileState } from "@/features/social/lib/socialState";
 
-export type ConnectionGroup = "phone" | "messaging" | "website" | "bookings";
+export type ConnectionGroup = "phone" | "messaging" | "website" | "bookings" | "social";
 type State = "on" | "pending" | "off";
 
 const DOT: Record<State, string> = { on: "var(--good)", pending: "var(--warn)", off: "var(--mute-2)" };
@@ -32,6 +34,7 @@ export function ConnectionsOverview({ accountId, active, onSelect, layout = "row
     queryFn: () => fetchWidgetConfigs(accountId),
     staleTime: 30_000,
   });
+  const { data: social } = useSocialStatus(accountId);
   const { data: calendars } = useQuery({
     queryKey: ["integrations-overview", "calendars", accountId],
     queryFn: () => fetchCalendarConnections(accountId),
@@ -64,6 +67,11 @@ export function ConnectionsOverview({ accountId, active, onSelect, layout = "row
       state: ownCalendar ? "on" : bookingPage ? "pending" : "off",
       detail: ownCalendar?.displayName ?? null,
     },
+    {
+      group: "social", icon: <Instagram size={16} />,
+      state: instagramTileState(social),
+      detail: social?.connection?.username && social.connection.status !== "disconnected" ? `@${social.connection.username}` : null,
+    },
   ];
 
   return (
@@ -72,14 +80,16 @@ export function ConnectionsOverview({ accountId, active, onSelect, layout = "row
       // The 1px gap over a line-coloured ground draws the dividers, so they stay right when the tiles wrap.
       style={{
         borderRadius: "var(--r-card)", background: "var(--line-strong)", display: "grid", gap: 1, overflow: "hidden",
-        gridTemplateColumns: layout === "rail" ? "1fr" : layout === "grid" ? "1fr 1fr" : "repeat(4, 1fr)",
+        gridTemplateColumns: layout === "rail" ? "1fr" : layout === "grid" ? "1fr 1fr" : `repeat(${tiles.length}, 1fr)`,
       }}
       role="tablist"
       aria-orientation={layout === "rail" ? "vertical" : "horizontal"}
       data-testid="integrations-overview"
     >
-      {tiles.map((tile) => {
+      {tiles.map((tile, i) => {
         const on = tile.group === active;
+        // An odd last tile in the 2-column phone grid spans the row instead of leaving a gap.
+        const spanRow = layout === "grid" && tiles.length % 2 === 1 && i === tiles.length - 1;
         return (
         <button
           key={tile.group}
@@ -92,6 +102,7 @@ export function ConnectionsOverview({ accountId, active, onSelect, layout = "row
           style={{
             display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start", textAlign: "left", cursor: "pointer",
             padding: layout === "grid" ? "14px 14px" : "16px 18px", border: 0, minWidth: 0,
+            gridColumn: spanRow ? "1 / -1" : undefined,
             // The open tile is the brightest one, like a page lifted out of the stack.
             background: on ? "var(--card)" : "var(--bone)",
             boxShadow: on ? "inset 3px 0 0 var(--wine)" : undefined,

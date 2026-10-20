@@ -133,7 +133,18 @@
         "on": "Linked",
         "pending": "Booking page only",
         "off": "Not set"
+      },
+      "social": {
+        "on": "Connected",
+        "pending": "Needs attention",
+        "off": "Not set"
       }
+    },
+    "social": {
+      "title": "Social media",
+      "help": "The client's Instagram account, where scheduled Reels are posted.",
+      "short": "Instagram",
+      "hint": "Not connected"
     }
   },
   "sections": {
@@ -480,7 +491,8 @@
       "voice": "Phone",
       "chat": "Chat",
       "alerts": "Alerts",
-      "automations": "Automations"
+      "automations": "Automations",
+      "social": "Social"
     },
     "createAccount": "Create account",
     "compactPanel": "Compact panel",
@@ -870,5 +882,136 @@
     "savedDesc": "Your changes are in effect.",
     "error": "Could not save opening hours",
     "errorDesc": "Please try again."
+  },
+  "social": {
+    "connect": {
+      "title": "Instagram",
+      "connected": "Connected",
+      "notConnected": "Not connected",
+      "needsAttention": "Needs attention",
+      "requirement": "Needs an Instagram Business or Creator account. You log in to Instagram yourself, Lead Awaker never sees the password.",
+      "connectButton": "Connect Instagram",
+      "reconnectButton": "Reconnect",
+      "renews": "Connected · renews automatically",
+      "disconnect": "Disconnect",
+      "disconnectConfirm": "Disconnect this Instagram account? Scheduled posts will not go out until it is connected again.",
+      "disconnectYes": "Yes, disconnect",
+      "cancel": "Cancel",
+      "disconnectFailed": "Could not disconnect. Try again.",
+      "attentionHelp": "The connection needs a fresh login before posts can go out.",
+      "askManager": "A manager of this account can connect Instagram.",
+      "enableTitle": "Social media for this account",
+      "enableHelp": "Shows the Social group and tab to the client's own users.",
+      "enableFailed": "Could not save. Try again.",
+      "toastConnected": "Instagram connected",
+      "toastFailed": "Instagram was not connected",
+      "errors": {
+        "access_denied": "The permissions were declined on Instagram. Connect again and allow them all.",
+        "missing_code": "Instagram did not send a login code back. Try again.",
+        "invalid_state": "The login link expired. Start again from this page.",
+        "not_professional": "This is a personal Instagram account. Switch it to Business or Creator in the Instagram app, then connect again.",
+        "already_connected": "This Instagram account is already connected to another account.",
+        "failed": "Something went wrong while connecting. Try again."
+      },
+      "attentionHelpNamed": "@{{username}}: the connection needs a fresh login before posts can go out.",
+      "loading": "Loading Instagram status"
+    },
+    "posts": {
+      "title": "Scheduled Reels",
+      "subtitle": "Videos waiting to go out on Instagram, and the ones already live.",
+      "subtitleConnected": "Posting to @{{username}} on Instagram.",
+      "newPost": "New post",
+      "loading": "Loading posts",
+      "loadFailed": "Could not load the posts. Try again.",
+      "emptyAgency": "No posts yet. Upload a video to schedule the first Reel.",
+      "emptyClient": "No posts yet. New videos show up here for you to approve.",
+      "sections": {
+        "needs_approval": "Needs approval",
+        "upcoming": "Upcoming",
+        "held": "Held",
+        "failed": "Failed",
+        "published": "Published"
+      },
+      "badge": {
+        "needs_approval": "Waiting for approval",
+        "upcoming": "Scheduled",
+        "held": "Held",
+        "failed": "Failed",
+        "published": "Published",
+        "publishing": "Publishing"
+      },
+      "previewLabel": "Video preview",
+      "noCaption": "No caption",
+      "approvedBy": "Approved by {{name}}",
+      "waivedBy": "Approval waived by {{name}}",
+      "rejectedNote": "Rejected: \"{{note}}\"",
+      "rejectedNoNote": "Rejected, no note left.",
+      "heldHelp": "Its time passed without approval, so it was not posted. Pick a new time to schedule it again.",
+      "viewOnInstagram": "View on Instagram",
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "reschedule": "Pick a new time",
+        "edit": "Edit",
+        "retry": "Try again now",
+        "cancel": "Cancel post"
+      },
+      "rejectNoteLabel": "What should change? (optional)",
+      "rejectNotePlaceholder": "For example: use a different caption",
+      "cancelConfirm": "Cancel this post? The video is deleted and it will not go out.",
+      "rejectYes": "Reject",
+      "cancelYes": "Yes, cancel post",
+      "back": "Back",
+      "sheet": {
+        "newTitle": "New Reel",
+        "editTitle": "Edit Reel",
+        "rescheduleTitle": "Pick a new time",
+        "video": "Video",
+        "chooseVideo": "Choose video",
+        "replaceVideo": "Replace video",
+        "videoHelp": "MP4 or MOV, up to 100 MB, 3 seconds to 15 minutes. 9:16 looks best.",
+        "uploading": "Uploading video",
+        "caption": "Caption",
+        "when": "Date and time ({{zone}})",
+        "date": "Date",
+        "time": "Time",
+        "shareToFeed": "Also show in the feed",
+        "shareToFeedHelp": "The Reel appears on the profile grid too.",
+        "isAiGenerated": "Label as AI-generated",
+        "isAiGeneratedHelp": "Instagram shows an AI info label on the Reel.",
+        "requiresApproval": "Client must approve",
+        "requiresApprovalHelp": "Not posted until a manager of the account approves it.",
+        "save": "Save changes",
+        "schedule": "Schedule",
+        "cancel": "Cancel"
+      },
+      "errors": {
+        "not_editable": "This post is already being published, so it can no longer be changed.",
+        "changed": "This post was changed in the meantime. Check the new version and try again.",
+        "in_past": "Pick a time in the future.",
+        "invalid_time": "Pick a valid date and time.",
+        "not_connected": "Connect Instagram for this account first.",
+        "not_allowed": "This post can no longer be approved or rejected.",
+        "not_failed": "Only a failed post can be tried again.",
+        "not_enabled": "Social media is not switched on for this account.",
+        "upload_missing": "The video was not found. Upload it again.",
+        "upload_used": "This video is already used by another post. Upload it again.",
+        "aborted": "The upload stopped halfway. Try again.",
+        "too_long": "The caption is longer than 2,200 characters.",
+        "too_many_hashtags": "Instagram allows at most 30 hashtags.",
+        "too_many_mentions": "Instagram allows at most 20 @ mentions.",
+        "format": "This file is not an MP4 or MOV video.",
+        "video_codec": "The video must be H.264 or HEVC.",
+        "audio_codec": "The audio must be AAC.",
+        "audio_rate": "The audio sample rate must be 48 kHz or lower.",
+        "duration_short": "The video must be at least 3 seconds long.",
+        "duration_long": "The video can be at most 15 minutes long.",
+        "fps": "The video must be between 23 and 60 frames per second.",
+        "width": "The video can be at most 1920 pixels wide.",
+        "size": "The video is larger than 100 MB.",
+        "failed": "Something went wrong. Try again."
+      },
+      "failedHelp": "Instagram did not publish this post."
+    }
   }
 }
