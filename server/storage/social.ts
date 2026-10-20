@@ -7,7 +7,7 @@
  * Posts: every post route writes through updateSocialPostIf, a conditional
  * UPDATE that loses (returns null) when the post moved on meanwhile.
  */
-import { and, desc, eq, inArray, isNull, ne, or, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, isNull, lte, ne, or, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import {
   accounts,
@@ -197,6 +197,31 @@ export const socialStorage = {
       .where(and(...conds))
       .returning();
     return row ?? null;
+  },
+
+  /** Publisher: scheduled posts whose time has come, oldest first. */
+  async listDueSocialPosts(now: Date): Promise<SocialPost[]> {
+    return db.select().from(socialPosts)
+      .where(and(eq(socialPosts.status, "scheduled"), lte(socialPosts.scheduledAt, now)))
+      .orderBy(asc(socialPosts.scheduledAt), asc(socialPosts.id));
+  },
+
+  /** Publisher: posts with a container being processed (also what a restart leaves behind). */
+  async listPublishingSocialPosts(): Promise<SocialPost[]> {
+    return db.select().from(socialPosts).where(eq(socialPosts.status, "publishing")).orderBy(asc(socialPosts.id));
+  },
+
+  /** Publisher: posts still waiting for approval within 24 h of their time, not reminded yet. */
+  async listPostsNeedingReminder(now: Date): Promise<SocialPost[]> {
+    return db.select().from(socialPosts)
+      .where(and(
+        eq(socialPosts.status, "scheduled"),
+        eq(socialPosts.requiresApproval, true),
+        eq(socialPosts.approvalStatus, "pending"),
+        isNull(socialPosts.approvalReminderSentAt),
+        gt(socialPosts.scheduledAt, now),
+        lte(socialPosts.scheduledAt, new Date(now.getTime() + 24 * 3_600_000)),
+      ));
   },
 
   /** Display names for user ids: the full name, else the email. Unknown ids are left out. */
