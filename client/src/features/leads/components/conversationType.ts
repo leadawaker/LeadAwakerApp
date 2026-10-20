@@ -3,7 +3,7 @@
 // prefix / source and its campaign's service type (verified against live data).
 //   widget   = website chat widget   voice = AI voice receptionist
 //   dbr      = DBR reactivation + speed-to-lead quotes (one bucket on purpose)
-//   instagram = Instagram comment-to-DM demo
+//   instagram = Instagram comment-to-DM (the demo, and live leads with an ig: channel)
 import { Globe, Instagram, MoreHorizontal, Phone, RefreshCw, type LucideIcon } from "lucide-react";
 
 export type ConversationType = "widget" | "voice" | "dbr" | "instagram" | "other";
@@ -25,6 +25,8 @@ export function getConversationType(
   const channel = String(lead.channel_identifier ?? lead.channelIdentifier ?? "");
   if (source === "Website Chat" || /^web:/.test(channel)) return "widget";
   if (source === "voice_receptionist") return "voice";
+  // Live comment-to-DM leads (server/storage/socialDm.ts): channel ig:<Instagram-scoped id>.
+  if (/^ig:/.test(channel)) return "instagram";
   const cId = Number(lead.Campaigns_id ?? lead.campaigns_id ?? lead.campaignsId ?? 0);
   const campaignType = cId ? campaignsById?.get(cId)?.campaignType : null;
   if (campaignType === "social_reply") return "instagram";

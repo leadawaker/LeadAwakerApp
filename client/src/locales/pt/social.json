@@ -12,7 +12,8 @@
       "studio": "Estúdio",
       "calendar": "Calendário",
       "about": "Sobre mim",
-      "settings": "Configurações"
+      "settings": "Configurações",
+      "comments": "Comentário para DM"
     }
   },
   "captions": {
@@ -182,6 +183,76 @@
     "duration_long": "O vídeo tem mais de 15 minutos.",
     "mic_denied": "O acesso ao microfone foi negado. Permita no navegador para gravar.",
     "changed": "O Gabriel mudou este roteiro nesse meio tempo. Leia a nova versão.",
-    "no_recorder": "Este navegador não grava áudio. Escreva o tema."
+    "no_recorder": "Este navegador não grava áudio. Escreva o tema.",
+    "post_not_published": "Escolha um post que já está no Instagram."
+  },
+  "comments": {
+    "modeTitle": "Comentário para DM",
+    "now": "Agora: {{mode}}",
+    "modes": {
+      "off": "Desligado",
+      "dry_run": "Teste",
+      "live": "Ao vivo"
+    },
+    "modeHelp": {
+      "off": "Nada acontece com os comentários. Este é o padrão.",
+      "dry_run": "Comentários com uma palavra-chave são reconhecidos e a mensagem que seria enviada vai para o registro abaixo. Nada é enviado.",
+      "live": "Um comentário com a palavra-chave recebe uma resposta privada no Instagram, uma vez por comentário. A conversa aparece depois na página Chats, em Instagram."
+    },
+    "liveConfirm": "Ao vivo envia mensagens reais do Instagram desta conta para quem comentar uma palavra-chave. Confira antes as palavras-chave e o registro do teste.",
+    "liveYes": "Passar para ao vivo",
+    "cancel": "Cancelar",
+    "switchOff": "A chave do servidor INSTAGRAM_DM_LIVE está desligada, então ao vivo funciona igual ao teste até ela ser ligada no servidor.",
+    "webhookMissing": "O webhook do Instagram ainda não está configurado no servidor (INSTAGRAM_WEBHOOK_VERIFY_TOKEN e INSTAGRAM_APP_SECRET), então nenhum comentário chega.",
+    "cap": "Máximo de mensagens por hora",
+    "saveCap": "Salvar",
+    "sentLastHour": "{{sent}} de {{cap}} na última hora",
+    "rulesTitle": "Palavras-chave",
+    "rulesHelp": "Quando um comentário tem a palavra-chave como palavra (sem importar maiúsculas, acentos e pontuação), a pessoa recebe a primeira mensagem no DM.",
+    "newRule": "Nova palavra-chave",
+    "noRules": "Nenhuma palavra-chave ainda.",
+    "keyword": "Palavra-chave",
+    "keywordHelp": "Letras e números, por exemplo GUIA. \"guia!\" e \"Guia por favor\" valem, \"guias\" não.",
+    "post": "Post",
+    "allPosts": "Todos os posts",
+    "firstMessage": "Primeira mensagem",
+    "firstMessageHelp": "{username} vira o @nome da pessoa. Seja breve e diga o que ela recebe.",
+    "defaultMessage": "Oi {username}! Obrigado pelo comentário. Aqui está o que você pediu:",
+    "aiFollowUp": "Continuação com IA",
+    "aiFollowUpHelp": "Por enquanto isto só fica registrado: o motor de conversa com IA ainda não tem canal do Instagram, então quem responde é uma pessoa, pela página Chats.",
+    "aiBadge": "Continuação com IA",
+    "addRule": "Adicionar palavra-chave",
+    "saveRule": "Salvar palavra-chave",
+    "active": "Ativa",
+    "edit": "Editar",
+    "delete": "Excluir",
+    "deleteConfirm": "Excluir esta palavra-chave? Comentários com ela não recebem mais mensagem.",
+    "deleteYes": "Excluir",
+    "logTitle": "Registro",
+    "logHelp": "Os últimos 50 eventos: respostas privadas, respostas, pedidos para parar. No teste, é o que teria sido enviado.",
+    "logEmpty": "Nada ainda.",
+    "kinds": {
+      "private_reply": "Resposta privada",
+      "reply": "Resposta pelo Chats",
+      "inbound": "Mensagem recebida",
+      "opt_out": "Pediu para parar",
+      "ai_follow_up": "Continuação com IA"
+    },
+    "statuses": {
+      "would_send": "Enviaria",
+      "sending": "Enviando",
+      "sent": "Enviada",
+      "failed": "Falhou",
+      "skipped": "Pulada",
+      "received": "Recebida"
+    },
+    "reasons": {
+      "opted_out": "Esta pessoa pediu para parar.",
+      "window_closed": "Fora da janela do Instagram (7 dias para um comentário, 24 h depois da última mensagem da pessoa).",
+      "hourly_cap": "O limite por hora foi atingido.",
+      "not_connected": "O Instagram não está conectado.",
+      "engine_not_connected": "Não enviada: o motor de IA ainda não tem canal do Instagram.",
+      "dm_off": "Comentário para DM está desligado nesta conta."
+    }
   }
 }

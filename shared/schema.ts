@@ -2347,6 +2347,76 @@ export const socialHeygenPulls = nocodb.table("Social_Heygen_Pulls", {
 ]);
 export type SocialHeygenPull = typeof socialHeygenPulls.$inferSelect;
 
+// Comment-to-DM (docs/superpowers/specs/2026-10-20-comment-to-dm-design.md). Off by default; a real
+// send needs Social_Settings.dm_mode = 'live' AND env INSTAGRAM_DM_LIVE=1 (server/social/igMessaging.ts).
+export const socialDmRules = nocodb.table("Social_Dm_Rules", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  postId: integer("post_id"),                                  // a CRM post; null with ig_media_id null = every post
+  igMediaId: text("ig_media_id"),
+  keyword: text("keyword").notNull(),
+  keywordNorm: text("keyword_norm").notNull(),                 // server/social/dmMatch.ts keywordNorm
+  firstMessage: text("first_message").notNull(),
+  aiFollowUp: boolean("ai_follow_up").notNull().default(false),
+  active: boolean("active").notNull().default(true),
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_dm_rules_accounts_id_idx").on(t.accountsId),
+]);
+export type SocialDmRule = typeof socialDmRules.$inferSelect;
+export type InsertSocialDmRule = typeof socialDmRules.$inferInsert;
+
+/** One row per webhook comment or message: the unique key is the dedupe (Meta delivers at least once). */
+export const socialWebhookEvents = nocodb.table("Social_Webhook_Events", {
+  id: serial("id").primaryKey(),
+  eventKey: text("event_key").notNull(),                       // comment:<id> | message:<mid>
+  field: text("field").notNull(),                              // comments | messages
+  accountsId: integer("accounts_id"),
+  igUserId: text("ig_user_id"),                                // the commenter / sender (IG-scoped id)
+  outcome: text("outcome"),
+  receivedAt: timestamp("received_at", { withTimezone: true }).defaultNow().notNull(),
+  processedAt: timestamp("processed_at", { withTimezone: true }),
+}, (t) => [
+  uniqueIndex("social_webhook_events_key").on(t.eventKey),
+]);
+export type SocialWebhookEvent = typeof socialWebhookEvents.$inferSelect;
+
+/** Everything comment-to-DM did or would have done (dry run), shown in the Socials page. */
+export const socialDmLog = nocodb.table("Social_Dm_Log", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  ruleId: integer("rule_id"),
+  commentId: text("comment_id"),
+  igUserId: text("ig_user_id"),
+  username: text("username"),
+  kind: text("kind").notNull(),                                // private_reply | reply | inbound | opt_out | ai_follow_up
+  mode: text("mode").notNull(),                                // dry_run | live
+  status: text("status").notNull(),                            // would_send | sent | failed | skipped | received
+  reason: text("reason"),
+  text: text("text"),
+  leadId: integer("lead_id"),
+  interactionId: integer("interaction_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_dm_log_account_created_idx").on(t.accountsId, t.createdAt),
+  // One private reply per comment, ever (Meta allows one; this also stops a double send on a redelivery).
+  uniqueIndex("social_dm_log_one_private_reply").on(t.accountsId, t.commentId).where(sql`${t.kind} = 'private_reply'`),
+]);
+export type SocialDmLogRow = typeof socialDmLog.$inferSelect;
+export type InsertSocialDmLog = typeof socialDmLog.$inferInsert;
+
+/** People who wrote a stop word: no automated message reaches them again. */
+export const socialDmOptOuts = nocodb.table("Social_Dm_Opt_Outs", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  igUserId: text("ig_user_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_dm_opt_outs_account_user").on(t.accountsId, t.igUserId),
+]);
+
 // Daily estimated spend ledger for public demos (Europe/Amsterdam day).
 export const publicDemoSpend = nocodb.table("Public_Demo_Spend", {
   day: date("day").primaryKey(),

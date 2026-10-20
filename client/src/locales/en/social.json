@@ -12,7 +12,8 @@
       "studio": "Studio",
       "calendar": "Calendar",
       "about": "About me",
-      "settings": "Settings"
+      "settings": "Settings",
+      "comments": "Comments to DM"
     }
   },
   "captions": {
@@ -182,6 +183,76 @@
     "duration_long": "The video is longer than 15 minutes.",
     "mic_denied": "Microphone access was refused. Allow it in the browser to record.",
     "changed": "Gabriel changed this script meanwhile. Read the new version.",
-    "no_recorder": "This browser cannot record audio. Type the topic instead."
+    "no_recorder": "This browser cannot record audio. Type the topic instead.",
+    "post_not_published": "Pick a post that is already live on Instagram."
+  },
+  "comments": {
+    "modeTitle": "Comment to DM",
+    "now": "Now: {{mode}}",
+    "modes": {
+      "off": "Off",
+      "dry_run": "Dry run",
+      "live": "Live"
+    },
+    "modeHelp": {
+      "off": "Nothing happens with comments. This is the default.",
+      "dry_run": "Comments with a keyword are matched and the message that would go out is written to the log below. Nothing is sent.",
+      "live": "A comment with a keyword gets a private reply on Instagram, once per comment. The conversation then shows on the Chats page under Instagram."
+    },
+    "liveConfirm": "Live sends real Instagram messages from this account to people who comment a keyword. Check the rules and the dry-run log first.",
+    "liveYes": "Switch to live",
+    "cancel": "Cancel",
+    "switchOff": "The server switch INSTAGRAM_DM_LIVE is off, so live works exactly like dry run until it is set on the server.",
+    "webhookMissing": "The Instagram webhook is not set up on the server yet (INSTAGRAM_WEBHOOK_VERIFY_TOKEN and INSTAGRAM_APP_SECRET), so no comments arrive.",
+    "cap": "Most messages per hour",
+    "saveCap": "Save",
+    "sentLastHour": "{{sent}} of {{cap}} in the last hour",
+    "rulesTitle": "Keywords",
+    "rulesHelp": "When a comment contains the keyword as a word (any case, accents and punctuation ignored), the person gets the first message in DM.",
+    "newRule": "New keyword",
+    "noRules": "No keywords yet.",
+    "keyword": "Keyword",
+    "keywordHelp": "Letters and digits, for example GUIA. \"guia!\" and \"Guia please\" match, \"guias\" does not.",
+    "post": "Post",
+    "allPosts": "All posts",
+    "firstMessage": "First message",
+    "firstMessageHelp": "{username} becomes the person's @name. Keep it short and say what they get.",
+    "defaultMessage": "Hi {username}! Thanks for your comment. Here is what you asked for:",
+    "aiFollowUp": "AI follow-up",
+    "aiFollowUpHelp": "For now this is recorded only: the AI conversation engine has no Instagram channel yet, so replies are answered by a person from Chats.",
+    "aiBadge": "AI follow-up",
+    "addRule": "Add keyword",
+    "saveRule": "Save keyword",
+    "active": "Active",
+    "edit": "Edit",
+    "delete": "Delete",
+    "deleteConfirm": "Delete this keyword? Comments with it get no message any more.",
+    "deleteYes": "Delete",
+    "logTitle": "Log",
+    "logHelp": "The latest 50 events: private replies, replies, opt-outs. In dry run this is what would have been sent.",
+    "logEmpty": "Nothing yet.",
+    "kinds": {
+      "private_reply": "Private reply",
+      "reply": "Reply from Chats",
+      "inbound": "Message received",
+      "opt_out": "Asked to stop",
+      "ai_follow_up": "AI follow-up"
+    },
+    "statuses": {
+      "would_send": "Would send",
+      "sending": "Sending",
+      "sent": "Sent",
+      "failed": "Failed",
+      "skipped": "Skipped",
+      "received": "Received"
+    },
+    "reasons": {
+      "opted_out": "This person asked to stop.",
+      "window_closed": "Outside Instagram's window (7 days for a comment, 24 h after their last message).",
+      "hourly_cap": "The hourly limit was reached.",
+      "not_connected": "Instagram is not connected.",
+      "engine_not_connected": "Not sent: the AI engine has no Instagram channel yet.",
+      "dm_off": "Comment to DM is off for this account."
+    }
   }
 }

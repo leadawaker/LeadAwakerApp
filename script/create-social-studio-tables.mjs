@@ -1,6 +1,6 @@
-// Creates the Socials studio tables (settings, topics, scripts, HeyGen pulls), the comment-to-DM tables
-// and the insights tables. Purely additive and idempotent: CREATE ... IF NOT EXISTS only, no existing
-// table or row is touched. Every table is inert until the new code reads it.
+// Creates the Socials studio tables (settings, topics, scripts, HeyGen pulls) and the comment-to-DM
+// tables (rules, webhook events, DM log, opt-outs). Purely additive and idempotent: CREATE ... IF NOT
+// EXISTS only, no existing table or row is touched. Every table is inert until the new code reads it.
 // Run: node --env-file=.env script/create-social-studio-tables.mjs
 import pg from "pg";
 
@@ -68,9 +68,68 @@ CREATE TABLE IF NOT EXISTS ${S}."Social_Heygen_Pulls" (
   "pulled_at" timestamptz NOT NULL DEFAULT now()
 );
 CREATE UNIQUE INDEX IF NOT EXISTS "social_heygen_pulls_account_video" ON ${S}."Social_Heygen_Pulls" ("accounts_id", "heygen_video_id");
+
+-- ─── Comment-to-DM (Phase C) ─────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS ${S}."Social_Dm_Rules" (
+  "id" serial PRIMARY KEY,
+  "accounts_id" integer NOT NULL,
+  "post_id" integer,
+  "ig_media_id" text,
+  "keyword" text NOT NULL,
+  "keyword_norm" text NOT NULL,
+  "first_message" text NOT NULL,
+  "ai_follow_up" boolean NOT NULL DEFAULT false,
+  "active" boolean NOT NULL DEFAULT true,
+  "created_by_user_id" integer,
+  "created_at" timestamptz NOT NULL DEFAULT now(),
+  "updated_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS "social_dm_rules_accounts_id_idx" ON ${S}."Social_Dm_Rules" ("accounts_id");
+
+CREATE TABLE IF NOT EXISTS ${S}."Social_Webhook_Events" (
+  "id" serial PRIMARY KEY,
+  "event_key" text NOT NULL,
+  "field" text NOT NULL,
+  "accounts_id" integer,
+  "ig_user_id" text,
+  "outcome" text,
+  "received_at" timestamptz NOT NULL DEFAULT now(),
+  "processed_at" timestamptz
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "social_webhook_events_key" ON ${S}."Social_Webhook_Events" ("event_key");
+
+CREATE TABLE IF NOT EXISTS ${S}."Social_Dm_Log" (
+  "id" serial PRIMARY KEY,
+  "accounts_id" integer NOT NULL,
+  "rule_id" integer,
+  "comment_id" text,
+  "ig_user_id" text,
+  "username" text,
+  "kind" text NOT NULL,
+  "mode" text NOT NULL,
+  "status" text NOT NULL,
+  "reason" text,
+  "text" text,
+  "lead_id" integer,
+  "interaction_id" integer,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS "social_dm_log_account_created_idx" ON ${S}."Social_Dm_Log" ("accounts_id", "created_at");
+CREATE UNIQUE INDEX IF NOT EXISTS "social_dm_log_one_private_reply" ON ${S}."Social_Dm_Log" ("accounts_id", "comment_id") WHERE "kind" = 'private_reply';
+
+CREATE TABLE IF NOT EXISTS ${S}."Social_Dm_Opt_Outs" (
+  "id" serial PRIMARY KEY,
+  "accounts_id" integer NOT NULL,
+  "ig_user_id" text NOT NULL,
+  "created_at" timestamptz NOT NULL DEFAULT now()
+);
+CREATE UNIQUE INDEX IF NOT EXISTS "social_dm_opt_outs_account_user" ON ${S}."Social_Dm_Opt_Outs" ("accounts_id", "ig_user_id");
 `;
 
-const TABLES = ["Social_Settings", "Social_Topics", "Social_Scripts", "Social_Heygen_Pulls"];
+const TABLES = [
+  "Social_Settings", "Social_Topics", "Social_Scripts", "Social_Heygen_Pulls",
+  "Social_Dm_Rules", "Social_Webhook_Events", "Social_Dm_Log", "Social_Dm_Opt_Outs",
+];
 
 const pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
 try {

@@ -54,6 +54,7 @@ import { registerHomeRoutes } from "./home";
 import { registerSocialRoutes } from "./social";
 import { registerSocialPostRoutes } from "./socialPosts";
 import { registerSocialStudioRoutes } from "./socialStudio";
+import { registerSocialDmRoutes } from "./socialDm";
 import { startPublicDemoPoller } from "../publicDemo/poller";
 import { startSocialPublisher } from "../social/publisher";
 import { startSocialTokenRefresher } from "../social/tokenRefresher";
@@ -123,6 +124,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerSocialRoutes(app);
   registerSocialPostRoutes(app);
   registerSocialStudioRoutes(app);
+  registerSocialDmRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)

@@ -12,7 +12,8 @@
       "studio": "Studio",
       "calendar": "Kalender",
       "about": "Over mij",
-      "settings": "Instellingen"
+      "settings": "Instellingen",
+      "comments": "Reactie naar DM"
     }
   },
   "captions": {
@@ -182,6 +183,76 @@
     "duration_long": "De video is langer dan 15 minuten.",
     "mic_denied": "Toegang tot de microfoon is geweigerd. Sta het toe in de browser om op te nemen.",
     "changed": "Dit script is intussen aangepast. Lees de nieuwe versie.",
-    "no_recorder": "Deze browser kan geen geluid opnemen. Typ het onderwerp."
+    "no_recorder": "Deze browser kan geen geluid opnemen. Typ het onderwerp.",
+    "post_not_published": "Kies een post die al op Instagram staat."
+  },
+  "comments": {
+    "modeTitle": "Reactie naar DM",
+    "now": "Nu: {{mode}}",
+    "modes": {
+      "off": "Uit",
+      "dry_run": "Proefdraaien",
+      "live": "Live"
+    },
+    "modeHelp": {
+      "off": "Er gebeurt niets met reacties. Dit is de standaard.",
+      "dry_run": "Reacties met een trefwoord worden herkend en het bericht dat zou gaan, komt in het logboek hieronder. Er wordt niets verstuurd.",
+      "live": "Een reactie met een trefwoord krijgt een privéantwoord op Instagram, één keer per reactie. Het gesprek staat daarna op de Chats-pagina onder Instagram."
+    },
+    "liveConfirm": "Live verstuurt echte Instagram-berichten vanaf dit account naar mensen die een trefwoord reageren. Controleer eerst de trefwoorden en het proeflogboek.",
+    "liveYes": "Live zetten",
+    "cancel": "Annuleren",
+    "switchOff": "De serverschakelaar INSTAGRAM_DM_LIVE staat uit, dus live werkt precies als proefdraaien tot die op de server aan staat.",
+    "webhookMissing": "De Instagram-webhook is nog niet ingesteld op de server (INSTAGRAM_WEBHOOK_VERIFY_TOKEN en INSTAGRAM_APP_SECRET), dus er komen geen reacties binnen.",
+    "cap": "Maximaal aantal berichten per uur",
+    "saveCap": "Opslaan",
+    "sentLastHour": "{{sent}} van {{cap}} in het afgelopen uur",
+    "rulesTitle": "Trefwoorden",
+    "rulesHelp": "Bevat een reactie het trefwoord als woord (hoofdletters, accenten en leestekens tellen niet), dan krijgt die persoon het eerste bericht in DM.",
+    "newRule": "Nieuw trefwoord",
+    "noRules": "Nog geen trefwoorden.",
+    "keyword": "Trefwoord",
+    "keywordHelp": "Letters en cijfers, bijvoorbeeld GIDS. \"gids!\" en \"Gids graag\" tellen, \"gidsen\" niet.",
+    "post": "Post",
+    "allPosts": "Alle posts",
+    "firstMessage": "Eerste bericht",
+    "firstMessageHelp": "{username} wordt de @naam van de persoon. Houd het kort en zeg wat ze krijgen.",
+    "defaultMessage": "Hoi {username}! Bedankt voor je reactie. Hier is wat je vroeg:",
+    "aiFollowUp": "AI-opvolging",
+    "aiFollowUpHelp": "Voorlopig wordt dit alleen vastgelegd: de AI-gesprekmotor heeft nog geen Instagram-kanaal, dus antwoorden worden door een mens vanuit Chats gegeven.",
+    "aiBadge": "AI-opvolging",
+    "addRule": "Trefwoord toevoegen",
+    "saveRule": "Trefwoord opslaan",
+    "active": "Actief",
+    "edit": "Bewerken",
+    "delete": "Verwijderen",
+    "deleteConfirm": "Dit trefwoord verwijderen? Reacties ermee krijgen dan geen bericht meer.",
+    "deleteYes": "Verwijderen",
+    "logTitle": "Logboek",
+    "logHelp": "De laatste 50 gebeurtenissen: privéantwoorden, antwoorden, afmeldingen. Bij proefdraaien is dit wat er verstuurd zou zijn.",
+    "logEmpty": "Nog niets.",
+    "kinds": {
+      "private_reply": "Privéantwoord",
+      "reply": "Antwoord vanuit Chats",
+      "inbound": "Bericht ontvangen",
+      "opt_out": "Wil stoppen",
+      "ai_follow_up": "AI-opvolging"
+    },
+    "statuses": {
+      "would_send": "Zou versturen",
+      "sending": "Wordt verstuurd",
+      "sent": "Verstuurd",
+      "failed": "Mislukt",
+      "skipped": "Overgeslagen",
+      "received": "Ontvangen"
+    },
+    "reasons": {
+      "opted_out": "Deze persoon wil stoppen.",
+      "window_closed": "Buiten het venster van Instagram (7 dagen voor een reactie, 24 uur na hun laatste bericht).",
+      "hourly_cap": "Het maximum per uur is bereikt.",
+      "not_connected": "Instagram is niet gekoppeld.",
+      "engine_not_connected": "Niet verstuurd: de AI-motor heeft nog geen Instagram-kanaal.",
+      "dm_off": "Reactie naar DM staat uit voor dit account."
+    }
   }
 }

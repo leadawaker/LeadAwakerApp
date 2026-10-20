@@ -41,10 +41,10 @@ test("deep links: account and section, junk ignored", () => {
 });
 
 test("sections: agency opens on posts with the studio and settings; clients open on their home, no studio or settings", () => {
-  assert.deepEqual(socialSections({ isAgency: true, userRole: "Owner" }), ["posts", "studio", "calendar", "about", "settings"]);
+  assert.deepEqual(socialSections({ isAgency: true, userRole: "Owner" }), ["posts", "studio", "calendar", "comments", "about", "settings"]);
   for (const role of ["Manager", "Viewer"]) {
     const s = socialSections({ isAgency: false, userRole: role });
     assert.equal(s[0], "home");
-    assert.ok(!s.includes("studio") && !s.includes("settings"));
+    assert.ok(!s.includes("studio") && !s.includes("settings") && !s.includes("comments"));
   }
 });

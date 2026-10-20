@@ -102,3 +102,18 @@ test("every literal t(\"...\") key in a social-namespace component exists in en"
   }
   assert.ok(checked > 50, `checked ${checked} keys`);
 });
+
+test("comment-to-DM: every mode, log kind, status and engine reason has a label", async () => {
+  const { DM_MODES } = await import("@shared/socialStudio");
+  const kinds = ["private_reply", "reply", "inbound", "opt_out", "ai_follow_up"];
+  const statuses = ["would_send", "sending", "sent", "failed", "skipped", "received"];
+  // Reasons dmEngine.ts writes to the log (a Meta error text is shown as it is).
+  const reasons = ["opted_out", "window_closed", "hourly_cap", "not_connected", "engine_not_connected", "dm_off"];
+  for (const lang of ["en", "nl", "pt"]) {
+    const c = load(lang, "social").comments;
+    for (const m of DM_MODES) assert.ok(c.modes[m] && c.modeHelp[m], `${lang}:${m}`);
+    for (const k of kinds) assert.ok(c.kinds[k], `${lang}:kinds.${k}`);
+    for (const s of statuses) assert.ok(c.statuses[s], `${lang}:statuses.${s}`);
+    for (const r of reasons) assert.ok(c.reasons[r], `${lang}:reasons.${r}`);
+  }
+});

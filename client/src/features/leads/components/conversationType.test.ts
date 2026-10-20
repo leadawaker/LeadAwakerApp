@@ -16,3 +16,9 @@ test("existing types unchanged", () => {
   assert.equal(getConversationType({ Source: "Website Chat" }, campaigns), "widget");
   assert.equal(getConversationType({ Campaigns_id: 67 }, campaigns), "dbr");
 });
+
+test("live comment-to-DM leads (ig: channel, no campaign) are instagram", () => {
+  assert.equal(getConversationType({ channel_identifier: "ig:17841400000000001", Source: "Instagram" }, campaigns), "instagram");
+  assert.equal(getConversationType({ channelIdentifier: "ig:1" }), "instagram");
+  assert.equal(getConversationType({ channel_identifier: "wa:+5511" }, campaigns), "other");
+});

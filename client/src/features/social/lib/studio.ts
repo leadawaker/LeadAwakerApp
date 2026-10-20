@@ -10,7 +10,7 @@ export const STUDIO_REASONS = [
   "transcribe_failed", "no_speech", "too_long", "empty_script", "not_sent",
   "upload_missing", "upload_used", "already_used", "not_ready", "not_found", "download_failed",
   "heygen_failed", "heygen_not_configured", "format", "size", "duration_short", "duration_long",
-  "mic_denied", "no_recorder", "changed",
+  "mic_denied", "no_recorder", "changed", "post_not_published",
 ] as const;
 
 export function studioErrorKey(reason: string | null | undefined): string {
