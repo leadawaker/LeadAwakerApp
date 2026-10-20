@@ -984,7 +984,8 @@
         "requiresApprovalHelp": "Not posted until a manager of the account approves it.",
         "save": "Save changes",
         "schedule": "Schedule",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "studioVideo": "The video from the studio is attached. You can replace it."
       },
       "errors": {
         "not_editable": "This post is already being published, so it can no longer be changed.",

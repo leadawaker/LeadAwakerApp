@@ -12,6 +12,11 @@ import { cn } from "@/lib/utils";
 import { useSocialStatus } from "../components/InstagramConnectCard";
 import { SocialAccountPicker } from "../components/SocialAccountPicker";
 import { SocialTab } from "../components/SocialTab";
+import { AboutSection } from "../components/AboutSection";
+import { ManagerHome } from "../components/ManagerHome";
+import { SocialCalendar } from "../components/SocialCalendar";
+import { SocialSettingsSection } from "../components/SocialSettingsSection";
+import { StudioSection } from "../components/studio/StudioSection";
 import { showSocialTab } from "../lib/posts";
 import { SocialApiError } from "../api/socialApi";
 import { parseSocialDeepLink, pickSocialAccount, socialAccountOptions, socialSections, SOCIAL_PAGE_PATH, type SocialSection } from "../lib/socialPage";
@@ -85,7 +90,14 @@ export function SocialPage() {
                 <p style={{ margin: 0, fontSize: 13, color: "var(--mute)" }}>{t("page.noAccounts")}</p>
               </div>
             ) : (
-              section === "posts" && <SocialTab key={account.id} accountId={account.id} timeZone={account.timeZone} />
+              <div key={`${account.id}-${section}`} data-testid={`social-section-${section}-body`}>
+                {section === "home" && <ManagerHome accountId={account.id} timeZone={account.timeZone} onOpen={setPicked} />}
+                {section === "posts" && <SocialTab accountId={account.id} timeZone={account.timeZone} />}
+                {section === "studio" && <StudioSection accountId={account.id} timeZone={account.timeZone} />}
+                {section === "calendar" && <SocialCalendar accountId={account.id} timeZone={account.timeZone} />}
+                {section === "about" && <AboutSection accountId={account.id} />}
+                {section === "settings" && <SocialSettingsSection accountId={account.id} />}
+              </div>
             )}
           </div>
         </div>

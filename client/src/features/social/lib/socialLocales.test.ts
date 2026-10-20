@@ -63,3 +63,42 @@ for (const lang of ["nl", "pt"]) {
 test("no em dashes in the social namespace", () => {
   for (const lang of ["en", "nl", "pt"]) for (const [k, v] of leaves(load(lang, "social"))) assert.ok(!v.includes("\u2014"), `${lang}:${k}`);
 });
+
+test("every studio error reason and the fallback has a message", async () => {
+  const { STUDIO_REASONS } = await import("./studio");
+  for (const lang of ["en", "nl", "pt"]) for (const r of [...STUDIO_REASONS, "failed"]) assert.ok(load(lang, "social").errors?.[r], `${lang}:${r}`);
+});
+
+test("every status, review state, topic state and section has a label", async () => {
+  const { SCRIPT_STATUSES, REVIEW_STATUSES, TOPIC_STATUSES } = await import("@shared/socialStudio");
+  const { socialSections } = await import("./socialPage");
+  const sections = new Set([...socialSections({ isAgency: true, userRole: "Owner" }), ...socialSections({ isAgency: false, userRole: "Manager" })]);
+  for (const lang of ["en", "nl", "pt"]) {
+    const d = load(lang, "social");
+    for (const s of SCRIPT_STATUSES) assert.ok(d.scripts.statuses[s], `${lang}:scripts.statuses.${s}`);
+    for (const s of REVIEW_STATUSES) assert.ok(d.scripts.review[s], `${lang}:scripts.review.${s}`);
+    for (const s of TOPIC_STATUSES) assert.ok(d.topics.statuses[s], `${lang}:topics.statuses.${s}`);
+    for (const s of sections) assert.ok(d.page.tabs[s], `${lang}:page.tabs.${s}`);
+  }
+});
+
+test("every literal t(\"...\") key in a social-namespace component exists in en", async () => {
+  const { readdirSync, statSync } = await import("node:fs");
+  const root = join(import.meta.dirname, "..");
+  const files: string[] = [];
+  const walk = (d: string) => { for (const n of readdirSync(d)) { const p = join(d, n); if (statSync(p).isDirectory()) walk(p); else if (p.endsWith(".tsx")) files.push(p); } };
+  walk(root);
+  const en = leaves(load("en", "social"));
+  const has = (k: string) => en.has(k) || en.has(`${k}_one`);
+  let checked = 0;
+  for (const f of files) {
+    const src = readFileSync(f, "utf8");
+    if (!/const \{ t(, i18n)? \} = useTranslation\("social"\)/.test(src)) continue;
+    // t("key") and the keys inside t(cond ? "a" : "b"): any quoted dotted key under a top-level group.
+    for (const m of src.matchAll(/"((?:page|captions|settings|about|topics|scripts|heygen|home|calendar|errors|comments|insights)\.[a-zA-Z_.]+)"/g)) {
+      checked++;
+      assert.ok(has(m[1]), `${f.slice(root.length)}: ${m[1]}`);
+    }
+  }
+  assert.ok(checked > 50, `checked ${checked} keys`);
+});

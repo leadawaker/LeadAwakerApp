@@ -935,7 +935,8 @@
         "requiresApprovalHelp": "Só é publicado depois que um gerente da conta aprovar.",
         "save": "Salvar alterações",
         "schedule": "Agendar",
-        "cancel": "Cancelar"
+        "cancel": "Cancelar",
+        "studioVideo": "O vídeo do estúdio já está anexado. Você pode trocar."
       },
       "errors": {
         "not_editable": "Este post já está sendo publicado e não pode mais ser alterado.",

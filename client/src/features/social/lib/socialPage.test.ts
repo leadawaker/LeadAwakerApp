@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { parseSocialDeepLink, pickSocialAccount, socialAccountOptions } from "./socialPage";
+import { parseSocialDeepLink, pickSocialAccount, socialAccountOptions, socialSections } from "./socialPage";
 
 const rows = [
   { id: 1, name: "Lead Awaker", social_enabled: false },
@@ -38,4 +38,13 @@ test("deep links: account and section, junk ignored", () => {
   assert.deepEqual(parseSocialDeepLink("account=12"), { accountId: 12, section: null });
   assert.deepEqual(parseSocialDeepLink("?account=-3&section=<script>"), { accountId: null, section: null });
   assert.deepEqual(parseSocialDeepLink(""), { accountId: null, section: null });
+});
+
+test("sections: agency opens on posts with the studio and settings; clients open on their home, no studio or settings", () => {
+  assert.deepEqual(socialSections({ isAgency: true, userRole: "Owner" }), ["posts", "studio", "calendar", "about", "settings"]);
+  for (const role of ["Manager", "Viewer"]) {
+    const s = socialSections({ isAgency: false, userRole: role });
+    assert.equal(s[0], "home");
+    assert.ok(!s.includes("studio") && !s.includes("settings"));
+  }
 });

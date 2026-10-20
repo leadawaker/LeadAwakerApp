@@ -984,7 +984,8 @@
         "requiresApprovalHelp": "Wordt pas geplaatst als een manager van het account goedkeurt.",
         "save": "Wijzigingen opslaan",
         "schedule": "Inplannen",
-        "cancel": "Annuleren"
+        "cancel": "Annuleren",
+        "studioVideo": "De video uit de studio is toegevoegd. Je kunt hem vervangen."
       },
       "errors": {
         "not_editable": "Deze post wordt al geplaatst en kan niet meer worden gewijzigd.",
