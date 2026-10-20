@@ -13,7 +13,7 @@ import {
   fetchWidgetConfigs, createWidgetConfig, updateWidgetConfig, deleteWidgetConfig,
   widgetSnippet, type WidgetConfigRow,
 } from "../../api/widgetApi";
-import { WidgetAppearance } from "./WidgetAppearance";
+import { WidgetAppearance, WidgetPreview } from "./WidgetAppearance";
 
 const MONO = {
   fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em",
@@ -50,7 +50,10 @@ export function WebsiteChatCard({ accountId }: { accountId: number }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [open, setOpen] = useState(false);
+  // Open by default: the website group holds only this card.
+  const [open, setOpen] = useState(true);
+  // Reloads the chat preview after each saved change.
+  const [previewRev, setPreviewRev] = useState(0);
   const [domainText, setDomainText] = useState("");
 
   const load = useCallback(async () => {
@@ -75,6 +78,7 @@ export function WebsiteChatCard({ accountId }: { accountId: number }) {
     setBusy(true); setError(null);
     try {
       setCfg(await updateWidgetConfig(cfg.id, body));
+      setPreviewRev((n) => n + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -127,7 +131,9 @@ export function WebsiteChatCard({ accountId }: { accountId: number }) {
   const live = !!cfg?.enabled && domains.length > 0 && !!cfg?.campaignsId;
 
   return (
-    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "18px 22px" }}>
+    // Settings on the left, the live chat on the right (below on a narrow screen).
+    <div style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "flex-start" }}>
+    <div className="neu-raised" style={{ flex: "1 1 320px", minWidth: 0, borderRadius: "var(--r-card)", background: "var(--bone)", padding: "18px 22px" }}>
       <button
         onClick={() => setOpen((v) => !v)}
         style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", background: "transparent", border: 0, cursor: "pointer", padding: 0 }}
@@ -166,7 +172,7 @@ export function WebsiteChatCard({ accountId }: { accountId: number }) {
                 {busy && <Loader2 size={13} className="animate-spin" style={{ color: "var(--mute-2)" }} />}
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14 }}>
                 <Field label={t("websiteChat.campaign")}>
                   <select
                     style={inputStyle}
@@ -207,7 +213,7 @@ export function WebsiteChatCard({ accountId }: { accountId: number }) {
                 />
               </Field>
 
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 14 }}>
                 <Field label={t("websiteChat.position")}>
                   <select style={inputStyle} value={cfg.launcherPosition || "right"} onChange={(e) => patch({ launcherPosition: e.target.value })}>
                     <option value="right">{t("websiteChat.positionRight")}</option>
@@ -256,6 +262,12 @@ export function WebsiteChatCard({ accountId }: { accountId: number }) {
           {error && <span style={{ fontSize: 12, color: "var(--danger, #B3261E)" }}>{error}</span>}
         </div>
       )}
+    </div>
+    {cfg && (
+      <div style={{ flex: "0 0 300px", minWidth: 0, position: "sticky", top: "calc(var(--ws-sticky-top, 0px) + 16px)" }}>
+        <WidgetPreview cfg={cfg} rev={previewRev} />
+      </div>
+    )}
     </div>
   );
 }

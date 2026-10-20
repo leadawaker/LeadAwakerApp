@@ -29,7 +29,7 @@
   color: var(--muted-foreground);
 }
 .eyebrow-sm { font-size: 10px; letter-spacing: 0.18em; }
-.serif { font-family: 'Playfair Display', serif; font-weight: 400; letter-spacing: -0.012em; }
+.serif { font-family: var(--sans); font-weight: 700; letter-spacing: -0.012em; }
 .italic { font-style: italic; }
 .wine { color: var(--wine); }
 .mute { color: var(--muted-foreground); }
@@ -241,7 +241,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Playfair Display', serif;
+  font-family: var(--sans);
+  font-weight: 700;
   font-size: 20px;
   color: hsl(var(--foreground));
   flex-shrink: 0;
@@ -302,7 +303,7 @@
 }
 .la-nav-item:hover { background: var(--wine-tint); }
 .la-nav-item.active {
-  background: var(--surface);
+  background: var(--nav-active-bg);
   box-shadow: var(--sh-polished-crisp);
   color: var(--wine);
   font-weight: 600;
@@ -427,7 +428,7 @@
   background: linear-gradient(145deg, #8a6e4a, #5a4530);
   box-shadow: var(--sh-raised-crisp);
   display: flex; align-items: center; justify-content: center;
-  color: #FFFFFF; font-family: 'Playfair Display', serif; font-size: 13px;
+  color: #FFFFFF; font-family: var(--sans); font-weight: 700; font-size: 13px;
 }
 .la-profile-menu {
   position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 8px;
@@ -485,6 +486,6 @@
 
 @keyframes la-nav-highlight {
   0% { background: transparent; box-shadow: none; }
-  100% { background: var(--surface); box-shadow: var(--sh-polished-crisp); }
+  100% { background: var(--nav-active-bg); box-shadow: var(--sh-polished-crisp); }
 }
 

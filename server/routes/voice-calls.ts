@@ -3,7 +3,7 @@ import { Readable } from "node:stream";
 import { storage } from "../storage";
 import { requireAuth, scopeToAccount } from "../auth";
 import { wrapAsync } from "./_helpers";
-import { decideScope, resolveVoiceAccess, type VoiceAccess } from "./voiceCallsAccess";
+import { decideScope, hidesTestData, resolveVoiceAccess, type VoiceAccess } from "./voiceCallsAccess";
 import { registerVoiceCallersRoutes } from "./voiceCallers";
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
@@ -32,6 +32,7 @@ async function loadAllowedCall(req: Request) {
     accountId: access.lockedAccountId,
     allowDemo: access.isOwner,
     includeAccountName: access.isAgency,
+    hideTest: hidesTestData(access),
   });
 }
 
@@ -71,9 +72,10 @@ export function registerVoiceCallsRoutes(app: Express): void {
   }));
 
   app.get("/api/voice-calls/stats", ...guards, wrapAsync(async (req, res) => {
-    const decision = decideScope(accessOf(req), req.query);
+    const access = accessOf(req);
+    const decision = decideScope(access, req.query);
     if (!decision.ok) return res.status(decision.status).json({ message: "Owner access required" });
-    res.json(await storage.getVoiceStats({ scope: decision.scope, accountId: decision.accountId }));
+    res.json(await storage.getVoiceStats({ scope: decision.scope, accountId: decision.accountId, hideTest: hidesTestData(access) }));
   }));
 
   app.get("/api/voice-calls", ...guards, wrapAsync(async (req, res) => {
@@ -88,14 +90,33 @@ export function registerVoiceCallsRoutes(app: Express): void {
       scope: decision.scope,
       accountId: decision.accountId,
       includeAccountName: access.isAgency,
+      hideTest: hidesTestData(access),
     });
     res.json({ calls });
+  }));
+
+  // Calendar detail: the call that booked this lead's appointment, if any.
+  app.get("/api/voice-calls/for-lead/:leadId", ...guards, wrapAsync(async (req, res) => {
+    const leadId = Number(req.params.leadId);
+    if (!Number.isInteger(leadId) || leadId <= 0) return res.status(400).json({ message: "Bad lead id" });
+    const access = accessOf(req);
+    const callId = await storage.findBookingCallId(leadId, { accountId: access.lockedAccountId, allowDemo: access.isOwner, hideTest: hidesTestData(access) });
+    res.json({ callId });
   }));
 
   // Before "/:callId", or "callers" would be read as a call id.
   registerVoiceCallersRoutes(app, guards, accessOf);
 
   app.get("/api/voice-calls/:callId/recording", ...guards, wrapAsync(proxyRecording));
+
+  // Owner only (not impersonating): hide a call, and its lead, from clients and Home.
+  app.patch("/api/voice-calls/:callId/test", ...guards, wrapAsync(async (req, res) => {
+    if (!accessOf(req).isOwner) return res.status(403).json({ message: "Owner access required" });
+    if (typeof req.body?.isTest !== "boolean") return res.status(400).json({ message: "isTest must be a boolean" });
+    const ok = await storage.setCallTestFlag(String(req.params.callId), req.body.isTest);
+    if (!ok) return res.status(404).json({ message: "Call not found" });
+    res.json({ isTest: req.body.isTest });
+  }));
 
   app.get("/api/voice-calls/:callId", ...guards, wrapAsync(async (req, res) => {
     const call = await loadAllowedCall(req);

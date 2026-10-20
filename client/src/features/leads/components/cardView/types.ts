@@ -7,7 +7,7 @@ export type ViewMode = "list" | "table" | "pipeline";
 
 // ── Group / sort option types ─────────────────────────────────────────────────
 export type GroupByOption = "date" | "status" | "campaign" | "tag" | "type" | "none";
-export type SortByOption  = "recent" | "latest_message" | "name_asc" | "name_desc" | "score_desc" | "score_asc";
+export type SortByOption  = "recent" | "latest_message" | "name_asc" | "name_desc" | "created_desc" | "created_asc";
 
 // ── Virtual list item union type ──────────────────────────────────────────────
 export type VirtualListItem =
@@ -115,4 +115,18 @@ export interface LeadsCardViewProps {
   campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null; campaignType?: string | null }>;
   /** Conversations page: shows the Type filter/group and the "Chats" title. */
   isConversationsMode?: boolean;
+  // ── Server paging (GET /api/leads/page) ──
+  /** Every lead matching the filters (not just the loaded page). */
+  total: number;
+  groups: { key: string; count: number }[];
+  facets?: import("../../hooks/usePagedLeads").LeadsFacets | null;
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore: () => void;
+  /** Chats inbox tabs (All / Website / WhatsApp) with server counts. */
+  channelTab: import("../chatChannel").ChatChannelTab;
+  onChannelTabChange: (tab: import("../chatChannel").ChatChannelTab) => void;
+  chatChannelCounts: Record<string, number>;
+  /** Account / campaign / type filters, owned by the page so they reach the server query. */
+  listFilters: import("../useLeadsFilters").ListFilterState;
 }

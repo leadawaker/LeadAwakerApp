@@ -1,9 +1,20 @@
 {
+  "requestChange": {
+    "note": "Lead Awaker beheert deze instellingen voor je.",
+    "button": "Wijziging aanvragen",
+    "areas": { "chat": "de websitechat", "alerts": "meldingen", "phone": "de telefoonlijn", "integrations": "koppelingen" },
+    "draft": "Hoi Gabriel, ik wil graag iets wijzigen bij {{area}}: "
+  },
   "sidebar": {
+    "skipToMain": "Naar de inhoud",
     "menu": "Menu",
     "home": "Home",
+    "calls": "Gesprekken",
+    "myReceptionist": "Receptionist",
+    "myReceptionistShort": "Receptionist",
+    "myAccount": "Mijn account",
     "services": "Diensten",
-    "reactivation": "Reactivatie",
+    "reactivation": "Campagnes",
     "reputation": "Reputatie",
     "speedToLead": "Speed to Lead",
     "missedCalls": "Gemiste oproepen",
@@ -12,9 +23,9 @@
     "prospects": "Prospects",
     "cadence": "Cadentie",
     "leads": "Leads",
-    "conversations": "Gesprekken",
+    "conversations": "Chats",
     "contacts": "Leads",
-    "chats": "Gesprekken",
+    "chats": "Chats",
     "inbox": "Prospect-inbox",
     "calendar": "Kalender",
     "promptLibrary": "Promptbibliotheek",
@@ -51,7 +62,8 @@
     "outreach": "Outreach",
     "admin": "Admin",
     "backend": "Backend",
-    "agency": "Agentuur"
+    "agency": "Agentuur",
+    "setup": "Instellen"
   },
   "sidebarSubmenu": {
     "summary": "Overzicht",

@@ -12,9 +12,14 @@ import { updateLead } from "../api/leadsApi";
 import { resolveColor } from "@/features/tags/types";
 import type { VirtualListItem } from "./LeadsCardView";
 import { getLeadId } from "./LeadsCardView";
-import { getInitials, PIPELINE_HEX, getLeadStatusAvatarColor } from "@/lib/avatarUtils";
+import { getInitials, getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { useTheme } from "@/hooks/useTheme";
-import { getLastMessage, getLastMessageSender } from "./cardView/leadUtils";
+import { getLastMessage, getLastMessageSender, getFullName } from "./cardView/leadUtils";
+import { displayStage, stageHex, stageLabel, lastContactChannel, lastContactAt } from "../lib/leadDisplay";
+import { formatBookedDate } from "./cardView/formatUtils";
+import { ChannelGlyph } from "./cardView/ChannelGlyph";
+import { LoadMoreSentinel } from "./cardView/LoadMoreSentinel";
+import { TableSkeleton } from "./LeadsSkeletons";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
@@ -25,7 +30,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 
 // ── Column definitions ─────────────────────────────────────────────────────────
 type ColKey =
-  | "name" | "status" | "score" | "phone" | "email" | "campaign"
+  | "name" | "status" | "lastContact" | "appointment" | "phone" | "email" | "campaign"
   | "tags" | "lastActivity" | "lastMessage" | "notes" | "chats"
   | "account" | "source" | "company" | "bumpStage" | "createdAt" | "assignedTo";
 
@@ -40,7 +45,8 @@ interface ColumnDef {
 const ALL_TABLE_COLUMNS: ColumnDef[] = [
   { key: "name",         label: "Name",          width: 200, editable: false, type: "text"   },
   { key: "status",       label: "Status",        width: 140, editable: true,  type: "select" },
-  { key: "score",        label: "Score",         width: 70,  editable: false, type: "text"   },
+  { key: "lastContact",  label: "Last contact",  width: 185, editable: false, type: "text"   },
+  { key: "appointment",  label: "Appointment",   width: 140, editable: false, type: "text"   },
   { key: "phone",        label: "Phone",         width: 140, editable: true,  type: "text"   },
   { key: "email",        label: "Email",         width: 180, editable: true,  type: "text"   },
   { key: "campaign",     label: "Campaign",      width: 130, editable: false, type: "text"   },
@@ -128,13 +134,6 @@ function LastMessageCell({ lead, t: _t }: { lead: Record<string, any>; t: (k: st
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-function getFullName(lead: Record<string, any>): string {
-  return lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
-}
-// getInitials moved to @/lib/avatarUtils
-function getScore(lead: Record<string, any>): number {
-  return Number(lead.lead_score ?? lead.leadScore ?? lead.Lead_Score ?? 0);
-}
 function getStatus(lead: Record<string, any>): string {
   return lead.conversion_status || lead.Conversion_Status || "";
 }
@@ -156,22 +155,6 @@ function formatRelativeTime(dateStr: string | null | undefined, t: (key: string,
   } catch { return ""; }
 }
 
-// ── Skeleton ──────────────────────────────────────────────────────────────────
-function TableSkeleton() {
-  return (
-    <div className="p-3 space-y-1.5">
-      <div className="h-8 bg-primary/10 rounded animate-pulse mb-2" />
-      {Array.from({ length: 12 }).map((_, i) => (
-        <div
-          key={i}
-          className="h-[52px] bg-card/70 rounded-xl animate-pulse"
-          style={{ animationDelay: `${i * 35}ms` }}
-        />
-      ))}
-    </div>
-  );
-}
-
 // ── Editable cell (textarea overlay pattern from Prospects) ──────────────────
 interface EditableCellProps {
   value: string;
@@ -186,11 +169,13 @@ interface EditableCellProps {
   onCancel: () => void;
   /** Optional inline style applied to the read-mode display text (design tokens). */
   displayStyle?: React.CSSProperties;
+  /** Read-mode text when it differs from the edited value (receptionist stage labels). */
+  displayValue?: string;
 }
 
 function EditableCell({
   value, type, isEditing, editValue, isSaving, hasError,
-  onStartEdit, onEditChange, onSave, onCancel, displayStyle,
+  onStartEdit, onEditChange, onSave, onCancel, displayStyle, displayValue,
 }: EditableCellProps) {
   const { t } = useTranslation("leads");
   if (isEditing && type === "select") {
@@ -252,7 +237,9 @@ function EditableCell({
       title={hasError ? t("table.saveFailed") : value}
     >
       <span className="truncate flex-1" style={displayStyle}>
-        {value
+        {displayValue
+          ? displayValue
+          : value
           ? (type === "select" ? t(`kanban.stageLabels.${value.replace(/ /g, "")}`, value) : value)
           : <span style={{ color: "var(--mute-2)" }}>&mdash;</span>}
       </span>
@@ -333,6 +320,10 @@ interface LeadsInlineTableProps {
   showVerticalLines?: boolean;
   fullWidthTable?: boolean;
   groupBy?: string;
+  /** Infinite scroll (server paging). */
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onLoadMore?: () => void;
 }
 
 // ── Main component ─────────────────────────────────────────────────────────────
@@ -353,6 +344,9 @@ export function LeadsInlineTable({
   showVerticalLines,
   fullWidthTable,
   groupBy,
+  hasMore = false,
+  loadingMore = false,
+  onLoadMore,
 }: LeadsInlineTableProps) {
   const { t } = useTranslation("leads");
   const [, setLocation] = useLocation();
@@ -369,9 +363,6 @@ export function LeadsInlineTable({
   // ── Shift-click ref ────────────────────────────────────────────────────────
   const lastClickedIndexRef = useRef<number>(-1);
 
-  // ── Table pagination ─────────────────────────────────────────────────────
-  const TABLE_PAGE_SIZE = 50;
-  const [tablePage, setTablePage] = useState(0);
 
   // ── Group collapse ─────────────────────────────────────────────────────────
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
@@ -453,18 +444,8 @@ export function LeadsInlineTable({
     onColumnOrderChange?.(newOrder);
   }, [visibleColumns, onColumnOrderChange]);
 
-  // ── Filter by text search (parent manages sort/filter; we only do text) ───
-  const displayItems = useMemo(() => {
-    if (!tableSearch.trim()) return flatItems;
-    const q = tableSearch.toLowerCase();
-    return flatItems.filter((item) => {
-      if (item.kind === "header") return false;
-      const name  = getFullName(item.lead).toLowerCase();
-      const email = (item.lead.email || item.lead.Email || "").toLowerCase();
-      const phone = (item.lead.phone || item.lead.Phone || "").toLowerCase();
-      return name.includes(q) || email.includes(q) || phone.includes(q);
-    });
-  }, [flatItems, tableSearch]);
+  // Search, filters, sort and grouping all run on the server (GET /api/leads/page).
+  const displayItems = flatItems;
 
   // ── Flat lead-only list (for shift-click range selection) ─────────────────
   const leadIndexMap = useMemo(() => {
@@ -489,7 +470,8 @@ export function LeadsInlineTable({
     if (overrides?.[field] !== undefined) return overrides[field]!;
     switch (field) {
       case "status":       return getStatus(lead);
-      case "score":        return String(getScore(lead) || "");
+      case "lastContact":  return "";
+      case "appointment":  return "";
       case "phone":        return lead.phone || lead.Phone || "";
       case "email":        return lead.email || lead.Email || "";
       case "campaign":     return lead.Campaign || lead.campaign || lead.campaign_name || "";
@@ -629,80 +611,16 @@ export function LeadsInlineTable({
     onSelectionChange(next);
   }, [getGroupLeadIds, selectedIds, onSelectionChange]);
 
-  // ── Paginated display items ────────────────────────────────────────────
-  // Reset page when data changes
-  useEffect(() => { setTablePage(0); }, [displayItems.length]);
-
-  // F shortcut: scroll selected row into view, jumping pages if needed.
-  // (No auto-scroll on plain selection — selecting a lead no longer slides the
-  // list to re-center it; press F to deliberately jump to the selected row.)
+  // F shortcut: scroll the selected row into view. (No auto-scroll on plain
+  // selection: press F to deliberately jump to the selected row.)
   const tableScrollRef = useRef<HTMLDivElement>(null);
   useFKeyScrollToSelected({
     containerRef: tableScrollRef,
     selectedId: selectedLeadId,
     disabled: selectedIds.size > 1,
     getSelector: (id) => `tr[data-lead-id="${id}"]`,
-    ensureLoaded: async (id) => {
-      const idx = leadOnlyItems.findIndex((i) => getLeadId(i.lead) === id);
-      if (idx >= 0 && leadCount > TABLE_PAGE_SIZE) {
-        const page = Math.floor(idx / TABLE_PAGE_SIZE);
-        if (page !== tablePage) setTablePage(page);
-      }
-    },
   });
-
-  // Only leads in expanded (non-collapsed) groups count toward pagination, so
-  // folding a group re-flows the pages instead of leaving blanks.
-  const visibleLeadCount = useMemo(() => {
-    let count = 0;
-    let currentGroup: string | null = null;
-    for (const item of displayItems) {
-      if (item.kind === "header") { currentGroup = item.label; continue; }
-      if (currentGroup && collapsedGroups.has(currentGroup)) continue;
-      count++;
-    }
-    return count;
-  }, [displayItems, collapsedGroups]);
-
-  const totalPages = Math.max(1, Math.ceil(visibleLeadCount / TABLE_PAGE_SIZE));
-
-  // Keep the current page in range when folding shrinks the page count.
-  useEffect(() => {
-    if (tablePage > totalPages - 1) setTablePage(Math.max(0, totalPages - 1));
-  }, [totalPages, tablePage]);
-
-  const paginatedItems = useMemo(() => {
-    if (visibleLeadCount <= TABLE_PAGE_SIZE) return displayItems;
-    const startIdx = tablePage * TABLE_PAGE_SIZE;
-    const endIdx = startIdx + TABLE_PAGE_SIZE;
-    const result: typeof displayItems = [];
-    let vIdx = 0;                                        // visible-lead index
-    let currentGroup: string | null = null;
-    let pendingHeader: typeof displayItems[number] | null = null;
-    for (const item of displayItems) {
-      if (item.kind === "header") {
-        currentGroup = item.label;
-        if (collapsedGroups.has(item.label)) {
-          // Collapsed stub: render on the page where it naturally sits, so it
-          // stays reachable for unfolding without consuming page slots.
-          const groupPage = Math.min(totalPages - 1, Math.floor(vIdx / TABLE_PAGE_SIZE));
-          if (groupPage === tablePage) result.push(item);
-          pendingHeader = null;
-        } else {
-          pendingHeader = item;
-        }
-        continue;
-      }
-      if (currentGroup && collapsedGroups.has(currentGroup)) continue; // skip folded leads
-      if (vIdx >= startIdx && vIdx < endIdx) {
-        if (pendingHeader) { result.push(pendingHeader); pendingHeader = null; }
-        result.push(item);
-      }
-      vIdx++;
-      if (vIdx >= endIdx) break;
-    }
-    return result;
-  }, [displayItems, tablePage, visibleLeadCount, collapsedGroups, totalPages]);
+  const paginatedItems = displayItems;
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-transparent">
@@ -834,10 +752,9 @@ export function LeadsInlineTable({
                   const isMultiSelected  = selectedIds.has(leadId);
                   const isHighlighted    = isMultiSelected || isDetailSelected;
                   const name             = getFullName(lead);
-                  const score            = getScore(lead);
-                  const leadStatus       = getStatus(lead);
-                  const stageHex         = PIPELINE_HEX[leadStatus] || PIPELINE_HEX.New || "#6C5A8C";
-                  const avatarColor      = getLeadStatusAvatarColor(leadStatus);
+                  const leadStage        = displayStage(lead);
+                  const leadHex          = stageHex(leadStage);
+                  const avatarColor      = getLeadStatusAvatarColor(getStatus(lead) || "New");
                   // `--row-bg` is set by the `.la-lead-row` CSS (base/hover/selected),
                   // so every column — including the frozen sticky ones — paints the
                   // same surface. Selected rows go bright (--card); base is --bg.
@@ -899,7 +816,7 @@ export function LeadsInlineTable({
                                 <div
                                   style={{
                                     width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                                    background: isDark ? avatarColor.bg : stageHex,
+                                    background: isDark ? avatarColor.bg : leadHex,
                                     display: "flex", alignItems: "center", justifyContent: "center",
                                     color: isDark ? avatarColor.text : "#fff", fontFamily: "var(--mono)", fontWeight: 600,
                                     fontSize: 11, letterSpacing: "0.01em",
@@ -923,17 +840,21 @@ export function LeadsInlineTable({
                         if (col.key === "status") {
                           const cellVal = getCellValue(lead, "status");
                           const isEdit  = editingCell?.leadId === leadId && editingCell?.field === "status";
+                          // Receptionist leads show their simpler stage; an edit writes the DB status.
+                          const overridden = localOverrides.get(leadId)?.status !== undefined;
+                          const shownStage = overridden ? cellVal : leadStage;
                           return (
                             <td key="status" className={cn("px-1", tdClass)} style={isEdit ? { overflow: "visible" } : tdStickyStyle}>
                               <div className="flex items-center gap-1.5 min-w-0">
                                 {!isEdit && (
                                   <span
                                     className="shrink-0"
-                                    style={{ width: 8, height: 8, borderRadius: "50%", background: PIPELINE_HEX[cellVal] || "var(--mute-2)" }}
+                                    style={{ width: 8, height: 8, borderRadius: "50%", background: stageHex(shownStage) }}
                                   />
                                 )}
                                 <EditableCell
                                   value={cellVal}
+                                  displayValue={stageLabel(t, shownStage)}
                                   type="select"
                                   isEditing={isEdit}
                                   editValue={isEdit ? editValue : ""}
@@ -950,21 +871,34 @@ export function LeadsInlineTable({
                           );
                         }
 
-                        // ── Score (read-only) ──
-                        if (col.key === "score") {
-                          const scoreColor = score >= 55 ? "var(--good)" : score >= 40 ? "var(--warn)" : "var(--stage-contacted)";
+                        // ── Last contact: channel + relative time (where the score used to be) ──
+                        if (col.key === "lastContact") {
+                          const ch = lastContactChannel(lead);
+                          const when = lastContactAt(lead);
                           return (
-                            <td key="score" className={cn("px-2.5", tdClass)}>
-                              {score > 0 ? (
-                                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                                  <span style={{ fontFamily: "var(--mono)", fontSize: 12, fontWeight: 700, color: "var(--ink)", width: 20 }}>{score}</span>
-                                  <div style={{ flex: 1, height: 5, background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
-                                    <div style={{ width: `${Math.min(100, score)}%`, height: "100%", background: scoreColor, borderRadius: "var(--r-pill)" }} />
-                                  </div>
-                                </div>
-                              ) : (
-                                <span style={{ color: "var(--mute-2)" }}>&mdash;</span>
-                              )}
+                            <td key="lastContact" className={cn("px-2.5", tdClass)}>
+                              {ch || when ? (
+                                <span className="inline-flex items-center gap-1.5 min-w-0" style={{ fontSize: 12, color: "var(--ink-soft)" }}>
+                                  {ch && <ChannelGlyph channel={ch} />}
+                                  <span className="truncate">{ch ? t(`leadChannel.${ch}`) : ""}</span>
+                                  {when && <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute-2)", flexShrink: 0 }}>{formatRelativeTime(when, t)}</span>}
+                                </span>
+                              ) : <span style={{ color: "var(--mute-2)" }}>&mdash;</span>}
+                            </td>
+                          );
+                        }
+
+                        // ── Appointment: booking date-time ──
+                        if (col.key === "appointment") {
+                          const booked = lead.booked_call_date || lead.bookedCallDate;
+                          const past = booked && new Date(booked).getTime() < Date.now();
+                          return (
+                            <td key="appointment" className={cn("px-2.5", tdClass)}>
+                              {booked ? (
+                                <span style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: past ? 500 : 700, color: past ? "var(--mute-2)" : "var(--stage-booked)" }}>
+                                  {formatBookedDate(booked)}
+                                </span>
+                              ) : <span style={{ color: "var(--mute-2)" }}>&mdash;</span>}
                             </td>
                           );
                         }
@@ -1101,44 +1035,11 @@ export function LeadsInlineTable({
                   );
                 });
               })()}
+              {onLoadMore && (
+                <LoadMoreSentinel rootRef={tableScrollRef} hasMore={hasMore} loading={loadingMore} onLoadMore={onLoadMore} asTableRow={colSpan + 1} />
+              )}
             </tbody>
           </table>
-        </div>
-      )}
-
-      {/* ── Pagination footer (when >50 leads) ── */}
-      {totalPages > 1 && (
-        <div className="shrink-0 px-3 py-2 flex items-center justify-between gap-2 border-t border-border/20" style={{ background: "var(--bg)" }}>
-          <button
-            onClick={() => setTablePage((p) => Math.max(0, p - 1))}
-            disabled={tablePage === 0}
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-black/[0.125] text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
-          >
-            <ChevronDown className="h-3 w-3 rotate-90" /> {t("table.pagination.prev")}
-          </button>
-          <div className="flex items-center gap-1">
-            {Array.from({ length: totalPages }, (_, i) => (
-              <button
-                key={i}
-                onClick={() => setTablePage(i)}
-                className={cn(
-                  "h-6 min-w-[24px] rounded-full text-[10px] font-bold tabular-nums transition-colors",
-                  tablePage === i
-                    ? "bg-foreground text-background"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
-                )}
-              >
-                {i + 1}
-              </button>
-            ))}
-          </div>
-          <button
-            onClick={() => setTablePage((p) => Math.min(totalPages - 1, p + 1))}
-            disabled={tablePage >= totalPages - 1}
-            className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border border-black/[0.125] text-muted-foreground hover:text-foreground hover:bg-card disabled:opacity-30 disabled:pointer-events-none"
-          >
-            {t("table.pagination.next")} <ChevronDown className="h-3 w-3 -rotate-90" />
-          </button>
         </div>
       )}
 

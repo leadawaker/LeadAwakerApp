@@ -120,7 +120,7 @@ function AddContractPopover({ accountId, onLinked }: { accountId: number; onLink
   );
 }
 
-export function ContractsPanel({ contracts, loading, accountId, onRefresh, inset = false, naked = false }: { contracts: ContractRowData[]; loading?: boolean; accountId: number; onRefresh?: () => void; inset?: boolean; naked?: boolean }) {
+export function ContractsPanel({ contracts, loading, accountId, onRefresh, inset = false, naked = false, clientView = false }: { contracts: ContractRowData[]; loading?: boolean; accountId: number; onRefresh?: () => void; inset?: boolean; naked?: boolean; clientView?: boolean }) {
   const { t } = useTranslation("accounts");
   const [, setLocation] = useLocation();
 
@@ -130,9 +130,12 @@ export function ContractsPanel({ contracts, loading, accountId, onRefresh, inset
   };
   const statusLabel = (s: string) => t(`contractStatus.${s}`, { defaultValue: s });
 
+  // A client sees contracts only when there are some, and cannot add one.
+  if (clientView && (loading || contracts.length === 0)) return null;
+
   return (
-    <Panel eyebrow="04" title={t("panels.contracts")} count={contracts.length} inset={inset} naked={naked}
-      action={<AddContractPopover accountId={accountId} onLinked={() => onRefresh?.()} />}>
+    <Panel eyebrow={clientView ? undefined : "04"} title={t("panels.contracts")} count={contracts.length} inset={inset} naked={naked}
+      action={clientView ? undefined : <AddContractPopover accountId={accountId} onLinked={() => onRefresh?.()} />}>
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {[0, 1].map((i) => <div key={i} style={{ height: 56, borderRadius: "var(--r-surface)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }} className="animate-pulse" />)}

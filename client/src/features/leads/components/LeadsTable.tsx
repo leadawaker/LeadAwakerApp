@@ -1,1319 +1,377 @@
 import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
-import { useLeadsData } from "../hooks/useLeadsData";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
+import { useTopbarActions } from "@/contexts/TopbarActionsContext";
+import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+import { usePersistedSelection } from "@/hooks/usePersistedSelection";
+import { apiFetch } from "@/lib/apiUtils";
 import {
-  applyLeadFilters,
-  EMPTY_FILTERS,
-  type LeadFilterState,
-} from "./LeadFilters";
-import {
-  LeadsCardView,
-  KanbanDetailPanel,
-  LeadDetailView,
-  getLeadId as getLeadIdHelper,
-  getFullName as getFullNameHelper,
-  type GroupByOption,
-  type SortByOption,
+  LeadsCardView, LeadDetailView, getLeadId as getLeadIdHelper, getFullName as getFullNameHelper,
+  type GroupByOption, type SortByOption, type VirtualListItem,
 } from "./LeadsCardView";
 import { LeadsInlineTable } from "./LeadsInlineTable";
 import { LeadsKanban } from "./LeadsKanban";
-import { LeadDetailPanel } from "./LeadDetailPanel";
 import { PipelineLeadPanel } from "./cardView/PipelineLeadPanel";
 import { isRealTag } from "./cardView/constants";
+import { exportLeadsCsv } from "./cardView/exportLeadsCsv";
 import { CsvImportWizard } from "./CsvImportWizard";
-import { createLead, bulkDeleteLeads, bulkUpdateLeads, updateLead, deleteLead } from "../api/leadsApi";
-import { apiFetch } from "@/lib/apiUtils";
+import { createLead, bulkDeleteLeads, updateLead, deleteLead } from "../api/leadsApi";
+import { usePagedLeads, fetchLeadsByIds, fetchAllLeads, useDebouncedValue, type PagedLeadsQuery } from "../hooks/usePagedLeads";
+import { buildServerRows } from "../lib/serverRows";
+import { RX_STAGE_DB_STATUS } from "../lib/leadDisplay";
+import { CHAT_CHANNEL_TABS, type ChatChannelTab } from "./chatChannel";
+import type { ConversationType } from "./conversationType";
+import { LeadsTableTopbar, type TableFilters } from "./LeadsTableTopbar";
+import { LeadsPipelineTopbar } from "./LeadsPipelineTopbar";
+import { LeadsQuickFilters } from "./LeadsQuickFilters";
+import { useLeadsLookups } from "./useLeadsLookups";
 import {
-  Table2, List, Kanban,
-  Plus, Trash2, Copy, ArrowUpDown, Filter, Layers, Pencil,
-  FileSpreadsheet, Eye, Check, Upload, Download,
-  Search, X, SlidersHorizontal, Flame, Phone, Mail, Columns3, Tag, Settings, Rows3, Shrink, Expand,
-  ArrowUp, ArrowDown, MoreHorizontal,
-} from "lucide-react";
-import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
-import { SearchPill } from "@/components/ui/search-pill";
-import { useTopbarActions } from "@/contexts/TopbarActionsContext";
-import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
-import { usePersistedSelection } from "@/hooks/usePersistedSelection";
-import { buildEntityRows } from "@/components/crm/entityList";
-import type { VirtualListItem } from "./LeadsCardView";
+  VIEW_MODE_KEY, VISIBLE_COLS_KEY, LIST_PREFS_KEY, TABLE_PREFS_KEY, PIPE_PREFS_KEY, COL_ORDER_KEY, COL_WIDTHS_KEY,
+  QUICK_PREFS_KEY, DEFAULT_VISIBLE_COLS, VIEW_TAB_KEYS, ALLOWED_VIEWS_BY_MODE, safeListSort, safeTableSort, normalizeLead,
+  type ViewMode, type LeadsPageMode, type TableGroupByOption, type TableSortByOption, type QuickView, type ChannelFilter, type PipelineSort,
+} from "./leadsTableConfig";
 
-type ViewMode = "list" | "table" | "pipeline";
-type TableSortByOption  = "recent" | "oldest" | "name_asc" | "name_desc" | "score_desc" | "score_asc" | "activity_desc" | "activity_asc" | "created_desc" | "created_asc";
-type TableGroupByOption = "status" | "campaign" | "account" | "service" | "source" | "tag" | "none";
-
-const VIEW_MODE_KEY    = "leads-view-mode";
-const VISIBLE_COLS_KEY = "leads-table-visible-cols";
-const LIST_PREFS_KEY   = "leads-list-prefs";
-const TABLE_PREFS_KEY  = "leads-table-prefs";
-const PIPE_PREFS_KEY   = "leads-pipe-prefs";
-const COL_ORDER_KEY    = "leads-column-order";
-const COL_WIDTHS_KEY   = "leads-column-widths";
-
-/* ── Column metadata for the visibility dropdown ── */
-const TABLE_COL_META = [
-  { key: "name",         label: "Name",          defaultVisible: true  },
-  { key: "status",       label: "Status",        defaultVisible: true  },
-  { key: "score",        label: "Score",         defaultVisible: true  },
-  { key: "phone",        label: "Phone",         defaultVisible: true  },
-  { key: "email",        label: "Email",         defaultVisible: true  },
-  { key: "campaign",     label: "Campaign",      defaultVisible: true  },
-  { key: "lastMessage",  label: "Last Message",  defaultVisible: true  },
-  { key: "tags",         label: "Tags",          defaultVisible: true  },
-  { key: "lastActivity", label: "Last Activity", defaultVisible: true  },
-  { key: "notes",        label: "Notes",         defaultVisible: true  },
-  { key: "chats",        label: "Conversations",       defaultVisible: false },
-  { key: "account",      label: "Account",       defaultVisible: false },
-  { key: "source",       label: "Source",        defaultVisible: false },
-  { key: "company",      label: "Company",       defaultVisible: false },
-  { key: "bumpStage",    label: "Bump Stage",    defaultVisible: false },
-  { key: "createdAt",    label: "Created",       defaultVisible: false },
-  { key: "assignedTo",   label: "Assigned To",   defaultVisible: false },
-];
-
-const DEFAULT_VISIBLE_COLS = TABLE_COL_META
-  .filter((c) => c.defaultVisible)
-  .map((c) => c.key);
-
-/* ── Tab definitions (labels resolved via t() inside component) ── */
-const VIEW_TAB_KEYS: { id: string; tKey: string; icon: typeof List }[] = [
-  { id: "list",     tKey: "viewTabs.list",     icon: List   },
-  { id: "table",    tKey: "viewTabs.table",    icon: Table2 },
-  { id: "pipeline", tKey: "viewTabs.pipeline", icon: Kanban },
-];
-
-/* ── Status group ordering ── */
-const STATUS_GROUP_ORDER = [
-  "New", "Contacted", "Responded", "Multiple Responses",
-  "Qualified", "Booked", "Lost", "DND",
-];
-
-const STATUS_OPTIONS = STATUS_GROUP_ORDER;
-
-const STATUS_DOT: Record<string, string> = {
-  New:                  "bg-gray-500",
-  Contacted:            "bg-indigo-600",
-  Responded:            "bg-teal-500",
-  "Multiple Responses": "bg-green-500",
-  Qualified:            "bg-lime-500",
-  Booked:               "bg-amber-500",
-  Closed:               "bg-emerald-500",
-  Lost:                 "bg-red-500",
-  DND:                  "bg-zinc-500",
-};
-
-const TABLE_SORT_TKEYS: Record<TableSortByOption, string> = {
-  recent:        "sort.mostRecent",
-  oldest:        "sort.oldest",
-  name_asc:      "sort.nameAZ",
-  name_desc:     "sort.nameZA",
-  score_desc:    "sort.scoreDown",
-  score_asc:     "sort.scoreUp",
-  activity_desc: "sort.activityRecent",
-  activity_asc:  "sort.activityOldest",
-  created_desc:  "sort.createdNewest",
-  created_asc:   "sort.createdOldest",
-};
-
-const TABLE_GROUP_TKEYS: Record<TableGroupByOption, string> = {
-  status:   "group.status",
-  campaign: "group.campaign",
-  account:  "group.account",
-  service:  "group.service",
-  source:   "group.source",
-  tag:      "group.tag",
-  none:     "group.none",
-};
-
-// ── Inline confirmation button ────────────────────────────────────────────────
-function ConfirmToolbarButton({
-  icon: Icon, label, onConfirm, variant = "default", iconOnly = false,
-}: {
-  icon: React.ElementType; label: string;
-  onConfirm: () => Promise<void> | void;
-  variant?: "default" | "danger";
-  /** Render the trigger as a neumorphic-raised icon button (topbar style). */
-  iconOnly?: boolean;
-}) {
-  const [confirming, setConfirming] = useState(false);
-  const [loading, setLoading] = useState(false);
-  if (confirming) {
-    return (
-      <div className="h-9 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
-        <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
-        <button
-          className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
-          onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
-          disabled={loading}
-        >
-          {loading ? "…" : "Yes"}
-        </button>
-        <button
-          className="px-2 py-0.5 rounded-full text-muted-foreground text-[11px] hover:text-foreground"
-          onClick={() => setConfirming(false)}
-        >
-          No
-        </button>
-      </div>
-    );
-  }
-  if (iconOnly) {
-    return (
-      <button
-        className="la-btn la-btn--soft la-btn--icon"
-        style={variant === "danger" ? { color: "hsl(var(--destructive))" } : undefined}
-        title={label}
-        aria-label={label}
-        onClick={() => setConfirming(true)}
-      >
-        <Icon className="h-4 w-4" />
-      </button>
-    );
-  }
-  return (
-    <button
-      className={cn(
-        "h-9 inline-flex items-center gap-1.5 rounded-full border px-3 text-[12px] font-medium shrink-0",
-        variant === "danger"
-          ? "border-red-300/50 text-red-600 hover:bg-red-50/60"
-          : "border-border/30 text-foreground/70 hover:bg-card hover:text-foreground",
-      )}
-      onClick={() => setConfirming(true)}
-    >
-      <Icon className="h-4 w-4" />
-      {label}
-    </button>
-  );
-}
+export type { LeadsPageMode };
 
 /**
- * Page mode (Conversations / Contacts split):
- *  - "conversations" → chat list only (the WhatsApp-style thread view).
- *  - "contacts"      → directory: Table (default) + Pipeline.
- *  - "all"           → legacy combined page (all three views). Default.
+ * Leads workspace. Page mode (Conversations / Contacts split):
+ *  - "conversations" → chat list only (the Chats page).
+ *  - "contacts"      → directory: Table (default) + Pipeline (the Leads page).
+ *  - "all"           → legacy combined page (all three views).
+ * Data is paged from GET /api/leads/page: search, filters, sort and counts run
+ * on the server; the list loads 50 at a time and fetches more on scroll.
  */
-export type LeadsPageMode = "conversations" | "contacts" | "all";
-
-const ALLOWED_VIEWS_BY_MODE: Record<LeadsPageMode, ViewMode[]> = {
-  conversations: ["list"],
-  contacts: ["table", "pipeline"],
-  all: ["list", "table", "pipeline"],
-};
-
 export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
   const allowedViews = ALLOWED_VIEWS_BY_MODE[mode];
-  const visibleViewTabKeys = useMemo(
-    () => VIEW_TAB_KEYS.filter((k) => allowedViews.includes(k.id as ViewMode)),
-    [allowedViews],
-  );
-  const VIEW_TABS: TabDef[] = useMemo(() => visibleViewTabKeys.map((k) => ({ id: k.id, label: t(k.tKey), icon: k.icon })), [t, visibleViewTabKeys]);
+  const viewTabs = useMemo(() => VIEW_TAB_KEYS.filter((k) => allowedViews.includes(k.id)), [allowedViews]);
   const { currentAccountId, isAgencyView, isAgencyUser } = useWorkspace();
   const filterAccountId = currentAccountId > 0 ? currentAccountId : undefined;
-  const { leads, loading, error, handleRefresh } = useLeadsData(filterAccountId);
 
-  // Publish leads list entity data for AI agent context ("what leads are here")
-  const publishEntity = usePublishEntityData();
-  useEffect(() => {
-    if (leads.length > 0) {
-      const statusCounts: Record<string, number> = {};
-      leads.forEach((l: any) => {
-        const s = l.conversion_status || "unknown";
-        statusCounts[s] = (statusCounts[s] || 0) + 1;
-      });
-      publishEntity({
-        entityType: "list",
-        entityName: "Leads List",
-        summary: {
-          totalLeads: leads.length,
-          statusBreakdown: statusCounts,
-          recentLeads: leads.slice(0, 10).map((l: any) => ({
-            id: l.id,
-            name: l.full_name || `${l.first_name || ""} ${l.last_name || ""}`.trim(),
-            status: l.conversion_status,
-            source: l.source,
-          })),
-        },
-        updatedAt: Date.now(),
-      });
-    }
-  }, [leads, publishEntity]);
-
-  /* ── Toolbar button constants ───────────────────────────────────────────── */
-  const tbBase = "h-9 px-3 rounded-full inline-flex items-center gap-1.5 text-[12px] font-medium transition-colors whitespace-nowrap shrink-0 select-none";
-
-  /* ── Expand-on-hover icon-circle button helpers ─────────────────────────── */
-  const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-  const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-  const xActive  = "border-brand-indigo text-brand-indigo";
-  const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
-  const tbDefault = "border border-black/[0.125] text-foreground/60 hover:text-foreground hover:bg-card";
-
-  /* ── View mode (persisted) ─────────────────────────────────────────────── */
-  // If navigating from an external page (e.g. calendar event popup), open detail automatically
+  /* ── View mode (persisted per page mode) ── */
   const [mobileView, setMobileView] = useState<"list" | "detail">(() => {
-    try {
-      const returnTo = localStorage.getItem("leadawaker-returnto");
-      const storedLeadId = localStorage.getItem("selected-lead-id");
-      if (returnTo && storedLeadId) return "detail";
-    } catch {}
+    try { if (localStorage.getItem("leadawaker-returnto") && localStorage.getItem("selected-lead-id")) return "detail"; } catch {}
     return "list";
   });
-
-  // View-mode persistence is scoped per page mode so the Conversations and
-  // Contacts pages don't fight over a single shared key.
   const viewModeKey = mode === "all" ? VIEW_MODE_KEY : `${VIEW_MODE_KEY}:${mode}`;
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
-    // Conversations is chat-only; no view switching.
     if (mode === "conversations") return "list";
-    // Non-agency users (clients) only see pipeline view (when reachable).
     const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-    const isClient = role !== "Owner" && role !== "Admin";
-    if (isClient && allowedViews.includes("pipeline")) return "pipeline";
+    if (role !== "Owner" && role !== "Admin" && allowedViews.includes("pipeline")) return "pipeline";
     try {
       const stored = localStorage.getItem(viewModeKey);
       if (stored && allowedViews.includes(stored as ViewMode)) return stored as ViewMode;
     } catch {}
     return allowedViews[0];
   });
+  useEffect(() => { if (isAgencyUser) try { localStorage.setItem(viewModeKey, viewMode); } catch {} }, [viewMode, isAgencyUser, viewModeKey]);
 
-  const [selectedLead,   setSelectedLead]   = usePersistedSelection<Record<string, any>>(
-    "selected-lead-id",
-    (l) => l.Id ?? l.id,
-    leads,
-  );
-
-  // On open, always land on the lead with the most recent message (per Gabriel).
-  // Runs once per mount, after leads arrive, only on the chat/list view. Skipped
-  // when arriving via a deep-link (calendar "return to" carries a specific lead).
-  const didAutoSelectRef = useRef(false);
-  useEffect(() => {
-    if (didAutoSelectRef.current) return;
-    if (viewMode !== "list" || !leads || leads.length === 0) return;
-    didAutoSelectRef.current = true;
-    try {
-      const returnTo = localStorage.getItem("leadawaker-returnto");
-      const storedId = localStorage.getItem("selected-lead-id");
-      if (returnTo && storedId && leads.some((l) => String(l.Id ?? l.id) === storedId)) return;
-    } catch { /* noop */ }
-    const recency = (l: any) =>
-      new Date(l.last_interaction_at || l.last_message_received_at || l.created_at || 0).getTime();
-    const latest = leads.reduce((a, b) => (recency(b) > recency(a) ? b : a));
-    if (latest) setSelectedLead(latest);
-  }, [leads, viewMode, setSelectedLead]);
-
-  const [importWizardOpen, setImportWizardOpen] = useState(false);
-  // ── Lifted multi-select state ─────────────────────────────────────────────
-  const [tableSelectedIds, setTableSelectedIds] = useState<Set<number>>(new Set());
-  const [leadFilters]    = useState<LeadFilterState>({ ...EMPTY_FILTERS });
-
-  /* ── Tag data ────────────────────────────────────────────────────────────── */
-  const [allTagsById,  setAllTagsById]  = useState<Map<number, { name: string; color: string }>>(new Map());
-
-  /* ── Pipeline-specific state ────────────────────────────────────────────── */
-  const [showTagsAlways, setShowTagsAlways] = useState<boolean>(() => {
-    try { return localStorage.getItem("kanban_tags_always_show") === "true"; } catch { /* noop */ } return false;
+  /* ── List view prefs (Chats) ── */
+  const [listSearch, setListSearch] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [listPrefs, setListPrefs] = usePersistedState(mode === "conversations" ? `${LIST_PREFS_KEY}:conversations` : LIST_PREFS_KEY, {
+    groupBy: "date" as GroupByOption, sortBy: "recent" as SortByOption, filterStatus: [] as string[], filterTags: [] as string[],
   });
-  const [compactMode, setCompactMode] = useState<boolean>(() => {
-    try { return localStorage.getItem("kanban_compact_mode") === "true"; } catch { /* noop */ } return false;
+  const groupBy = listPrefs.groupBy;
+  const sortBy = safeListSort(listPrefs.sortBy) as SortByOption;
+  const { filterStatus, filterTags } = listPrefs;
+  const setGroupBy = useCallback((v: GroupByOption) => setListPrefs((p) => ({ ...p, groupBy: v })), [setListPrefs]);
+  const setSortBy = useCallback((v: SortByOption) => setListPrefs((p) => ({ ...p, sortBy: v })), [setListPrefs]);
+  const toggleFilterStatus = useCallback((s: string) => setListPrefs((p) => ({ ...p, filterStatus: p.filterStatus.includes(s) ? p.filterStatus.filter((x) => x !== s) : [...p.filterStatus, s] })), [setListPrefs]);
+  const toggleFilterTag = useCallback((s: string) => setListPrefs((p) => ({ ...p, filterTags: p.filterTags.includes(s) ? p.filterTags.filter((x) => x !== s) : [...p.filterTags, s] })), [setListPrefs]);
+  const [listFilterAccount, setListFilterAccount] = useState("");
+  const [listFilterCampaign, setListFilterCampaign] = useState("");
+  const [listFilterType, setListFilterType] = useState<ConversationType[]>([]);
+  const toggleListFilterType = useCallback((v: ConversationType) => setListFilterType((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v])), []);
+  const clearListFilterType = useCallback(() => setListFilterType([]), []);
+  const [channelTab, setChannelTab] = usePersistedState<ChatChannelTab>("chats-channel-tab", "all", (v) => CHAT_CHANNEL_TABS.includes(v as ChatChannelTab));
+
+  /* ── Table prefs ── */
+  const [tableSearch, setTableSearch] = useState("");
+  const [tableGroupDir, setTableGroupDir] = useState<"asc" | "desc">("asc");
+  const [tablePrefs, setTablePrefs] = usePersistedState(TABLE_PREFS_KEY, {
+    sortBy: "recent" as TableSortByOption, groupBy: "status" as TableGroupByOption,
+    filterStatus: [] as string[], filterCampaign: "", filterAccount: "", filterService: [] as string[],
+    filterSource: [] as string[], filterTags: [] as string[], filterHasPhone: false, filterHasEmail: false,
   });
-  const [kanbanSearchQuery, setKanbanSearchQuery] = useState("");
-  const [kanbanSearchOpen, setKanbanSearchOpen] = useState(true);
-  const [pipePrefs, setPipePrefs] = usePersistedState(PIPE_PREFS_KEY, {
-    showHighScore: false,
-    filterHasPhone: false,
-    filterHasEmail: false,
-    sortBy: null as "score-desc" | "recency" | "alpha" | null,
-  });
-  const showHighScore = pipePrefs.showHighScore;
-  const filterHasPhone = pipePrefs.filterHasPhone;
-  const filterHasEmail = pipePrefs.filterHasEmail;
-  const pipelineSortBy = pipePrefs.sortBy;
-  const setShowHighScore = useCallback((v: boolean) => setPipePrefs(p => ({ ...p, showHighScore: v })), [setPipePrefs]);
-  const setFilterHasPhone = useCallback((v: boolean) => setPipePrefs(p => ({ ...p, filterHasPhone: v })), [setPipePrefs]);
-  const setFilterHasEmail = useCallback((v: boolean) => setPipePrefs(p => ({ ...p, filterHasEmail: v })), [setPipePrefs]);
-  const setPipelineSortBy = useCallback((v: "score-desc" | "recency" | "alpha" | null) => setPipePrefs(p => ({ ...p, sortBy: v })), [setPipePrefs]);
+  const tableSortBy = safeTableSort(tablePrefs.sortBy);
+  const tableGroupBy = tablePrefs.groupBy;
+  const tableFilters: TableFilters = {
+    status: tablePrefs.filterStatus ?? [], campaign: tablePrefs.filterCampaign ?? "", account: tablePrefs.filterAccount ?? "",
+    service: tablePrefs.filterService ?? [], source: tablePrefs.filterSource ?? [], tags: tablePrefs.filterTags ?? [],
+    hasPhone: tablePrefs.filterHasPhone ?? false, hasEmail: tablePrefs.filterHasEmail ?? false,
+  };
+  const PREF_KEY: Record<keyof TableFilters, string> = {
+    status: "filterStatus", campaign: "filterCampaign", account: "filterAccount", service: "filterService",
+    source: "filterSource", tags: "filterTags", hasPhone: "filterHasPhone", hasEmail: "filterHasEmail",
+  };
+  const setTableFilter = useCallback(<K extends keyof TableFilters>(k: K, v: TableFilters[K]) => setTablePrefs((p) => ({ ...p, [PREF_KEY[k]]: v })), [setTablePrefs]); // eslint-disable-line react-hooks/exhaustive-deps
+  const toggleTableFilter = useCallback((k: "status" | "service" | "source" | "tags", v: string) => setTablePrefs((p: any) => {
+    const cur: string[] = p[PREF_KEY[k]] ?? [];
+    return { ...p, [PREF_KEY[k]]: cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v] };
+  }), [setTablePrefs]); // eslint-disable-line react-hooks/exhaustive-deps
+  const clearTableFilters = useCallback(() => setTablePrefs((p) => ({
+    ...p, filterStatus: [], filterCampaign: "", filterAccount: "", filterService: [], filterSource: [], filterTags: [], filterHasPhone: false, filterHasEmail: false,
+  })), [setTablePrefs]);
+  const isTableFilterActive = tableFilters.status.length > 0 || !!tableFilters.campaign || !!tableFilters.account || tableFilters.service.length > 0
+    || tableFilters.source.length > 0 || tableFilters.tags.length > 0 || tableFilters.hasPhone || tableFilters.hasEmail;
+
+  /* ── Pipeline prefs ── */
+  const [kanbanSearch, setKanbanSearch] = useState("");
+  const [pipePrefs, setPipePrefs] = usePersistedState(PIPE_PREFS_KEY, { filterHasPhone: false, filterHasEmail: false, sortBy: null as PipelineSort | "score-desc" });
+  const pipelineSortBy: PipelineSort = pipePrefs.sortBy === "recency" || pipePrefs.sortBy === "alpha" ? pipePrefs.sortBy : null;
+  const [compactMode, setCompactMode] = usePersistedState<boolean>("kanban_compact_mode", false);
   const [foldAction, setFoldAction] = useState<{ type: "expand-all" | "fold-empty" | "fold-threshold"; threshold?: number; seq: number }>({ type: "expand-all", seq: 0 });
   const [hasAnyCollapsed, setHasAnyCollapsed] = useState(false);
   const [selectedKanbanLead, setSelectedKanbanLead] = useState<Record<string, any> | null>(null);
-  const [fullProfileLead, setFullProfileLead] = useState<Record<string, any> | null>(null);
 
-  /* ── Lifted list-view controls (persisted) ───────────────────────────────── */
-  const [listSearch,   setListSearch]   = useState("");
-  const [searchOpen,   setSearchOpen]   = useState(false);
-  const [listPrefs, setListPrefs]       = usePersistedState(mode === "conversations" ? `${LIST_PREFS_KEY}:conversations` : LIST_PREFS_KEY, {
-    groupBy: "date" as GroupByOption,
-    sortBy: "recent" as SortByOption,
-    filterStatus: [] as string[],
-    filterTags: [] as string[],
-  });
-  const groupBy = listPrefs.groupBy;
-  const sortBy = listPrefs.sortBy;
-  const filterStatus = listPrefs.filterStatus;
-  const filterTags = listPrefs.filterTags;
-  const setGroupBy = useCallback((v: GroupByOption) => setListPrefs(p => ({ ...p, groupBy: v })), [setListPrefs]);
-  const setSortBy = useCallback((v: SortByOption) => setListPrefs(p => ({ ...p, sortBy: v })), [setListPrefs]);
-  const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setListPrefs]);
-  const setFilterTags = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterTags: typeof v === "function" ? v(p.filterTags) : v })), [setListPrefs]);
+  /* ── Quick filters (Leads page: views + channel) ── */
+  const [quickPrefs, setQuickPrefs] = usePersistedState(QUICK_PREFS_KEY, { view: "all" as QuickView, channel: "all" as ChannelFilter });
 
-  /* ── Table toolbar state (persisted) ─────────────────────────────────────── */
-  const [tableSearch,         setTableSearch]         = useState("");
-  const [tableGroupDirection, setTableGroupDirection] = useState<"asc" | "desc">("asc");
-  const [tablePrefs, setTablePrefs] = usePersistedState(TABLE_PREFS_KEY, {
-    sortBy: "recent" as TableSortByOption,
-    filterStatus: [] as string[],
-    filterCampaign: "",
-    filterAccount: "",
-    filterService: [] as string[],
-    filterSource: [] as string[],
-    filterTags: [] as string[],
-    filterHasPhone: false,
-    filterHasEmail: false,
-    filterMinScore: 0,
-    groupBy: "status" as TableGroupByOption,
-  });
-  const tableSortBy = tablePrefs.sortBy;
-  const tableFilterStatus = tablePrefs.filterStatus;
-  const tableFilterCampaign = tablePrefs.filterCampaign;
-  const tableFilterAccount = tablePrefs.filterAccount;
-  // New filter axes — guarded with defaults so prefs persisted before they existed still load.
-  const tableFilterService  = tablePrefs.filterService  ?? [];
-  const tableFilterSource   = tablePrefs.filterSource   ?? [];
-  const tableFilterTags     = tablePrefs.filterTags     ?? [];
-  const tableFilterHasPhone = tablePrefs.filterHasPhone ?? false;
-  const tableFilterHasEmail = tablePrefs.filterHasEmail ?? false;
-  const tableFilterMinScore = tablePrefs.filterMinScore ?? 0;
-  const tableGroupBy = tablePrefs.groupBy;
-  const setTableSortBy = useCallback((v: TableSortByOption) => setTablePrefs(p => ({ ...p, sortBy: v })), [setTablePrefs]);
-  const setTableFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setTablePrefs]);
-  const setTableFilterCampaign = useCallback((v: string) => setTablePrefs(p => ({ ...p, filterCampaign: v })), [setTablePrefs]);
-  const setTableFilterAccount = useCallback((v: string) => setTablePrefs(p => ({ ...p, filterAccount: v })), [setTablePrefs]);
-  const setTableFilterService = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterService: typeof v === "function" ? v(p.filterService ?? []) : v })), [setTablePrefs]);
-  const setTableFilterSource = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterSource: typeof v === "function" ? v(p.filterSource ?? []) : v })), [setTablePrefs]);
-  const setTableFilterTags = useCallback((v: string[] | ((p: string[]) => string[])) => setTablePrefs(p => ({ ...p, filterTags: typeof v === "function" ? v(p.filterTags ?? []) : v })), [setTablePrefs]);
-  const setTableFilterHasPhone = useCallback((v: boolean) => setTablePrefs(p => ({ ...p, filterHasPhone: v })), [setTablePrefs]);
-  const setTableFilterHasEmail = useCallback((v: boolean) => setTablePrefs(p => ({ ...p, filterHasEmail: v })), [setTablePrefs]);
-  const setTableFilterMinScore = useCallback((v: number) => setTablePrefs(p => ({ ...p, filterMinScore: v })), [setTablePrefs]);
-  const setTableGroupBy = useCallback((v: TableGroupByOption) => setTablePrefs(p => ({ ...p, groupBy: v })), [setTablePrefs]);
-
-  /* ── Column visibility (persisted) ──────────────────────────────────────── */
+  /* ── Table display prefs ── */
   const [visibleCols, setVisibleCols] = useState<Set<string>>(() => {
     try {
-      const stored = localStorage.getItem(VISIBLE_COLS_KEY);
-      if (stored) {
-        const arr = JSON.parse(stored);
-        if (Array.isArray(arr) && arr.length > 0) {
-          const set = new Set<string>(arr);
-          // One-time migration: surface the new "Last Message" column for users
-          // whose saved prefs predate it (runs once; respects later manual removal).
-          if (localStorage.getItem("leads-table-lastmsg-v1") !== "done") {
-            set.add("lastMessage");
-            try { localStorage.setItem("leads-table-lastmsg-v1", "done"); } catch {}
-          }
-          return set;
+      const arr = JSON.parse(localStorage.getItem(VISIBLE_COLS_KEY) || "null");
+      if (Array.isArray(arr) && arr.length > 0) {
+        const set = new Set<string>(arr);
+        set.delete("score");
+        // One-time: surface the new last-contact + appointment columns.
+        if (localStorage.getItem("leads-table-contact-v1") !== "done") {
+          set.add("lastContact"); set.add("appointment");
+          try { localStorage.setItem("leads-table-contact-v1", "done"); } catch {}
         }
+        return set;
       }
     } catch {}
     return new Set(DEFAULT_VISIBLE_COLS);
   });
-
-  /* ── Column order persistence ────────────────────────────────────────────── */
-  const [columnOrder, setColumnOrder] = useState<string[]>(() => {
-    try {
-      const stored = localStorage.getItem(COL_ORDER_KEY);
-      if (stored) return JSON.parse(stored);
-    } catch {}
-    return [];
-  });
-
-  useEffect(() => {
-    try { localStorage.setItem(COL_ORDER_KEY, JSON.stringify(columnOrder)); } catch {}
-  }, [columnOrder]);
-
-  /* ── Column widths persistence ─────────────────────────────────────────── */
+  useEffect(() => { try { localStorage.setItem(VISIBLE_COLS_KEY, JSON.stringify(Array.from(visibleCols))); } catch {} }, [visibleCols]);
+  const [columnOrder, setColumnOrder] = usePersistedState<string[]>(COL_ORDER_KEY, []);
   const [columnWidths, setColumnWidths] = usePersistedState<Record<string, number>>(COL_WIDTHS_KEY, {});
+  const [showVerticalLines, setShowVerticalLines] = usePersistedState<boolean>("leads-vertical-lines", false);
+  const [tableSelectedIds, setTableSelectedIds] = useState<Set<number>>(new Set());
+  const [importWizardOpen, setImportWizardOpen] = useState(false);
 
-  /* ── Settings toggles (persisted) ──────────────────────────────────────── */
-  const [showVerticalLines, setShowVerticalLines] = useState(() => {
-    try { return localStorage.getItem("leads-vertical-lines") === "true"; } catch { return false; }
-  });
-  useEffect(() => { try { localStorage.setItem("leads-vertical-lines", String(showVerticalLines)); } catch {} }, [showVerticalLines]);
-  // The Leads page always renders full-width: the topbar and content sit flush to
-  // the screen edges, matching Campaigns/Calendar. We keep the shared content
-  // wrapper free of the old max-w-[1729px] cap while mounted, and strip any cap
-  // left behind by other pages so nothing leaks across navigations.
+  /* ── Full-width page (strip the shared content cap while mounted) ── */
   useEffect(() => {
-    const setFullWidth = () => {
-      const el = document.getElementById("crm-content-wrapper");
-      if (el) {
-        el.classList.remove("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
-        el.classList.add("px-1", "md:px-1");
-        el.style.overflow = "visible";
-      }
-    };
-    setFullWidth();
+    const el = document.getElementById("crm-content-wrapper");
+    if (el) { el.classList.remove("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]"); el.classList.add("px-1", "md:px-1"); el.style.overflow = "visible"; }
     return () => {
-      const el = document.getElementById("crm-content-wrapper");
-      if (el) {
-        el.classList.remove("px-1", "md:px-1", "px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]");
-        el.style.overflow = "";
-      }
+      const w = document.getElementById("crm-content-wrapper");
+      if (w) { w.classList.remove("px-1", "md:px-1", "px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]"); w.style.overflow = ""; }
     };
   }, []);
-
-  /* ── Accounts (agency view) ──────────────────────────────────────────────── */
-  const [accountsById, setAccountsById] = useState<Map<number, string>>(new Map());
-  /* ── Campaigns (id → { name, accountId }) ──────────────────────────────── */
-  const [campaignsById, setCampaignsById] = useState<Map<number, { name: string; accountId: number | null; bookingMode: string | null; campaignType: string | null }>>(new Map());
-
-  /* ── Persist view mode (agency only) ────────────────────────────────────── */
-  useEffect(() => {
-    if (!isAgencyUser) return;
-    try { localStorage.setItem(viewModeKey, viewMode); } catch {}
-  }, [viewMode, isAgencyUser, viewModeKey]);
-
-  /* ── Persist visible columns ────────────────────────────────────────────── */
-  useEffect(() => {
-    try { localStorage.setItem(VISIBLE_COLS_KEY, JSON.stringify(Array.from(visibleCols))); } catch {}
-  }, [visibleCols]);
-
-  /* ── Clear topbar actions ───────────────────────────────────────────────── */
   const { clearTopbarActions } = useTopbarActions();
   useEffect(() => { clearTopbarActions(); }, [clearTopbarActions]);
 
-  /* ── Fetch all tags ─────────────────────────────────────────────────────── */
+  /* ── Lookups: accounts, campaigns, tags ── */
+  const { accountsById, campaignsById, allTagsById } = useLeadsLookups(isAgencyView);
+
+  /* ── Server queries (one per view; only the active one fetches) ── */
+  const dListSearch = useDebouncedValue(listSearch, 300);
+  const dTableSearch = useDebouncedValue(tableSearch, 300);
+  const dKanbanSearch = useDebouncedValue(kanbanSearch, 300);
+  const quick: Partial<PagedLeadsQuery> = mode === "conversations" ? {} : {
+    channel: quickPrefs.channel === "all" ? undefined : quickPrefs.channel,
+    needsReply: quickPrefs.view === "needsReply",
+    upcoming: quickPrefs.view === "upcoming",
+  };
+  const listQuery = useMemo<PagedLeadsQuery>(() => ({
+    accountId: filterAccountId, search: dListSearch.trim(), sort: sortBy, groupBy,
+    status: filterStatus, tags: filterTags, account: listFilterAccount, campaign: listFilterCampaign, type: listFilterType,
+    chatChannel: mode === "conversations" && channelTab !== "all" ? channelTab : undefined,
+  }), [filterAccountId, dListSearch, sortBy, groupBy, filterStatus, filterTags, listFilterAccount, listFilterCampaign, listFilterType, mode, channelTab]);
+  const tableQuery = useMemo<PagedLeadsQuery>(() => ({
+    accountId: filterAccountId, search: dTableSearch.trim(),
+    sort: quickPrefs.view === "upcoming" ? "appointment" : tableSortBy,
+    groupBy: quickPrefs.view === "upcoming" ? "none" : tableGroupBy, groupDir: tableGroupDir,
+    ...tableFilters, ...quick,
+  }), [filterAccountId, dTableSearch, tableSortBy, tableGroupBy, tableGroupDir, JSON.stringify(tableFilters), JSON.stringify(quick), quickPrefs.view]); // eslint-disable-line react-hooks/exhaustive-deps
+  const pipeQuery = useMemo<PagedLeadsQuery>(() => ({
+    accountId: filterAccountId, search: dKanbanSearch.trim(), groupBy: "status",
+    sort: pipelineSortBy === "alpha" ? "name_asc" : "recent",
+    hasPhone: pipePrefs.filterHasPhone, hasEmail: pipePrefs.filterHasEmail, ...quick,
+  }), [filterAccountId, dKanbanSearch, pipelineSortBy, pipePrefs.filterHasPhone, pipePrefs.filterHasEmail, JSON.stringify(quick)]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const listData = usePagedLeads(listQuery, { enabled: viewMode === "list" });
+  const tableData = usePagedLeads(tableQuery, { enabled: viewMode === "table" });
+  const pipeData = usePagedLeads(pipeQuery, { enabled: viewMode === "pipeline", perGroup: 30 });
+  const active = viewMode === "list" ? listData : viewMode === "table" ? tableData : pipeData;
+
+  const maps = useMemo(() => ({ accountsById, campaignsById }), [accountsById, campaignsById]);
+  const leads = useMemo(() => active.leads.map((l) => normalizeLead(l, maps)), [active.leads, maps]);
+
+  /* ── Selection, including a lead that is not in the loaded page ── */
+  const [selVersion, setSelVersion] = useState(0);
   useEffect(() => {
-    const fetchAllTags = async () => {
-      try {
-        const res = await apiFetch("/api/tags");
-        if (res.ok) {
-          const data = await res.json();
-          const list = Array.isArray(data) ? data : data?.list || [];
-          const byId = new Map<number, { name: string; color: string }>();
-          list.forEach((t: any) => {
-            byId.set(t.id, { name: t.name || `Tag ${t.id}`, color: t.color || "gray" });
-          });
-          setAllTagsById(byId);
-        }
-      } catch (err) { console.error("Failed to fetch all tags", err); }
-    };
-    fetchAllTags();
+    const h = () => setSelVersion((v) => v + 1);
+    window.addEventListener("persisted-selection", h);
+    return () => window.removeEventListener("persisted-selection", h);
   }, []);
-
-  /* ── Fetch accounts (agency view) ───────────────────────────────────────── */
+  // ?lead=<id> deep link: select it (overrides the stored selection).
+  const deepLinkRef = useRef<string | null>(null);
+  if (deepLinkRef.current === null) {
+    try {
+      const id = new URLSearchParams(window.location.search).get("lead");
+      deepLinkRef.current = id && /^\d+$/.test(id) ? id : "";
+      if (deepLinkRef.current) localStorage.setItem("selected-lead-id", deepLinkRef.current);
+    } catch { deepLinkRef.current = ""; }
+  }
+  const [pinned, setPinned] = useState<Record<string, any> | null>(null);
+  const [pinnedMissing, setPinnedMissing] = useState(false);
   useEffect(() => {
-    if (!isAgencyView) return;
-    const fetchAccountData = async () => {
-      try {
-        const res = await apiFetch("/api/accounts");
-        if (res.ok) {
-          const data = await res.json();
-          const list = Array.isArray(data) ? data : data?.list || [];
-          const byId = new Map<number, string>();
-          list.forEach((a: any) => {
-            // Skip soft-deleted accounts — they shouldn't clutter filter dropdowns
-            // or show up as labels (Gabriel, 2026-06-21).
-            if (String(a.status || a.Status || "").toLowerCase() === "archived") return;
-            const id = a.id ?? a.Id;
-            byId.set(Number(id), a.name || a.Name || `Account ${id}`);
-          });
-          setAccountsById(byId);
-        }
-      } catch (err) { console.error("Failed to fetch accounts", err); }
-    };
-    fetchAccountData();
-  }, [isAgencyView]);
+    if (active.loading) return;
+    let sid: string | null = null;
+    try { sid = localStorage.getItem("selected-lead-id"); } catch {}
+    if (!sid || leads.some((l) => String(l.id) === sid)) { setPinnedMissing(false); return; }
+    let cancelled = false;
+    fetchLeadsByIds([Number(sid)], filterAccountId)
+      .then((r) => { if (cancelled) return; setPinned(r[0] ? normalizeLead(r[0], maps) : null); setPinnedMissing(!r[0]); })
+      .catch(() => { if (!cancelled) setPinnedMissing(true); });
+    return () => { cancelled = true; };
+  }, [leads, selVersion, filterAccountId, active.loading, maps]);
+  const items = useMemo(
+    () => (pinned && !leads.some((l) => l.id === pinned.id) ? [...leads, pinned] : leads),
+    [leads, pinned],
+  );
+  const [selectedLead, setSelectedLead] = usePersistedSelection<Record<string, any>>("selected-lead-id", (l) => l.Id ?? l.id, items);
 
-  /* ── Fetch campaigns ─────────────────────────────────────────────────────── */
+  // Chats: land on the most recent conversation on open (per Gabriel), unless
+  // arriving through a deep link (calendar "return to" or ?lead=).
+  const didAutoSelectRef = useRef(false);
   useEffect(() => {
-    const fetchCampaignData = async () => {
-      try {
-        const res = await apiFetch("/api/campaigns");
-        if (res.ok) {
-          const data = await res.json();
-          const list = Array.isArray(data) ? data : data?.list || [];
-          const byId = new Map<number, { name: string; accountId: number | null; bookingMode: string | null; campaignType: string | null }>();
-          list.forEach((c: any) => {
-            // Skip soft-deleted campaigns — they shouldn't clutter filter dropdowns
-            // or show up as labels (Gabriel, 2026-06-21).
-            if (String(c.status || c.Status || "").toLowerCase() === "archived") return;
-            const id = c.id ?? c.Id;
-            byId.set(Number(id), {
-              name: c.name || c.Name || c.campaign_name || `Campaign ${id}`,
-              accountId: c.Accounts_id ?? c.accounts_id ?? c.accountsId ?? null,
-              bookingMode: c.booking_mode_override ?? c.bookingModeOverride ?? null,
-              campaignType: c.campaign_type ?? c.campaignType ?? null,
-            });
-          });
-          setCampaignsById(byId);
-        }
-      } catch (err) { console.error("Failed to fetch campaigns", err); }
-    };
-    fetchCampaignData();
-  }, []);
+    if (didAutoSelectRef.current || viewMode !== "list" || leads.length === 0) return;
+    didAutoSelectRef.current = true;
+    try { if ((localStorage.getItem("leadawaker-returnto") || deepLinkRef.current) && localStorage.getItem("selected-lead-id")) return; } catch {}
+    const rec = (l: any) => new Date(l.recency_at || l.created_at || 0).getTime();
+    setSelectedLead(leads.reduce((a, b) => (rec(b) > rec(a) ? b : a)));
+  }, [leads, viewMode, setSelectedLead]);
+  // No selection (or the stored one is gone): select the first row of the list.
+  useEffect(() => {
+    if (viewMode !== "list" || selectedLead || leads.length === 0) return;
+    let sid: string | null = null;
+    try { sid = localStorage.getItem("selected-lead-id"); } catch {}
+    if (!sid || pinnedMissing) setSelectedLead(leads[0]);
+  }, [leads, selectedLead, viewMode, pinnedMissing, setSelectedLead]);
 
-  /* ── Derive leadTagMap from tag_ids embedded in lead objects ────────────── */
-  const leadTagMap = useMemo((): Map<number, number[]> => {
-    const m = new Map<number, number[]>();
-    leads.forEach((l: any) => {
-      const ids: number[] = Array.isArray(l.tag_ids) ? l.tag_ids : [];
-      if (ids.length > 0) m.set(l.Id ?? l.id, ids);
-    });
-    return m;
-  }, [leads]);
-
-  /* ── Derive leadTagsInfo from leadTagMap + allTagsById ───────────────────── */
-  const leadTagsInfo = useMemo((): Map<number, { name: string; color: string }[]> => {
+  /* ── Tags per lead ── */
+  const leadTagsInfo = useMemo(() => {
     const info = new Map<number, { name: string; color: string }[]>();
-    leadTagMap.forEach((tagIds, leadId) => {
-      const tagDetails = tagIds
-        .map((id) => allTagsById.get(id))
-        .filter((t): t is { name: string; color: string } => !!t);
-      if (tagDetails.length > 0) info.set(leadId, tagDetails);
+    items.forEach((l: any) => {
+      const tags = (Array.isArray(l.tag_ids) ? l.tag_ids : []).map((id: number) => allTagsById.get(id)).filter(Boolean);
+      if (tags.length) info.set(Number(l.Id ?? l.id), tags);
     });
     return info;
-  }, [leadTagMap, allTagsById]);
+  }, [items, allTagsById]);
+  const allTags = useMemo(() => Array.from(allTagsById.values()).filter((tg) => isRealTag(tg.name)), [allTagsById]);
 
-  /* ── Filtered leads (applies list-view structured filters) ──────────────── */
-  const filteredLeads = useMemo(() => {
-    let result = applyLeadFilters(leads, leadFilters, leadTagMap);
-    result = result.map((l) => {
-      const tags = leadTagsInfo.get(l.Id);
-      const primaryTag = tags && tags.length > 0 ? tags[0].name : "Untagged";
-      return { ...l, _primary_tag: primaryTag };
-    });
-    return result;
-  }, [leads, leadFilters, leadTagMap, leadTagsInfo]);
-
-  /* ── Pipeline-filtered leads (applies kanban-specific filters) ────────── */
-  const filteredPipelineLeads = useMemo(() => {
-    let filtered = filteredLeads;
-    if (showHighScore) filtered = filtered.filter((l: any) => Number(l.lead_score ?? l.leadScore ?? l.Lead_Score ?? 0) >= 70);
-    if (filterHasPhone) filtered = filtered.filter((l: any) => Boolean(l.phone || l.Phone));
-    if (filterHasEmail) filtered = filtered.filter((l: any) => Boolean(l.email || l.Email));
-    if (kanbanSearchQuery.trim()) {
-      const q = kanbanSearchQuery.toLowerCase();
-      filtered = filtered.filter((l: any) => {
-        const name = (l.full_name || [l.first_name, l.last_name].filter(Boolean).join(" ") || "").toLowerCase();
-        return name.includes(q) || (l.phone || "").includes(q) || (l.email || "").includes(q);
-      });
-    }
-    if (pipelineSortBy === "score-desc") {
-      filtered = [...filtered].sort((a, b) => Number(b.lead_score ?? b.leadScore ?? b.Lead_Score ?? 0) - Number(a.lead_score ?? a.leadScore ?? a.Lead_Score ?? 0));
-    } else if (pipelineSortBy === "recency") {
-      filtered = [...filtered].sort((a, b) => {
-        const aDate = new Date(a.last_interaction_at || a.last_message_received_at || a.created_at || 0).getTime();
-        const bDate = new Date(b.last_interaction_at || b.last_message_received_at || b.created_at || 0).getTime();
-        return bDate - aDate;
-      });
-    } else if (pipelineSortBy === "alpha") {
-      filtered = [...filtered].sort((a, b) => {
-        const na = (a.full_name || [a.first_name, a.last_name].filter(Boolean).join(" ") || "").toLowerCase();
-        const nb = (b.full_name || [b.first_name, b.last_name].filter(Boolean).join(" ") || "").toLowerCase();
-        return na.localeCompare(nb);
-      });
-    }
-    return filtered;
-  }, [filteredLeads, showHighScore, filterHasPhone, filterHasEmail, kanbanSearchQuery, pipelineSortBy]);
-
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { try { localStorage.setItem("kanban_tags_always_show", String(showTagsAlways)); } catch { /* noop */ } }, [showTagsAlways]);
-  useEffect(() => { try { localStorage.setItem("kanban_compact_mode", String(compactMode)); } catch { /* noop */ } }, [compactMode]);
-
-  const pipelineActiveFilterCount = (showHighScore ? 1 : 0) + (filterHasPhone ? 1 : 0) + (filterHasEmail ? 1 : 0);
-  const isPipelineFilterActive = pipelineActiveFilterCount > 0;
-  const isPipelineSortActive = pipelineSortBy !== null;
-  const clearPipelineFilters = useCallback(() => { setShowHighScore(false); setFilterHasPhone(false); setFilterHasEmail(false); }, []);
-
-  const handleKanbanLeadMove = useCallback(
-    async (leadId: number | string, newStage: string) => {
-      try {
-        await updateLead(leadId, { Conversion_Status: newStage });
-        handleRefresh();
-      } catch (err) {
-        console.error("Failed to move lead to new stage", err);
-        handleRefresh();
-        throw err;
-      }
-    },
-    [handleRefresh]
-  );
-
-  const handleCloseKanbanPanel = useCallback(() => { setSelectedKanbanLead(null); }, []);
-
-  // Sync kanban selection when the shared persisted selection changes (e.g. from search)
+  /* ── AI agent context ── */
+  const publishEntity = usePublishEntityData();
   useEffect(() => {
-    if (viewMode !== "pipeline" || !selectedLead) return;
-    const id = selectedLead.Id ?? selectedLead.id;
-    const kanbanId = selectedKanbanLead?.Id ?? selectedKanbanLead?.id;
-    if (id !== kanbanId) setSelectedKanbanLead(selectedLead);
-  }, [selectedLead, viewMode]);
-
-  // Auto-select the first "Booked" lead for non-agency users in pipeline view
-  const clientAutoSelectedRef = useRef(false);
-  useEffect(() => {
-    if (isAgencyUser || viewMode !== "pipeline" || clientAutoSelectedRef.current) return;
-    if (filteredPipelineLeads.length === 0) return;
-    clientAutoSelectedRef.current = true;
-    const booked = filteredPipelineLeads.find(
-      (l: any) => (l.conversion_status || l.Conversion_Status || "") === "Booked"
-    );
-    if (booked) setSelectedKanbanLead(booked);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredPipelineLeads.length, isAgencyUser, viewMode]);
-
-  /* ── Derived data for table filter dropdowns ─────────────────────────────── */
-  const availableAccounts = useMemo(() => {
-    if (!isAgencyView) return [];
-    const seen = new Set<string>();
-    const result: { id: string; name: string }[] = [];
-    filteredLeads.forEach((l) => {
-      const accountId = String(l.Accounts_id || l.account_id || "");
-      if (accountId && !seen.has(accountId)) {
-        seen.add(accountId);
-        const name = accountsById.get(Number(accountId)) || `Account ${accountId}`;
-        result.push({ id: accountId, name });
-      }
-    });
-    return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [filteredLeads, isAgencyView, accountsById]);
-
-  const availableCampaigns = useMemo(() => {
-    // Collect campaign IDs present in leads (optionally scoped to selected account)
-    const campaignIds = new Set<number>();
-    filteredLeads.forEach((l) => {
-      if (tableFilterAccount && String(l.Accounts_id || l.account_id || "") !== tableFilterAccount) return;
-      const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
-      if (cId) campaignIds.add(cId);
-    });
-    const result: { id: string; name: string }[] = [];
-    campaignIds.forEach((cId) => {
-      const info = campaignsById.get(cId);
-      result.push({ id: String(cId), name: info?.name || `Campaign ${cId}` });
-    });
-    return result.sort((a, b) => a.name.localeCompare(b.name));
-  }, [filteredLeads, campaignsById, tableFilterAccount]);
-
-  // Distinct services (campaign_type) present in the current leads.
-  const availableServices = useMemo(() => {
-    const seen = new Set<string>();
-    filteredLeads.forEach((l) => {
-      const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
-      const svc = (cId && campaignsById.get(cId)?.campaignType) || "";
-      if (svc) seen.add(svc);
-    });
-    return Array.from(seen).sort((a, b) => a.localeCompare(b));
-  }, [filteredLeads, campaignsById]);
-
-  // Distinct lead sources present in the current leads.
-  const availableSources = useMemo(() => {
-    const seen = new Set<string>();
-    filteredLeads.forEach((l) => {
-      const src = l.source || l.Source || "";
-      if (src) seen.add(src);
-    });
-    return Array.from(seen).sort((a, b) => a.localeCompare(b));
-  }, [filteredLeads]);
-
-  /* ── Per-lead dimension helpers (service / activity / created / tags) ────── */
-  const serviceOf = useCallback((l: Record<string, any>): string => {
-    const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
-    return (cId && campaignsById.get(cId)?.campaignType) || "";
-  }, [campaignsById]);
-  const tsOf = (v: any): number => {
-    if (!v) return 0;
-    const t = Date.parse(v);
-    return Number.isNaN(t) ? 0 : t;
-  };
-  const activityOf = (l: Record<string, any>): number =>
-    tsOf(l.last_interaction_at || l.lastInteractionAt || l.last_message_received_at || l.last_message_sent_at);
-  const createdOf = (l: Record<string, any>): number =>
-    tsOf(l.created_at || l.CreatedAt || l.createdAt);
-  const tagNamesOf = useCallback((l: Record<string, any>): string[] =>
-    (leadTagsInfo.get(l.Id ?? l.id) || []).map((tg) => tg.name), [leadTagsInfo]);
-
-  /* ── Table flat items — filtered, sorted, grouped ───────────────────────── */
-  const tableFlatItems = useMemo((): VirtualListItem[] => {
-    return buildEntityRows<Record<string, any>, VirtualListItem>({
-      items: filteredLeads,
-      predicate: (l) => {
-        if (tableFilterStatus.length > 0 &&
-          !tableFilterStatus.includes(l.conversion_status || l.Conversion_Status || "")) return false;
-        if (tableFilterAccount &&
-          String(l.Accounts_id || l.account_id || "") !== tableFilterAccount) return false;
-        if (tableFilterCampaign &&
-          String(l.Campaigns_id || l.campaigns_id || l.campaignsId || "") !== tableFilterCampaign) return false;
-        if (tableFilterService.length > 0 && !tableFilterService.includes(serviceOf(l))) return false;
-        if (tableFilterSource.length > 0 && !tableFilterSource.includes(l.source || l.Source || "")) return false;
-        if (tableFilterTags.length > 0) {
-          const names = tagNamesOf(l);
-          if (!tableFilterTags.some((tname) => names.includes(tname))) return false;
-        }
-        if (tableFilterHasPhone && !(l.phone || l.Phone)) return false;
-        if (tableFilterHasEmail && !(l.email || l.Email)) return false;
-        if (tableFilterMinScore > 0 && Number(l.lead_score ?? l.leadScore ?? 0) < tableFilterMinScore) return false;
-        return true;
+    if (!leads.length) return;
+    publishEntity({
+      entityType: "list",
+      entityName: "Leads List",
+      summary: {
+        totalLeads: active.total,
+        recentLeads: leads.slice(0, 10).map((l: any) => ({ id: l.id, name: getFullNameHelper(l), status: l.conversion_status, source: l.Source ?? l.source })),
       },
-      // "recent" keeps source order (no sort); other modes sort.
-      comparator: tableSortBy === "recent" ? undefined : (a, b) => {
-        switch (tableSortBy) {
-          case "oldest":        return (Number(a.id || a.Id || 0)) - (Number(b.id || b.Id || 0));
-          case "name_asc":      return getFullNameHelper(a).localeCompare(getFullNameHelper(b));
-          case "name_desc":     return getFullNameHelper(b).localeCompare(getFullNameHelper(a));
-          case "score_desc":    return Number(b.lead_score ?? b.leadScore ?? 0) - Number(a.lead_score ?? a.leadScore ?? 0);
-          case "score_asc":     return Number(a.lead_score ?? a.leadScore ?? 0) - Number(b.lead_score ?? b.leadScore ?? 0);
-          case "activity_desc": return activityOf(b) - activityOf(a);
-          case "activity_asc":  return activityOf(a) - activityOf(b);
-          case "created_desc":  return createdOf(b) - createdOf(a);
-          case "created_asc":   return createdOf(a) - createdOf(b);
-          default: return 0;
-        }
-      },
-      groupKeyOf: tableGroupBy === "none" ? null : (l) => {
-        switch (tableGroupBy) {
-          case "campaign": {
-            const cId = Number(l.Campaigns_id || l.campaigns_id || l.campaignsId || 0);
-            return (cId && campaignsById.get(cId)?.name) || l.Campaign || l.campaign || l.campaign_name || "No Campaign";
-          }
-          case "account":
-            return accountsById.get(Number(l.Accounts_id || l.account_id)) ||
-              (l.Accounts_id || l.account_id ? `Account ${l.Accounts_id || l.account_id}` : "No Account");
-          case "service":
-            return serviceOf(l) || "No Service";
-          case "source":
-            return l.source || l.Source || "No Source";
-          case "tag":
-            return tagNamesOf(l)[0] || "No Tag";
-          default: // status
-            return l.conversion_status || l.Conversion_Status || "Unknown";
-        }
-      },
-      groupDirection: tableGroupDirection,
-      orderGroups: tableGroupBy === "status"
-        ? (keys) => STATUS_GROUP_ORDER.filter((k) => keys.includes(k))
-            .concat(keys.filter((k) => !STATUS_GROUP_ORDER.includes(k)))
-        : undefined,
-      makeHeader: (key, count) => ({
-        kind: "header",
-        label: tableGroupBy === "status" ? t(`kanban.stageLabels.${key.replace(/ /g, "")}`, key) : key,
-        count,
-      }),
-      makeItem: (l) => ({ kind: "lead", lead: l, tags: leadTagsInfo.get(l.Id || l.id) || [] }),
+      updatedAt: Date.now(),
     });
-  }, [filteredLeads, leadTagsInfo, tableFilterStatus, tableFilterCampaign, tableFilterAccount, tableFilterService, tableFilterSource, tableFilterTags, tableFilterHasPhone, tableFilterHasEmail, tableFilterMinScore, tableSortBy, tableGroupBy, tableGroupDirection, accountsById, campaignsById, serviceOf, tagNamesOf, t]);
+  }, [leads, active.total, publishEntity]);
 
+  /* ── Breadcrumb ── */
+  const { setCrumb } = useBreadcrumb();
+  useEffect(() => { setCrumb(selectedLead ? getFullNameHelper(selectedLead) : null); return () => setCrumb(null); }, [selectedLead, setCrumb]);
+
+  /* ── Actions ── */
+  const handleRefresh = useCallback(() => { active.refresh(); setSelVersion((v) => v + 1); }, [active]);
   const handleViewSwitch = useCallback((next: ViewMode) => {
     if (!allowedViews.includes(next)) return;
-    setViewMode(next);
-    setSelectedLead(null);
-    setMobileView("list");
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allowedViews]);
-
-  const handleClosePanel = useCallback(() => { setSelectedLead(null); }, []);
-
-  /* ── Auto-select first lead (list view) ─────────────────────────────────── */
-  /* Only fires when there is no persisted selection to restore. If a stored ID
-     exists AND that lead is present in the current list, defer to
-     usePersistedSelection to restore it instead of clobbering it. */
-  useEffect(() => {
-    if (!selectedLead && filteredLeads.length > 0 && viewMode === "list") {
-      const storedId = localStorage.getItem("selected-lead-id");
-      const storedLeadExists =
-        storedId &&
-        filteredLeads.some((l) => String(l.Id ?? l.id) === storedId);
-      if (!storedLeadExists) {
-        setSelectedLead(filteredLeads[0]);
-      }
-    }
-  }, [filteredLeads, selectedLead, viewMode]);
-
-  /* ── Breadcrumb ─────────────────────────────────────────────────────────── */
-  const { setCrumb } = useBreadcrumb();
-  useEffect(() => {
-    setCrumb(selectedLead ? getFullNameHelper(selectedLead) : null);
-    return () => setCrumb(null);
-  }, [selectedLead, setCrumb]);
-
-  /* ── List-view helpers ──────────────────────────────────────────────────── */
-  const allTags = useMemo(() => {
-    const seen = new Map<string, { name: string; color: string }>();
-    leadTagsInfo.forEach((tags) => tags.forEach((t) => { if (isRealTag(t.name) && !seen.has(t.name)) seen.set(t.name, t); }));
-    return Array.from(seen.values());
-  }, [leadTagsInfo]);
-
-  const isGroupNonDefault     = groupBy !== "date";
-  // "recent" and "latest_message" are both treated as the default sort (most
-  // recent activity) — persisted prefs from before this option existed may
-  // still hold "latest_message" (Gabriel, 2026-06-21).
-  const isSortNonDefault      = sortBy !== "recent" && sortBy !== "latest_message";
-  const isFilterActive        = filterStatus.length > 0 || filterTags.length > 0;
-  const hasNonDefaultControls = isGroupNonDefault || isSortNonDefault || isFilterActive;
-
-  const toggleFilterStatus  = useCallback((s: string) =>
-    setFilterStatus((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), []);
-  const toggleFilterTag     = useCallback((t: string) =>
-    setFilterTags((prev) => prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]), []);
-  const handleResetControls = useCallback(() => {
-    setFilterStatus([]); setFilterTags([]); setGroupBy("date"); setSortBy("recent");
-  }, []);
-
-  /* ── Table toolbar helpers ──────────────────────────────────────────────── */
-  const toggleTableFilterStatus = useCallback((s: string) =>
-    setTableFilterStatus((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), []);
-  const toggleTableFilterService = useCallback((s: string) =>
-    setTableFilterService((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), [setTableFilterService]);
-  const toggleTableFilterSource = useCallback((s: string) =>
-    setTableFilterSource((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), [setTableFilterSource]);
-  const toggleTableFilterTag = useCallback((s: string) =>
-    setTableFilterTags((prev) => prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]), [setTableFilterTags]);
-  const clearTableFilters = useCallback(() => {
-    setTableFilterStatus([]); setTableFilterCampaign(""); setTableFilterAccount("");
-    setTableFilterService([]); setTableFilterSource([]); setTableFilterTags([]);
-    setTableFilterHasPhone(false); setTableFilterHasEmail(false); setTableFilterMinScore(0);
-  }, [setTableFilterService, setTableFilterSource, setTableFilterTags, setTableFilterHasPhone, setTableFilterHasEmail, setTableFilterMinScore]);
-  const isTableFilterActive    = tableFilterStatus.length > 0 || !!tableFilterCampaign || !!tableFilterAccount
-    || tableFilterService.length > 0 || tableFilterSource.length > 0 || tableFilterTags.length > 0
-    || tableFilterHasPhone || tableFilterHasEmail || tableFilterMinScore > 0;
-  const tableActiveFilterCount = tableFilterStatus.length + (tableFilterCampaign ? 1 : 0) + (tableFilterAccount ? 1 : 0)
-    + tableFilterService.length + tableFilterSource.length + tableFilterTags.length
-    + (tableFilterHasPhone ? 1 : 0) + (tableFilterHasEmail ? 1 : 0) + (tableFilterMinScore > 0 ? 1 : 0);
-
+    setViewMode(next); setSelectedLead(null); setMobileView("list");
+  }, [allowedViews, setSelectedLead]);
+  const handleClosePanel = useCallback(() => setSelectedLead(null), [setSelectedLead]);
   const handleAddLead = useCallback(async () => {
     try {
       const newLead = await createLead({ first_name: "New", last_name: "Lead", phone: "" });
-      await handleRefresh();
-      if (newLead?.id || newLead?.Id) {
-        setSelectedLead(newLead);
-        setTableSelectedIds(new Set([newLead.id ?? newLead.Id]));
-      }
+      handleRefresh();
+      if (newLead?.id || newLead?.Id) { setSelectedLead(newLead); setTableSelectedIds(new Set([newLead.id ?? newLead.Id])); }
     } catch (err) { console.error("Create lead failed", err); }
   }, [handleRefresh, setSelectedLead]);
-
-  const handleBulkDeleteLeads = useCallback(async () => {
-    if (tableSelectedIds.size === 0) return;
-    try {
-      await bulkDeleteLeads(Array.from(tableSelectedIds));
-      setTableSelectedIds(new Set());
-      setSelectedLead(null);
-      handleRefresh();
-    } catch (err) { console.error("Bulk delete failed", err); }
+  const handleBulkDelete = useCallback(async () => {
+    if (!tableSelectedIds.size) return;
+    try { await bulkDeleteLeads(Array.from(tableSelectedIds)); setTableSelectedIds(new Set()); setSelectedLead(null); handleRefresh(); }
+    catch (err) { console.error("Bulk delete failed", err); }
   }, [tableSelectedIds, handleRefresh, setSelectedLead]);
-
-  const handleDuplicateLeads = useCallback(async () => {
-    if (tableSelectedIds.size === 0) return;
+  const handleDuplicate = useCallback(async () => {
+    if (!tableSelectedIds.size) return;
     try {
-      const leadsToClone = leads.filter((l) => tableSelectedIds.has(l.Id ?? l.id ?? 0));
-      for (const lead of leadsToClone) {
+      for (const lead of items.filter((l) => tableSelectedIds.has(Number(l.Id ?? l.id)))) {
         await createLead({
-          first_name: lead.first_name || lead.full_name || "Copy",
-          last_name: lead.last_name || "",
-          phone: lead.phone || lead.Phone || "",
-          email: lead.email || lead.Email || "",
-          Conversion_Status: lead.conversion_status || lead.Conversion_Status || "New",
-          notes: lead.notes || lead.Notes || "",
+          first_name: lead.first_name || lead.full_name || "Copy", last_name: lead.last_name || "",
+          phone: lead.phone || "", email: lead.email || "", Conversion_Status: lead.conversion_status || "New", notes: lead.notes || "",
         });
       }
-      setTableSelectedIds(new Set());
-      handleRefresh();
+      setTableSelectedIds(new Set()); handleRefresh();
     } catch (err) { console.error("Duplicate leads failed", err); }
-  }, [tableSelectedIds, leads, handleRefresh]);
+  }, [tableSelectedIds, items, handleRefresh]);
+  const handleExportTable = useCallback(async () => {
+    try { exportLeadsCsv((await fetchAllLeads(tableQuery)).map((l) => normalizeLead(l, maps)), campaignsById, accountsById); }
+    catch (err) { console.error("Export failed", err); }
+  }, [tableQuery, maps, campaignsById, accountsById]);
+  const handleKanbanLeadMove = useCallback(async (leadId: number | string, newStage: string) => {
+    const status = RX_STAGE_DB_STATUS[newStage] ?? newStage;
+    pipeData.patchLead(leadId, { Conversion_Status: status, conversion_status: status, stage_key: newStage, group_key: newStage });
+    try { await updateLead(leadId, { Conversion_Status: status }); pipeData.refresh(); }
+    catch (err) { console.error("Failed to move lead", err); pipeData.refresh(); throw err; }
+  }, [pipeData]);
 
-  const handleBulkStageChange = useCallback(async (stage: string) => {
-    if (tableSelectedIds.size === 0) return;
-    try {
-      await bulkUpdateLeads(Array.from(tableSelectedIds), { Conversion_Status: stage });
-      setTableSelectedIds(new Set());
-      handleRefresh();
-    } catch (err) { console.error("Bulk stage change failed", err); }
-  }, [tableSelectedIds, handleRefresh]);
+  // Pipeline: keep the side panel in sync with the shared selection.
+  useEffect(() => {
+    if (viewMode !== "pipeline" || !selectedLead) return;
+    if ((selectedLead.Id ?? selectedLead.id) !== (selectedKanbanLead?.Id ?? selectedKanbanLead?.id)) setSelectedKanbanLead(selectedLead);
+  }, [selectedLead, viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleExportCsv = useCallback(() => {
-    const headers = [t("table.columns.name"), t("table.columns.status"), t("table.columns.score"), t("table.columns.phone"), t("table.columns.email"), t("table.columns.campaign"), t("table.columns.tags"), t("table.columns.lastActivity"), t("table.columns.notes")];
-    const rows = tableFlatItems
-      .filter((i): i is Extract<VirtualListItem, { kind: "lead" }> => i.kind === "lead")
-      .map((item) => {
-        const l = item.lead;
-        const tags = leadTagsInfo.get(l.Id ?? l.id ?? 0) || [];
-        const name = getFullNameHelper(l);
-        const d    = l.last_interaction_at || l.last_message_received_at || l.last_message_sent_at || "";
-        let lastActivity = "";
-        if (d) {
-          try {
-            const diffDays = Math.floor((Date.now() - new Date(d).getTime()) / 86_400_000);
-            if (diffDays === 0) lastActivity = t("time.today");
-            else if (diffDays === 1) lastActivity = t("relativeTime.yesterday");
-            else if (diffDays < 7)  lastActivity = t("relativeTime.daysAgo", { count: diffDays });
-            else                    lastActivity = t("relativeTime.weeksAgo", { count: Math.floor(diffDays / 7) });
-          } catch {}
-        }
-        const row = [
-          name,
-          l.conversion_status || l.Conversion_Status || "",
-          String(l.lead_score || l.leadScore || 0),
-          l.phone || l.Phone || "",
-          l.email || l.Email || "",
-          l.Campaign || l.campaign || l.campaign_name || "",
-          tags.map((t) => t.name).join("; "),
-          lastActivity,
-          l.notes || l.Notes || "",
-        ];
-        return row.map((v) =>
-          v.includes(",") || v.includes('"') || v.includes("\n") ? `"${v.replace(/"/g, '""')}"` : v
-        ).join(",");
-      });
-    const csv  = [headers.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement("a");
-    a.href     = url;
-    a.download = `leads-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [tableFlatItems, leadTagsInfo]);
+  /* ── Table rows (server-ordered, headers from server counts) ── */
+  const tableFlatItems = useMemo((): VirtualListItem[] => buildServerRows(
+    viewMode === "table" ? leads : [], quickPrefs.view === "upcoming" ? "none" : tableGroupBy, tableData.groups, leadTagsInfo, t,
+  ), [viewMode, leads, quickPrefs.view, tableGroupBy, tableData.groups, leadTagsInfo, t]);
 
-  /* ── Error fallback ─────────────────────────────────────────────────────── */
-  if (error && !loading) {
-    return <ApiErrorFallback error={error} onRetry={handleRefresh} isRetrying={loading} />;
+  const facets = active.facets;
+  const accountOpts = useMemo(() => (isAgencyView ? (facets?.accounts ?? []).map((a) => ({ id: String(a.id), name: a.name })) : []), [facets, isAgencyView]);
+  const campaignOpts = useMemo(() => (facets?.campaigns ?? [])
+    .filter((c) => !tableFilters.account || String(c.accountId ?? "") === tableFilters.account)
+    .map((c) => ({ id: String(c.id), name: c.name })), [facets, tableFilters.account]);
+
+  if (active.error && !active.loading && !active.leads.length) {
+    return <ApiErrorFallback error={active.error} onRetry={handleRefresh} isRetrying={active.fetching} />;
   }
 
-  /* ── Table toolbar (rendered inline below title) ────────────────────────── */
-  const tableToolbar = (
-    <>
-      {/* +Add */}
-      <button onClick={handleAddLead} className={cn(xBase, "hover:max-w-[90px]", xDefault)}>
-        <Plus className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>{t("toolbar.add")}</span>
-      </button>
-
-      {/* Search — always extended, no fill */}
-      <SearchPill
-        value={tableSearch}
-        onChange={setTableSearch}
-        open={true}
-        onOpenChange={() => {}}
-        placeholder={t("toolbar.searchPlaceholder")}
-      />
-
-      {/* Filter */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[110px]", isTableFilterActive ? xActive : xDefault)}>
-            <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.filter")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.status")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {STATUS_OPTIONS.map((s) => (
-            <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-              <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[s] ?? "bg-zinc-400")} />
-              <span className="flex-1">{t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}</span>
-              {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-            </DropdownMenuItem>
-          ))}
-
-          {availableAccounts.length > 0 && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.account")}</DropdownMenuLabel>
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-indigo")}>
-                {t("filters.allAccounts")} {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
-              </DropdownMenuItem>
-              {availableAccounts.map((a) => (
-                <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); if (tableFilterAccount === a.id) { setTableFilterAccount(""); } else { setTableFilterAccount(a.id); setTableFilterCampaign(""); } }} className={cn("text-[12px]", tableFilterAccount === a.id && "font-semibold text-brand-indigo")}>
-                  <span className="flex-1 truncate">{a.name}</span>
-                  {tableFilterAccount === a.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                </DropdownMenuItem>
-              ))}
-            </>
-          )}
-
-          {availableCampaigns.length > 0 && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.campaign")}{tableFilterAccount ? ` (${accountsById.get(Number(tableFilterAccount)) || t("group.account")})` : ""}</DropdownMenuLabel>
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterCampaign && "font-semibold text-brand-indigo")}>
-                {t("filters.allCampaigns")} {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
-              </DropdownMenuItem>
-              {availableCampaigns.map((c) => (
-                <DropdownMenuItem key={c.id} onClick={(e) => { e.preventDefault(); setTableFilterCampaign(tableFilterCampaign === c.id ? "" : c.id); }} className={cn("text-[12px]", tableFilterCampaign === c.id && "font-semibold text-brand-indigo")}>
-                  <span className="flex-1 truncate">{c.name}</span>
-                  {tableFilterCampaign === c.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                </DropdownMenuItem>
-              ))}
-            </>
-          )}
-
-          {isTableFilterActive && (
-            <>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
-            </>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Sort */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[100px]", tableSortBy !== "recent" ? xActive : xDefault)}>
-            <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          {([
-            { key: "recent", label: t("sort.mostRecent"), asc: "oldest" as TableSortByOption, desc: "recent" as TableSortByOption },
-            { key: "name",   label: t("sort.name"),       asc: "name_asc" as TableSortByOption, desc: "name_desc" as TableSortByOption },
-            { key: "score",  label: t("sort.score"),      asc: "score_asc" as TableSortByOption, desc: "score_desc" as TableSortByOption },
-          ]).map((group) => {
-            const isActive = tableSortBy === group.asc || tableSortBy === group.desc;
-            const activeDir: "asc" | "desc" = tableSortBy === group.asc ? "asc" : "desc";
-            return (
-              <DropdownMenuItem
-                key={group.key}
-                onSelect={(e) => { e.preventDefault(); setTableSortBy(isActive ? tableSortBy : group.desc); }}
-                className="text-[12px] flex items-center gap-2"
-              >
-                <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{group.label}</span>
-                {isActive && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableSortBy(group.asc); }}
-                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}
-                      title="Ascending"
-                    >
-                      <ArrowUp className="h-3 w-3" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableSortBy(group.desc); }}
-                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}
-                      title="Descending"
-                    >
-                      <ArrowDown className="h-3 w-3" />
-                    </button>
-                  </>
-                )}
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Group */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[115px]", tableGroupBy !== "status" ? xActive : xDefault)}>
-            <Layers className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.group")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          {(["status", "campaign", "account", "none"] as TableGroupByOption[]).map((opt) => (
-            <DropdownMenuItem
-              key={opt}
-              onSelect={(e) => { e.preventDefault(); setTableGroupBy(opt); }}
-              className="text-[12px] flex items-center gap-2"
-            >
-              <span className={cn("flex-1", tableGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(TABLE_GROUP_TKEYS[opt])}</span>
-              {tableGroupBy === opt && opt !== "none" && (
-                <>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("asc"); }}
-                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}
-                    title="Ascending"
-                  >
-                    <ArrowUp className="h-3 w-3" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("desc"); }}
-                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}
-                    title="Descending"
-                  >
-                    <ArrowDown className="h-3 w-3" />
-                  </button>
-                </>
-              )}
-              {tableGroupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <div className="w-px h-4 bg-border/25 mx-1.5 shrink-0" />
-
-      {/* Fields (Visibility) */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[115px]", visibleCols.size !== DEFAULT_VISIBLE_COLS.length ? xActive : xDefault)}>
-            <Eye className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.fields")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.showHideColumns")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          {TABLE_COL_META.map((col) => {
-            const isVisible = visibleCols.has(col.key);
-            return (
-              <DropdownMenuItem
-                key={col.key}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setVisibleCols((prev) => {
-                    const next = new Set(prev);
-                    if (next.has(col.key)) { if (next.size > 1) next.delete(col.key); }
-                    else next.add(col.key);
-                    return next;
-                  });
-                }}
-                className="flex items-center gap-2 text-[12px]"
-              >
-                <div className={cn(
-                  "h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0",
-                  isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50"
-                )}>
-                  {isVisible && <Check className="h-2 w-2 text-white" />}
-                </div>
-                <span className="flex-1">{t(`table.columns.${col.key}`)}</span>
-                {!col.defaultVisible && (
-                  <span className="text-[9px] text-muted-foreground/40 px-1 bg-muted rounded font-medium">+</span>
-                )}
-              </DropdownMenuItem>
-            );
-          })}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => setVisibleCols(new Set(DEFAULT_VISIBLE_COLS))} className="text-[12px] text-muted-foreground">
-            {t("toolbar.resetToDefault")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* CSV */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[90px]", xDefault)} data-onboarding="import-leads-btn">
-            <FileSpreadsheet className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.csv")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
-          <DropdownMenuItem onClick={() => setImportWizardOpen(true)} className="text-[12px]">
-            <Upload className="h-3.5 w-3.5 mr-2" /> {t("toolbar.importCsv")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={handleExportCsv} className="text-[12px]">
-            <Download className="h-3.5 w-3.5 mr-2" /> {t("toolbar.exportCsv")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* Settings */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, xDefault, "hover:max-w-[100px]")}>
-            <Settings className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.settings")}</span>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
-          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.display")}</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={(e) => { e.preventDefault(); setShowVerticalLines(!showVerticalLines); }} className="flex items-center gap-2 text-[12px]">
-            <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", showVerticalLines ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
-              {showVerticalLines && <Check className="h-2 w-2 text-white" />}
-            </div>
-            <span className="flex-1">{t("toolbar.verticalLines")}</span>
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setColumnOrder([])} className="text-[12px] text-muted-foreground">
-            {t("toolbar.resetColumnOrder")}
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setColumnWidths({})} className="text-[12px] text-muted-foreground">
-            {t("toolbar.resetColumnWidths")}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      {/* ── Selection actions — far right, visible when rows selected ── */}
-      {tableSelectedIds.size > 0 && (
-        <>
-          <div className="flex-1 min-w-0" />
-          <div className="flex items-center gap-1 shrink-0">
-            {/* Change Stage dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className={cn(tbBase, tbDefault)}>
-                  <Pencil className="h-4 w-4" />
-                  {t("toolbar.changeStage")}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filters.moveTo")}</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {STATUS_OPTIONS.map((s) => (
-                  <DropdownMenuItem key={s} onClick={() => handleBulkStageChange(s)} className="text-[12px]">
-                    <span className={cn("w-1.5 h-1.5 rounded-full shrink-0 mr-2", STATUS_DOT[s] ?? "bg-zinc-400")} />
-                    {t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <ConfirmToolbarButton
-              icon={Copy}
-              label={t("toolbar.duplicate")}
-              onConfirm={handleDuplicateLeads}
-            />
-            <ConfirmToolbarButton
-              icon={Trash2}
-              label={deleteLabel}
-              onConfirm={handleBulkDeleteLeads}
-              variant="danger"
-            />
-
-            {/* Count badge with dismiss */}
-            <button
-              className={cn(tbBase, tbDefault, "cursor-default ml-1")}
-              onClick={() => setTableSelectedIds(new Set())}
-            >
-              <span className="tabular-nums">{tableSelectedIds.size}</span>
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </>
-      )}
-    </>
+  const quickFilters = mode !== "conversations" && (
+    <LeadsQuickFilters
+      view={quickPrefs.view}
+      onViewChange={(v) => setQuickPrefs((p) => ({ ...p, view: v }))}
+      channel={quickPrefs.channel}
+      onChannelChange={(c) => setQuickPrefs((p) => ({ ...p, channel: c }))}
+      total={active.total}
+      viewCounts={active.viewCounts}
+      channelCounts={active.channelCounts}
+    />
   );
+  const sidePanelStyle: React.CSSProperties = { flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" };
 
   return (
     <div className="flex flex-col h-full" data-onboarding="leads-table">
-
-      {/* ── List view ── */}
       {viewMode === "list" && (
         <div className="flex-1 min-h-0">
           <LeadsCardView
-            leads={filteredLeads}
-            loading={loading}
+            leads={items}
+            loading={listData.loading}
             selectedLead={selectedLead}
             onSelectLead={setSelectedLead}
             onClose={handleClosePanel}
@@ -1335,319 +393,80 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             onToggleFilterStatus={toggleFilterStatus}
             onToggleFilterTag={toggleFilterTag}
             allTags={allTags}
-            hasNonDefaultControls={hasNonDefaultControls}
-            isGroupNonDefault={isGroupNonDefault}
-            isSortNonDefault={isSortNonDefault}
-            onResetControls={handleResetControls}
+            hasNonDefaultControls={groupBy !== "date" || sortBy !== "recent" || filterStatus.length > 0 || filterTags.length > 0}
+            isGroupNonDefault={groupBy !== "date"}
+            isSortNonDefault={sortBy !== "recent"}
+            onResetControls={() => setListPrefs((p) => ({ ...p, filterStatus: [], filterTags: [], groupBy: "date", sortBy: "recent" }))}
             onCreateLead={handleAddLead}
             mobileView={mobileView}
             onMobileViewChange={setMobileView}
             accountsById={accountsById}
             campaignsById={campaignsById}
             isConversationsMode={mode === "conversations"}
+            total={listData.total}
+            groups={listData.groups}
+            facets={listData.facets}
+            hasMore={listData.hasMore}
+            loadingMore={listData.loadingMore}
+            onLoadMore={listData.loadMore}
+            channelTab={channelTab}
+            onChannelTabChange={setChannelTab}
+            chatChannelCounts={listData.chatChannelCounts}
+            listFilters={{
+              filterAccount: listFilterAccount, filterCampaign: listFilterCampaign, filterType: listFilterType,
+              setFilterAccount: setListFilterAccount, setFilterCampaign: setListFilterCampaign,
+              toggleFilterType: toggleListFilterType, clearFilterType: clearListFilterType,
+            }}
           />
         </div>
       )}
 
-      {/* ── Table view ── */}
       {viewMode === "table" && (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-
-          {/* ── Full-width flat top bar (matches list view) ── */}
-          <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
-            <div className="flex items-baseline gap-2 shrink-0">
-              <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
-              <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leads.length}</span>
-            </div>
-            <div className="la-seg shrink-0">
-              {visibleViewTabKeys.map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => handleViewSwitch(tab.id as ViewMode)}
-                  className={`la-seg-btn${viewMode === tab.id ? " on" : ""}`}
-                  style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
-                >
-                  <span className="flex items-center"><tab.icon size={13} /></span>
-                  {t(tab.tKey)}
-                </button>
-              ))}
-            </div>
-            {/* Selection actions — inline on the topbar (raised icons) when rows are checked */}
-            <div className="flex-1 min-w-0 flex items-center justify-end gap-[5px] pr-1.5">
-              {tableSelectedIds.size > 0 && (
-                <>
-                  <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700 }}>
-                    {t("selection.countSelected", { count: tableSelectedIds.size, defaultValue: "{{count}} selected" })}
-                  </span>
-                  <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateLeads} iconOnly />
-                  <ConfirmToolbarButton icon={Trash2} label={deleteLabel} onConfirm={handleBulkDeleteLeads} variant="danger" iconOnly />
-                  <button className="la-btn la-btn--soft la-btn--icon" onClick={() => setTableSelectedIds(new Set())} title={t("toolbar.clearAllFilters", "Clear")} aria-label={t("toolbar.clearAllFilters", "Clear")}>
-                    <X className="h-4 w-4" />
-                  </button>
-                </>
-              )}
-            </div>
-            <div className="shrink-0 flex items-center gap-[5px]">
-              {/* Search — same as list view */}
-              <div className="relative" style={{ width: 160 }}>
-                <input
-                  value={tableSearch}
-                  onChange={(e) => setTableSearch(e.target.value)}
-                  placeholder={t("toolbar.searchPlaceholder")}
-                  className="la-input"
-                  style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 10, height: 32, fontSize: 11 }}
-                />
-                <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
-                </span>
-                {tableSearch && (
-                  <button type="button" onClick={() => setTableSearch("")} className="absolute right-[7px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] hover:text-foreground">
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-              {/* Filter */}
-              <DropdownMenu>
-                <div style={{ position: "relative" }}>
-                  <DropdownMenuTrigger asChild>
-                    <button className="la-btn la-btn--soft la-btn--icon">
-                      <Filter className="h-4 w-4 shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  {isTableFilterActive && (
-                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
-                  )}
-                </div>
-                <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto bg-white">
-                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.status")}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {STATUS_OPTIONS.map((s) => (
-                    <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                      <span className={cn("w-1.5 h-1.5 rounded-full shrink-0", STATUS_DOT[s] ?? "bg-zinc-400")} />
-                      <span className="flex-1">{t(`kanban.stageLabels.${s.replace(/ /g, "")}`, s)}</span>
-                      {tableFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                    </DropdownMenuItem>
-                  ))}
-                  {availableAccounts.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.account")}</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterAccount(""); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterAccount && "font-semibold text-brand-indigo")}>
-                        {t("filters.allAccounts")} {!tableFilterAccount && <Check className="h-3 w-3 ml-auto" />}
-                      </DropdownMenuItem>
-                      {availableAccounts.map((a) => (
-                        <DropdownMenuItem key={a.id} onClick={(e) => { e.preventDefault(); if (tableFilterAccount === a.id) { setTableFilterAccount(""); } else { setTableFilterAccount(a.id); setTableFilterCampaign(""); } }} className={cn("text-[12px]", tableFilterAccount === a.id && "font-semibold text-brand-indigo")}>
-                          <span className="flex-1 truncate">{a.name}</span>
-                          {tableFilterAccount === a.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-                  {availableCampaigns.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.campaign")}</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterCampaign(""); }} className={cn("text-[12px]", !tableFilterCampaign && "font-semibold text-brand-indigo")}>
-                        {t("filters.allCampaigns")} {!tableFilterCampaign && <Check className="h-3 w-3 ml-auto" />}
-                      </DropdownMenuItem>
-                      {availableCampaigns.map((c) => (
-                        <DropdownMenuItem key={c.id} onClick={(e) => { e.preventDefault(); setTableFilterCampaign(tableFilterCampaign === c.id ? "" : c.id); }} className={cn("text-[12px]", tableFilterCampaign === c.id && "font-semibold text-brand-indigo")}>
-                          <span className="flex-1 truncate">{c.name}</span>
-                          {tableFilterCampaign === c.id && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-                  {availableServices.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.service", "Service")}</DropdownMenuLabel>
-                      {availableServices.map((s) => (
-                        <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterService(s); }} className="flex items-center gap-2 text-[12px]">
-                          <span className="flex-1 truncate">{s}</span>
-                          {tableFilterService.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-                  {availableSources.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.source", "Source")}</DropdownMenuLabel>
-                      {availableSources.map((s) => (
-                        <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterSource(s); }} className="flex items-center gap-2 text-[12px]">
-                          <span className="flex-1 truncate">{s}</span>
-                          {tableFilterSource.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-                  {allTags.length > 0 && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("group.tag", "Tag")}</DropdownMenuLabel>
-                      {allTags.map((tg) => (
-                        <DropdownMenuItem key={tg.name} onClick={(e) => { e.preventDefault(); toggleTableFilterTag(tg.name); }} className="flex items-center gap-2 text-[12px]">
-                          <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: tg.color || "var(--mute-2)" }} />
-                          <span className="flex-1 truncate">{tg.name}</span>
-                          {tableFilterTags.includes(tg.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                        </DropdownMenuItem>
-                      ))}
-                    </>
-                  )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filters.attributes", "Attributes")}</DropdownMenuLabel>
-                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterHasPhone(!tableFilterHasPhone); }} className="flex items-center gap-2 text-[12px]">
-                    <span className="flex-1">{t("filters.hasPhone", "Has phone")}</span>
-                    {tableFilterHasPhone && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTableFilterHasEmail(!tableFilterHasEmail); }} className="flex items-center gap-2 text-[12px]">
-                    <span className="flex-1">{t("filters.hasEmail", "Has email")}</span>
-                    {tableFilterHasEmail && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("filters.minScore", "Min score")}</DropdownMenuLabel>
-                  <div className="flex items-center gap-1 px-2 pb-1.5">
-                    {[0, 50, 70, 90].map((thr) => (
-                      <button
-                        key={thr}
-                        type="button"
-                        onClick={() => setTableFilterMinScore(thr)}
-                        className={cn("flex-1 rounded text-[11px] py-1 border transition-colors", tableFilterMinScore === thr ? "bg-brand-indigo text-white border-brand-indigo" : "border-border/50 hover:bg-muted/60 text-foreground/70")}
-                      >
-                        {thr === 0 ? t("filters.anyScore", "Any") : `≥${thr}`}
-                      </button>
-                    ))}
-                  </div>
-                  {isTableFilterActive && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={clearTableFilters} className="text-[12px] text-destructive">{t("toolbar.clearAllFilters")}</DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {/* Sort */}
-              <DropdownMenu>
-                <div style={{ position: "relative" }}>
-                  <DropdownMenuTrigger asChild>
-                    <button className="la-btn la-btn--soft la-btn--icon">
-                      <ArrowUpDown className="h-4 w-4 shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  {tableSortBy !== "recent" && (
-                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
-                  )}
-                </div>
-                <DropdownMenuContent align="start" className="w-52 bg-white">
-                  {([
-                    { key: "recent",   label: t("sort.mostRecent"),         asc: "oldest" as TableSortByOption,        desc: "recent" as TableSortByOption },
-                    { key: "name",     label: t("sort.name"),               asc: "name_asc" as TableSortByOption,      desc: "name_desc" as TableSortByOption },
-                    { key: "score",    label: t("sort.score"),              asc: "score_asc" as TableSortByOption,     desc: "score_desc" as TableSortByOption },
-                    { key: "activity", label: t("sort.activity", "Last activity"), asc: "activity_asc" as TableSortByOption, desc: "activity_desc" as TableSortByOption },
-                    { key: "created",  label: t("sort.created", "Created date"),    asc: "created_asc" as TableSortByOption,  desc: "created_desc" as TableSortByOption },
-                  ]).map((group) => {
-                    const isActive = tableSortBy === group.asc || tableSortBy === group.desc;
-                    const activeDir: "asc" | "desc" = tableSortBy === group.asc ? "asc" : "desc";
-                    return (
-                      <DropdownMenuItem key={group.key} onSelect={(e) => { e.preventDefault(); setTableSortBy(isActive ? tableSortBy : group.desc); }} className="text-[12px] flex items-center gap-2">
-                        <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{group.label}</span>
-                        {isActive && (
-                          <>
-                            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableSortBy(group.asc); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowUp className="h-3 w-3" /></button>
-                            <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableSortBy(group.desc); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowDown className="h-3 w-3" /></button>
-                          </>
-                        )}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {/* Group */}
-              <DropdownMenu>
-                <div style={{ position: "relative" }}>
-                  <DropdownMenuTrigger asChild>
-                    <button className="la-btn la-btn--soft la-btn--icon">
-                      <Layers className="h-4 w-4 shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  {tableGroupBy !== "status" && (
-                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
-                  )}
-                </div>
-                <DropdownMenuContent align="start" className="w-52 bg-white">
-                  {(["status", "campaign", "account", "service", "source", "tag", "none"] as TableGroupByOption[]).map((opt) => (
-                    <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); setTableGroupBy(opt); }} className="text-[12px] flex items-center gap-2">
-                      <span className={cn("flex-1", tableGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(TABLE_GROUP_TKEYS[opt])}</span>
-                      {tableGroupBy === opt && opt !== "none" && (
-                        <>
-                          <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowUp className="h-3 w-3" /></button>
-                          <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setTableGroupDirection("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", tableGroupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowDown className="h-3 w-3" /></button>
-                        </>
-                      )}
-                      {tableGroupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {/* Settings ⚙ — table-specific options */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="la-btn la-btn--soft la-btn--icon">
-                    <Settings className="h-4 w-4 shrink-0" />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 max-h-[500px] overflow-y-auto bg-white">
-                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.fields")}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  {TABLE_COL_META.map((col) => {
-                    const isVisible = visibleCols.has(col.key);
-                    return (
-                      <DropdownMenuItem key={col.key} onClick={(e) => { e.preventDefault(); setVisibleCols((prev) => { const next = new Set(prev); if (next.has(col.key)) { if (next.size > 1) next.delete(col.key); } else next.add(col.key); return next; }); }} className="flex items-center gap-2 text-[12px]">
-                        <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", isVisible ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
-                          {isVisible && <Check className="h-2 w-2 text-white" />}
-                        </div>
-                        <span className="flex-1">{t(`table.columns.${col.key}`)}</span>
-                        {!col.defaultVisible && <span className="text-[9px] text-muted-foreground/40 px-1 bg-muted rounded font-medium">+</span>}
-                      </DropdownMenuItem>
-                    );
-                  })}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.display")}</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={(e) => { e.preventDefault(); setShowVerticalLines(!showVerticalLines); }} className="flex items-center gap-2 text-[12px]">
-                    <div className={cn("h-3.5 w-3.5 rounded border flex items-center justify-center shrink-0", showVerticalLines ? "bg-brand-indigo border-brand-indigo" : "border-border/50")}>
-                      {showVerticalLines && <Check className="h-2 w-2 text-white" />}
-                    </div>
-                    <span className="flex-1">{t("toolbar.verticalLines")}</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setImportWizardOpen(true)} className="text-[12px]">
-                    <Upload className="h-3.5 w-3.5 mr-2" /> {t("toolbar.importCsv")}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleExportCsv} className="text-[12px]">
-                    <Download className="h-3.5 w-3.5 mr-2" /> {t("toolbar.exportCsv")}
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setColumnOrder([])} className="text-[12px] text-muted-foreground">{t("toolbar.resetColumnOrder")}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setColumnWidths({})} className="text-[12px] text-muted-foreground">{t("toolbar.resetColumnWidths")}</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setVisibleCols(new Set(DEFAULT_VISIBLE_COLS))} className="text-[12px] text-muted-foreground">{t("toolbar.resetToDefault")}</DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {/* +Add */}
-              <button onClick={handleAddLead} className="la-btn la-btn--wine la-btn--icon" title={t("toolbar.add")}>
-                <Plus className="h-[14px] w-[14px] shrink-0" />
-              </button>
-            </div>{/* close controls */}
-          </div>{/* close top bar */}
-
-          {/* Body — full width */}
+          <LeadsTableTopbar
+            total={tableData.total}
+            viewTabs={viewTabs}
+            viewMode={viewMode}
+            onViewSwitch={handleViewSwitch}
+            selectedCount={tableSelectedIds.size}
+            onDuplicate={handleDuplicate}
+            onBulkDelete={handleBulkDelete}
+            onClearSelection={() => setTableSelectedIds(new Set())}
+            deleteLabel={deleteLabel}
+            search={tableSearch}
+            onSearch={setTableSearch}
+            filters={tableFilters}
+            setFilter={setTableFilter}
+            toggleIn={toggleTableFilter}
+            clearFilters={clearTableFilters}
+            isFilterActive={isTableFilterActive}
+            accounts={accountOpts}
+            campaigns={campaignOpts}
+            services={facets?.services ?? []}
+            sources={facets?.sources ?? []}
+            allTags={allTags}
+            sortBy={tableSortBy}
+            setSortBy={(v) => setTablePrefs((p) => ({ ...p, sortBy: v }))}
+            groupBy={tableGroupBy}
+            setGroupBy={(v) => setTablePrefs((p) => ({ ...p, groupBy: v }))}
+            groupDir={tableGroupDir}
+            setGroupDir={setTableGroupDir}
+            visibleCols={visibleCols}
+            setVisibleCols={setVisibleCols}
+            showVerticalLines={showVerticalLines}
+            setShowVerticalLines={setShowVerticalLines}
+            onImport={() => setImportWizardOpen(true)}
+            onExport={handleExportTable}
+            onResetColumnOrder={() => setColumnOrder([])}
+            onResetColumnWidths={() => setColumnWidths({})}
+            onAdd={handleAddLead}
+          />
+          {quickFilters}
           <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
-          {/* Right: table (selection actions now live inline on the topbar) */}
-          <div className="relative flex-1 min-w-0 overflow-hidden flex flex-col">
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="relative flex-1 min-w-0 overflow-hidden flex flex-col">
               <LeadsInlineTable
                 flatItems={tableFlatItems}
-                loading={loading}
+                loading={tableData.loading}
                 selectedLeadId={selectedLead ? (selectedLead.Id ?? selectedLead.id ?? null) : null}
                 onSelectLead={setSelectedLead}
                 onRefresh={handleRefresh}
@@ -1661,233 +480,82 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
                 onColumnOrderChange={setColumnOrder}
                 columnWidths={columnWidths}
                 onColumnWidthsChange={setColumnWidths}
+                hasMore={tableData.hasMore}
+                loadingMore={tableData.loadingMore}
+                onLoadMore={tableData.loadMore}
               />
             </div>
-          </div>
-          {/* Right detail panel — only while the open lead is actually checked, so
-              the page loads with the panel closed until you click a lead. */}
-          {selectedLead && tableSelectedIds.has(Number(selectedLead.Id ?? selectedLead.id)) && (
-            <div className="shrink-0 overflow-hidden flex flex-col" style={{ flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
-              <LeadDetailView
-                lead={selectedLead}
-                onClose={handleClosePanel}
-                leadTags={leadTagsInfo.get(getLeadIdHelper(selectedLead)) || []}
-                onRefresh={handleRefresh}
-                campaignsById={campaignsById}
-                mode={mode}
-              />
-            </div>
-          )}
+            {selectedLead && tableSelectedIds.has(Number(selectedLead.Id ?? selectedLead.id)) && (
+              <div className="shrink-0 overflow-hidden flex flex-col" style={sidePanelStyle}>
+                <LeadDetailView
+                  lead={selectedLead}
+                  onClose={handleClosePanel}
+                  leadTags={leadTagsInfo.get(getLeadIdHelper(selectedLead)) || []}
+                  onRefresh={handleRefresh}
+                  campaignsById={campaignsById}
+                  mode={mode}
+                />
+              </div>
+            )}
           </div>
         </div>
       )}
 
-      {/* ── Pipeline view (Kanban) ── */}
       {viewMode === "pipeline" && (
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
-
-          {/* ── Full-width flat top bar (matches list view) ── */}
-          <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
-            <div className="flex items-baseline gap-2 shrink-0">
-              <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
-              <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leads.length}</span>
-            </div>
-            {/* View tabs — agency only */}
-            {isAgencyUser && (
-              <div className="la-seg shrink-0">
-                {visibleViewTabKeys.map((tab) => (
-                  <button
-                    key={tab.id}
-                    onClick={() => handleViewSwitch(tab.id as ViewMode)}
-                    className={`la-seg-btn${viewMode === tab.id ? " on" : ""}`}
-                    style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
-                  >
-                    <span className="flex items-center"><tab.icon size={13} /></span>
-                    {t(tab.tKey)}
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="flex-1 min-w-0" />
-            <div className="shrink-0 flex items-center gap-[5px]">
-              {/* Compact toggle — left of search */}
-              <button
-                onClick={() => setCompactMode((v) => !v)}
-                className={cn("la-btn la-btn--soft", compactMode && "on")}
-                title={t("toolbar.compactView")}
-                style={{ fontSize: 11 }}
-              >
-                {compactMode ? <Expand size={13} /> : <Shrink size={13} />}
-                {t("toolbar.compactView")}
-              </button>
-              {/* Fold / Unfold — left of search */}
-              <button
-                onClick={() => { if (hasAnyCollapsed) { setFoldAction((prev) => ({ type: "expand-all", seq: prev.seq + 1 })); } else { setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 })); } }}
-                className="la-btn la-btn--soft"
-                title={hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
-                style={{ fontSize: 11 }}
-              >
-                <Rows3 size={13} />
-                {hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
-              </button>
-              {/* More actions (...) — left of search, for selected lead */}
-              {selectedKanbanLead && isAgencyUser && (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="la-btn la-btn--soft la-btn--icon" title={t("common.more", "More")}>
-                      <MoreHorizontal size={13} />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-44 bg-white">
-                    <DropdownMenuItem onClick={async () => {
-                      const id = selectedKanbanLead.Id ?? selectedKanbanLead.id;
-                      if (!id) return;
-                      await deleteLead(id);
-                      setSelectedKanbanLead(null);
-                      handleRefresh();
-                    }} className="text-red-600 focus:text-red-600 text-[12px]">
-                      <Trash2 className="h-3.5 w-3.5 mr-2" />
-                      {t("detailView.deleteLead", "Delete lead")}
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-              {/* Search */}
-              <div className="relative" style={{ width: 160 }}>
-                <input
-                  value={kanbanSearchQuery}
-                  onChange={(e) => setKanbanSearchQuery(e.target.value)}
-                  placeholder={t("toolbar.searchPlaceholder")}
-                  className="la-input"
-                  style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 10, height: 32, fontSize: 11 }}
-                />
-                <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
-                </span>
-                {kanbanSearchQuery && (
-                  <button type="button" onClick={() => setKanbanSearchQuery("")} className="absolute right-[7px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] hover:text-foreground">
-                    <X className="h-3 w-3" />
-                  </button>
-                )}
-              </div>
-              {/* Filter */}
-              <DropdownMenu>
-                <div style={{ position: "relative" }}>
-                  <DropdownMenuTrigger asChild>
-                    <button className="la-btn la-btn--soft la-btn--icon">
-                      <Filter className="h-4 w-4 shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  {isPipelineFilterActive && (
-                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
-                  )}
-                </div>
-                <DropdownMenuContent align="start" className="w-60 rounded-2xl bg-white">
-                  <DropdownMenuItem onClick={() => setShowHighScore(!showHighScore)} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                    <Flame className={cn("h-4 w-4 shrink-0", showHighScore ? "text-[#FCB803]" : "text-muted-foreground")} />
-                    <span className={cn("text-sm flex-1", showHighScore && "font-semibold")}>{t("filters.highScore")}</span>
-                    {showHighScore && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterHasPhone(!filterHasPhone)} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                    <Phone className={cn("h-4 w-4 shrink-0", filterHasPhone ? "text-brand-indigo" : "text-muted-foreground")} />
-                    <span className={cn("text-sm flex-1", filterHasPhone && "font-semibold")}>{t("filters.hasPhone")}</span>
-                    {filterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setFilterHasEmail(!filterHasEmail)} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                    <Mail className={cn("h-4 w-4 shrink-0", filterHasEmail ? "text-brand-indigo" : "text-muted-foreground")} />
-                    <span className={cn("text-sm flex-1", filterHasEmail && "font-semibold")}>{t("filters.hasEmail")}</span>
-                    {filterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                  {isPipelineFilterActive && (
-                    <>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={clearPipelineFilters} className="flex items-center gap-2 cursor-pointer rounded-xl text-muted-foreground">
-                        <X className="h-4 w-4 shrink-0" /><span className="text-sm">{t("toolbar.clearAll")}</span>
-                      </DropdownMenuItem>
-                    </>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {/* Sort */}
-              <DropdownMenu>
-                <div style={{ position: "relative" }}>
-                  <DropdownMenuTrigger asChild>
-                    <button className="la-btn la-btn--soft la-btn--icon">
-                      <ArrowUpDown className="h-4 w-4 shrink-0" />
-                    </button>
-                  </DropdownMenuTrigger>
-                  {isPipelineSortActive && (
-                    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
-                  )}
-                </div>
-                <DropdownMenuContent align="start" className="w-56 rounded-2xl bg-white">
-                  <DropdownMenuItem onClick={() => setPipelineSortBy(null)} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                    <span className={cn("text-sm flex-1", pipelineSortBy === null && "font-semibold")}>{t("sort.default")}</span>
-                    {pipelineSortBy === null && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setPipelineSortBy("score-desc")} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                    <span className={cn("text-sm flex-1", pipelineSortBy === "score-desc" && "font-semibold")}>{t("sort.scoreHighToLow")}</span>
-                    {pipelineSortBy === "score-desc" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setPipelineSortBy("recency")} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                    <span className={cn("text-sm flex-1", pipelineSortBy === "recency" && "font-semibold")}>{t("sort.recency")}</span>
-                    {pipelineSortBy === "recency" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setPipelineSortBy("alpha")} className="flex items-center gap-2 cursor-pointer rounded-xl">
-                    <span className={cn("text-sm flex-1", pipelineSortBy === "alpha" && "font-semibold")}>{t("sort.alphaAZ")}</span>
-                    {pipelineSortBy === "alpha" && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>{/* close controls */}
-          </div>{/* close top bar */}
-
-          {/* Body — full width */}
+          <LeadsPipelineTopbar
+            total={pipeData.total}
+            showTabs={isAgencyUser}
+            viewTabs={viewTabs}
+            viewMode={viewMode}
+            onViewSwitch={handleViewSwitch}
+            compactMode={compactMode}
+            setCompactMode={(fn) => setCompactMode(fn(compactMode))}
+            hasAnyCollapsed={hasAnyCollapsed}
+            onFoldToggle={() => setFoldAction((prev) => ({ type: hasAnyCollapsed ? "expand-all" : "fold-empty", seq: prev.seq + 1 }))}
+            canDelete={!!selectedKanbanLead && isAgencyUser}
+            onDeleteSelected={async () => {
+              const id = selectedKanbanLead?.Id ?? selectedKanbanLead?.id;
+              if (!id) return;
+              await deleteLead(id); setSelectedKanbanLead(null); handleRefresh();
+            }}
+            search={kanbanSearch}
+            onSearch={setKanbanSearch}
+            hasPhone={pipePrefs.filterHasPhone}
+            setHasPhone={(v) => setPipePrefs((p) => ({ ...p, filterHasPhone: v }))}
+            hasEmail={pipePrefs.filterHasEmail}
+            setHasEmail={(v) => setPipePrefs((p) => ({ ...p, filterHasEmail: v }))}
+            sortBy={pipelineSortBy}
+            setSortBy={(v) => setPipePrefs((p) => ({ ...p, sortBy: v }))}
+          />
+          {quickFilters}
           <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
-          {/* Right: kanban + optional detail panel */}
-          <div className="flex-1 min-h-0 min-w-0 flex overflow-hidden">
             <div className="flex-1 min-w-0 overflow-hidden p-[6px] pt-3">
               <LeadsKanban
-                leads={filteredPipelineLeads}
-                loading={loading}
+                leads={viewMode === "pipeline" ? leads : []}
+                loading={pipeData.loading}
                 leadTagsMap={leadTagsInfo}
                 onLeadMove={handleKanbanLeadMove}
-                onCardClick={setSelectedKanbanLead}
+                onCardClick={(l) => { setSelectedKanbanLead(l); setSelectedLead(l); }}
                 selectedLeadId={selectedKanbanLead?.Id ?? selectedKanbanLead?.id}
                 foldAction={foldAction}
                 onCollapsedChange={setHasAnyCollapsed}
-                showTagsAlways={showTagsAlways}
+                showTagsAlways={false}
                 compactMode={compactMode}
+                stageCounts={Object.fromEntries(pipeData.groups.map((g) => [g.key, g.count]))}
+                onLoadMoreStage={pipeData.loadMoreGroup}
               />
             </div>
             {selectedKanbanLead && (
-              <div className="shrink-0 flex flex-col overflow-hidden" style={{ flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" }}>
-                <PipelineLeadPanel
-                  lead={selectedKanbanLead}
-                  onRefresh={handleRefresh}
-                  onClose={() => setSelectedKanbanLead(null)}
-                />
+              <div className="shrink-0 flex flex-col overflow-hidden" style={sidePanelStyle}>
+                <PipelineLeadPanel lead={selectedKanbanLead} onRefresh={handleRefresh} onClose={() => setSelectedKanbanLead(null)} />
               </div>
             )}
-          </div>
           </div>
         </div>
       )}
 
-      {/* Full lead profile sheet (for pipeline view) */}
-      <LeadDetailPanel
-        lead={fullProfileLead ?? {}}
-        open={!!fullProfileLead}
-        onClose={() => setFullProfileLead(null)}
-      />
-
-      {/* CSV Import Wizard */}
-      <CsvImportWizard
-        open={importWizardOpen}
-        onClose={() => setImportWizardOpen(false)}
-        onImportComplete={handleRefresh}
-        defaultAccountId={filterAccountId}
-      />
+      <CsvImportWizard open={importWizardOpen} onClose={() => setImportWizardOpen(false)} onImportComplete={handleRefresh} defaultAccountId={filterAccountId} />
     </div>
   );
 }

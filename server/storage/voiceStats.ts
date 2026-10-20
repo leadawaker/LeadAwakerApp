@@ -8,6 +8,7 @@
 import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { accounts } from "@shared/schema";
+import { bookingsSql, liveCallSql } from "./homeSql";
 
 export interface AccountVoiceStats {
   month: string;
@@ -16,6 +17,11 @@ export interface AccountVoiceStats {
   transfers: number;
   transfersFailed: number;
   minutes: number;
+  /** Median of the calls' own median reply gaps, in ms. Null before any call was measured. */
+  latencyMs: number | null;
+  /** Owner only: the route strips these for everyone else. Null before any call was priced. */
+  costUsd?: number | null;
+  costPerMinute?: number | null;
 }
 
 const DEFAULT_TZ = "Europe/Amsterdam";
@@ -49,28 +55,46 @@ async function getAccountVoiceStats(accountId: number, month?: string): Promise<
   const result = await db.execute(sql`
     SELECT
       count(*)::int AS calls,
-      (count(*) FILTER (WHERE vc.booked_iso IS NOT NULL))::int AS bookings,
       (count(*) FILTER (WHERE vc.transfer_outcome = 'transferred' OR vc.outcome = 'transferred'))::int AS transfers,
       (count(*) FILTER (WHERE vc.transfer_outcome = 'failed'))::int AS transfers_failed,
-      COALESCE(sum(GREATEST(EXTRACT(EPOCH FROM (
-        COALESCE(vc.ended_at, (
+      COALESCE(sum(vc.seconds), 0)::float8 AS seconds,
+      percentile_cont(0.5) WITHIN GROUP (ORDER BY vc.latency_ms) FILTER (WHERE vc.latency_ms IS NOT NULL) AS latency_ms,
+      sum(vc.cost_usd)::float8 AS cost_usd,
+      -- The same minutes as above, so a priced call cut off before wrap-up
+      -- counts its minutes too (the Home Phone tab does the same).
+      sum(vc.seconds) FILTER (WHERE vc.cost_usd IS NOT NULL)::float8 AS costed_seconds
+    FROM (
+      SELECT c.*, GREATEST(EXTRACT(EPOCH FROM (
+        COALESCE(c.ended_at, (
           SELECT max(i.created_at) FROM "p2mxx34fvbf3ll6"."Interactions" i
-          WHERE i.conversation_thread_id = vc.call_id
-        )) - vc.started_at
-      )), 0)), 0)::float8 AS seconds
-    FROM "p2mxx34fvbf3ll6"."Voice_Calls" vc
-    WHERE vc.accounts_id = ${accountId}
-      AND vc.started_at >= (${monthStart}::date)::timestamp AT TIME ZONE ${tz}
-      AND vc.started_at <  ((${monthStart}::date + interval '1 month')::timestamp AT TIME ZONE ${tz})
+          WHERE i.conversation_thread_id = c.call_id
+        )) - c.started_at
+      )), 0) AS seconds
+      FROM "p2mxx34fvbf3ll6"."Voice_Calls" c
+      WHERE c.accounts_id = ${accountId}
+        AND c.started_at >= (${monthStart}::date)::timestamp AT TIME ZONE ${tz}
+        AND c.started_at <  ((${monthStart}::date + interval '1 month')::timestamp AT TIME ZONE ${tz})
+    ) vc
+    WHERE ${liveCallSql}
   `);
   const r = (result.rows as Record<string, unknown>[])[0] ?? {};
+  // Bookings use the Home definition (leads booked on the phone channel), not the call rows.
+  const from = sql`((${monthStart}::date)::timestamp AT TIME ZONE ${tz})`;
+  const to = sql`((${monthStart}::date + interval '1 month')::timestamp AT TIME ZONE ${tz})`;
+  const bk = await db.execute(sql`WITH bk AS (${bookingsSql(accountId, from, to)}) SELECT count(*)::int AS n FROM bk WHERE channel = 'phone'`);
+  const bookings = Number((bk.rows as Record<string, unknown>[])[0]?.n ?? 0);
   return {
     month: key,
     calls: Number(r.calls ?? 0),
-    bookings: Number(r.bookings ?? 0),
+    bookings,
     transfers: Number(r.transfers ?? 0),
     transfersFailed: Number(r.transfers_failed ?? 0),
     minutes: Math.round(Number(r.seconds ?? 0) / 60),
+    latencyMs: r.latency_ms == null ? null : Math.round(Number(r.latency_ms)),
+    costUsd: r.cost_usd == null ? null : Number(r.cost_usd),
+    costPerMinute: r.cost_usd == null || !Number(r.costed_seconds)
+      ? null
+      : Number(r.cost_usd) / (Number(r.costed_seconds) / 60),
   };
 }
 

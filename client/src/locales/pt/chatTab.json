@@ -1,0 +1,151 @@
+{
+  "readOnly": "Você pode ver estas configurações. Para alterá-las, fale com a Lead Awaker.",
+  "loadFailed": "Não foi possível carregar as configurações do chat.",
+  "empty": {
+    "title": "Ainda sem assistente de chat",
+    "help": "Esta conta não tem campanha respondendo o chat do site ou o WhatsApp. Crie uma campanha de recepção na página Campanhas e depois aponte o chat do site e o WhatsApp de entrada para ela em Integrações.",
+    "helpClient": "Seu assistente de chat ainda não está configurado. A Lead Awaker vai configurá-lo para você.",
+    "openCampaigns": "Abrir Campanhas"
+  },
+  "save": {
+    "saving": "Salvando...",
+    "pending": "Salvando em instantes",
+    "saved": "Tudo salvo"
+  },
+  "rail": {
+    "overview": {
+      "label": "Visão geral",
+      "help": "Os chats deste mês e quais canais estão conectados.",
+      "active": "Respondendo chats",
+      "inactive": "Campanha está {{status}}"
+    },
+    "greeting": {
+      "label": "Saudação",
+      "help": "Como um chat começa no site e no WhatsApp.",
+      "none": "Sem saudação no site"
+    },
+    "behaviour": {
+      "label": "Comportamento",
+      "help": "Quem é o assistente, como escreve e quando uma pessoa assume."
+    },
+    "knowledge": {
+      "label": "Conhecimento",
+      "help": "O que o assistente sabe sobre a empresa e onde agenda.",
+      "withLink": "Link de agendamento definido",
+      "noLink": "Sem link de agendamento"
+    },
+    "followup": {
+      "label": "Retomada",
+      "help": "Uma mensagem gentil quando um chat no WhatsApp para no meio.",
+      "on": "Ligada, uma mensagem",
+      "off": "Desligada",
+      "other": "Retomadas de reativação"
+    },
+    "hours": {
+      "label": "Horário ativo",
+      "help": "Quando a retomada pode ser enviada."
+    }
+  },
+  "overview": {
+    "thisMonth": "Este mês",
+    "websiteChats": "Chats no site",
+    "whatsappChats": "Chats no WhatsApp",
+    "bookings": "Agendamentos",
+    "handedOff": "Passados para uma pessoa",
+    "lastChat": "Último chat",
+    "unknownName": "Visitante desconhecido",
+    "noChats": "Nenhum chat ainda.",
+    "channel": {
+      "website": "Chat do site",
+      "whatsapp": "WhatsApp"
+    },
+    "channels": "Canais",
+    "assistant": "Assistente",
+    "active": "ativa",
+    "notActive": "{{status}}, sem responder",
+    "widgetLive": "No ar em {{domain}}",
+    "widgetNotLive": "Configurado, ainda não está no ar em um site",
+    "widgetNone": "Não configurado",
+    "senderOn": "Número conectado",
+    "senderOff": "Nenhum número de WhatsApp conectado",
+    "wiringHelp": "A instalação do chat no site e a conexão do número de WhatsApp são feitas em Integrações.",
+    "openIntegrations": "Abrir Integrações"
+  },
+  "greeting": {
+    "websiteTitle": "Chat do site",
+    "websiteHelp": "A primeira frase que os visitantes veem ao abrir o chat no site.",
+    "websiteLabel": "Saudação",
+    "websitePlaceholder": "Oi, como posso ajudar?",
+    "noWidget": "Esta conta ainda não tem chat no site. Adicione um em Integrações.",
+    "agencyOnly": "A saudação do site é gerenciada pela Lead Awaker.",
+    "saving": "Salvando...",
+    "saved": "Salvo",
+    "failed": "Não foi possível salvar a saudação.",
+    "whatsappTitle": "WhatsApp",
+    "whatsappHelp": "No WhatsApp o cliente escreve primeiro e o assistente responde, então não há mensagem de abertura para definir."
+  },
+  "behaviour": {
+    "whoTitle": "Quem é",
+    "agentName": "Nome",
+    "agentNameHelp": "O nome com que o assistente se apresenta.",
+    "agentNamePlaceholder": "ex.: Sophie",
+    "language": "Idioma",
+    "languageHelp": "Usado enquanto o idioma do cliente ainda não é conhecido.",
+    "languages": {
+      "en": "Inglês",
+      "nl": "Holandês",
+      "pt": "Português"
+    },
+    "tone": "Tom",
+    "toneHelp": "Como o assistente soa, em uma frase. Salvo para o idioma em que você usa o app.",
+    "tonePlaceholder": "ex.: Caloroso e direto, palavras simples, sem exagero",
+    "howTitle": "Como responde",
+    "replies": "Mensagens por resposta",
+    "repliesHelp": "No máximo esta quantidade de mensagens curtas por vez. Cada mensagem extra é cobrada.",
+    "voice": "Áudios",
+    "voiceHelp": "Se um áudio no WhatsApp pode ser respondido com um áudio.",
+    "voiceModes": {
+      "off": "Só texto",
+      "smart": "Decidido a cada mensagem",
+      "voice_reply": "Áudio em resposta a áudio"
+    },
+    "handoff": "Passar para uma pessoa no primeiro pedido",
+    "handoffHelp": "Ligado: quando alguém pede uma pessoa, o assistente avisa que um colega vai responder e para de responder. Desligado: ele tenta ajudar primeiro.",
+    "stopTitle": "Quando ele para",
+    "stopHelp": "Quando alguém pede para parar, diz que é a pessoa errada ou é grosseiro, o assistente se despede com educação e o chat termina. Chats agendados, passados para uma pessoa ou descadastrados nunca recebem retomada."
+  },
+  "knowledge": {
+    "title": "O que ele sabe",
+    "description": "Sobre a empresa",
+    "descriptionHelp": "Algumas frases sobre o que a empresa faz. Salvo para o idioma em que você usa o app.",
+    "kb": "Conhecimento",
+    "kbHelp": "Fatos que ele pode usar: produtos, preços, endereço, como funcionam os agendamentos. Ele não inventa nada que não esteja aqui.",
+    "accountKb": "Usar também a Intel da Empresa da conta",
+    "accountKbHelp": "Acrescenta os fatos reunidos no onboarding ao que o assistente sabe.",
+    "bookingLink": "Link de agendamento",
+    "bookingLinkHelp": "Enviado quando o cliente quer escolher um horário sozinho."
+  },
+  "followUp": {
+    "title": "Retomada",
+    "help": "Quando um chat no WhatsApp para no meio de algo, o assistente pode enviar uma mensagem curta para retomar.",
+    "switch": "Enviar uma retomada",
+    "switchHelp": "No máximo uma por silêncio. Outra só depois que o cliente escrever de novo.",
+    "when": "Quando",
+    "whenValue": "De 3 a 20 horas depois da última mensagem sem resposta do assistente",
+    "whenHelp": "Só dentro do horário ativo, só no WhatsApp (quem visitou o site já saiu). Esta janela é fixa.",
+    "what": "O que ele envia",
+    "whatValue": "Uma frase sobre o que o cliente perguntou, ou nada quando o chat terminou naturalmente. O status do cliente nunca muda.",
+    "notReceptionist": "Esta campanha usa as retomadas de reativação. Elas são definidas na página Campanhas.",
+    "openPrompt": "Editar as instruções da retomada (prompt {{id}})"
+  },
+  "hours": {
+    "title": "Horário ativo",
+    "help": "Quem escreve recebe resposta a qualquer hora. A retomada só é enviada dentro deste horário.",
+    "label": "Horário",
+    "range": "{{start}} às {{end}}",
+    "unset": "Não definido",
+    "to": "até",
+    "active_hours_start": "Das",
+    "active_hours_end": "Até"
+  }
+}

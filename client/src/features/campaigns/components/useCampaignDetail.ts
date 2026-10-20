@@ -284,6 +284,9 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     voice_engine: c.voice_engine || "pipeline",
     tts_voice_id: c.tts_voice_id || "",
     max_bumps: c.max_bumps ?? "",
+    // Reception campaigns: a person on the first "can I talk to someone"
+    // (engine handoff_detector.py). Edited from Account > Chat.
+    handoff_on_first_request: (c as any).handoff_on_first_request ?? false,
     ai_model: c.ai_model || "",
     ai_temperature: c.ai_temperature ?? "",
     agent_name: c.agent_name || "",

@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Conversations",
-    "searchPlaceholder": "Search conversations...",
+    "title": "Chats",
+    "searchPlaceholder": "Search chats...",
     "group": "Group",
     "groupBy": "Group by",
     "sort": "Sort",
@@ -12,11 +12,11 @@
     "allCampaigns": "All Campaigns"
   },
   "inbox": {
-    "title": "Conversations",
+    "title": "Chats",
     "prospectTitle": "Prospect inbox",
     "newChat": "New conversation",
     "startNewChat": "Start new conversation",
-    "openInConversations": "Open in Conversations",
+    "openInConversations": "Open in Chats",
     "tabs": {
       "all": "All",
       "unread": "Unread",
@@ -162,6 +162,8 @@
     },
     "attachment": "Attachment",
     "clickToOpenFullSize": "Click to open full size",
+    "photoTitle": "Photo",
+    "downloadFullSize": "Download full size",
     "seek": "Seek",
     "playbackSpeed": "Playback speed",
     "play": "Play",

@@ -10,6 +10,7 @@ export const ALERT_TYPES = [
   "appointment_cancelled",
   "callback_requested",
   "lead_needs_reply",
+  "new_photo",
 ] as const;
 export type AlertType = (typeof ALERT_TYPES)[number];
 

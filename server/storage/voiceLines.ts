@@ -19,7 +19,7 @@ import {
   type VoiceNumber,
 } from "@shared/schema";
 import {
-  getLivePersona, localeLanguage, pickSlot, upsertLivePersona,
+  getLivePersona, localeLanguage, pickSlot, syncLivePersona, upsertLivePersona,
   type DbLike, type Tx,
 } from "./voicePersona";
 import { normalizeIntake } from "@shared/voiceIntake";
@@ -32,6 +32,7 @@ export const TRANSFER_WAITING = ["sara", "hold"] as const;
 export const HOLD_MUSIC = [
   "satie-gymnopedie-1", "bach-air-g-string", "pachelbel-canon-d", "chopin-nocturne-op9-2",
   "grieg-morning-mood", "vivaldi-winter-largo", "romance-anonimo-guitar",
+  "easy-funk",
 ] as const;
 export type HoldMusic = (typeof HOLD_MUSIC)[number];
 export const DEFAULT_HOLD_MUSIC: HoldMusic = "satie-gymnopedie-1";
@@ -111,6 +112,13 @@ export interface VoiceLinePatch {
   /** E.164: finds or creates a row and attaches it. */
   phoneNumber?: string;
   createPersona?: boolean;
+  /**
+   * The persona card's edit. description and usp save to their sources
+   * (Accounts.business_description, profile differentiator); companyName is
+   * the name she says and lives on the persona row only, so the account is
+   * never renamed from the Voice tab. The persona row then follows.
+   */
+  persona?: { companyName?: string; description?: string; usp?: string };
   agentName?: string | null;
   agentNameCustom?: string | null;
   voice?: string | null;
@@ -384,6 +392,7 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   }
 
   const set: Partial<typeof accountCommunicationProfile.$inferInsert> = {};
+  if (patch.persona?.usp !== undefined) set.differentiator = patch.persona.usp.trim() || null;
   // Same exclusivity as the wizard: a preset clears the custom name and back.
   if (patch.agentName !== undefined) {
     set.agentName = patch.agentName;
@@ -435,10 +444,11 @@ async function saveVoiceLine(accountId: number, patch: VoiceLinePatch): Promise<
     await applyProfile(tx, accountId, profile, patch);
     await applyNumber(tx, accountId, account, patch);
 
-    // The after-call follow-up lives on the account row, not in `setup`.
+    // The after-call follow-up and the business description live on the account row, not in `setup`.
     const followUp: Partial<typeof accounts.$inferInsert> = {};
     if (patch.followUpEnabled !== undefined) followUp.afterCallFollowupEnabled = patch.followUpEnabled;
     if (patch.smsSenderId !== undefined) followUp.smsSenderId = patch.smsSenderId;
+    if (patch.persona?.description !== undefined) followUp.businessDescription = patch.persona.description.trim() || null;
     if (Object.keys(followUp).length > 0) {
       await tx.update(accounts).set(followUp).where(eq(accounts.id, accountId));
     }
@@ -452,6 +462,13 @@ async function saveVoiceLine(accountId: number, patch: VoiceLinePatch): Promise<
     let persona = await getLivePersona(tx, accountId);
     if (patch.createPersona) {
       persona = await upsertLivePersona(tx, account, fresh, localeLanguage(locale));
+    }
+    if (patch.persona && persona) {
+      await syncLivePersona(tx, accountId, {
+        company: patch.persona.companyName,
+        description: patch.persona.description,
+        usp: patch.persona.usp,
+      });
     }
 
     // Mirrors onto every row the account owns (its real number and any browser-test row).

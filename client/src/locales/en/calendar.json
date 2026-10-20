@@ -100,6 +100,7 @@
     "resetAll": "Reset all settings"
   },
   "search": {
+    "placeholderClient": "Search by name",
     "searchAppointments": "Search appointments",
     "placeholder": "Search by name or campaign...",
     "searchLeadPlaceholder": "Search lead by name..."
@@ -183,6 +184,11 @@
       "noShow": "No-show",
       "rescheduled": "Rescheduled"
     },
+    "kind": {
+      "callback": "Callback",
+      "visit": "Visit",
+      "sideNote": "Booked next to the main appointment. Reschedule or cancel it in the booking calendar."
+    },
     "detail": {
       "date": "Date",
       "channel": "Channel",
@@ -207,7 +213,18 @@
       "actions": "Appointment actions",
       "reschedule": "Reschedule",
       "cancelCall": "Cancel appointment",
-      "close": "Close"
+      "close": "Close",
+      "callRecap": "Call recap",
+      "chatRecap": "Chat recap",
+      "openChat": "Open the chat",
+      "bookedBy": "Booked by",
+      "bookedByPhone": "Phone call",
+      "bookedByWhatsapp": "WhatsApp",
+      "bookedBySms": "SMS",
+      "bookedByWebsite": "Website chat",
+      "bookedByBookingPage": "Booking page",
+      "noChatRecap": "No chat recap yet.",
+      "loadingCall": "Loading the call"
     },
     "panel": {
       "minimize": "Minimize panel",

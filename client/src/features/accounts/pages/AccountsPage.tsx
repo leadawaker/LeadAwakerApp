@@ -20,7 +20,7 @@ export type AccountGroupBy = "status" | "type" | "none";
 export type AccountSortBy = "recent" | "name_asc" | "name_desc";
 
 export default function AccountsPage() {
-  const { currentAccountId, isAgencyUser } = useWorkspace();
+  const { currentAccountId, isAgencyUser, userRole } = useWorkspace();
   const isMobile = useIsMobile(768);
 
   // Clear any global topbar actions — the workspace owns its own top bar.
@@ -93,18 +93,23 @@ export default function AccountsPage() {
   }, [selectedAccount, setCrumb]);
 
   // ── Mutations ──────────────────────────────────────────────────────────────
-  const handleDetailSave = useCallback(async (accountId: number, patch: Partial<AccountRow>, opts?: { silent?: boolean }) => {
+  const handleDetailSave = useCallback(async (accountId: number, patch: Partial<AccountRow>, opts?: { silent?: boolean; clientHours?: boolean }) => {
     for (const [col, value] of Object.entries(patch)) {
       await handleInlineUpdate(accountId, col, value, [accountId], opts);
     }
     setSelectedAccount((prev) => (prev && (prev.Id ?? prev.id) === accountId ? ({ ...prev, ...patch } as AccountRow) : prev));
   }, [handleInlineUpdate, setSelectedAccount]);
 
-  const handleFieldSave = useCallback(async (field: string, value: string, opts?: { silent?: boolean }) => {
+  const handleFieldSave = useCallback(async (field: string, value: string, opts?: { silent?: boolean; clientHours?: boolean }) => {
     if (!selectedAccount) return;
     const aid = selectedAccount.Id ?? selectedAccount.id ?? 0;
     await handleDetailSave(aid, { [field]: value }, opts);
   }, [selectedAccount, handleDetailSave]);
+
+  // A client Manager may change their own opening hours; the server refuses everything else.
+  const handleClientSave = useCallback(async (field: string, value: string) => {
+    if (field === "business_hours_start" || field === "business_hours_end") await handleFieldSave(field, value, { clientHours: true });
+  }, [handleFieldSave]);
 
   const handleCreate = useCallback(async (data: NewAccountForm) => {
     await handleCreateRow(data);
@@ -146,7 +151,7 @@ export default function AccountsPage() {
         onSelectAccount={setSelectedAccount}
         count={rows.length}
         onCreate={isAgencyUser ? handleCreate : async () => {}}
-        onSave={isAgencyUser ? handleFieldSave : async () => {}}
+        onSave={isAgencyUser ? handleFieldSave : userRole === "Manager" ? handleClientSave : async () => {}}
         onDelete={isAgencyUser ? handleDeleteAccount : () => {}}
         listSearch={listSearch}
         onListSearchChange={setListSearch}

@@ -26,6 +26,7 @@ import type { Interaction } from "@/types/models";
 import { useSession, type SessionUser } from "@/hooks/useSession";
 import { PIPELINE_HEX } from "@/lib/avatarUtils";
 import { getAttachmentType } from "@/features/conversations/components/chatView/utils";
+import { AttachmentPreview } from "@/features/conversations/components/chatView/AttachmentPreview";
 import {
   AI_TRIGGERED_BY,
   MINI_THREAD_GAP_MS,
@@ -499,6 +500,18 @@ export function MiniChatBubble({ item, meta, leadName, leadAvatarColors, suppres
           // while lead voice notes carry it as an attachment (type "voice_note").
           const isInlineAudio = content.startsWith("data:audio/") || itemType === "audio";
           const isVoiceNote = itemType === "voice_note" || hasAudioAttachment || isInlineAudio;
+          // A photo the lead sent (WhatsApp or website chat): the picture itself, with
+          // the AI's description of it underneath, so a client sees what was sent.
+          const imageUrl = typeof attachRaw === "string" && attachRaw.startsWith("data:image/") ? attachRaw : null;
+          if (itemType === "image" || imageUrl) {
+            const caption = content.replace(/^\[Image\]:\s*/i, "").trim();
+            return (
+              <div className="flex flex-col gap-1.5">
+                {imageUrl && <AttachmentPreview url={imageUrl} outbound={outbound} />}
+                {caption && <div className="whitespace-pre-wrap leading-relaxed break-words text-[12px] italic opacity-80">{caption}</div>}
+              </div>
+            );
+          }
           if (!isVoiceNote) return <div className="whitespace-pre-wrap leading-relaxed break-words">{content}</div>;
           const VOICE_PREFIX = "[Voice Note]: ";
           const audioUrl = isInlineAudio && content.startsWith("data:audio/")

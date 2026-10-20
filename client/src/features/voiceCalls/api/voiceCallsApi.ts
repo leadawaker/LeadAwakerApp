@@ -26,6 +26,8 @@ export interface VoiceCallListItem {
   leadStatus: string | null;
   callerNumber: string | null;
   scope: VoiceScope;
+  /** Owner-flagged test data, hidden from clients. */
+  isTest: boolean;
   /** Null on Live calls. */
   personaCompany: string | null;
   personaNiche: string | null;
@@ -134,6 +136,41 @@ export function useVoiceCall(callId: string | null) {
   });
 }
 
+/** Calendar detail: the call that booked this lead's appointment (null when it was not booked by phone). */
+export function useBookingCallId(leadId: number | null | undefined) {
+  return useQuery<string | null>({
+    queryKey: [...LIST_KEY, "for-lead", leadId ?? null],
+    enabled: leadId != null,
+    queryFn: async () => {
+      const res = await apiFetch(`/api/voice-calls/for-lead/${leadId}`);
+      if (!res.ok) return null;
+      return (await res.json()).callId ?? null;
+    },
+    staleTime: 60 * 1000,
+  });
+}
+
+/** Owner only: flag a call (and its lead) as test data, hidden from clients and Home. */
+export function useSetCallTest() {
+  const qc = useQueryClient();
+  return useMutation<{ isTest: boolean }, Error, { callId: string; isTest: boolean }>({
+    mutationFn: async ({ callId, isTest }) => {
+      const res = await apiFetch(`/api/voice-calls/${encodeURIComponent(callId)}/test`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isTest }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: LIST_KEY });
+      qc.invalidateQueries({ queryKey: ["/api/home"] });
+      qc.invalidateQueries({ queryKey: [CALLERS_KEY] });
+    },
+  });
+}
+
 /** Mirrors VoiceCaller in server/storage/voiceCallers.ts: one row per person Sara spoke to. */
 export interface VoiceCaller {
   /** "lead:<id>" or "num:<number>". */
@@ -160,13 +197,15 @@ export interface VoiceCaller {
   hubspotContactId: string | null;
   lastCalledBackAt: string | null;
   lastCalledBackBy: string | null;
+  /** Which button was pressed last: the dialler or WhatsApp. Opening either is logged, not a finished call. */
+  lastCalledBackChannel: CallBackChannel | null;
   accountId: number;
   /** Only populated for agency users. */
   accountName: string | null;
 }
 
 export type CallBackChannel = "phone" | "whatsapp";
-export interface CallBackResult { lastCalledBackAt: string | null; lastCalledBackBy: string | null }
+export interface CallBackResult { lastCalledBackAt: string | null; lastCalledBackBy: string | null; lastCalledBackChannel: CallBackChannel | null }
 export interface HubspotPushResult { contactId: string; url: string; noteCreated: boolean }
 
 const CALLERS_KEY = "/api/voice-calls/callers";

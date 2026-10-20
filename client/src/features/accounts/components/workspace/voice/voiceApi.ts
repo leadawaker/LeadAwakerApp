@@ -128,6 +128,11 @@ export interface VoiceStats {
   transfers: number;
   transfersFailed: number;
   minutes: number;
+  /** Typical gap from the caller's last word to hers, in ms. Null before a measured call. */
+  latencyMs: number | null;
+  /** Only sent to the Owner. Null before a priced call. */
+  costUsd?: number | null;
+  costPerMinute?: number | null;
 }
 
 export interface UnassignedNumber {

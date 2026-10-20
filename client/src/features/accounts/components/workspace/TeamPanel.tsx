@@ -131,7 +131,7 @@ function InvitePopover({ accountId, onAssigned }: { accountId: number; onAssigne
   );
 }
 
-export function TeamPanel({ team, loading, accountId, onRefresh, inset = false, naked = false, eyebrow = "03" }: { team: TeamMemberData[]; loading?: boolean; accountId: number; onRefresh?: () => void; inset?: boolean; naked?: boolean; eyebrow?: string }) {
+export function TeamPanel({ team, loading, accountId, onRefresh, inset = false, naked = false, eyebrow = "03", clientView = false }: { team: TeamMemberData[]; loading?: boolean; accountId: number; onRefresh?: () => void; inset?: boolean; naked?: boolean; eyebrow?: string; clientView?: boolean }) {
   const { t } = useTranslation("accounts");
   const [, setLocation] = useLocation();
 
@@ -144,8 +144,8 @@ export function TeamPanel({ team, loading, accountId, onRefresh, inset = false, 
   };
 
   return (
-    <Panel eyebrow={eyebrow} title={t("panels.team")} count={t("metrics.nMembers", { count: team.length })} inset={inset} naked={naked}
-      action={<InvitePopover accountId={accountId} onAssigned={() => onRefresh?.()} />}>
+    <Panel eyebrow={clientView ? undefined : eyebrow} title={t("panels.team")} count={t("metrics.nMembers", { count: team.length })} inset={inset} naked={naked}
+      action={clientView ? undefined : <InvitePopover accountId={accountId} onAssigned={() => onRefresh?.()} />}>
       {loading ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {[0, 1].map((i) => <div key={i} style={{ height: 44, borderRadius: "var(--r-surface)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }} className="animate-pulse" />)}

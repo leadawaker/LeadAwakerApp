@@ -6,7 +6,7 @@ import nodemailer from "nodemailer";
 export const EMAIL_ASSET_BASE = process.env.EMAIL_ASSET_BASE || "https://app.leadawaker.com/site/img/email";
 /** Bump when an image changes under the same name: Gmail's image proxy and
  *  Cloudflare both cache by URL. */
-const EMAIL_ASSET_VERSION = "9";
+const EMAIL_ASSET_VERSION = "11";
 export const emailAsset = (file: string) => `${EMAIL_ASSET_BASE}/${file}?v=${EMAIL_ASSET_VERSION}`;
 /** Wordmark PNG: the homepage logo (white LEAD with its soft shadow), transparent. */
 const EMAIL_LOGO_URL = process.env.EMAIL_LOGO_URL || emailAsset("logo.png");
@@ -40,6 +40,16 @@ export function escapeHtml(value: unknown): string {
     .replace(/'/g, "&#39;");
 }
 
+/** A file sent with the email. `contentId` makes it an inline image the
+ *  HTML shows with `src="cid:<contentId>"`; it stays downloadable too. */
+export interface EmailAttachment {
+  filename: string;
+  contentType: string;
+  /** base64, no data: prefix */
+  content: string;
+  contentId?: string;
+}
+
 interface Outgoing {
   to: string;
   subject: string;
@@ -48,6 +58,7 @@ interface Outgoing {
   replyTo?: string;
   /** Resend only (kept 24h): a retry with the same key cannot send twice. */
   idempotencyKey?: string;
+  attachments?: EmailAttachment[];
 }
 
 export interface DeliveryResult {
@@ -77,8 +88,14 @@ async function deliverViaResend(msg: Outgoing): Promise<DeliveryResult> {
         text: msg.text,
         html: msg.html,
         reply_to: msg.replyTo || undefined,
+        attachments: msg.attachments?.length
+          ? msg.attachments.map((a) => ({
+            filename: a.filename, content: a.content, content_type: a.contentType,
+            ...(a.contentId ? { content_id: a.contentId } : {}),
+          }))
+          : undefined,
       }),
-      signal: AbortSignal.timeout(15_000),
+      signal: AbortSignal.timeout(msg.attachments?.length ? 30_000 : 15_000),
     });
   } catch (err: any) {
     throw new ResendError(`Resend unreachable: ${err?.message ?? err}`, true);
@@ -99,6 +116,10 @@ async function deliverViaSmtp(msg: Outgoing): Promise<DeliveryResult> {
     text: msg.text,
     html: msg.html,
     replyTo: msg.replyTo || undefined,
+    attachments: msg.attachments?.map((a) => ({
+      filename: a.filename, content: a.content, encoding: "base64", contentType: a.contentType,
+      ...(a.contentId ? { cid: a.contentId } : {}),
+    })),
   });
   console.log(`[email] SMTP sent id=${info.messageId ?? "unknown"} to=${msg.to}`);
   return { provider: "smtp", id: info.messageId };
@@ -159,6 +180,13 @@ const T = EMAIL_THEME;
 const EMAIL_ART = {
   default: { side: "header-side.jpg", strip: "header-strip.jpg", footer: "footer.jpg" },
   alert: { side: "alert-header-side.jpg", strip: "alert-header-strip.jpg", footer: "alert-footer.jpg" },
+  // One set per alert type, so each email is recognisable before it is read (Gabriel, 2026-10-15).
+  booked: { side: "booked-header-side.jpg", strip: "booked-header-strip.jpg", footer: "booked-footer.jpg" },
+  moved: { side: "moved-header-side.jpg", strip: "moved-header-strip.jpg", footer: "moved-footer.jpg" },
+  cancelled: { side: "cancelled-header-side.jpg", strip: "cancelled-header-strip.jpg", footer: "cancelled-footer.jpg" },
+  callback: { side: "callback-header-side.jpg", strip: "callback-header-strip.jpg", footer: "callback-footer.jpg" },
+  reply: { side: "reply-header-side.jpg", strip: "reply-header-strip.jpg", footer: "reply-footer.jpg" },
+  photo: { side: "photo-header-side.jpg", strip: "photo-header-strip.jpg", footer: "photo-footer.jpg" },
 } as const;
 
 export interface EmailCta {
@@ -280,6 +308,8 @@ export function renderEmailLayout(opts: EmailLayoutOptions): string {
   a { color:${T.wine}; }
   @media only screen and (max-width:660px) {
     .la-outer { padding:12px 8px !important; }
+    .la-card { width:100% !important; }
+    .la-foot { width:100% !important; height:auto !important; }
     .la-pad { padding-left:14px !important; padding-right:14px !important; }
     .la-head { padding:20px 18px 24px !important; }
     .la-h1 { font-size:30px !important; }
@@ -300,7 +330,7 @@ ${preheader}
   <tr>
     <td class="la-outer" align="center" style="padding:28px 12px;">
       <!--[if mso]><table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;">
+      <table role="presentation" class="la-card" width="640" cellpadding="0" cellspacing="0" border="0" style="width:640px;max-width:100%;">
         <tr>
           <td bgcolor="${T.body}" style="background-color:${T.body};border:1px solid ${T.edge};border-radius:14px;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -321,7 +351,7 @@ ${preheader}
               </tr>
               <tr>
                 <td style="font-size:0;line-height:0;border-radius:0 0 13px 13px;">
-                  <img src="${emailAsset(footerArt)}" width="638" alt="" style="display:block;width:100%;max-width:638px;height:auto;border:0;border-radius:0 0 13px 13px;">
+                  <img class="la-foot" src="${emailAsset(footerArt)}" width="638" height="118" alt="" style="display:block;width:638px;max-width:100%;height:auto;border:0;border-radius:0 0 13px 13px;">
                 </td>
               </tr>
             </table>
@@ -428,6 +458,7 @@ export async function sendRawEmail(opts: {
   html?: string;
   replyTo?: string;
   idempotencyKey?: string;
+  attachments?: EmailAttachment[];
 }): Promise<DeliveryResult> {
   return deliver(opts);
 }

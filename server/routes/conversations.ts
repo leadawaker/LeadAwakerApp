@@ -8,13 +8,15 @@ import {
   insertNotificationsSchema,
 } from "@shared/schema";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
+import { requestHidesTestData, notTestInteractionSql } from "./testDataAccess";
 import { pool } from "../db";
 import { createAndDispatchNotification } from "../notification-dispatcher";
 import { broadcast, addClient, removeClient } from "../sse";
 import { handleZodError, wrapAsync, getPagination } from "./_helpers";
-import { eq, type SQL } from "drizzle-orm";
+import { and, eq, sql, type SQL } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { sendToChannel, sendVoiceToChannel, sendPhotoToChannel } from "../channel-sender";
+import { manualReplyChannel } from "../storage/interactionChannel";
 
 export function registerConversationsRoutes(app: Express): void {
   // ─── Interactions ─────────────────────────────────────────────────
@@ -57,7 +59,14 @@ export function registerConversationsRoutes(app: Express): void {
     const prospectId = req.query.prospect_id ? Number(req.query.prospect_id) : undefined;
     const accountId = forcedId ?? (req.query.accountId ? Number(req.query.accountId) : undefined);
 
+    if (leadId && (forcedId || requestHidesTestData(req))) {
+      const lead = await storage.getLeadById(leadId);
+      if (forcedId && lead?.accountsId !== forcedId) return res.status(404).json({ message: "Lead not found" });
+      if (requestHidesTestData(req) && lead?.isTest) return res.status(404).json({ message: "Lead not found" });
+    }
+
     if (prospectId) {
+      if (forcedId) return res.status(403).json({ message: "Agency only" });
       const limit = Math.min(Number(req.query.limit) || 20, 200);
       const offset = Number(req.query.offset) || 0;
       const result = await storage.getInteractionsByProspectId(prospectId, limit, offset);
@@ -72,18 +81,20 @@ export function registerConversationsRoutes(app: Express): void {
       } else if (accountId) {
         where = eq(interactions.accountsId, accountId);
       }
+      if (requestHidesTestData(req)) where = where ? and(where, notTestInteractionSql) : notTestInteractionSql;
       const { paginatedQuery } = await import("../storage");
       const result = await paginatedQuery(interactions, pagination, where);
       return res.json({ ...result, data: toDbKeysArray(result.data as any, interactions) });
     }
 
+    const extra = requestHidesTestData(req) ? notTestInteractionSql : undefined;
     let data;
     if (leadId) {
-      data = await storage.getInteractionsByLeadId(leadId);
+      data = await storage.getInteractionsByLeadId(leadId, extra);
     } else if (accountId) {
-      data = await storage.getInteractionsByAccountId(accountId);
+      data = await storage.getInteractionsByAccountId(accountId, extra);
     } else {
-      data = await storage.getInteractions();
+      data = await storage.getInteractions(extra);
     }
     res.json(toDbKeysArray(data as any, interactions));
   }));
@@ -95,6 +106,12 @@ export function registerConversationsRoutes(app: Express): void {
     const user = (req as any).user;
     if (user.accountsId !== 1 && (row as any).accountsId !== user.accountsId) {
       return res.status(403).json({ message: "Access denied" });
+    }
+    if (requestHidesTestData(req)) {
+      const { db } = await import("../db");
+      const [hit] = await db.select({ id: interactions.id }).from(interactions)
+        .where(and(eq(interactions.id, id), sql`NOT ${notTestInteractionSql}`));
+      if (hit) return res.status(404).json({ error: "Not found" });
     }
     res.json(toDbKeys(row as any, interactions));
   }));
@@ -144,6 +161,24 @@ export function registerConversationsRoutes(app: Express): void {
               campaignChannel = (campaign as any).channel || campaignChannel;
               campaignBotToken = (campaign as any).botToken ?? undefined;
             }
+          }
+
+          // Website chat visitors have no transport to push to: the widget polls
+          // Interactions and shows the row itself. Without this the campaign's
+          // whatsapp channel sent the reply to the session id's digits on WhatsApp.
+          if (manualReplyChannel(lead as any, campaignChannel) === "website") {
+            await storage.updateInteraction(interaction.id!, {
+              status: "delivered",
+              deliveredAt: new Date(),
+            } as any);
+            if (interaction.accountsId) {
+              broadcast(interaction.accountsId, "interaction_updated", {
+                id: interaction.id,
+                status: "delivered",
+                delivered_at: new Date().toISOString(),
+              });
+            }
+            return;
           }
 
           // WhatsApp delivery is keyed by the lead's phone, not the channel_identifier
@@ -290,6 +325,8 @@ export function registerConversationsRoutes(app: Express): void {
     const acctFilter = accountId ? `AND t."Accounts_id" = $1` : "";
     const acctFilterLeads = accountId ? `AND l."Accounts_id" = $1` : "";
     const params: unknown[] = accountId ? [accountId] : [];
+    const hideTest = requestHidesTestData(req);
+    const noTestLead = (col: string) => (hideTest ? `AND NOT EXISTS (SELECT 1 FROM "${schema}"."Leads" tl WHERE tl.id = ${col} AND tl.is_test = true)` : "");
 
     const interactionsQ = `
       SELECT
@@ -315,6 +352,7 @@ export function registerConversationsRoutes(app: Express): void {
       FROM "${schema}"."Interactions" i
       WHERE i."created_at" > NOW() - INTERVAL '7 days'
         ${acctFilter.replace('t.', 'i.')}
+        ${noTestLead(`COALESCE(i."Leads_id", i."lead_id"::int)`)}
     `;
 
     const statusQ = `
@@ -343,6 +381,7 @@ export function registerConversationsRoutes(app: Express): void {
       WHERE l."updated_at" > NOW() - INTERVAL '7 days'
         AND l."Conversion_Status" IN ('Booked', 'Qualified', 'Lost')
         ${acctFilterLeads}
+        ${hideTest ? 'AND COALESCE(l.is_test, false) = false' : ''}
     `;
 
     const automationQ = `
@@ -360,6 +399,7 @@ export function registerConversationsRoutes(app: Express): void {
       FROM "${schema}"."Automation_Logs" a
       WHERE a."created_at" > NOW() - INTERVAL '7 days'
         ${acctFilter.replace('t.', 'a.')}
+        ${noTestLead(`COALESCE(a."Leads_id", a."lead_id"::int)`)}
     `;
 
     const takeoverQ = `
@@ -375,6 +415,7 @@ export function registerConversationsRoutes(app: Express): void {
       WHERE l."manual_takeover" = true
         AND l."updated_at" > NOW() - INTERVAL '7 days'
         ${acctFilterLeads}
+        ${hideTest ? 'AND COALESCE(l.is_test, false) = false' : ''}
     `;
 
     const countQuery = `

@@ -138,3 +138,14 @@ export interface PromptVersion {
   savedAt: string;
   savedBy: string | null;
 }
+
+/**
+ * A Campaigns-tab prompt is the conversation prompt a campaign talks with.
+ * Helper rows that merely hang off a campaign (niche generator, recap,
+ * reschedule) are system prompts, so they live on the System tab.
+ */
+export function isCampaignPrompt(p: any): boolean {
+  const campaignId = p?.campaignsId || p?.Campaigns_id;
+  const useCase = String(p?.useCase ?? p?.use_case ?? "").toLowerCase().trim();
+  return !!campaignId && useCase === "conversation";
+}

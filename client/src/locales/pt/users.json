@@ -133,5 +133,27 @@
     "yesterday": "Ontem",
     "daysAgo": "{{count}}d atr\u00e1s",
     "weeksAgo": "{{count}}sem atr\u00e1s"
+  },
+  "acceptInvite": {
+    "invalidTitle": "Link de convite inv\u00e1lido",
+    "invalidBody": "Este link de convite est\u00e1 sem informa\u00e7\u00f5es necess\u00e1rias. Verifique seu e-mail para encontrar o link correto ou fale com o administrador.",
+    "welcome": "Bem-vindo ao Lead Awaker",
+    "settingUp": "Configurando a conta de",
+    "fullName": "Nome completo",
+    "fullNamePlaceholder": "Seu nome completo",
+    "password": "Senha",
+    "passwordPlaceholder": "Pelo menos 6 caracteres",
+    "confirmPassword": "Confirmar senha",
+    "confirmPlaceholder": "Digite sua senha novamente",
+    "timezone": "Fuso hor\u00e1rio",
+    "language": "Idioma",
+    "activating": "Ativando...",
+    "getStarted": "Come\u00e7ar",
+    "changeLater": "Voc\u00ea pode alterar essas configura\u00e7\u00f5es depois no seu perfil.",
+    "errName": "Informe seu nome completo.",
+    "errPasswordShort": "A senha deve ter pelo menos 6 caracteres.",
+    "errPasswordMismatch": "As senhas n\u00e3o coincidem.",
+    "errFailed": "N\u00e3o foi poss\u00edvel ativar a conta. Tente novamente.",
+    "errNetwork": "Erro de rede. Tente novamente."
   }
 }

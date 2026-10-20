@@ -11,7 +11,8 @@ import { requireAuth, requireAgency } from "../auth";
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 
 const previewSchema = z.object({
-  kind: z.enum(["layer", "greeting", "backend"]),
+  // xai: the lean Grok prompt (voice_xai_layer_*), as Grok hears it.
+  kind: z.enum(["layer", "greeting", "backend", "xai"]),
   // "" renders the saved prompt (the Voice tab's "What she is told").
   text: z.string().max(60_000).default(""),
   locale: z.string().max(10).default("en-GB"),

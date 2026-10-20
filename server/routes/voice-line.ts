@@ -1,8 +1,9 @@
-import type { Express } from "express";
+import type { Express, Request } from "express";
 import { z } from "zod";
 import { storage } from "../storage";
 import { requireAuth, requireAgency } from "../auth";
 import { accountIdFor, handleZodError, wrapAsync } from "./_helpers";
+import { resolveVoiceAccess } from "./voiceCallsAccess";
 import {
   AFTER_HOURS, HOLD_MUSIC, NOTICE_SPEEDS, NOTICE_VOICES, TRANSFER_MODES, TRANSFER_WAITING, VOICE_LOCALES,
   VOICE_REGIONS, VoiceLineError, type RecordingNoticeCustom,
@@ -10,6 +11,18 @@ import {
 
 // Account Workspace "Voice" tab (specs/voice-tab). Reads are open to the
 // account's own users; writes are agency-only.
+
+/** The Owner, not viewing as someone else: the only one who sees what calls cost. */
+function isOwnerRequest(req: Request): boolean {
+  const user = req.user;
+  if (!user) return false;
+  return resolveVoiceAccess({
+    role: user.role ?? "",
+    accountsId: user.accountsId ?? null,
+    impersonatedAccountId: req.session?.impersonation?.accountId ?? null,
+    impersonatedRole: req.session?.impersonation?.role ?? null,
+  }).isOwner;
+}
 
 const E164 = /^\+[1-9]\d{6,14}$/;
 const e164 = z.string().trim().regex(E164, "Must be an E.164 number, e.g. +31612345678");
@@ -28,6 +41,12 @@ const putBodySchema = z.object({
   numberId: z.number().int().positive().nullable().optional(),
   phoneNumber: e164.optional(),
   createPersona: z.boolean().optional(),
+  // The persona card's edit (storage/voiceLines.ts saveVoiceLine): company is required when sent.
+  persona: z.object({
+    companyName: z.string().trim().min(1).max(120).optional(),
+    description: z.string().max(2000).optional(),
+    usp: z.string().max(2000).optional(),
+  }).strict().optional(),
   agentName: z.string().trim().max(60).nullable().optional(),
   agentNameCustom: z.string().trim().max(60).nullable().optional(),
   voice: z.string().trim().regex(/^[A-Za-z0-9_-]{1,40}$/).nullable().optional(),
@@ -201,7 +220,13 @@ export function registerVoiceLineRoutes(app: Express): void {
     if (month && !/^\d{4}-(0[1-9]|1[0-2])$/.test(month)) {
       return res.status(400).json({ message: "month must be YYYY-MM" });
     }
-    res.json(await storage.getAccountVoiceStats(accountId, month));
+    const stats = await storage.getAccountVoiceStats(accountId, month);
+    // What a call costs us is the Owner's number only: clients and admins see minutes and speed.
+    if (!isOwnerRequest(req)) {
+      delete stats.costUsd;
+      delete stats.costPerMinute;
+    }
+    res.json(stats);
   }));
 
   // Agency only: a test call lives in the demo account, whose leads a client must not see.

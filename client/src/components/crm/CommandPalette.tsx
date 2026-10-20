@@ -21,6 +21,8 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import { setPersistedSelection } from "@/hooks/usePersistedSelection";
 import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
+import { clientNavItems, CLIENT_NAV_HREF, myAccountLabelKey } from "@/components/crm/navGates";
+import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 import {
   Megaphone,
   BookUser,
@@ -106,10 +108,19 @@ export function CommandPalette() {
     { href: `${prefix}/settings?tab=team`, labelKey: "commandPalette.team", icon: Users, keywords: "users team members roles", agencyOnly: true },
   ], [prefix]);
 
-  const visibleNavItems = useMemo(() =>
-    allNavItems.filter((item) => isNavItemVisible(item, navGates)),
-    [allNavItems, navGates]
-  );
+  // Clients only get the pages in their own nav (same gates as the nav bar).
+  const clientFacts = useClientNavFacts();
+  const visibleNavItems = useMemo(() => {
+    if (!isAgencyUser) {
+      const allowed = new Set(clientNavItems(clientFacts).map((k) => CLIENT_NAV_HREF[k]));
+      allowed.add(`${prefix}/settings`); // Settings stays reachable for clients
+      return allNavItems
+        .filter((item) => allowed.has(item.href))
+        // The Accounts page is "My receptionist" / "My account" for a client.
+        .map((item) => (item.href === `${prefix}/accounts` ? { ...item, labelKey: myAccountLabelKey(clientFacts) } : item));
+    }
+    return allNavItems.filter((item) => isNavItemVisible(item, navGates));
+  }, [allNavItems, navGates, isAgencyUser, clientFacts, prefix]);
 
   // Filter nav items based on query (manual filtering since we use shouldFilter={false})
   const filteredNavItems = useMemo(() => {
@@ -226,6 +237,8 @@ export function CommandPalette() {
       promises.push(
         (async () => {
           try {
+            // Clients without the reactivation service have no Campaigns page to land on.
+            if (!isAgencyUser && !clientFacts.hasReactivation) return;
             // Match the Campaigns page scope so the selected campaign is in its list.
             const campaignsUrl = isAgencyUser && currentAccountId <= 0
               ? `/api/campaigns`
@@ -295,7 +308,7 @@ export function CommandPalette() {
       await Promise.all(promises);
       return results;
     },
-    [currentAccountId, isAgencyUser, prefix, t],
+    [currentAccountId, isAgencyUser, prefix, t, clientFacts.hasReactivation],
   );
 
   const handleSelect = (href: string, selection?: { key: string; id: number }) => {

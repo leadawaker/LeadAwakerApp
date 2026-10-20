@@ -3,7 +3,7 @@ import type { AccountRow } from "../AccountDetailsDialog";
 
 export type { AccountRow };
 
-export type WorkspaceTab = "overview" | "integrations" | "communication" | "voice" | "alerts" | "automations";
+export type WorkspaceTab = "overview" | "integrations" | "communication" | "voice" | "chat" | "alerts" | "automations";
 
 // ── Identity-card metric chip ────────────────────────────────────────────────
 export interface MetaChip {
@@ -12,6 +12,8 @@ export interface MetaChip {
   value: string | number;
   sub: string;
   accent: string; // CSS var string, e.g. 'var(--wine)'
+  /** Shown in a hover card over the figure (the phone line's readiness list). */
+  detail?: import("react").ReactNode;
 }
 
 // ── Integration field (Twilio / Instagram) ───────────────────────────────────

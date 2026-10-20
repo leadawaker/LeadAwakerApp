@@ -1,4 +1,31 @@
 {
+  "chatChannel": {
+    "all": "Alle chats",
+    "website": "Website",
+    "whatsapp": "WhatsApp"
+  },
+  "chatRecap": {
+    "title": "Samenvatting",
+    "booked": "Geboekt",
+    "noShow": "Niet verschenen",
+    "cancelled": "Geannuleerd",
+    "via": "via {{channel}}",
+    "wanted": "Wat ze willen",
+    "facts": "Belangrijkste punten",
+    "nextStep": "Volgende stap",
+    "noSummary": "Nog geen samenvatting. Die wordt geschreven zodra het gesprek klaar is.",
+    "handoff": "Wacht op jullie team",
+    "followUp": "Opvolging op {{date}}",
+    "appointment": "Afspraak op {{date}}",
+    "messageCounts": "{{received}} binnen, {{sent}} verstuurd",
+    "bookingChannel": {
+      "whatsapp": "WhatsApp",
+      "website": "website",
+      "booking_page": "boekingspagina",
+      "phone": "telefoon",
+      "sms": "sms"
+    }
+  },
   "conversationType": {
     "label": "Type",
     "widget": "Widget",
@@ -8,7 +35,7 @@
     "other": "Overig"
   },
   "page": {
-    "chatsTitle": "Gesprekken",
+    "chatsTitle": "Chats",
     "title": "Leads",
     "opportunities": "Kansen"
   },
@@ -20,7 +47,7 @@
   "toolbar": {
     "add": "Toevoegen",
     "searchPlaceholder": "Leads zoeken...",
-    "searchConversationsPlaceholder": "Gesprekken zoeken...",
+    "searchConversationsPlaceholder": "Chats zoeken...",
     "searchLeads": "Leads zoeken",
     "group": "Groeperen",
     "sort": "Sorteren",
@@ -55,7 +82,7 @@
     "previous": "Vorige",
     "next": "Volgende",
     "of": "van",
-    "chats": "Gesprekken",
+    "chats": "Chats",
     "chatsPeek": "Laatste bericht voor elke lead tonen",
     "minimizeList": "Lijst minimaliseren",
     "expandList": "Lijst uitvouwen",
@@ -65,8 +92,8 @@
     "upcomingCalls": "Aankomende afspraken",
     "more": "Meer",
     "exportPdf": "PDF exporteren",
-    "showChats": "Gesprekken tonen",
-    "hideChats": "Gesprekken verbergen"
+    "showChats": "Chats tonen",
+    "hideChats": "Chats verbergen"
   },
   "sort": {
     "sortBy": "Sorteren op",
@@ -86,7 +113,9 @@
     "scoreDown": "Score ↓",
     "scoreUp": "Score ↑",
     "activity": "Laatste activiteit",
-    "created": "Aanmaakdatum"
+    "created": "Aanmaakdatum",
+    "createdNewest": "Nieuwste leads",
+    "createdOldest": "Oudste leads"
   },
   "group": {
     "status": "Status",
@@ -97,7 +126,10 @@
     "untagged": "Zonder Tag",
     "service": "Dienst",
     "source": "Bron",
-    "tag": "Tag"
+    "tag": "Tag",
+    "noAccount": "Geen account",
+    "noService": "Geen dienst",
+    "noSource": "Geen bron"
   },
   "filters": {
     "title": "Leadfilters",
@@ -156,7 +188,9 @@
       "created": "Aangemaakt",
       "assignedTo": "Toegewezen aan",
       "chats": "Gesprekken",
-      "createdAt": "Aangemaakt"
+      "createdAt": "Aangemaakt",
+      "lastContact": "Laatste contact",
+      "appointment": "Afspraak"
     },
     "empty": {
       "noResults": "Geen leads gevonden voor uw zoekopdracht",
@@ -181,7 +215,10 @@
       "Closed": "Gesloten",
       "Lost": "Verloren",
       "DND": "Niet Storen",
-      "Unknown": "Onbekend"
+      "Unknown": "Onbekend",
+      "rx_new": "Nieuwe aanvraag",
+      "rx_answered": "Beantwoord",
+      "rx_done": "Afgerond"
     },
     "dropHere": "Hier neerzetten",
     "foldColumn": "Klik om in te klappen",
@@ -334,10 +371,12 @@
     "gradientTester": "Gradiënt-tester"
   },
   "contact": {
+    "sideBooking": "Terugbellen · {{date}}", "sideVisit": "Bezoek · {{date}}",
     "title": "Contact",
     "firstName": "Voornaam",
     "lastName": "Achternaam",
     "phone": "Telefoon",
+    "callbackPhone": "Ander nummer",
     "email": "E-mail",
     "jobTitle": "Functie",
     "company": "Bedrijf",
@@ -557,7 +596,7 @@
     "noMessagesHint": "Berichten verschijnen hier zodra het contact begint",
     "typePlaceholder": "Typ een bericht…",
     "letAiContinue": "AI laten doorgaan",
-    "openInChats": "Openen in Gesprekken",
+    "openInChats": "Openen in Chats",
     "transcribing": "Transcriberen…"
   },
   "team": {
@@ -624,7 +663,10 @@
     "confirm": "Bevestigen",
     "cancel": "Annuleren",
     "clear": "Wissen",
-    "close": "Sluiten"
+    "close": "Sluiten",
+    "yes": "Ja",
+    "no": "Nee",
+    "more": "Meer"
   },
   "addLead": {
     "title": "Lead toevoegen",
@@ -667,5 +709,29 @@
         "hint": "De AI stuurt eerst een vriendelijke check-in, en een dag later een link om opnieuw te boeken als er geen reactie komt."
       }
     }
+  },
+  "leadChannel": {
+    "website": "Websitechat",
+    "whatsapp": "WhatsApp",
+    "phone": "Gebeld",
+    "email": "E-mail",
+    "sms": "SMS"
+  },
+  "channelFilter": {
+    "all": "Alle kanalen",
+    "website": "Website",
+    "whatsapp": "WhatsApp",
+    "phone": "Telefoon"
+  },
+  "quickViews": {
+    "all": "Alle leads",
+    "needsReply": "Wacht op antwoord",
+    "upcoming": "Komende afspraken"
+  },
+  "names": {
+    "websiteVisitor": "Websitebezoeker"
+  },
+  "list": {
+    "loadingMore": "Meer laden"
   }
 }

@@ -38,6 +38,8 @@ import { ProfileSection } from "@/features/settings/components/ProfileSection";
 import { NotificationsSection } from "@/features/settings/components/NotificationsSection";
 import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
 import { APP_LANGUAGES } from "@/lib/languages";
+import { clientMoreItems, clientNavLabelKey, CLIENT_NAV_HREF, type ClientNavKey } from "@/components/crm/navGates";
+import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 
 const THEME_CYCLE: { mode: ThemeMode; icon: LucideIcon; labelKey: string }[] = [
   { mode: "light", icon: Sun, labelKey: "sidebar.themeLight" },
@@ -128,7 +130,13 @@ export function MobileMorePage({
   // Nav items grouped like the desktop nav bar (Services, Engage, Admin, Backend).
   // Reactivation is shown to everyone: Home holds the first bottom-bar slot, so this is the clients' way to Campaigns.
   type Item = NavGate & { label: string; href: string; icon: LucideIcon };
-  const visible = (items: Item[]) => items.filter((it) => isNavItemVisible(it, navCtx));
+  // Clients get their own flat list (clientMoreItems) instead of the agency groups.
+  const clientFacts = useClientNavFacts();
+  const CLIENT_ICON: Partial<Record<ClientNavKey, LucideIcon>> = { calls: AudioLines, billing: Receipt, campaigns: Megaphone };
+  const clientItems = isAgencyUser ? [] : clientMoreItems(clientFacts).map((k) => ({
+    key: k, label: t(clientNavLabelKey(k, clientFacts)), href: CLIENT_NAV_HREF[k], icon: CLIENT_ICON[k] ?? Megaphone,
+  }));
+  const visible = (items: Item[]) => (isAgencyUser ? items.filter((it) => isNavItemVisible(it, navCtx)) : []);
   const serviceItems = visible([
     { label: t("sidebar.reactivation"), href: `${prefix}/campaigns`, icon: Megaphone },
     { label: t("sidebar.speedToLead"), href: `${prefix}/speed-to-lead`, icon: Send, agencyOnly: true, serviceKey: "speed" },
@@ -247,6 +255,14 @@ export function MobileMorePage({
           </div>
         ))}
 
+        {clientItems.length > 0 && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+            {clientItems.map((it) => (
+              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} testId={`mobile-more-link-${it.key}`} />
+            ))}
+          </div>
+        )}
+
         {/* Admin — plain label dividing the screen + one button per page */}
         {adminItems.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -274,7 +290,7 @@ export function MobileMorePage({
           {isOwner ? (
             <NavButton icon={Inbox} label={t("sidebar.founderInbox", "Support inbox")} onClick={() => setInboxSheetOpen(true)} testId="mobile-more-inbox" />
           ) : (
-            <NavButton icon={MessageSquare} label={t("help.assistance", "Assistance")} onClick={openFounderChat} testId="mobile-more-assistance" />
+            <NavButton icon={MessageSquare} label={isAgencyUser ? t("help.assistance", "Assistance") : t("sidebar.messageFounder", "Message Gabriel")} onClick={openFounderChat} testId="mobile-more-assistance" />
           )}
         </div>
 

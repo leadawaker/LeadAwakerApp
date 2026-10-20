@@ -51,3 +51,8 @@ export function decideScope(access: VoiceAccess, q: { scope?: unknown; accountId
   const accountId = access.isAgency ? positiveInt(q.accountId) : access.lockedAccountId;
   return { ok: true, scope, accountId };
 }
+
+/** Gabriel's own test calls and leads stay hidden from clients (and from the Owner viewing as one). */
+export function hidesTestData(access: VoiceAccess): boolean {
+  return !access.isAgency;
+}

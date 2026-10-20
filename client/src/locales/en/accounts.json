@@ -477,8 +477,9 @@
       "integrations": "Integrations",
       "knowledge": "Company Intel",
       "communication": "Onboarding",
-      "voice": "Phone line",
-      "alerts": "Recaps & alerts",
+      "voice": "Phone",
+      "chat": "Chat",
+      "alerts": "Alerts",
       "automations": "Automations"
     },
     "createAccount": "Create account",
@@ -495,10 +496,34 @@
     "acrossAll": "across all",
     "nActive": "{{count}} active",
     "nOwner": "{{count}} owner",
-    "nMembers": "{{count}} members"
+    "nMembers": "{{count}} members",
+    "callsMonth": "Calls this month",
+    "nBooked_one": "{{count}} booked",
+    "nBooked_other": "{{count}} booked",
+    "phone": "Phone line",
+    "live": "Live",
+    "notLive": "Not live",
+    "noNumber": "No number",
+    "settingUp": "Being set up",
+    "nMissing_one": "{{count}} missing",
+    "nMissing_other": "{{count}} missing",
+    "ready": "ready",
+    "whatsapp": "WhatsApp",
+    "connected": "On",
+    "pending": "Pending",
+    "off": "Off",
+    "alerts": "Alert recipients",
+    "recapAt": "recap {{time}}",
+    "recapOff": "no recap"
+  },
+  "languageNames": {
+    "English": "English",
+    "Portuguese": "Portuguese",
+    "Dutch": "Dutch"
   },
   "panels": {
     "accountDetails": "Account Details",
+    "businessDetails": "Business details",
     "campaigns": "Campaigns",
     "team": "Team",
     "contracts": "Contracts",
@@ -604,6 +629,7 @@
   },
   "pills": {
     "connected": "Connected",
+    "waitingCalendar": "Waiting for your calendar",
     "notSet": "Not set",
     "comingSoon": "Coming soon",
     "nConnected": "{{count}} connected"
@@ -804,5 +830,45 @@
     },
     "phoneUsage_one": "{{count}} call this month, {{bookings}} booked",
     "phoneUsage_other": "{{count}} calls this month, {{bookings}} booked"
+  },
+  "onboardingEntry": {
+    "title": "Onboarding",
+    "help": "The setup call with the client: their business, how she answers, bookings and alerts.",
+    "open": "Open onboarding",
+    "back": "Back to overview",
+    "doneTitle": "Onboarding done",
+    "doneHelp": "Reopen it to review or change the setup answers.",
+    "reopen": "Review"
+  },
+  "customDomainGuide": {
+    "open": "How to set this up",
+    "title": "Your own booking link",
+    "intro": "Booking links can use the client's own website address instead of book.leadawaker.com. It takes one DNS record on their side and a few minutes.",
+    "subdomain": "afspraak",
+    "step1": "Pick the address",
+    "step1Help": "A word in front of their own domain works best, for example",
+    "step2": "Find who manages their DNS",
+    "step2Help": "Usually the company where the domain was bought, or their web designer. We can look it up:",
+    "lookUp": "Look it up",
+    "registrar": "Registered at",
+    "nameservers": "Nameservers",
+    "hostHint": "The record is added in the control panel of the company behind these nameservers.",
+    "lookupFailed": "Could not look this up. Ask the client who built their website.",
+    "step3": "Add this record",
+    "step3Help": "Only the first part (the name) goes in the \"Name\" or \"Host\" field, not the whole domain. Leave TTL on its default.",
+    "step4": "Lead Awaker connects it",
+    "step4Help": "We link the address on our side as well. Tell us when the record is added.",
+    "step5": "Check and activate",
+    "step5Help": "Save the address here and press \"Check DNS & activate\". It can take a few minutes, sometimes an hour, before it is reachable.",
+    "messageTitle": "Message for their web person",
+    "copyMessage": "Copy message",
+    "copy": "Copy",
+    "message": "Hi! Could you add one DNS record for our booking page?\n\nType: CNAME\nName: {{name}}\nValue: {{target}}\n\nThat makes {{domain}} show our appointment page. Thanks!"
+  },
+  "clientHoursToast": {
+    "saved": "Opening hours saved",
+    "savedDesc": "Your changes are in effect.",
+    "error": "Could not save opening hours",
+    "errorDesc": "Please try again."
   }
 }

@@ -37,7 +37,8 @@ export type NotificationType =
   | "booking_cancelled"
   | "callback_requested"
   | "daily_recap"
-  | "client_reply";
+  | "client_reply"
+  | "unanswered_question";
 
 export interface Notification {
   id: number;
@@ -101,8 +102,15 @@ export function useNotificationStream(options?: {
   enabled?: boolean;
   /** Account ID for scoping the SSE stream (agency users can pass specific account). */
   accountId?: number;
+  /**
+   * Open the SSE stream and fire toasts (default: true). Only CrmShell should
+   * be live; readers like NotificationCenter pass false and share the query
+   * cache, otherwise every mounted instance toasts the same notification.
+   */
+  live?: boolean;
 }) {
   const enabled = options?.enabled !== false;
+  const live = options?.live !== false;
   const accountId = options?.accountId;
   const qc = useQueryClient();
   const sseRef = useRef<EventSource | null>(null);
@@ -148,7 +156,7 @@ export function useNotificationStream(options?: {
 
   /* ── SSE connection (existing interactions stream) ──────────── */
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || !live) return;
 
     const params = new URLSearchParams();
     if (accountId && accountId > 0) {
@@ -200,7 +208,7 @@ export function useNotificationStream(options?: {
       es.close();
       sseRef.current = null;
     };
-  }, [enabled, accountId, qc]);
+  }, [enabled, live, accountId, qc]);
 
   /* ── Show toast when new notifications appear after refetch ──── */
   const prevItemsRef = useRef<Notification[]>([]);
@@ -212,10 +220,18 @@ export function useNotificationStream(options?: {
       (n) => !prevIds.has(n.id) && !n.read && !sseToastedIdsRef.current.has(n.id)
     );
 
-    // Only toast if this isn't the initial load
-    if (prevItemsRef.current.length > 0) {
-      // Limit to 3 toasts to avoid flooding
-      newOnes.slice(0, 3).forEach((n) => fireNotificationToast(n));
+    // Only toast if this isn't the initial load. Identical ones collapse into
+    // one card with a count, and at most 3 distinct cards show at once.
+    if (live && prevItemsRef.current.length > 0) {
+      const groups = new Map<string, { notif: Notification; count: number }>();
+      for (const n of newOnes) {
+        if (toastedIds.has(n.id)) continue;
+        const key = notificationGroupKey(n);
+        const g = groups.get(key);
+        if (g) { g.count += 1; toastedIds.add(n.id); }
+        else groups.set(key, { notif: n, count: 1 });
+      }
+      Array.from(groups.values()).slice(0, 3).forEach(({ notif, count }) => fireNotificationToast(notif, count));
     }
 
     // Clean up SSE-toasted IDs that are now in the list (no longer needed)
@@ -226,7 +242,7 @@ export function useNotificationStream(options?: {
     }
 
     prevItemsRef.current = notifications;
-  }, [notifications]);
+  }, [notifications, live]);
 
   /* ── Mark single notification as read ──────────────────────── */
   const markAsReadMutation = useMutation({
@@ -429,7 +445,17 @@ export function useNotificationStream(options?: {
 
 /* ─── Toast helper ───────────────────────────────────────────────── */
 
-function fireNotificationToast(notif: Notification) {
+/** Notifications that say the same thing (type + title) group together. */
+export function notificationGroupKey(n: Pick<Notification, "type" | "title">): string {
+  return `${n.type}::${n.title}`;
+}
+
+// Module-level so a notification toasts once per tab, whichever path saw it first.
+const toastedIds = new Set<number>();
+
+function fireNotificationToast(notif: Notification, count = 1) {
+  if (toastedIds.has(notif.id)) return;
+  toastedIds.add(notif.id);
   const variant = NOTIFICATION_VARIANT[notif.type] ?? "default";
 
   toast({
@@ -437,5 +463,7 @@ function fireNotificationToast(notif: Notification) {
     description: notif.body ?? undefined,
     variant,
     duration: 5000,
+    groupKey: `notif:${notificationGroupKey(notif)}`,
+    count,
   });
 }

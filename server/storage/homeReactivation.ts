@@ -4,6 +4,7 @@ import type { HomeReactivation } from "@shared/homeTypes";
 import { eachDay } from "@shared/homePeriod";
 import type { HomeQuery } from "../routes/homeScope";
 import { T, acct, at, boundsFor, dayOf, dbrCampaignSql, liveLeadSql, num } from "./homeSql";
+import { homeReactivationLiveStorage } from "./homeReactivationLive";
 
 type Row = Record<string, unknown>;
 const rows = (r: { rows: unknown[] }) => r.rows as Row[];
@@ -75,4 +76,4 @@ async function getHomeReactivation(q: HomeQuery): Promise<HomeReactivation> {
   };
 }
 
-export const homeReactivationStorage = { getHomeReactivation };
+export const homeReactivationStorage = { getHomeReactivation, ...homeReactivationLiveStorage };

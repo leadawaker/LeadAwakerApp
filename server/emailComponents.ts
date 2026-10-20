@@ -178,6 +178,9 @@ export function emailSplit(leftHtml: string, rightHtml: string): string {
 /** Label/value card (contact details, alert facts). `valueHtml` must already
  *  be escaped; labels are escaped here. `icon` is a file in the email image
  *  folder; give one to every row or to none. */
+/** A value past this many characters runs over one line: semibold then reads as heavy. */
+const LONG_VALUE = 70;
+
 export function emailDetails(rows: Array<{ label: string; valueHtml: string; icon?: string }>): string {
   const body = rows.map((r, i) => {
     const rule = i ? `border-top:1px solid ${T.line};` : "";
@@ -188,7 +191,7 @@ export function emailDetails(rows: Array<{ label: string; valueHtml: string; ico
   ${icon}
   <td valign="top" style="padding:12px 18px 13px ${r.icon ? 13 : 18}px;${rule}">
     <p style="margin:0 0 2px;font-family:${T.sans};font-size:9.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;line-height:14px;color:${T.mute2};">${e(r.label)}</p>
-    <p style="margin:0;font-family:${T.sans};font-size:14px;font-weight:600;line-height:20px;color:${T.ink};">${r.valueHtml}</p>
+    <p style="margin:0;font-family:${T.sans};font-size:14px;font-weight:${r.valueHtml.length > LONG_VALUE ? 400 : 600};line-height:20px;color:${T.ink};">${r.valueHtml}</p>
   </td>
 </tr>`;
   }).join("\n");

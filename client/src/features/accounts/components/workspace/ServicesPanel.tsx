@@ -67,7 +67,7 @@ export function ServicesPanel({ accountId, campaigns, onOpenTab, naked = true, e
   ];
 
   return (
-    <Panel eyebrow={eyebrow} title={t("services.title")} naked={naked} style={naked ? undefined : { background: "var(--bone)" }}>
+    <Panel eyebrow={eyebrow} title={t("services.title")} naked={naked} style={naked ? undefined : { background: "var(--card)" }}>
       <div style={{ display: "flex", flexDirection: "column", padding: "0 12px 12px" }} data-testid="account-services">
         {rows.map((row) => {
           const open = row.tab && onOpenTab ? () => onOpenTab(row.tab!) : undefined;

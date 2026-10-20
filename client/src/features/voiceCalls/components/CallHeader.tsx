@@ -38,7 +38,8 @@ export function CallHeader({ call, narrow, caller }: { call: VoiceCallDetail; na
       {caller && (
         <div data-testid="voice-caller-header" style={{ display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap", minWidth: 0 }}>
           <CallBackButton caller={caller.rawCaller} align={narrow ? "start" : "end"} />
-          {caller.isOwner && <HubspotPushButton caller={caller.rawCaller} />}
+          {/* The HubSpot push is a demo of the CRM handoff: Demo calls only. */}
+          {caller.isOwner && call.scope === "demo" && <HubspotPushButton caller={caller.rawCaller} />}
         </div>
       )}
     </div>

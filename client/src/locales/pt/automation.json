@@ -61,7 +61,7 @@
       "phone_call": "Quando alguém liga",
       "call_ended": "Quando uma ligação termina",
       "missed_call": "Quando uma chamada é perdida",
-      "client_event": "Quando h\u00e1 um agendamento, pedido de retorno ou transfer\u00eancia",
+      "client_event": "Quando há um agendamento, pedido de retorno ou transferência",
       "incoming_message": "Quando chega uma mensagem",
       "lead_replies": "Quando um lead responde",
       "widget_message": "Quando alguém conversa no site",
@@ -120,7 +120,7 @@
     "after_call_followup": "Envia a quem ligou um WhatsApp com o link de agendamento 30 segundos depois da ligação, ou um SMS quando a pessoa não tem WhatsApp.",
     "missed_call": "Envia uma mensagem de volta quando o cliente perde a chamada.",
     "client_alerts": "Avisa o cliente sobre agendamentos, pedidos de retorno e conversas que precisam de uma pessoa, pelo app, e-mail e WhatsApp.",
-    "client_recap": "Envia ao cliente, no hor\u00e1rio escolhido, um resumo das liga\u00e7\u00f5es, conversas e agendamentos do dia.",
+    "client_recap": "Envia ao cliente, no horário escolhido, um resumo das ligações, conversas e agendamentos do dia.",
     "inbound_handler": "Recebe todas as mensagens e as encaminha.",
     "ai_conversation": "Escreve e envia a resposta da IA quando um lead responde.",
     "website_chat": "Trata as mensagens do chat no site do cliente.",
@@ -177,7 +177,8 @@
     "alert_appointment_rescheduled": "Alerta: agendamento remarcado",
     "alert_appointment_cancelled": "Alerta: agendamento cancelado",
     "alert_callback_requested": "Alerta: pedido de retorno",
-    "alert_lead_needs_reply": "Alerta: resposta necess\u00e1ria",
+    "alert_lead_needs_reply": "Alerta: resposta necessária",
+    "alert_new_photo": "Alerta: nova foto",
     "recap_sent": "Resumo do dia enviado"
   },
   "outcome": {
@@ -335,5 +336,38 @@
     "no_booking_link": "Nenhum link de agendamento definido na campanha",
     "not_on_whatsapp_no_sms": "O número não tem WhatsApp e o SMS não pôde ser enviado",
     "send_failed": "Não foi possível enviar a mensagem"
+  },
+  "rail": {
+    "label": "Categorias de automação",
+    "failuresTitle": "{{count}} falha em aberto",
+    "failuresTitle_other": "{{count}} falhas em aberto",
+    "automations": "{{count}} automação",
+    "automations_other": "{{count}} automações",
+    "short": {
+      "reactivation": "Reativação",
+      "speed_to_lead": "Resposta rápida",
+      "bookings": "Agendamentos",
+      "reputation": "Avaliações",
+      "receptionist": "Recepção",
+      "inbox": "Caixa de entrada",
+      "internal": "Nos bastidores",
+      "unlisted": "Fora da lista"
+    }
+  },
+  "clear": {
+    "label": "Limpar {{count}} falha",
+    "label_other": "Limpar {{count}} falhas",
+    "short": "Limpar tudo",
+    "confirm": "Sim, limpar {{count}}",
+    "confirmAll": "Sim, limpar tudo",
+    "cancel": "Cancelar",
+    "working": "Limpando...",
+    "done": "{{count}} falha limpa",
+    "done_other": "{{count}} falhas limpas",
+    "error": "Não foi possível limpar as falhas.",
+    "hint": "Marca essas falhas como resolvidas. Elas continuam no diário.",
+    "markFixed": "Marcar como resolvida",
+    "reopen": "Reabrir",
+    "fixedTag": "Resolvida"
   }
 }

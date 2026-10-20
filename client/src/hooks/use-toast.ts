@@ -15,11 +15,16 @@ type ToasterToast = ToastProps & {
   description?: React.ReactNode
   action?: ToastActionElement
   duration?: number
+  /** Toasts sharing a groupKey collapse into one card with a count ("3x"). */
+  groupKey?: string
+  /** How many events this card stands for (shown when > 1). */
+  count?: number
 }
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
   UPDATE_TOAST: "UPDATE_TOAST",
+  BUMP_TOAST: "BUMP_TOAST",
   DISMISS_TOAST: "DISMISS_TOAST",
   REMOVE_TOAST: "REMOVE_TOAST",
 } as const
@@ -41,6 +46,10 @@ type Action =
   | {
       type: ActionType["UPDATE_TOAST"]
       toast: Partial<ToasterToast>
+    }
+  | {
+      type: ActionType["BUMP_TOAST"]
+      toast: Partial<ToasterToast> & { id: string }
     }
   | {
       type: ActionType["DISMISS_TOAST"]
@@ -88,6 +97,19 @@ export const reducer = (state: State, action: Action): State => {
           t.id === action.toast.id ? { ...t, ...action.toast } : t
         ),
       }
+
+    case "BUMP_TOAST": {
+      // Merge into an existing card and move it to the top (newest first)
+      const existing = state.toasts.find((t) => t.id === action.toast.id)
+      if (!existing) return state
+      return {
+        ...state,
+        toasts: [
+          { ...existing, ...action.toast },
+          ...state.toasts.filter((t) => t.id !== action.toast.id),
+        ],
+      }
+    }
 
     case "DISMISS_TOAST": {
       const { toastId } = action
@@ -155,8 +177,36 @@ function scheduleAutoDismiss(id: string, duration: number) {
 }
 
 function toast({ ...props }: Toast) {
-  const id = genId()
   const duration = props.duration ?? TOAST_AUTO_DISMISS_DEFAULT
+
+  // Same groupKey as a card that is still on screen: bump its count instead
+  // of stacking another identical card.
+  if (props.groupKey) {
+    const existing = memoryState.toasts.find(
+      (t) => t.open && t.groupKey === props.groupKey
+    )
+    if (existing) {
+      dispatch({
+        type: "BUMP_TOAST",
+        toast: {
+          ...props,
+          id: existing.id,
+          count: (existing.count ?? 1) + (props.count ?? 1),
+        },
+      })
+      if (duration > 0 && duration < Infinity) {
+        scheduleAutoDismiss(existing.id, duration)
+      }
+      return {
+        id: existing.id,
+        dismiss: () => dispatch({ type: "DISMISS_TOAST", toastId: existing.id }),
+        update: (next: ToasterToast) =>
+          dispatch({ type: "UPDATE_TOAST", toast: { ...next, id: existing.id } }),
+      }
+    }
+  }
+
+  const id = genId()
 
   const update = (props: ToasterToast) =>
     dispatch({

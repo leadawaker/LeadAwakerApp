@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronDown } from "lucide-react";
 import { SectionCard } from "@/components/crm/primitives";
@@ -7,7 +8,7 @@ import { BUCKET_COLOR, SERVICE_ICON, bucketOf } from "../status";
 import { AutomationRow } from "./AutomationRow";
 
 /** One service (Reactivation, Bookings, ...) as a card: header with a one-line verdict, rows below. */
-export function ServiceSection({ service, rows, selected, onSelect, collapsible = false, open = true, onToggle }: {
+export function ServiceSection({ service, rows, selected, onSelect, collapsible = false, open = true, onToggle, action, id }: {
   service: AutomationService | "unlisted";
   rows: OverviewRow[];
   selected: string | null;
@@ -15,6 +16,9 @@ export function ServiceSection({ service, rows, selected, onSelect, collapsible 
   collapsible?: boolean;
   open?: boolean;
   onToggle?: () => void;
+  /** Extra control in the header (e.g. Clear failures). Not shown on a collapsible header, which is itself a button. */
+  action?: ReactNode;
+  id?: string;
 }) {
   const { t } = useTranslation("automation");
   const Icon = SERVICE_ICON[service];
@@ -31,22 +35,23 @@ export function ServiceSection({ service, rows, selected, onSelect, collapsible 
   const head = (
     <>
       <span className="am-icon-tile"><Icon className="h-4 w-4" /></span>
-      <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ flex: 1, minWidth: collapsible ? 0 : 160 }}>
         <div className="am-section-title">{t(`services.${service}`)}</div>
         <div style={{ fontSize: 12.5, color: "var(--mute)", marginTop: 1 }}>{t(`serviceBlurb.${service}`)}</div>
       </div>
       <span style={{ fontSize: 12.5, color: verdict.color, fontWeight: 600, whiteSpace: "nowrap" }}>{verdict.text}</span>
+      {!collapsible && action}
       <span className="am-mono" style={{ minWidth: 18, textAlign: "right" }}>{rows.length}</span>
       {collapsible && <ChevronDown className="h-4 w-4" style={{ color: "var(--mute)", transform: open ? "rotate(180deg)" : undefined, transition: "transform 200ms ease" }} />}
     </>
   );
 
   return (
-    <SectionCard padded={false} className="overflow-hidden" data-testid={`automation-service-${service}`}>
+    <SectionCard padded={false} className="overflow-hidden" data-testid={`automation-service-${service}`} id={id} role={id ? "tabpanel" : undefined}>
       {collapsible ? (
         <button type="button" className="am-section-head" onClick={onToggle} aria-expanded={open} style={{ borderBottom: open ? undefined : "none" }}>{head}</button>
       ) : (
-        <div className="am-section-head">{head}</div>
+        <div className="am-section-head" style={{ flexWrap: "wrap" }}>{head}</div>
       )}
       {open && (
         <div>

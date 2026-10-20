@@ -2160,57 +2160,7 @@ export function startAutomationFailureNotifier(): void {
   setInterval(checkAutomationFailures, 5 * 60 * 1000);
 }
 
-export function startCampaignFinishedNotifier(): void {
-  const campaignFinishedNotified = new Set<number>();
-
-  async function checkCampaignsFinished() {
-    try {
-      const activeCampaigns = await db
-        .select()
-        .from(campaigns)
-        .where(eq(campaigns.status, "active"));
-
-      for (const campaign of activeCampaigns) {
-        if (!campaign.id || campaignFinishedNotified.has(campaign.id)) continue;
-        if ((campaign as any).isDemo) continue;
-
-        const [pending] = await db
-          .select({ cnt: count() })
-          .from(leads)
-          .where(
-            and(
-              eq(leads.campaignsId, campaign.id),
-              sql`${leads.conversionStatus} IN ('New', 'Queued')`,
-            ),
-          );
-
-        const [total] = await db
-          .select({ cnt: count() })
-          .from(leads)
-          .where(eq(leads.campaignsId, campaign.id));
-
-        if (total.cnt > 0 && pending.cnt === 0) {
-          campaignFinishedNotified.add(campaign.id);
-
-          const agencyUsers = (await storage.getAppUsers()).filter((u: any) => u.accountsId === 1);
-          for (const user of agencyUsers) {
-            await createAndDispatchNotification({
-              type: "campaign_finished",
-              title: `Campaign finished: ${(campaign as any).title || campaign.name || "Untitled"}`,
-              body: `All ${total.cnt} leads have been contacted`,
-              userId: user.id!,
-              accountId: campaign.accountsId ?? null,
-              read: false,
-              link: "/platform/campaigns",
-              leadId: null,
-            });
-          }
-        }
-      }
-    } catch (err) {
-      console.error("[CampaignFinishedNotifier]", err);
-    }
-  }
-
-  setInterval(checkCampaignsFinished, 10 * 60 * 1000);
-}
+// campaign_finished is fired by the engine's campaign launcher only
+// (automations/src/automations/campaign_launcher.py, once per completion).
+// The old Express poller here never matched (status 'active' vs 'Active')
+// and would have duplicated the engine's row, so it was removed.

@@ -41,49 +41,54 @@ export function useCalendarAppointments({
 }: UseCalendarAppointmentsParams) {
   const appts = useMemo((): Appointment[] => {
     if (!leads) return [];
-    return leads
+    const inScope = leads
       .filter((l: any) => {
         if (!isAgencyUser) return (l.account_id || l.accounts_id) === currentAccountId;
         if (effectiveAccountFilter === "all") return true;
         return (l.account_id || l.accounts_id) === effectiveAccountFilter;
       })
-      .filter((l: any) => campaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === campaignId)
-      .filter((l: any) => {
-        const callDate = l.booked_call_date || l.booking_confirmed_at || l.bookingConfirmedAt;
-        return Boolean(callDate) && (l.conversion_status === "Booked" || l.Conversion_Status === "Booked");
-      })
-      .map((l: any) => {
-        const rawDate = l.booked_call_date || l.booking_confirmed_at || l.bookingConfirmedAt;
-        const d = new Date(rawDate as string);
-        const firstName = l.first_name || "";
-        const lastName = l.last_name || "";
-        const fullName = l.full_name || (firstName || lastName ? `${firstName} ${lastName}`.trim() : t("appointment.unknownLead"));
-        const aid = l.account_id || l.accounts_id;
-        const tz = accounts.find((a: any) => a.id === Number(aid))?.timezone as string | undefined;
-        return {
-          id: l.id,
-          lead_name: fullName,
-          campaign_name: l.campaign_name || null,
-          date: toLocaleDateStringTz(d, tz),
-          formattedDate: formatDate(d, t),
-          time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", ...(tz ? { timeZone: tz } : {}) }),
-          hour: getHoursInTimezone(d, tz),
-          minutes: getMinutesInTimezone(d, tz),
-          status: l.conversion_status,
-          calendar_link: l.calendar_link || "https://cal.example.com/leadawaker",
-          no_show: l.no_show === true || l.no_show === "true" || l.no_show === 1,
-          re_scheduled_count: Number(l.re_scheduled_count) || 0,
-          raw_booked_call_date: (l.booked_call_date || l.booking_confirmed_at || l.bookingConfirmedAt) as string,
-          raw_previous_booked_call_date: (l.previous_booked_call_date || l.previousBookedCallDate || null) as string | null,
-          phone: l.phone || l.Phone || null,
-          email: l.email || l.Email || null,
-          callDurationMinutes: Number(l.call_duration_minutes) || 30,
-          rawLead: l,
-          timezone: tz || undefined,
-          leadScore: Number(l.lead_score) || 0,
-        };
-      })
-      .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
+      .filter((l: any) => campaignId === "all" ? true : (l.campaign_id || l.campaigns_id) === campaignId);
+
+    const toAppt = (l: any, rawDate: string, side: boolean): Appointment => {
+      const d = new Date(rawDate);
+      const firstName = l.first_name || "";
+      const lastName = l.last_name || "";
+      const fullName = l.full_name || (firstName || lastName ? `${firstName} ${lastName}`.trim() : t("appointment.unknownLead"));
+      const aid = l.account_id || l.accounts_id;
+      const tz = accounts.find((a: any) => a.id === Number(aid))?.timezone as string | undefined;
+      return {
+        id: side ? -l.id : l.id,
+        lead_name: fullName,
+        campaign_name: l.campaign_name || null,
+        date: toLocaleDateStringTz(d, tz),
+        formattedDate: formatDate(d, t),
+        time: d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", ...(tz ? { timeZone: tz } : {}) }),
+        hour: getHoursInTimezone(d, tz),
+        minutes: getMinutesInTimezone(d, tz),
+        status: side ? "Booked" : l.conversion_status,
+        calendar_link: l.calendar_link || "https://cal.example.com/leadawaker",
+        no_show: !side && (l.no_show === true || l.no_show === "true" || l.no_show === 1),
+        re_scheduled_count: side ? 0 : Number(l.re_scheduled_count) || 0,
+        raw_booked_call_date: rawDate,
+        raw_previous_booked_call_date: side ? null : (l.previous_booked_call_date || l.previousBookedCallDate || null) as string | null,
+        phone: (side && l.callback_phone) || l.phone || l.Phone || null,
+        email: l.email || l.Email || null,
+        callDurationMinutes: Number(l.call_duration_minutes) || 30,
+        rawLead: l,
+        timezone: tz || undefined,
+        leadScore: Number(l.lead_score) || 0,
+        side,
+        kind: side ? (l.side_booking_kind || null) : null,
+      };
+    };
+
+    const out: Appointment[] = [];
+    for (const l of inScope) {
+      const callDate = l.booked_call_date || l.booking_confirmed_at || l.bookingConfirmedAt;
+      if (callDate && (l.conversion_status === "Booked" || l.Conversion_Status === "Booked")) out.push(toAppt(l, callDate as string, false));
+      if (l.side_booking_date) out.push(toAppt(l, l.side_booking_date as string, true));
+    }
+    return out.sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`));
   }, [leads, currentAccountId, isAgencyUser, effectiveAccountFilter, campaignId, t, accounts]);
 
   // Indexed by date for O(1) grid lookups

@@ -396,6 +396,29 @@ export function registerCalendarRoutes(app: Express): void {
     res.json({ ...customDomainPayload(updated ?? caldiy), verified: true });
   }));
 
+  // Who manages a domain's DNS, for the setup guide: its nameservers and, for
+  // .nl and other RDAP-listed domains, the registrar. Best effort, never throws.
+  app.get("/api/accounts/:id/custom-domain/dns-host", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+    const raw = String(req.query.domain ?? "").trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0];
+    if (!/^[a-z0-9.-]+\.[a-z]{2,}$/.test(raw)) return res.status(400).json({ message: "domain required" });
+    // The registrable part: afspraak.robbenrosmalen.nl -> robbenrosmalen.nl (good enough for .nl/.com/.be).
+    const apex = raw.split(".").slice(-2).join(".");
+    const { promises: dns } = await import("dns");
+    const nameservers = await dns.resolveNs(apex).catch(() => [] as string[]);
+    let registrar: string | null = null;
+    try {
+      const url = apex.endsWith(".nl") ? `https://rdap.sidn.nl/domain/${apex}` : `https://rdap.org/domain/${apex}`;
+      const r = await fetch(url, { signal: AbortSignal.timeout(5000) });
+      if (r.ok) {
+        const body = await r.json() as { entities?: Array<{ roles?: string[]; vcardArray?: [string, unknown[][]] }> };
+        const ent = body.entities?.find((e) => e.roles?.includes("registrar"));
+        const fn = (ent?.vcardArray?.[1] ?? []).find((x) => Array.isArray(x) && x[0] === "fn") as unknown[] | undefined;
+        registrar = typeof fn?.[3] === "string" ? fn[3] : null;
+      }
+    } catch { /* no registrar: the nameservers still say enough */ }
+    res.json({ domain: raw, apex, nameservers, registrar });
+  }));
+
   // Remove the domain — reverts links + routing to cal.leadawaker.com.
   app.delete("/api/accounts/:id/custom-domain", requireAuth, requireAgency, wrapAsync(async (req, res) => {
     const accountId = Number(req.params.id);

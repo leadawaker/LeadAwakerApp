@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { BookOpen, Plus, ChevronDown, ChevronRight } from "lucide-react";
 import { Panel, PanelAction } from "../atoms";
@@ -7,8 +7,10 @@ import { KBCategory } from "./KBCategory";
 import { KBForm } from "./KBForm";
 import type { KBEntryData } from "../types";
 
-export function KBPanel({ accountId, collapsible = false, defaultCollapsed = false, titleOverride, inset = false, insetCrisp = false }: {
+export function KBPanel({ accountId, collapsible = false, defaultCollapsed = false, titleOverride, inset = false, insetCrisp = false, top }: {
   accountId: number;
+  /** Shown first inside the panel (the Voice tab puts the live persona here). */
+  top?: ReactNode;
   collapsible?: boolean;
   defaultCollapsed?: boolean;
   titleOverride?: string;
@@ -70,6 +72,7 @@ export function KBPanel({ accountId, collapsible = false, defaultCollapsed = fal
     >
       {bodyOpen && (
         <>
+          {top}
           {formOpen && (
             <KBForm campaigns={campaigns} initial={initial} saving={saving} onSubmit={handleSubmit} onClose={closeForm} />
           )}

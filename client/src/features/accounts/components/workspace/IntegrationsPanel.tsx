@@ -1,4 +1,6 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { RequestChangeNote } from "@/components/crm/RequestChangeNote";
 import { MeetingTypeCard } from "./MeetingTypeCard";
 import { VisitsCard } from "./VisitsCard";
 import type { AccountRow, AccountDetail } from "./types";
@@ -31,9 +33,10 @@ function Group({ index, group, children }: { index: number; group: ConnectionGro
 
 // ── Main panel ─────────────────────────────────────────────────────────────────
 // What is connected, in four families: the phone number, WhatsApp, the chat on
-// the client's website, and where appointments land. A strip on top shows the
-// state of all four. How the assistant behaves on a call is the Phone line
-// tab. A client login (readOnly) sees bookings only.
+// the client's website, and where appointments land. A menu of the four (with
+// each one's state) opens one family at a time: a column on the left on
+// desktop, a 2x2 grid on top on a phone. How the assistant behaves on a call is
+// the Phone line tab. A client login (readOnly) sees bookings only, no menu.
 export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnly = false }: {
   account: AccountRow;
   d: AccountDetail;
@@ -42,19 +45,21 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
   stacked?: boolean;
   readOnly?: boolean;
 }) {
+  const { t: tc } = useTranslation("crm");
   const accountId = account.Id ?? account.id ?? 0;
+  const [open, setOpen] = useState<ConnectionGroup>(readOnly ? "bookings" : "phone");
+  const shown = readOnly ? "bookings" : open;
 
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 34 }}>
-      {!readOnly && <ConnectionsOverview accountId={accountId} stacked={stacked} />}
-
-      {!readOnly && (
+  const groups = (
+    <div style={{ display: "flex", flexDirection: "column", gap: 34, minWidth: 0 }}>
+      {readOnly && <RequestChangeNote area={tc("requestChange.areas.integrations")} />}
+      {shown === "phone" && (
         <Group index={1} group="phone">
           <PhoneConnection accountId={accountId} />
         </Group>
       )}
 
-      {!readOnly && (
+      {shown === "messaging" && (
         <Group index={2} group="messaging">
           {/* WhatsApp on the client's own number (specs/receptionist-channels) */}
           <WhatsAppCloudCard accountId={accountId} />
@@ -72,15 +77,17 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
         </Group>
       )}
 
-      {!readOnly && (
+      {shown === "website" && (
         <Group index={3} group="website">
           {/* specs/website-widget */}
           <WebsiteChatCard accountId={accountId} />
         </Group>
       )}
 
+      {shown === "bookings" && (
       <Group index={readOnly ? 1 : 4} group="bookings">
-        <div style={{ display: "grid", gridTemplateColumns: stacked ? "1fr" : "1fr 1fr", gap: 18 }}>
+        {/* Calendar first, the booking page second: one under the other, in that order. */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 18 }}>
           <div className="neu-raised" style={cardStyle}>
             <CalendarConnectCard accountId={accountId} noBorder clientMode={readOnly} />
           </div>
@@ -109,9 +116,28 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
         )}
         {/* Optional and folded; visible to clients too. */}
         <div className="neu-raised" style={cardStyle}>
-          <CustomBookingDomainCard accountId={accountId} noBorder />
+          <CustomBookingDomainCard accountId={accountId} noBorder website={account.website ? String(account.website) : null} />
         </div>
       </Group>
+      )}
+    </div>
+  );
+
+  if (readOnly) return groups;
+  if (stacked) {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
+        <ConnectionsOverview accountId={accountId} active={open} onSelect={setOpen} layout="grid" />
+        {groups}
+      </div>
+    );
+  }
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "220px minmax(0, 1fr)", gap: 28, alignItems: "start" }}>
+      <div style={{ position: "sticky", top: "calc(var(--ws-sticky-top, 0px) + 16px)" }}>
+        <ConnectionsOverview accountId={accountId} active={open} onSelect={setOpen} layout="rail" />
+      </div>
+      {groups}
     </div>
   );
 }

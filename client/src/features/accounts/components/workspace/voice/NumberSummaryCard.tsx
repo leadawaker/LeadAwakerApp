@@ -3,16 +3,18 @@
 // This card stays here as the readiness checklist's "number" anchor.
 import { useTranslation } from "react-i18next";
 import { ArrowRight, Phone } from "lucide-react";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { VoiceCardShell, helpStyle } from "./voiceAtoms";
 import { NumberStatusChip } from "./NumberCard";
 import type { VoiceLine } from "./voiceApi";
 
 export function NumberSummaryCard({ line, onManage }: { line: VoiceLine; onManage?: () => void }) {
   const { t } = useTranslation("voiceTab");
+  const { isAgencyUser } = useWorkspace();
   return (
     <VoiceCardShell card="number" icon={<Phone size={17} />} title={t("number.title")} action={<NumberStatusChip status={line.number?.status ?? "not_set"} />}>
       <div style={{ fontFamily: "var(--mono)", fontSize: 15, color: line.number ? "var(--ink)" : "var(--mute)", marginBottom: onManage ? 12 : 0 }}>
-        {line.number?.phoneNumber ?? t("number.summaryNone")}
+        {line.number?.phoneNumber ?? t(isAgencyUser ? "number.summaryNone" : "number.summaryNoneClient")}
       </div>
       {onManage && (
         <>

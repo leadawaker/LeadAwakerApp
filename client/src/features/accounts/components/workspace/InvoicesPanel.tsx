@@ -40,7 +40,7 @@ function formatAmount(total: string | null, currency: string | null) {
   return new Intl.NumberFormat("en-US", { style: "currency", currency: currency || "EUR" }).format(n);
 }
 
-export function InvoicesPanel({ accountId, naked = false }: { accountId: number; naked?: boolean }) {
+export function InvoicesPanel({ accountId, naked = false, clientView = false }: { accountId: number; naked?: boolean; clientView?: boolean }) {
   const { t } = useTranslation("accounts");
   const [, setLocation] = useLocation();
   const [invoices, setInvoices] = useState<InvoiceSummary[] | null>(null);
@@ -61,8 +61,11 @@ export function InvoicesPanel({ accountId, naked = false }: { accountId: number;
 
   const recent = (invoices ?? []).slice(0, 3);
 
+  // A client sees invoices only when there are some.
+  if (clientView && (invoices === null || invoices.length === 0)) return null;
+
   return (
-    <Panel eyebrow="05" title={t("panels.invoices")} count={invoices?.length ?? undefined} naked={naked}>
+    <Panel eyebrow={clientView ? undefined : "05"} title={t("panels.invoices")} count={invoices?.length ?? undefined} naked={naked}>
       {invoices === null ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
           {[0, 1].map((i) => <div key={i} style={{ height: 56, borderRadius: "var(--r-surface)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }} className="animate-pulse" />)}

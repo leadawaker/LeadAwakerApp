@@ -187,7 +187,7 @@
   background: var(--surface);
   box-shadow: var(--sh-inset-super-crisp);
 }
-.am-section-title { font-family: 'Playfair Display', serif; font-size: 19px; color: var(--ink); line-height: 1.2; }
+.am-section-title { font-family: var(--sans); font-weight: 700; font-size: 19px; color: var(--ink); line-height: 1.2; }
 
 /* column captions above the first section */
 .am-captions {
@@ -247,7 +247,7 @@
 .am-lead-link:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; border-radius: 2px; }
 
 .am-stat { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.am-stat b { font-family: 'Playfair Display', serif; font-weight: 400; font-size: 24px; line-height: 1; color: var(--ink); }
+.am-stat b { font-family: var(--sans); font-weight: 700; font-weight: 400; font-size: 24px; line-height: 1; color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) {
   .am-dot--alert::after, .am-pulse--grow .am-pulse-bar { animation: none; }

@@ -9,12 +9,12 @@ import { AccountFilter, type AccountOption } from "./AccountFilter";
 import { PresentingToggle } from "./PresentingToggle";
 import { VoiceCallsMenus } from "./VoiceCallsMenus";
 import { VoiceCallsMobileTopbar } from "./VoiceCallsMobileTopbar";
-
-const SCOPES: VoiceScope[] = ["live", "demo"];
+import { ScopeSwitch } from "./ScopeSwitch";
+import { WeekSummary } from "./WeekSummary";
 
 interface Props {
   scope: VoiceScope;
-  /** Owner only: shows the Live | Demo tabs, the account chip and the Presenting toggle. */
+  /** Owner only: shows the Live | Demo switch (by the search), the account chip and the Presenting toggle. */
   isOwner: boolean;
   onScope: (s: VoiceScope) => void;
   /** Calls or Callers: shown to everyone with access. */
@@ -49,24 +49,6 @@ export function VoiceCallsTopbar({ scope, isOwner, onScope, view, onView, option
         {t("title")}
       </span>
 
-      {isOwner && (
-        <div className="la-seg shrink-0" role="tablist" aria-label={t("tabs.aria")} style={{ marginLeft: 4 }}>
-          {SCOPES.map((s) => (
-            <button
-              key={s}
-              role="tab"
-              aria-selected={scope === s}
-              data-testid={`voice-tab-${s}`}
-              className={cn("la-seg-btn", scope === s && "on")}
-              style={{ padding: "8px 14px", fontSize: 11, letterSpacing: "0.13em" }}
-              onClick={() => onScope(s)}
-            >
-              {t(`tabs.${s}`)}
-            </button>
-          ))}
-        </div>
-      )}
-
       <div className="la-seg shrink-0" role="tablist" aria-label={t("callers.view.aria")}>
         {VIEWS.map((v) => (
           <button
@@ -83,7 +65,11 @@ export function VoiceCallsTopbar({ scope, isOwner, onScope, view, onView, option
         ))}
       </div>
 
-      <div style={{ flex: 1 }} />
+      <WeekSummary scope={scope} accountId={accountId} />
+
+      <div style={{ flex: 1, minWidth: 8 }} />
+
+      {isOwner && <ScopeSwitch scope={scope} onScope={onScope} />}
 
       <div className="hidden md:flex" style={{ alignItems: "center", gap: 6, background: "var(--bg)", borderRadius: "var(--r-surface)", boxShadow: "var(--sh-inset-crisp)", padding: "7px 12px", width: 200, flexShrink: 0 }}>
         <Search size={13} style={{ color: "var(--mute-2)", flexShrink: 0 }} />

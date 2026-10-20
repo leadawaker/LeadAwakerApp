@@ -6,7 +6,7 @@
  * and the Recaps & alerts card cannot wipe each other's keys. `setup.alerts`
  * is written only here (storage/accounts.ts keeps it out of wizard saves).
  */
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { accountCommunicationProfile, accounts, clientAlertLog } from "@shared/schema";
 import { toE164 } from "@shared/phoneE164";
@@ -148,6 +148,9 @@ export const clientAlertsStorage = {
       voiceCallId: clientAlertLog.voiceCallId,
       eventType: clientAlertLog.eventType,
       kind: clientAlertLog.kind,
+      // Appointment alerts: "call" | "chat" | "calendar", set by the engine
+      // (automations client_alerts/links.py). Null on other and older rows.
+      open: sql<string | null>`${clientAlertLog.payload} ->> 'open'`,
     }).from(clientAlertLog).where(eq(clientAlertLog.linkCode, code));
     return row ?? null;
   },

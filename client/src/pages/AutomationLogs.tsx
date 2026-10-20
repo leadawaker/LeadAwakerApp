@@ -13,6 +13,8 @@ import { useAutomationsOverview } from "@/features/automation/api";
 import { OverviewHero } from "@/features/automation/components/OverviewHero";
 import { ServiceSection } from "@/features/automation/components/ServiceSection";
 import { DiaryPanel } from "@/features/automation/components/DiaryPanel";
+import { AutomationRail, railPanelId } from "@/features/automation/components/AutomationRail";
+import { ClearFailuresButton } from "@/features/automation/components/ClearFailuresButton";
 import { automationName, automationDescription } from "@/features/automation/labels";
 import { bucketOf, rowActions24h } from "@/features/automation/status";
 import "@/features/automation/automation.css";
@@ -25,7 +27,7 @@ export default function AutomationLogsPage() {
   const isMobile = useIsMobile(768);
   const q = useAutomationsOverview();
   const [selected, setSelected] = useState<string | null>(null);
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [picked, setPicked] = useState<GroupKey | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
@@ -51,12 +53,18 @@ export default function AutomationLogsPage() {
       const key: GroupKey = r.entry ? r.entry.service : "unlisted";
       map.set(key, [...(map.get(key) ?? []), r]);
     }
-    return ([...SERVICE_ORDER, "unlisted"] as GroupKey[]).filter((k) => map.has(k)).map((k) => ({ key: k, rows: map.get(k)! }));
+    return ([...SERVICE_ORDER, "unlisted"] as GroupKey[]).filter((k) => map.has(k)).map((k) => ({
+      key: k,
+      rows: map.get(k)!,
+      failures: map.get(k)!.reduce((n, r) => n + r.counts24h.failed, 0),
+    }));
   }, [rows, filter, search, t]);
 
+  // The picked category, else the first one with open failures, else the first. A filter can hide the picked one.
+  const active = groups.find((g) => g.key === picked) ?? groups.find((g) => g.failures > 0) ?? groups[0];
+  const railItems = groups.map((g) => ({ key: g.key, detail: t("rail.automations", { count: g.rows.length }), failures: g.failures }));
+
   const panelOnly = isMobile && !!selected;
-  // A filter or search that hides "Behind the scenes" rows should still show the matches.
-  const narrowed = filter !== "all" || search.trim() !== "";
 
   return (
     <CrmShell>
@@ -101,35 +109,33 @@ export default function AutomationLogsPage() {
                       </div>
                     </div>
 
-                    <div className="am-list" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-                      {groups.length > 0 && (
-                        <div className="am-captions" aria-hidden>
-                          <span /><span>{t("captions.automation")}</span><span>{t("captions.runs")}</span><span>{t("captions.pulse")}</span>
-                          <span style={{ textAlign: "right" }}>{t("captions.actions")}</span><span style={{ textAlign: "right" }}>{t("captions.clients")}</span>
-                          <span style={{ textAlign: "right" }}>{t("captions.last")}</span><span />
+                    {groups.length === 0 ? (
+                      <div style={{ padding: "40px 0", textAlign: "center", color: "var(--mute)", fontSize: 14 }}>
+                        {filter === "attention" && !search ? t("filter.noneAttention") : t("filter.none")}
+                      </div>
+                    ) : active && (
+                      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, alignItems: isMobile ? "stretch" : "flex-start" }}>
+                        <div style={isMobile ? undefined : { width: 232, flexShrink: 0 }}>
+                          <AutomationRail items={railItems} active={active.key} onSelect={(k) => setPicked(k)} layout={isMobile ? "grid" : "rail"} />
                         </div>
-                      )}
-                      {groups.length === 0 && (
-                        <div style={{ padding: "40px 0", textAlign: "center", color: "var(--mute)", fontSize: 14 }}>
-                          {filter === "attention" && !search ? t("filter.noneAttention") : t("filter.none")}
-                        </div>
-                      )}
-                      {groups.map(({ key, rows: groupRows }) => {
-                        const collapsible = key === "internal" && !narrowed;
-                        return (
+                        <div className="am-list" style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
+                          <div className="am-captions" aria-hidden>
+                            <span /><span>{t("captions.automation")}</span><span>{t("captions.runs")}</span><span>{t("captions.pulse")}</span>
+                            <span style={{ textAlign: "right" }}>{t("captions.actions")}</span><span style={{ textAlign: "right" }}>{t("captions.clients")}</span>
+                            <span style={{ textAlign: "right" }}>{t("captions.last")}</span><span />
+                          </div>
                           <ServiceSection
-                            key={key}
-                            service={key}
-                            rows={groupRows}
+                            key={active.key}
+                            id={railPanelId(active.key)}
+                            service={active.key}
+                            rows={active.rows}
                             selected={selected}
                             onSelect={setSelected}
-                            collapsible={collapsible}
-                            open={!collapsible || internalOpen}
-                            onToggle={() => setInternalOpen((o) => !o)}
+                            action={<ClearFailuresButton count={active.failures} scope={{ automationIds: active.rows.map((r) => r.id) }} />}
                           />
-                        );
-                      })}
-                    </div>
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : null}
               </div>

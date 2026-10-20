@@ -38,10 +38,13 @@
     "tiles": { "calls": "Ligações", "booked": "Agendadas", "transferred": "Transferidas", "transfersFailed_one": "{{count}} falhou", "transfersFailed_other": "{{count}} falharam", "avgLength": "Duração média" },
     "perDay": "Ligações por dia",
     "outcomes": "Resultados",
-    "outcome": { "booked": "Agendada", "callback": "Retorno", "transferred": "Transferida", "hung_up": "Desligou", "other": "Outro" },
-    "outOfHours": "das ligações chegaram fora do horário comercial",
+    "outcome": { "booked": "Agendada", "callback": "Retorno", "transferred": "Transferida", "hung_up": "Desligou", "answered": "Dúvidas respondidas" },
+    "outOfHoursLabel": "Ligações fora do horário comercial",
     "screened_one": "ligação de vendas ou robô barrada",
     "screened_other": "ligações de vendas e robôs barradas",
+    "latency": "velocidade típica de resposta, da última palavra de quem liga até a resposta",
+    "costPerMinute": "custo por minuto (só você vê isto)",
+    "cost": "gasto com chamadas (só você vê isto)",
     "recent": "Ligações recentes",
     "recentEmpty": "Ainda não há ligações neste período."
   },
@@ -106,7 +109,8 @@
     "openCampaign": "Abrir campanha",
     "newCampaign": "Nova campanha",
     "importLeads": "Importar leads",
-    "status": {"New": "Novo", "Contacted": "Contatado", "Responded": "Respondeu", "MultipleResponses": "Múltiplas Respostas", "Qualified": "Qualificado", "Booked": "Chamada Agendada", "Closed": "Fechado", "Lost": "Perdido", "DND": "Não Perturbe", "Unknown": "Desconhecido"}
+    "status": {"New": "Novo", "Contacted": "Contatado", "Responded": "Respondeu", "MultipleResponses": "Múltiplas Respostas", "Qualified": "Qualificado", "Booked": "Chamada Agendada", "Closed": "Fechado", "Lost": "Perdido", "DND": "Não Perturbe", "Unknown": "Desconhecido"},
+    "live": {"upcoming": "A seguir", "upcomingEmpty": "Nenhuma chamada agendada por vir.", "todayCount_one": "{{count}} hoje", "todayCount_other": "{{count}} hoje", "handoff": "Transferido", "activity": "Acabou de acontecer", "activityEmpty": "Nenhuma mensagem nos últimos 30 dias.", "live": "Ao vivo", "replied": "Respondeu", "sent": "Enviada", "bumps": "Follow-ups de hoje", "sentToday": "Enviados hoje", "dueToday": "Ainda para hoje", "nextUp": "Próximos agendados", "nextEmpty": "Nenhum follow-up agendado.", "firstMessage": "Primeira mensagem", "bump": "Follow-up {{n}}", "due": "Agora"}
   },
   "reputation": {
     "banner": "novas avaliações no Google",
@@ -144,5 +148,19 @@
     "recent": "Conversas recentes",
     "recentEmpty": "Ainda não há conversas no Instagram neste período.",
     "notConnected": "Nenhuma conta do Instagram está conectada ainda."
+  },
+  "onboarding": {
+    "yourReceptionist": "Sua recepcionista",
+    "there": "por aqui",
+    "close": "Fechar",
+    "welcome": "Bem-vindo, {{firstName}}. {{agentName}} atende pela {{company}}.",
+    "welcomeNoName": "Bem-vindo. {{agentName}} atende pela {{company}}.",
+    "where1": "Ligações, conversas e agendamentos aparecem nesta página e nas páginas de {{calls}}, {{leads}} e {{calendar}}.",
+    "where2": "Você recebe um resumo diário e alertas na hora assim que se adicionar a eles.",
+    "guide": "Ler o guia",
+    "done": "Pronto",
+    "installIos": "Compartilhar › Adicionar à Tela de Início.",
+    "installAndroid": "Menu ⋮ › Instalar app / Adicionar à tela inicial.",
+    "items": { "details": "Confira os dados da sua empresa", "alerts": "Adicione-se ao resumo e aos alertas", "call": "Abra sua primeira ligação ou conversa", "install": "Coloque o CRM no seu celular" }
   }
 }

@@ -1,6 +1,6 @@
 // DesktopCalendarHeader.tsx — center week/month header with date navigation and
 // the meetings-this-week KPI. Extracted from DesktopCalendarToolbar to keep files <500 lines.
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { HEADER_H, dateKeyOf } from "../lib/calendarDesign";
@@ -17,6 +17,22 @@ export function CenterHeader(p: DesktopCalendarProps) {
   const meetingsThisWeek = useMemo(() => p.appts.filter((a) => weekKeys.has(a.date)).length, [p.appts, weekKeys]);
   const activeMonth = p.month.getMonth();
   const flashDir = useSwipeFlash();
+
+  // Month pills live in normal flow, in a slot that shrinks when the header is tight.
+  // When the pills' natural width no longer fits the slot they are hidden (never overlap the title).
+  const pillSlotRef = useRef<HTMLDivElement>(null);
+  const pillInnerRef = useRef<HTMLDivElement>(null);
+  const [pillsFit, setPillsFit] = useState(true);
+  useEffect(() => {
+    const slot = pillSlotRef.current;
+    const inner = pillInnerRef.current;
+    if (!slot || !inner) return;
+    const measure = () => setPillsFit(inner.offsetWidth <= slot.clientWidth);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(slot);
+    return () => ro.disconnect();
+  }, []);
 
   // Today button: inset shadow when viewing the current week/month, plain raised when navigated away.
   const now = new Date();
@@ -92,18 +108,22 @@ export function CenterHeader(p: DesktopCalendarProps) {
   }
 
   return (
-    <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "center", gap: 16, position: "relative" }}>
+    <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 16, position: "relative" }}>
       {/* Refresh + Today — left-anchored */}
-      <div style={{ position: "absolute", left: 14, display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
         <NavBtn onClick={() => p.onRefresh?.()} aria-label="Refresh"><RefreshCw className="h-4 w-4" /></NavBtn>
         <button onClick={p.onToday} className="la-btn la-btn--soft" style={todayBtnStyle}>{t("navigation.today")}</button>
       </div>
-      <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")} forcePressed={flashDir === -1}><ChevronLeft className="h-5 w-5" /></NavBtn>
-      <span style={{ ...SERIF, fontSize: 28, color: "var(--ink)", letterSpacing: "-0.01em", minWidth: 200, textAlign: "center", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
-      <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")} forcePressed={flashDir === 1}><ChevronRight className="h-5 w-5" /></NavBtn>
-      {/* Month buttons — always visible, right-aligned in header */}
-      <div style={{ position: "absolute", right: 14 }}>
-        {monthButtons}
+      <div style={{ flex: "1 0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
+        <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")} forcePressed={flashDir === -1}><ChevronLeft className="h-5 w-5" /></NavBtn>
+        <span style={{ ...SERIF, fontSize: 28, color: "var(--ink)", letterSpacing: "-0.01em", minWidth: 200, textAlign: "center", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
+        <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")} forcePressed={flashDir === 1}><ChevronRight className="h-5 w-5" /></NavBtn>
+      </div>
+      {/* Month buttons — in flow, right-aligned; hidden (not overlapping) when they don't fit */}
+      <div ref={pillSlotRef} style={{ flex: "0 1 auto", minWidth: 0, display: "flex", justifyContent: "flex-end", overflow: "hidden" }}>
+        <div ref={pillInnerRef} style={{ flexShrink: 0, visibility: pillsFit ? "visible" : "hidden" }}>
+          {monthButtons}
+        </div>
       </div>
     </div>
   );

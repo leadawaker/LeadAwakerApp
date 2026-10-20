@@ -21,10 +21,12 @@ interface Props {
   bookedSlot?: string | null;
   bookedIso?: string | null;
   small?: boolean;
+  /** Shown before the outcome inside the pill, e.g. "Call 3". */
+  prefix?: string;
 }
 
 /** What the call amounted to, as a pill. Booked calls carry their slot inside it. */
-export function OutcomePill({ outcome, bookedSlot, bookedIso, small }: Props) {
+export function OutcomePill({ outcome, bookedSlot, bookedIso, small, prefix }: Props) {
   const { t, i18n } = useTranslation("voiceCalls");
   const key = normalizeOutcome(outcome);
   const c = outcomeColors(key);
@@ -35,13 +37,14 @@ export function OutcomePill({ outcome, bookedSlot, bookedIso, small }: Props) {
       data-outcome={key}
       style={{
         gap: 6, flexShrink: 0, background: c.bg, color: c.text,
-        boxShadow: c.inset ? "var(--sh-inset-crisp)" : "none",
-        fontFamily: "var(--mono)", fontSize: small ? 8 : 9, fontWeight: 700,
+        boxShadow: c.inset ? "var(--sh-inset-super-crisp)" : c.ring ? `inset 0 0 0 1px ${c.ring}` : "none",
+        fontFamily: "var(--mono)", fontSize: small ? 9 : 10, fontWeight: 700,
         letterSpacing: "0.12em", textTransform: "uppercase",
-        padding: small ? "3px 7px" : "4px 9px",
+        padding: small ? "4px 8px" : "5px 10px",
       }}
     >
-      <span style={{ width: 5, height: 5, borderRadius: "50%", background: c.text, flexShrink: 0 }} />
+      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.text, flexShrink: 0 }} />
+      {prefix && <span>{`${prefix} ·`}</span>}
       {t(`outcomes.${OUTCOME_LABEL_KEY[key]}`)}
       {slot && <span style={{ fontWeight: 600, letterSpacing: "0.04em" }}>{`· ${slot}`}</span>}
     </Pill>

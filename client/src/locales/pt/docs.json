@@ -2,7 +2,102 @@
   "title": "Documentação",
   "whatsNew": "Novidades",
   "operatorManual": "Manual do Operador",
-  "clientGuide": "Guia do Cliente",
+  "clientGuide": {
+    "title": "Guia do cliente",
+    "yourReceptionist": "sua recepcionista",
+    "welcome": {
+      "title": "Bem-vindo ao seu CRM",
+      "intro": "É aqui que você acompanha a {{company}}. {{Name}} atende suas ligações e chats, e tudo o que acontece aparece aqui, então você nunca precisa adivinhar. Veja o que fica onde:",
+      "home": "<b>Início</b>: o retrato rápido. O que chegou, o que foi agendado e o que precisa de você.",
+      "calls": "<b>Chamadas</b>: todas as ligações que {{name}} atendeu. Abra uma para ler o que foi dito e o que resultou.",
+      "leads": "<b>Leads</b>: as pessoas que entraram em contato, com as conversas reunidas num só lugar.",
+      "calendar": "<b>Calendário</b>: seus agendamentos e visitas. Aqui você também adiciona bloqueios de horário.",
+      "receptionist": "<b>Recepcionista</b>: a configuração de {{name}}, seu horário de funcionamento e quem recebe o resumo e os alertas.",
+      "tip": "Ficou em dúvida? Use o botão de chat para mandar uma mensagem direto ao Gabriel. Nenhuma pergunta é pequena demais."
+    },
+    "phone": {
+      "title": "Como {{name}} atende seu telefone",
+      "intro": "Quando alguém liga para o número da sua empresa, {{name}} atende, escuta e ajuda como uma boa recepcionista. Isto pode acontecer numa ligação:",
+      "calls": "<strong>Ligações:</strong> {{Name}} responde perguntas sobre sua empresa, no idioma de quem ligou. Cada ligação aparece em Chamadas com um resumo.",
+      "transfers": "<strong>Transferências:</strong> se quem ligou quiser falar com você ou com um colega, {{name}} pode passar a ligação. Na chamada você vê se a transferência deu certo.",
+      "callbacks": "<strong>Retornos:</strong> se ninguém puder atender, {{name}} anota o nome, o número e a dúvida de quem ligou. Esses pedidos de retorno aparecem na sua página Início, para você ligar de volta.",
+      "bookings": "<strong>Agendamentos e visitas:</strong> {{name}} pode marcar uma visita ou um agendamento direto na sua agenda, num horário realmente livre. O agendamento aparece na hora no seu Calendário.",
+      "tip": "Quer outra saudação ou outro horário de funcionamento? O horário você mesmo altera. Para o resto, aperte Pedir uma alteração."
+    },
+    "chat": {
+      "title": "O chat do seu site",
+      "p1": "O balãozinho de chat no seu site funciona como o telefone: {{name}} recebe os visitantes, responde às perguntas e pode marcar uma visita.",
+      "p2": "Cada conversa aparece em Leads, para você acompanhar e ver quem tem interesse."
+    },
+    "recap": {
+      "title": "Seu resumo diário e alertas",
+      "intro": "Você não precisa ficar olhando o CRM o dia todo. As informações vêm até você.",
+      "recap": "<strong>Resumo diário:</strong> um e-mail com o resumo, no horário que você define em Alertas, com as ligações, os chats e os agendamentos.",
+      "alerts": "<strong>Alertas na hora:</strong> uma mensagem assim que algo precisa de você, como um novo agendamento ou um pedido de retorno.",
+      "addTitle": "Adicionar você ou um colega",
+      "add1": "Abra <strong>Recepcionista</strong> e vá para a aba <strong>Alertas</strong>.",
+      "add2": "Adicione seu e-mail (ou o de um colega) aos destinatários do resumo ou dos alertas.",
+      "add3": "Salve. A partir do próximo resumo ou alerta, essa pessoa também recebe."
+    },
+    "calendar": {
+      "title": "Seu calendário",
+      "p1": "Todo agendamento que {{name}} faz cai no seu Calendário, com o nome do cliente e o horário.",
+      "p2": "Precisa mudar uma visita? Abra-a e remarque ou cancele. O calendário sempre manda.",
+      "p3": "Não vai estar disponível num dia ou horário? Adicione um <strong>bloqueio de horário</strong>. {{Name}} não oferece esses horários a ninguém.",
+      "tip": "Crie os bloqueios com antecedência, por exemplo para férias ou um dia de folga. É o jeito mais fácil de manter a agenda sua."
+    },
+    "change": {
+      "title": "O que você pode alterar e o que pode pedir",
+      "intro": "Muita coisa você faz sozinho, na hora:",
+      "hours": "Seu horário de funcionamento.",
+      "alerts": "Quem recebe seu resumo diário e os alertas.",
+      "replies": "Responder aos leads você mesmo.",
+      "bookings": "Remarcar ou cancelar um agendamento.",
+      "busy": "Adicionar bloqueios de horário no seu Calendário.",
+      "request": "O resto, como o que {{name}} diz, a saudação, os preços ou o que {{name}} sabe sobre sua empresa, também é fácil de mudar: aperte <strong>Pedir uma alteração</strong> e abre um chat com o Gabriel. Conte o que você quer e ele cuida disso."
+    },
+    "install": {
+      "title": "Coloque o CRM no seu celular",
+      "intro": "Adicione o CRM à tela inicial e ele abre como um aplicativo, com ícone próprio. Leva meio minuto.",
+      "iosTitle": "iPhone (Safari)",
+      "ios1": "Abra esta página no <strong>Safari</strong>.",
+      "ios2": "Toque no botão <strong>Compartilhar</strong>.",
+      "ios3": "Escolha <strong>Adicionar à Tela de Início</strong> e depois <strong>Adicionar</strong>.",
+      "androidTitle": "Android (Chrome)",
+      "android1": "Abra esta página no <strong>Chrome</strong>.",
+      "android2": "Toque no <strong>menu</strong> (três pontinhos).",
+      "android3": "Escolha <strong>Instalar aplicativo</strong> ou <strong>Adicionar à tela inicial</strong>."
+    },
+    "faq": {
+      "title": "Perguntas frequentes",
+      "items": {
+        "1": {
+          "q": "Posso ouvir uma ligação?",
+          "a": "Você lê o que foi dito em Chamadas. Abra a chamada para ver o resumo e a conversa."
+        },
+        "2": {
+          "q": "E se {{name}} não souber uma resposta?",
+          "a": "Se {{name}} não tiver certeza de algo, isso é dito com honestidade e a pergunta é repassada a você, em vez de adivinhar. Quem ligou recebe a oferta de um retorno e você recebe um alerta."
+        },
+        "3": {
+          "q": "Os clientes sabem que estão falando com uma IA?",
+          "a": "Sim. {{Name}} se apresenta como assistente digital na saudação e diz isso abertamente se alguém perguntar. A maioria só quer ter a dúvida resolvida."
+        },
+        "4": {
+          "q": "Apareceu um agendamento que eu não esperava. E agora?",
+          "a": "Abra-o no seu Calendário. Você pode remarcar ou cancelar, ou apertar Pedir uma alteração se algo parecer errado."
+        },
+        "5": {
+          "q": "Posso ler os chats do meu site?",
+          "a": "Pode. Você lê todos os chats do site em Leads."
+        },
+        "6": {
+          "q": "Com quem falo se algo der errado?",
+          "a": "Mande uma mensagem ao Gabriel pelo botão de chat. Ele recebe sua mensagem na hora."
+        }
+      }
+    }
+  },
   "agencyDocs": "Docs da Agência",
   "userDocs": "Docs do Usuário",
   "agencyDocumentation": "Documentação da Agência",

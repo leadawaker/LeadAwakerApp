@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { API_BASE } from "@/lib/apiUtils";
 import { clearServicePageToggles, hydrateServicePageToggles } from "@/hooks/useServicePageToggles";
 import { clearLandingPage, hydrateLandingPage } from "@/lib/landingPage";
+import { hydrateUserLanguage } from "@/lib/userLanguage";
+import { syncAccountFromStorage } from "@/hooks/useWorkspace";
 
 export type SessionUser = {
   id: number;
@@ -57,6 +59,7 @@ export function useSession(): SessionState {
           localStorage.setItem("leadawaker_show_outreach_pages", prefs.showOutreachPages ? "1" : "0");
           hydrateServicePageToggles(prefs);
           hydrateLandingPage(prefs);
+          hydrateUserLanguage(prefs);
           window.dispatchEvent(new Event("leadawaker-prefs-changed"));
           // Only set account ID if not already stored (preserve explicit user selections).
           // For agency users (Admin), default to 0 (all-accounts view).
@@ -69,6 +72,8 @@ export function useSession(): SessionState {
               String(isAgency ? 0 : (user.accountsId ?? 1)),
             );
           }
+          // The account store may have been read before this login wrote the keys.
+          syncAccountFromStorage();
         } else {
           localStorage.removeItem("leadawaker_auth");
           setState({ status: "unauthenticated" });
@@ -97,4 +102,5 @@ export async function logout(): Promise<void> {
   localStorage.removeItem("leadawaker_account_explicitly_selected");
   clearServicePageToggles();
   clearLandingPage();
+  syncAccountFromStorage();
 }

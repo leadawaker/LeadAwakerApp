@@ -102,10 +102,26 @@ function api(path, opts) {
   });
 }
 
+// The page the visitor is on, reported by the loader (server/widgetPages.ts):
+// address without query or fragment, its title, and an optional car name. The
+// demo page never sends one, and an old loader still in a browser cache does
+// not either; a turn simply goes without it.
+var PAGE = null;
+window.addEventListener("message", function (e) {
+  if (e.source !== parent || !e.data || e.data.type !== "la-widget-page") return;
+  var p = e.data.page;
+  if (!p || typeof p !== "object" || typeof p.url !== "string") return;
+  PAGE = {
+    url: p.url.slice(0, 300),
+    title: String(p.title || "").slice(0, 200),
+    car: String(p.car || "").slice(0, 120),
+  };
+});
+
 function withContext(extra) {
   // The proxy overwrites account, campaign and caps on every request, so these
   // are conveniences for the engine, never a trust boundary.
-  return Object.assign({ visitorId: VISITOR }, extra || {});
+  return Object.assign({ visitorId: VISITOR }, PAGE ? { page: PAGE } : {}, extra || {});
 }
 
 // GET query strings: the live proxy needs the visitor id on every read.

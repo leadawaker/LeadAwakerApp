@@ -44,17 +44,22 @@ export function HoursCard({ line, canEdit, onChanged }: { line: VoiceLine; canEd
   );
 }
 
-export function KnowledgeCard({ line, canEdit, onChanged }: { line: VoiceLine; canEdit: boolean; onChanged: () => void }) {
+export function KnowledgeCard({ line, canEdit, onChanged, persona }: {
+  line: VoiceLine; canEdit: boolean; onChanged: () => void;
+  /** The live persona, shown at the top of Company Intel. */
+  persona?: ReactNode;
+}) {
   const { t } = useTranslation("voiceTab");
   if (canEdit) {
     return (
       <RefetchOnActivity card="knowledge" onChanged={onChanged}>
-        <KBPanel accountId={line.accountId} />
+        <KBPanel accountId={line.accountId} top={persona} />
       </RefetchOnActivity>
     );
   }
   return (
     <VoiceCardShell card="knowledge" icon={<BookOpen size={17} />} title={t("knowledge.title")}>
+      {persona}
       <ReadOnlyValue value={t("knowledge.count", { count: line.kbCount })} />
     </VoiceCardShell>
   );

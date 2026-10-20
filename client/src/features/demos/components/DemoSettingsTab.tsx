@@ -10,6 +10,7 @@ import { Loader2, RotateCcw, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { SERVICES } from "../services";
 import { PhoneAmbienceSettings } from "./PhoneAmbienceSettings";
+import { EngineTestSettings } from "./EngineTestSettings";
 import { PhoneJitterSettings } from "./PhoneJitterSettings";
 import { PublicDemoSettings } from "./PublicDemoSettings";
 import { CommaListInput } from "./CommaListInput";
@@ -321,6 +322,7 @@ export function DemoSettingsTab() {
         ) : service === "voice" ? (
           <>
             <VoiceSettings />
+            <EngineTestSettings />
             <PublicDemoSettings />
             <PhoneAmbienceSettings />
             <PhoneJitterSettings />

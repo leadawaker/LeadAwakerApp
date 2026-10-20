@@ -178,6 +178,7 @@
     "alert_appointment_cancelled": "Alerted: appointment cancelled",
     "alert_callback_requested": "Alerted: callback request",
     "alert_lead_needs_reply": "Alerted: reply needed",
+    "alert_new_photo": "Alerted: new photo",
     "recap_sent": "Sent daily recap"
   },
   "outcome": {
@@ -332,5 +333,38 @@
     "no_booking_link": "No booking link set on the campaign",
     "not_on_whatsapp_no_sms": "Number is not on WhatsApp and the SMS could not be sent",
     "send_failed": "Message could not be sent"
+  },
+  "rail": {
+    "label": "Automation categories",
+    "failuresTitle": "{{count}} open failure",
+    "failuresTitle_other": "{{count}} open failures",
+    "automations": "{{count}} automation",
+    "automations_other": "{{count}} automations",
+    "short": {
+      "reactivation": "Reactivation",
+      "speed_to_lead": "Speed to lead",
+      "bookings": "Bookings",
+      "reputation": "Reviews",
+      "receptionist": "Receptionist",
+      "inbox": "Inbox",
+      "internal": "Behind the scenes",
+      "unlisted": "Unlisted"
+    }
+  },
+  "clear": {
+    "label": "Clear {{count}} failure",
+    "label_other": "Clear {{count}} failures",
+    "short": "Clear all",
+    "confirm": "Yes, clear {{count}}",
+    "confirmAll": "Yes, clear all",
+    "cancel": "Cancel",
+    "working": "Clearing...",
+    "done": "{{count}} failure cleared",
+    "done_other": "{{count}} failures cleared",
+    "error": "Could not clear the failures.",
+    "hint": "Marks these failures as fixed. They stay in the diary.",
+    "markFixed": "Mark fixed",
+    "reopen": "Reopen",
+    "fixedTag": "Fixed"
   }
 }

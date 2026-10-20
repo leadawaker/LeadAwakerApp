@@ -13,12 +13,20 @@ export const AFTER_HOURS = ["message", "callback", "ringHot"] as const;
 export const WA_NUMBER_CHOICE = ["new", "existing"] as const;
 export const WA_APP_TYPE = ["business", "personal", "unknown"] as const;
 
-// Natural (recorded) voices the phone receptionist can use. Mirrors VOICES in
-// the engine's live_session_config.py, natural ones only: a generated voice
-// sounded synthetic on Dutch calls.
-export const FEMININE_VOICE_OPTIONS = ["marin", "gleam", "willow", "bossa"] as const;
-export const MASCULINE_VOICE_OPTIONS = ["vesper", "stone", "meridian", "ripple", "tempo"] as const;
+// The voices the phone receptionist can use: mirrors FEMININE_VOICES and
+// MASCULINE_VOICES in the engine's live_session_config.py, same order. OpenAI
+// splits gpt-live-1 voices into natural (recorded from a person) and generated
+// (synthesised) ones; a generated voice sounded synthetic on a Dutch call, so
+// the natural ones come first and the picker labels each. The generated
+// masculine voices (beacon, cinder) joined on 2026-10-15, last in their group.
+export const FEMININE_VOICE_OPTIONS = [
+  "marin", "gleam", "willow", "bossa", "quartz", "delta", "coral", "sage", "shimmer",
+] as const;
+export const MASCULINE_VOICE_OPTIONS = ["vesper", "stone", "meridian", "ripple", "tempo", "beacon", "cinder"] as const;
 export const VOICE_OPTIONS = [...FEMININE_VOICE_OPTIONS, ...MASCULINE_VOICE_OPTIONS] as const;
+/** The generated (synthesised) voices; every other option is natural. */
+export const GENERATED_VOICES: readonly string[] = ["quartz", "delta", "coral", "sage", "shimmer", "beacon", "cinder"];
+export const isGeneratedVoice = (voice: string) => GENERATED_VOICES.includes(voice);
 
 // The default names, mirroring DEFAULT_AGENT_NAME / MALE_AGENT_NAMES in the engine.
 export const DEFAULT_AGENT_NAME = "Sara";
@@ -32,8 +40,21 @@ export function nameForVoice(current: string, voice: string, locale: string): st
   const maleDefaults = Object.values(MALE_AGENT_NAMES);
   const isDefault = !current || current === DEFAULT_AGENT_NAME || maleDefaults.includes(current);
   if (!isDefault) return current;
-  if (isMasculineVoice(voice)) return MALE_AGENT_NAMES[locale.split("-")[0]] ?? MALE_AGENT_NAMES.en;
+  if (isMasculineVoice(voice)) return maleNameFor(locale);
   return maleDefaults.includes(current) ? DEFAULT_AGENT_NAME : current;
+}
+
+// No language set means the engine's default, Dutch.
+const maleNameFor = (locale: string) => MALE_AGENT_NAMES[(locale || "nl").split("-")[0]] ?? MALE_AGENT_NAMES.en;
+
+/** The name she answers to on a call, as the engine's agent_for decides it:
+ *  a typed name wins, except a leftover Sara on a masculine voice. */
+export function spokenAgentName(name: string, voice: string, locale: string): string {
+  const n = name.trim();
+  if (!n || (n === DEFAULT_AGENT_NAME && isMasculineVoice(voice))) {
+    return isMasculineVoice(voice) ? maleNameFor(locale) : DEFAULT_AGENT_NAME;
+  }
+  return n;
 }
 export const VOICE_LOCALES = ["nl", "en-GB", "en-US", "pt-BR"] as const;
 

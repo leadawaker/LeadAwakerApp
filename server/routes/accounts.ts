@@ -12,16 +12,30 @@ import {
   type NicheWordGroups,
 } from "@shared/schema";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
-import { pool } from "../db";
+import { db, pool } from "../db";
+import { syncLivePersona, type PersonaSourceChange } from "../storage/voicePersona";
 import { provisionCaldiyForAccount, resyncCaldiySchedule } from "../calendar/caldiy";
 import { generateAndSaveNicheRow } from "../nicheGenerator";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl } from "./_helpers";
+import { editLevelForRequest, pickClientAccountPatch } from "./clientEditAccess";
 import { registerProspectsRoutes } from "./prospects";
 import { registerProspectsWhatsappRoutes } from "./prospectsWhatsapp";
 import { registerUsersRoutes } from "./users";
 
 /** Visit lengths (minutes) the CRM offers; the server rejects anything else. */
 const VISIT_DURATIONS = [30, 45, 60, 90, 120];
+
+/**
+ * Keep the account's live voice persona in step with an account or wizard save
+ * (storage/voicePersona.ts). Best-effort: the save itself already succeeded.
+ */
+async function followPersona(accountId: number, change: PersonaSourceChange): Promise<void> {
+  try {
+    await syncLivePersona(db, accountId, change);
+  } catch (err) {
+    console.warn("[voice-persona] sync failed", accountId, err instanceof Error ? err.message : err);
+  }
+}
 
 export function registerAccountsRoutes(app: Express): void {
   // ─── Accounts ─────────────────────────────────────────────────────
@@ -103,8 +117,16 @@ export function registerAccountsRoutes(app: Express): void {
     res.status(201).json(toDbKeys(account as any, accounts));
   }));
 
-  app.patch("/api/accounts/:id", requireAgency, wrapAsync(async (req, res) => {
+  app.patch("/api/accounts/:id", requireAuth, wrapAsync(async (req, res) => {
+    // Agency edits everything; a client Manager only their own opening hours; anyone else is refused.
+    const level = editLevelForRequest(req, Number(req.params.id));
+    if (level === "none") return res.status(403).json({ message: "Forbidden" });
     const body = fromDbKeys(req.body, accounts);
+    if (level === "client") {
+      const picked = pickClientAccountPatch(body);
+      if (!picked.ok && picked.invalid?.length) return res.status(400).json({ message: "Invalid value", invalid: picked.invalid });
+      if (!picked.ok) return res.status(403).json({ message: "Not allowed", disallowed: picked.disallowed });
+    }
     // AccountDetailsPanel's generic edit UI sends every field as a string (plain <input> onChange),
     // including number-typed ones — coerce here so maxDailySends doesn't 422 on a well-formed edit.
     if (typeof body.maxDailySends === "string" && body.maxDailySends !== "") {
@@ -134,8 +156,17 @@ export function registerAccountsRoutes(app: Express): void {
     if ("maxDailySends" in parsed.data && !("whatsappMaxDailySendsIsManual" in parsed.data)) {
       parsed.data.whatsappMaxDailySendsIsManual = true;
     }
+    const renamed = "name" in parsed.data;
+    const before = renamed ? await storage.getAccountById(Number(req.params.id)) : undefined;
     const account = await storage.updateAccount(Number(req.params.id), parsed.data);
     if (!account) return res.status(404).json({ message: "Account not found" });
+    // The live voice persona follows the account's name and description.
+    if (renamed || "businessDescription" in parsed.data) {
+      await followPersona(account.id!, {
+        ...(renamed ? { accountRename: { from: before?.name ?? null, to: account.name ?? null } } : {}),
+        ...("businessDescription" in parsed.data ? { description: account.businessDescription } : {}),
+      });
+    }
     // If working hours or open days changed, re-sync the Cal.diy booking schedule (best-effort).
     if ("businessHoursStart" in parsed.data || "businessHoursEnd" in parsed.data || "openDays" in parsed.data) {
       void resyncCaldiySchedule(account.id!);
@@ -282,6 +313,8 @@ export function registerAccountsRoutes(app: Express): void {
     );
     if (!parsed.success) return handleZodError(res, parsed.error);
     const profile = await storage.upsertCommunicationProfile(accountId, parsed.data);
+    // The differentiator is the live voice persona's USP.
+    if ("differentiator" in parsed.data) await followPersona(accountId, { usp: profile.differentiator });
     res.json(toDbKeys(profile as any, accountCommunicationProfile));
   }));
 

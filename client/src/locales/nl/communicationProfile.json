@@ -327,7 +327,14 @@
         "stone": "Natuurlijk, man, Ierse toon.",
         "meridian": "Natuurlijk, man, Noord-Amerikaans.",
         "ripple": "Natuurlijk, man, Australische toon.",
-        "tempo": "Natuurlijk, man, Braziliaans Portugees."
+        "tempo": "Natuurlijk, man, Braziliaans Portugees.",
+        "quartz": "Gegenereerd, Australische toon.",
+        "delta": "Gegenereerd, toon uit het zuiden van de VS.",
+        "coral": "Gegenereerd, Noord-Amerikaans.",
+        "sage": "Gegenereerd, Noord-Amerikaans.",
+        "shimmer": "Gegenereerd, Noord-Amerikaans.",
+        "beacon": "Gegenereerd, man, Engels.",
+        "cinder": "Gegenereerd, man, Engels."
       },
       "localeLabel": "Taal",
       "locales": {

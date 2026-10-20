@@ -267,7 +267,8 @@
     "kind": {
       "layer": "Camada de voz",
       "greeting": "Saudação",
-      "backend": "Backend"
+      "backend": "Backend",
+      "xai": "Prompt do Grok (enxuto)"
     }
   }
 }

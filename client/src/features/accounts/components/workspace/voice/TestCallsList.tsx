@@ -11,12 +11,17 @@ import { CallConversation } from "@/features/voiceCalls/components/CallConversat
 import { CallRecap } from "@/features/voiceCalls/components/CallRecap";
 import { OutcomePill } from "@/features/voiceCalls/components/OutcomePill";
 import { formatDateTime, formatDuration } from "@/features/voiceCalls/format";
-import { FieldLabel, helpStyle } from "./voiceAtoms";
+import { helpStyle } from "./voiceAtoms";
 import { fetchTestCalls, testCallsKey } from "./voiceApi";
+
+/** The latest few only: older test calls are on the Voice calls page. */
+const MAX_SHOWN = 5;
 
 export function TestCallsList({ accountId }: { accountId: number }) {
   const { t, i18n } = useTranslation("voiceTab");
   const [open, setOpen] = useState<string | null>(null);
+  // Folded by default: the prompts are the point of the section, not the call log.
+  const [listOpen, setListOpen] = useState(false);
   const { data: calls = [], isLoading } = useQuery({
     queryKey: testCallsKey(accountId),
     queryFn: () => fetchTestCalls(accountId),
@@ -26,18 +31,28 @@ export function TestCallsList({ accountId }: { accountId: number }) {
   });
 
   return (
-    <div style={{ marginTop: 20 }} data-testid="voice-test-calls">
-      <FieldLabel>{t("test.recentTitle")}</FieldLabel>
-      {isLoading ? (
+    <div style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 10 }} data-testid="voice-test-calls">
+      <button
+        type="button"
+        onClick={() => setListOpen((v) => !v)}
+        aria-expanded={listOpen}
+        data-testid="voice-test-calls-toggle"
+        style={{ display: "flex", alignItems: "center", gap: 6, padding: 0, background: "none", border: 0, cursor: "pointer", color: "var(--mute)" }}
+      >
+        {listOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
+        <span className="eyebrow eyebrow-sm">{t("test.recentTitle")}</span>
+        {!isLoading && <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute-2)" }}>{Math.min(calls.length, MAX_SHOWN)}</span>}
+      </button>
+      {!listOpen ? null : isLoading ? (
         <Loader2 size={14} className="animate-spin" style={{ color: "var(--mute)" }} />
       ) : calls.length === 0 ? (
         <p style={{ ...helpStyle, margin: 0 }}>{t("test.recentEmpty")}</p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-          {calls.map((c) => {
+          {calls.slice(0, MAX_SHOWN).map((c) => {
             const isOpen = open === c.callId;
             return (
-              <div key={c.callId} className="neu-inset" style={{ borderRadius: "var(--r-card)" }}>
+              <div key={c.callId} className="neu-inset-crisp" style={{ borderRadius: "var(--r-card)" }}>
                 <button
                   type="button"
                   onClick={() => setOpen(isOpen ? null : c.callId)}

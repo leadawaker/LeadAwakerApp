@@ -34,7 +34,14 @@
     "transfersFailed_one": "{{count}} failed transfer",
     "transfersFailed_other": "{{count}} failed transfers",
     "minutes": "Minutes",
-    "empty": "No calls yet this month."
+    "empty": "No calls yet this month.",
+    "latency": "Reply speed",
+    "latencyValue": "{{ms}} ms",
+    "latencyHelp": "Caller's last word to her first, typical call",
+    "latencyHelp_male": "Caller's last word to his first, typical call",
+    "costPerMinute": "Cost per minute",
+    "cost": "Cost this month",
+    "ownerOnly": "Only you see this"
   },
   "number": {
     "title": "Phone number",
@@ -59,6 +66,7 @@
       "help": "Callers hear a quiet office in the background. Only the caller hears it, and it stops when you take a transferred call."
     },
     "summaryNone": "No number attached yet",
+    "summaryNoneClient": "Your phone number is being set up",
     "summaryHelp": "The number, the client's documents and Go live are on the Integrations tab.",
     "summaryManage": "Manage in Integrations",
     "region": {
@@ -75,11 +83,19 @@
   },
   "persona": {
     "title": "Live persona",
-    "help": "The business text the receptionist speaks from. It is generated from the account, not edited by hand.",
+    "help": "The business text the receptionist answers from. Saved here, in the account details or in the communication profile, it stays the same in all three.",
     "company": "Company",
+    "companyHelp": "She answers the phone with this name, and it is the company name in her instructions. The account keeps its own name.",
+    "companyHelp_male": "He answers the phone with this name, and it is the company name in his instructions. The account keeps its own name.",
     "description": "Description",
+    "descriptionHelp": "Tells her what the company does: it goes into her voice prompt and into her instructions as the business description. Saved to the account details.",
+    "descriptionHelp_male": "Tells him what the company does: it goes into his voice prompt and into his instructions as the business description. Saved to the account details.",
     "usp": "What sets them apart",
-    "generatedNote": "Update the account details or the communication profile to change this text.",
+    "uspHelp": "One reason per line. She finds it in her knowledge as the answer to \"Why do customers choose us?\". Saved to the communication profile.",
+    "uspHelp_male": "One reason per line. He finds it in his knowledge as the answer to \"Why do customers choose us?\". Saved to the communication profile.",
+    "generatedNote": "Hand-written knowledge on this persona is kept: saving here never overwrites it.",
+    "edit": "Edit",
+    "companyRequired": "Enter a company name.",
     "emptyTitle": "No live persona yet",
     "emptyHelp": "Create one from this account's company details so the receptionist can answer as the business.",
     "create": "Create live persona"
@@ -89,7 +105,23 @@
     "help": "How the receptionist introduces itself and sounds on the phone.",
     "name": "Receptionist name",
     "pronunciation": "Pronunciation",
-    "intake": "What the team wants to know before an appointment"
+    "intake": "What the team wants to know before an appointment",
+    "pickVoice": "Pick a voice",
+    "samplesHelp": "Play a short greeting in English, Dutch or Portuguese, then click a voice to pick it.",
+    "playSample": "Play {{voice}} in {{lang}}",
+    "sampleFailed": "This sample could not be played",
+    "natural": "Natural",
+    "generated": "Generated",
+    "naturalHelp": "Recorded from a real person.",
+    "generatedHelp": "Synthesised by OpenAI. Can sound less human, especially in Dutch.",
+    "spokenAs": "On calls she answers as {{name}}.",
+    "greetingSwapped": "The greeting now says {{name}} too.",
+    "pronunciationAdd": "Add a word",
+    "pronunciationCount_one": "{{count}} word",
+    "pronunciationCount_other": "{{count}} words",
+    "pronunciationSaveNote": "Changes here are kept with the card: press Save on the card when you are done.",
+    "spokenAs_male": "On calls he answers as {{name}}.",
+    "pronunciationAutosave": "Saved when you close this."
   },
   "transfer": {
     "title": "Transfer",
@@ -144,6 +176,10 @@
         "romance-anonimo-guitar": {
           "title": "Romance Anónimo",
           "by": "Anonymous · classical guitar"
+        },
+        "easy-funk": {
+          "title": "Make Funk",
+          "by": "HoliznaCC0 · funk groove"
         }
       }
     },
@@ -182,16 +218,26 @@
     "kind": {
       "greeting": "Greeting",
       "layer": "How she speaks",
-      "backend": "What she knows and does"
+      "backend": "What she knows and does",
+      "layer_male": "How he speaks",
+      "backend_male": "What he knows and does"
     },
     "kindHelp": {
       "greeting": "The instruction she gets when the call opens.",
       "layer": "Her voice prompt: tone, address form, pronunciation and how a phone call goes.",
-      "backend": "The backend that answers for her: business facts, knowledge, hours, after-hours and booking rules."
+      "backend": "The backend that answers for her: business facts, knowledge, hours, after-hours and booking rules.",
+      "greeting_male": "The instruction he gets when the call opens.",
+      "layer_male": "His voice prompt: tone, address form, pronunciation and how a phone call goes.",
+      "backend_male": "The backend that answers for him: business facts, knowledge, hours, after-hours and booking rules."
     },
     "recentTitle": "Recent test calls",
     "recentEmpty": "No test calls yet. Press Test in browser to make one.",
-    "callFailed": "This call could not be loaded."
+    "callFailed": "This call could not be loaded.",
+    "title_male": "Try him out",
+    "help_male": "Talk to him in your browser, exactly as a caller on this line would hear him: this client's persona, voice, greeting, hours and setup. No phone needed.",
+    "promptTitle_male": "What he is told",
+    "promptHelp": "The exact prompt she gets on a call, in three parts. Admins only.",
+    "promptHelp_male": "The exact prompt he gets on a call, in three parts. Admins only."
   },
   "live": {
     "goLive": "Go live",
@@ -201,7 +247,8 @@
     "cancel": "Cancel",
     "isLive": "Live: calls to {{number}} are answered by the AI receptionist.",
     "takeOffline": "Take offline",
-    "notReady": "Can go live once these are done: {{items}}."
+    "notReady": "Can go live once these are done: {{items}}.",
+    "readyHelp_male": "Everything is ready. Going live lets real callers on this number reach him."
   },
   "screening": {
     "title": "Unwanted calls",
@@ -212,11 +259,13 @@
     },
     "robocalls": {
       "label": "Hang up on robocalls",
-      "help": "Recordings and automated voices are ended without a word. When she isn't sure it's a machine, she treats it as a person."
+      "help": "Recordings and automated voices are ended without a word. When she isn't sure it's a machine, she treats it as a person.",
+      "help_male": "Recordings and automated voices are ended without a word. When he isn't sure it's a machine, he treats it as a person."
     },
     "abuse": {
       "label": "End abusive calls",
-      "help": "After one calm warning she ends the call, and you get a notification. If the same number is abusive again within 30 days, it is blocked on this line for 14 days."
+      "help": "After one calm warning she ends the call, and you get a notification. If the same number is abusive again within 30 days, it is blocked on this line for 14 days.",
+      "help_male": "After one calm warning he ends the call, and you get a notification. If the same number is abusive again within 30 days, it is blocked on this line for 14 days."
     },
     "blocked": {
       "label": "Blocked and warned numbers",
@@ -225,7 +274,8 @@
       "unblock": "Unblock",
       "warned": "ended for abuse on {{date}}, blocked if it happens again",
       "clear": "Clear"
-    }
+    },
+    "help_male": "What the AI receptionist turns away. Every call he ends this way is marked in its transcript."
   },
   "followUp": {
     "title": "After the call",
@@ -242,6 +292,31 @@
       "placeholder": "e.g. Robben",
       "help": "If the caller's number is not on WhatsApp, the same message goes out once as a text message from this name. People cannot reply to it.",
       "invalid": "Use up to 11 letters, digits or spaces, with at least one letter."
+    },
+    "help_male": "During the call, he asks whether he may send the details on WhatsApp. If the caller says yes, a message from this business with the link to plan an appointment arrives 30 seconds after the call ends.",
+    "preview": {
+      "title": "What the caller gets",
+      "help": "The exact WhatsApp, filled in with a sample name. The real one uses the caller's first name.",
+      "loading": "Loading the message…",
+      "error": "Could not load the message preview.",
+      "kindLabel": "Which message",
+      "languageLabel": "Language",
+      "kind": {
+        "followup": "No appointment yet",
+        "booked": "Booked on the call"
+      },
+      "lang": {
+        "en": "English",
+        "nl": "Dutch"
+      },
+      "link": {
+        "short": "The link is the caller's own booking link: book.leadawaker.com followed by a code made for them. It opens this account's calendar ({{calendar}}) with the caller already linked, so the booking lands on their record.",
+        "custom": "The link is the caller's own booking link on this account's booking domain. It opens this account's calendar ({{calendar}}) with the caller already linked, so the booking lands on their record.",
+        "none": "This account's campaign has no calendar link, so callers who did not book get no message. Add a calendar link to the campaign to send it."
+      },
+      "bookedNote": "When she books the appointment during the call, the message confirms the time instead of sending a link. The time shown is a sample.",
+      "bookedNote_male": "When he books the appointment during the call, the message confirms the time instead of sending a link. The time shown is a sample.",
+      "otherLanguages": "Callers in any other language, Portuguese included, get the English message."
     }
   },
   "numberDocs": {
@@ -385,5 +460,98 @@
       "google": "Google voices"
     },
     "unsaved": "Not saved yet. Press Generate clip, listen to it, then Use this clip to save it."
+  },
+  "rail": {
+    "overview": {
+      "label": "Overview",
+      "help": "How this month went and the phone number.",
+      "ready": "Ready to take calls",
+      "missing_one": "{{count}} item missing",
+      "missing_other": "{{count}} items missing",
+      "help_male": "How this month went and the phone number."
+    },
+    "identity": {
+      "label": "Who she is",
+      "help": "Her name, voice, greeting and the business she speaks for.",
+      "empty": "No name or voice yet",
+      "label_male": "Who he is",
+      "help_male": "His name, voice, greeting and the business he speaks for."
+    },
+    "knowledge": {
+      "label": "What she knows",
+      "help": "Opening hours and the answers she can give.",
+      "detail_one": "{{count}} knowledge entry",
+      "detail_other": "{{count}} knowledge entries",
+      "label_male": "What he knows",
+      "help_male": "Opening hours and the answers he can give."
+    },
+    "call": {
+      "label": "During the call",
+      "help": "Transfers, what she asks, what callers hear and who she turns away.",
+      "noTransfer": "No transfers",
+      "noNumber": "No transfer number yet",
+      "help_male": "Transfers, what he asks, what callers hear and who he turns away."
+    },
+    "after": {
+      "label": "After the call",
+      "help": "The WhatsApp message callers get afterwards.",
+      "on": "WhatsApp after each call",
+      "off": "No message after the call"
+    },
+    "prompt": {
+      "label": "Prompt & test",
+      "help": "Everything she is told, saved as you type, next to a test call.",
+      "help_male": "Everything he is told, saved as you type, next to a test call.",
+      "detail": "Edit and try her out",
+      "detail_male": "Edit and try him out"
+    }
+  },
+  "line": {
+    "title": "On the line",
+    "help": "What a caller hears around her voice. Each switch saves straight away.",
+    "needsNumber": "Attach a number on Integrations > Phone first: the recording notice, office sound and region apply to that number.",
+    "help_male": "What a caller hears around his voice. Each switch saves straight away."
+  },
+  "conversation": {
+    "title": "Questions and after hours"
+  },
+  "prompt": {
+    "autosave": {
+      "saving": "Saving",
+      "saved": "Saved",
+      "error": "Not saved"
+    },
+    "greeting": {
+      "title": "First thing she says",
+      "title_male": "First thing he says",
+      "help": "Said word for word when she picks up. Only this business.",
+      "help_male": "Said word for word when he picks up. Only this business."
+    },
+    "extra": {
+      "help": "Rules and facts for this business only. They reach the part that answers questions and books, not her speaking style.",
+      "help_male": "Rules and facts for this business only. They reach the part that answers questions and books, not his speaking style."
+    },
+    "layer": {
+      "title": "How she speaks ({{language}})",
+      "title_male": "How he speaks ({{language}})",
+      "help": "Her voice instructions: tone, pace, pronunciation, when to hand over. Placeholders in curly brackets are filled per business.",
+      "help_male": "His voice instructions: tone, pace, pronunciation, when to hand over. Placeholders in curly brackets are filled per business."
+    },
+    "backend": {
+      "title": "What she does ({{language}})",
+      "title_male": "What he does ({{language}})",
+      "help": "The backend that answers for her: booking, knowledge and tools.",
+      "help_male": "The backend that answers for him: booking, knowledge and tools."
+    },
+    "shared": "Shared: every client line in this language uses this text ({{useCase}}). A change here reaches their next call within 30 seconds.",
+    "history": "Earlier versions in the Prompt Library (#{{id}})",
+    "noLanguage": "Pick a language under Who she is first. The shared prompts depend on it.",
+    "resolve": {
+      "show": "Show filled in",
+      "edit": "Edit",
+      "failed": "Could not fill in the prompt for this line.",
+      "valueLegend": "Filled in for this business",
+      "addedLegend": "Added by the system on the call"
+    }
   }
 }

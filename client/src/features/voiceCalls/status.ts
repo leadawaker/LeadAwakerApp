@@ -39,19 +39,26 @@ export function statusColors(status: VoiceCallStatus): { bg: string; text: strin
   return getLeadStatusAvatarColor(PALETTE[status]);
 }
 
-// Outcome pills borrow the same Chats palettes as the avatars; the two quiet
-// outcomes (hung up, other) use muted tokens instead.
-const OUTCOME_PALETTE: Partial<Record<VoiceOutcome, string>> = {
-  booked: "Booked",
-  callback: "Responded",
-  transferred: "Contacted",
+// Outcome pills use the light tint the Chats page uses for its status pills
+// (the Booked pill in the lead header: a pale wash of the stage colour, a
+// faint ring, the stage colour as text) instead of the saturated avatar
+// pastels. The two quiet outcomes (hung up, other) stay recessed and muted.
+const OUTCOME_STAGE: Partial<Record<VoiceOutcome, string>> = {
+  booked: "var(--stage-booked)",
+  callback: "var(--stage-responded)",
+  transferred: "var(--stage-contacted)",
 };
 
-/** Pill colours for an outcome. `inset` marks the quiet, recessed look. */
-export function outcomeColors(outcome: VoiceOutcome): { bg: string; text: string; inset: boolean } {
-  const key = OUTCOME_PALETTE[outcome];
-  if (!key) return { bg: "var(--bg)", text: "var(--mute)", inset: true };
-  return { ...getLeadStatusAvatarColor(key), inset: false };
+/** Pill colours for an outcome. `inset` marks the quiet, recessed look; `ring` is the faint edge of a tinted pill. */
+export function outcomeColors(outcome: VoiceOutcome): { bg: string; text: string; inset: boolean; ring: string | null } {
+  const stage = OUTCOME_STAGE[outcome];
+  if (!stage) return { bg: "var(--bg)", text: "var(--mute)", inset: true, ring: null };
+  return {
+    bg: `color-mix(in srgb, ${stage} 13%, transparent)`,
+    text: `color-mix(in srgb, ${stage} 78%, var(--ink))`,
+    inset: false,
+    ring: `color-mix(in srgb, ${stage} 35%, transparent)`,
+  };
 }
 
 /** Locale key under `outcomes.` for each outcome (hung_up is camel-cased in the JSON). */

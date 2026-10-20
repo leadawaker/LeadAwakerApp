@@ -8,6 +8,8 @@ import { buildClientLines, type GateInputs } from "../automations/clientGates";
 
 const T = sql.raw(`"p2mxx34fvbf3ll6"."Automation_Logs"`);
 const REASON = sql.raw(`COALESCE(NULLIF(skipped_reason, ''), NULLIF(output_data, ''), NULLIF(error_code, ''))`);
+// A failure stops counting once it is cleared as fixed (resolved_at set); the row itself stays.
+const OPEN_FAILURE = sql.raw(`(status = 'Failure' AND resolved_at IS NULL)`);
 
 function toCounts(r: any): ActionCounts {
   return {
@@ -23,7 +25,7 @@ export const automationDiaryStorage = {
   async getActionCountsByWorkflow(sinceHours: number): Promise<Map<string, ActionCounts>> {
     const res = await db.execute(sql`
       WITH win AS (
-        SELECT workflow_name, status, ${REASON} AS reason FROM ${T}
+        SELECT workflow_name, status, resolved_at, ${REASON} AS reason FROM ${T}
         WHERE kind = 'action' AND created_at > NOW() - make_interval(hours => ${sinceHours})
       ),
       last AS (
@@ -32,12 +34,12 @@ export const automationDiaryStorage = {
       ),
       reasons AS (
         SELECT DISTINCT ON (workflow_name) workflow_name, reason AS top_reason
-        FROM (SELECT workflow_name, reason, COUNT(*) AS n FROM win WHERE status = 'Failure' AND reason IS NOT NULL GROUP BY 1, 2) x
+        FROM (SELECT workflow_name, reason, COUNT(*) AS n FROM win WHERE ${OPEN_FAILURE} AND reason IS NOT NULL GROUP BY 1, 2) x
         ORDER BY workflow_name, n DESC
       )
       SELECT l.workflow_name,
         COUNT(*) FILTER (WHERE w.status = 'Success') AS success,
-        COUNT(*) FILTER (WHERE w.status = 'Failure') AS failed,
+        COUNT(*) FILTER (WHERE w.status = 'Failure' AND w.resolved_at IS NULL) AS failed,
         COUNT(*) FILTER (WHERE w.status = 'Skipped') AS skipped,
         l.last_action_at, r.top_reason
       FROM last l
@@ -53,8 +55,8 @@ export const automationDiaryStorage = {
     const res = await db.execute(sql`
       SELECT workflow_name,
         LEAST(23, FLOOR(EXTRACT(EPOCH FROM (NOW() - created_at)) / 3600))::int AS hours_ago,
-        COUNT(*) FILTER (WHERE status <> 'Failure') AS ok,
-        COUNT(*) FILTER (WHERE status = 'Failure') AS failed
+        COUNT(*) FILTER (WHERE NOT (${OPEN_FAILURE})) AS ok,
+        COUNT(*) FILTER (WHERE ${OPEN_FAILURE}) AS failed
       FROM ${T}
       WHERE kind = 'action' AND created_at > NOW() - INTERVAL '24 hours'
       GROUP BY 1, 2
@@ -73,18 +75,18 @@ export const automationDiaryStorage = {
   async getActionCountsForAccount(accountId: number, sinceDays: number): Promise<Map<string, ActionCounts>> {
     const res = await db.execute(sql`
       WITH win AS (
-        SELECT workflow_name, "Campaigns_id" AS campaign_id, status, created_at, ${REASON} AS reason FROM ${T}
+        SELECT workflow_name, "Campaigns_id" AS campaign_id, status, resolved_at, created_at, ${REASON} AS reason FROM ${T}
         WHERE kind = 'action' AND "Accounts_id" = ${accountId}
           AND created_at > NOW() - make_interval(days => ${sinceDays})
       ),
       reasons AS (
         SELECT DISTINCT ON (workflow_name, campaign_id) workflow_name, campaign_id, reason AS top_reason
-        FROM (SELECT workflow_name, campaign_id, reason, COUNT(*) AS n FROM win WHERE status = 'Failure' AND reason IS NOT NULL GROUP BY 1, 2, 3) x
+        FROM (SELECT workflow_name, campaign_id, reason, COUNT(*) AS n FROM win WHERE ${OPEN_FAILURE} AND reason IS NOT NULL GROUP BY 1, 2, 3) x
         ORDER BY workflow_name, campaign_id, n DESC
       )
       SELECT w.workflow_name, w.campaign_id,
         COUNT(*) FILTER (WHERE w.status = 'Success') AS success,
-        COUNT(*) FILTER (WHERE w.status = 'Failure') AS failed,
+        COUNT(*) FILTER (WHERE w.status = 'Failure' AND w.resolved_at IS NULL) AS failed,
         COUNT(*) FILTER (WHERE w.status = 'Skipped') AS skipped,
         MAX(w.created_at) AS last_action_at,
         MAX(r.top_reason) AS top_reason
@@ -101,7 +103,7 @@ export const automationDiaryStorage = {
       SELECT l.id, l.created_at, l.workflow_name, l.step_name, l.status, ${REASON} AS reason, l.metadata,
         l."Accounts_id" AS account_id, a.name AS account_name,
         l."Campaigns_id" AS campaign_id, c.name AS campaign_name,
-        l."Leads_id" AS lead_id,
+        l."Leads_id" AS lead_id, l.resolved_at,
         NULLIF(TRIM(CONCAT_WS(' ', ld.first_name, ld.last_name)), '') AS lead_name
       FROM ${T} l
       LEFT JOIN "p2mxx34fvbf3ll6"."Accounts" a ON a.id = l."Accounts_id"
@@ -110,7 +112,7 @@ export const automationDiaryStorage = {
       WHERE l.kind = 'action'
         AND l.workflow_name IN (${sql.join(opts.names.map((n) => sql`${n}`), sql`, `)})
         ${opts.accountId ? sql`AND l."Accounts_id" = ${opts.accountId}` : sql``}
-        ${opts.failedOnly ? sql`AND l.status = 'Failure'` : sql``}
+        ${opts.failedOnly ? sql`AND l.status = 'Failure' AND l.resolved_at IS NULL` : sql``}
       ORDER BY l.created_at DESC NULLS LAST, l.id DESC
       LIMIT ${opts.limit + 1} OFFSET ${offset}
     `);
@@ -130,9 +132,32 @@ export const automationDiaryStorage = {
         leadId: r.lead_id ?? null, leadName: r.lead_name ?? null,
         interactionId: typeof meta?.interaction_id === "number" ? meta.interaction_id : null,
         voiceCallId: typeof meta?.voice_call_id === "number" ? meta.voice_call_id : null,
+        resolvedAt: r.resolved_at ? new Date(r.resolved_at).toISOString() : null,
       };
     });
     return { lines, page: opts.page, hasMore: rows.length > opts.limit };
+  },
+
+  /** Clear the open failures of these workflows as fixed (one client, optionally one campaign, or all). Returns how many. */
+  async resolveFailures(opts: { names: string[]; accountId?: number; campaignId?: number }): Promise<number> {
+    if (opts.names.length === 0) return 0;
+    const res = await db.execute(sql`
+      UPDATE ${T} SET resolved_at = ${new Date()}
+      WHERE kind = 'action' AND status = 'Failure' AND resolved_at IS NULL
+        AND workflow_name IN (${sql.join(opts.names.map((n) => sql`${n}`), sql`, `)})
+        ${opts.accountId ? sql`AND "Accounts_id" = ${opts.accountId}` : sql``}
+        ${opts.campaignId ? sql`AND "Campaigns_id" = ${opts.campaignId}` : sql``}
+    `);
+    return Number(res.rowCount ?? 0);
+  },
+
+  /** Clear (or reopen) one diary failure. Returns false when the id is not a failure line. */
+  async setFailureResolved(id: number, resolved: boolean): Promise<boolean> {
+    const res = await db.execute(sql`
+      UPDATE ${T} SET resolved_at = ${resolved ? new Date() : null}
+      WHERE id = ${id} AND kind = 'action' AND status = 'Failure'
+    `);
+    return Number(res.rowCount ?? 0) > 0;
   },
 
   async getGateInputs(accountId: number): Promise<GateInputs> {

@@ -3,6 +3,7 @@ import { usePersistedState } from "@/hooks/usePersistedState";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeads } from "@/hooks/useApiData";
 import { AlertCircle, RefreshCw } from "lucide-react";
@@ -12,6 +13,7 @@ import { DesktopCalendar } from "@/features/calendar/components/DesktopCalendar"
 import { apiFetch } from "@/lib/apiUtils";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useListPanelState } from "@/hooks/useListPanelState";
+import { defaultCalendarView, isCalendarView, coerceCalendarView, clientSafeCampaignKey } from "@/features/calendar/lib/calendarView";
 import { dateKeyOf, type Appointment } from "@/features/calendar/lib/calendarDesign";
 import { useCalendarFreeBusy } from "@/features/calendar/hooks/useCalendarFreeBusy";
 import { useCalendarWorkingHours } from "@/features/calendar/hooks/useCalendarWorkingHours";
@@ -65,14 +67,18 @@ export default function CalendarPage() {
     getSelector: (id) => `[data-appt-id="${id}"]`,
   });
 
-  const [viewMode, setViewMode] = usePersistedState<ViewMode>(
+  const [storedViewMode, setViewMode] = usePersistedState<ViewMode>(
     "calendar-view-mode",
-    "week",
-    (v) => ["month", "week"].includes(v as string),
+    defaultCalendarView(typeof window === "undefined" ? 1280 : window.innerWidth),
+    isCalendarView,
   );
+  const isPhone = useIsMobile(768);
+  const viewMode = coerceCalendarView(storedViewMode, isPhone);
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [apptSortBy, setApptSortBy] = useState<ApptSortBy>("time_desc");
-  const [apptGroupBy, setApptGroupBy] = useState<ApptGroupBy>("date");
+  const [rawApptSortBy, setApptSortBy] = useState<ApptSortBy>("time_desc");
+  const [rawApptGroupBy, setApptGroupBy] = useState<ApptGroupBy>("date");
+  const apptSortBy = clientSafeCampaignKey<ApptSortBy>(rawApptSortBy, isAgencyUser, "time_desc");
+  const apptGroupBy = clientSafeCampaignKey<ApptGroupBy>(rawApptGroupBy, isAgencyUser, "date");
   const [apptGroupDirection, setApptGroupDirection] = useState<"asc" | "desc">("asc");
   const [apptFilterStatuses, setApptFilterStatuses] = useState<ApptFilterStatus[]>([]);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -258,7 +264,7 @@ export default function CalendarPage() {
   // Reschedule a booking (PATCH booked_call_date + re_scheduled_count)
   const handleReschedule = useCallback(async (apptId: number, newDate: Date) => {
     const appt = appts.find(a => a.id === apptId);
-    if (!appt) return;
+    if (!appt || appt.side) return;
     await apiFetch(`/api/leads/${apptId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -273,6 +279,7 @@ export default function CalendarPage() {
 
   // Cancel call (clears booked_call_date, reverts status to Contacted)
   const handleCancelCall = useCallback(async (apptId: number) => {
+    if (apptId < 0) return; // a side appointment: its id is the lead id negated
     await apiFetch(`/api/leads/${apptId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -360,6 +367,7 @@ export default function CalendarPage() {
           currentTime={currentTime}
           apptListRef={apptListRef}
           canSeeConversation={canSeeConversation}
+          isAgencyUser={isAgencyUser}
           onReschedule={handleReschedule}
           onCancelCall={handleCancelCall}
           blocks={blocks}

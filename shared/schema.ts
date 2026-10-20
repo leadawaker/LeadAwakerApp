@@ -58,6 +58,7 @@ export const accounts = nocodb.table("Accounts", {
   // Visits (specs/phone-booking-v2): an in-person appointment at the business,
   // its own Cal.diy event type ("visit"), offered by the phone receptionist.
   visitsEnabled: boolean("visits_enabled").notNull().default(false),
+  socialEnabled: boolean("social_enabled").notNull().default(false),
   visitTitle: text("visit_title"),
   visitDurationMinutes: integer("visit_duration_minutes").notNull().default(60),
   visitAddress: text("visit_address"),
@@ -550,6 +551,8 @@ export const automationLogs = nocodb.table("Automation_Logs", {
   // 'action' = one diary line per real automation action (specs/automation-overview).
   // NULL = debug step row (2-day retention).
   kind: text("kind"),
+  // Set when Gabriel clears a failure that was already fixed. The row stays in the diary.
+  resolvedAt: timestamp("resolved_at", { withTimezone: true }),
 }, (t) => [
   index("automation_logs_accounts_id_idx").on(t.accountsId),
   index("automation_logs_created_at_idx").on(t.createdAt),
@@ -625,6 +628,9 @@ export const campaigns = nocodb.table("Campaigns", {
   maxBumps: bigint("max_bumps", { mode: "number" }).default(4),
   // Reception campaigns hand off on the first "a person please" (engine migrate_receptionist_channels.py).
   handoffOnFirstRequest: boolean("handoff_on_first_request").default(false),
+  // 'receptionist' = one AI follow-up only when the lead went quiet mid-question, never Lost.
+  // NULL = the normal bump flow (engine scripts/migrate_receptionist_bump_mode.py).
+  bumpMode: text("bump_mode"),
   stopOnResponse: boolean("stop_on_response"),
   channel: text("channel").default("sms"),
   // Channel fallback (specs/channel-fallback): primary→fallback delivery routing.
@@ -863,6 +869,7 @@ export interface VoiceCallSummary {
 }
 
 export const voiceCalls = nocodb.table("Voice_Calls", {
+  isTest: boolean("is_test").notNull().default(false),
   id: serial("id").primaryKey(),
   callId: text("call_id").notNull(),
   sessionId: text("session_id"),
@@ -893,6 +900,15 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
   endReason: text("end_reason"),
   // sales_pitch | robocall | abuse when the call was screened out (engine migrate_receptionist_channels.py).
   screenedKind: text("screened_kind"),
+  // What the call cost and how fast she answered (engine migrate_add_voice_call_cost.py,
+  // specs/call-costs). Phone calls only; null on browser calls and older rows.
+  usage: jsonb("usage"),
+  costUsd: numeric("cost_usd", { precision: 10, scale: 4 }),
+  latencyMs: integer("latency_ms"),
+  latencyP90Ms: integer("latency_p90_ms"),
+  // Grok calls only: "telnyx:<recording id>", recorded by Telnyx because xAI keeps
+  // no recording (engine xai_recording.py, migrate_add_voice_call_recording_ref.py).
+  recordingRef: text("recording_ref"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
@@ -937,6 +953,7 @@ export type VoiceNumber = typeof voiceNumbers.$inferSelect;
 // ─── Leads ───────────────────────────────────────────────────────────────
 
 export const leads = nocodb.table("Leads", {
+  isTest: boolean("is_test").notNull().default(false),
   id: integer("id"),
   createdAt: timestamp("created_at", { withTimezone: true }),
   updatedAt: timestamp("updated_at", { withTimezone: true }),
@@ -996,6 +1013,13 @@ export const leads = nocodb.table("Leads", {
   previousBookedCallDate: timestamp("previous_booked_call_date", { withTimezone: true }),
   reScheduledCount: bigint("re_scheduled_count", { mode: "number" }),
   calcomBookingUid: text("calcom_booking_uid"),
+  // A second appointment of the other kind beside the one above (a callback
+  // next to a showroom visit). Reminders and no-shows stay on the main one.
+  sideBookingUid: text("side_booking_uid"),
+  sideBookingDate: timestamp("side_booking_date", { withTimezone: true }),
+  sideBookingKind: text("side_booking_kind"),
+  // The number the caller asked to be called back on, when it is not the one they called from.
+  callbackPhone: varchar("callback_phone"),
   billableBooking: boolean("billable_booking"),
   bookingCancelledAt: timestamp("booking_cancelled_at", { withTimezone: true }),
   clientCancelledBooking: boolean("client_cancelled_booking").default(false),
@@ -2176,6 +2200,78 @@ export const publicDemoRequests = nocodb.table("Public_Demo_Requests", {
   index("public_demo_requests_status_idx").on(t.status),
 ]);
 export type PublicDemoRequest = typeof publicDemoRequests.$inferSelect;
+
+// Instagram connect + scheduled Reels publishing (docs/superpowers/specs/
+// 2026-10-19-instagram-connect-and-publishing-design.md). Tokens are sealed
+// with server/lib/secretBox.ts and never leave the server.
+export const socialConnections = nocodb.table("Social_Connections", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  provider: text("provider").notNull(),                      // "instagram"
+  externalUserId: text("external_user_id"),
+  appScopedUserId: text("app_scoped_user_id"),               // /me "id"; Meta callbacks may send this one
+  username: text("username"),
+  profilePictureUrl: text("profile_picture_url"),
+  accountType: text("account_type"),
+  accessTokenEnc: text("access_token_enc"),                  // seal()ed, never returned to the client
+  scopes: jsonb("scopes").$type<string[]>().notNull().default([]),
+  tokenExpiresAt: timestamp("token_expires_at", { withTimezone: true }),
+  tokenRefreshedAt: timestamp("token_refreshed_at", { withTimezone: true }),
+  status: text("status").notNull().default("connected"),
+  lastError: text("last_error"),
+  expiryWarnedAt: timestamp("expiry_warned_at", { withTimezone: true }),
+  connectedByUserId: integer("connected_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_connections_account_provider").on(t.accountsId, t.provider),
+  uniqueIndex("social_connections_external_connected").on(t.provider, t.externalUserId).where(sql`${t.status} <> 'disconnected'`),
+]);
+export type SocialConnection = typeof socialConnections.$inferSelect;
+export type InsertSocialConnection = typeof socialConnections.$inferInsert;
+
+export const socialPosts = nocodb.table("Social_Posts", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  connectionId: integer("connection_id"),
+  mediaType: text("media_type").notNull().default("REELS"),
+  videoPath: text("video_path"),
+  videoPublicId: text("video_public_id"),
+  videoExt: text("video_ext"),
+  videoDurationS: real("video_duration_s"),
+  videoWidth: integer("video_width"),
+  videoHeight: integer("video_height"),
+  videoBytes: bigint("video_bytes", { mode: "number" }),
+  caption: text("caption").notNull().default(""),
+  shareToFeed: boolean("share_to_feed").notNull().default(true),
+  isAiGenerated: boolean("is_ai_generated").notNull().default(true),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
+  requiresApproval: boolean("requires_approval").notNull().default(true),
+  approvalStatus: text("approval_status").notNull().default("pending"),
+  approvalNote: text("approval_note"),
+  approvedByUserId: integer("approved_by_user_id"),
+  approvedAt: timestamp("approved_at", { withTimezone: true }),
+  approvalWaivedByUserId: integer("approval_waived_by_user_id"),
+  approvalWaivedAt: timestamp("approval_waived_at", { withTimezone: true }),
+  approvalReminderSentAt: timestamp("approval_reminder_sent_at", { withTimezone: true }),
+  status: text("status").notNull().default("scheduled"),
+  igContainerId: text("ig_container_id"),
+  publishingStartedAt: timestamp("publishing_started_at", { withTimezone: true }),
+  igMediaId: text("ig_media_id"),
+  permalink: text("permalink"),
+  attempts: integer("attempts").notNull().default(0),
+  lastError: text("last_error"),
+  publishedAt: timestamp("published_at", { withTimezone: true }),
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_posts_video_public_id").on(t.videoPublicId),
+  index("social_posts_status_scheduled_idx").on(t.status, t.scheduledAt),
+  index("social_posts_accounts_id_idx").on(t.accountsId),
+]);
+export type SocialPost = typeof socialPosts.$inferSelect;
+export type InsertSocialPost = typeof socialPosts.$inferInsert;
 
 // Daily estimated spend ledger for public demos (Europe/Amsterdam day).
 export const publicDemoSpend = nocodb.table("Public_Demo_Spend", {

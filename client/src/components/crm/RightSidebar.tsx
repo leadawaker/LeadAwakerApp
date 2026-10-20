@@ -50,6 +50,8 @@ import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
 import { useVoiceRecorderState, toggleVoiceRecording, MAX_RECORDING_SECONDS } from "@/lib/voiceRecorder";
 import { useToast } from "@/hooks/use-toast";
 import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
+import { clientNavItems, clientBottomBar, clientNavLabelKey, CLIENT_NAV_HREF, type ClientNavKey } from "@/components/crm/navGates";
+import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 import { APP_LANGUAGES } from "@/lib/languages";
 import type { ServicePageKey } from "@/hooks/useServicePageToggles";
 
@@ -201,6 +203,12 @@ export function RightSidebar({
   // Role, impersonation, outreach pref, voice capabilities and the Owner's service
   // page toggles: the same context the mobile More page and landing picker use.
   const navCtx = useNavGateContext();
+  // Client mode (!isAgencyUser): one flat list driven by what the account actually has.
+  const clientFacts = useClientNavFacts();
+  const CLIENT_ICON: Record<ClientNavKey, any> = {
+    home: Home, calls: AudioLines, leads: BookUser, calendar: Calendar,
+    myReceptionist: Building2, billing: Receipt, campaigns: Megaphone,
+  };
 
   // Owner-only voice memo mic — recording state lives outside React (see voiceRecorder.ts)
   // so it survives navigation between pages, since every page remounts CrmShell.
@@ -344,7 +352,13 @@ export function RightSidebar({
         }}
         data-testid="mobile-bottom-bar"
       >
-        {([
+        {(!isAgencyUser ? clientBottomBar(clientFacts).map((k) => ({
+          key: k,
+          href: CLIENT_NAV_HREF[k],
+          icon: k === "calendar" ? CalendarDays : CLIENT_ICON[k],
+          label: t(k === "myReceptionist" ? "sidebar.myReceptionistShort" : clientNavLabelKey(k, clientFacts)),
+          testId: `mobile-nav-${k === "myReceptionist" ? "accounts" : k}`,
+        })) : [
           // Home is the first slot for every role.
           { key: "home", href: `${prefix}/home`, icon: Home, label: t("sidebar.home"), testId: "mobile-nav-home" },
           // Agency = Conversations inbox; clients go straight to Leads (/chat redirects them there anyway).
@@ -455,7 +469,7 @@ export function RightSidebar({
           borderBottom: "1px solid var(--line)",
           cursor: "pointer",
         }}>
-          <img src={isDark ? "/premium/logo-v2-dark.svg" : "/premium/logo-v2.svg"} alt="Lead Awaker" style={{ height: 34, marginTop: 4 }} />
+          <img src={isDark ? "/premium/logo-v2-dark.svg" : "/premium/logo-v2.svg"} alt="Lead Awaker" style={{ height: 34, marginTop: 4, ...(isDark ? null : { background: "var(--logo-plate)", borderRadius: 10, padding: "2px 8px" }) }} />
         </a>
 
         {/* ── Nav (scrolls) ── */}
@@ -501,6 +515,22 @@ export function RightSidebar({
             </DropdownMenu>
           )}
 
+          {!isAgencyUser ? (
+            clientNavItems(clientFacts).map((k) => {
+              const href = CLIENT_NAV_HREF[k];
+              const Icon = CLIENT_ICON[k];
+              return (
+                <Link key={k} href={href}
+                  className={`la-nav-item ${isActive(href) ? "active" : ""}`}
+                  data-testid={`link-client-${k}`}
+                  data-active={isActive(href) || undefined}
+                >
+                  <span className="icon"><Icon size={16} /></span>
+                  {t(clientNavLabelKey(k, clientFacts))}
+                </Link>
+              );
+            })
+          ) : (<>
           {/* Home: the dashboard landing page, shown to every role. */}
           <Link
             href={`${prefix}/home`}
@@ -512,24 +542,34 @@ export function RightSidebar({
             {t("sidebar.home")}
           </Link>
 
-          {/* Services group — each row is a service the agency runs. Reactivation
-              sits on top (→ Campaigns dashboard). Reputation is live (mock
-              workspace); Speed to Lead is live for agency users and a "Soon"
-              placeholder for clients; Missed-Call is a mock workspace. */}
+          {/* Demos sits right under Home: it is opened on most sales calls. */}
+          {visibleNavItems.filter((it) => it.labelKey === "Demos").map((it) => {
+            const Icon = it.icon;
+            return (
+              <Link key={it.href} href={it.href}
+                className={`la-nav-item ${isActive(it.href) ? "active" : ""}`}
+                data-testid={`link-${it.testId}`}
+                data-active={isActive(it.href) || undefined}
+              >
+                <span className="icon"><Icon size={16} /></span>
+                {it.label}
+              </Link>
+            );
+          })}
+
+          {/* Services group — each row is a service the agency runs. Reputation is
+              live (mock workspace); Speed to Lead is live for agency users and a
+              "Soon" placeholder for clients; Missed-Call is a mock workspace.
+              Campaigns (the reactivation setup tool) is at the very bottom. */}
           <div>
-            <div className="la-nav-section">{t("sidebar.services")}</div>
             {[
-              // Reactivation = the original service; its cockpit is the Campaigns dashboard.
-              { key: "reactivation", labelKey: "sidebar.reactivation", Icon: Megaphone, href: `${prefix}/campaigns` as string | null },
               // Speed to Lead has a live mission-control dashboard for agency users;
               // client users still see it as an upcoming "Soon" service.
               { key: "speed", labelKey: "sidebar.speedToLead", Icon: Send, href: isAgencyUser ? `${prefix}/speed-to-lead` : null },
               { key: "reputation", labelKey: "sidebar.reputation", Icon: Star, href: `${prefix}/reputation` as string | null },
               // Missed-Call Text-Back (Voice service) — mock workspace for now.
               { key: "missedcall", labelKey: "sidebar.missedCalls", Icon: PhoneMissed, href: `${prefix}/missed-calls` as string | null },
-            ].filter(({ key }) =>
-              key === "reactivation" || isNavItemVisible({ serviceKey: key as ServicePageKey }, navCtx)
-            ).map(({ key, labelKey, Icon, href }) =>
+            ].filter(({ key }) => isNavItemVisible({ serviceKey: key as ServicePageKey }, navCtx)).map(({ key, labelKey, Icon, href }) =>
               href ? (
                 <Link
                   key={key}
@@ -587,7 +627,7 @@ export function RightSidebar({
             const sections = [
               { section: "engage", items: visibleNavItems.filter(it => ["Voice calls", "Conversations", "Calendar", "Leads"].includes(it.labelKey)) },
               { section: "admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
-              { section: "backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automation logs", "Traffic", "Demos"].includes(it.labelKey)) },
+              { section: "backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automation logs", "Traffic"].includes(it.labelKey)) },
               { section: "outreach", items: visibleNavItems.filter(it => ["Prospect inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
             ];
             return sections.map((g) => {
@@ -630,6 +670,22 @@ export function RightSidebar({
               );
             });
           })()}
+
+          {/* Campaigns: where reactivation campaigns are set up. Its live panels
+              moved to Home > Reactivation, so it is a setup tool and sits last. */}
+          <div>
+            <div className="la-nav-section">{t("sidebarSections.setup")}</div>
+            <Link
+              href={`${prefix}/campaigns`}
+              className={`la-nav-item ${isActive(`${prefix}/campaigns`) ? "active" : ""}`}
+              data-testid="link-service-reactivation"
+              data-active={isActive(`${prefix}/campaigns`) || undefined}
+            >
+              <span className="icon"><Megaphone size={16} /></span>
+              {t("sidebar.reactivation")}
+            </Link>
+          </div>
+          </>)}
         </div>
 
         {/* ── Bottom: utilities + profile ── */}

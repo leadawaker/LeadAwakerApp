@@ -1,6 +1,7 @@
 import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "../db";
-import { interactions, voiceCalls, type VoiceCall, type VoiceCallSummary } from "@shared/schema";
+import { T, liveCallSql } from "./homeSql";
+import { interactions, leads, voiceCalls, type VoiceCall, type VoiceCallSummary } from "@shared/schema";
 import { deriveOutcome, isVoiceOutcome, type VoiceOutcome } from "@shared/voiceOutcome";
 import type { VoiceAccess } from "../routes/voiceCallsAccess";
 import {
@@ -39,6 +40,8 @@ export interface VoiceCallListItem {
   /** The number the caller rang from (made up for the web demo). */
   callerNumber: string | null;
   scope: VoiceScope;
+  /** Owner-flagged test data: hidden from clients. */
+  isTest: boolean;
   /** Demo calls only. Null falls back to "Universal demo" in the client. */
   personaCompany: string | null;
   personaNiche: string | null;
@@ -140,6 +143,7 @@ export function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
     leadStatus: x.leadStatus,
     callerNumber: x.callerNumber,
     scope: x.isDemo ? "demo" : "live",
+    isTest: row.isTest === true,
     personaCompany: x.isDemo ? row.personaCompany : null,
     personaNiche: x.isDemo ? row.personaNiche : null,
     accountId: row.accountsId,
@@ -148,11 +152,16 @@ export function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
 }
 
 /** Live ALWAYS excludes demo calls, whoever asks. */
-export function scopeWhere(scope: VoiceScope, accountId: number | null): SQL {
+export function scopeWhere(scope: VoiceScope, accountId: number | null, hideTest = false): SQL {
   // Test calls are listed on the tested client's Voice tab instead.
   const base = scope === "demo" ? sql`${isDemoSql} AND ${testAccountIdSql} IS NULL` : sql`NOT ${isDemoSql}`;
-  return accountId === null ? base : sql`${base} AND ${voiceCalls.accountsId} = ${accountId}`;
+  const scoped = accountId === null ? base : sql`${base} AND ${voiceCalls.accountsId} = ${accountId}`;
+  return hideTest ? sql`${scoped} AND ${notTestSql}` : scoped;
 }
+
+/** Not flagged is_test itself and not linked to a lead flagged is_test. */
+export const notTestSql = sql`(COALESCE(${voiceCalls.isTest}, false) = false
+  AND NOT EXISTS (SELECT 1 FROM ${leads} tl WHERE tl.id = ${voiceCalls.leadsId} AND tl.is_test = true))`;
 
 export function itemColumns(includeAccountName: boolean) {
   return {
@@ -172,11 +181,12 @@ export const voiceCallsStorage = {
     scope: VoiceScope;
     accountId: number | null;
     includeAccountName: boolean;
+    hideTest?: boolean;
   }): Promise<VoiceCallListItem[]> {
     const rows = await db
       .select(itemColumns(opts.includeAccountName))
       .from(voiceCalls)
-      .where(scopeWhere(opts.scope, opts.accountId))
+      .where(scopeWhere(opts.scope, opts.accountId, opts.hideTest))
       .orderBy(desc(voiceCalls.startedAt))
       .limit(opts.limit)
       .offset(opts.offset);
@@ -200,13 +210,17 @@ export const voiceCallsStorage = {
    */
   async getVoiceCall(
     callId: string,
-    opts: { accountId: number | null; allowDemo: boolean; includeAccountName?: boolean },
+    opts: { accountId: number | null; allowDemo: boolean; includeAccountName?: boolean; hideTest?: boolean },
   ): Promise<VoiceCallDetail | undefined> {
     const [row] = await db
       .select(itemColumns(opts.includeAccountName ?? false))
       .from(voiceCalls)
       .where(eq(voiceCalls.callId, callId));
     if (!row) return undefined;
+    if (opts.hideTest) {
+      const [t] = await db.select({ hidden: sql<boolean>`NOT ${notTestSql}` }).from(voiceCalls).where(eq(voiceCalls.callId, callId));
+      if (t?.hidden) return undefined;
+    }
     if (row.isDemo && !opts.allowDemo) return undefined;
     if (opts.accountId !== null && row.call.accountsId !== opts.accountId) return undefined;
     const turns = await db
@@ -236,8 +250,34 @@ export const voiceCallsStorage = {
     };
   },
 
+  /**
+   * The call that made a lead's booking (Calendar detail): this lead's booked
+   * calls, the one whose slot matches the lead's booked_call_date first, else
+   * the newest. Same reach rule as getVoiceCall; null when there is none.
+   */
+  async findBookingCallId(
+    leadId: number,
+    opts: { accountId: number | null; allowDemo: boolean; hideTest?: boolean },
+  ): Promise<string | null> {
+    const conds: SQL[] = [eq(voiceCalls.leadsId, leadId), sql`${voiceCalls.bookedSlot} IS NOT NULL`];
+    if (opts.accountId !== null) conds.push(eq(voiceCalls.accountsId, opts.accountId));
+    if (!opts.allowDemo) conds.push(sql`NOT ${isDemoSql}`);
+    if (opts.hideTest) conds.push(notTestSql);
+    const bookedAt = sql`(SELECT l.booked_call_date FROM ${leads} l WHERE l.id = ${leadId})`;
+    const [row] = await db
+      .select({ callId: voiceCalls.callId })
+      .from(voiceCalls)
+      .where(and(...conds))
+      .orderBy(
+        sql`(${voiceCalls.bookedIso} IS NOT NULL AND ${voiceCalls.bookedIso} = ${bookedAt}) DESC`,
+        desc(voiceCalls.startedAt),
+      )
+      .limit(1);
+    return row?.callId ?? null;
+  },
+
   /** Rolling 7 days, computed in SQL so the list's row cap does not matter. */
-  async getVoiceStats(opts: { scope: VoiceScope; accountId: number | null }): Promise<VoiceStats> {
+  async getVoiceStats(opts: { scope: VoiceScope; accountId: number | null; hideTest?: boolean }): Promise<VoiceStats> {
     const result = await db.execute(sql`
       SELECT count(*)::int AS calls,
              count(*) FILTER (WHERE booked_slot IS NOT NULL)::int AS booked,
@@ -246,7 +286,7 @@ export const voiceCallsStorage = {
         SELECT ${voiceCalls.bookedSlot} AS booked_slot, ${durationSecondsSql} AS dur
         FROM ${voiceCalls}
         WHERE ${voiceCalls.startedAt} > now() - interval '7 days'
-          AND ${scopeWhere(opts.scope, opts.accountId)}
+          AND ${scopeWhere(opts.scope, opts.accountId, opts.hideTest)}
       ) t
     `);
     const r = result.rows[0] as { calls: number; booked: number; avg_dur: string | number | null };
@@ -259,9 +299,29 @@ export const voiceCallsStorage = {
     };
   },
 
+  /** Owner toggle: flags the call, and its lead when it has one. False when the call does not exist. */
+  async setCallTestFlag(callId: string, isTest: boolean): Promise<boolean> {
+    const [call] = await db
+      .update(voiceCalls)
+      .set({ isTest })
+      .where(eq(voiceCalls.callId, callId))
+      .returning({ leadsId: voiceCalls.leadsId });
+    if (!call) return false;
+    if (call.leadsId !== null) {
+      await db.update(leads).set({ isTest }).where(eq(leads.id, call.leadsId));
+    }
+    return true;
+  },
+
   async getVoiceCapabilities(access: VoiceAccess): Promise<VoiceCapabilities> {
     if (access.isOwner) return { live: true, demo: true };
-    const result = await db.execute(sql`SELECT ${hasEnabledClientLineSql(access.lockedAccountId)} AS ok`);
+    // Same rule as the Home phone service: an enabled client line, or a live call in the last 90 days.
+    const result = await db.execute(sql`SELECT (
+      ${hasEnabledClientLineSql(access.lockedAccountId)}
+      OR EXISTS (SELECT 1 FROM ${T.voiceCalls} vc
+                 WHERE vc.accounts_id = ${access.lockedAccountId} AND vc.started_at > now() - interval '90 days'
+                   AND ${liveCallSql})
+    ) AS ok`);
     return { live: (result.rows[0] as { ok: boolean }).ok === true, demo: false };
   },
 };

@@ -1,7 +1,7 @@
 import type { Express, Request, RequestHandler } from "express";
 import { storage } from "../storage";
 import { wrapAsync } from "./_helpers";
-import { decideScope, type VoiceAccess } from "./voiceCallsAccess";
+import { decideScope, hidesTestData, type VoiceAccess } from "./voiceCallsAccess";
 import type { VoiceOutcome } from "@shared/voiceOutcome";
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
@@ -57,6 +57,7 @@ export function registerVoiceCallersRoutes(
       accountId: decision.accountId,
       isOwner: access.isOwner,
       includeAccountName: access.isAgency,
+      hideTest: hidesTestData(access),
     });
     res.json({ callers });
   }));
@@ -81,7 +82,9 @@ export function registerVoiceCallersRoutes(
       accountId: lead.accountId,
       usersId: typeof user.id === "number" ? user.id : null,
       who,
-      content: `Called back by ${who} (${channel})`,
+      channel,
+      // A button press, not a finished call: say what was opened. The "(channel)" tail is parsed back.
+      content: `${channel === "whatsapp" ? "WhatsApp opened" : "Call back started"} by ${who} from Voice calls (${channel})`,
     });
     res.json(record);
   }));

@@ -7,7 +7,7 @@ import { db } from "../db";
 import type { ActivityRow, AttentionRow, HomeChannel, HomeOverview } from "@shared/homeTypes";
 import type { HomeQuery } from "../routes/homeScope";
 import {
-  T, acct, at, boundsFor, dayOf, fillDays, humanOutboundSql,
+  T, acct, at, boundsFor, bookingsSql, dayOf, fillDays, humanOutboundSql,
   liveCallSql, liveLeadSql, needsCallbackSql, num, receptionistLeadSql,
 } from "./homeSql";
 
@@ -38,14 +38,7 @@ async function getHomeOverview(q: HomeQuery): Promise<HomeOverview> {
     SELECT vc.started_at, ${needsCallbackSql} AS cb
     FROM ${T.voiceCalls} vc
     WHERE ${acct("vc.accounts_id", q.accountId)} AND vc.started_at >= ${prev} AND vc.started_at < ${end} AND ${liveCallSql}`;
-  const bookings = sql`
-    SELECT COALESCE(l.booking_channel, 'other') AS channel, COALESCE(l.booked_at, l.booking_confirmed_at_) AS booked
-    FROM ${T.leads} l
-    LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
-    WHERE ${acct('l."Accounts_id"', q.accountId)} AND l.booked_call_date IS NOT NULL
-      AND COALESCE(l.booked_at, l.booking_confirmed_at_) >= ${prev}
-      AND COALESCE(l.booked_at, l.booking_confirmed_at_) < ${end}
-      AND ${liveLeadSql} AND ${receptionistLeadSql}`;
+  const bookings = bookingsSql(q.accountId, prev, end);
 
   // The current to-do list as one union, shared by the list (LIMIT 8) and the true count.
   // A callback is done once the lead has a logged call back (Voice Calls page) after the call,
@@ -124,25 +117,26 @@ async function getHomeOverview(q: HomeQuery): Promise<HomeOverview> {
       SELECT * FROM (
         SELECT 'booked' AS kind, COALESCE(l.booking_channel, 'unknown') AS channel, l.id AS lead_id, NULL AS call_id,
                NULLIF(trim(concat_ws(' ', l.first_name, l.last_name)), '') AS name,
-               COALESCE(l.booked_at, l.booking_confirmed_at_) AS at
+               COALESCE(l.booked_at, l.booking_confirmed_at_) AS at, NULL::text AS headline
         FROM ${T.leads} l LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
         WHERE ${acct('l."Accounts_id"', q.accountId)} AND l.booked_call_date IS NOT NULL
           AND COALESCE(l.booked_at, l.booking_confirmed_at_) >= ${cur} AND COALESCE(l.booked_at, l.booking_confirmed_at_) < ${end}
           AND ${liveLeadSql} AND ${receptionistLeadSql}
         UNION ALL
         SELECT CASE WHEN vc.outcome = 'transferred' THEN 'transferred' ELSE 'call' END, 'phone', vc.leads_id, vc.call_id,
-               NULLIF(trim(concat_ws(' ', cl.first_name, cl.last_name)), ''), vc.started_at
+               NULLIF(trim(concat_ws(' ', cl.first_name, cl.last_name)), ''), vc.started_at,
+               NULLIF(vc.summary ->> 'outcome', '')
         FROM ${T.voiceCalls} vc LEFT JOIN ${T.leads} cl ON cl.id = vc.leads_id
         WHERE ${acct("vc.accounts_id", q.accountId)} AND vc.started_at >= ${cur} AND vc.started_at < ${end} AND ${liveCallSql}
         UNION ALL
         SELECT 'chat_started', 'website', l.id, NULL,
-               NULLIF(trim(concat_ws(' ', l.first_name, l.last_name)), ''), l.created_at
+               NULLIF(trim(concat_ws(' ', l.first_name, l.last_name)), ''), l.created_at, NULL
         FROM ${T.leads} l LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
         WHERE ${acct('l."Accounts_id"', q.accountId)} AND l.channel_identifier LIKE 'web:%'
           AND l.created_at >= ${cur} AND l.created_at < ${end} AND ${liveLeadSql} AND ${receptionistLeadSql}
         UNION ALL
         SELECT 'followup_sent', CASE WHEN f.channel = 'sms' THEN 'sms' ELSE 'whatsapp' END, f.leads_id, NULL,
-               NULLIF(trim(concat_ws(' ', l.first_name, l.last_name)), ''), f.created_at
+               NULLIF(trim(concat_ws(' ', l.first_name, l.last_name)), ''), f.created_at, NULL
         FROM ${T.callFollowupLog} f LEFT JOIN ${T.leads} l ON l.id = f.leads_id
         LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
         WHERE ${acct("f.accounts_id", q.accountId)} AND f.decision = 'sent'
@@ -182,7 +176,7 @@ async function getHomeOverview(q: HomeQuery): Promise<HomeOverview> {
     activity: rows(activity).map((r): ActivityRow => ({
       kind: r.kind as ActivityRow["kind"], channel: r.channel as ActivityRow["channel"],
       leadId: r.lead_id == null ? null : num(r.lead_id), callId: (r.call_id as string | null) ?? null,
-      name: (r.name as string | null) ?? null, at: iso(r.at),
+      name: (r.name as string | null) ?? null, at: iso(r.at), headline: (r.headline as string | null) || null,
     })),
   };
 }

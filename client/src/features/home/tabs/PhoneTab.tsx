@@ -14,13 +14,17 @@ import { RowList } from "../components/RowList";
 import { StatRow } from "../components/StatRow";
 import { formatDuration, trendOf } from "../lib/homeFormat";
 import { openCall } from "../lib/openCall";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import type { HomeTabProps } from "./tabTypes";
 
-const OUTCOMES: CallOutcome[] = ["booked", "callback", "transferred", "hung_up", "other"];
+const OUTCOMES: CallOutcome[] = ["booked", "callback", "transferred", "hung_up", "answered"];
 
 export default function PhoneTab({ scope }: HomeTabProps) {
-  const { t } = useTranslation("home");
+  const { t, i18n } = useTranslation("home");
+  const usd = (n: number, digits: number) =>
+    new Intl.NumberFormat(i18n.language, { style: "currency", currency: "USD", maximumFractionDigits: digits }).format(n);
   const [, setLocation] = useLocation();
+  const { isAgencyUser } = useWorkspace();
   const { data, isLoading, isError } = useHomePhone(scope);
 
   if (isError) return <EmptyState title={t("errorTitle")} body={t("error")} />;
@@ -33,7 +37,7 @@ export default function PhoneTab({ scope }: HomeTabProps) {
   const recentRows = (data?.recent ?? []).map((r) => ({
     key: r.callId,
     title: r.name || t("overview.unknownCaller"),
-    meta: r.callerNumber ?? undefined,
+    meta: r.headline ?? r.callerNumber ?? undefined,
     tag: <Pill>{t(`phone.outcome.${r.outcome}`)}</Pill>,
     time: r.at,
     onClick: () => openCall(r.callId, setLocation),
@@ -61,7 +65,7 @@ export default function PhoneTab({ scope }: HomeTabProps) {
         },
         { key: "avg", label: t("phone.tiles.avgLength"), value: data ? formatDuration(data.avgSeconds.value) : "…", compared: data?.avgSeconds },
       ]} />
-      <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-2">
         <PanelShell>
           <SectionHead title={t("phone.perDay")} />
           <DayChart data={data?.perDay ?? []} label={t("phone.perDay")} />
@@ -73,8 +77,11 @@ export default function PhoneTab({ scope }: HomeTabProps) {
       </div>
       {data && (
         <div className="grid grid-cols-1 gap-[14px] md:grid-cols-2">
-          {data.outOfHoursPct !== null && <StatCard flat label={t("phone.outOfHours")} value={`${data.outOfHoursPct}%`} />}
+          {data.outOfHoursPct !== null && <StatCard flat label={t("phone.outOfHoursLabel")} value={`${data.outOfHoursPct}%`} />}
           <StatCard flat label={t("phone.screened", { count: data.screened })} value={data.screened} />
+          {isAgencyUser && data.latencyMs !== null && <StatCard flat label={t("phone.latency")} value={`${data.latencyMs} ms`} />}
+          {data.cost?.perMinute != null && <StatCard flat label={t("phone.costPerMinute")} value={usd(data.cost.perMinute, 3)} />}
+          {data.cost && <StatCard flat label={t("phone.cost")} value={usd(data.cost.total, 2)} />}
         </div>
       )}
       <PanelShell>

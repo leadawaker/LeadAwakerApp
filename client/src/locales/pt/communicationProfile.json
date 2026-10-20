@@ -270,7 +270,14 @@
         "stone": "Natural, masculina, tom irlandês.",
         "meridian": "Natural, masculina, norte-americana.",
         "ripple": "Natural, masculina, tom australiano.",
-        "tempo": "Natural, masculina, português brasileiro."
+        "tempo": "Natural, masculina, português brasileiro.",
+        "quartz": "Gerada, tom australiano.",
+        "delta": "Gerada, tom do sul dos EUA.",
+        "coral": "Gerada, norte-americana.",
+        "sage": "Gerada, norte-americana.",
+        "shimmer": "Gerada, norte-americana.",
+        "beacon": "Gerada, masculina, inglês.",
+        "cinder": "Gerada, masculina, inglês."
       },
       "localeLabel": "Idioma",
       "locales": {

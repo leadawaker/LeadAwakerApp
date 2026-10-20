@@ -38,10 +38,13 @@
     "tiles": { "calls": "Calls", "booked": "Booked", "transferred": "Transferred", "transfersFailed_one": "{{count}} failed", "transfersFailed_other": "{{count}} failed", "avgLength": "Average length" },
     "perDay": "Calls per day",
     "outcomes": "Outcomes",
-    "outcome": { "booked": "Booked", "callback": "Callback", "transferred": "Transferred", "hung_up": "Hung up", "other": "Other" },
-    "outOfHours": "of calls came in outside office hours",
+    "outcome": { "booked": "Booked", "callback": "Callback", "transferred": "Transferred", "hung_up": "Hung up", "answered": "Questions answered" },
+    "outOfHoursLabel": "Calls outside office hours",
     "screened_one": "sales call or robocall screened out",
     "screened_other": "sales calls and robocalls screened out",
+    "latency": "typical reply speed, from the caller's last word to the reply",
+    "costPerMinute": "cost per minute (only you see this)",
+    "cost": "spent on calls (only you see this)",
     "recent": "Recent calls",
     "recentEmpty": "No calls in this period yet."
   },
@@ -106,7 +109,8 @@
     "openCampaign": "Open campaign",
     "newCampaign": "New campaign",
     "importLeads": "Import leads",
-    "status": {"New": "New", "Contacted": "Contacted", "Responded": "Responded", "MultipleResponses": "Multiple Responses", "Qualified": "Qualified", "Booked": "Booked", "Closed": "Closed", "Lost": "Lost", "DND": "DND", "Unknown": "Unknown"}
+    "status": {"New": "New", "Contacted": "Contacted", "Responded": "Responded", "MultipleResponses": "Multiple Responses", "Qualified": "Qualified", "Booked": "Booked", "Closed": "Closed", "Lost": "Lost", "DND": "DND", "Unknown": "Unknown"},
+    "live": {"upcoming": "Up next", "upcomingEmpty": "No booked calls coming up.", "todayCount_one": "{{count}} today", "todayCount_other": "{{count}} today", "handoff": "Handoff", "activity": "Just happened", "activityEmpty": "No messages in the last 30 days.", "live": "Live", "replied": "Replied", "sent": "Sent", "bumps": "Bumps today", "sentToday": "Sent today", "dueToday": "Still due today", "nextUp": "Next scheduled", "nextEmpty": "No bumps scheduled.", "firstMessage": "First message", "bump": "Bump {{n}}", "due": "Due now"}
   },
   "reputation": {
     "banner": "new Google reviews",
@@ -144,5 +148,19 @@
     "recent": "Recent conversations",
     "recentEmpty": "No Instagram conversations in this period yet.",
     "notConnected": "No Instagram account is connected yet."
+  },
+  "onboarding": {
+    "yourReceptionist": "Your receptionist",
+    "there": "there",
+    "close": "Close",
+    "welcome": "Welcome, {{firstName}}. {{agentName}} answers for {{company}}.",
+    "welcomeNoName": "Welcome. {{agentName}} answers for {{company}}.",
+    "where1": "Calls, chats and bookings show up on this page and in the {{calls}}, {{leads}} and {{calendar}} pages.",
+    "where2": "You get a daily recap and instant alerts once you add yourself to them.",
+    "guide": "Read the guide",
+    "done": "Done",
+    "installIos": "Share › Add to Home Screen.",
+    "installAndroid": "⋮ menu › Install app / Add to Home screen.",
+    "items": { "details": "Check your business details", "alerts": "Add yourself to the recap and alerts", "call": "Open your first call or chat", "install": "Put the CRM on your phone" }
   }
 }

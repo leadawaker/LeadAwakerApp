@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveVoiceAccess, decideScope } from "./voiceCallsAccess";
+import { resolveVoiceAccess, decideScope, hidesTestData } from "./voiceCallsAccess";
 
 const owner = resolveVoiceAccess({ role: "Owner", accountsId: 1, impersonatedAccountId: null });
 const admin = resolveVoiceAccess({ role: "Admin", accountsId: 1, impersonatedAccountId: null });
@@ -81,4 +81,13 @@ test("scope: owner accountId=7 honored, garbage accountId ignored", () => {
   assert.deepEqual(decideScope(owner, { scope: "live", accountId: "abc" }), { ok: true, scope: "live", accountId: null });
   assert.deepEqual(decideScope(owner, { scope: "live", accountId: "-3" }), { ok: true, scope: "live", accountId: null });
   assert.deepEqual(decideScope(admin, { scope: "live", accountId: "7" }), { ok: true, scope: "live", accountId: 7 });
+});
+
+test("test data is hidden from clients and impersonation, never from agency", () => {
+  assert.equal(hidesTestData(owner), false);
+  assert.equal(hidesTestData(admin), false);
+  assert.equal(hidesTestData(client), true);
+  assert.equal(hidesTestData(resolveVoiceAccess({ role: "Manager", accountsId: 53, impersonatedAccountId: null })), true);
+  assert.equal(hidesTestData(resolveVoiceAccess({ role: "Owner", accountsId: 1, impersonatedAccountId: 53 })), true);
+  assert.equal(hidesTestData(resolveVoiceAccess({ role: "Owner", accountsId: 1, impersonatedAccountId: null, impersonatedRole: "Admin" })), false);
 });

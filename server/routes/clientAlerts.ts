@@ -2,8 +2,9 @@ import type { Express, Request, Response } from "express";
 import { z } from "zod";
 import { storage } from "../storage";
 import { isValidInternalKey, requireAgency, requireAuth } from "../auth";
+import { editLevelForRequest } from "./clientEditAccess";
 import { accountIdFor, getEngineUrl, handleZodError, wrapAsync } from "./_helpers";
-import { sendRawEmail } from "../email";
+import { sendRawEmail, type EmailAttachment } from "../email";
 import { renderClientAlertEmail } from "../clientAlerts/renderEmail";
 import { AlertSettingsError } from "../storage/clientAlerts";
 import { ALERT_CHANNELS, ALERT_LANGUAGES, ALERT_TYPES, MAX_EMAIL_RECIPIENTS, MAX_WHATSAPP_RECIPIENTS } from "@shared/clientAlerts";
@@ -38,6 +39,52 @@ const emailBodySchema = z.object({
   data: z.record(z.string(), z.any()),
 });
 
+/** Photo caps per email: one photo above MAX_PHOTO_BYTES goes by link only,
+ *  and the set stops at MAX_PHOTOS or MAX_PHOTOS_BYTES (Resend allows 40 MB
+ *  per email, base64 included). The rest is one click away in the CRM. */
+const MAX_PHOTO_BYTES = 4_000_000;
+const MAX_PHOTOS = 10;
+const MAX_PHOTOS_BYTES = 15_000_000;
+const PHOTO_EXT: Record<string, string> = { "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp", "image/gif": "gif" };
+
+/** new_photo: the photos of one bundle, from their Interactions rows (the
+ *  engine sends the row ids, never the images). A photo that is missing,
+ *  belongs to another lead or is over a cap is left out and counted in
+ *  `left`. Older single-photo rows carry one top-level interaction_id. */
+async function loadAlertPhotos(data: Record<string, any>): Promise<{ files: EmailAttachment[]; shown: number[]; left: number }> {
+  const items: any[] = Array.isArray(data.photos) && data.photos.length
+    ? data.photos
+    : data.interaction_id ? [{ interaction_id: data.interaction_id }] : [];
+  const c = data.customer ?? {};
+  const who = [c.first, c.last].filter(Boolean).join(" ").trim();
+  const files: EmailAttachment[] = [];
+  const shown: number[] = [];
+  let total = 0;
+  for (const [index, item] of items.entries()) {
+    if (files.length >= MAX_PHOTOS) break;
+    const id = Number(item?.interaction_id);
+    if (!Number.isInteger(id) || id <= 0) continue;
+    const row = await storage.getInteractionById(id).catch(() => null);
+    if (!row?.attachment || (data.lead_id && row.leadsId !== Number(data.lead_id))) continue;
+    const m = /^data:(image\/(?:jpeg|png|webp|gif));base64,(.+)$/s.exec(row.attachment);
+    if (!m) continue;
+    const content = m[2].replace(/\s/g, "");
+    const bytes = Math.floor(content.length * 3 / 4);
+    if (bytes > MAX_PHOTO_BYTES || total + bytes > MAX_PHOTOS_BYTES) continue;
+    total += bytes;
+    const slug = (who && !who.startsWith("+") ? who : `lead-${row.leadsId ?? id}`)
+      .normalize("NFKD").replace(/[^\w\s-]/g, "").trim().replace(/\s+/g, "-").toLowerCase() || "lead";
+    const day = new Date(row.createdAt ?? Date.now()).toISOString().slice(0, 10);
+    const n = files.length + 1;
+    files.push({
+      filename: `photo-${slug}-${day}${items.length > 1 ? `-${n}` : ""}.${PHOTO_EXT[m[1]] ?? "jpg"}`,
+      contentType: m[1], content, contentId: `lead-photo-${n}`,
+    });
+    shown.push(index);
+  }
+  return { files, shown, left: Math.max(0, items.length - files.length) };
+}
+
 const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/);
 const channelPatch = z.object(Object.fromEntries(ALERT_CHANNELS.map((c) => [c, z.boolean().optional()]))).strict();
 const patchSchema = z.object({
@@ -69,10 +116,14 @@ export function registerClientAlertsRoutes(app: Express): void {
     const parsed = emailBodySchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     const body = parsed.data;
+    const photos = body.type === "new_photo"
+      ? await loadAlertPhotos(body.data).catch(() => ({ files: [] as EmailAttachment[], shown: [] as number[], left: 0 }))
+      : null;
     let rendered;
     try {
       rendered = renderClientAlertEmail({
         type: body.type, language: body.language, accountName: body.accountName, link: body.link, data: body.data,
+        photos: photos ? { contentIds: photos.files.map((f) => f.contentId as string), shown: photos.shown, left: photos.left } : null,
       });
     } catch (err: any) {
       console.error("[client-alerts] render failed:", err?.message);
@@ -80,7 +131,10 @@ export function registerClientAlertsRoutes(app: Express): void {
     }
     const results = await Promise.all(body.to.map(async (t) => {
       try {
-        const r = await sendRawEmail({ to: t.address, ...rendered, idempotencyKey: `${body.ledgerId}:${t.address.toLowerCase()}` });
+        const r = await sendRawEmail({
+          to: t.address, ...rendered, idempotencyKey: `${body.ledgerId}:${t.address.toLowerCase()}`,
+          ...(photos?.files.length ? { attachments: photos.files } : {}),
+        });
         return { address: t.address, ok: true, provider: r.provider, id: r.id ?? null };
       } catch (err: any) {
         return { address: t.address, ok: false, error: String(err?.message ?? err).slice(0, 300), transient: true };
@@ -94,12 +148,13 @@ export function registerClientAlertsRoutes(app: Express): void {
     if (accountId == null) return;
     const settings = await storage.getAlertSettings(accountId);
     if (!settings) return res.status(404).json({ message: "Account not found" });
-    res.json({ ...settings, canEdit: isAgency(req) });
+    res.json({ ...settings, canEdit: editLevelForRequest(req, accountId) !== "none" });
   }));
 
-  app.patch("/api/accounts/:id/alert-settings", requireAgency, wrapAsync(async (req, res) => {
+  app.patch("/api/accounts/:id/alert-settings", requireAuth, wrapAsync(async (req, res) => {
     const accountId = accountIdFor(req, res);
     if (accountId == null) return;
+    if (editLevelForRequest(req, accountId) === "none") return res.status(403).json({ message: "Forbidden" });
     const parsed = patchSchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     try {
@@ -111,9 +166,10 @@ export function registerClientAlertsRoutes(app: Express): void {
     }
   }));
 
-  app.post("/api/accounts/:id/alert-settings/test", requireAgency, wrapAsync(async (req, res) => {
+  app.post("/api/accounts/:id/alert-settings/test", requireAuth, wrapAsync(async (req, res) => {
     const accountId = accountIdFor(req, res);
     if (accountId == null) return;
+    if (editLevelForRequest(req, accountId) === "none") return res.status(403).json({ message: "Forbidden" });
     const parsed = testSchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     try {
@@ -145,6 +201,17 @@ export function registerClientAlertsRoutes(app: Express): void {
       return res.json({ path: "/platform/accounts?tab=alerts", selectAccountId: target.accountsId, accountId: target.accountsId });
     }
     const t = target.eventType;
+    // Appointment alerts open where the booking happened: the phone call, the
+    // chat, or (source unknown) the Calendar.
+    if (target.open === "call" && target.voiceCallId) {
+      return res.json({ path: "/platform/voice-calls", selectVoiceCallId: target.voiceCallId, accountId: target.accountsId });
+    }
+    if (target.open === "chat" && target.leadsId) {
+      return res.json({ path: "/platform/leads", selectLeadId: target.leadsId, accountId: target.accountsId });
+    }
+    if (target.open) {
+      return res.json({ path: "/platform/calendar", accountId: target.accountsId });
+    }
     if (target.leadsId && t !== "daily_recap") {
       // The Leads page shows the conversation and the booking side by side.
       return res.json({ path: "/platform/leads", selectLeadId: target.leadsId, accountId: target.accountsId });

@@ -327,7 +327,14 @@
         "stone": "Natural, male, Irish tone.",
         "meridian": "Natural, male, North American.",
         "ripple": "Natural, male, Australian tone.",
-        "tempo": "Natural, male, Brazilian Portuguese."
+        "tempo": "Natural, male, Brazilian Portuguese.",
+        "quartz": "Generated, Australian tone.",
+        "delta": "Generated, Southern US tone.",
+        "coral": "Generated, North American.",
+        "sage": "Generated, North American.",
+        "shimmer": "Generated, North American.",
+        "beacon": "Generated, male, English.",
+        "cinder": "Generated, male, English."
       },
       "localeLabel": "Language",
       "locales": {

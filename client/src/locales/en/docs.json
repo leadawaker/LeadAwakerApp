@@ -2,7 +2,102 @@
   "title": "Documentation",
   "whatsNew": "What's New",
   "operatorManual": "Operator Manual",
-  "clientGuide": "Client Guide",
+  "clientGuide": {
+    "title": "Client Guide",
+    "yourReceptionist": "your receptionist",
+    "welcome": {
+      "title": "Welcome to your CRM",
+      "intro": "This is where you keep an eye on {{company}}. {{Name}} answers your calls and chats, and everything that happens ends up here, so you never have to guess. Here is what you will find where:",
+      "home": "<b>Home</b>: the quick picture. What came in, what was booked, and anything that needs you.",
+      "calls": "<b>Calls</b>: every call {{name}} took. Open one to read what was said and what came of it.",
+      "leads": "<b>Leads</b>: the people who got in touch, with their conversations in one place.",
+      "calendar": "<b>Calendar</b>: your bookings and visits. You can add busy blocks here too.",
+      "receptionist": "<b>My receptionist</b>: how {{name}} is set up, your opening hours and who gets your recap and alerts.",
+      "tip": "Stuck anywhere? Use the chat button to message Gabriel directly. No question is too small."
+    },
+    "phone": {
+      "title": "How {{name}} answers your phone",
+      "intro": "When someone calls your business number, {{name}} picks up, listens and helps them like a good receptionist would. This is what can happen on a call:",
+      "calls": "<strong>Calls:</strong> {{Name}} answers questions about your business, in the caller's language. Every call shows up under Calls with a summary.",
+      "transfers": "<strong>Transfers:</strong> if a caller wants to speak to you or a colleague, {{name}} can pass the call on. You will see in the call whether the transfer worked.",
+      "callbacks": "<strong>Callbacks:</strong> if nobody can pick up, {{name}} takes the caller's name, number and question. These callbacks show up on your Home page so you can ring them back.",
+      "bookings": "<strong>Bookings and visits:</strong> {{name}} can book a visit or appointment straight into your calendar, at a time that is actually free. The booking appears in your Calendar right away.",
+      "tip": "Want a different greeting or other opening hours? Opening hours you can change yourself. For anything else, press Request a change."
+    },
+    "chat": {
+      "title": "Your website chat",
+      "p1": "The chat bubble on your website works just like the phone: {{name}} welcomes visitors, answers their questions and can book a visit.",
+      "p2": "Every conversation shows up under Leads, so you can read along and see who is interested."
+    },
+    "recap": {
+      "title": "Your daily recap and alerts",
+      "intro": "You do not have to check the CRM all day. It comes to you.",
+      "recap": "<strong>Daily recap:</strong> a summary email at the time you set under Alerts, covering calls, chats and bookings.",
+      "alerts": "<strong>Instant alerts:</strong> a message as soon as something needs you, such as a new booking or a callback request.",
+      "addTitle": "Adding yourself or a colleague",
+      "add1": "Open <strong>My receptionist</strong> and go to the <strong>Alerts</strong> tab.",
+      "add2": "Add your email address (or your colleague's) to the recipients of the recap or the alerts.",
+      "add3": "Save. From the next recap or alert on, that person gets it too."
+    },
+    "calendar": {
+      "title": "Your calendar",
+      "p1": "Every booking {{name}} makes lands in your Calendar, with the name of the customer and the time.",
+      "p2": "Need to move a visit? Open it and reschedule or cancel it. The calendar is always the leader.",
+      "p3": "Not available on a certain day or time? Add a <strong>busy block</strong>. {{Name}} will not offer those times to anyone.",
+      "tip": "Add busy blocks early, for example for holidays or a day out. It is the easiest way to keep your calendar yours."
+    },
+    "change": {
+      "title": "What you can change, and what to ask",
+      "intro": "A lot you can do yourself, straight away:",
+      "hours": "Your opening hours.",
+      "alerts": "Who gets your daily recap and alerts.",
+      "replies": "Replying to leads yourself.",
+      "bookings": "Rescheduling or cancelling a booking.",
+      "busy": "Adding busy blocks in your Calendar.",
+      "request": "Everything else, such as what {{name}} says, the greeting, prices or what {{name}} knows about your business, is easy to change as well: press <strong>Request a change</strong> and it opens a chat with Gabriel. Tell him what you would like and he takes care of it."
+    },
+    "install": {
+      "title": "Put the CRM on your phone",
+      "intro": "Add the CRM to your home screen and it opens like an app, with its own icon. It takes half a minute.",
+      "iosTitle": "iPhone (Safari)",
+      "ios1": "Open this page in <strong>Safari</strong>.",
+      "ios2": "Tap the <strong>Share</strong> button.",
+      "ios3": "Choose <strong>Add to Home Screen</strong>, then <strong>Add</strong>.",
+      "androidTitle": "Android (Chrome)",
+      "android1": "Open this page in <strong>Chrome</strong>.",
+      "android2": "Tap the <strong>menu</strong> (three dots).",
+      "android3": "Choose <strong>Install app</strong> or <strong>Add to Home screen</strong>."
+    },
+    "faq": {
+      "title": "Frequently asked questions",
+      "items": {
+        "1": {
+          "q": "Can I listen to a call?",
+          "a": "You can read what was said under Calls. Open the call for the summary and the conversation."
+        },
+        "2": {
+          "q": "What if {{name}} does not know an answer?",
+          "a": "If {{name}} is not sure about something, that is said honestly and the question is passed on to you, instead of guessing. The caller is offered a callback and you get an alert."
+        },
+        "3": {
+          "q": "Will customers know they are talking to an AI?",
+          "a": "Yes. {{Name}} is introduced as a digital assistant in the greeting, and that is confirmed openly if someone asks. Most callers just care about getting their question answered."
+        },
+        "4": {
+          "q": "I got a booking I did not expect. What now?",
+          "a": "Open it in your Calendar. You can reschedule or cancel it, or press Request a change if something looks off."
+        },
+        "5": {
+          "q": "Can I read my website chats?",
+          "a": "Yes. You can read every website chat under Leads."
+        },
+        "6": {
+          "q": "Who do I contact if something is wrong?",
+          "a": "Use the chat button to message Gabriel. He gets your message straight away."
+        }
+      }
+    }
+  },
   "agencyDocs": "Agency Docs",
   "userDocs": "User Docs",
   "agencyDocumentation": "Agency Documentation",

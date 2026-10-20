@@ -36,6 +36,7 @@ import enSetup from "./locales/en/setup.json";
 import enCommunicationProfile from "./locales/en/communicationProfile.json";
 import enSpeedToLead from "./locales/en/speedToLead.json";
 import enVoiceTab from "./locales/en/voiceTab.json";
+import enChatTab from "./locales/en/chatTab.json";
 import enWhatsappCloud from "./locales/en/whatsappCloud.json";
 import enClientAlerts from "./locales/en/clientAlerts.json";
 
@@ -70,6 +71,7 @@ import ptSetup from "./locales/pt/setup.json";
 import ptCommunicationProfile from "./locales/pt/communicationProfile.json";
 import ptSpeedToLead from "./locales/pt/speedToLead.json";
 import ptVoiceTab from "./locales/pt/voiceTab.json";
+import ptChatTab from "./locales/pt/chatTab.json";
 import ptWhatsappCloud from "./locales/pt/whatsappCloud.json";
 import ptClientAlerts from "./locales/pt/clientAlerts.json";
 
@@ -104,6 +106,7 @@ import nlSetup from "./locales/nl/setup.json";
 import nlCommunicationProfile from "./locales/nl/communicationProfile.json";
 import nlSpeedToLead from "./locales/nl/speedToLead.json";
 import nlVoiceTab from "./locales/nl/voiceTab.json";
+import nlChatTab from "./locales/nl/chatTab.json";
 import nlWhatsappCloud from "./locales/nl/whatsappCloud.json";
 import nlClientAlerts from "./locales/nl/clientAlerts.json";
 
@@ -140,6 +143,7 @@ const resources = {
     communicationProfile: enCommunicationProfile,
     speedToLead: enSpeedToLead,
     voiceTab: enVoiceTab,
+    chatTab: enChatTab,
     whatsappCloud: enWhatsappCloud,
     clientAlerts: enClientAlerts,
   },
@@ -175,6 +179,7 @@ const resources = {
     communicationProfile: ptCommunicationProfile,
     speedToLead: ptSpeedToLead,
     voiceTab: ptVoiceTab,
+    chatTab: ptChatTab,
     whatsappCloud: ptWhatsappCloud,
     clientAlerts: ptClientAlerts,
   },
@@ -210,6 +215,7 @@ const resources = {
     communicationProfile: nlCommunicationProfile,
     speedToLead: nlSpeedToLead,
     voiceTab: nlVoiceTab,
+    chatTab: nlChatTab,
     whatsappCloud: nlWhatsappCloud,
     clientAlerts: nlClientAlerts,
   },
@@ -256,6 +262,7 @@ i18n
       "communicationProfile",
       "speedToLead",
       "voiceTab",
+      "chatTab",
       "whatsappCloud",
       "clientAlerts",
     ],
@@ -274,7 +281,9 @@ i18n
       order: ["localStorage", "path"],
       lookupLocalStorage: "leadawaker_lang",
       lookupFromPathIndex: 0,
-      caches: ["localStorage"],
+      // Never let detection write leadawaker_lang: only explicit toggles (and the
+      // saved-language hydrate) may, so "empty" means "no choice yet".
+      caches: [],
       lookupFromSubdomainIndex: undefined,
     },
   });

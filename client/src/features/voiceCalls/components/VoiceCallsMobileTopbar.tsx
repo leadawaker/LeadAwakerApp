@@ -7,8 +7,8 @@ import { GROUPS, SORTS, type ListOptions } from "../listOptions";
 import { OUTCOME_LABEL_KEY, VOICE_CALL_STATUSES } from "../status";
 import { AccountFilter, type AccountOption } from "./AccountFilter";
 import { PresentingToggle } from "./PresentingToggle";
-
-const SCOPES: VoiceScope[] = ["live", "demo"];
+import { ScopeSwitch } from "./ScopeSwitch";
+import { WeekSummary } from "./WeekSummary";
 
 interface Props {
   scope: VoiceScope;
@@ -28,7 +28,8 @@ interface Props {
 
 /**
  * Phone layout of the Voice calls topbar: title + search icon + one settings
- * drawer (Filter / Sort / Group), with the source and view tabs on a second row.
+ * drawer (Filter / Sort / Group). The second row, in the desktop order: the
+ * view tabs, the week numbers, then (Owner) the Live / Demo switch.
  * Owners also get the Presenting toggle (icon only) on that row, so they can
  * unmask caller names on a phone.
  */
@@ -72,10 +73,9 @@ export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, view, onView, 
 
   const subRow = (
     <>
-      {isOwner && (
-        <MobileTabSeg tabs={SCOPES.map((s) => ({ id: s, label: t(`tabs.${s}`) }))} activeId={scope} onChange={onScope} />
-      )}
       <MobileTabSeg tabs={VIEWS.map((v) => ({ id: v, label: t(`callers.view.${v}`) }))} activeId={view} onChange={onView} />
+      <WeekSummary scope={scope} accountId={accountId} />
+      {isOwner && <ScopeSwitch scope={scope} onScope={onScope} compact />}
       {isOwner && scope === "live" && (accounts.length > 1 || accountId != null) && (
         <AccountFilter accounts={accounts} value={accountId} onChange={onAccount} />
       )}

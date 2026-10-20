@@ -1,13 +1,19 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ExternalLink, Video, FileText, Download } from "lucide-react";
+import { Video, FileText, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAttachmentType } from "./utils";
 import { VoiceMemoPlayer } from "./VoiceMemoPlayer";
+import { ImageLightbox } from "./ImageLightbox";
 
-export function AttachmentPreview({ url, outbound, voiceColor }: { url: string; outbound: boolean; voiceColor?: string }) {
+export function AttachmentPreview({ url, outbound, voiceColor, downloadName }: {
+  url: string; outbound: boolean; voiceColor?: string;
+  /** Base of the downloaded photo's file name, e.g. the lead's name. */
+  downloadName?: string;
+}) {
   const { t } = useTranslation("conversations");
   const [imgError, setImgError] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
   const type = getAttachmentType(url);
   const filename = decodeURIComponent(url.split("/").pop()?.split("?")[0] ?? "attachment");
 
@@ -18,18 +24,16 @@ export function AttachmentPreview({ url, outbound, voiceColor }: { url: string; 
   if (type === "image" && !imgError) {
     return (
       <div className="mt-2" data-testid="attachment-image">
-        <img
-          src={url}
-          alt={t("chat.attachment")}
-          className="max-w-full max-h-60 rounded-lg object-cover border border-white/20 cursor-pointer"
-          onError={() => setImgError(true)}
-          onClick={() => window.open(url, "_blank", "noopener,noreferrer")}
-          title={t("chat.clickToOpenFullSize")}
-        />
-        <a href={url} target="_blank" rel="noopener noreferrer" className={linkClasses} data-testid="attachment-link">
-          <ExternalLink className="w-3 h-3 shrink-0" />
-          <span className="truncate max-w-[200px]">{filename}</span>
-        </a>
+        <button type="button" onClick={() => setLightbox(true)} title={t("chat.clickToOpenFullSize")}
+          aria-label={t("chat.clickToOpenFullSize")} className="block max-w-full cursor-zoom-in rounded-lg">
+          <img
+            src={url}
+            alt={t("chat.attachment")}
+            className="max-w-full max-h-60 rounded-lg object-cover border border-white/20"
+            onError={() => setImgError(true)}
+          />
+        </button>
+        <ImageLightbox url={url} open={lightbox} onOpenChange={setLightbox} downloadName={downloadName} />
       </div>
     );
   }

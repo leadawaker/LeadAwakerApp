@@ -16,7 +16,8 @@ export function formatDuration(seconds: number | null | undefined): string {
 
 /** Whole percent, or null when the denominator is zero. */
 export function rateOf(part: number, whole: number): number | null {
-  return whole > 0 ? Math.round((part / whole) * 100) : null;
+  // Capped at 100: a reply window can hold leads first contacted earlier.
+  return whole > 0 ? Math.min(100, Math.round((part / whole) * 100)) : null;
 }
 
 /** Bar widths as percentages of the largest value; all zero stays zero. */

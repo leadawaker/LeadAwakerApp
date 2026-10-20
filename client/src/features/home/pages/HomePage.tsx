@@ -5,6 +5,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { HOME_PERIODS, type HomePeriod, type HomeServices, type HomeTab } from "@shared/homeTypes";
 import { useHomeServices, type HomeScope } from "../api/homeApi";
+import { WelcomeChecklistCard } from "../onboarding/WelcomeChecklistCard";
 import { EmptyState } from "../components/EmptyState";
 import "../home.css";
 
@@ -88,19 +89,21 @@ function HomeDashboard() {
   const noServices = !isLoading && services && tabs.length === 1;
 
   return (
-    <div className="la-page" data-testid="page-home">
-      {/* One scroll container for the page, so neumorphic shadows are never clipped. */}
-      <div className="min-h-0 flex-1 overflow-y-auto" style={{ background: "var(--bg)" }}>
-        <div className="mr-auto flex max-w-[1386px] flex-col gap-5 px-4 pb-11 pt-7 md:px-9">
+    <div className="la-page" data-testid="page-home" style={{ background: "var(--bg)", overflow: "hidden" }}>
+      {/* Fixed header: greeting + tabs never scroll. The tab content scrolls in
+          its own container below, so cards (and their shadows) are cut off at
+          the header's bottom edge instead of painting over it. */}
+      <div className="shrink-0" style={{ background: "var(--bg)", position: "relative", zIndex: 1 }}>
+        <div className="mr-auto flex max-w-[1386px] flex-col gap-5 px-4 pb-3 pt-7 md:px-9">
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-            <h1 className="text-[26px] md:text-[32px]" style={{ margin: 0, fontFamily: "var(--serif)", color: "var(--ink)", lineHeight: 1.1 }}>
+            <h1 className="text-[26px] md:text-[32px]" style={{ margin: 0, fontWeight: 700, color: "var(--ink)", lineHeight: 1.1 }}>
               {firstName ? `${greeting}, ${firstName}` : greeting}
             </h1>
             <span className="eyebrow eyebrow-sm">{dateStr}</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="la-seg la-seg--fill max-w-full" role="tablist" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
+            <div className="la-seg la-seg--fill la-seg--touch max-w-full" role="tablist" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
               {tabs.map((k) => (
                 <button key={k} role="tab" aria-selected={active === k} data-testid={`home-tab-${k}`}
                   className={cn("la-seg-btn shrink-0", active === k && "on")} onClick={() => setTab(k)}>
@@ -114,7 +117,14 @@ function HomeDashboard() {
               {HOME_PERIODS.map((p) => <option key={p} value={p}>{t(`period.${p}`)}</option>)}
             </select>
           </div>
+        </div>
+      </div>
 
+      {/* The page's one scroll container. Side and top padding live inside it so
+          resting card shadows have room and are never clipped. */}
+      <div className="min-h-0 flex-1 overflow-y-auto" data-testid="home-scroll">
+        <div className="mr-auto flex max-w-[1386px] flex-col gap-5 px-4 pb-11 pt-3 md:px-9">
+          {!isAgencyUser && <WelcomeChecklistCard />}
           {isError ? (
             <EmptyState title={t("errorTitle")} body={t("error")} />
           ) : noServices ? (

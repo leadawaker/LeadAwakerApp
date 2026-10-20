@@ -1,8 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { Card, CardLabel } from "@/features/leads/components/cardView/designPrimitives";
 import type { VoiceCallDetail } from "../api/voiceCallsApi";
+import { CallSummaryBody } from "./CallSummaryBody";
 
-/** Three weeks around the booked day, enough to read "that's next week". */
+/** Three weeks around the booked day, enough to read "that's next week". Fills its column. */
 function MiniMonth({ date, locale }: { date: Date; locale: string }) {
   const start = new Date(date);
   start.setDate(start.getDate() - ((start.getDay() + 6) % 7) - 7);
@@ -12,11 +13,11 @@ function MiniMonth({ date, locale }: { date: Date; locale: string }) {
     return d;
   });
   const initials = days.slice(0, 7).map((d) => d.toLocaleDateString(locale, { weekday: "narrow" }));
-  const cell: React.CSSProperties = { width: 22, height: 22, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 6, fontSize: 10.5, fontVariantNumeric: "tabular-nums" };
+  const cell: React.CSSProperties = { height: 30, display: "flex", alignItems: "center", justifyContent: "center", borderRadius: 8, fontSize: 12, fontVariantNumeric: "tabular-nums" };
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 22px)", gap: 3 }}>
+    <div style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))", gap: 4, width: "100%" }}>
       {initials.map((d, i) => (
-        <span key={`h${i}`} style={{ ...cell, height: 16, fontSize: 9, fontWeight: 700, color: "var(--mute-2)" }}>{d}</span>
+        <span key={`h${i}`} style={{ ...cell, height: 18, fontSize: 10, fontWeight: 700, color: "var(--mute-2)" }}>{d}</span>
       ))}
       {days.map((d) => {
         const booked = d.toDateString() === date.toDateString();
@@ -34,56 +35,65 @@ function MiniMonth({ date, locale }: { date: Date; locale: string }) {
   );
 }
 
-/** Right-hand column: when they booked and what they asked for. */
-export function CallRecap({ call }: { call: VoiceCallDetail }) {
+/** The booked appointment: a mini calendar across the column, then the day and time. */
+export function CallBooking({ call }: { call: VoiceCallDetail }) {
   const { t, i18n } = useTranslation("voiceCalls");
+  if (!call.bookedSlot) return null;
   const when = call.bookedIso ? new Date(call.bookedIso) : null;
-  const items = call.summary?.items ?? [];
-
   return (
-    <Card variant="flat" headLeft={<CardLabel>{t("sections.recap")}</CardLabel>} style={{ minWidth: 0 }}>
-      {call.bookedSlot && (
-        <section style={{ padding: "16px 16px 18px", borderBottom: "1px solid var(--line)" }}>
-          <div style={{ fontSize: 12, fontWeight: 600, color: "var(--good)", marginBottom: 10 }}>{t("sections.booked")}</div>
-          {when ? (
-            <>
-              <MiniMonth date={when} locale={i18n.language} />
-              <div style={{ marginTop: 12, fontFamily: "var(--serif)", fontSize: 17, lineHeight: 1.25, color: "var(--ink)" }}>
-                {when.toLocaleDateString(i18n.language, { weekday: "long", day: "numeric", month: "long" })}
-              </div>
-              <div style={{ fontSize: 13, color: "var(--mute)", marginTop: 2 }}>
-                {when.toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}
-              </div>
-              <p style={{ margin: "10px 0 0", fontSize: 11.5, lineHeight: 1.5, color: "var(--mute-2)" }}>
-                “{call.bookedSlot}”
-              </p>
-            </>
-          ) : (
-            <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{call.bookedSlot}</div>
-          )}
-        </section>
+    <Card variant="flat" headLeft={<CardLabel>{t("sections.booked")}</CardLabel>} style={{ minWidth: 0 }} bodyStyle={{ padding: "14px 16px 18px" }}>
+      {when ? (
+        <>
+          <MiniMonth date={when} locale={i18n.language} />
+          <div style={{ marginTop: 14, fontSize: 16, fontWeight: 700, lineHeight: 1.25, color: "var(--ink)" }}>
+            {when.toLocaleDateString(i18n.language, { weekday: "long", day: "numeric", month: "long" })}
+          </div>
+          <div style={{ fontSize: 13.5, color: "var(--mute)", marginTop: 2, fontVariantNumeric: "tabular-nums" }}>
+            {when.toLocaleTimeString(i18n.language, { hour: "2-digit", minute: "2-digit" })}
+          </div>
+        </>
+      ) : (
+        <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{call.bookedSlot}</div>
       )}
-
-      <section style={{ padding: "16px 16px 8px" }}>
-        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-soft)", marginBottom: 4 }}>{t("sections.wanted")}</div>
-        {items.length === 0 ? (
-          <p style={{ margin: "6px 0 12px", fontSize: 13, lineHeight: 1.55, color: "var(--mute)" }}>{t("noSummary")}</p>
-        ) : (
-          items.map((item, i) => (
-            <div key={i} style={{ padding: "10px 0 12px", borderTop: i ? "1px solid var(--line)" : "none" }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "var(--wine)", marginBottom: 4 }}>
-                {t(`intents.${item.intent}`, { defaultValue: item.intent })}
-              </div>
-              {item.interest && (
-                <p style={{ margin: 0, fontSize: 13.5, lineHeight: 1.5, color: "var(--ink)" }}>{item.interest}</p>
-              )}
-              {item.notes && (
-                <p style={{ margin: "4px 0 0", fontSize: 12.5, lineHeight: 1.55, color: "var(--mute)" }}>{item.notes}</p>
-              )}
-            </div>
-          ))
-        )}
-      </section>
     </Card>
+  );
+}
+
+/** The summary as its own raised block, above the conversation (Voice calls and Calendar). */
+export function CallSummary({ call }: { call: VoiceCallDetail }) {
+  const { t } = useTranslation("voiceCalls");
+  return (
+    <div className="neu-raised" data-testid="voice-call-summary" style={{ flexShrink: 0, borderRadius: "var(--r-card)", background: "var(--card)", padding: "14px 18px 16px" }}>
+      <div style={{ marginBottom: 8 }}><CardLabel>{t("sections.summary")}</CardLabel></div>
+      <CallSummaryBody call={call} />
+    </div>
+  );
+}
+
+/** The summary as a flat section of the call's left panel, under the booking. */
+export function CallSummaryCard({ call, divider }: { call: VoiceCallDetail; divider: boolean }) {
+  const { t } = useTranslation("voiceCalls");
+  return (
+    <Card
+      variant="flat"
+      headLeft={<CardLabel>{t("sections.summary")}</CardLabel>}
+      style={{ minWidth: 0, borderTop: divider ? "1px solid var(--line)" : undefined }}
+      bodyStyle={{ padding: "14px 16px 18px" }}
+    >
+      <CallSummaryBody call={call} />
+    </Card>
+  );
+}
+
+/** Booking plus summary in one flat column (the account Voice tab's test calls). */
+export function CallRecap({ call }: { call: VoiceCallDetail }) {
+  const { t } = useTranslation("voiceCalls");
+  return (
+    <div style={{ minWidth: 0 }}>
+      <CallBooking call={call} />
+      <Card variant="flat" headLeft={<CardLabel>{t("sections.summary")}</CardLabel>} style={{ minWidth: 0, borderTop: call.bookedSlot ? "1px solid var(--line)" : undefined }} bodyStyle={{ padding: "14px 16px 18px" }}>
+        <CallSummaryBody call={call} />
+      </Card>
+    </div>
   );
 }

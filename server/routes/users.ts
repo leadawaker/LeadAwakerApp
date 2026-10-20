@@ -119,7 +119,8 @@ export function registerUsersRoutes(app: Express): void {
   // POST /api/users/invite — generate invite token and create pending user record
   app.post("/api/users/invite", requireAgency, async (req, res) => {
     try {
-      const { email, role, accountsId, lang = "en" } = req.body;
+      const { email, role, accountsId, lang = "en", sendEmail = true } = req.body;
+      const shouldEmail = sendEmail !== false;
       if (!email || typeof email !== "string") {
         return res.status(400).json({ message: "email is required" });
       }
@@ -153,10 +154,10 @@ export function registerUsersRoutes(app: Express): void {
         const { passwordHash: _, ...safeUser } = updated;
 
         const baseUrl = frontendBaseUrl(req);
-        const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}`;
+        const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}&lang=${encodeURIComponent(String(lang))}`;
         console.log(`\nRE-INVITE EMAIL (dev mode)\nTo: ${email}\nRole: ${role}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
 
-        const emailSent = await trySendInvite({
+        const emailSent = shouldEmail && await trySendInvite({
           to: email,
           inviteLink,
           role,
@@ -168,7 +169,7 @@ export function registerUsersRoutes(app: Express): void {
           user: safeUser,
           invite_token: inviteToken,
           email_sent: emailSent,
-          message: emailSent ? `Invite resent to ${email}` : `Invite created for ${email}, but the email failed to send`,
+          message: !shouldEmail ? `Invite created for ${email} (no email sent)` : emailSent ? `Invite resent to ${email}` : `Invite created for ${email}, but the email failed to send`,
         });
       }
 
@@ -195,10 +196,10 @@ export function registerUsersRoutes(app: Express): void {
       const { passwordHash: _, ...safeUser } = newUser;
 
       const baseUrl = frontendBaseUrl(req);
-      const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}`;
+      const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}&lang=${encodeURIComponent(String(lang))}`;
       console.log(`\nINVITE EMAIL (dev mode)\nTo: ${email}\nRole: ${role}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
 
-      const emailSent = await trySendInvite({
+      const emailSent = shouldEmail && await trySendInvite({
         to: email,
         inviteLink,
         role,
@@ -210,7 +211,7 @@ export function registerUsersRoutes(app: Express): void {
         user: safeUser,
         invite_token: inviteToken,
         email_sent: emailSent,
-        message: emailSent ? `Invite sent to ${email}` : `Invite created for ${email}, but the email failed to send`,
+        message: !shouldEmail ? `Invite created for ${email} (no email sent)` : emailSent ? `Invite sent to ${email}` : `Invite created for ${email}, but the email failed to send`,
       });
     } catch (err: any) {
       console.error("Error creating invite:", err);
@@ -258,7 +259,7 @@ export function registerUsersRoutes(app: Express): void {
       const { passwordHash: _, ...safeUser } = updated;
 
       const baseUrl = frontendBaseUrl(req);
-      const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(user.email || "")}`;
+      const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(user.email || "")}&lang=${encodeURIComponent(String(lang))}`;
       console.log(`\nRESENT INVITE (dev mode)\nTo: ${user.email}\nInvite link: ${inviteLink}\nToken: ${inviteToken}\n`);
 
       const emailSent = await trySendInvite({

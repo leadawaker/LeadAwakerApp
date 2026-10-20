@@ -100,6 +100,7 @@
     "resetAll": "Redefinir todas as configuracoes"
   },
   "search": {
+    "placeholderClient": "Buscar por nome",
     "searchAppointments": "Buscar agendamentos",
     "placeholder": "Buscar por nome ou campanha...",
     "searchLeadPlaceholder": "Buscar lead por nome..."
@@ -183,6 +184,11 @@
       "noShow": "Não compareceu",
       "rescheduled": "Remarcada"
     },
+    "kind": {
+      "callback": "Retorno",
+      "visit": "Visita",
+      "sideNote": "Marcado ao lado do agendamento principal. Remarque ou cancele na agenda de reservas."
+    },
     "detail": {
       "date": "Data",
       "channel": "Canal",
@@ -207,7 +213,18 @@
       "actions": "Ações do agendamento",
       "reschedule": "Reagendar",
       "cancelCall": "Cancelar agendamento",
-      "close": "Fechar"
+      "close": "Fechar",
+      "callRecap": "Resumo da ligação",
+      "chatRecap": "Resumo da conversa",
+      "openChat": "Abrir a conversa",
+      "bookedBy": "Agendado por",
+      "bookedByPhone": "Ligação",
+      "bookedByWhatsapp": "WhatsApp",
+      "bookedBySms": "SMS",
+      "bookedByWebsite": "Chat do site",
+      "bookedByBookingPage": "Página de agendamento",
+      "noChatRecap": "Ainda sem resumo da conversa.",
+      "loadingCall": "Carregando a ligação"
     },
     "panel": {
       "minimize": "Minimizar painel",

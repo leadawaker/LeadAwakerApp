@@ -21,6 +21,7 @@ import {
 } from "../lib/calendarDesign";
 import { BookAppointmentPopover } from "./BookAppointmentPopover";
 import { AddBlockForm } from "./AddBlockForm";
+import { hourLabel } from "./hourLabel";
 import {
   type DesktopCalendarProps, type ApptFilterStatus, type ApptGroupBy,
   MONO, SERIF, SORT_GROUPS, GROUP_KEYS, FILTER_KEYS,
@@ -34,7 +35,7 @@ function CalendarSettingsPopover({ p }: { p: DesktopCalendarProps }) {
   const active = !!p.showAvailability || p.hideWeekends;
   const hourOptions: number[] = [];
   for (let h = HOUR0; h <= HOUR1; h++) hourOptions.push(h);
-  const fmtHour = (h: number) => `${h === 0 ? 12 : h <= 12 ? h : h - 12}${h < 12 ? "am" : "pm"}`;
+  const fmtHour = hourLabel;
   const Row = ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "7px 0" }}>
       <span style={{ fontSize: 12.5, color: "var(--ink-soft)" }}>{label}</span>
@@ -101,7 +102,9 @@ export function TopToolbar(p: DesktopCalendarProps) {
 
   // Shared action controls (icon buttons + dropdowns), reused by the desktop
   // and mobile toolbar layouts so behavior never drifts between the two.
-  const actionsMenu = p.selectedBooking ? (
+  // A side appointment lives in Cal.diy only: these actions edit the lead's
+  // main booking, so they are not offered on it.
+  const actionsMenu = p.selectedBooking && !p.selectedBooking.side ? (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button className="la-btn la-btn--soft la-btn--icon" title={t("design.detail.actions")}><MoreVertical className="h-4 w-4" /></button>
@@ -157,7 +160,7 @@ export function TopToolbar(p: DesktopCalendarProps) {
         <button className={toolBtnClass(p.apptSortBy !== "time_desc")} title={t("sort.label")}><ArrowUpDown className="h-4 w-4" /></button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-44">
-        {SORT_GROUPS.map((g) => {
+        {SORT_GROUPS.filter((g) => p.isAgencyUser || g.key !== "campaign").map((g) => {
           const isActive = p.apptSortBy === g.asc || p.apptSortBy === g.desc;
           const dir: "asc" | "desc" = p.apptSortBy === g.asc ? "asc" : "desc";
           return (
@@ -182,7 +185,7 @@ export function TopToolbar(p: DesktopCalendarProps) {
         <button className={toolBtnClass(p.apptGroupBy !== "date")} title={t("group.label")}><Layers className="h-4 w-4" /></button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-44">
-        {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
+        {(["date", "campaign", "status", "none"] as ApptGroupBy[]).filter((opt) => p.isAgencyUser || opt !== "campaign").map((opt) => (
           <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); p.setApptGroupBy(opt); }} className="text-[12px] flex items-center gap-2">
             <span className={cn("flex-1", p.apptGroupBy === opt && "font-semibold !text-brand-indigo")}>{t(GROUP_KEYS[opt])}</span>
             {p.apptGroupBy === opt && opt !== "none" && (
@@ -241,7 +244,7 @@ export function TopToolbar(p: DesktopCalendarProps) {
     );
     const mobileSortPanel = (
       <>
-        {SORT_GROUPS.map((g) => {
+        {SORT_GROUPS.filter((g) => p.isAgencyUser || g.key !== "campaign").map((g) => {
           const isAsc = p.apptSortBy === g.asc;
           const isDesc = p.apptSortBy === g.desc;
           const isActive = isAsc || isDesc;
@@ -258,7 +261,7 @@ export function TopToolbar(p: DesktopCalendarProps) {
     );
     const mobileGroupPanel = (
       <>
-        {(["date", "campaign", "status", "none"] as ApptGroupBy[]).map((opt) => (
+        {(["date", "campaign", "status", "none"] as ApptGroupBy[]).filter((opt) => p.isAgencyUser || opt !== "campaign").map((opt) => (
           <MobileDrawerOption
             key={opt}
             label={t(GROUP_KEYS[opt])}
@@ -280,7 +283,7 @@ export function TopToolbar(p: DesktopCalendarProps) {
         )}
         searchValue={p.searchQuery}
         onSearchChange={p.setSearchQuery}
-        searchPlaceholder={t("search.placeholder")}
+        searchPlaceholder={t(p.isAgencyUser ? "search.placeholder" : "search.placeholderClient")}
         filterPanel={mobileFilterPanel}
         filterActive={p.apptFilterStatuses.length > 0}
         sortPanel={mobileSortPanel}
@@ -356,7 +359,7 @@ export function TopToolbar(p: DesktopCalendarProps) {
         <div style={{ position: "relative" }}>
           <input
             className="neu-input"
-            placeholder={t("search.placeholder")}
+            placeholder={t(p.isAgencyUser ? "search.placeholder" : "search.placeholderClient")}
             value={p.searchQuery}
             onChange={e => p.setSearchQuery(e.target.value)}
             style={{ paddingLeft: 32, paddingTop: 0, paddingBottom: 0, height: 32, fontSize: 12, width: 190 }}

@@ -155,7 +155,6 @@ if (!INTERNAL_API_KEY) {
 const EMAIL_ALIASES: Record<string, string> = {
   // old email → canonical DB email (so old credentials still work after display-email updates)
   "leadawaker@gmail.com": "gabriel@leadawaker.com",
-  "furion@sent.com": "finn@leadawaker.com",
 };
 function resolveLoginEmail(email: string): string {
   const lower = email.toLowerCase().trim();

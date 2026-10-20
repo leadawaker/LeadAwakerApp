@@ -7,15 +7,16 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import {
   type Appointment,
-  statusMetaOf, channelOf, dateKeyOf,
+  statusMetaOf, kindLabelOf, channelOf, dateKeyOf,
 } from "../lib/calendarDesign";
 import { ScoreArcDonut } from "@/features/leads/components/cardView/atoms";
 import {
   type DesktopCalendarProps, MONO, SERIF, DAY_KEYS, DOW_ORDER, isWeekendDay, emitCalSwipe,
 } from "./desktopCalendarShared";
 
-function AgendaCard({ ev, active, onClick, t }: { ev: Appointment; active: boolean; onClick: () => void; t: TFunction }) {
+function AgendaCard({ ev, active, onClick, t, showScore }: { ev: Appointment; active: boolean; onClick: () => void; t: TFunction; showScore: boolean }) {
   const sm = statusMetaOf(ev, t);
+  const kind = kindLabelOf(ev, t);
   const statusKey = ev.no_show ? "Lost" : (ev.status || "Contacted");
   const av = getLeadStatusAvatarColor(statusKey);
   const initials = ev.lead_name.split(/\s+/).slice(0, 2).map(p => p[0]).join("").toUpperCase();
@@ -44,12 +45,13 @@ function AgendaCard({ ev, active, onClick, t }: { ev: Appointment; active: boole
         {ev.campaign_name && <div style={{ fontSize: 10.5, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{ev.campaign_name}</div>}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
           <span style={{ ...MONO, fontSize: 9.5, color: "var(--ink-soft)", display: "inline-flex", alignItems: "center", gap: 4 }}><Clock className="h-3 w-3" />{ev.time}</span>
+          {kind && <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", background: "var(--wine-tint)", borderRadius: 4, padding: "1px 5px", fontWeight: 700 }}>{kind}</span>}
           {sm.key !== "booked" && <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: sm.color, background: sm.tint, borderRadius: 4, padding: "1px 5px", fontWeight: 700 }}>{sm.label}</span>}
         </div>
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
         <span style={{ color: "var(--mute-2)", display: "flex" }}>{channelOf(ev) === "phone" ? <Phone className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />}</span>
-        {ev.leadScore > 0 && <ScoreArcDonut score={ev.leadScore} />}
+        {showScore && ev.leadScore > 0 && <ScoreArcDonut score={ev.leadScore} />}
       </div>
     </div>
   );
@@ -74,7 +76,7 @@ export function AgendaList(p: DesktopCalendarProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {g.items.map((a) => (
               <div key={a.id} data-appt-id={a.id}>
-                <AgendaCard ev={a} active={p.selectedBooking?.id === a.id} onClick={() => p.onSelectBooking(a)} t={t} />
+                <AgendaCard ev={a} active={p.selectedBooking?.id === a.id} onClick={() => p.onSelectBooking(a)} t={t} showScore={p.isAgencyUser} />
               </div>
             ))}
           </div>

@@ -2,7 +2,7 @@
 // click that names the number, and is refused (here and on the server) until
 // every readiness item is green. Going offline is one click, any time.
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useVoiceT } from "./voiceGender";
 import { Loader2, Power, PowerOff } from "lucide-react";
 import { helpStyle } from "./voiceAtoms";
 import type { VoiceLine, VoiceLinePatch } from "./voiceApi";
@@ -10,7 +10,7 @@ import type { VoiceLine, VoiceLinePatch } from "./voiceApi";
 export function GoLiveControl({ line, saving, onSave }: {
   line: VoiceLine; saving: boolean; onSave: (patch: VoiceLinePatch) => Promise<boolean>;
 }) {
-  const { t } = useTranslation("voiceTab");
+  const { t } = useVoiceT();
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const number = line.number;

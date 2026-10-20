@@ -5,6 +5,7 @@ import { storage } from "../storage";
 import { requireAgency } from "../auth";
 import {
   tasks,
+  notifications,
   insertTaskSchema,
   insertTaskSubtaskSchema,
   insertTaskCategorySchema,
@@ -449,6 +450,16 @@ export function registerTasksRoutes(app: Express): void {
   }));
 }
 
+// True when a notification of this type and link already exists since `since`.
+// The in-memory sets below reset on every pm2 watch reload, so the DB is the
+// real dedup (without it one overdue task piled up 200+ identical rows).
+async function notifiedSince(type: string, link: string, since: Date | null): Promise<boolean> {
+  const conds = [eq(notifications.type, type), eq(notifications.link, link)];
+  if (since) conds.push(gte(notifications.createdAt, since));
+  const [row] = await db.select({ id: notifications.id }).from(notifications).where(and(...conds)).limit(1);
+  return !!row;
+}
+
 // Background task notification timers — called once at startup from routes/index.ts
 export function startTaskNotifiers(): void {
   const dbInstance = db;
@@ -479,6 +490,7 @@ export function startTaskNotifiers(): void {
       for (const task of dueSoonTasks) {
         if (taskDueSoonNotified.has(task.id)) continue;
         taskDueSoonNotified.add(task.id);
+        if (await notifiedSince("task_due_soon", `/tasks/${task.id}`, new Date(now.getTime() - 48 * 60 * 60 * 1000))) continue;
 
         await createAndDispatchNotification({
           type: "task_due_soon",
@@ -524,6 +536,7 @@ export function startTaskNotifiers(): void {
         const lastNotified = taskOverdueLastNotified.get(task.id);
         if (lastNotified && now.getTime() - lastNotified < oneDayMs) continue;
         taskOverdueLastNotified.set(task.id, now.getTime());
+        if (await notifiedSince("task_overdue", `/tasks/${task.id}`, new Date(now.getTime() - oneDayMs))) continue;
 
         await createAndDispatchNotification({
           type: "task_overdue",

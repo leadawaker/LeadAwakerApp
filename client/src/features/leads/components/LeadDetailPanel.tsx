@@ -295,7 +295,7 @@ export function LeadDetailPanel({ lead, open, onClose }: LeadDetailPanelProps) {
   // Derived engagement metrics
   const sentCount = Number(lead.message_count_sent || 0);
   const recvCount = Number(lead.message_count_received || 0);
-  const responseRate = sentCount > 0 ? `${Math.round((recvCount / sentCount) * 100)}%` : "—";
+  const responseRate = sentCount > 0 ? `${Math.min(100, Math.round((recvCount / sentCount) * 100))}%` : "—";
 
   const lastActivityTs = Math.max(
     lead.last_message_sent_at ? new Date(lead.last_message_sent_at).getTime() : 0,

@@ -1,7 +1,8 @@
 import { useRef } from "react";
-import { PIPELINE_HEX, getLeadStatusAvatarColor } from "@/lib/avatarUtils";
+import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { useTheme } from "@/hooks/useTheme";
-import { getFullName, getStatus, getInitials } from "./leadUtils";
+import { getFullName, getInitials } from "./leadUtils";
+import { displayStage, stageColorKey, stageHex } from "../../lib/leadDisplay";
 
 interface Props {
   lead: Record<string, any>;
@@ -22,9 +23,9 @@ export function CompactLeadCard({ lead, isActive, onClick, onHover, onHoverEnd }
   const ref = useRef<HTMLButtonElement>(null);
   const { isDark } = useTheme();
   const name = getFullName(lead);
-  const status = getStatus(lead);
-  const avatarColor = getLeadStatusAvatarColor(status);
-  const color = isDark ? avatarColor.bg : (PIPELINE_HEX[status] ?? "#6B7280");
+  const stage = displayStage(lead);
+  const avatarColor = getLeadStatusAvatarColor(stageColorKey(stage));
+  const color = isDark ? avatarColor.bg : stageHex(stage);
   const initials = getInitials(name);
 
   return (

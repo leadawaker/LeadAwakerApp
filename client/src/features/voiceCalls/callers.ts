@@ -62,3 +62,18 @@ export function relativeFromNow(iso: string, locale: string): string {
   }
   return rtf.format(Math.round(value), "year");
 }
+
+/**
+ * The last time someone pressed Call back or WhatsApp for this person. The
+ * press is all that is known (the call or message itself is not tracked), so
+ * the line says what was opened: "WhatsApp opened by Gabriel, 2 hours ago".
+ */
+export function lastContactAttempt(
+  rec: { lastCalledBackAt: string | null; lastCalledBackBy: string | null; lastCalledBackChannel?: "phone" | "whatsapp" | null },
+  t: (key: string, opts?: Record<string, unknown>) => string,
+  locale: string,
+): string | null {
+  if (!rec.lastCalledBackAt) return null;
+  const key = rec.lastCalledBackChannel === "whatsapp" ? "callers.lastAttempt.whatsapp" : "callers.lastAttempt.phone";
+  return t(key, { name: rec.lastCalledBackBy || t("callers.lastAttempt.someone"), when: relativeFromNow(rec.lastCalledBackAt, locale) });
+}

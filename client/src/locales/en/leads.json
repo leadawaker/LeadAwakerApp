@@ -1,4 +1,31 @@
 {
+  "chatChannel": {
+    "all": "All chats",
+    "website": "Website",
+    "whatsapp": "WhatsApp"
+  },
+  "chatRecap": {
+    "title": "Recap",
+    "booked": "Booked",
+    "noShow": "No-show",
+    "cancelled": "Cancelled",
+    "via": "via {{channel}}",
+    "wanted": "What they want",
+    "facts": "Key facts",
+    "nextStep": "Next step",
+    "noSummary": "No summary yet. It is written once the conversation ends.",
+    "handoff": "Waiting for your team",
+    "followUp": "Follow-up on {{date}}",
+    "appointment": "Appointment on {{date}}",
+    "messageCounts": "{{received}} in, {{sent}} out",
+    "bookingChannel": {
+      "whatsapp": "WhatsApp",
+      "website": "website",
+      "booking_page": "booking page",
+      "phone": "phone",
+      "sms": "SMS"
+    }
+  },
   "conversationType": {
     "label": "Type",
     "widget": "Widget",
@@ -8,7 +35,7 @@
     "other": "Other"
   },
   "page": {
-    "chatsTitle": "Conversations",
+    "chatsTitle": "Chats",
     "title": "Leads",
     "opportunities": "Opportunities"
   },
@@ -20,7 +47,7 @@
   "toolbar": {
     "add": "Add",
     "searchPlaceholder": "Search leads...",
-    "searchConversationsPlaceholder": "Search conversations...",
+    "searchConversationsPlaceholder": "Search chats...",
     "searchLeads": "Search leads",
     "group": "Group",
     "sort": "Sort",
@@ -55,7 +82,7 @@
     "previous": "Previous",
     "next": "Next",
     "of": "of",
-    "chats": "Conversations",
+    "chats": "Chats",
     "chatsPeek": "Show last message for every lead",
     "minimizeList": "Minimize list",
     "expandList": "Expand list",
@@ -65,8 +92,8 @@
     "upcomingCalls": "Upcoming appointments",
     "more": "More",
     "exportPdf": "Export PDF",
-    "showChats": "Show conversations",
-    "hideChats": "Hide conversations"
+    "showChats": "Show chats",
+    "hideChats": "Hide chats"
   },
   "sort": {
     "sortBy": "Sort by",
@@ -86,7 +113,9 @@
     "scoreDown": "Score ↓",
     "scoreUp": "Score ↑",
     "activity": "Last activity",
-    "created": "Created date"
+    "created": "Created date",
+    "createdNewest": "Newest leads",
+    "createdOldest": "Oldest leads"
   },
   "group": {
     "status": "Status",
@@ -97,7 +126,10 @@
     "untagged": "Untagged",
     "service": "Service",
     "source": "Source",
-    "tag": "Tag"
+    "tag": "Tag",
+    "noAccount": "No account",
+    "noService": "No service",
+    "noSource": "No source"
   },
   "filters": {
     "title": "Lead Filters",
@@ -156,7 +188,9 @@
       "created": "Created",
       "assignedTo": "Assigned To",
       "chats": "Conversations",
-      "createdAt": "Created"
+      "createdAt": "Created",
+      "lastContact": "Last contact",
+      "appointment": "Appointment"
     },
     "empty": {
       "noResults": "No leads match your search",
@@ -181,7 +215,10 @@
       "Closed": "Closed",
       "Lost": "Lost",
       "DND": "DND",
-      "Unknown": "Unknown"
+      "Unknown": "Unknown",
+      "rx_new": "New inquiry",
+      "rx_answered": "Answered",
+      "rx_done": "Done"
     },
     "dropHere": "Drop here",
     "foldColumn": "Click to fold",
@@ -334,10 +371,12 @@
     "gradientTester": "Gradient tester"
   },
   "contact": {
+    "sideBooking": "Callback · {{date}}", "sideVisit": "Visit · {{date}}",
     "title": "Contact",
     "firstName": "First Name",
     "lastName": "Last Name",
     "phone": "Phone",
+    "callbackPhone": "Other number",
     "email": "Email",
     "jobTitle": "Job Title",
     "company": "Company",
@@ -557,7 +596,7 @@
     "noMessagesHint": "Messages will appear here once outreach begins",
     "typePlaceholder": "Type a message…",
     "letAiContinue": "Let AI continue",
-    "openInChats": "Open in Conversations",
+    "openInChats": "Open in Chats",
     "transcribing": "Transcribing…"
   },
   "team": {
@@ -624,7 +663,10 @@
     "confirm": "Confirm",
     "cancel": "Cancel",
     "clear": "Clear",
-    "close": "Close"
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "more": "More"
   },
   "addLead": {
     "title": "Add Lead",
@@ -667,5 +709,29 @@
         "hint": "The AI sends a friendly check-in first, and a rebooking link a day later if they don't reply."
       }
     }
+  },
+  "leadChannel": {
+    "website": "Website chat",
+    "whatsapp": "WhatsApp",
+    "phone": "Called",
+    "email": "Email",
+    "sms": "SMS"
+  },
+  "channelFilter": {
+    "all": "All channels",
+    "website": "Website",
+    "whatsapp": "WhatsApp",
+    "phone": "Phone"
+  },
+  "quickViews": {
+    "all": "All leads",
+    "needsReply": "Needs reply",
+    "upcoming": "Next appointments"
+  },
+  "names": {
+    "websiteVisitor": "Website visitor"
+  },
+  "list": {
+    "loadingMore": "Loading more"
   }
 }

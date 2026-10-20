@@ -64,7 +64,7 @@ export default function OverviewTab({ scope, services, onOpenTab }: HomeTabProps
   const activityRows: RowListItem[] = (data?.activity ?? []).map((r, i) => ({
     key: `${r.kind}-${r.callId ?? r.leadId ?? "x"}-${r.at}-${i}`,
     title: t(`overview.activityKind.${r.kind}`),
-    meta: r.name ?? undefined,
+    meta: [r.name, r.headline].filter(Boolean).join(" · ") || undefined,
     tag: channelPill(r.channel),
     time: r.at,
     onClick: r.callId || r.leadId ? () => open(r) : undefined,
@@ -92,7 +92,7 @@ export default function OverviewTab({ scope, services, onOpenTab }: HomeTabProps
           onClick: () => attentionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }),
         },
       ]} />
-      <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-2">
         <PanelShell>
           <SectionHead title={t("overview.byChannel")} />
           <BarList
@@ -107,7 +107,7 @@ export default function OverviewTab({ scope, services, onOpenTab }: HomeTabProps
           </PanelShell>
         </div>
       </div>
-      <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-2">
         <PanelShell>
           <SectionHead title={t("overview.perDay")} />
           <DayChart data={data?.perDay ?? []} label={t("overview.perDay")} />

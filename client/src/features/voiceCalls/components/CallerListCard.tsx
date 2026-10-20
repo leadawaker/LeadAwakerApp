@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { PhoneOutgoing, Users } from "lucide-react";
 import type { VoiceCaller } from "../api/voiceCallsApi";
-import { callerStatus, maskVoiceCaller, relativeFromNow } from "../callers";
+import { callerStatus, lastContactAttempt, maskVoiceCaller } from "../callers";
 import { formatListTime } from "../format";
 import { CallAvatar, callerIni, callerTitle } from "./bits";
 import { OutcomePill } from "./OutcomePill";
@@ -25,9 +25,7 @@ export function CallerListCard({ caller: rawCaller, active, masked, showAccount,
   const title = callerTitle(who, t("webCaller"));
   const count = t("callers.callCount", { count: caller.callCount });
   const second = [caller.personaCompany, showAccount ? caller.accountName : null].filter(Boolean).join(" · ");
-  const calledBack = caller.lastCalledBackAt
-    ? t("callers.calledBackBy", { name: caller.lastCalledBackBy || "", when: relativeFromNow(caller.lastCalledBackAt, i18n.language) })
-    : null;
+  const calledBack = lastContactAttempt(caller, t, i18n.language);
   return (
     <div
       onClick={onClick}

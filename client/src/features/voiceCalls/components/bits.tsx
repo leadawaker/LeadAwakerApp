@@ -46,3 +46,7 @@ export function CallAvatar({ ini, status, size = 38, radius }: { ini: string; st
     </div>
   );
 }
+
+// Neumorphic depth turned down: on the bone ground the full-strength cast
+// reads too dark and the highlight disappears (Gabriel, 2026-10-15).
+export const SOFT_RAISED = { "--light-strength": 0.55 } as React.CSSProperties;

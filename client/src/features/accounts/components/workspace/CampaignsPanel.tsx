@@ -86,7 +86,7 @@ function CampaignRow({ c, onOpen, selected, onToggleSelect, onDelete, leadsLabel
   );
 }
 
-export function CampaignsPanel({ campaigns, loading, onRefresh, inset = false, naked = false, eyebrow = "02" }: { campaigns: CampaignRowData[]; loading?: boolean; onRefresh?: () => void; inset?: boolean; naked?: boolean; eyebrow?: string }) {
+export function CampaignsPanel({ campaigns, loading, onRefresh, inset = false, naked = false, eyebrow = "02", clientView = false }: { campaigns: CampaignRowData[]; loading?: boolean; onRefresh?: () => void; inset?: boolean; naked?: boolean; eyebrow?: string; clientView?: boolean }) {
   const { t } = useTranslation("accounts");
   const [, setLocation] = useLocation();
   const [selected, setSelected] = useState<Set<number>>(new Set());
@@ -127,8 +127,8 @@ export function CampaignsPanel({ campaigns, loading, onRefresh, inset = false, n
   };
 
   return (
-    <Panel eyebrow={eyebrow} title={t("panels.campaigns")} count={t("metrics.nActive", { count: campaigns.length })} inset={inset} naked={naked}
-      action={<PanelAction wine icon={<Plus size={12} />} onClick={() => setLocation(`${ROUTE_PREFIX}/campaigns`)}>{t("panels.actions.new")}</PanelAction>}>
+    <Panel eyebrow={clientView ? undefined : eyebrow} title={t("panels.campaigns")} count={t("metrics.nActive", { count: campaigns.length })} inset={inset} naked={naked}
+      action={clientView ? undefined : <PanelAction wine icon={<Plus size={12} />} onClick={() => setLocation(`${ROUTE_PREFIX}/campaigns`)}>{t("panels.actions.new")}</PanelAction>}>
 
       {selected.size > 0 && (
         <div className="row" style={{ gap: 8, padding: "9px 12px", marginBottom: 8, borderRadius: "var(--r-surface)", background: "var(--wine-tint)", flexWrap: "wrap" }}>

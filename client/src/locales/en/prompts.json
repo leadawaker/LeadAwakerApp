@@ -291,7 +291,8 @@
     "kind": {
       "layer": "Voice layer",
       "greeting": "Greeting",
-      "backend": "Backend"
+      "backend": "Backend",
+      "xai": "Grok prompt (lean)"
     }
   }
 }

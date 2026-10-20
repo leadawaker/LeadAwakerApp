@@ -1,9 +1,20 @@
 {
+  "requestChange": {
+    "note": "A Lead Awaker cuida dessas configura\u00e7\u00f5es para voc\u00ea.",
+    "button": "Pedir uma altera\u00e7\u00e3o",
+    "areas": { "chat": "o chat do site", "alerts": "alertas", "phone": "a linha telef\u00f4nica", "integrations": "integra\u00e7\u00f5es" },
+    "draft": "Oi Gabriel, gostaria de mudar algo em {{area}}: "
+  },
   "sidebar": {
+    "skipToMain": "Ir para o conteúdo",
     "menu": "Menu",
     "home": "Início",
+    "calls": "Chamadas",
+    "myReceptionist": "Recepcionista",
+    "myReceptionistShort": "Recepcionista",
+    "myAccount": "Minha conta",
     "services": "Serviços",
-    "reactivation": "Reativação",
+    "reactivation": "Campanhas",
     "reputation": "Reputação",
     "speedToLead": "Resposta Rápida",
     "missedCalls": "Chamadas Perdidas",
@@ -12,9 +23,9 @@
     "prospects": "Prospectos",
     "cadence": "Cadência",
     "leads": "Leads",
-    "conversations": "Conversas",
+    "conversations": "Chats",
     "contacts": "Leads",
-    "chats": "Conversas",
+    "chats": "Chats",
     "inbox": "Caixa de prospects",
     "calendar": "Calendário",
     "promptLibrary": "Biblioteca de Prompts",
@@ -51,7 +62,8 @@
     "outreach": "Prospecção",
     "admin": "Admin",
     "backend": "Backend",
-    "agency": "Agência"
+    "agency": "Agência",
+    "setup": "Configuração"
   },
   "sidebarSubmenu": {
     "summary": "Resumo",

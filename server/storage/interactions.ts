@@ -141,10 +141,10 @@ async function resolveLeadMessageChannel(leadsId: unknown): Promise<string | nul
 export const interactionsStorage = {
   // ─── Interactions ───────────────────────────────────────────────────
 
-  async getInteractions(): Promise<Interactions[]> {
+  async getInteractions(extra?: SQL): Promise<Interactions[]> {
     // No-arg global fetch returns the whole interactions table (largest table).
     // Hard-cap to the most recent rows; scoped views use the by-lead/by-account methods.
-    const rows = await db.select().from(interactions).orderBy(desc(interactions.createdAt)).limit(MAX_UNPAGINATED_ROWS);
+    const rows = await db.select().from(interactions).where(extra).orderBy(desc(interactions.createdAt)).limit(MAX_UNPAGINATED_ROWS);
     if (rows.length === MAX_UNPAGINATED_ROWS) {
       console.warn(`[storage] getInteractions() hit ${MAX_UNPAGINATED_ROWS}-row cap; results truncated — caller should paginate`);
     }
@@ -165,22 +165,23 @@ export const interactionsStorage = {
   // Deliberately NOT applied to inbound: an empty inbound row is a message that
   // arrived and failed to capture (untranscribed voice notes and one SMS exist in
   // the table today). Hiding those would erase the evidence that a lead replied.
-  async getInteractionsByLeadId(leadId: number): Promise<Interactions[]> {
+  async getInteractionsByLeadId(leadId: number, extra?: SQL): Promise<Interactions[]> {
     return db
       .select()
       .from(interactions)
       .where(and(
         eq(interactions.leadsId, leadId),
         sql`(${interactions.direction} <> 'outbound' OR COALESCE(${interactions.content}, '') <> '')`,
+        extra,
       ))
       .orderBy(desc(interactions.createdAt));
   },
 
-  async getInteractionsByAccountId(accountId: number): Promise<Interactions[]> {
+  async getInteractionsByAccountId(accountId: number, extra?: SQL): Promise<Interactions[]> {
     return db
       .select()
       .from(interactions)
-      .where(eq(interactions.accountsId, accountId))
+      .where(and(eq(interactions.accountsId, accountId), extra))
       .orderBy(desc(interactions.createdAt));
   },
 

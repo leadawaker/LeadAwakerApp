@@ -1,0 +1,151 @@
+{
+  "readOnly": "Je kunt deze instellingen bekijken. Vraag Lead Awaker om ze te wijzigen.",
+  "loadFailed": "De chatinstellingen konden niet worden geladen.",
+  "empty": {
+    "title": "Nog geen chatassistent",
+    "help": "Dit account heeft geen campagne die de websitechat of WhatsApp beantwoordt. Maak een receptiecampagne aan op de pagina Campagnes en koppel de websitechat en inkomende WhatsApp daaraan op Integraties.",
+    "helpClient": "Je chatassistent is nog niet ingesteld. Lead Awaker zet hem voor je klaar.",
+    "openCampaigns": "Open Campagnes"
+  },
+  "save": {
+    "saving": "Opslaan...",
+    "pending": "Wordt zo opgeslagen",
+    "saved": "Alles opgeslagen"
+  },
+  "rail": {
+    "overview": {
+      "label": "Overzicht",
+      "help": "De chats van deze maand en welke kanalen gekoppeld zijn.",
+      "active": "Beantwoordt chats",
+      "inactive": "Campagne staat op {{status}}"
+    },
+    "greeting": {
+      "label": "Begroeting",
+      "help": "Hoe een chat begint op de website en op WhatsApp.",
+      "none": "Geen websitebegroeting"
+    },
+    "behaviour": {
+      "label": "Gedrag",
+      "help": "Wie de assistent is, hoe hij schrijft en wanneer een mens het overneemt."
+    },
+    "knowledge": {
+      "label": "Kennis",
+      "help": "Wat de assistent weet over het bedrijf en waar hij afspraken maakt.",
+      "withLink": "Boekingslink ingesteld",
+      "noLink": "Geen boekingslink"
+    },
+    "followup": {
+      "label": "Opvolging",
+      "help": "Eén vriendelijk bericht als een WhatsApp-chat halverwege stilvalt.",
+      "on": "Aan, één bericht",
+      "off": "Uit",
+      "other": "Reactivatie-opvolging"
+    },
+    "hours": {
+      "label": "Actieve uren",
+      "help": "Wanneer de opvolging verstuurd mag worden."
+    }
+  },
+  "overview": {
+    "thisMonth": "Deze maand",
+    "websiteChats": "Websitechats",
+    "whatsappChats": "WhatsApp-chats",
+    "bookings": "Afspraken",
+    "handedOff": "Doorgezet naar een mens",
+    "lastChat": "Laatste chat",
+    "unknownName": "Onbekende bezoeker",
+    "noChats": "Nog geen chats.",
+    "channel": {
+      "website": "Websitechat",
+      "whatsapp": "WhatsApp"
+    },
+    "channels": "Kanalen",
+    "assistant": "Assistent",
+    "active": "actief",
+    "notActive": "{{status}}, beantwoordt niet",
+    "widgetLive": "Live op {{domain}}",
+    "widgetNotLive": "Ingesteld, nog niet live op een site",
+    "widgetNone": "Niet ingesteld",
+    "senderOn": "Nummer gekoppeld",
+    "senderOff": "Geen WhatsApp-nummer gekoppeld",
+    "wiringHelp": "De websitechat installeren en het WhatsApp-nummer koppelen doe je op Integraties.",
+    "openIntegrations": "Open Integraties"
+  },
+  "greeting": {
+    "websiteTitle": "Websitechat",
+    "websiteHelp": "De eerste regel die bezoekers zien als ze de chat op de website openen.",
+    "websiteLabel": "Begroeting",
+    "websitePlaceholder": "Hoi, waarmee kan ik je helpen?",
+    "noWidget": "Dit account heeft nog geen websitechat. Voeg er een toe op Integraties.",
+    "agencyOnly": "De websitebegroeting wordt beheerd door Lead Awaker.",
+    "saving": "Opslaan...",
+    "saved": "Opgeslagen",
+    "failed": "De begroeting kon niet worden opgeslagen.",
+    "whatsappTitle": "WhatsApp",
+    "whatsappHelp": "Op WhatsApp schrijft de klant eerst en antwoordt de assistent, dus er is geen openingsbericht om in te stellen."
+  },
+  "behaviour": {
+    "whoTitle": "Wie het is",
+    "agentName": "Naam",
+    "agentNameHelp": "De naam waarmee de assistent zich voorstelt.",
+    "agentNamePlaceholder": "bijv. Sophie",
+    "language": "Taal",
+    "languageHelp": "Gebruikt zolang de taal van de klant nog niet bekend is.",
+    "languages": {
+      "en": "Engels",
+      "nl": "Nederlands",
+      "pt": "Portugees"
+    },
+    "tone": "Toon",
+    "toneHelp": "Hoe de assistent klinkt, in één zin. Opgeslagen voor de taal waarin je de app gebruikt.",
+    "tonePlaceholder": "bijv. Warm en recht door zee, gewone woorden, geen hype",
+    "howTitle": "Hoe hij antwoordt",
+    "replies": "Berichten per antwoord",
+    "repliesHelp": "Maximaal zoveel korte berichten in één beurt. Elk extra bericht wordt gefactureerd.",
+    "voice": "Spraakberichten",
+    "voiceHelp": "Of een WhatsApp-spraakbericht met een spraakbericht beantwoord mag worden.",
+    "voiceModes": {
+      "off": "Alleen tekst",
+      "smart": "Per bericht bepaald",
+      "voice_reply": "Spraak terug op spraak"
+    },
+    "handoff": "Doorzetten bij de eerste vraag om een mens",
+    "handoffHelp": "Aan: vraagt iemand om een mens, dan zegt de assistent dat een collega contact opneemt en stopt met antwoorden. Uit: hij probeert eerst zelf te helpen.",
+    "stopTitle": "Wanneer hij stopt",
+    "stopHelp": "Vraagt iemand om te stoppen, zegt iemand dat het de verkeerde persoon is of is iemand onbeleefd, dan neemt de assistent beleefd afscheid en eindigt de chat. Chats die geboekt zijn, naar een mens zijn doorgezet of zich hebben afgemeld krijgen nooit een opvolging."
+  },
+  "knowledge": {
+    "title": "Wat hij weet",
+    "description": "Over het bedrijf",
+    "descriptionHelp": "Een paar zinnen over wat het bedrijf doet. Opgeslagen voor de taal waarin je de app gebruikt.",
+    "kb": "Kennis",
+    "kbHelp": "Feiten die hij mag gebruiken: producten, prijzen, adres, hoe afspraken werken. Wat hier niet staat, verzint hij niet.",
+    "accountKb": "Ook de Bedrijfsintel van het account gebruiken",
+    "accountKbHelp": "Voegt de feiten uit de onboarding toe aan wat de assistent weet.",
+    "bookingLink": "Boekingslink",
+    "bookingLinkHelp": "Wordt gedeeld als een klant zelf een tijd wil kiezen."
+  },
+  "followUp": {
+    "title": "Opvolging",
+    "help": "Valt een WhatsApp-chat midden in iets stil, dan mag de assistent één kort bericht sturen om het weer op te pakken.",
+    "switch": "Eén opvolging sturen",
+    "switchHelp": "Hooguit één per stilte. Pas weer een nieuwe nadat de klant opnieuw schrijft.",
+    "when": "Wanneer",
+    "whenValue": "3 tot 20 uur na het laatste onbeantwoorde bericht van de assistent",
+    "whenHelp": "Alleen binnen de actieve uren, alleen op WhatsApp (websitebezoekers zijn al weg). Dit venster ligt vast.",
+    "what": "Wat hij stuurt",
+    "whatValue": "Eén regel over waar de klant naar vroeg, of niets als de chat vanzelf eindigde. De status van de klant verandert nooit.",
+    "notReceptionist": "Deze campagne gebruikt de reactivatie-opvolging. Die stel je in op de pagina Campagnes.",
+    "openPrompt": "Instructies voor de opvolging bewerken (prompt {{id}})"
+  },
+  "hours": {
+    "title": "Actieve uren",
+    "help": "Klanten die schrijven krijgen altijd antwoord. De opvolging wordt alleen binnen deze uren verstuurd.",
+    "label": "Uren",
+    "range": "{{start}} tot {{end}}",
+    "unset": "Niet ingesteld",
+    "to": "tot",
+    "active_hours_start": "Van",
+    "active_hours_end": "Tot"
+  }
+}

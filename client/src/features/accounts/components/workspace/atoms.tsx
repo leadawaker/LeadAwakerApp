@@ -20,7 +20,7 @@ export function Panel({
             onClick={onTitleClick}
           >
             {eyebrow && <div className="eyebrow eyebrow-sm" style={{ marginRight: 2 }}>{eyebrow}</div>}
-            <h3 className="serif" style={{ margin: 0, fontSize: 23, color: "var(--ink-soft)", lineHeight: 1, letterSpacing: "-0.01em" }}>{title}</h3>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 700, color: "var(--ink)", lineHeight: 1.1, letterSpacing: "-0.01em" }}>{title}</h3>
             {count != null && (
               <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute)", letterSpacing: "0.08em", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", padding: "2px 9px", borderRadius: "var(--r-pill)" }}>{count}</span>
             )}

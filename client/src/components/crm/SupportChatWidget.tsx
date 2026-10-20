@@ -57,6 +57,9 @@ interface SupportChatWidgetProps {
   founderChat?: FounderChatProps;
   /** Lock the widget to the founder channel only (no AI bot, no channel switcher). */
   founderOnly?: boolean;
+  /** Text to put in the input (not sent), e.g. a "Request a change" draft. */
+  initialDraft?: string;
+  onDraftUsed?: () => void;
 }
 
 // ─── Main widget ──────────────────────────────────────────────────────────────
@@ -79,6 +82,8 @@ export function SupportChatWidget({
   onOpenAgent,
   founderChat,
   founderOnly = false,
+  initialDraft,
+  onDraftUsed,
 }: SupportChatWidgetProps) {
   const isAgencyUser = isAdmin;
   const isInline = mode === "inline";
@@ -114,6 +119,12 @@ export function SupportChatWidget({
   const activeClearContext = channel === "founder" && founderChat ? founderChat.clearContext : clearContext;
 
   const [input, setInput] = useState("");
+  useEffect(() => {
+    if (!initialDraft) return;
+    setInput(initialDraft);
+    onDraftUsed?.();
+    textareaRef.current?.focus();
+  }, [initialDraft]); // eslint-disable-line react-hooks/exhaustive-deps
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const [emojiOpen, setEmojiOpen] = useState(false);

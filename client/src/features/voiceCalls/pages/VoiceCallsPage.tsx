@@ -113,7 +113,6 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
             error={callersQuery.error}
             query={options.query}
             scope={scope}
-            accountId={accountId}
             masked={masked}
             isOwner={isOwner}
             selection={callerSelection}
@@ -126,7 +125,6 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
             error={error}
             options={options}
             scope={scope}
-            accountId={accountId}
             masked={masked}
             selection={selection}
             setSelection={setSelection}

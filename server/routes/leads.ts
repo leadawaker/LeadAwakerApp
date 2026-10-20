@@ -14,15 +14,21 @@ import { handleZodError, wrapAsync, getPagination, getEngineUrl, coerceDates } f
 import { eq, and, gte, lte, ne, type SQL } from "drizzle-orm";
 import { registerLeadsBulkTagsRoutes } from "./leadsBulkTags";
 import { registerLeadsDemoScoreRoutes } from "./leadsDemoScore";
+import { registerLeadsPageRoutes } from "./leadsPage";
+import { requestHidesTestData } from "./testDataAccess";
 
 // Fetch the latest interaction (content + direction) and unread inbound count
 // for a set of lead IDs in a single query (no N+1). Uses a LEFT JOIN LATERAL
 // against the Interactions table to grab the most recent interaction per lead,
 // plus a correlated subquery counting unread inbound interactions.
+// last_channel = channel of the lead's latest WhatsApp or website message
+// (Interactions.channel is the channel truth, same as the Home dashboard);
+// the Chats page tabs filter on it.
+type MessagePeek = { last_message: string | null; last_message_direction: string | null; unread_count: number; last_channel: string | null };
 async function getLeadMessagePeek(
   leadIds: number[],
-): Promise<Map<number, { last_message: string | null; last_message_direction: string | null; unread_count: number }>> {
-  const map = new Map<number, { last_message: string | null; last_message_direction: string | null; unread_count: number }>();
+): Promise<Map<number, MessagePeek>> {
+  const map = new Map<number, MessagePeek>();
   if (leadIds.length === 0) return map;
   try {
     const result = await pool.query(
@@ -30,7 +36,8 @@ async function getLeadMessagePeek(
          l.id AS lead_id,
          LEFT(lm."Content", 140) AS last_message,
          lm.direction          AS last_message_direction,
-         COALESCE(uc.unread_count, 0) AS unread_count
+         COALESCE(uc.unread_count, 0) AS unread_count,
+         lc.channel            AS last_channel
        FROM p2mxx34fvbf3ll6."Leads" l
        LEFT JOIN LATERAL (
          SELECT i."Content", i.direction
@@ -46,14 +53,23 @@ async function getLeadMessagePeek(
            AND i2.direction = 'inbound'
            AND COALESCE(i2.is_read, true) = false
        ) uc ON true
+       LEFT JOIN LATERAL (
+         SELECT i3.channel
+         FROM p2mxx34fvbf3ll6."Interactions" i3
+         WHERE i3."Leads_id" = l.id
+           AND i3.channel IN ('whatsapp', 'website')
+         ORDER BY i3.created_at DESC NULLS LAST
+         LIMIT 1
+       ) lc ON true
        WHERE l.id = ANY($1::int[])`,
       [leadIds],
     );
-    for (const row of result.rows as Array<{ lead_id: number; last_message: string | null; last_message_direction: string | null; unread_count: number }>) {
+    for (const row of result.rows as Array<MessagePeek & { lead_id: number }>) {
       map.set(row.lead_id, {
         last_message: row.last_message ?? null,
         last_message_direction: row.last_message_direction ?? null,
         unread_count: Number(row.unread_count) || 0,
+        last_channel: row.last_channel ?? null,
       });
     }
   } catch (err) {
@@ -65,6 +81,9 @@ async function getLeadMessagePeek(
 export function registerLeadsRoutes(app: Express): void {
   // ─── Leads ────────────────────────────────────────────────────────
 
+  // Paged list (Chats + Leads pages). Registered before /api/leads/:id.
+  registerLeadsPageRoutes(app);
+
   app.get("/api/leads", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
     const forcedId = (req as any).forcedAccountId as number | undefined;
     const { accountId: qAccountId, campaignId } = req.query;
@@ -74,10 +93,13 @@ export function registerLeadsRoutes(app: Express): void {
     if (pagination) {
       let where: SQL | undefined;
       if (campaignId) {
-        where = eq(leads.campaignsId, Number(campaignId));
+        where = forcedId
+          ? and(eq(leads.campaignsId, Number(campaignId)), eq(leads.accountsId, forcedId))
+          : eq(leads.campaignsId, Number(campaignId));
       } else if (accountId) {
         where = eq(leads.accountsId, accountId);
       }
+      if (requestHidesTestData(req)) where = where ? and(where, eq(leads.isTest, false)) : eq(leads.isTest, false);
       const result = await paginatedQuery(leads, pagination, where);
       const pageData = result.data as any[];
       const pageIds = pageData.map((l: any) => l.id).filter((id: any): id is number => typeof id === "number");
@@ -98,6 +120,7 @@ export function registerLeadsRoutes(app: Express): void {
           last_message: peek?.last_message ?? null,
           last_message_direction: peek?.last_message_direction ?? null,
           unread_count: peek?.unread_count ?? 0,
+          last_channel: peek?.last_channel ?? null,
         };
       });
       return res.json({ ...result, data: toDbKeysArray(enrichedPage as any, leads) });
@@ -106,11 +129,13 @@ export function registerLeadsRoutes(app: Express): void {
     let data;
     if (campaignId) {
       data = await storage.getLeadsByCampaignId(Number(campaignId));
+      if (forcedId) data = data.filter((l: any) => l.accountsId === forcedId);
     } else if (accountId) {
       data = await storage.getLeadsByAccountId(accountId);
     } else {
       data = await storage.getLeads();
     }
+    if (requestHidesTestData(req)) data = data.filter((l: any) => !l.isTest);
     const leadIds = data.map((l: any) => l.id).filter((id: any): id is number => typeof id === "number");
     const tagRows = leadIds.length > 0 ? await storage.getTagsByLeadIds(leadIds) : [];
     const tagIdsByLead = new Map<number, number[]>();
@@ -129,6 +154,7 @@ export function registerLeadsRoutes(app: Express): void {
         last_message: peek?.last_message ?? null,
         last_message_direction: peek?.last_message_direction ?? null,
         unread_count: peek?.unread_count ?? 0,
+        last_channel: peek?.last_channel ?? null,
       };
     });
     res.json(toDbKeysArray(enrichedData as any, leads));
@@ -136,7 +162,7 @@ export function registerLeadsRoutes(app: Express): void {
 
   app.get("/api/leads/:id", requireAuth, wrapAsync(async (req, res) => {
     const lead = await storage.getLeadById(Number(req.params.id));
-    if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (!lead || (lead.isTest && requestHidesTestData(req))) return res.status(404).json({ message: "Lead not found" });
     // Subaccount users can only access their own leads
     if (req.user!.accountsId !== 1 && lead.accountsId !== req.user!.accountsId) {
       return res.status(403).json({ message: "Forbidden" });

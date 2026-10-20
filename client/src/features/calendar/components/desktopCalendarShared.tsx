@@ -167,6 +167,8 @@ export interface DesktopCalendarProps {
   apptListRef: React.RefObject<HTMLDivElement | null>;
   // conversation visibility gate (admin/owner only)
   canSeeConversation: boolean;
+  // agency (Owner/Admin/Operator) vs client view: clients get no score ring or campaign group/sort
+  isAgencyUser: boolean;
   // reschedule / cancel handlers
   onReschedule: (apptId: number, newDate: Date) => Promise<void>;
   onCancelCall: (apptId: number) => Promise<void>;

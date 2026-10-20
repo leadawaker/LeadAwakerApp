@@ -20,7 +20,6 @@ import {
   seedSupportBotPrompt,
   seedAiAgents,
   startAutomationFailureNotifier,
-  startCampaignFinishedNotifier,
 } from "./ai-agents";
 import { registerGmailRoutes } from "./gmail";
 import { registerCalendarRoutes } from "./calendar";
@@ -33,22 +32,26 @@ import { registerMissedCallRoutes } from "./missedCall";
 import { registerDemoRoutes } from "./demo";
 import { registerVoiceCallsRoutes } from "./voice-calls";
 import { registerVoiceLineRoutes } from "./voice-line";
+import { registerVoiceFollowUpPreviewRoutes } from "./voiceFollowUpPreview";
 import { registerTwilioVoiceRoutes } from "./twilio-voice";
 import { registerUserSettingsRoutes } from "./user-settings";
 import { registerAutomationRoutes } from "./automation";
 import { registerWidgetRoutes } from "./widget";
 import { registerDemoSettingsRoutes } from "./demoSettings";
 import { registerVoicePromptRoutes } from "./voicePrompts";
+import { registerVoiceAccountPromptRoutes } from "./voiceAccountPrompts";
 import { registerDemoSocialRoutes } from "./demoSocial";
 import { registerDemoLogoRoutes } from "./demoLogos";
 import { registerPublicDemoRoutes } from "./publicDemo";
 import { registerReportOptinRoutes } from "./reportOptin";
+import { registerTopaWebhookRoutes } from "./topaWebhook";
 import { registerProposalRoutes } from "./proposals";
 import { registerTrafficRoutes } from "./traffic";
 import { registerWhatsappCloudRoutes } from "./whatsappCloud";
 import { registerNumberRequestRoutes } from "./numberRequests";
 import { registerClientAlertsRoutes } from "./clientAlerts";
 import { registerHomeRoutes } from "./home";
+import { registerSocialRoutes } from "./social";
 import { startPublicDemoPoller } from "../publicDemo/poller";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
@@ -94,22 +97,26 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerDemoRoutes(app);
   registerVoiceCallsRoutes(app);
   registerVoiceLineRoutes(app);
+  registerVoiceFollowUpPreviewRoutes(app);
   registerTwilioVoiceRoutes(app);
   registerUserSettingsRoutes(app);
   registerAutomationRoutes(app);
   registerWidgetRoutes(app);
   registerDemoSettingsRoutes(app);
   registerVoicePromptRoutes(app);
+  registerVoiceAccountPromptRoutes(app);
   registerDemoSocialRoutes(app);
   registerDemoLogoRoutes(app);
   registerPublicDemoRoutes(app);
   registerReportOptinRoutes(app);
+  registerTopaWebhookRoutes(app);
   registerProposalRoutes(app);
   registerTrafficRoutes(app);
   registerWhatsappCloudRoutes(app);
   registerNumberRequestRoutes(app);
   registerClientAlertsRoutes(app);
   registerHomeRoutes(app);
+  registerSocialRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)
@@ -123,7 +130,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   startTaskNotifiers();             // task due-soon (30min) + task overdue (30min)
   startBookingReminders();          // booking reminder 1h before call (10min check)
   startAutomationFailureNotifier(); // automation failure check (5min)
-  startCampaignFinishedNotifier();  // campaign finished check (10min)
   startReviewPoller();              // Reputation v2: Google review ingest + auto-post (20min)
   startDemoReplyNotifier();         // a prospect replied to a demo for the first time (60s)
   startPublicDemoPoller();          // landing-page website demos: call task, budget, retention (60s)

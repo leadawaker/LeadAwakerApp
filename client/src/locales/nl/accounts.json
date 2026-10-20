@@ -477,8 +477,9 @@
       "integrations": "Integraties",
       "knowledge": "Bedrijfsintel",
       "communication": "Onboarding",
-      "voice": "Telefoonlijn",
-      "alerts": "Overzichten & meldingen",
+      "voice": "Telefoon",
+      "chat": "Chat",
+      "alerts": "Meldingen",
       "automations": "Automatiseringen"
     },
     "createAccount": "Account aanmaken",
@@ -495,10 +496,34 @@
     "acrossAll": "over alles",
     "nActive": "{{count}} actief",
     "nOwner": "{{count}} eigenaar",
-    "nMembers": "{{count}} leden"
+    "nMembers": "{{count}} leden",
+    "callsMonth": "Gesprekken deze maand",
+    "nBooked_one": "{{count}} geboekt",
+    "nBooked_other": "{{count}} geboekt",
+    "phone": "Telefoonlijn",
+    "live": "Live",
+    "notLive": "Niet live",
+    "noNumber": "Geen nummer",
+    "settingUp": "Wordt ingesteld",
+    "nMissing_one": "{{count}} ontbreekt",
+    "nMissing_other": "{{count}} ontbreken",
+    "ready": "klaar",
+    "whatsapp": "WhatsApp",
+    "connected": "Aan",
+    "pending": "In behandeling",
+    "off": "Uit",
+    "alerts": "Ontvangers meldingen",
+    "recapAt": "overzicht {{time}}",
+    "recapOff": "geen overzicht"
+  },
+  "languageNames": {
+    "English": "Engels",
+    "Portuguese": "Portugees",
+    "Dutch": "Nederlands"
   },
   "panels": {
     "accountDetails": "Accountdetails",
+    "businessDetails": "Bedrijfsgegevens",
     "campaigns": "Campagnes",
     "team": "Team",
     "contracts": "Contracten",
@@ -604,6 +629,7 @@
   },
   "pills": {
     "connected": "Verbonden",
+    "waitingCalendar": "Wacht op je agenda",
     "notSet": "Niet ingesteld",
     "comingSoon": "Binnenkort",
     "nConnected": "{{count}} verbonden"
@@ -804,5 +830,45 @@
     },
     "phoneUsage_one": "{{count}} gesprek deze maand, {{bookings}} geboekt",
     "phoneUsage_other": "{{count}} gesprekken deze maand, {{bookings}} geboekt"
+  },
+  "onboardingEntry": {
+    "title": "Onboarding",
+    "help": "Het intakegesprek met de klant: hun bedrijf, hoe ze opneemt, afspraken en meldingen.",
+    "open": "Onboarding openen",
+    "back": "Terug naar overzicht",
+    "doneTitle": "Onboarding afgerond",
+    "doneHelp": "Open het opnieuw om de antwoorden te bekijken of aan te passen.",
+    "reopen": "Bekijken"
+  },
+  "customDomainGuide": {
+    "open": "Zo stel je het in",
+    "title": "Een eigen afsprakenlink",
+    "intro": "Afsprakenlinks kunnen het eigen webadres van de klant gebruiken in plaats van book.leadawaker.com. Daarvoor is één DNS-record aan hun kant nodig, en een paar minuten.",
+    "subdomain": "afspraak",
+    "step1": "Kies het adres",
+    "step1Help": "Een woord voor hun eigen domein werkt het best, bijvoorbeeld",
+    "step2": "Zoek uit wie hun DNS beheert",
+    "step2Help": "Meestal het bedrijf waar het domein is gekocht, of hun webbouwer. We kunnen het opzoeken:",
+    "lookUp": "Opzoeken",
+    "registrar": "Geregistreerd bij",
+    "nameservers": "Nameservers",
+    "hostHint": "Het record wordt toegevoegd in het beheerpaneel van het bedrijf achter deze nameservers.",
+    "lookupFailed": "Opzoeken lukte niet. Vraag de klant wie hun website heeft gemaakt.",
+    "step3": "Voeg dit record toe",
+    "step3Help": "Alleen het eerste deel (de naam) komt in het veld \"Naam\" of \"Host\", niet het hele domein. Laat TTL op de standaardwaarde.",
+    "step4": "Lead Awaker koppelt het",
+    "step4Help": "Wij koppelen het adres ook aan onze kant. Laat het ons weten als het record is toegevoegd.",
+    "step5": "Controleren en activeren",
+    "step5Help": "Sla het adres hier op en druk op \"DNS controleren & activeren\". Het kan een paar minuten, soms een uur, duren voordat het bereikbaar is.",
+    "messageTitle": "Bericht voor hun webbeheerder",
+    "copyMessage": "Bericht kopiëren",
+    "copy": "Kopiëren",
+    "message": "Hoi! Kun je één DNS-record toevoegen voor onze afsprakenpagina?\n\nType: CNAME\nNaam: {{name}}\nWaarde: {{target}}\n\nDan toont {{domain}} onze afsprakenpagina. Bedankt!"
+  },
+  "clientHoursToast": {
+    "saved": "Openingstijden opgeslagen",
+    "savedDesc": "Je wijzigingen zijn doorgevoerd.",
+    "error": "Openingstijden opslaan mislukt",
+    "errorDesc": "Probeer het opnieuw."
   }
 }

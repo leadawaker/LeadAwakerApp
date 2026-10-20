@@ -27,6 +27,11 @@ export type Appointment = {
   rawLead?: Record<string, any>;
   timezone?: string;
   leadScore: number;
+  // A second appointment booked beside the lead's main one (Leads.side_booking_*),
+  // e.g. a callback before a showroom visit. Its id is the lead id negated, so
+  // both cards can be on the page at once; the lead itself is in rawLead.
+  side?: boolean;
+  kind?: string | null;
 };
 
 // ── Shared card chrome ───────────────────────────────────────────────────────
@@ -71,8 +76,14 @@ export function statusMetaOf(
   }
 }
 
+// "Callback" / "Visit" for an appointment whose kind is known, else null.
+export function kindLabelOf(appt: Pick<Appointment, "kind">, t: (k: string) => string): string | null {
+  return appt.kind === "callback" || appt.kind === "visit" ? t(`design.kind.${appt.kind}`) : null;
+}
+
 // ── Channel (calendar_link → video meet, else phone) ─────────────────────────
-export function channelOf(appt: Pick<Appointment, "calendar_link" | "phone" | "email">): "video" | "phone" {
+export function channelOf(appt: Pick<Appointment, "calendar_link" | "phone" | "email" | "kind">): "video" | "phone" {
+  if (appt.kind === "callback") return "phone";
   if (!appt.email && appt.phone && !appt.calendar_link) return "phone";
   return "video";
 }

@@ -13,6 +13,7 @@ export interface PendingOAuthState {
   accountId: number;
   flow: string; // e.g. "reviews", "calendar:google" — scopes a nonce to one flow
   createdAt: number; // epoch ms, for expiry
+  returnOrigin?: string; // frontend origin to send the browser back to (Instagram connect); validated by the caller
 }
 
 declare module "express-session" {
@@ -24,7 +25,7 @@ declare module "express-session" {
 const STATE_TTL_MS = 10 * 60 * 1000; // 10 min — generous for the consent screen
 
 /** Mint + persist a random state nonce bound to this session. Returns the nonce. */
-export function createOAuthState(req: Request, flow: string, accountId: number): string {
+export function createOAuthState(req: Request, flow: string, accountId: number, returnOrigin?: string): string {
   const nonce = crypto.randomBytes(32).toString("base64url");
   const store = (req.session.oauthStates ||= {});
   // Evict expired entries so the session map can't grow unbounded across retries.
@@ -32,16 +33,21 @@ export function createOAuthState(req: Request, flow: string, accountId: number):
   for (const [k, v] of Object.entries(store)) {
     if (now - v.createdAt > STATE_TTL_MS) delete store[k];
   }
-  store[nonce] = { accountId, flow, createdAt: now };
+  store[nonce] = returnOrigin ? { accountId, flow, createdAt: now, returnOrigin } : { accountId, flow, createdAt: now };
   return nonce;
 }
 
 /**
- * Verify + consume a returned state nonce. Returns the bound accountId, or null
- * if the nonce is missing, unknown, for a different flow, or expired. Single-use:
- * a valid nonce is deleted on read so it can't be replayed.
+ * Verify + consume a returned state nonce. Returns the bound accountId and the
+ * stored return origin (null when none was stored), or null if the nonce is
+ * missing, unknown, for a different flow, or expired. Single-use: a valid nonce
+ * is deleted on read so it can't be replayed.
  */
-export function consumeOAuthState(req: Request, flow: string, returnedState: unknown): number | null {
+export function consumeOAuthStateEntry(
+  req: Request,
+  flow: string,
+  returnedState: unknown,
+): { accountId: number; returnOrigin: string | null } | null {
   if (typeof returnedState !== "string" || !returnedState) return null;
   const store = req.session?.oauthStates;
   const entry = store?.[returnedState];
@@ -49,7 +55,12 @@ export function consumeOAuthState(req: Request, flow: string, returnedState: unk
   delete store![returnedState];
   if (entry.flow !== flow) return null;
   if (Date.now() - entry.createdAt > STATE_TTL_MS) return null;
-  return entry.accountId;
+  return { accountId: entry.accountId, returnOrigin: entry.returnOrigin ?? null };
+}
+
+/** consumeOAuthStateEntry, returning only the bound accountId (reviews, calendar, gmail). */
+export function consumeOAuthState(req: Request, flow: string, returnedState: unknown): number | null {
+  return consumeOAuthStateEntry(req, flow, returnedState)?.accountId ?? null;
 }
 
 /**

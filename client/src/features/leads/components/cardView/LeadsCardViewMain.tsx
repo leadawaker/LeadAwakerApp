@@ -20,7 +20,7 @@ import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useLocation } from "wouter";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
-import { SkeletonLeadPanel } from "@/components/ui/skeleton";
+import { ChatsDetailSkeleton } from "../LeadsSkeletons";
 import { MobileRecede } from "@/components/crm/mobile/MobileSheet";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLeadsSelection } from "../useLeadsSelection";
@@ -41,6 +41,8 @@ import {
   LeadFilterBottomSheet,
 } from "./MobileViews";
 import { LeadListCard } from "./LeadListCard";
+import { ChatChannelTabs } from "./ChatChannelTabs";
+import type { ChatChannelTab } from "../chatChannel";
 
 // ── Main export ───────────────────────────────────────────────────────────────
 
@@ -78,6 +80,16 @@ export function LeadsCardView({
   accountsById,
   campaignsById,
   isConversationsMode,
+  total,
+  groups,
+  facets,
+  hasMore,
+  loadingMore,
+  onLoadMore,
+  channelTab,
+  onChannelTabChange,
+  chatChannelCounts,
+  listFilters,
 }: LeadsCardViewProps) {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
@@ -132,10 +144,7 @@ export function LeadsCardView({
   ].filter((tab) => !allowedViews || allowedViews.includes(tab.id as ViewMode));
 
 
-  const [currentPage, setCurrentPage]   = useState(0);
   const [cardAnimKey, setCardAnimKey] = useState(0);
-
-  const PAGE_SIZE = 50;
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   // Keeps the mobile sheet showing the last lead's content while it animates closed.
   const lastSelectedLeadRef = useRef<typeof selectedLead>(null);
@@ -177,33 +186,37 @@ export function LeadsCardView({
     bulkDeleteConfirm, setBulkDeleteConfirm,
   } = useLeadsListControls(onRefresh);
 
-  // ── Local filter state: account, campaign, tags, upcoming calls, flatItems ──
+  // ── Chats page inbox tabs (All chats / Website / WhatsApp): server counts ──
+  const activeChannelTab: ChatChannelTab = isConversationsMode ? channelTab : "all";
+  const channelCounts: Record<ChatChannelTab, number> = {
+    all: chatChannelCounts.all ?? 0,
+    website: chatChannelCounts.website ?? 0,
+    whatsapp: chatChannelCounts.whatsapp ?? 0,
+  };
+
+  // ── Rows from the server page + filter options from the server facets ──
   const {
     filterAccount,
     filterCampaign,
     filterType,
     toggleFilterType,
-    tagSearchInput,
-    upcomingCallsOnly,
     setFilterAccount,
     setFilterCampaign,
-    setTagSearchInput,
-    setUpcomingCallsOnly,
     flatItems,
     availableAccounts,
     availableCampaigns,
     isFilterActive,
     handleFilterReset,
   } = useLeadsFilters({
+    ...listFilters,
     leads,
-    listSearch,
     groupBy,
+    groups,
     sortBy,
     filterStatus,
     filterTags,
     leadTagsInfo,
-    campaignsById,
-    accountsById,
+    facets,
     onSortByChange,
     onToggleFilterStatus,
     onToggleFilterTag,
@@ -231,7 +244,9 @@ export function LeadsCardView({
     () => flatItems.map((it) => (it.kind === "lead" ? `l${getLeadId(it.lead)}` : `h${it.label}`)).join(","),
     [flatItems],
   );
-  useEffect(() => { setCurrentPage(0); setCardAnimKey((k) => k + 1); }, [flatItemsSignature]);
+  // Only the first rows animate; appending a page (infinite scroll) keeps the key.
+  const firstRowsSignature = useMemo(() => flatItemsSignature.split(",").slice(0, 20).join(","), [flatItemsSignature]);
+  useEffect(() => { setCardAnimKey((k) => k + 1); }, [firstRowsSignature]);
 
   // ── Export all currently-filtered leads to CSV ──────────────────────────────
   const handleExportCsv = useCallback(() => {
@@ -239,19 +254,11 @@ export function LeadsCardView({
     exportLeadsCsv(rows, campaignsById, accountsById);
   }, [flatItems, campaignsById, accountsById]);
 
-  // F shortcut: scroll selected lead into view, jumping to its page if paginated.
+  // F shortcut: scroll the selected lead into view (when it is loaded).
   useFKeyScrollToSelected({
     containerRef: scrollContainerRef,
     selectedId: selectedLead ? getLeadId(selectedLead) : null,
     getSelector: (id) => `[data-lead-id="${id}"]`,
-    ensureLoaded: async (id) => {
-      const items = flatItems.filter((i: any) => i.kind === "lead");
-      const idx = items.findIndex((i: any) => getLeadId(i.lead) === id);
-      if (idx >= 0) {
-        const page = Math.floor(idx / PAGE_SIZE);
-        if (page !== currentPage) setCurrentPage(page);
-      }
-    },
   });
 
   // ── Keyboard navigation between leads (↑/↓ or j/k) ──────────────────────────
@@ -275,8 +282,7 @@ export function LeadsCardView({
       const nextIdx = Math.min(rows.length - 1, Math.max(0, idx + (down ? 1 : -1)));
       const next = rows[nextIdx];
       if (!next || getLeadId(next) === curId) return;
-      const page = Math.floor(nextIdx / PAGE_SIZE);
-      if (page !== currentPage) setCurrentPage(page);
+      if (nextIdx >= rows.length - 3 && hasMore) onLoadMore();
       onSelectLead(next);
       const nid = getLeadId(next);
       window.setTimeout(() => {
@@ -286,7 +292,7 @@ export function LeadsCardView({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [flatItems, selectedLead, onSelectLead, currentPage, isNarrow]);
+  }, [flatItems, selectedLead, onSelectLead, isNarrow, hasMore, onLoadMore]);
 
   return (
     /* Outer shell: transparent — gaps between panels reveal stone-gray page background */
@@ -295,7 +301,7 @@ export function LeadsCardView({
       {/* ── Full-width flat top bar — all desktop formats (expanded + minimized) ── */}
       {!isNarrow && (
         <LeadsDesktopToolbar
-          leadsCount={leads.length}
+          leadsCount={total}
           viewTabs={viewTabs}
           viewMode={viewMode}
           onViewModeChange={onViewModeChange}
@@ -344,6 +350,9 @@ export function LeadsCardView({
           showTypeControls={isConversationsMode}
           filterType={filterType}
           onToggleFilterType={toggleFilterType}
+          channelTabs={isConversationsMode ? (
+            <ChatChannelTabs variant="topbar" active={activeChannelTab} onChange={onChannelTabChange} counts={channelCounts} />
+          ) : undefined}
         />
       )}
 
@@ -370,6 +379,9 @@ export function LeadsCardView({
           filterAccount={filterAccount}
           filterCampaign={filterCampaign}
           isConversationsMode={isConversationsMode}
+          channelTabs={isConversationsMode && isNarrow ? (
+            <ChatChannelTabs active={activeChannelTab} onChange={onChannelTabChange} counts={channelCounts} />
+          ) : undefined}
           filterType={filterType}
           onToggleFilterType={toggleFilterType}
           setFilterSheetOpen={setFilterSheetOpen}
@@ -381,16 +393,14 @@ export function LeadsCardView({
           onViewModeChange={onViewModeChange}
           listSearch={listSearch}
           onListSearchChange={onListSearchChange}
-          upcomingCallsOnly={upcomingCallsOnly}
-          setUpcomingCallsOnly={setUpcomingCallsOnly}
           leads={leads}
           leadTagsInfo={leadTagsInfo}
           leadsPullDistance={leadsPullDistance}
           leadsIsRefreshing={leadsIsRefreshing}
           cardAnimKey={cardAnimKey}
-          currentPage={currentPage}
-          setCurrentPage={setCurrentPage}
-          pageSize={PAGE_SIZE}
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          onLoadMore={onLoadMore}
           campaignsById={campaignsById}
           peekOn={peekOn}
           setPeekOn={setPeekOn}
@@ -439,7 +449,7 @@ export function LeadsCardView({
         "relative flex-1 flex-col min-w-0 rounded-lg hidden lg:flex"
       )}>
         {loading && !selectedLead ? (
-          <SkeletonLeadPanel />
+          <ChatsDetailSkeleton />
         ) : selectedLead ? (
           <LeadDetailView
             lead={selectedLead}
@@ -447,9 +457,10 @@ export function LeadsCardView({
             leadTags={leadTagsInfo.get(getLeadId(selectedLead)) || []}
             onRefresh={onRefresh}
             campaignsById={campaignsById}
+            mode={isConversationsMode ? "conversations" : undefined}
           />
         ) : (
-          <EmptyDetailState leadsCount={leads.length} />
+          <EmptyDetailState leadsCount={total} />
         )}
       </div>
 

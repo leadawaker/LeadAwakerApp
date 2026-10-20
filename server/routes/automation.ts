@@ -3,7 +3,7 @@ import { storage } from "../storage";
 import { requireOwner } from "../auth";
 import { wrapAsync, getEngineUrl } from "./_helpers";
 import { AUTOMATION_CATALOGUE, findEntry } from "@shared/automationCatalogue";
-import { EMPTY_COUNTS, type ClientAutomationsResponse, type EngineJobsHealth, type OverviewResponse } from "@shared/automationTypes";
+import { EMPTY_COUNTS, type ClientAutomationsResponse, type EngineJobsHealth, type OverviewResponse, type ResolveFailuresBody } from "@shared/automationTypes";
 import { buildOverviewRows, overviewTotals } from "../automations/health";
 import { buildClientLines } from "../automations/clientGates";
 
@@ -19,6 +19,12 @@ async function fetchEngineHealth(): Promise<EngineJobsHealth | null> {
   } catch {
     return null;
   }
+}
+
+/** Every workflow_name an automation writes its diary under. */
+function namesFor(id: string): string[] {
+  const entry = findEntry(id);
+  return entry ? [entry.id, ...(entry.aliases ?? []), ...(entry.jobId ? [entry.jobId] : [])] : [id];
 }
 
 export function registerAutomationRoutes(app: Express) {
@@ -44,8 +50,7 @@ export function registerAutomationRoutes(app: Express) {
 
   app.get("/api/automations/:id/diary", requireOwner, wrapAsync(async (req, res) => {
     const id = String(req.params.id);
-    const entry = findEntry(id);
-    const names = entry ? [entry.id, ...(entry.aliases ?? []), ...(entry.jobId ? [entry.jobId] : [])] : [id];
+    const names = namesFor(id);
     const page = Math.min(10_000, Math.max(1, Math.floor(Number(req.query.page)) || 1));
     const rawAccountId = req.query.accountId ? Number(req.query.accountId) : undefined;
     const accountId = rawAccountId !== undefined && Number.isInteger(rawAccountId) && rawAccountId > 0 ? rawAccountId : undefined;
@@ -54,6 +59,27 @@ export function registerAutomationRoutes(app: Express) {
       accountId,
       failedOnly: req.query.failedOnly === "1",
     }));
+  }));
+
+  // Clear failures that were already fixed. Non-destructive: sets resolved_at, the diary rows stay.
+  app.post("/api/automations/resolve", requireOwner, wrapAsync(async (req, res) => {
+    const body = (req.body ?? {}) as Partial<ResolveFailuresBody>;
+    const ids = Array.isArray(body.automationIds) ? body.automationIds.filter((x): x is string => typeof x === "string").slice(0, 100) : [];
+    if (ids.length === 0) return res.status(400).json({ message: "automationIds required" });
+    const posInt = (v: unknown) => (Number.isInteger(v) && (v as number) > 0 ? (v as number) : undefined);
+    const names = Array.from(new Set(ids.flatMap(namesFor)));
+    const resolved = await storage.resolveFailures({ names, accountId: posInt(body.accountId), campaignId: posInt(body.campaignId) });
+    overviewCache = null;
+    res.json({ resolved });
+  }));
+
+  app.post("/api/automations/diary/:lineId/resolve", requireOwner, wrapAsync(async (req, res) => {
+    const id = Number(req.params.lineId);
+    if (!Number.isInteger(id) || id <= 0) return res.status(400).json({ message: "Invalid line id" });
+    const ok = await storage.setFailureResolved(id, req.body?.resolved !== false);
+    if (!ok) return res.status(404).json({ message: "Not a failure line" });
+    overviewCache = null;
+    res.json({ ok: true });
   }));
 
   app.get("/api/accounts/:id/automations", requireOwner, wrapAsync(async (req, res) => {

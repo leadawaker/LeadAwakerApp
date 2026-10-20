@@ -14,7 +14,8 @@ import { TopToolbar, StatusTabs } from "./DesktopCalendarToolbar";
 import { CenterHeader } from "./DesktopCalendarHeader";
 import { WeekGrid } from "./DesktopCalendarWeek";
 import { MonthGrid, AgendaList, CompactAgendaList } from "./DesktopCalendarMonthAgenda";
-import { DetailPanel } from "./DesktopCalendarDetail";
+import { bookingLeadId, DetailPanel } from "./DesktopCalendarDetail";
+import { useBookingCallId } from "@/features/voiceCalls/api/voiceCallsApi";
 
 export type { DesktopCalendarProps } from "./desktopCalendarShared";
 
@@ -69,6 +70,8 @@ function WeekMonthSplit(p: DesktopCalendarProps) {
 // Composition
 // ════════════════════════════════════════════════════════════════════════════
 const DETAIL_W = 372;
+// A booking made on a call shows its player and transcript, which need the room.
+const DETAIL_W_CALL = 500;
 
 export function DesktopCalendar(p: DesktopCalendarProps) {
   const { state: leftPanelState, cycle } = useListPanelState();
@@ -91,6 +94,8 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
   const effectiveLeftPanelState: ListPanelState = isMobile ? "hidden" : leftPanelState;
   const leftWidth = effectiveLeftPanelState === "hidden" ? 0 : effectiveLeftPanelState === "compact" ? 64 : 318;
   const ultra = rootWidth >= 1700;
+  const { data: bookingCallId } = useBookingCallId(bookingLeadId(p.selectedBooking));
+  const detailW = bookingCallId ? DETAIL_W_CALL : DETAIL_W;
 
   return (
     <div ref={rootRef} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }} data-testid="calendar-desktop">
@@ -132,7 +137,7 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
         </div>
         {/* RIGHT — detail: floating slide-over, desktop/tablet only (mobile uses the bottom sheet below) */}
         {!isMobile && p.selectedBooking && (
-          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(DETAIL_W, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--bg)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
+          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(detailW, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--bg)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
             <DetailPanel {...p} showClose />
           </div>
         )}

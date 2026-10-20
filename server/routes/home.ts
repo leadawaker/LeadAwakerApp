@@ -10,15 +10,18 @@ import { resolveHomeQuery, type HomeQuery } from "./homeScope";
 // applies that lock first, so an Admin on a client account never gets the agency view.
 const guards = [requireAuth, scopeToAccount];
 
-function queryOf(req: Request): HomeQuery {
+function accessOf(req: Request) {
   const user = req.user!;
-  const access = resolveVoiceAccess({
+  return resolveVoiceAccess({
     role: user.role ?? "",
     accountsId: user.accountsId ?? null,
     impersonatedAccountId: req.session?.impersonation?.accountId ?? null,
     impersonatedRole: req.session?.impersonation?.role ?? null,
   });
-  return resolveHomeQuery(access, req.query, (req as any).forcedAccountId);
+}
+
+function queryOf(req: Request): HomeQuery {
+  return resolveHomeQuery(accessOf(req), req.query, (req as any).forcedAccountId);
 }
 
 export function registerHomeRoutes(app: Express): void {
@@ -29,7 +32,10 @@ export function registerHomeRoutes(app: Express): void {
     res.json(await storage.getHomeOverview(queryOf(req)));
   }));
   app.get("/api/home/phone", ...guards, wrapAsync(async (req, res) => {
-    res.json(await storage.getHomePhone(queryOf(req)));
+    const phone = await storage.getHomePhone(queryOf(req));
+    // What calls cost us is the Owner's number only.
+    if (!accessOf(req).isOwner) delete phone.cost;
+    res.json(phone);
   }));
   app.get("/api/home/whatsapp", ...guards, wrapAsync(async (req, res) => {
     res.json(await storage.getHomeWhatsapp(queryOf(req)));
@@ -39,6 +45,9 @@ export function registerHomeRoutes(app: Express): void {
   }));
   app.get("/api/home/reactivation", ...guards, wrapAsync(async (req, res) => {
     res.json(await storage.getHomeReactivation(queryOf(req)));
+  }));
+  app.get("/api/home/reactivation/live", ...guards, wrapAsync(async (req, res) => {
+    res.json(await storage.getHomeReactivationLive(queryOf(req)));
   }));
   app.get("/api/home/reputation", ...guards, wrapAsync(async (req, res) => {
     res.json(await storage.getHomeReputation(queryOf(req)));

@@ -63,6 +63,10 @@
     "lead_needs_reply": {
       "label": "Resposta necessária",
       "help": "A assistente pausou uma conversa e uma pessoa precisa responder. No máximo uma vez por cliente por dia."
+    },
+    "new_photo": {
+      "label": "Nova foto",
+      "help": "Um cliente enviou uma foto pelo WhatsApp ou pelo chat do site, com o que ela mostra. Por e-mail (foto em anexo) e no CRM, não pelo WhatsApp."
     }
   },
   "quiet": {
@@ -123,5 +127,29 @@
     "notFound": "Este link não abre nada para você.",
     "notFoundHelp": "Ele pode ser de outra conta, ou o item foi removido.",
     "open": "Abrir o Lead Awaker"
+  },
+  "rail": {
+    "recipients": {
+      "label": "Destinatários",
+      "help": "Quem recebe o resumo e os alertas, por e-mail e WhatsApp.",
+      "detail": "{{emails}} e-mail · {{whatsapps}} WhatsApp",
+      "none": "Ninguém ainda"
+    },
+    "recap": {
+      "label": "Resumo diário",
+      "help": "Um resumo do dia, enviado num horário fixo.",
+      "on": "Todo dia às {{time}}",
+      "off": "Desligado"
+    },
+    "instant": {
+      "label": "Alertas imediatos",
+      "help": "Uma mensagem assim que algo precisa da equipe, com horário de silêncio.",
+      "detail": "{{on}} de {{total}} ligados"
+    },
+    "test": {
+      "label": "Enviar um teste",
+      "help": "Envie um exemplo do resumo ou de um alerta para ver como chega.",
+      "detail": "E-mail ou WhatsApp"
+    }
   }
 }

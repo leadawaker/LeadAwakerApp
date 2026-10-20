@@ -1,0 +1,151 @@
+{
+  "readOnly": "You can see these settings. To change them, ask Lead Awaker.",
+  "loadFailed": "Could not load the chat settings.",
+  "empty": {
+    "title": "No chat assistant yet",
+    "help": "This account has no campaign answering its website chat or WhatsApp. Create a receptionist campaign on the Campaigns page, then point the website chat and inbound WhatsApp at it on Integrations.",
+    "helpClient": "Your chat assistant is not set up yet. Lead Awaker will set it up for you.",
+    "openCampaigns": "Open Campaigns"
+  },
+  "save": {
+    "saving": "Saving...",
+    "pending": "Saving in a moment",
+    "saved": "All changes saved"
+  },
+  "rail": {
+    "overview": {
+      "label": "Overview",
+      "help": "This month's chats and which channels are wired.",
+      "active": "Answering chats",
+      "inactive": "Campaign is {{status}}"
+    },
+    "greeting": {
+      "label": "Greeting",
+      "help": "How a chat starts on the website and on WhatsApp.",
+      "none": "No website greeting"
+    },
+    "behaviour": {
+      "label": "Behaviour",
+      "help": "Who the assistant is, how it writes and when a person takes over."
+    },
+    "knowledge": {
+      "label": "Knowledge",
+      "help": "What the assistant knows about the business and where it books.",
+      "withLink": "Booking link set",
+      "noLink": "No booking link"
+    },
+    "followup": {
+      "label": "Follow-up",
+      "help": "One gentle message when a WhatsApp chat stops halfway.",
+      "on": "On, one message",
+      "off": "Off",
+      "other": "Reactivation follow-ups"
+    },
+    "hours": {
+      "label": "Active hours",
+      "help": "When the follow-up may be sent."
+    }
+  },
+  "overview": {
+    "thisMonth": "This month",
+    "websiteChats": "Website chats",
+    "whatsappChats": "WhatsApp chats",
+    "bookings": "Bookings",
+    "handedOff": "Handed to a person",
+    "lastChat": "Last chat",
+    "unknownName": "Unknown visitor",
+    "noChats": "No chats yet.",
+    "channel": {
+      "website": "Website chat",
+      "whatsapp": "WhatsApp"
+    },
+    "channels": "Channels",
+    "assistant": "Assistant",
+    "active": "active",
+    "notActive": "{{status}}, not answering",
+    "widgetLive": "Live on {{domain}}",
+    "widgetNotLive": "Set up, not live on a site yet",
+    "widgetNone": "Not set up",
+    "senderOn": "Number connected",
+    "senderOff": "No WhatsApp number connected",
+    "wiringHelp": "Installing the website chat and connecting the WhatsApp number are done on Integrations.",
+    "openIntegrations": "Open Integrations"
+  },
+  "greeting": {
+    "websiteTitle": "Website chat",
+    "websiteHelp": "The first line visitors see when they open the chat on the website.",
+    "websiteLabel": "Greeting",
+    "websitePlaceholder": "Hi, how can I help?",
+    "noWidget": "There is no website chat on this account yet. Add one on Integrations.",
+    "agencyOnly": "The website greeting is managed by Lead Awaker.",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "failed": "Could not save the greeting.",
+    "whatsappTitle": "WhatsApp",
+    "whatsappHelp": "On WhatsApp the customer writes first and the assistant answers, so there is no opening message to set."
+  },
+  "behaviour": {
+    "whoTitle": "Who it is",
+    "agentName": "Name",
+    "agentNameHelp": "The name the assistant introduces itself with.",
+    "agentNamePlaceholder": "e.g. Sophie",
+    "language": "Language",
+    "languageHelp": "Used until the customer's own language is known.",
+    "languages": {
+      "en": "English",
+      "nl": "Dutch",
+      "pt": "Portuguese"
+    },
+    "tone": "Tone",
+    "toneHelp": "How the assistant sounds, in a sentence. Saved for the language you are using the app in.",
+    "tonePlaceholder": "e.g. Warm and straightforward, plain words, no hype",
+    "howTitle": "How it replies",
+    "replies": "Messages per reply",
+    "repliesHelp": "At most this many short messages in one turn. Each extra message is billed.",
+    "voice": "Voice notes",
+    "voiceHelp": "Whether a WhatsApp voice note may be answered with a voice note.",
+    "voiceModes": {
+      "off": "Text only",
+      "smart": "Decided per message",
+      "voice_reply": "Voice note back to a voice note"
+    },
+    "handoff": "Hand over on the first request for a person",
+    "handoffHelp": "On: when someone asks for a person, the assistant says a colleague will get back to them and stops replying. Off: it first tries to help.",
+    "stopTitle": "When it stops",
+    "stopHelp": "When someone asks it to stop, says it is the wrong person or is rude, the assistant says one polite goodbye and the chat ends. Chats that are booked, handed to a person or opted out never get a follow-up."
+  },
+  "knowledge": {
+    "title": "What it knows",
+    "description": "About the business",
+    "descriptionHelp": "A few sentences on what the business does. Saved for the language you are using the app in.",
+    "kb": "Knowledge",
+    "kbHelp": "Facts it may use: products, prices, address, how appointments work. It does not make up anything that is not here.",
+    "accountKb": "Also use the account's Company Intel",
+    "accountKbHelp": "Adds the facts collected during onboarding to what the assistant knows.",
+    "bookingLink": "Booking link",
+    "bookingLinkHelp": "Shared when a customer wants to pick a time themselves."
+  },
+  "followUp": {
+    "title": "Follow-up",
+    "help": "When a WhatsApp chat stops in the middle of something, the assistant may send one short message to pick it up again.",
+    "switch": "Send one follow-up",
+    "switchHelp": "At most one per silence. A new one only after the customer writes again.",
+    "when": "When",
+    "whenValue": "3 to 20 hours after the assistant's last unanswered message",
+    "whenHelp": "Only inside the active hours, only on WhatsApp (website visitors have left). This window is fixed.",
+    "what": "What it sends",
+    "whatValue": "One line about what they were asking, or nothing when the chat ended naturally. The customer's status is never changed.",
+    "notReceptionist": "This campaign uses the reactivation follow-ups. They are set on the Campaigns page.",
+    "openPrompt": "Edit the follow-up instructions (prompt {{id}})"
+  },
+  "hours": {
+    "title": "Active hours",
+    "help": "Customers who write get an answer at any time. The follow-up is only sent inside these hours.",
+    "label": "Hours",
+    "range": "{{start}} to {{end}}",
+    "unset": "Not set",
+    "to": "to",
+    "active_hours_start": "From",
+    "active_hours_end": "Until"
+  }
+}

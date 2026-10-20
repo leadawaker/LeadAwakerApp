@@ -83,6 +83,8 @@ export function ContactWidget({
   const { t } = useTranslation("leads");
   const leadId    = getLeadId(lead);
   const phone     = lead.phone || lead.Phone || "";
+  // Another number the caller asked to be called back on (phone receptionist).
+  const callbackPhone = lead.callback_phone || lead.callbackPhone || "";
   const email     = lead.email || lead.Email || "";
   const company   = lead.company || lead.Company || lead.company_name || "";
   const firstName = lead.first_name || lead.firstName || "";
@@ -242,7 +244,7 @@ export function ContactWidget({
   const editableRows: { label: string; value: string; field: string; copy?: boolean; type?: string }[] = [
     { label: t("contact.firstName"),  value: firstName, field: "first_name" },
     { label: t("contact.lastName"),   value: lastName,  field: "last_name" },
-    { label: t("contact.phone"),      value: phone,     field: "phone", copy: true, type: "tel" },
+    { label: t("contact.phone"), value: phone, field: "phone", copy: true, type: "tel" },
     { label: t("contact.email"),      value: email,     field: "email", copy: true, type: "email" },
   ];
 
@@ -269,6 +271,19 @@ export function ContactWidget({
               </div>
             </div>
           ))}
+          {/* Other number (read-only): one a caller gave to be called or messaged on.
+              When they write from it, it becomes the phone above and this one keeps the old number. */}
+          {callbackPhone && (
+            <div className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">
+              <span className="font-mono text-[8.5px] uppercase tracking-[0.16em] text-[var(--mute-2)] block leading-none mb-1">
+                {t("contact.callbackPhone")}
+              </span>
+              <div className="min-h-[1.125rem] flex items-center gap-1">
+                <span className="flex-1 min-w-0 text-[12px] font-semibold text-foreground leading-snug">{callbackPhone}</span>
+                <CopyContactBtn value={callbackPhone} />
+              </div>
+            </div>
+          )}
           {/* Company (read-only) */}
           {company && (
             <div className="py-2.5 border-b border-border/20 last:border-0 last:pb-0">

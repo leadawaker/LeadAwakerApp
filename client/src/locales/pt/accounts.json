@@ -470,8 +470,9 @@
       "integrations": "Integrações",
       "knowledge": "Intel da Empresa",
       "communication": "Onboarding",
-      "voice": "Linha telefônica",
-      "alerts": "Resumos e alertas",
+      "voice": "Telefone",
+      "chat": "Chat",
+      "alerts": "Alertas",
       "automations": "Automações"
     },
     "createAccount": "Criar conta",
@@ -488,10 +489,34 @@
     "acrossAll": "no total",
     "nActive": "{{count}} ativos",
     "nOwner": "{{count}} dono",
-    "nMembers": "{{count}} membros"
+    "nMembers": "{{count}} membros",
+    "callsMonth": "Ligações no mês",
+    "nBooked_one": "{{count}} agendada",
+    "nBooked_other": "{{count}} agendadas",
+    "phone": "Linha telefônica",
+    "live": "Ativa",
+    "notLive": "Inativa",
+    "noNumber": "Sem número",
+    "settingUp": "Em configuração",
+    "nMissing_one": "{{count}} faltando",
+    "nMissing_other": "{{count}} faltando",
+    "ready": "pronta",
+    "whatsapp": "WhatsApp",
+    "connected": "Ligado",
+    "pending": "Pendente",
+    "off": "Desligado",
+    "alerts": "Destinatários de alertas",
+    "recapAt": "resumo {{time}}",
+    "recapOff": "sem resumo"
+  },
+  "languageNames": {
+    "English": "Inglês",
+    "Portuguese": "Português",
+    "Dutch": "Holandês"
   },
   "panels": {
     "accountDetails": "Detalhes da conta",
+    "businessDetails": "Dados da empresa",
     "campaigns": "Campanhas",
     "team": "Equipe",
     "contracts": "Contratos",
@@ -595,6 +620,7 @@
   },
   "pills": {
     "connected": "Conectado",
+    "waitingCalendar": "Aguardando sua agenda",
     "notSet": "Não definido",
     "comingSoon": "Em breve",
     "nConnected": "{{count}} conectado(s)"
@@ -755,5 +781,45 @@
     },
     "phoneUsage_one": "{{count}} ligação este mês, {{bookings}} com agendamento",
     "phoneUsage_other": "{{count}} ligações este mês, {{bookings}} com agendamento"
+  },
+  "onboardingEntry": {
+    "title": "Onboarding",
+    "help": "A ligação de configuração com o cliente: a empresa, como ela atende, agendamentos e alertas.",
+    "open": "Abrir onboarding",
+    "back": "Voltar para a visão geral",
+    "doneTitle": "Onboarding concluído",
+    "doneHelp": "Abra de novo para revisar ou mudar as respostas.",
+    "reopen": "Revisar"
+  },
+  "customDomainGuide": {
+    "open": "Como configurar",
+    "title": "Link de agendamento próprio",
+    "intro": "Os links de agendamento podem usar o endereço do site do cliente em vez de book.leadawaker.com. Basta um registro DNS do lado deles e alguns minutos.",
+    "subdomain": "agenda",
+    "step1": "Escolha o endereço",
+    "step1Help": "Uma palavra antes do domínio deles funciona melhor, por exemplo",
+    "step2": "Descubra quem gerencia o DNS deles",
+    "step2Help": "Normalmente a empresa onde o domínio foi comprado, ou quem fez o site. Podemos verificar:",
+    "lookUp": "Verificar",
+    "registrar": "Registrado em",
+    "nameservers": "Nameservers",
+    "hostHint": "O registro é adicionado no painel da empresa por trás desses nameservers.",
+    "lookupFailed": "Não foi possível verificar. Pergunte ao cliente quem fez o site.",
+    "step3": "Adicione este registro",
+    "step3Help": "Só a primeira parte (o nome) vai no campo \"Nome\" ou \"Host\", não o domínio inteiro. Deixe o TTL no padrão.",
+    "step4": "A Lead Awaker conecta",
+    "step4Help": "Nós também conectamos o endereço do nosso lado. Avise quando o registro for adicionado.",
+    "step5": "Verificar e ativar",
+    "step5Help": "Salve o endereço aqui e clique em \"Verificar DNS e ativar\". Pode levar alguns minutos, às vezes uma hora, até funcionar.",
+    "messageTitle": "Mensagem para quem cuida do site",
+    "copyMessage": "Copiar mensagem",
+    "copy": "Copiar",
+    "message": "Oi! Você pode adicionar um registro DNS para a nossa página de agendamento?\n\nTipo: CNAME\nNome: {{name}}\nValor: {{target}}\n\nAssim {{domain}} mostra a nossa página de agendamento. Obrigado!"
+  },
+  "clientHoursToast": {
+    "saved": "Hor\u00e1rio de funcionamento salvo",
+    "savedDesc": "Suas altera\u00e7\u00f5es j\u00e1 est\u00e3o valendo.",
+    "error": "N\u00e3o foi poss\u00edvel salvar o hor\u00e1rio de funcionamento",
+    "errorDesc": "Tente novamente."
   }
 }

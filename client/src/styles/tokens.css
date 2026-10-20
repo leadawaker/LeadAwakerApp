@@ -1,6 +1,7 @@
 @theme inline {
   --font-sans: 'Manrope', ui-sans-serif, system-ui, sans-serif;
-  --font-heading: 'Playfair Display', serif;
+  /* No serif in the CRM (Gabriel, 2026-10-15): headings use the sans face. */
+  --font-heading: 'Manrope', ui-sans-serif, system-ui, sans-serif;
 
   --radius-sm: var(--radius);
   --radius-md: var(--radius);

@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AudioLines, Users } from "lucide-react";
 import { MonoLabel } from "@/features/voice/components/atoms";
+import { CallListSkeleton } from "./VoiceCallsSkeleton";
 import type { VoiceCaller, VoiceCallListItem, VoiceScope } from "../api/voiceCallsApi";
 import { filterCallers } from "../callers";
 import { CallerDetail } from "./CallerDetail";
 import { CallerListCard } from "./CallerListCard";
-import { WeekSummaryCard } from "./WeekSummaryCard";
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
@@ -24,8 +24,6 @@ interface Props {
   error: unknown;
   query: string;
   scope: VoiceScope;
-  /** Live scope only: the picked account, so the week summary matches the list. */
-  accountId?: number;
   masked: boolean;
   isOwner: boolean;
   selection: string | null;
@@ -33,7 +31,7 @@ interface Props {
 }
 
 /** Same split as VoiceCallsInbox: 348px list of people, the chosen person on the right. */
-export function CallersInbox({ callers, calls, isLoading, error, query, scope, accountId, masked, isOwner, selection, setSelection }: Props) {
+export function CallersInbox({ callers, calls, isLoading, error, query, scope, masked, isOwner, selection, setSelection }: Props) {
   const { t } = useTranslation("voiceCalls");
   const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 1600);
   useEffect(() => {
@@ -52,7 +50,7 @@ export function CallersInbox({ callers, calls, isLoading, error, query, scope, a
     setSelection(items[0].key);
   }, [narrow, selected, items, setSelection]);
 
-  const listBody = isLoading ? null : error ? (
+  const listBody = isLoading ? <CallListSkeleton /> : error ? (
     <Centered><MonoLabel>{t("loadError")}</MonoLabel></Centered>
   ) : callers.length === 0 ? (
     <Centered>
@@ -78,8 +76,7 @@ export function CallersInbox({ callers, calls, isLoading, error, query, scope, a
 
   const listPane = (
     <div style={{ width: narrow ? "100%" : 348, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: narrow ? "none" : "1px solid var(--line)", background: "var(--surface)" }}>
-      <WeekSummaryCard scope={scope} accountId={accountId} />
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "6px 10px 8px", display: "flex", flexDirection: "column" }}>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 10px 8px", display: "flex", flexDirection: "column" }}>
         {listBody}
       </div>
       {callers.length > 0 && (

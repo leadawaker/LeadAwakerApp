@@ -27,6 +27,8 @@ export interface VoiceCaller {
   hubspotContactId: string | null;
   lastCalledBackAt: string | null;
   lastCalledBackBy: string | null;
+  /** Which button was pressed: the phone dialler or WhatsApp. Null on rows that do not say. */
+  lastCalledBackChannel: CallBackChannel | null;
   accountId: number;
   accountName: string | null;
 }
@@ -45,12 +47,26 @@ export interface CallerLead {
   calls: VoiceCallListItem[];
 }
 
+export type CallBackChannel = "phone" | "whatsapp";
+
+/**
+ * A press of Call back or WhatsApp on the Voice calls page. It records that
+ * someone opened the dialler or WhatsApp for this person, not that a call or
+ * message actually happened.
+ */
 export interface CallBackRecord {
   lastCalledBackAt: string;
   lastCalledBackBy: string | null;
+  lastCalledBackChannel: CallBackChannel | null;
 }
 
 const CALL_BACK_TYPE = "call_back";
+
+/** The channel sits in the note's text as "(phone)" or "(whatsapp)", old and new wording alike. */
+function channelOfNote(content: string | null): CallBackChannel | null {
+  const m = /\((phone|whatsapp)\)\s*$/.exec(content ?? "");
+  return m ? (m[1] as CallBackChannel) : null;
+}
 
 const leadColumns = {
   id: leads.id,
@@ -93,16 +109,17 @@ async function latestCallBacks(leadIds: number[]): Promise<Map<number, CallBackR
   if (!leadIds.length) return out;
   const result = await db.execute(sql`
     SELECT DISTINCT ON (${interactions.leadsId}) ${interactions.leadsId} AS leads_id,
-           ${interactions.who} AS who, ${interactions.createdAt} AS created_at
+           ${interactions.who} AS who, ${interactions.content} AS content, ${interactions.createdAt} AS created_at
     FROM ${interactions}
     WHERE ${interactions.type} = ${CALL_BACK_TYPE}
       AND ${inArray(interactions.leadsId, leadIds)}
     ORDER BY ${interactions.leadsId}, ${interactions.createdAt} DESC, ${interactions.id} DESC
   `);
-  for (const r of result.rows as Array<{ leads_id: number; who: string | null; created_at: string | Date }>) {
+  for (const r of result.rows as Array<{ leads_id: number; who: string | null; content: string | null; created_at: string | Date }>) {
     out.set(Number(r.leads_id), {
       lastCalledBackAt: new Date(r.created_at).toISOString(),
       lastCalledBackBy: r.who ?? null,
+      lastCalledBackChannel: channelOfNote(r.content),
     });
   }
   return out;
@@ -126,11 +143,12 @@ export const voiceCallersStorage = {
     accountId: number | null;
     isOwner: boolean;
     includeAccountName: boolean;
+    hideTest?: boolean;
   }): Promise<VoiceCaller[]> {
     const rows = await db
       .select(itemColumns(opts.includeAccountName))
       .from(voiceCalls)
-      .where(scopeWhere(opts.scope, opts.accountId))
+      .where(scopeWhere(opts.scope, opts.accountId, opts.hideTest))
       .orderBy(desc(voiceCalls.startedAt), desc(voiceCalls.id));
 
     const groups = new Map<string, Group>();
@@ -196,6 +214,7 @@ export const voiceCallersStorage = {
           opts.isOwner && lead && typeof lead.hubspotContactId === "string" ? lead.hubspotContactId : null,
         lastCalledBackAt: callBack?.lastCalledBackAt ?? null,
         lastCalledBackBy: callBack?.lastCalledBackBy ?? null,
+        lastCalledBackChannel: callBack?.lastCalledBackChannel ?? null,
         accountId: latest.accountId,
         accountName: latest.accountName,
       };
@@ -240,12 +259,13 @@ export const voiceCallersStorage = {
     };
   },
 
-  /** Logs a human call back. Internal direction: never delivered to the lead. */
+  /** Logs a press of Call back or WhatsApp. Internal direction: never delivered to the lead. */
   async logCallBack(input: {
     leadsId: number;
     accountId: number;
     usersId: number | null;
     who: string;
+    channel: CallBackChannel;
     content: string;
   }): Promise<CallBackRecord> {
     const now = new Date();
@@ -269,6 +289,7 @@ export const voiceCallersStorage = {
     return {
       lastCalledBackAt: (row?.createdAt ?? now).toISOString(),
       lastCalledBackBy: row?.who ?? input.who,
+      lastCalledBackChannel: input.channel,
     };
   },
 

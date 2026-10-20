@@ -1,7 +1,7 @@
 // Full-width desktop top bar for the Leads card view — title, view tabs, bulk
 // controls, chats-peek toggle, list-collapse, search, and filter/sort/group menus.
 // Extracted from LeadsCardViewMain.tsx to keep that file focused.
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Check,
@@ -98,6 +98,7 @@ export function LeadsDesktopToolbar({
   showTypeControls,
   filterType,
   onToggleFilterType,
+  channelTabs,
 }: {
   leadsCount: number;
   viewTabs: ViewTab[];
@@ -152,6 +153,8 @@ export function LeadsDesktopToolbar({
   showTypeControls?: boolean;
   filterType: ConversationType[];
   onToggleFilterType: (v: ConversationType) => void;
+  /** Chats page: All / Website / WhatsApp inbox tabs, shown in place of the view switcher. */
+  channelTabs?: ReactNode;
 }) {
   const { t } = useTranslation("leads");
   const [leadDeleteConfirm, setLeadDeleteConfirm] = useState(false);
@@ -166,8 +169,9 @@ export function LeadsDesktopToolbar({
         <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{title ?? t("page.title")}</span>
         <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leadsCount}</span>
       </div>
+      {channelTabs}
       {/* Single-view pages (e.g. Conversations) hide the segmented switcher. */}
-      {viewTabs.length > 1 && (
+      {!channelTabs && viewTabs.length > 1 && (
         <div className="la-seg shrink-0">
           {viewTabs.map((tab) => (
             <button

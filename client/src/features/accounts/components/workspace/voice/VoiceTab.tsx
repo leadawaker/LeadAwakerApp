@@ -1,26 +1,42 @@
-// Account workspace "Voice" tab (specs/voice-tab): readiness, the monthly
-// dashboard, and one card per piece of a live voice client's setup.
+// Account workspace "Voice" tab (specs/voice-tab): a menu of sections, one
+// open at a time, the way the Integrations tab works. Overview is the month's
+// calls and the number (readiness is the hover on the header's phone figure);
+// Prompt & test (Owner only) is who she is, what she is told and a test call;
+// the others hold what she knows, the call and what follows it.
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { RequestChangeNote } from "@/components/crm/RequestChangeNote";
+import { VoiceGenderProvider, useVoiceT, voiceGender } from "./voiceGender";
 import { Loader2 } from "lucide-react";
 import { useVoiceLine } from "./useVoiceLine";
-import { ReadinessChecklist } from "./ReadinessChecklist";
 import { VoiceStatsRow } from "./VoiceStatsRow";
 import { NumberSummaryCard } from "./NumberSummaryCard";
 import { PersonaCard } from "./PersonaCard";
-import { AgentVoiceCard } from "./AgentVoiceCard";
+import { ConversationCard } from "./ConversationCard";
+import { OnTheLineCard } from "./OnTheLineCard";
 import { TransferCard } from "./TransferCard";
 import { UnwantedCallsCard } from "./UnwantedCallsCard";
 import { FollowUpCard } from "./FollowUpCard";
-import { ExtraInstructionsCard } from "./ExtraInstructionsCard";
 import { HoursCard, KnowledgeCard } from "./ReuseCards";
-import { TestCard } from "./TestCard";
+import { PromptSection } from "./PromptSection";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { VoiceRail, sectionAnchorId } from "./VoiceRail";
+import { SectionHeader, SectionLayout } from "../SectionRail";
+import { VOICE_SECTIONS, type VoiceSection } from "./readiness";
 
-export function VoiceTab({ accountId, readOnly = false, onOpenIntegrations }: {
-  accountId: number; readOnly?: boolean; onOpenIntegrations?: () => void;
+const gap = 22;
+
+export function VoiceTab({ accountId, readOnly = false, stacked = false, onOpenIntegrations }: {
+  accountId: number; readOnly?: boolean; stacked?: boolean; onOpenIntegrations?: () => void;
 }) {
-  const { t } = useTranslation("voiceTab");
+  const { t } = useVoiceT();
+  const { t: tc } = useTranslation("crm");
   const { line, loading, error, saving, save, refetch } = useVoiceLine(accountId);
+  const [section, setSection] = useState<VoiceSection>("overview");
   const canEdit = !readOnly;
+  // Prompt & test edits prompts every client line shares: the Owner's alone.
+  const { isOwner } = useWorkspace();
+  const sections = isOwner && canEdit ? VOICE_SECTIONS : VOICE_SECTIONS.filter((s) => s !== "prompt");
 
   if (loading) {
     return (
@@ -39,27 +55,57 @@ export function VoiceTab({ accountId, readOnly = false, onOpenIntegrations }: {
 
   const card = { line, canEdit, saving, onSave: save };
   const onChanged = () => { void refetch(); };
+  const index = sections.indexOf(section) + 1;
+
+  const body = (
+    <section id={sectionAnchorId(section)} style={{ display: "flex", flexDirection: "column", gap, minWidth: 0 }} data-testid={`voice-section-${section}`}>
+      <SectionHeader
+        index={index}
+        // Rendered above the gender provider: pass her/his explicitly.
+        title={t(`rail.${section}.label`, { context: voiceGender(line.voice) })}
+        help={t(`rail.${section}.help`, { context: voiceGender(line.voice) })}
+      />
+
+      {!canEdit && <RequestChangeNote area={tc("requestChange.areas.phone")} />}
+
+      {section === "overview" && (
+        <>
+          <VoiceStatsRow accountId={accountId} />
+          <NumberSummaryCard line={line} onManage={canEdit ? onOpenIntegrations : undefined} />
+        </>
+      )}
+
+      {section === "prompt" && sections.includes("prompt") && <PromptSection {...card} />}
+
+      {section === "knowledge" && (
+        <>
+          <HoursCard line={line} canEdit={canEdit} onChanged={onChanged} />
+          <KnowledgeCard line={line} canEdit={canEdit} onChanged={onChanged} persona={<PersonaCard {...card} bare />} />
+        </>
+      )}
+
+      {section === "call" && (
+        <>
+          <TransferCard {...card} />
+          <ConversationCard {...card} />
+          <OnTheLineCard {...card} />
+          <UnwantedCallsCard {...card} />
+        </>
+      )}
+
+      {section === "after" && <FollowUpCard {...card} />}
+    </section>
+  );
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 22 }} data-testid="voice-tab">
-      <ReadinessChecklist line={line} />
-      <VoiceStatsRow accountId={accountId} />
-      {canEdit && <TestCard line={line} />}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 380px), 1fr))", gap: 22, alignItems: "start" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
-          <NumberSummaryCard line={line} onManage={canEdit ? onOpenIntegrations : undefined} />
-          <PersonaCard {...card} />
-          <TransferCard {...card} />
-          <HoursCard line={line} canEdit={canEdit} onChanged={onChanged} />
-        </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
-          <AgentVoiceCard {...card} />
-          <ExtraInstructionsCard {...card} />
-          <UnwantedCallsCard {...card} />
-          <FollowUpCard {...card} />
-        </div>
-      </div>
-      <KnowledgeCard line={line} canEdit={canEdit} onChanged={onChanged} />
-    </div>
+    <VoiceGenderProvider value={voiceGender(line.voice)}>
+      <SectionLayout
+        stacked={stacked}
+        testId="voice-tab"
+        rail={(layout) => <VoiceRail line={line} sections={sections} active={section} onSelect={setSection} layout={layout} />}
+      >
+        {body}
+      </SectionLayout>
+    </VoiceGenderProvider>
   );
 }

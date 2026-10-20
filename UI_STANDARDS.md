@@ -211,17 +211,17 @@ be added as a follow-up phase after the full light-mode migration is approved.
 | Property | Value |
 |----------|-------|
 | Body font | `Manrope` (`--font-sans`) |
-| Heading font | `Playfair Display` (`--font-heading`) |
+| Heading font | `Manrope` bold (`--font-heading`). No serif anywhere in the CRM (decided 2026-10-15) |
 | Mono font | `Geist Mono` — eyebrows, labels, data, status pills |
 | Headings | `font-heading font-bold tracking-tight` |
 | Body | `font-sans antialiased` |
 
 **Rules:**
-- All `<h1>` through `<h6>` use `Playfair Display` automatically via the base layer.
-- Never override heading font to Manrope. Never use Playfair Display for body text.
+- All `<h1>` through `<h6>` use `--font-heading` (Manrope, bold) automatically via the base layer.
+- Never use a serif face (Playfair Display, Instrument Serif, Georgia...) in the CRM. `--serif` and `--display` are kept only as aliases of `--sans`. The public website (`client/public/premium/`) and legal pages keep their own fonts.
 - Geist Mono is used for eyebrows (`.eyebrow`), UI labels, status pills (`.la-status`),
   segmented controls (`.la-seg-btn`), and compact buttons (`.la-btn`).
-- No additional font imports needed beyond Manrope + Playfair Display + Geist Mono.
+- No additional font imports needed beyond Manrope + Geist Mono.
 
 ---
 
@@ -500,7 +500,7 @@ These rules prevent the UI from looking like generic AI-generated output:
 
 - No default Tailwind blue (`blue-500`/`blue-600`). Only deep wine (`#5E2230`, `--primary`).
 - Neumorphic shadows over generic `shadow-md`. Use `.neu-raised`, `.neu-inset`, `.neu-polished`, etc.
-- Paired fonts: Playfair Display for headings, Manrope for body, Geist Mono for labels/data.
+- Fonts: Manrope for headings and body, Geist Mono for labels/data. No serif.
 - No gratuitous gradients. If you use a gradient, use `--wine-grad` for wine or the `.neu-polished` radial overlay for hero surfaces.
 - Every clickable needs hover + focus + active states. No exceptions.
 

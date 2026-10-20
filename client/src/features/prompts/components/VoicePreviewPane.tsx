@@ -10,11 +10,14 @@ import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 
-type Kind = "layer" | "greeting" | "backend";
+type Kind = "layer" | "greeting" | "backend" | "xai";
 
 /** Which builder and language a voice use_case belongs to. */
 export function voicePromptTarget(useCase: string): { kind: Kind; locale: string } | null {
   if (!useCase.startsWith("voice_")) return null;
+  // The lean Grok prompt: rendered as Grok hears it, tools section included.
+  const xai = useCase.match(/^voice_xai_layer_(.+)$/);
+  if (xai) return { kind: "xai", locale: xai[1]! };
   const layer = useCase.match(/^voice_layer_(.+)$/);
   if (layer) return { kind: "layer", locale: layer[1]! };
   const greeting = useCase.match(/^voice_greeting_(.+)$/);

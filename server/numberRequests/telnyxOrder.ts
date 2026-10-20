@@ -78,6 +78,15 @@ function splitName(full: string): [string, string] {
   return parts.length > 1 ? [parts[0], parts.slice(1).join(" ")] : [full.trim(), full.trim()];
 }
 
+/** "06 81 76 47 63" or "0031681764763" -> "+31681764763": Telnyx only takes E.164. */
+function toE164NL(phone: string): string {
+  const p = phone.replace(/[^\d+]/g, "");
+  if (p.startsWith("+")) return p;
+  if (p.startsWith("00")) return `+${p.slice(2)}`;
+  if (p.startsWith("0")) return `+31${p.slice(1)}`;
+  return p.startsWith("31") ? `+${p}` : p;
+}
+
 const now = () => new Date().toISOString();
 
 /**
@@ -98,13 +107,14 @@ export async function placeOrder(row: NumberRequest, companyName: string): Promi
     if (!phoneNumber) throw new TelnyxOrderError(`No numbers in stock for area code 0${row.areaCode}`);
 
     const [first, last] = splitName(d.representative || companyName);
-    const business = d.legalName || companyName;
+    const business = (d.legalName || companyName).replace(/\s+/g, " ").trim();
+    const contactPhone = toE164NL(d.contactPhone);
     const address = await telnyx("addresses", {
       method: "POST",
       body: {
         first_name: first, last_name: last, business_name: business,
         street_address: d.street, locality: d.city, postal_code: d.postalCode, country_code: "NL",
-        phone_number: d.contactPhone, customer_reference: `KvK ${d.kvkNumber}`,
+        phone_number: contactPhone, customer_reference: `KvK ${d.kvkNumber}`,
       },
     });
     const group = await telnyx("requirement_groups", {
@@ -113,7 +123,7 @@ export async function placeOrder(row: NumberRequest, companyName: string): Promi
         country_code: "NL", phone_number_type: "local", action: "ordering",
         customer_reference: `${business} (account ${row.accountsId})`,
         regulatory_requirements: [
-          { requirement_id: REQ.contact, field_value: `Contact: ${d.representative} | Business: ${business} (KvK ${d.kvkNumber}) | Phone: ${d.contactPhone}` },
+          { requirement_id: REQ.contact, field_value: `Contact: ${d.representative} | Business: ${business} (KvK ${d.kvkNumber}) | Phone: ${contactPhone}` },
           { requirement_id: REQ.address, field_value: String(address.id) },
           { requirement_id: REQ.kvk, field_value: doc("kvk")! },
           { requirement_id: REQ.id, field_value: doc("id")! },

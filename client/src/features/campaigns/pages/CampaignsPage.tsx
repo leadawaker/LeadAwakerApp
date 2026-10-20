@@ -427,7 +427,6 @@ function CampaignsContent() {
         agent_name: "Sofia", // Default agent name
         calendar_link: "https://cal.com/lead-awaker-orlfpr/demo", // Demo calendar
         ai_model: "gpt-4.1",
-        bot_token: "8280015135:AAGqqekYPNnGHa0zSn19Irop-9Ti1AAoBe8", // Demo bot token
       };
       if (isAgencyUser) {
         payload.Accounts_id = 1; // Lead Awaker (use DB field name, gets converted by fromDbKeys)

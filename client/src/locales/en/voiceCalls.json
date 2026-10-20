@@ -122,7 +122,10 @@
     "callback": "Callback",
     "transferred": "Transferred",
     "hungUp": "Hung up",
-    "other": "Conversation"
+    "other": "Chat"
+  },
+  "testData": {
+    "label": "Test data (hidden from the client)"
   },
   "presenting": {
     "label": "Presenting",
@@ -152,12 +155,11 @@
     "lead": "Lead",
     "booked": "Booked",
     "callBack": "Call back",
-    "whatsapp": "WhatsApp",
+    "whatsapp": "Message on WhatsApp",
     "callAnyway": "Call anyway",
     "warnDnd": "This person asked not to be contacted.",
     "warnOutOfHours": "It is outside business hours for this account right now.",
     "noNumber": "No phone number on file",
-    "calledBackBy": "Called back by {{name}}, {{when}}",
     "hubspot": {
       "push": "Push to HubSpot",
       "pushing": "Pushing",
@@ -170,6 +172,27 @@
     "empty": "Select a caller to see their calls.",
     "back": "Back to people",
     "dismiss": "Dismiss",
-    "search": "Search callers…"
+    "search": "Search callers…",
+    "showMore": "Show more ({{count}})",
+    "showLess": "Show less",
+    "openLead": "Open the lead",
+    "callNumber": "Call {{n}}",
+    "whatsappHint": "Opens a WhatsApp chat with this person",
+    "lastAttempt": {
+      "phone": "Call back started by {{name}}, {{when}}",
+      "whatsapp": "WhatsApp opened by {{name}}, {{when}}",
+      "someone": "someone",
+      "hint": "Logged when the button is pressed. Whether the call or message went through is not tracked."
+    }
+  },
+  "summaryGroups": {
+    "wanted": "What they wanted",
+    "booked": "Booked",
+    "followUp": "Follow-up",
+    "other": "Also mentioned"
+  },
+  "duration": {
+    "minSec": "{{m}}m {{s}}s",
+    "sec": "{{s}}s"
   }
 }

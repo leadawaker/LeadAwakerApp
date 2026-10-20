@@ -47,6 +47,7 @@ import {
   type PromptFormData,
   type PromptVersion,
   MODEL_OPTIONS,
+  isCampaignPrompt,
 } from "../types";
 
 /* ── Module-level i18n key maps ─────────────────────────────────────────── */
@@ -155,7 +156,7 @@ function PromptListCard({
   const updatedAt = prompt.updatedAt || prompt.updated_at;
   const promptId = getPromptId(prompt);
   const campaignId = Number(prompt.campaignsId || prompt.Campaigns_id) || 0;
-  const isSystem = campaignId === 0;
+  const isSystem = !isCampaignPrompt(prompt);
   const accent = isSystem ? "var(--stage-responded)" : "var(--wine)";
   const accentTint = isSystem ? "rgba(63,142,142,0.12)" : "var(--wine-tint)";
   const avatarBg = isSystem ? "var(--stage-responded)" : campaignAvatarBg(campaignId);
@@ -238,7 +239,7 @@ function PromptListCard({
                 fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)",
                 overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                 flex: 1, minWidth: 0,
-              }}>
+              }} title={campaignName}>
                 {campaignName}
               </span>
             )}
@@ -441,8 +442,33 @@ export function PromptsListView({
   const [showSystemMessage, setShowSystemMessage] = useState(false);
   const [showNotes, setShowNotes] = useState(false);
 
-  // A prompt belongs to the Campaign tab only when it has a linked campaign.
-  const isCampaignPrompt = (p: any) => !!(p.campaignsId || p.Campaigns_id);
+  // Campaigns that talk with each prompt: its own campaign plus every campaign
+  // that borrows it via prompt_campaign_id and has no active prompt of its own
+  // (same fall-through as the engine's get_prompt_for_campaign).
+  const servedCampaignNames = useMemo(() => {
+    const ownActive = new Set<number>();
+    for (const p of prompts) {
+      if (isCampaignPrompt(p) && String(p.status || "").toLowerCase().trim() === "active") {
+        ownActive.add(Number(p.campaignsId || p.Campaigns_id));
+      }
+    }
+    const byPromptCampaign = new Map<number, string[]>();
+    for (const c of campaigns) {
+      const target = Number(c.promptCampaignId) || 0;
+      if (!target || target === c.id || ownActive.has(c.id)) continue;
+      const list = byPromptCampaign.get(target) ?? [];
+      list.push(c.name);
+      byPromptCampaign.set(target, list);
+    }
+    return (p: any): string | undefined => {
+      const cId = Number(p.campaignsId || p.Campaigns_id) || 0;
+      if (!cId) return undefined;
+      const own = campaignMap.get(cId);
+      if (!own) return undefined;
+      if (!isCampaignPrompt(p)) return own;
+      return [own, ...(byPromptCampaign.get(cId) ?? [])].join(" · ");
+    };
+  }, [prompts, campaigns, campaignMap]);
 
   // Counts from the full prompts list (not filtered by tab)
   const systemCount = useMemo(() => prompts.filter((p: any) => !isCampaignPrompt(p)).length, [prompts]);
@@ -540,16 +566,15 @@ export function PromptsListView({
   const [fontPopoverOpen, setFontPopoverOpen] = useState(false);
 
   // System prompt = no linked campaign → blue accent (responded-lead status color)
-  const selectedIsSystem = selectedPrompt ? !(selectedPrompt.campaignsId || selectedPrompt.Campaigns_id) : false;
+  const selectedIsSystem = selectedPrompt ? !isCampaignPrompt(selectedPrompt) : false;
   const detailAccent = selectedIsSystem ? "var(--stage-responded)" : "var(--wine)";
   const detailAccentTint = selectedIsSystem ? "rgba(63,142,142,0.12)" : "var(--wine-tint)";
   const detailAccentGlow = selectedIsSystem ? "rgba(63,142,142,0.35)" : "var(--wine-glow)";
 
   // Derived account + campaign for selected prompt header
   const selCampaignId = selectedPrompt ? (selectedPrompt.campaignsId || selectedPrompt.Campaigns_id) : null;
-  const selCampaignName = selCampaignId
-    ? campaignMap.get(Number(selCampaignId)) || t("labels.noCampaign", { defaultValue: "no campaign" })
-    : t("labels.noCampaign", { defaultValue: "no campaign" });
+  const selCampaignName = (selectedPrompt && servedCampaignNames(selectedPrompt))
+    || t("labels.noCampaign", { defaultValue: "no campaign" });
   const selCampaignData = selCampaignId ? campaigns.find((c) => c.id === Number(selCampaignId)) : null;
   const selAccountName = selCampaignData?.accountsId ? accountMap.get(selCampaignData.accountsId) : null;
 
@@ -716,7 +741,7 @@ export function PromptsListView({
   function getCardNames(p: any): { campaignName?: string; accountName?: string } {
     const cId = p.campaignsId || p.Campaigns_id;
     if (!cId) return {};
-    const cName = campaignMap.get(Number(cId));
+    const cName = servedCampaignNames(p);
     const campaign = campaigns.find((c) => c.id === Number(cId));
     const aName = campaign?.accountsId ? accountMap.get(campaign.accountsId) : undefined;
     return { campaignName: cName, accountName: aName };

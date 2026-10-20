@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessageCircle, Phone, TriangleAlert, X } from "lucide-react";
 import { useCallBack, type CallBackChannel, type VoiceCaller } from "../api/voiceCallsApi";
-import { dialDigits, relativeFromNow } from "../callers";
+import { dialDigits, lastContactAttempt } from "../callers";
+import { SOFT_RAISED } from "./bits";
 
 interface Props {
   /** The unmasked caller: the number is dialled, never shown here. */
@@ -12,8 +13,10 @@ interface Props {
 }
 
 /**
- * A human calls the person back by phone or WhatsApp. The click is logged on the
- * lead. DND and out-of-hours callers get a warning first and need a second click.
+ * A human calls the person back by phone or messages them on WhatsApp. The
+ * press is logged on the lead (the call or chat itself is not tracked), and the
+ * line under the buttons says what was opened, by whom and when. DND and
+ * out-of-hours callers get a warning first and need a second click.
  */
 export function CallBackButton({ caller, align = "start" }: Props) {
   const { t, i18n } = useTranslation("voiceCalls");
@@ -23,8 +26,7 @@ export function CallBackButton({ caller, align = "start" }: Props) {
   const disabled = !digits;
   const warn = caller.dnd || caller.outOfHours;
 
-  const lastAt = callBack.data?.lastCalledBackAt ?? caller.lastCalledBackAt;
-  const lastBy = callBack.data?.lastCalledBackBy ?? caller.lastCalledBackBy;
+  const last = lastContactAttempt(callBack.data ?? caller, t, i18n.language);
 
   const go = (channel: CallBackChannel) => {
     if (!digits) return;
@@ -54,17 +56,17 @@ export function CallBackButton({ caller, align = "start" }: Props) {
             {t("callers.callBack")}
           </button>
         </span>
-        <span title={noNumber ?? t("callers.whatsapp")} style={{ display: "inline-flex" }}>
+        <span title={noNumber ?? t("callers.whatsappHint")} style={{ display: "inline-flex" }}>
           <button
             type="button"
-            className="la-btn la-btn--soft la-btn--icon"
+            className="la-btn la-btn--soft"
             disabled={disabled}
-            aria-label={t("callers.whatsapp")}
             onClick={() => click("whatsapp")}
             data-testid="voice-caller-whatsapp"
-            style={off}
+            style={{ ...SOFT_RAISED, height: 32, ...off }}
           >
-            <MessageCircle className="h-4 w-4 shrink-0" />
+            <MessageCircle className="h-4 w-4 shrink-0" style={{ color: "var(--good)" }} />
+            {t("callers.whatsapp")}
           </button>
         </span>
       </div>
@@ -102,9 +104,9 @@ export function CallBackButton({ caller, align = "start" }: Props) {
         </div>
       )}
 
-      {lastAt && (
-        <span data-testid="voice-caller-last-call-back" style={{ fontSize: 11.5, color: "var(--mute)" }}>
-          {t("callers.calledBackBy", { name: lastBy || "", when: relativeFromNow(lastAt, i18n.language) })}
+      {last && (
+        <span data-testid="voice-caller-last-call-back" title={t("callers.lastAttempt.hint")} style={{ fontSize: 11.5, color: "var(--mute)" }}>
+          {last}
         </span>
       )}
     </div>

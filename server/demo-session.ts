@@ -913,7 +913,7 @@ const RATE_MAX_GLOBAL = 100;
  */
 export const DEMO_VIP_IPS: string[] = [];
 export const DEMO_VIP_PHONES = new Set<string>([
-  "+554774002162", // Gabriel (founder) — unlimited demos + /commands from his phone
+  "+31684446349", // Gabriel (founder) — unlimited demos + /commands from his phone
 ]);
 
 export function isVipPhone(phone: string | null | undefined): boolean {

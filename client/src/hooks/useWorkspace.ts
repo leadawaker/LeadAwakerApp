@@ -1,10 +1,77 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useSyncExternalStore } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { getQueryFn } from "@/lib/queryClient";
 
 const KEY = "leadawaker_current_account_id";
 /** Set when an agency user explicitly picks an account from the dropdown. Cleared on logout. */
 const SELECTED_KEY = "leadawaker_account_explicitly_selected";
+
+/* ─── Shared account store ─────────────────────────────────────────
+ * Every useWorkspace() caller used to keep its own useState copy of the
+ * account id, so a switch in the picker only updated the picker: the page kept
+ * its mount-time id until it remounted (navigation). The id now lives in one
+ * module-level store backed by localStorage; all callers subscribe to it.
+ */
+const listeners = new Set<() => void>();
+let cachedId: number | null = null;
+
+function readStoredAccountId(): number {
+  try {
+    const raw = localStorage.getItem(KEY);
+    const n = raw ? Number(raw) : NaN;
+    const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
+    const isAgency = role === "Owner" || role === "Admin";
+    // Agency users default to 0 (all-accounts / agency mode) unless they've explicitly picked an account.
+    if (isAgency && !localStorage.getItem(SELECTED_KEY)) return 0;
+    return Number.isFinite(n) && n >= 0 ? n : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function getAccountSnapshot(): number {
+  if (cachedId === null) cachedId = readStoredAccountId();
+  return cachedId;
+}
+
+function emitAccountChange() {
+  listeners.forEach((l) => l());
+}
+
+/** Re-read localStorage (login/logout or GoLink wrote the keys directly) and notify on change. */
+export function syncAccountFromStorage() {
+  const next = readStoredAccountId();
+  if (next === cachedId) return;
+  cachedId = next;
+  emitAccountChange();
+}
+
+/** `explicit` = an agency user's pick; false for the client-role fallback, which must not mark a pick. */
+function writeAccountId(id: number, explicit = true) {
+  try {
+    localStorage.setItem(KEY, String(id));
+    if (explicit) {
+      if (id === 0) localStorage.removeItem(SELECTED_KEY); // back to agency mode
+      else localStorage.setItem(SELECTED_KEY, "1");
+    }
+  } catch { /* storage blocked: the in-memory value still switches */ }
+  if (cachedId === id) return;
+  cachedId = id;
+  emitAccountChange();
+}
+
+function onStorage(e: StorageEvent) {
+  if (e.key === null || e.key === KEY || e.key === SELECTED_KEY) syncAccountFromStorage();
+}
+
+function subscribeAccount(listener: () => void) {
+  if (listeners.size === 0) window.addEventListener("storage", onStorage);
+  listeners.add(listener);
+  return () => {
+    listeners.delete(listener);
+    if (listeners.size === 0) window.removeEventListener("storage", onStorage);
+  };
+}
 
 export type Account = {
   id: number;
@@ -69,15 +136,9 @@ export function useWorkspace(): WorkspaceState {
   const realUserRole = localStorage.getItem("leadawaker_user_role") || "Viewer";
   const isRealOwner = realUserRole === "Owner";
 
-  const [currentAccountIdState, setCurrentAccountIdState] = useState<number>(() => {
-    const raw = localStorage.getItem(KEY);
-    const n = raw ? Number(raw) : NaN;
-    const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-    const isAgency = role === "Owner" || role === "Admin";
-    // Agency users default to 0 (all-accounts / agency mode) unless they've explicitly picked an account.
-    if (isAgency && !localStorage.getItem(SELECTED_KEY)) return 0;
-    return Number.isFinite(n) && n >= 0 ? n : 0;
-  });
+  // One shared value for every caller (see the store above): a switch in the
+  // account picker re-renders every page that reads the account at once.
+  const currentAccountIdState = useSyncExternalStore(subscribeAccount, getAccountSnapshot);
 
   // Poll /api/auth/me only to detect active impersonation — never overrides localStorage role
   const { data: authMe } = useQuery<{ user: unknown; impersonation: ImpersonationInfo | null } | null>({
@@ -125,46 +186,24 @@ export function useWorkspace(): WorkspaceState {
     return [];
   }, [apiAccounts]);
 
-  // For non-agency users, force their account
-  useEffect(() => {
-    if (!isAgencyUser) {
-      const accountId = Number(localStorage.getItem(KEY)) || 1;
-      if (currentAccountIdState !== accountId) {
-        setCurrentAccountIdState(accountId);
-      }
-    }
-    localStorage.setItem(KEY, String(currentAccountIdState));
-  }, [currentAccountIdState, isAgencyUser]);
-
   // A stored selection can outlive its account (deleted since, or picked in an
   // older session). Drop it back to agency mode: otherwise pages that filter by
   // this id come up empty while the switcher shows some other account.
   useEffect(() => {
     if (!isAgencyUser || currentAccountIdState === 0 || accountsList.length === 0) return;
     if (accountsList.some((a) => a.id === currentAccountIdState)) return;
-    setCurrentAccountIdState(0);
-    localStorage.setItem(KEY, "0");
-    localStorage.removeItem(SELECTED_KEY);
+    writeAccountId(0);
   }, [isAgencyUser, currentAccountIdState, accountsList]);
 
   const setCurrentAccountId = (id: number) => {
-    if (isAgencyUser) {
-      setCurrentAccountIdState(id);
-      localStorage.setItem(KEY, String(id));
-      if (id === 0) {
-        // Clearing selection returns to agency mode
-        localStorage.removeItem(SELECTED_KEY);
-      } else {
-        localStorage.setItem(SELECTED_KEY, "1");
-      }
-    }
+    if (isAgencyUser) writeAccountId(id);
   };
 
   // Force non-agency users away from 0 (all accounts)
   useEffect(() => {
     if (!isAgencyUser && currentAccountIdState === 0) {
       const fallback = Number(localStorage.getItem(KEY)) || 1;
-      setCurrentAccountIdState(fallback > 0 ? fallback : 1);
+      writeAccountId(fallback > 0 ? fallback : 1, false);
     }
   }, [isAgencyUser, currentAccountIdState]);
 

@@ -100,6 +100,7 @@
     "resetAll": "Alle instellingen resetten"
   },
   "search": {
+    "placeholderClient": "Zoek op naam",
     "searchAppointments": "Afspraken zoeken",
     "placeholder": "Zoek op naam of campagne...",
     "searchLeadPlaceholder": "Zoek lead op naam..."
@@ -183,6 +184,11 @@
       "noShow": "No-show",
       "rescheduled": "Verzet"
     },
+    "kind": {
+      "callback": "Terugbellen",
+      "visit": "Bezoek",
+      "sideNote": "Staat naast de hoofdafspraak. Verzet of annuleer hem in de boekingsagenda."
+    },
     "detail": {
       "date": "Datum",
       "channel": "Kanaal",
@@ -207,7 +213,18 @@
       "actions": "Afspraakacties",
       "reschedule": "Verzetten",
       "cancelCall": "Afspraak annuleren",
-      "close": "Sluiten"
+      "close": "Sluiten",
+      "callRecap": "Samenvatting van het gesprek",
+      "chatRecap": "Samenvatting van de chat",
+      "openChat": "Open de chat",
+      "bookedBy": "Geboekt via",
+      "bookedByPhone": "Telefoongesprek",
+      "bookedByWhatsapp": "WhatsApp",
+      "bookedBySms": "SMS",
+      "bookedByWebsite": "Websitechat",
+      "bookedByBookingPage": "Boekingspagina",
+      "noChatRecap": "Nog geen samenvatting van de chat.",
+      "loadingCall": "Gesprek laden"
     },
     "panel": {
       "minimize": "Paneel minimaliseren",

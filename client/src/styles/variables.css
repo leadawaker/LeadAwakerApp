@@ -99,6 +99,7 @@
 
   /* Lines (warm brown at low alpha) */
   --line: hsl(40 26% 34% / 0.14);
+  --logo-plate: #B5A88E;   /* sand bar behind the nav logo (light only) */
   --line-strong: hsl(40 26% 34% / 0.24);
 
   /* ── Ink ── */
@@ -147,9 +148,17 @@
   --stage-dnd: #9D8E76;
 
   /* ── Neumorphic shadow + glass colors (shapes live in design-system.css) ── */
-  --neu-dark: rgba(105, 75, 40, 0.40);
-  --neu-light: rgb(255, 253, 245);
+  /* Softer cast since the ground went bone (2026-10-15): 0.40 read too dark
+     next to the near-white highlight. */
+  --neu-dark: rgba(105, 75, 40, 0.24);
+  /* Pure white: the ground was brightened to 98.5% lightness, and the old warm
+     rgb(255,253,245) highlight sat almost on top of it, so raised and inset
+     surfaces read flat. White keeps a visible lit edge. */
+  --neu-light: #FFFFFF;
   --inset-rim-color: rgba(255, 255, 255, 1);
+  /* Active nav pill body: a step under the panel ground so its white
+     bottom highlight (--sh-polished-crisp) reads as a lit edge. */
+  --nav-active-bg: hsl(var(--ground-h) var(--ground-s) 95.5%);
   --glass-bg: rgba(255, 250, 240, 0.28);
   --glass-bg-strong: rgba(255, 250, 240, 0.46);
   --glass-border: rgba(255, 255, 255, 0.45);
@@ -242,6 +251,7 @@
   --paper: #221D19;
   --popover: 30 12% 14%;
 
+  --logo-plate: transparent;
   --line: rgba(225, 208, 178, 0.10);
   --line-strong: rgba(225, 208, 178, 0.20);
 
@@ -293,6 +303,7 @@
   --neu-dark: rgba(0, 0, 0, 0.55);
   --neu-light: rgba(255, 240, 220, 0.045);
   --inset-rim-color: rgba(255, 240, 220, 0.10);
+  --nav-active-bg: var(--surface);
   --glass-bg: rgba(31, 26, 22, 0.42);
   --glass-bg-strong: rgba(31, 26, 22, 0.64);
   --glass-border: rgba(255, 255, 255, 0.08);

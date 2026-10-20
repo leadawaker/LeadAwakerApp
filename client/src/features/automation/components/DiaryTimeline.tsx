@@ -17,7 +17,14 @@ function dayLabel(t: TFunction, iso: string, lang: string): string {
 }
 
 /** Diary lines grouped by day on a vertical rail: time, outcome node, what happened, for whom, and why. */
-export function DiaryTimeline({ lines, showClient, onOpenLead }: { lines: DiaryLine[]; showClient: boolean; onOpenLead: (leadId: number) => void }) {
+export function DiaryTimeline({ lines, showClient, onOpenLead, onResolve, resolvingId }: {
+  lines: DiaryLine[];
+  showClient: boolean;
+  onOpenLead: (leadId: number) => void;
+  /** Clear a failure as fixed (or reopen it). Omit to hide the control. */
+  onResolve?: (line: DiaryLine, resolved: boolean) => void;
+  resolvingId?: number | null;
+}) {
   const { t, i18n } = useTranslation("automation");
   const days: { label: string; lines: DiaryLine[] }[] = [];
   for (const l of lines) {
@@ -34,8 +41,10 @@ export function DiaryTimeline({ lines, showClient, onOpenLead }: { lines: DiaryL
           <div className="am-day">{day.label}</div>
           <div style={{ paddingTop: 4 }}>
             {day.lines.map((l) => {
-              const color = OUTCOME_COLOR[l.outcome];
+              const fixed = l.outcome === "failed" && !!l.resolvedAt;
+              const color = fixed ? "var(--mute-2)" : OUTCOME_COLOR[l.outcome];
               const showReason = l.reason && l.outcome !== "success";
+              const failedLook = l.outcome === "failed" && !fixed;
               return (
                 <div key={l.id} className="am-entry" data-testid="automation-diary-line">
                   <span className="am-entry-time am-mono" title={new Date(l.createdAt).toLocaleString()}>
@@ -48,7 +57,22 @@ export function DiaryTimeline({ lines, showClient, onOpenLead }: { lines: DiaryL
                     <div className="am-entry-action">
                       {actionLabel(t, l.action)}
                       {l.outcome !== "success" && (
-                        <span style={{ marginLeft: 8, fontSize: 11.5, fontWeight: 600, color }}>{t(`outcome.${l.outcome}`)}</span>
+                        <span style={{ marginLeft: 8, fontSize: 11.5, fontWeight: 600, color }} title={fixed ? new Date(l.resolvedAt!).toLocaleString() : undefined}>
+                          {fixed ? t("clear.fixedTag") : t(`outcome.${l.outcome}`)}
+                        </span>
+                      )}
+                      {l.outcome === "failed" && onResolve && (
+                        <button
+                          type="button"
+                          className="am-lead-link"
+                          style={{ marginLeft: 10, fontSize: 11.5 }}
+                          disabled={resolvingId === l.id}
+                          onClick={() => onResolve(l, !fixed)}
+                          title={fixed ? undefined : t("clear.hint")}
+                          data-testid="automation-diary-resolve"
+                        >
+                          {fixed ? t("clear.reopen") : t("clear.markFixed")}
+                        </button>
                       )}
                     </div>
                     {(l.leadId || (showClient && l.accountName) || l.campaignName) && (
@@ -66,8 +90,8 @@ export function DiaryTimeline({ lines, showClient, onOpenLead }: { lines: DiaryL
                       <div
                         className="am-entry-reason"
                         style={{
-                          background: l.outcome === "failed" ? "color-mix(in srgb, hsl(var(--destructive)) 9%, transparent)" : "var(--wine-tint)",
-                          color: l.outcome === "failed" ? "hsl(var(--destructive))" : "var(--ink-soft)",
+                          background: failedLook ? "color-mix(in srgb, hsl(var(--destructive)) 9%, transparent)" : "var(--wine-tint)",
+                          color: failedLook ? "hsl(var(--destructive))" : "var(--ink-soft)",
                         }}
                       >
                         {reasonLabel(t, l.reason!)}

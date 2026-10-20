@@ -1,12 +1,11 @@
 // Left lead-list panel for the card view: compact avatar rail, mobile list
 // chrome (header/tabs/search/filters), the paginated card list, and the mobile
 // simplified kanban. Extracted from LeadsCardViewMain.tsx.
-import { useRef, useState, type RefObject } from "react";
+import { useRef, useState, type ReactNode, type RefObject } from "react";
+import { LoadMoreSentinel } from "./LoadMoreSentinel";
 import { useTranslation } from "react-i18next";
 import {
   Users,
-  ChevronLeft,
-  ChevronRight,
   Search,
   SlidersHorizontal,
   List,
@@ -72,9 +71,9 @@ export function LeadsListPanel({
   leadsPullDistance,
   leadsIsRefreshing,
   cardAnimKey,
-  currentPage,
-  setCurrentPage,
-  pageSize,
+  hasMore,
+  loadingMore,
+  onLoadMore,
   campaignsById,
   peekOn,
   setPeekOn,
@@ -91,6 +90,7 @@ export function LeadsListPanel({
   onToggleFilterStatus,
   onToggleFilterTag,
   isConversationsMode,
+  channelTabs,
   filterType,
   onToggleFilterType,
   allTags,
@@ -127,16 +127,15 @@ export function LeadsListPanel({
   onViewModeChange: (v: ViewMode) => void;
   listSearch: string;
   onListSearchChange: (v: string) => void;
-  upcomingCallsOnly: boolean;
-  setUpcomingCallsOnly: (v: boolean) => void;
   leads: any[];
   leadTagsInfo: Map<any, any>;
   leadsPullDistance: number;
   leadsIsRefreshing: boolean;
   cardAnimKey: number;
-  currentPage: number;
-  setCurrentPage: (fn: (p: number) => number) => void;
-  pageSize: number;
+  /** Infinite scroll: more leads on the server than loaded. */
+  hasMore: boolean;
+  loadingMore: boolean;
+  onLoadMore: () => void;
   campaignsById?: Map<number, any>;
   peekOn: boolean;
   setPeekOn: (fn: (p: boolean) => boolean) => void;
@@ -153,6 +152,8 @@ export function LeadsListPanel({
   onToggleFilterStatus: (s: string) => void;
   onToggleFilterTag: (t: string) => void;
   isConversationsMode?: boolean;
+  /** Chats page inbox tabs, shown above the card list. */
+  channelTabs?: ReactNode;
   filterType: ConversationType[];
   onToggleFilterType: (v: ConversationType) => void;
   allTags: { name: string; color: string }[];
@@ -193,11 +194,10 @@ export function LeadsListPanel({
   // ── Filter / Sort / Group drill-in panels for the mobile header drawer ──
   const sortOptions: { value: SortByOption; label: string }[] = [
     { value: "recent",         label: t("sort.mostRecent") },
-    { value: "latest_message", label: t("sort.latestMessage") },
     { value: "name_asc",       label: t("sort.nameAZ") },
     { value: "name_desc",      label: t("sort.nameZA") },
-    { value: "score_desc",     label: t("sort.scoreDown") },
-    { value: "score_asc",      label: t("sort.scoreUp") },
+    { value: "created_desc",   label: t("sort.createdNewest") },
+    { value: "created_asc",    label: t("sort.createdOldest") },
   ];
   const groupOptions: { value: GroupByOption; label: string }[] = [
     { value: "date",     label: t("sort.mostRecent") },
@@ -334,7 +334,7 @@ export function LeadsListPanel({
               </div>
             ) : (
               <div className="flex flex-col items-center" style={{ gap: 9, padding: "12px 0 20px" }}>
-                {flatItems.map((item, i) => {
+                {flatItems.map((item) => {
                   if (item.kind === "header") return null;
                   const lid = getLeadId(item.lead);
                   const selectedId = selectedLead ? getLeadId(selectedLead) : null;
@@ -350,6 +350,7 @@ export function LeadsListPanel({
                     </div>
                   );
                 })}
+                <LoadMoreSentinel rootRef={scrollContainerRef} hasMore={hasMore} loading={loadingMore} onLoadMore={onLoadMore} compact />
               </div>
             )}
           </div>
@@ -542,12 +543,13 @@ export function LeadsListPanel({
           />
         </div>
       )}
+      {mobileListMode !== "kanban" && channelTabs}
       {/* Lead list — card list (pagination inside scroll area, below last card) */}
       <div ref={scrollContainerRef} className={cn("la-list-area", mobileListMode === "kanban" && "hidden lg:flex lg:flex-col")} style={{ padding: "3px 6px" }}>
         {/* Pull-to-refresh indicator — mobile only */}
         <PullToRefreshIndicator pullDistance={leadsPullDistance} isRefreshing={leadsIsRefreshing} />
         {loading ? (
-          <ListSkeleton />
+          <ListSkeleton peek={peekOn} />
         ) : flatItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12 px-4 text-center">
             <Users className="h-8 w-8 text-muted-foreground/40" />
@@ -557,9 +559,8 @@ export function LeadsListPanel({
           </div>
         ) : (
           <>
-            <div key={`anim-${cardAnimKey}-page-${currentPage}`} className="la-cards">
+            <div key={`anim-${cardAnimKey}`} className="la-cards">
               {flatItems
-                .slice(currentPage * pageSize, (currentPage + 1) * pageSize)
                 .map((item, i) => {
                   const selectedId = selectedLead ? getLeadId(selectedLead) : null;
                   return item.kind === "header" ? (
@@ -589,31 +590,8 @@ export function LeadsListPanel({
 
             </div>
 
-            {/* Pagination — below last card, inside scroll area */}
-            {flatItems.length > pageSize && (
-              <div className="px-3 py-3 mt-2 flex items-center justify-between gap-2">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-                  disabled={currentPage === 0}
-                  className="icon-circle-lg icon-circle-base disabled:opacity-30 touch-target"
-                  title={t("detailView.previousPage")}
-                >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                </button>
-                <span className="text-[10px] text-muted-foreground tabular-nums text-center leading-tight">
-                  {currentPage * pageSize + 1}–{Math.min((currentPage + 1) * pageSize, flatItems.length)}
-                  {" "}<span className="text-muted-foreground/50">{t("detailView.of")} {flatItems.length}</span>
-                </span>
-                <button
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                  disabled={(currentPage + 1) * pageSize >= flatItems.length}
-                  className="icon-circle-lg icon-circle-base disabled:opacity-30 touch-target"
-                  title={t("detailView.nextPage")}
-                >
-                  <ChevronRight className="h-3.5 w-3.5" />
-                </button>
-              </div>
-            )}
+            {/* Infinite scroll: the next page loads as this nears the viewport */}
+            <LoadMoreSentinel rootRef={scrollContainerRef} hasMore={hasMore} loading={loadingMore} onLoadMore={onLoadMore} />
           </>
         )}
       </div>

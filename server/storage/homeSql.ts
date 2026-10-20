@@ -25,6 +25,7 @@ export const liveLeadSql = sql`(
   COALESCE(c.is_demo, false) = false AND l.demo_niche IS NULL
   AND COALESCE(l.channel_identifier, '') NOT LIKE 'wa-demo:%'
   AND COALESCE(l.channel_identifier, '') NOT LIKE 'web-demo:%'
+  AND COALESCE(l.is_test, false) = false
 )`;
 
 /** Campaign c is wired to a receptionist surface (widget, voice number, inbound). */
@@ -59,9 +60,10 @@ export const receptionistLeadSql = sql`(
 /** Call vc is live. Mirror of IS_LIVE_SQL in automations client_alerts/live_calls.py. */
 export const liveCallSql = sql`(
   vc.test_account_id IS NULL
+  AND COALESCE(vc.is_test, false) = false
   AND NOT EXISTS (SELECT 1 FROM ${T.campaigns} dc WHERE dc.id = vc.campaigns_id AND dc.is_demo = true)
   AND NOT EXISTS (SELECT 1 FROM ${T.leads} dl WHERE dl.id = vc.leads_id
-                  AND (dl.demo_niche IS NOT NULL OR dl.channel_identifier LIKE 'wa-demo:%' OR dl.channel_identifier LIKE 'web-demo:%'))
+                  AND (dl.demo_niche IS NOT NULL OR dl.channel_identifier LIKE 'wa-demo:%' OR dl.channel_identifier LIKE 'web-demo:%' OR dl.is_test = true))
   AND NOT EXISTS (SELECT 1 FROM ${T.voiceNumbers} dn WHERE dn.id = vc.voice_numbers_id AND dn.client_niche IS NULL)
   AND NOT (vc.voice_numbers_id IS NULL AND vc.campaigns_id IS NULL)
 )`;
@@ -112,3 +114,16 @@ export function fillDays(b: Bounds, rows: { day: string; value: number }[]): Day
   const byDay = new Map(rows.map((r) => [r.day, r.value]));
   return eachDay(b.from, b.to).map((day) => ({ day, value: byDay.get(day) ?? 0 }));
 }
+
+/**
+ * Bookings in [from, to) as rows of (channel, booked). One definition for Overview and Phone:
+ * leads with a booked call, dated by booked_at, live and receptionist traffic only.
+ */
+export const bookingsSql = (accountId: number | null, from: SQL, to: SQL): SQL => sql`
+    SELECT COALESCE(l.booking_channel, 'other') AS channel, COALESCE(l.booked_at, l.booking_confirmed_at_) AS booked
+    FROM ${T.leads} l
+    LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
+    WHERE ${acct('l."Accounts_id"', accountId)} AND l.booked_call_date IS NOT NULL
+      AND COALESCE(l.booked_at, l.booking_confirmed_at_) >= ${from}
+      AND COALESCE(l.booked_at, l.booking_confirmed_at_) < ${to}
+      AND ${liveLeadSql} AND ${receptionistLeadSql}`;

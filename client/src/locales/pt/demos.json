@@ -182,6 +182,40 @@
         "onState": "Ligado: áudio mais suave, até {{max}} ms depois. Vale a partir da próxima ligação.",
         "offState": "Desligado: menor atraso, pequenas falhas são possíveis.",
         "anchor": "Áudio roteado por {{site}}."
+      },
+      "engines": {
+        "title": "Testes de motor",
+        "hint": "Ligações destes números para a linha de demonstração são atendidas pelo motor, voz e prompt escolhidos aqui. Qualquer outra pessoa continua com a configuração da linha. Vale em até 30 segundos.",
+        "xaiReady": "O Grok está configurado para {{numbers}}.",
+        "xaiMissing": "O Grok ainda não está configurado (falta: {{missing}}): essas ligações ficam no GPT-Live até lá.",
+        "number": "Telefone",
+        "numberPlaceholder": "+31 6 12345678",
+        "label": "Nome",
+        "labelPlaceholder": "Nome (opcional)",
+        "enabled": "Teste ativo",
+        "remove": "Remover",
+        "add": "Adicionar testador",
+        "lineVoice": "A voz da própria linha",
+        "engine": {
+          "gpt-live": "GPT-Live",
+          "xai": "Grok"
+        },
+        "gender": {
+          "female": "Feminina",
+          "male": "Masculina",
+          "neutral": "Neutra",
+          "other": "Outras vozes"
+        },
+        "prompt": "Prompt",
+        "promptOption": {
+          "standard": "Igual ao GPT-Live",
+          "lean": "Enxuto (estilo xAI)"
+        },
+        "reasoning": "Raciocínio",
+        "reasoningOption": {
+          "high": "Ligado",
+          "none": "Desligado"
+        }
       }
     }
   },

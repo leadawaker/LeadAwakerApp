@@ -63,6 +63,10 @@
     "lead_needs_reply": {
       "label": "Reactie nodig",
       "help": "De assistent heeft een chat gepauzeerd en een medewerker moet antwoorden. Maximaal één keer per klant per dag."
+    },
+    "new_photo": {
+      "label": "Nieuwe foto",
+      "help": "Een klant stuurde een foto via WhatsApp of de websitechat, met wat erop staat. Per e-mail (foto als bijlage) en in de CRM, niet via WhatsApp."
     }
   },
   "quiet": {
@@ -123,5 +127,29 @@
     "notFound": "Deze link opent niets voor jou.",
     "notFoundHelp": "Hij hoort misschien bij een ander account, of het item is verwijderd.",
     "open": "Lead Awaker openen"
+  },
+  "rail": {
+    "recipients": {
+      "label": "Ontvangers",
+      "help": "Wie het overzicht en de meldingen krijgt, per e-mail en WhatsApp.",
+      "detail": "{{emails}} e-mail · {{whatsapps}} WhatsApp",
+      "none": "Nog niemand"
+    },
+    "recap": {
+      "label": "Dagoverzicht",
+      "help": "Eén samenvatting van de dag, op een vast tijdstip.",
+      "on": "Elke dag om {{time}}",
+      "off": "Uit"
+    },
+    "instant": {
+      "label": "Directe meldingen",
+      "help": "Een bericht zodra iets het team nodig heeft, met stille uren.",
+      "detail": "{{on}} van {{total}} aan"
+    },
+    "test": {
+      "label": "Test versturen",
+      "help": "Stuur een voorbeeld van het overzicht of een melding om te zien hoe het aankomt.",
+      "detail": "E-mail of WhatsApp"
+    }
   }
 }

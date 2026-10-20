@@ -182,6 +182,40 @@
         "onState": "Aan: vloeiender geluid, tot {{max}} ms later. Geldt vanaf het volgende gesprek.",
         "offState": "Uit: zo min mogelijk vertraging, kleine haperingen zijn mogelijk.",
         "anchor": "Geluid loopt via {{site}}."
+      },
+      "engines": {
+        "title": "Engine-tests",
+        "hint": "Gesprekken vanaf deze nummers naar de demolijn worden beantwoord door de engine, stem en prompt die je hier kiest. Iedere andere beller houdt de instellingen van de lijn. Binnen 30 seconden actief.",
+        "xaiReady": "Grok is ingesteld voor {{numbers}}.",
+        "xaiMissing": "Grok is nog niet ingesteld (ontbreekt: {{missing}}): deze gesprekken blijven op GPT-Live tot dat klaar is.",
+        "number": "Telefoonnummer",
+        "numberPlaceholder": "+31 6 12345678",
+        "label": "Naam",
+        "labelPlaceholder": "Naam (optioneel)",
+        "enabled": "Test aan",
+        "remove": "Verwijderen",
+        "add": "Tester toevoegen",
+        "lineVoice": "De eigen stem van de lijn",
+        "engine": {
+          "gpt-live": "GPT-Live",
+          "xai": "Grok"
+        },
+        "gender": {
+          "female": "Vrouw",
+          "male": "Man",
+          "neutral": "Neutraal",
+          "other": "Overige stemmen"
+        },
+        "prompt": "Prompt",
+        "promptOption": {
+          "standard": "Zelfde als GPT-Live",
+          "lean": "Kort (xAI-stijl)"
+        },
+        "reasoning": "Redeneren",
+        "reasoningOption": {
+          "high": "Aan",
+          "none": "Uit"
+        }
       }
     }
   },

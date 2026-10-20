@@ -1,225 +1,160 @@
-// Agent name, voice, language, greeting, pronunciation, what to ask before an
-// appointment, and after-hours behaviour.
-// Options and labels are the onboarding wizard's (setupConstants + the
-// communicationProfile namespace), so the tab and the wizard cannot drift.
+// Who she is on the phone, the short version: her name, voice, language and
+// how she says tricky words. Everything saves on its own. A name change is
+// carried into the greeting, which says her name word for word.
 import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Mic, Plus, X } from "lucide-react";
-import { Chip } from "../communication/wizardAtoms";
-import { AGENT_NAMES } from "../communication/profileConstants";
-import {
-  AFTER_HOURS, FEMININE_VOICE_OPTIONS, MASCULINE_VOICE_OPTIONS, VOICE_LOCALES, VOICE_OPTIONS, nameForVoice,
-  type PronunciationRow,
-} from "../communication/setupConstants";
-import { IntakeEditor } from "../communication/IntakeEditor";
-import { VoiceCardShell, FieldLabel, ReadOnlyValue, SaveRow, helpStyle, inputStyle, useDraft } from "./voiceAtoms";
-import type { AfterHoursMode, VoiceLine, VoiceLinePatch } from "./voiceApi";
+import { useVoiceT } from "./voiceGender";
+import { ChevronDown, Mic, Plus, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { VOICE_LOCALES, nameForVoice, spokenAgentName, type PronunciationRow } from "../communication/setupConstants";
+import { VoiceCardShell, FieldLabel, helpStyle, inputStyle } from "./voiceAtoms";
+import { VoicePicker } from "./VoicePicker";
+import { AutosaveBadge } from "./SharedPromptCard";
+import { useAutosave, type AutosaveState } from "./useAutosave";
+import type { VoiceLine, VoiceLinePatch } from "./voiceApi";
 
-interface AgentDraft {
-  agentName: string;
-  agentNameCustom: string;
-  voice: string;
-  locale: string;
-  greeting: string;
-  pronunciation: PronunciationRow[];
-  intake: string;
-  afterHours: AfterHoursMode | "";
-}
-
-const fromLine = (l: VoiceLine): AgentDraft => ({
-  agentName: l.agentName ?? "",
-  agentNameCustom: l.agentNameCustom ?? "",
-  voice: l.voice ?? "",
-  locale: l.locale ?? "",
-  greeting: l.greeting ?? "",
-  pronunciation: l.pronunciation ?? [],
-  intake: l.intake ?? "",
-  afterHours: l.afterHours ?? "",
-});
+const titleCase = (v: string) => (v ? v.charAt(0).toUpperCase() + v.slice(1) : "");
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** The greeting says her name word for word: carry a name change into it. */
+const swapName = (text: string, from: string, to: string) =>
+  from && to && from !== to ? text.replace(new RegExp(`\\b${escapeRe(from)}\\b`, "g"), to) : text;
 
 const withCurrent = (options: readonly string[], current: string) =>
   current && !options.includes(current) ? [...options, current] : [...options];
 
-const VOICE_GROUPS = [
-  { gender: "female", options: FEMININE_VOICE_OPTIONS },
-  { gender: "male", options: MASCULINE_VOICE_OPTIONS },
-] as const;
-
-export function AgentVoiceCard({ line, canEdit, saving, onSave }: {
+export function AgentVoiceCard({ line, onSave }: {
   line: VoiceLine; canEdit: boolean; saving: boolean;
   onSave: (patch: VoiceLinePatch) => Promise<boolean>;
 }) {
-  const { t } = useTranslation(["voiceTab", "communicationProfile"]);
+  const { t } = useVoiceT();
   const cp = (k: string) => t(`communicationProfile:questions.${k}`);
-  const server = useMemo(() => fromLine(line), [line]);
-  const { draft, setDraft, dirty, reset } = useDraft(server);
-  const set = (patch: Partial<AgentDraft>) => setDraft((d) => ({ ...d, ...patch }));
+  const voice = line.voice ?? "";
+  const locale = line.locale ?? "";
+  const savedName = line.agentNameCustom?.trim() || titleCase(line.agentName ?? "");
+  const spokenNow = spokenAgentName(savedName, voice, locale);
 
-  const rows = draft.pronunciation.length ? draft.pronunciation : [{ word: "", sayAs: "" }];
-  const setRows = (pronunciation: PronunciationRow[]) => set({ pronunciation });
-  const agentLabel = (n: string) => (AGENT_NAMES as readonly string[]).includes(n) ? cp(`agentName.options.${n}.label`) : n;
+  // Name: typed, saved a moment after typing stops.
+  const [name, setName] = useState(savedName);
+  const nameState = useAutosave(name, savedName, (next) => onSave({
+    agentNameCustom: next.trim() || null,
+    agentName: null,
+    greeting: swapName(line.greeting ?? "", spokenNow, spokenAgentName(next.trim(), voice, locale)),
+  }));
 
-  const [failed, setFailed] = useState(false);
-  const submit = async () => {
-    setFailed(false);
+  // Voice and language: saved on pick. A default name follows the voice.
+  const [pickState, setPickState] = useState<AutosaveState>("idle");
+  const pick = async (patch: { voice?: string; locale?: string }) => {
+    const v = patch.voice ?? voice;
+    const l = patch.locale ?? locale;
+    const followed = line.agentName && !line.agentNameCustom?.trim() ? null : nameForVoice(line.agentNameCustom?.trim() ?? "", v, l);
+    const nextName = followed ?? savedName;
+    setPickState("saving");
     const ok = await onSave({
-      agentName: draft.agentName || null,
-      agentNameCustom: draft.agentNameCustom.trim() || null,
-      voice: draft.voice || null,
-      locale: draft.locale || null,
-      greeting: draft.greeting,
-      pronunciation: draft.pronunciation.filter((r) => r.word.trim() && r.sayAs.trim()),
-      intake: draft.intake,
-      afterHours: draft.afterHours || null,
+      ...patch,
+      ...(followed !== null ? { agentNameCustom: followed || null } : {}),
+      greeting: swapName(line.greeting ?? "", spokenNow, spokenAgentName(nextName, v, l)),
     });
-    if (!ok) setFailed(true);
+    if (ok && followed !== null) setName(followed);
+    setPickState(ok ? "saved" : "error");
   };
 
-  const effectiveName = draft.agentNameCustom.trim() || (draft.agentName ? agentLabel(draft.agentName) : "");
+  // Pronunciation: edited in a popover, saved when it closes.
+  const serverRows = useMemo(() => line.pronunciation ?? [], [line.pronunciation]);
+  const [rows, setRows] = useState<PronunciationRow[]>(serverRows);
+  const filled = (r: PronunciationRow[]) => r.filter((x) => x.word.trim() && x.sayAs.trim());
+  const shownRows = rows.length ? rows : [{ word: "", sayAs: "" }];
+  const closePronunciation = async (open: boolean) => {
+    if (open) { setRows(serverRows); return; }
+    if (JSON.stringify(filled(rows)) === JSON.stringify(serverRows)) return;
+    setPickState("saving");
+    const ok = await onSave({ pronunciation: filled(rows) });
+    setPickState(ok ? "saved" : "error");
+  };
 
-  // A default name (Sara, Harry, Daan, Pedro) follows the voice and language;
-  // a picked name chip or a typed name stays as it is.
-  const followName = (voice: string, locale: string) =>
-    draft.agentName && !draft.agentNameCustom.trim()
-      ? {}
-      : { agentNameCustom: nameForVoice(draft.agentNameCustom.trim(), voice, locale) };
-  const otherVoice = draft.voice && !(VOICE_OPTIONS as readonly string[]).includes(draft.voice) ? draft.voice : null;
+  const state: AutosaveState = nameState === "saving" || pickState === "saving" ? "saving"
+    : nameState === "error" || pickState === "error" ? "error"
+    : nameState === "saved" || pickState === "saved" ? "saved" : "idle";
+  const spoken = spokenAgentName(name.trim(), voice, locale);
 
   return (
-    <VoiceCardShell card="agent" icon={<Mic size={17} />} title={t("voiceTab:agent.title")}>
-      <p style={helpStyle}>{t("voiceTab:agent.help")}</p>
-      <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+    <VoiceCardShell card="agent" icon={<Mic size={17} />} title={t("voiceTab:agent.title")} action={<AutosaveBadge state={state} />}>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))", gap: 16 }}>
         <div>
           <FieldLabel>{t("voiceTab:agent.name")}</FieldLabel>
-          {canEdit ? (
-            <>
-              <div style={{ display: "flex", gap: 9, flexWrap: "wrap", marginBottom: 10 }}>
-                {withCurrent(AGENT_NAMES, draft.agentName).map((n) => (
-                  <Chip key={n} selected={draft.agentName === n && !draft.agentNameCustom.trim()} onClick={() => set({ agentName: n, agentNameCustom: "" })} label={agentLabel(n)} />
-                ))}
-              </div>
-              <input
-                value={draft.agentNameCustom}
-                onChange={(e) => set({ agentNameCustom: e.target.value })}
-                placeholder={cp("agentName.customPlaceholder")}
-                className="neu-inset-crisp"
-                style={inputStyle}
-              />
-            </>
-          ) : <ReadOnlyValue value={effectiveName} />}
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder={cp("agentName.customPlaceholder")}
+            className="neu-inset-crisp"
+            style={inputStyle}
+            aria-label={t("voiceTab:agent.name")}
+            data-testid="voice-agent-name"
+          />
+          {spoken && spoken !== name.trim() && (
+            <p style={{ ...helpStyle, margin: "6px 0 0" }} data-testid="voice-spoken-name">{t("voiceTab:agent.spokenAs", { name: spoken })}</p>
+          )}
         </div>
-
         <div>
           <FieldLabel>{cp("voiceSound.voiceLabel")}</FieldLabel>
-          {canEdit ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              {VOICE_GROUPS.map(({ gender, options }) => (
-                <div key={gender}>
-                  <p style={{ ...helpStyle, margin: "0 0 6px" }}>{cp(`agentName.${gender}`)}</p>
-                  <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
-                    {[...options, ...(gender === "female" && otherVoice ? [otherVoice] : [])].map((k) => (
-                      <Chip key={k} selected={draft.voice === k} onClick={() => set({ voice: k, ...followName(k, draft.locale) })} label={k.charAt(0).toUpperCase() + k.slice(1)} />
-                    ))}
-                  </div>
+          <VoicePicker value={voice} onChange={(v) => { void pick({ voice: v }); }} />
+        </div>
+        <div>
+          <FieldLabel>{cp("voiceSound.localeLabel")}</FieldLabel>
+          <select
+            value={locale}
+            onChange={(e) => { void pick({ locale: e.target.value }); }}
+            className="neu-inset-crisp"
+            style={inputStyle}
+            aria-label={cp("voiceSound.localeLabel")}
+            data-testid="voice-locale"
+          >
+            {!locale && <option value="">{"–"}</option>}
+            {withCurrent(VOICE_LOCALES, locale).map((k) => (
+              <option key={k} value={k}>{(VOICE_LOCALES as readonly string[]).includes(k) ? cp(`voiceSound.locales.${k}`) : k}</option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <Popover onOpenChange={(o) => { void closePronunciation(o); }}>
+          <PopoverTrigger asChild>
+            <button type="button" className="la-btn la-btn--soft" data-testid="voice-pronunciation-open">
+              {serverRows.length ? t("voiceTab:agent.pronunciationCount", { count: serverRows.length }) : t("voiceTab:agent.pronunciationAdd")}
+              <ChevronDown size={13} />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="start" collisionPadding={12} style={{ width: "min(92vw, 460px)", maxHeight: "min(var(--radix-popover-content-available-height), 560px)", overflowY: "auto" }}>
+            <p style={helpStyle}>{cp("voicePronunciation.help")}</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {shownRows.map((row, i) => (
+                <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <input
+                    value={row.word}
+                    onChange={(e) => setRows(shownRows.map((r, idx) => (idx === i ? { ...r, word: e.target.value } : r)))}
+                    placeholder={cp("voicePronunciation.wordPlaceholder")}
+                    className="neu-inset-crisp"
+                    style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+                  />
+                  <input
+                    value={row.sayAs}
+                    onChange={(e) => setRows(shownRows.map((r, idx) => (idx === i ? { ...r, sayAs: e.target.value } : r)))}
+                    placeholder={cp("voicePronunciation.sayAsPlaceholder")}
+                    className="neu-inset-crisp"
+                    style={{ ...inputStyle, flex: 1, minWidth: 0 }}
+                  />
+                  <button type="button" onClick={() => setRows(shownRows.filter((_, idx) => idx !== i))} className="la-btn la-btn--soft la-btn--icon" title={cp("voicePronunciation.remove")} style={{ width: 34, height: 34, flexShrink: 0 }}>
+                    <X size={13} />
+                  </button>
                 </div>
               ))}
             </div>
-          ) : <ReadOnlyValue value={draft.voice} />}
-          {draft.voice && (VOICE_OPTIONS as readonly string[]).includes(draft.voice) && (
-            <p style={{ ...helpStyle, margin: "8px 0 0" }}>{cp(`voiceSound.voices.${draft.voice}`)}</p>
-          )}
-        </div>
-
-        <div>
-          <FieldLabel>{cp("voiceSound.localeLabel")}</FieldLabel>
-          {canEdit ? (
-            <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
-              {withCurrent(VOICE_LOCALES, draft.locale).map((k) => (
-                <Chip key={k} selected={draft.locale === k} onClick={() => set({ locale: k, ...followName(draft.voice, k) })} label={(VOICE_LOCALES as readonly string[]).includes(k) ? cp(`voiceSound.locales.${k}`) : k} />
-              ))}
-            </div>
-          ) : <ReadOnlyValue value={draft.locale} />}
-        </div>
-
-        <div>
-          <FieldLabel>{cp("voiceSound.greetingLabel")}</FieldLabel>
-          {canEdit ? (
-            <>
-              <p style={helpStyle}>{cp("voiceSound.greetingHelp")}</p>
-              <textarea
-                value={draft.greeting}
-                onChange={(e) => set({ greeting: e.target.value })}
-                placeholder={cp("voiceSound.greetingPlaceholder")}
-                rows={3}
-                className="neu-inset-crisp"
-                style={{ ...inputStyle, padding: "11px 13px", resize: "vertical", lineHeight: 1.5 }}
-              />
-            </>
-          ) : <ReadOnlyValue value={draft.greeting} />}
-        </div>
-
-        <div>
-          <FieldLabel>{t("voiceTab:agent.pronunciation")}</FieldLabel>
-          {canEdit ? (
-            <>
-              <p style={helpStyle}>{cp("voicePronunciation.help")}</p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-                {rows.map((row, i) => (
-                  <div key={i} style={{ display: "flex", gap: 8, alignItems: "center" }}>
-                    <input
-                      value={row.word}
-                      onChange={(e) => setRows(rows.map((r, idx) => (idx === i ? { ...r, word: e.target.value } : r)))}
-                      placeholder={cp("voicePronunciation.wordPlaceholder")}
-                      className="neu-inset-crisp"
-                      style={{ ...inputStyle, flex: 1, minWidth: 0 }}
-                    />
-                    <input
-                      value={row.sayAs}
-                      onChange={(e) => setRows(rows.map((r, idx) => (idx === i ? { ...r, sayAs: e.target.value } : r)))}
-                      placeholder={cp("voicePronunciation.sayAsPlaceholder")}
-                      className="neu-inset-crisp"
-                      style={{ ...inputStyle, flex: 1, minWidth: 0 }}
-                    />
-                    <button type="button" onClick={() => setRows(rows.filter((_, idx) => idx !== i))} className="la-btn la-btn--soft la-btn--icon" title={cp("voicePronunciation.remove")} style={{ width: 34, height: 34, flexShrink: 0 }}>
-                      <X size={13} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-              <button type="button" className="la-btn la-btn--inset" style={{ marginTop: 12 }} onClick={() => setRows([...rows, { word: "", sayAs: "" }])}>
-                <Plus size={13} />{cp("voicePronunciation.add")}
-              </button>
-            </>
-          ) : draft.pronunciation.length ? (
-            <ReadOnlyValue value={draft.pronunciation.map((r) => `${r.word} → ${r.sayAs}`).join("\n")} />
-          ) : <ReadOnlyValue />}
-        </div>
-
-        <div>
-          <FieldLabel>{t("voiceTab:agent.intake")}</FieldLabel>
-          {canEdit ? (
-            <>
-              <p style={helpStyle}>{cp("voiceIntake.help")}</p>
-              <IntakeEditor value={draft.intake} onChange={(intake) => set({ intake })} />
-            </>
-          ) : <ReadOnlyValue value={draft.intake} />}
-        </div>
-
-        <div>
-          <FieldLabel>{cp("voiceAfterHours.short")}</FieldLabel>
-          {canEdit ? (
-            <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
-              {AFTER_HOURS.map((k) => (
-                <Chip key={k} selected={draft.afterHours === k} onClick={() => set({ afterHours: k })} label={cp(`voiceAfterHours.options.${k}.label`)} />
-              ))}
-            </div>
-          ) : <ReadOnlyValue value={draft.afterHours ? cp(`voiceAfterHours.options.${draft.afterHours}.label`) : ""} />}
-          {draft.afterHours && (
-            <p style={{ ...helpStyle, margin: "8px 0 0" }}>{cp(`voiceAfterHours.options.${draft.afterHours}.help`)}</p>
-          )}
-        </div>
+            <button type="button" className="la-btn la-btn--inset" style={{ marginTop: 12 }} onClick={() => setRows([...shownRows, { word: "", sayAs: "" }])}>
+              <Plus size={13} />{cp("voicePronunciation.add")}
+            </button>
+            <p style={{ ...helpStyle, margin: "12px 0 0" }}>{t("voiceTab:agent.pronunciationAutosave")}</p>
+          </PopoverContent>
+        </Popover>
       </div>
-      {canEdit && <SaveRow dirty={dirty} saving={saving} error={failed ? t("voiceTab:common.saveFailed") : null} onSave={submit} onReset={reset} />}
     </VoiceCardShell>
   );
 }

@@ -1,13 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2 } from "lucide-react";
 import { MonoLabel } from "@/features/voice/components/atoms";
-import { useVoiceCall, type VoiceCallDetail as Detail } from "../api/voiceCallsApi";
+import { Switch } from "@/components/ui/switch";
+import { useSetCallTest, useVoiceCall, useVoiceCapabilities, type VoiceCallDetail as Detail } from "../api/voiceCallsApi";
 import { maskSpoken } from "../maskIdentity";
 import { maskCaller } from "./bits";
 import { CallHeader } from "./CallHeader";
 import { CallConversation } from "./CallConversation";
 import { CallerHistory, CallSidebar, type CallerContext } from "./CallSidebar";
+import { useMarkVisited } from "@/features/home/onboarding/useOnboarding";
+import { CallDetailSkeleton, DETAIL_MAX_WIDTH, SIDEBAR_WIDTH } from "./VoiceCallsSkeleton";
 
 function useNarrow(): boolean {
   const [narrow, setNarrow] = useState(typeof window !== "undefined" && window.innerWidth < 1100);
@@ -55,17 +57,20 @@ function StatusPane({ caller, narrow, children }: { caller?: CallerContext; narr
       {center}
       <div
         className="neu-raised"
-        style={{ width: narrow ? "auto" : 310, flexShrink: 0, minHeight: 0, borderRadius: "var(--r-card)", background: "var(--card)", overflowX: "hidden", overflowY: "auto" }}
+        style={{ width: narrow ? "auto" : SIDEBAR_WIDTH, flexShrink: 0, minHeight: 0, borderRadius: "var(--r-card)", background: "var(--card)", overflowX: "hidden", overflowY: "auto" }}
       >
-        <CallerHistory ctx={caller} />
+        <CallerHistory ctx={caller} divider={false} />
       </div>
     </div>
   );
 }
 
 /**
- * One header, the transcript filling the middle, a sidebar on the right.
- * Below 1100px the whole pane scrolls as one column instead.
+ * Laid out like the Chats page: one header, the booking, summary and details
+ * panel on the left, the conversation with its audio player on the right,
+ * all in a centered column capped at DETAIL_MAX_WIDTH (the Chats width) so
+ * nothing stretches on a wide screen. Below 1100px the whole pane scrolls as
+ * one column instead (panel first).
  */
 export function VoiceCallDetail({ callId, masked, caller }: Props) {
   const { t } = useTranslation("voiceCalls");
@@ -74,29 +79,44 @@ export function VoiceCallDetail({ callId, masked, caller }: Props) {
   const rawCall = data && data.callId === callId ? data : data === null ? null : undefined;
   const call = useMemo(() => (rawCall ? maskDetail(rawCall, masked) : rawCall), [rawCall, masked]);
   const narrow = useNarrow();
+  // The server grants `demo` only to the Owner who is not impersonating.
+  const isOwner = useVoiceCapabilities().data?.demo === true;
+  const setTest = useSetCallTest();
+  useMarkVisited("call"); // Getting-started checklist (clients only)
 
   if (isError && !call) {
     return <StatusPane caller={caller} narrow={narrow}><MonoLabel>{t("callLoadError")}</MonoLabel></StatusPane>;
   }
   if (isLoading || call === undefined) {
-    return (
-      <StatusPane caller={caller} narrow={narrow}>
-        <Loader2 size={18} className="animate-spin" style={{ color: "var(--mute)" }} />
-      </StatusPane>
-    );
+    // The Callers view keeps the person's real call list up while the next call loads.
+    const history = caller && caller.calls.length > 0 ? <CallerHistory ctx={caller} divider={false} /> : undefined;
+    return <CallDetailSkeleton narrow={narrow} sidebar={history} />;
   }
   if (!call) {
     return <StatusPane caller={caller} narrow={narrow}><MonoLabel>{t("notFound")}</MonoLabel></StatusPane>;
   }
 
   return (
-    <div style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: "column", gap: 14, overflowY: narrow ? "auto" : "hidden", overflowX: "hidden" }}>
-      <CallHeader call={call} narrow={narrow} caller={caller} />
-      <div style={{ flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: narrow ? "column" : "row", gap: 14 }}>
-        <div style={{ flex: narrow ? "0 0 auto" : 1, minWidth: 0, minHeight: narrow ? 760 : 0, display: "flex", overflow: "hidden", order: narrow ? 2 : 0 }}>
-          <CallConversation key={call.callId} call={call} />
+    <div style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: "column", overflowY: narrow ? "auto" : "hidden", overflowX: "hidden" }}>
+      <div style={{ width: "100%", maxWidth: DETAIL_MAX_WIDTH, margin: "0 auto", flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14 }}>
+        {isOwner && (
+          <label className="flex items-center gap-2 self-end text-[12px] text-muted-foreground" data-testid="voice-test-toggle">
+            <span>{t("testData.label")}</span>
+            <Switch
+              checked={call.isTest}
+              disabled={setTest.isPending}
+              onCheckedChange={(isTest) => setTest.mutate({ callId: call.callId, isTest })}
+              aria-label={t("testData.label")}
+            />
+          </label>
+        )}
+        <CallHeader call={call} narrow={narrow} caller={caller} />
+        <div style={{ flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: narrow ? "column" : "row", gap: 14 }}>
+          <CallSidebar call={call} narrow={narrow} caller={caller} />
+          <div style={{ flex: narrow ? "0 0 auto" : 1, minWidth: 0, minHeight: narrow ? 760 : 0, display: "flex", flexDirection: "column", order: narrow ? 2 : 0 }}>
+            <CallConversation key={call.callId} call={call} />
+          </div>
         </div>
-        <CallSidebar call={call} narrow={narrow} caller={caller} />
       </div>
     </div>
   );

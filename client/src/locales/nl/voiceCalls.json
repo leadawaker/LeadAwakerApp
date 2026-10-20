@@ -122,7 +122,10 @@
     "callback": "Terugbellen",
     "transferred": "Doorverbonden",
     "hungUp": "Opgehangen",
-    "other": "Gesprek"
+    "other": "Chat"
+  },
+  "testData": {
+    "label": "Testdata (verborgen voor de klant)"
   },
   "presenting": {
     "label": "Presenteren",
@@ -152,12 +155,11 @@
     "lead": "Lead",
     "booked": "Geboekt",
     "callBack": "Terugbellen",
-    "whatsapp": "WhatsApp",
+    "whatsapp": "Bericht via WhatsApp",
     "callAnyway": "Toch bellen",
     "warnDnd": "Deze persoon wil niet benaderd worden.",
     "warnOutOfHours": "Het is nu buiten de openingstijden van dit account.",
     "noNumber": "Geen telefoonnummer bekend",
-    "calledBackBy": "Teruggebeld door {{name}}, {{when}}",
     "hubspot": {
       "push": "Naar HubSpot",
       "pushing": "Bezig met versturen",
@@ -170,6 +172,27 @@
     "empty": "Kies een beller om de gesprekken te zien.",
     "back": "Terug naar personen",
     "dismiss": "Sluiten",
-    "search": "Zoek bellers…"
+    "search": "Zoek bellers…",
+    "showMore": "Meer tonen ({{count}})",
+    "showLess": "Minder tonen",
+    "openLead": "Open de lead",
+    "callNumber": "Gesprek {{n}}",
+    "whatsappHint": "Opent een WhatsApp-chat met deze persoon",
+    "lastAttempt": {
+      "phone": "Terugbellen gestart door {{name}}, {{when}}",
+      "whatsapp": "WhatsApp geopend door {{name}}, {{when}}",
+      "someone": "iemand",
+      "hint": "Vastgelegd zodra op de knop wordt gedrukt. Of het gesprek of bericht echt plaatsvond, wordt niet bijgehouden."
+    }
+  },
+  "summaryGroups": {
+    "wanted": "Wat ze wilden",
+    "booked": "Ingepland",
+    "followUp": "Opvolging",
+    "other": "Ook genoemd"
+  },
+  "duration": {
+    "minSec": "{{m}}m {{s}}s",
+    "sec": "{{s}}s"
   }
 }

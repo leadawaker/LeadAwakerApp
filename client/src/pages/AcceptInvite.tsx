@@ -1,14 +1,18 @@
 import { motion } from "framer-motion";
+import { resolveLandingPath } from "@/lib/landingPage";
 import { Lock, User, Eye, EyeOff, ArrowRight, Loader2, AlertCircle, Globe, Languages } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useState, useEffect } from "react";
 import { API_BASE } from "@/lib/apiUtils";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
+import i18n from "@/i18n";
 
 const params = new URLSearchParams(window.location.search);
 const token = params.get("token");
 const email = params.get("email");
+const inviteLang = params.get("lang");
 
 const TIMEZONE_OPTIONS = [
   { value: "America/Sao_Paulo", label: "Sao Paulo (BRT)" },
@@ -39,6 +43,8 @@ function detectTimezone(): string {
 }
 
 function detectLanguage(): string {
+  // The invite link carries the invitee's language: it wins over the browser's.
+  if (LANGUAGE_OPTIONS.some((o) => o.value === inviteLang)) return inviteLang as string;
   try {
     const lang = navigator.language?.slice(0, 2);
     if (LANGUAGE_OPTIONS.some((o) => o.value === lang)) return lang;
@@ -49,6 +55,7 @@ function detectLanguage(): string {
 }
 
 export default function AcceptInvite() {
+  const { t } = useTranslation("users");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -59,6 +66,10 @@ export default function AcceptInvite() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, setLocation] = useLocation();
+
+  useEffect(() => {
+    if (i18n.language !== language) i18n.changeLanguage(language);
+  }, [language]);
 
   // If there's a valid invite token, always show the form (even if another session is active)
   // Only redirect if there's NO invite token and the user is already logged in
@@ -72,15 +83,15 @@ export default function AcceptInvite() {
     e.preventDefault();
 
     if (!fullName.trim()) {
-      setError("Please enter your full name.");
+      setError(t("acceptInvite.errName"));
       return;
     }
     if (password.length < 6) {
-      setError("Password must be at least 6 characters.");
+      setError(t("acceptInvite.errPasswordShort"));
       return;
     }
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(t("acceptInvite.errPasswordMismatch"));
       return;
     }
 
@@ -103,7 +114,7 @@ export default function AcceptInvite() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.message || "Failed to activate account. Please try again.");
+        setError(data.message || t("acceptInvite.errFailed"));
         return;
       }
 
@@ -119,12 +130,10 @@ export default function AcceptInvite() {
         }
       }
 
-      // Redirect to CRM (tour will start automatically)
-      const isAgency = data.user?.role === "Owner" || data.user?.role === "Admin";
-      const dest = "/platform/campaigns";
-      window.location.href = dest;
+      try { localStorage.setItem("leadawaker_lang", language); } catch {}
+      window.location.href = resolveLandingPath();
     } catch {
-      setError("Network error. Please try again.");
+      setError(t("acceptInvite.errNetwork"));
     } finally {
       setIsLoading(false);
     }
@@ -138,9 +147,9 @@ export default function AcceptInvite() {
           <div className="w-16 h-16 rounded-full bg-orange-100 flex items-center justify-center mx-auto mb-4">
             <AlertCircle className="w-8 h-8 text-orange-500" />
           </div>
-          <h2 className="text-2xl font-bold mb-3">Invalid Invite Link</h2>
+          <h2 className="text-2xl font-bold mb-3">{t("acceptInvite.invalidTitle")}</h2>
           <p className="text-muted-foreground">
-            This invite link is missing required information. Please check your email for the correct link or contact your administrator.
+            {t("acceptInvite.invalidBody")}
           </p>
         </div>
       </div>
@@ -157,16 +166,16 @@ export default function AcceptInvite() {
       >
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <img src="/4.SideLogo.svg" alt="Lead Awaker" className="h-10 object-contain" />
+          <img src="/premium/logo-v2.svg" alt="Lead Awaker" className="h-10 object-contain" style={{ background: "var(--logo-plate)", borderRadius: 10, padding: "2px 8px" }} />
         </div>
 
         {/* Card */}
         <div className="bg-white dark:bg-card rounded-2xl shadow-xl border border-slate-200 dark:border-border/30 p-8">
           <h1 className="text-2xl font-bold font-heading tracking-tight text-center mb-2">
-            Welcome to LeadAwaker
+            {t("acceptInvite.welcome")}
           </h1>
           <p className="text-sm text-muted-foreground text-center mb-6">
-            Setting up account for <strong className="text-foreground">{email}</strong>
+            {t("acceptInvite.settingUp")} <strong className="text-foreground">{email}</strong>
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -178,12 +187,12 @@ export default function AcceptInvite() {
 
             {/* Full Name */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Full Name</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{t("acceptInvite.fullName")}</label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Your full name"
+                  placeholder={t("acceptInvite.fullNamePlaceholder")}
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
                   className="pl-10 h-11"
@@ -197,12 +206,12 @@ export default function AcceptInvite() {
 
             {/* Password */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Password</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{t("acceptInvite.password")}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder="At least 6 characters"
+                  placeholder={t("acceptInvite.passwordPlaceholder")}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10 pr-10 h-11"
@@ -223,12 +232,12 @@ export default function AcceptInvite() {
 
             {/* Confirm Password */}
             <div>
-              <label className="block text-sm font-medium text-foreground mb-1.5">Confirm Password</label>
+              <label className="block text-sm font-medium text-foreground mb-1.5">{t("acceptInvite.confirmPassword")}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
                   type={showConfirm ? "text" : "password"}
-                  placeholder="Re-enter your password"
+                  placeholder={t("acceptInvite.confirmPlaceholder")}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   className="pl-10 pr-10 h-11"
@@ -250,7 +259,7 @@ export default function AcceptInvite() {
             {/* Timezone + Language row */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Timezone</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">{t("acceptInvite.timezone")}</label>
                 <div className="relative">
                   <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
                   <select
@@ -266,7 +275,7 @@ export default function AcceptInvite() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-foreground mb-1.5">Language</label>
+                <label className="block text-sm font-medium text-foreground mb-1.5">{t("acceptInvite.language")}</label>
                 <div className="relative">
                   <Languages className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none z-10" />
                   <select
@@ -291,18 +300,18 @@ export default function AcceptInvite() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Activating...
+                  {t("acceptInvite.activating")}
                 </>
               ) : (
                 <>
-                  Get Started
+                  {t("acceptInvite.getStarted")}
                   <ArrowRight className="ml-2 w-5 h-5" />
                 </>
               )}
             </Button>
 
             <p className="text-[11px] text-muted-foreground text-center">
-              You can change these settings later in your profile.
+              {t("acceptInvite.changeLater")}
             </p>
           </form>
         </div>

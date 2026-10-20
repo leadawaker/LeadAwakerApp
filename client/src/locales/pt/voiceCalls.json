@@ -122,7 +122,10 @@
     "callback": "Retorno",
     "transferred": "Transferida",
     "hungUp": "Desligou",
-    "other": "Conversa"
+    "other": "Chat"
+  },
+  "testData": {
+    "label": "Dados de teste (ocultos do cliente)"
   },
   "presenting": {
     "label": "Apresentando",
@@ -152,12 +155,11 @@
     "lead": "Lead",
     "booked": "Agendado",
     "callBack": "Retornar ligação",
-    "whatsapp": "WhatsApp",
+    "whatsapp": "Mensagem no WhatsApp",
     "callAnyway": "Ligar mesmo assim",
     "warnDnd": "Esta pessoa pediu para não ser contatada.",
     "warnOutOfHours": "Agora está fora do horário de atendimento desta conta.",
     "noNumber": "Nenhum telefone cadastrado",
-    "calledBackBy": "Retornado por {{name}}, {{when}}",
     "hubspot": {
       "push": "Enviar para o HubSpot",
       "pushing": "Enviando",
@@ -170,6 +172,27 @@
     "empty": "Selecione uma pessoa para ver as ligações.",
     "back": "Voltar para as pessoas",
     "dismiss": "Fechar",
-    "search": "Buscar pessoas…"
+    "search": "Buscar pessoas…",
+    "showMore": "Mostrar mais ({{count}})",
+    "showLess": "Mostrar menos",
+    "openLead": "Abrir o lead",
+    "callNumber": "Ligação {{n}}",
+    "whatsappHint": "Abre uma conversa no WhatsApp com esta pessoa",
+    "lastAttempt": {
+      "phone": "Retorno iniciado por {{name}}, {{when}}",
+      "whatsapp": "WhatsApp aberto por {{name}}, {{when}}",
+      "someone": "alguém",
+      "hint": "Registrado quando o botão é pressionado. Não é registrado se a ligação ou mensagem aconteceu de fato."
+    }
+  },
+  "summaryGroups": {
+    "wanted": "O que queriam",
+    "booked": "Agendado",
+    "followUp": "Próximo passo",
+    "other": "Também mencionado"
+  },
+  "duration": {
+    "minSec": "{{m}}min {{s}}s",
+    "sec": "{{s}}s"
   }
 }

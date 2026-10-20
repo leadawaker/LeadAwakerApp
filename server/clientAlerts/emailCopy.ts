@@ -6,7 +6,7 @@
 export type EmailLang = "en" | "nl" | "pt";
 export type AlertEmailType =
   | "appointment_booked" | "appointment_rescheduled" | "appointment_cancelled"
-  | "callback_requested" | "lead_needs_reply";
+  | "callback_requested" | "lead_needs_reply" | "new_photo";
 
 interface Copy {
   cta: string;
@@ -16,7 +16,21 @@ interface Copy {
   unknown: string;
   labels: {
     customer: string; phone: string; email: string; when: string; oldWhen: string;
-    source: string; about: string; reason: string; lastMessage: string; since: string; summary: string;
+    source: string; callbackPhone: string; about: string; reason: string; lastMessage: string; since: string; summary: string;
+    photo: string; description: string; caption: string; channel: string;
+  };
+  /** Shown instead of the photo when it could not be attached (too large, or a test). */
+  photoMissing: string;
+  /** Under the photo when it is attached in full size. */
+  photoAttached: string;
+  /** A bundle of 2+ photos from one lead (sent 5 minutes after the first). */
+  photoBundle: {
+    subject: (name: string, n: number) => string;
+    heading: string;
+    intro: (account: string, n: number) => string;
+    attached: string;
+    /** Photos left out of the email (size caps): still in Lead Awaker. */
+    more: (n: number) => string;
   };
   subject: Record<AlertEmailType, (name: string, time: string, phone: string) => string> & {
     daily_recap: (account: string, date: string) => string;
@@ -61,7 +75,17 @@ const EN: Copy = {
   unknown: "not given",
   labels: {
     customer: "Customer", phone: "Phone", email: "Email", when: "Date", oldWhen: "Was",
-    source: "Booked through", about: "About", reason: "Reason", lastMessage: "Last message", since: "Since", summary: "Summary",
+    source: "Booked through", callbackPhone: "Call back on", about: "About", reason: "Reason", lastMessage: "Last message", since: "Since", summary: "Summary",
+    photo: "Photo", description: "What the photo shows", caption: "Their message", channel: "Sent through",
+  },
+  photoMissing: "Open Lead Awaker to see the photo.",
+  photoAttached: "The full-size photo is attached to this email.",
+  photoBundle: {
+    subject: (name, n) => `${n} new photos from ${name}`,
+    heading: "New photos",
+    intro: (a, n) => `A customer sent ${a} ${n} photos in the chat.`,
+    attached: "The full-size photos are attached to this email.",
+    more: (n) => (n === 1 ? "1 more photo is in Lead Awaker." : `${n} more photos are in Lead Awaker.`),
   },
   subject: {
     daily_recap: (a, d) => `Daily recap for ${a}, ${d}`,
@@ -70,10 +94,12 @@ const EN: Copy = {
     appointment_cancelled: (n, t) => `Appointment cancelled: ${n}, ${t}`,
     callback_requested: (n, _t, p) => `Call back: ${n} (${p})`,
     lead_needs_reply: (n) => `Reply needed: ${n}`,
+    new_photo: (n) => `New photo from ${n}`,
   },
   heading: {
     daily_recap: "Daily recap", appointment_booked: "New appointment", appointment_rescheduled: "Appointment moved",
     appointment_cancelled: "Appointment cancelled", callback_requested: "Callback request", lead_needs_reply: "Reply needed",
+    new_photo: "New photo",
   },
   intro: {
     appointment_booked: (a) => `A new appointment was booked for ${a}.`,
@@ -81,6 +107,7 @@ const EN: Copy = {
     appointment_cancelled: (a) => `An appointment for ${a} was cancelled by the customer.`,
     callback_requested: (a) => `Someone who called ${a} would like a call back. Please call them back as soon as you can.`,
     lead_needs_reply: (a) => `A conversation for ${a} needs a reply from your team. The assistant has paused this chat until someone answers.`,
+    new_photo: (a) => `A customer sent ${a} a photo in the chat.`,
   },
   notes: { lead_needs_reply: "The assistant has paused this chat until someone answers." },
   recap: {
@@ -126,7 +153,17 @@ const NL: Copy = {
   unknown: "niet genoemd",
   labels: {
     customer: "Klant", phone: "Telefoon", email: "E-mail", when: "Datum", oldWhen: "Was",
-    source: "Geboekt via", about: "Onderwerp", reason: "Reden", lastMessage: "Laatste bericht", since: "Sinds", summary: "Samenvatting",
+    source: "Geboekt via", callbackPhone: "Terugbellen op", about: "Onderwerp", reason: "Reden", lastMessage: "Laatste bericht", since: "Sinds", summary: "Samenvatting",
+    photo: "Foto", description: "Wat er op de foto staat", caption: "Hun bericht", channel: "Gestuurd via",
+  },
+  photoMissing: "Open Lead Awaker om de foto te bekijken.",
+  photoAttached: "De foto zit op ware grootte als bijlage bij deze e-mail.",
+  photoBundle: {
+    subject: (name, n) => `${n} nieuwe foto's van ${name}`,
+    heading: "Nieuwe foto's",
+    intro: (a, n) => `Een klant heeft ${a} ${n} foto's gestuurd in de chat.`,
+    attached: "De foto's zitten op ware grootte als bijlage bij deze e-mail.",
+    more: (n) => (n === 1 ? "Nog 1 foto staat in Lead Awaker." : `Nog ${n} foto's staan in Lead Awaker.`),
   },
   subject: {
     daily_recap: (a, d) => `Dagoverzicht ${a}, ${d}`,
@@ -135,10 +172,12 @@ const NL: Copy = {
     appointment_cancelled: (n, t) => `Afspraak geannuleerd: ${n}, ${t}`,
     callback_requested: (n, _t, p) => `Terugbelverzoek: ${n} (${p})`,
     lead_needs_reply: (n) => `Reactie nodig: ${n}`,
+    new_photo: (n) => `Nieuwe foto van ${n}`,
   },
   heading: {
     daily_recap: "Dagoverzicht", appointment_booked: "Nieuwe afspraak", appointment_rescheduled: "Afspraak verzet",
     appointment_cancelled: "Afspraak geannuleerd", callback_requested: "Terugbelverzoek", lead_needs_reply: "Reactie nodig",
+    new_photo: "Nieuwe foto",
   },
   intro: {
     appointment_booked: (a) => `Er is een nieuwe afspraak ingepland voor ${a}.`,
@@ -146,6 +185,7 @@ const NL: Copy = {
     appointment_cancelled: (a) => `Een afspraak voor ${a} is door de klant geannuleerd.`,
     callback_requested: (a) => `Iemand die ${a} belde wil graag teruggebeld worden. Bel diegene zo snel mogelijk terug.`,
     lead_needs_reply: (a) => `Een gesprek voor ${a} heeft een reactie van jullie team nodig. De assistent heeft deze chat gepauzeerd tot iemand antwoordt.`,
+    new_photo: (a) => `Een klant heeft ${a} een foto gestuurd in de chat.`,
   },
   notes: { lead_needs_reply: "De assistent heeft deze chat gepauzeerd tot iemand antwoordt." },
   recap: {
@@ -191,7 +231,17 @@ const PT: Copy = {
   unknown: "não informado",
   labels: {
     customer: "Cliente", phone: "Telefone", email: "E-mail", when: "Data", oldWhen: "Antes",
-    source: "Agendado por", about: "Assunto", reason: "Motivo", lastMessage: "Última mensagem", since: "Desde", summary: "Resumo",
+    source: "Agendado por", callbackPhone: "Retornar para", about: "Assunto", reason: "Motivo", lastMessage: "Última mensagem", since: "Desde", summary: "Resumo",
+    photo: "Foto", description: "O que a foto mostra", caption: "Mensagem", channel: "Enviada por",
+  },
+  photoMissing: "Abra o Lead Awaker para ver a foto.",
+  photoAttached: "A foto em tamanho original está anexada a este e-mail.",
+  photoBundle: {
+    subject: (name, n) => `${n} novas fotos de ${name}`,
+    heading: "Novas fotos",
+    intro: (a, n) => `Um cliente enviou ${n} fotos para ${a} no chat.`,
+    attached: "As fotos em tamanho original estão anexadas a este e-mail.",
+    more: (n) => (n === 1 ? "Mais 1 foto está no Lead Awaker." : `Mais ${n} fotos estão no Lead Awaker.`),
   },
   subject: {
     daily_recap: (a, d) => `Resumo do dia de ${a}, ${d}`,
@@ -200,10 +250,12 @@ const PT: Copy = {
     appointment_cancelled: (n, t) => `Agendamento cancelado: ${n}, ${t}`,
     callback_requested: (n, _t, p) => `Retornar ligação: ${n} (${p})`,
     lead_needs_reply: (n) => `Resposta necessária: ${n}`,
+    new_photo: (n) => `Nova foto de ${n}`,
   },
   heading: {
     daily_recap: "Resumo do dia", appointment_booked: "Novo agendamento", appointment_rescheduled: "Agendamento remarcado",
     appointment_cancelled: "Agendamento cancelado", callback_requested: "Pedido de retorno", lead_needs_reply: "Resposta necessária",
+    new_photo: "Nova foto",
   },
   intro: {
     appointment_booked: (a) => `Um novo horário foi agendado para ${a}.`,
@@ -211,6 +263,7 @@ const PT: Copy = {
     appointment_cancelled: (a) => `Um agendamento de ${a} foi cancelado pelo cliente.`,
     callback_requested: (a) => `Uma pessoa que ligou para ${a} pediu um retorno. Retorne a ligação assim que puder.`,
     lead_needs_reply: (a) => `Uma conversa de ${a} precisa de uma resposta da sua equipe. A assistente pausou esta conversa até alguém responder.`,
+    new_photo: (a) => `Um cliente enviou uma foto para ${a} no chat.`,
   },
   notes: { lead_needs_reply: "A assistente pausou esta conversa até alguém responder." },
   recap: {

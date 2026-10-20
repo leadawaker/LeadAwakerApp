@@ -11,6 +11,7 @@ import { DayChart } from "../components/DayChart";
 import { EmptyState } from "../components/EmptyState";
 import banner from "@/assets/home/reactivation.webp";
 import { HomeBanner } from "../components/HomeBanner";
+import { ReactivationLivePanels } from "../components/ReactivationLivePanels";
 import { StatRow } from "../components/StatRow";
 import { rateOf, trendOf } from "../lib/homeFormat";
 import type { HomeTabProps } from "./tabTypes";
@@ -81,6 +82,7 @@ export default function ReactivationTab({ scope }: HomeTabProps) {
           sub: data && cost == null ? t("reactivation.tiles.costNone") : undefined,
         },
       ]} />
+      <ReactivationLivePanels scope={{ ...scope, campaignId }} />
       <div className="grid grid-cols-1 items-stretch gap-5 xl:grid-cols-2">
         <PanelShell>
           <SectionHead title={t("reactivation.perDay")} />

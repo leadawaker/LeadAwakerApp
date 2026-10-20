@@ -49,6 +49,24 @@ const KEY_RE = /^wk_[A-Za-z0-9]{24}$/;
 // Generated in the browser, so it is untrusted input and gets a strict shape.
 const VISITOR_RE = /^[A-Za-z0-9]{8,40}$/;
 
+/** The visitor's current page as the engine may see it: an http(s) address
+ *  with no query string or fragment, a title and an optional car name, each
+ *  clipped. Anything else becomes undefined, so the turn goes without it. */
+function widgetPage(raw: unknown): { url: string; title: string; car: string } | undefined {
+  if (!raw || typeof raw !== "object") return undefined;
+  const r = raw as Record<string, unknown>;
+  let url = "";
+  try {
+    const u = new URL(String(r.url || ""));
+    if (u.protocol !== "https:" && u.protocol !== "http:") return undefined;
+    url = (u.origin + u.pathname).slice(0, 300);
+  } catch {
+    return undefined;
+  }
+  const clean = (v: unknown, n: number) => String(v ?? "").replace(/[\u0000-\u001f\u007f]+/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
+  return { url, title: clean(r.title, 200), car: clean(r.car, 120) };
+}
+
 /** Mint a public widget key. Prefixed so it is recognisable in a page source. */
 // The fields that make up her look. A change to any of them is copied to the
 // account's other widgets (see the PATCH route).
@@ -468,6 +486,9 @@ export function registerWidgetRoutes(app: Express) {
           // browser cannot claim a save that did not happen.
           contact: undefined,
           contactSaved: saved,
+          // The page the visitor is on, reported by the host page and so as
+          // untrusted as their typing: reshaped and clipped rather than passed on.
+          page: widgetPage(req.body?.page),
           ...(contactText ? { text: contactText } : {}),
           // Pre-resolved by Express: the engine never reads widget config, so a
           // forged account or campaign in the request body cannot reach it.

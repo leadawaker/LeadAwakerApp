@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useMarkVisited } from "@/features/home/onboarding/useOnboarding";
 import { useTranslation } from "react-i18next";
 import { Building2, Plus } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -7,6 +8,8 @@ import { MobileSheet, MobileRecede } from "@/components/crm/mobile/MobileSheet";
 import { STATUS_FILTER_OPTIONS, STATUS_I18N_KEY, GROUP_TKEYS } from "../listWidgets/accountListConstants";
 import { ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { myAccountLabelKey } from "@/components/crm/navGates";
+import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 import { useListPanelState } from "@/hooks/useListPanelState";
 import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
@@ -15,13 +18,15 @@ import { AccountsListPanel } from "./AccountsListPanel";
 import { IdentityCard } from "./IdentityCard";
 import { TabContent } from "./OverviewTab";
 import { useAccountDetailData } from "./useAccountDetailData";
-import { toAccountDetail, deriveMetrics } from "./adapters";
+import { toAccountDetail } from "./adapters";
+import { useHeaderMetrics } from "./useHeaderMetrics";
 import { AccountCreatePanel } from "../AccountCreatePanel";
 import type { NewAccountForm } from "../AccountCreateDialog";
 import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "communication", "voice", "alerts", "automations"];
+// Onboarding ("communication") has no tab: it opens from a button on Overview.
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "voice", "chat", "alerts", "automations"];
 
 interface Props {
   accounts: AccountRow[];
@@ -49,10 +54,26 @@ interface Props {
   isGroupNonDefault: boolean;
 }
 
+// A ?tab= deep link survives a remount of the workspace: if a second instance mounts
+// before the first one finished with the link, it must still open the tab. The memo is
+// cleared once the param is consumed or the user picks a tab by hand.
+let lastDeepTab: { tab: WorkspaceTab; at: number } | null = null;
+function deepLinkTab(): WorkspaceTab | null {
+  const wanted = new URLSearchParams(window.location.search).get("tab") as WorkspaceTab | null;
+  if (wanted && (ACCOUNT_TABS.includes(wanted) || wanted === "communication")) {
+    lastDeepTab = { tab: wanted, at: Date.now() };
+    return wanted;
+  }
+  return lastDeepTab && Date.now() - lastDeepTab.at < 15000 ? lastDeepTab.tab : null;
+}
+
 export function AccountsWorkspace(p: Props) {
   const { t } = useTranslation("accounts");
+  const { t: tc } = useTranslation("crm");
+  const navFacts = useClientNavFacts();
   const isNarrow = useIsMobile(1024);
   const { isAgencyUser, isAdmin, isOwner } = useWorkspace();
+  useMarkVisited("receptionist"); // Getting-started checklist (clients only)
 
   // The Automations tab is owner only: hidden for everyone else, including via ?tab=automations.
   const visibleTabs = useMemo(
@@ -60,7 +81,10 @@ export function AccountsWorkspace(p: Props) {
     [isOwner],
   );
 
-  const [tab, setTab] = useState<WorkspaceTab>("overview");
+  const [tab, setTab] = useState<WorkspaceTab>(() => {
+    const wanted = deepLinkTab();
+    return wanted === "automations" && !isOwner ? "overview" : wanted ?? "overview";
+  });
 
   // Owner-only tab: fall back to Overview if the role changes (e.g. impersonation) while it is open.
   useEffect(() => {
@@ -77,15 +101,26 @@ export function AccountsWorkspace(p: Props) {
     compactObserverRef(node);
   }, [compactObserverRef]);
 
+  // The account header sticks to the top of the detail panel. Its height is
+  // published as --ws-sticky-top so a tab's own sticky menu (Integrations,
+  // Phone, Alerts) parks just below it instead of sliding under it.
+  const [headerH, setHeaderH] = useState(0);
+  const headerObserver = useMemo(() => (typeof ResizeObserver === "undefined" ? null : new ResizeObserver((entries) => {
+    setHeaderH(Math.round(entries[0]?.contentRect.height ?? 0) + 24);
+  })), []);
+  const setHeaderNode = useCallback((node: HTMLDivElement | null) => {
+    headerObserver?.disconnect();
+    if (node) headerObserver?.observe(node);
+  }, [headerObserver]);
+  useEffect(() => () => headerObserver?.disconnect(), [headerObserver]);
+
   const account = selectedAccountResolver(p.selectedAccount, p.accounts);
   const accountId = account ? (account.Id ?? account.id ?? 0) : 0;
 
   const detailData = useAccountDetailData(accountId);
   const d = useMemo(() => (account ? toAccountDetail(account, t) : null), [account, t]);
-  const metrics = useMemo(
-    () => (account ? deriveMetrics(detailData.campaigns, detailData.contracts, detailData.team, t) : []),
-    [account, detailData.campaigns, detailData.contracts, detailData.team, t],
-  );
+  // Header figures that point at the tabs (calls, phone line, WhatsApp, alerts).
+  const metrics = useHeaderMetrics(accountId);
 
   // Reset to view mode whenever selection changes.
   useEffect(() => { setPanelMode("view"); }, [accountId]);
@@ -108,16 +143,19 @@ export function AccountsWorkspace(p: Props) {
 
   // Deep link: /platform/accounts?tab=voice opens that tab (used by the Demos
   // page's "managed in Account > Voice" link). Stripped once applied.
+  const pickTab = (k: WorkspaceTab) => { lastDeepTab = null; setTab(k); };
+
+  // The tab itself is read from the URL when the state is created. The param is
+  // stripped only once an account has loaded, so a remount before that re-reads it.
   useEffect(() => {
+    if (!accountId) return;
     const params = new URLSearchParams(window.location.search);
-    const wanted = params.get("tab") as WorkspaceTab | null;
-    if (!wanted || !visibleTabs.includes(wanted)) return;
-    setTab(wanted);
+    if (!params.has("tab")) return;
     params.delete("tab");
+    lastDeepTab = null;
     const qs = params.toString();
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [accountId]);
 
   // Publish entity data for the AI chat context.
   const publishEntity = usePublishEntityData();
@@ -146,11 +184,11 @@ export function AccountsWorkspace(p: Props) {
 
   // ── Shared mobile detail blocks (used by the client page + the agency sheet) ──
   const mobileTabSeg = (
-    <div className="la-seg la-seg--fill" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
+    <div className={`la-seg la-seg--fill${isClient ? " la-seg--touch" : ""}`} style={{ overflowX: "auto", scrollbarWidth: "none" }}>
       {visibleTabs.map((k) => (
         <button
           key={k}
-          onClick={() => setTab(k)}
+          onClick={() => pickTab(k)}
           className={`la-seg-btn${tab === k ? " on" : ""}`}
           style={{ padding: "9px 10px", fontSize: 11, letterSpacing: "0.08em", whiteSpace: "nowrap", flex: "1 0 auto" }}
           data-testid={`account-tab-${k}`}
@@ -162,7 +200,7 @@ export function AccountsWorkspace(p: Props) {
   );
   const mobileFrozenIdentity = account && d ? (
     <div className="shrink-0" style={{ padding: "12px 16px" }}>
-      <IdentityCard d={d} metrics={metrics} onSave={p.onSave} compact />
+      <IdentityCard d={d} metrics={metrics} onSave={p.onSave} compact clientView={isClient} />
     </div>
   ) : null;
   const mobileScrollData = account && d ? (
@@ -171,7 +209,7 @@ export function AccountsWorkspace(p: Props) {
         tab={tab}
         isMobile
         readOnly={!isAdmin}
-        onOpenTab={setTab}
+        onOpenTab={pickTab}
         data={{
           account, d, accountId, onSave: p.onSave,
           campaigns: detailData.campaigns,
@@ -190,19 +228,19 @@ export function AccountsWorkspace(p: Props) {
   if (isNarrow && isClient) {
     return (
       <div className="flex flex-col h-full w-full" data-testid="accounts-workspace-client">
-        {/* Topbar: "Accounts" title + the 3 tabs next to it */}
+        {/* Topbar: the page title, with the tabs on their own full-width row under it */}
         <div
           className="shrink-0"
           style={{
-            display: "flex", alignItems: "center", gap: 12,
+            display: "flex", flexDirection: "column", gap: 10,
             padding: "14px 16px 12px", borderBottom: "1px solid var(--line)", background: "var(--bg)",
             paddingTop: "max(env(safe-area-inset-top, 0px), 14px)",
           }}
         >
-          <span className="serif" style={{ fontSize: 26, color: "var(--ink)", letterSpacing: "-0.02em", flexShrink: 0 }}>
-            {t("page.title")}
+          <span className="serif" style={{ fontSize: 26, color: "var(--ink)", letterSpacing: "-0.02em" }}>
+            {tc(myAccountLabelKey(navFacts))}
           </span>
-          <div style={{ flex: 1, minWidth: 0 }}>{mobileTabSeg}</div>
+          <div style={{ minWidth: 0 }}>{mobileTabSeg}</div>
         </div>
         {account && d ? (
           <div className="flex flex-col flex-1 min-h-0">
@@ -283,7 +321,7 @@ export function AccountsWorkspace(p: Props) {
       <AccountsTopBar
         tab={tab}
         tabs={visibleTabs}
-        onTabChange={setTab}
+        onTabChange={pickTab}
         showTabs={!isNarrow}
         count={p.count}
         listPanelState={listPanelState}
@@ -344,6 +382,7 @@ export function AccountsWorkspace(p: Props) {
       </MobileSheet>
 
       <div className="flex flex-1 min-h-0">
+        {isAgencyUser && (
         <MobileRecede open={mobileSheetOpen} fill={isNarrow}>
           <AccountsListPanel
             accounts={p.accounts}
@@ -362,13 +401,14 @@ export function AccountsWorkspace(p: Props) {
             isNarrow={isNarrow}
           />
         </MobileRecede>
+        )}
 
         {/* Desktop detail panel — this div is the single scroll container; 48px h-padding keeps shadows (22.5px reach) within the clip boundary */}
         {showDetailArea && (
           <div
             ref={setDetailNode}
             className="flex-1 min-w-0 min-h-0"
-            style={{ background: "var(--bg)", padding: "0 48px 16px", overflowY: "auto" }}
+            style={{ background: "var(--bg)", padding: "0 48px 16px", overflowY: "auto", ["--ws-sticky-top" as string]: `${headerH}px` }}
           >
             {panelMode === "create" ? (
               <div style={{ maxWidth: 720, margin: "0 auto", paddingTop: 24 }}>
@@ -381,15 +421,15 @@ export function AccountsWorkspace(p: Props) {
               </div>
             ) : account && d ? (
               <div style={{ maxWidth: maxW, margin: "0 auto", width: "100%" }}>
-                <div style={{ position: "sticky", top: 0, background: "var(--bg)", zIndex: 10, paddingTop: 24 }}>
-                  <IdentityCard d={d} metrics={metrics} onSave={p.onSave} />
+                <div ref={setHeaderNode} style={{ position: "sticky", top: 0, background: "var(--bg)", zIndex: 10, paddingTop: 24 }}>
+                  <IdentityCard d={d} metrics={metrics} onSave={p.onSave} clientView={isClient} />
                 </div>
                 <div style={{ height: 32 }} />
                 <TabContent
                   tab={tab}
                   isMobile={false}
                   readOnly={!isAdmin}
-                  onOpenTab={setTab}
+                  onOpenTab={pickTab}
                   data={{
                     account, d, accountId, onSave: p.onSave,
                     campaigns: detailData.campaigns,

@@ -291,7 +291,8 @@
     "kind": {
       "layer": "Spraaklaag",
       "greeting": "Begroeting",
-      "backend": "Backend"
+      "backend": "Backend",
+      "xai": "Grok-prompt (kort)"
     }
   }
 }

@@ -26,9 +26,10 @@ import {
   PhoneCall,
   Newspaper,
   Reply,
+  HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useNotificationStream } from "@/hooks/useNotificationStream";
+import { useNotificationStream, notificationGroupKey } from "@/hooks/useNotificationStream";
 import { setPersistedSelection } from "@/hooks/usePersistedSelection";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
@@ -52,35 +53,69 @@ function isUnread(n: Notification): boolean {
 
 // ─── Icon map ──────────────────────────────────────────────────────────────
 
-const TYPE_CONFIG: Record<string, { icon: typeof Bell; color: string; bgColor: string; borderColor: string }> = {
-  // ── New granular types (from SSE backend) ──────────────────────────────
-  task_assigned:                { icon: ClipboardList,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
-  task_due_soon:                { icon: Clock,          color: "text-amber-500",          bgColor: "bg-amber-500/10",     borderColor: "border-l-amber-500" },
-  task_overdue:                 { icon: AlertTriangle,  color: "text-red-500",            bgColor: "bg-red-500/10",       borderColor: "border-l-red-500" },
-  booking_confirmed:            { icon: CalendarCheck,  color: "text-[#DA9426]",          bgColor: "bg-[#DA9426]/10",     borderColor: "border-l-[#DA9426]" },
-  booking_reminder:             { icon: Clock,          color: "text-[#DA9426]",          bgColor: "bg-[#DA9426]/10",     borderColor: "border-l-[#DA9426]" },
-  lead_responded:               { icon: MessageSquare,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
-  lead_manual_takeover:         { icon: Hand,           color: "text-orange-500",         bgColor: "bg-orange-500/10",    borderColor: "border-l-orange-500" },
-  critical_automation_failure:  { icon: AlertOctagon,   color: "text-rose-600",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-600" },
-  campaign_finished:            { icon: Flag,           color: "text-emerald-500",        bgColor: "bg-emerald-500/10",   borderColor: "border-l-emerald-500" },
-  voice_abuse:                  { icon: ShieldBan,      color: "text-rose-600",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-600" },
+// Tones map to theme tokens only, so the panel follows dark mode.
+const TONE = {
+  primary: "bg-primary/10 text-primary",
+  warn:    "bg-[var(--warn-tint)] text-[var(--warn)]",
+  danger:  "bg-destructive/10 text-destructive",
+  success: "bg-success/10 text-success",
+  muted:   "bg-muted text-muted-foreground",
+} as const;
+
+const TYPE_CONFIG: Record<string, { icon: typeof Bell; tone: keyof typeof TONE }> = {
+  // ── Granular types (from SSE backend) ──────────────────────────────────
+  task_assigned:               { icon: ClipboardList, tone: "primary" },
+  task_due_soon:               { icon: Clock,         tone: "warn" },
+  task_overdue:                { icon: AlertTriangle, tone: "danger" },
+  booking_confirmed:           { icon: CalendarCheck, tone: "success" },
+  booking_reminder:            { icon: Clock,         tone: "warn" },
+  lead_responded:              { icon: MessageSquare, tone: "primary" },
+  lead_manual_takeover:        { icon: Hand,          tone: "warn" },
+  critical_automation_failure: { icon: AlertOctagon,  tone: "danger" },
+  campaign_finished:           { icon: Flag,          tone: "success" },
+  voice_abuse:                 { icon: ShieldBan,     tone: "danger" },
   // Client alerts (specs/client-recaps)
-  booking_rescheduled:          { icon: CalendarClock,  color: "text-[#DA9426]",          bgColor: "bg-[#DA9426]/10",     borderColor: "border-l-[#DA9426]" },
-  booking_cancelled:            { icon: CalendarX,      color: "text-rose-500",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-500" },
-  callback_requested:           { icon: PhoneCall,      color: "text-orange-500",         bgColor: "bg-orange-500/10",    borderColor: "border-l-orange-500" },
-  daily_recap:                  { icon: Newspaper,      color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
-  client_reply:                 { icon: Reply,          color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
+  booking_rescheduled:         { icon: CalendarClock, tone: "warn" },
+  booking_cancelled:           { icon: CalendarX,     tone: "danger" },
+  callback_requested:          { icon: PhoneCall,     tone: "warn" },
+  daily_recap:                 { icon: Newspaper,     tone: "primary" },
+  client_reply:                { icon: Reply,         tone: "primary" },
+  // A question the AI's knowledge base does not answer (light, bell only)
+  unanswered_question:         { icon: HelpCircle,    tone: "muted" },
 
   // ── Legacy broad types (existing API) ──────────────────────────────────
-  message:    { icon: MessageSquare,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
-  takeover:   { icon: Hand,           color: "text-orange-500",         bgColor: "bg-orange-500/10",    borderColor: "border-l-orange-500" },
-  booking:    { icon: Phone,          color: "text-[#DA9426]",          bgColor: "bg-[#DA9426]/10",     borderColor: "border-l-[#DA9426]" },
-  campaign:   { icon: Flag,           color: "text-emerald-500",        bgColor: "bg-emerald-500/10",   borderColor: "border-l-emerald-500" },
-  task:       { icon: ClipboardList,  color: "text-brand-indigo",       bgColor: "bg-brand-indigo/10",  borderColor: "border-l-brand-indigo" },
-  system:     { icon: Info,           color: "text-muted-foreground",   bgColor: "bg-muted/30",         borderColor: "border-l-muted-foreground/40" },
-  escalation: { icon: Headphones,     color: "text-orange-600",         bgColor: "bg-orange-100/60",    borderColor: "border-l-orange-600" },
-  automation: { icon: Workflow,       color: "text-rose-500",           bgColor: "bg-rose-500/10",      borderColor: "border-l-rose-500" },
+  message:    { icon: MessageSquare, tone: "primary" },
+  takeover:   { icon: Hand,          tone: "warn" },
+  booking:    { icon: Phone,         tone: "success" },
+  campaign:   { icon: Flag,          tone: "success" },
+  task:       { icon: ClipboardList, tone: "primary" },
+  system:     { icon: Info,          tone: "muted" },
+  escalation: { icon: Headphones,    tone: "warn" },
+  automation: { icon: Workflow,      tone: "danger" },
 };
+
+// Identical notifications (same type, title and link) inside one day group
+// collapse into a single row with a count, newest first.
+interface NotificationRow {
+  head: Notification;
+  ids: number[];
+  unreadIds: number[];
+}
+
+function collapseDuplicates(items: Notification[]): NotificationRow[] {
+  const rows = new Map<string, NotificationRow>();
+  for (const n of items) {
+    const key = `${notificationGroupKey(n)}::${n.link ?? ""}`;
+    const row = rows.get(key);
+    if (row) {
+      row.ids.push(n.id);
+      if (isUnread(n)) row.unreadIds.push(n.id);
+    } else {
+      rows.set(key, { head: n, ids: [n.id], unreadIds: isUnread(n) ? [n.id] : [] });
+    }
+  }
+  return Array.from(rows.values());
+}
 
 // ─── Time helpers ──────────────────────────────────────────────────────────
 
@@ -142,7 +177,8 @@ export function NotificationCenter({
   const [typeFilter, setTypeFilter] = useState<"all" | "messages" | "tasks" | "bookings" | "system">("all");
 
   // ── SSE hook (real-time notifications via SSE + polling) ───────────────
-  const stream = useNotificationStream();
+  // live: false, CrmShell owns the SSE stream and the toasts; this reads the shared cache.
+  const stream = useNotificationStream({ live: false });
 
   // ── Data from SSE hook ─────────────────────────────────────────────────
   const allItems = stream.notifications;
@@ -165,6 +201,7 @@ export function NotificationCenter({
     booking_cancelled: "bookings",
     callback_requested: "messages",
     client_reply: "messages",
+    unanswered_question: "messages",
     daily_recap: "system",
     campaign: "system",
     campaign_finished: "system",
@@ -204,9 +241,9 @@ export function NotificationCenter({
   }, [stream]);
 
   // ── Delete notification ───────────────────────────────────────────────
-  const handleDelete = useCallback((e: React.MouseEvent, id: number) => {
+  const handleDelete = useCallback((e: React.MouseEvent, ids: number[]) => {
     e.stopPropagation();
-    stream.deleteNotification(id);
+    ids.forEach((id) => stream.deleteNotification(id));
   }, [stream]);
 
   // ── Delete all notifications ───────────────────────────────────────────
@@ -215,11 +252,9 @@ export function NotificationCenter({
   }, [stream]);
 
   // ── Click handler ───────────────────────────────────────────────────────
-  const handleNotificationClick = useCallback((n: Notification) => {
-    // Mark as read
-    if (isUnread(n)) {
-      handleMarkAsRead(n.id);
-    }
+  const handleNotificationClick = useCallback((n: Notification, unreadIds: number[] = isUnread(n) ? [n.id] : []) => {
+    // Mark as read (every collapsed duplicate too)
+    unreadIds.forEach((id) => handleMarkAsRead(id));
     onClose();
 
     // A lead-scoped notification always preselects the lead, regardless of
@@ -249,6 +284,13 @@ export function NotificationCenter({
       if (matched) {
         setPersistedSelection(`selected-${matched.entity.slice(0, -1)}-id`, matched.match![1]);
         setLocation(`/platform/${matched.entity}`);
+        return;
+      }
+      // A booking made on a phone call links to that call (client alerts).
+      const call = rawPath.match(/^\/voice-calls\?call=([^&#]+)$/);
+      if (call) {
+        setPersistedSelection("selected-voice-call-id", decodeURIComponent(call[1]));
+        setLocation("/platform/voice-calls");
         return;
       }
       // Legacy typo: old "critical_automation_failure" rows link to "/automations"
@@ -284,7 +326,7 @@ export function NotificationCenter({
                   transition={{ duration: 0.15 }}
                   onClick={handleMarkAllAsRead}
                   disabled={false}
-                  className="text-xs text-brand-indigo hover:text-brand-indigo/80 font-medium transition-colors duration-150 disabled:opacity-50"
+                  className="text-xs text-primary hover:text-primary/80 font-medium transition-colors duration-150 disabled:opacity-50"
                   data-testid="button-mark-all-read"
                 >
                   <div className="flex items-center gap-1">
@@ -297,7 +339,7 @@ export function NotificationCenter({
             {allItems.length > 0 && (
               <button
                 onClick={handleDeleteAll}
-                className="text-xs text-muted-foreground hover:text-red-500 font-medium transition-colors duration-150"
+                className="text-xs text-muted-foreground hover:text-destructive font-medium transition-colors duration-150"
                 data-testid="button-clear-all"
               >
                 <div className="flex items-center gap-1">
@@ -316,15 +358,15 @@ export function NotificationCenter({
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
-                "relative h-7 px-3 rounded-full text-xs font-medium transition-all duration-200",
+                "relative h-7 px-3 rounded-full text-xs font-medium border transition-[background-color,color,border-color] duration-150",
                 filter === f
-                  ? "bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                  ? "bg-primary/10 text-primary border-primary/20"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/60"
               )}
             >
               {f === "all" ? t("notifications.all") : t("notifications.unread")}
               {f === "unread" && unreadCount > 0 && (
-                <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-brand-indigo text-white text-[10px] font-bold tabular-nums">
+                <span className="ml-1.5 inline-flex items-center justify-center h-4 min-w-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold tabular-nums">
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
               )}
@@ -339,10 +381,10 @@ export function NotificationCenter({
               key={tf}
               onClick={() => setTypeFilter(tf)}
               className={cn(
-                "h-6 px-2.5 rounded-full text-[11px] font-medium transition-all duration-200",
+                "h-6 px-2.5 rounded-full text-[11px] font-medium border transition-[background-color,color,border-color] duration-150",
                 typeFilter === tf
-                  ? "bg-brand-indigo/10 text-brand-indigo border border-brand-indigo/20"
-                  : "text-muted-foreground/70 hover:text-foreground hover:bg-muted/40"
+                  ? "bg-primary/10 text-primary border-primary/20"
+                  : "border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/60"
               )}
             >
               {tf === "all" ? t("notifications.filterAll")
@@ -367,19 +409,17 @@ export function NotificationCenter({
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-14 gap-3">
             <div className="relative h-8 w-8">
-              <div className="absolute inset-0 rounded-full border-2 border-brand-indigo/10" />
-              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-brand-indigo animate-spin" />
+              <div className="absolute inset-0 rounded-full border-2 border-primary/10" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-primary animate-spin" />
             </div>
             <span className="text-xs text-muted-foreground/60">{t("notifications.loading", "Loading...")}</span>
           </div>
         ) : items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
             <div className="relative mb-4">
-              <div className="h-14 w-14 rounded-2xl bg-gradient-to-br from-muted/80 to-muted/30 flex items-center justify-center border border-border/20">
-                <BellOff className="h-6 w-6 text-muted-foreground/40" />
+              <div className="h-12 w-12 rounded-[var(--r-card)] bg-muted flex items-center justify-center">
+                <BellOff className="h-5 w-5 text-muted-foreground/60" />
               </div>
-              {/* Subtle decorative ring */}
-              <div className="absolute -inset-1.5 rounded-[18px] border border-dashed border-border/20 pointer-events-none" />
             </div>
             <p className="text-sm font-semibold text-foreground/80">{t("notifications.allCaughtUp")}</p>
             <p className="text-xs text-muted-foreground/60 mt-1 max-w-[200px] leading-relaxed">
@@ -387,106 +427,117 @@ export function NotificationCenter({
             </p>
           </div>
         ) : (
-          <div className="py-1">
-            {grouped.map(({ group, items: groupItems }, groupIdx) => (
+          <div className="px-2 pb-2">
+            {grouped.map(({ group, items: groupItems }) => (
               <div key={group}>
                 {/* Group header */}
-                <div className="px-4 pt-3 pb-1.5 flex items-center gap-2">
-                  <span className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-widest">
+                <div className="px-2 pt-3 pb-1.5 flex items-center gap-2">
+                  <span className="text-[11px] font-semibold text-muted-foreground/70">
                     {group === "Today" ? t("time.today")
                       : group === "Yesterday" ? t("time.yesterday")
                       : group === "This Week" ? t("time.thisWeek")
                       : t("notifications.older")}
                   </span>
-                  <div className="flex-1 h-px bg-border/20" />
+                  <div className="flex-1 h-px bg-border/30" />
                 </div>
 
-                {/* Items */}
+                {/* Rows (identical notifications collapsed, see collapseDuplicates) */}
+                <div className="flex flex-col gap-1">
                 <AnimatePresence initial={false}>
-                {groupItems.map((n, itemIdx) => {
+                {collapseDuplicates(groupItems).map(({ head: n, ids, unreadIds }) => {
                   const config = TYPE_CONFIG[n.type] || TYPE_CONFIG.system;
                   const Icon = config.icon;
                   const isClickable = !!(n.link || n.leadId);
+                  const unread = unreadIds.length > 0;
 
                   return (
                     <motion.div
                       key={n.id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, height: 0, overflow: "hidden" }}
-                      transition={{ duration: 0.2, delay: Math.min((groupIdx * 3 + itemIdx) * 0.03, 0.3) }}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.15 }}
                       role="button"
                       tabIndex={0}
-                      onClick={() => handleNotificationClick(n)}
-                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleNotificationClick(n); }}
+                      onClick={() => handleNotificationClick(n, unreadIds)}
+                      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") handleNotificationClick(n, unreadIds); }}
                       className={cn(
-                        "group w-full text-left px-4 py-3 min-h-[44px] flex items-start gap-3",
-                        "border-l-2 transition-all duration-200",
+                        "group relative w-full text-left px-2.5 py-2.5 min-h-[44px] flex items-start gap-3 rounded-[var(--r-surface)]",
+                        "transition-[background-color] duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                        unread ? "bg-primary/[0.04]" : "",
                         isClickable
-                          ? "hover:bg-muted/30 active:bg-muted/40 cursor-pointer"
-                          : "cursor-default",
-                        isUnread(n)
-                          ? cn("bg-brand-indigo/[0.05]", config.borderColor)
-                          : "border-l-transparent"
+                          ? "hover:bg-muted/60 active:bg-muted cursor-pointer"
+                          : "cursor-default"
                       )}
                       data-testid={`card-notification-${n.id}`}
                     >
                       {/* Icon */}
                       <div className={cn(
-                        "h-8 w-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 transition-transform duration-150",
-                        config.bgColor,
-                        isClickable && "group-hover:scale-105"
+                        "h-9 w-9 rounded-[var(--r-surface)] flex items-center justify-center shrink-0",
+                        TONE[config.tone],
                       )}>
-                        <Icon className={cn("h-4 w-4", config.color)} />
+                        <Icon className="h-4 w-4" />
                       </div>
 
                       {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <span
-                          className={cn(
-                            "text-sm leading-snug line-clamp-1 block",
-                            isUnread(n) ? "font-semibold text-foreground" : "font-normal text-foreground/75"
-                          )}
-                          data-testid={`text-notification-title-${n.id}`}
-                        >
-                          {n.title}
-                        </span>
-                        <div className="flex items-center justify-between gap-2 mt-0.5">
-                          {n.body ? (
-                            <p
-                              className={cn(
-                                "text-xs line-clamp-1 leading-relaxed min-w-0",
-                                isUnread(n) ? "text-muted-foreground" : "text-muted-foreground/60"
-                              )}
-                              data-testid={`text-notification-desc-${n.id}`}
-                            >
-                              {n.body}
-                            </p>
-                          ) : (
-                            <span className="flex-1" />
-                          )}
+                      <div className="flex-1 min-w-0 pt-0.5">
+                        <div className="flex items-center gap-1.5 min-w-0">
                           <span
-                            className="text-[11px] text-muted-foreground/50 shrink-0 tabular-nums"
-                            data-testid={`text-notification-at-${n.id}`}
+                            className={cn(
+                              "text-sm leading-snug truncate",
+                              unread ? "font-semibold text-foreground" : "font-medium text-foreground/70"
+                            )}
+                            data-testid={`text-notification-title-${n.id}`}
                           >
-                            {timeAgo(n.createdAt, t)}
+                            {n.title}
                           </span>
+                          {ids.length > 1 && (
+                            <span className="shrink-0 rounded-full bg-muted px-1.5 py-px font-mono text-[11px] font-medium tabular-nums text-muted-foreground">
+                              {ids.length}&times;
+                            </span>
+                          )}
                         </div>
+                        {n.body && (
+                          <p
+                            className={cn(
+                              "text-xs line-clamp-2 leading-relaxed mt-0.5",
+                              unread ? "text-muted-foreground" : "text-muted-foreground/70"
+                            )}
+                            data-testid={`text-notification-desc-${n.id}`}
+                          >
+                            {n.body}
+                          </p>
+                        )}
+                        <span
+                          className="block text-[11px] text-muted-foreground/60 mt-1 tabular-nums"
+                          data-testid={`text-notification-at-${n.id}`}
+                        >
+                          {timeAgo(n.createdAt, t)}
+                        </span>
                       </div>
 
-                      {/* Delete button — always visible on mobile, hover on desktop */}
-                      <button
-                        onClick={(e) => handleDelete(e, n.id)}
-                        className="shrink-0 mt-0.5 p-1.5 rounded-md text-muted-foreground/40 hover:text-red-500 hover:bg-red-500/10 transition-colors opacity-100 md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
-                        aria-label={t("notifications.delete")}
-                        data-testid={`button-delete-notification-${n.id}`}
-                      >
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {/* Unread dot, swaps for delete on hover (desktop) */}
+                      <div className="shrink-0 flex items-center justify-center h-9 w-7">
+                        {unread && (
+                          <span className="hidden md:block h-2 w-2 rounded-full bg-primary md:group-hover:hidden" aria-hidden />
+                        )}
+                        <button
+                          onClick={(e) => handleDelete(e, ids)}
+                          className={cn(
+                            "p-1.5 rounded-md text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 transition-[color,background-color,opacity] duration-150 focus:opacity-100",
+                            unread ? "md:hidden md:group-hover:block" : "md:opacity-0 md:group-hover:opacity-100"
+                          )}
+                          aria-label={t("notifications.delete")}
+                          data-testid={`button-delete-notification-${n.id}`}
+                        >
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
                     </motion.div>
                   );
                 })}
                 </AnimatePresence>
+                </div>
               </div>
             ))}
           </div>

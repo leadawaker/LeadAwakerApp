@@ -178,6 +178,7 @@
     "alert_appointment_cancelled": "Gemeld: afspraak geannuleerd",
     "alert_callback_requested": "Gemeld: terugbelverzoek",
     "alert_lead_needs_reply": "Gemeld: reactie nodig",
+    "alert_new_photo": "Gemeld: nieuwe foto",
     "recap_sent": "Dagoverzicht verstuurd"
   },
   "outcome": {
@@ -332,5 +333,38 @@
     "no_booking_link": "Geen boekingslink ingesteld op de campagne",
     "not_on_whatsapp_no_sms": "Nummer heeft geen WhatsApp en de sms kon niet worden verstuurd",
     "send_failed": "Bericht kon niet worden verstuurd"
+  },
+  "rail": {
+    "label": "Automatiseringscategorieën",
+    "failuresTitle": "{{count}} open fout",
+    "failuresTitle_other": "{{count}} open fouten",
+    "automations": "{{count}} automatisering",
+    "automations_other": "{{count}} automatiseringen",
+    "short": {
+      "reactivation": "Reactivatie",
+      "speed_to_lead": "Snelle opvolging",
+      "bookings": "Afspraken",
+      "reputation": "Reviews",
+      "receptionist": "Receptie",
+      "inbox": "Inbox",
+      "internal": "Achter de schermen",
+      "unlisted": "Niet in de lijst"
+    }
+  },
+  "clear": {
+    "label": "{{count}} fout wissen",
+    "label_other": "{{count}} fouten wissen",
+    "short": "Alles wissen",
+    "confirm": "Ja, wis {{count}}",
+    "confirmAll": "Ja, wis alles",
+    "cancel": "Annuleren",
+    "working": "Bezig met wissen...",
+    "done": "{{count}} fout gewist",
+    "done_other": "{{count}} fouten gewist",
+    "error": "De fouten konden niet worden gewist.",
+    "hint": "Markeert deze fouten als opgelost. Ze blijven in het logboek staan.",
+    "markFixed": "Markeer als opgelost",
+    "reopen": "Heropenen",
+    "fixedTag": "Opgelost"
   }
 }

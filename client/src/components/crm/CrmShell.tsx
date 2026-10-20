@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 import { RightSidebar } from "./RightSidebar";
 import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
 import { FounderInbox } from "@/components/crm/FounderInbox";
@@ -25,6 +26,7 @@ import { useNotificationStream } from "@/hooks/useNotificationStream";
 import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 
 export function CrmShell({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation("crm");
   const [location, setLocation] = useLocation();
   const { currentAccount, currentAccountId, isImpersonating, impersonation, isAgencyUser } = useWorkspace();
 
@@ -78,6 +80,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const { isDark, toggleTheme } = useTheme();
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [founderChatOpen, setFounderChatOpen] = useState(false);
+  const [founderDraft, setFounderDraft] = useState<string | undefined>(undefined);
   const supportChat = useSupportChat();
   const founderChat = useFounderChat();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
@@ -113,7 +116,11 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   // Any page can dispatch "open-founder-chat" to open the founder chat panel
   // Any footer nav tap or button can dispatch "close-founder-chat" to close it
   useEffect(() => {
-    const openHandler = () => setFounderChatOpen(true);
+    const openHandler = (e: Event) => {
+      const draft = (e as CustomEvent<{ draft?: string }>).detail?.draft;
+      if (draft) setFounderDraft(draft);
+      setFounderChatOpen(true);
+    };
     const closeHandler = () => setFounderChatOpen(false);
     window.addEventListener("open-founder-chat", openHandler);
     window.addEventListener("close-founder-chat", closeHandler);
@@ -233,7 +240,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
     >
       {/* Skip to main content link — visible only on keyboard focus for accessibility */}
       <a href="#main-content" className="sr-skip-link" data-testid="skip-to-main">
-        Skip to main content
+        {t("sidebar.skipToMain")}
       </a>
       {/* Impersonation banner — fixed above the topbar; pushes topbar + sidebar down via --banner-h */}
       {isImpersonating && impersonation && (
@@ -350,6 +357,8 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         <SupportChatWidget
           mode="floating"
           founderOnly
+          initialDraft={founderDraft}
+          onDraftUsed={() => setFounderDraft(undefined)}
           founderChat={{
             messages: founderChat.messages,
             sending: founderChat.sending,

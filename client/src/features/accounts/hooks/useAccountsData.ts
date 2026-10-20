@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { fetchAccounts, updateAccount, createAccount, deleteAccount } from "../api/accountsApi";
 import type {
   DataTableRow,
@@ -87,6 +88,7 @@ export function useAccountsData(currentAccountId?: number) {
   });
 
   const { toast } = useToast();
+  const { t: tAcc } = useTranslation("accounts");
   const pendingSaves = useRef<Record<string, number>>({});
 
   const fetchData = async () => {
@@ -243,7 +245,7 @@ export function useAccountsData(currentAccountId?: number) {
     col: string,
     value: any,
     selectedIds: number[] = [],
-    opts?: { silent?: boolean },
+    opts?: { silent?: boolean; clientHours?: boolean },
   ) => {
     if (NON_EDITABLE_FIELDS.includes(col)) return;
     const cleanValue = value === null || value === undefined ? "" : value;
@@ -264,18 +266,22 @@ export function useAccountsData(currentAccountId?: number) {
       await Promise.all(updatePromises);
 
       if (!opts?.silent) {
-        toast({
-          title: "Updated",
-          description: `Saved ${col} for ${idsToUpdate.length} record(s).`,
-        });
+        toast(opts?.clientHours
+          ? { title: tAcc("clientHoursToast.saved"), description: tAcc("clientHoursToast.savedDesc") }
+          : {
+              title: "Updated",
+              description: `Saved ${col} for ${idsToUpdate.length} record(s).`,
+            });
       }
     } catch (err) {
       console.error("Detailed sync error:", err);
-      toast({
-        variant: "destructive",
-        title: "Sync Error",
-        description: "Failed to save to database.",
-      });
+      toast(opts?.clientHours
+        ? { variant: "destructive", title: tAcc("clientHoursToast.error"), description: tAcc("clientHoursToast.errorDesc") }
+        : {
+            variant: "destructive",
+            title: "Sync Error",
+            description: "Failed to save to database.",
+          });
       fetchData(); // Rollback on error
     }
   };

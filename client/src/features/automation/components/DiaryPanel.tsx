@@ -9,7 +9,8 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { findEntry } from "@shared/automationCatalogue";
 import type { DiaryLine, OverviewRow } from "@shared/automationTypes";
-import { useAutomationDiary } from "../api";
+import { useAutomationDiary, useResolveDiaryLine } from "../api";
+import { ClearFailuresButton } from "./ClearFailuresButton";
 import { automationName, automationDescription, triggerLabel } from "../labels";
 import { BUCKET_COLOR, SERVICE_ICON, bucketOf } from "../status";
 import { DiaryTimeline } from "./DiaryTimeline";
@@ -32,12 +33,23 @@ export function DiaryPanel({ automationId, accountId: fixedAccountId, row, onClo
   const [page, setPage] = useState(1);
   const [lines, setLines] = useState<DiaryLine[]>([]);
   const q = useAutomationDiary(automationId, { accountId, failedOnly, page });
+  const resolveLine = useResolveDiaryLine();
+  // Lines from earlier pages are kept in state, so a clear is mirrored here until they refetch.
+  const [resolvedOverride, setResolvedOverride] = useState<Record<number, string | null>>({});
+  const onResolve = (line: DiaryLine, resolved: boolean) => {
+    resolveLine.mutate({ id: line.id, resolved }, {
+      onSuccess: () => setResolvedOverride((m) => ({ ...m, [line.id]: resolved ? new Date().toISOString() : null })),
+    });
+  };
 
   // Accumulate pages; reset when the filter or automation changes.
   const combined = page === 1 ? (q.data?.lines ?? []) : [...lines, ...(q.data?.page === page ? q.data.lines : [])];
   // An offset page can overlap the snapshot, so keep only the first occurrence of each line.
   const seen = new Set<DiaryLine["id"]>();
-  const shown = combined.filter((l) => (seen.has(l.id) ? false : (seen.add(l.id), true)));
+  const shown = combined
+    .filter((l) => (seen.has(l.id) ? false : (seen.add(l.id), true)))
+    .map((l) => (l.id in resolvedOverride ? { ...l, resolvedAt: resolvedOverride[l.id] } : l));
+  const openFailures = shown.filter((l) => l.outcome === "failed" && !l.resolvedAt).length;
 
   const resetPaging = () => { setPage(1); setLines([]); };
   const openLead = (leadId: number) => {
@@ -92,6 +104,9 @@ export function DiaryPanel({ automationId, accountId: fixedAccountId, row, onClo
               </button>
             ))}
           </div>
+          {failedOnly && openFailures > 0 && (
+            <ClearFailuresButton compact count={openFailures} scope={{ automationIds: [automationId], accountId }} />
+          )}
           {fixedAccountId === undefined && (
             <div style={{ marginLeft: "auto", minWidth: 0, flex: "0 1 190px" }}>
               <Select value={pickedAccountId ? String(pickedAccountId) : "all"} onValueChange={(v) => { setPickedAccountId(v === "all" ? undefined : Number(v)); resetPaging(); }}>
@@ -124,7 +139,7 @@ export function DiaryPanel({ automationId, accountId: fixedAccountId, row, onClo
             </p>
           </div>
         )}
-        {shown.length > 0 && <DiaryTimeline lines={shown} showClient={!accountId} onOpenLead={openLead} />}
+        {shown.length > 0 && <DiaryTimeline lines={shown} showClient={!accountId} onOpenLead={openLead} onResolve={onResolve} resolvingId={resolveLine.isPending ? resolveLine.variables?.id ?? null : null} />}
         {q.data?.hasMore && (
           <button type="button" className="la-btn la-btn--soft" style={{ width: "100%", marginTop: 4 }} onClick={() => { setLines(shown); setPage((p) => p + 1); }}>
             {t("diary.loadMore")}

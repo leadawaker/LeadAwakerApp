@@ -672,9 +672,34 @@ export const LOADER_JS = String.raw`(function () {
   }
 
   // The frame asks to be closed (its own X button) and reports unread replies.
+  // Which page the visitor is reading, so she can talk about that car or that
+  // service. Only the address without its query string or fragment (those are
+  // where forms and trackers put personal data) and the page's own title; an
+  // element marked data-leadawaker-car can name the item outright. Sent on
+  // every frame load and whenever a single-page site moves on, checked by a
+  // cheap poll because such sites change the URL without telling anyone.
+  function pageInfo() {
+    var meta = document.querySelector('meta[property="og:title"]');
+    var title = (meta && meta.getAttribute("content")) || document.title || "";
+    var mark = document.querySelector("[data-leadawaker-car]");
+    var car = mark ? (mark.getAttribute("data-leadawaker-car") || mark.textContent || "") : "";
+    var clip = function (t, n) { return String(t).replace(/\s+/g, " ").trim().slice(0, n); };
+    return { url: (location.origin + location.pathname).slice(0, 300), title: clip(title, 200), car: clip(car, 120) };
+  }
+  var pageSent = "";
+  function sendPage(force) {
+    var p = pageInfo();
+    var sig = p.url + "|" + p.title + "|" + p.car;
+    if (!force && sig === pageSent) return;
+    pageSent = sig;
+    try { frame.contentWindow.postMessage({ type: "la-widget-page", page: p }, origin); } catch (e) {}
+  }
+  setInterval(function () { if (pageSent) sendPage(false); }, 2000);
+  window.addEventListener("popstate", function () { if (pageSent) sendPage(false); });
+
   window.addEventListener("message", function (e) {
     if (e.origin !== origin || !e.data || typeof e.data !== "object") return;
-    if (e.data.type === "la-widget-ready") chat.ready();
+    if (e.data.type === "la-widget-ready") { chat.ready(); sendPage(true); }
     if (e.data.type === "la-widget-close" && open) toggle();
     // Only a closed panel dings: with the chat open, the reply on screen is the
     // notification, and a sound on top of every message is just noise.

@@ -1,6 +1,7 @@
 // CSV export for the Leads card view. Exports the currently-filtered leads
-// (name, phone, email, status, score, campaign, account, booked date).
-import { getLeadId, getFullName, getStatus, getScore, getPhone } from "./leadUtils";
+// (name, phone, email, status, last contact, campaign, account, booked date).
+import { getLeadId, getFullName, getStatus, getPhone } from "./leadUtils";
+import { lastContactChannel, lastContactAt } from "../../lib/leadDisplay";
 
 function csvEscape(v: unknown): string {
   const s = v == null ? "" : String(v);
@@ -12,7 +13,7 @@ export function exportLeadsCsv(
   campaignsById?: Map<number, { name: string }>,
   accountsById?: Map<number, string>,
 ) {
-  const headers = ["ID", "Name", "Phone", "Email", "Status", "Score", "Campaign", "Account", "Booked Date"];
+  const headers = ["ID", "Name", "Phone", "Email", "Status", "Last Contact Channel", "Last Contact At", "Campaign", "Account", "Booked Date"];
   const rows = leads.map((l) => {
     const cId = Number(l.Campaigns_id ?? l.campaigns_id ?? l.campaignsId ?? 0);
     const aId = Number(l.Accounts_id ?? l.account_id ?? l.accounts_id ?? 0);
@@ -22,7 +23,8 @@ export function exportLeadsCsv(
       getPhone(l),
       l.email || l.Email || "",
       getStatus(l),
-      getScore(l),
+      lastContactChannel(l) || "",
+      lastContactAt(l) || "",
       (cId && campaignsById?.get(cId)?.name) || "",
       (aId && accountsById?.get(aId)) || "",
       l.booked_call_date || l.bookedCallDate || "",

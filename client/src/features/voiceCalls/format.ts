@@ -32,3 +32,11 @@ export function formatListTime(iso: string, locale: string): string {
     ? formatClock(iso, locale)
     : new Date(iso).toLocaleDateString(locale, { day: "numeric", month: "short" });
 }
+
+/** "1m 40s" / "40s", with the units from the locale (`duration.*` keys). */
+export function formatDurationUnits(seconds: number | null, t: (key: string, opts?: Record<string, unknown>) => string): string {
+  if (seconds == null) return "–";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return m > 0 ? t("duration.minSec", { m, s }) : t("duration.sec", { s });
+}

@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   Calendar,
   Clock,
+  Phone,
 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { updateLead, deleteLead } from "../../api/leadsApi";
@@ -35,18 +36,16 @@ const PAGE_DEFAULT_LAYERS: GradientLayer[] = [
 ];
 
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useScoreBreakdown, TIER_COLORS } from "@/hooks/useScoreBreakdown";
 import { hapticSave, hapticDelete } from "@/lib/haptics";
 import { getLeadStatusAvatarColor, getCampaignAvatarColor } from "@/lib/avatarUtils";
 
-import { getLeadId, getFullName, getStatus, getScore } from "./leadUtils";
+import { getLeadId, getFullName, getStatus } from "./leadUtils";
 import { formatRelativeTime, formatBookedDate } from "./formatUtils";
 import { PipelineProgress, PipelineProgressCompact, PipelineDashBar } from "./atoms";
-import { ScoreWidget } from "./ScoreWidgets";
 import { ContactWidget, NotesSection } from "./ContactWidget";
 import { ConversationWidget } from "./ConversationWidget";
-import { TempBadge } from "./designPrimitives";
 import { LeadSummaryCard } from "./LeadSummaryCard";
+import { LeadRecap } from "./LeadRecap";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // ── Alias used inside this file ──────────────────────────────────────────────
@@ -65,19 +64,20 @@ export function LeadDetailView({
   onClose: () => void;
   leadTags?: { name: string; color: string }[];
   onRefresh?: () => void;
-  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
-  /** Page context — the score breakdown sub-bars only show on the Chats page. */
+  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null; campaignType?: string | null }>;
+  /** Page context: "contacts" reorders the columns, "conversations" (Chats page) shows the recap sidebar. */
   mode?: string;
 }) {
   const { t } = useTranslation("leads");
   const name        = getFullName(lead);
   const status      = getStatus(lead);
-  const score       = getScore(lead);
   const avatarColor = getStatusAvatarColor(status);
   const leadId      = getLeadId(lead);
 
-  const { breakdown: detailBreakdown } = useScoreBreakdown(leadId ? Number(leadId) : null);
-  const tier = detailBreakdown?.tier ?? (score === 0 ? "Sleeping" : null);
+  // Chats page: recap on the left, chat on the right. The lead score is no
+  // longer shown anywhere on these pages (Gabriel: a gimmick).
+  const isChats = mode === "conversations";
+  const tier = null;
 
   // ── Responsive columns ─────────────────────────────────────────────────────
   const containerRef = useRef<HTMLDivElement>(null);
@@ -106,9 +106,10 @@ export function LeadDetailView({
       return Boolean(obj?.summary || obj?.notes || obj?.description);
     } catch { return false; }
   })();
-  const [chatTab, setChatTab] = useState<"chat" | "summary">(hasSummary ? "summary" : "chat");
+  // On the Chats page the recap sidebar already shows the summary, so open on the chat.
+  const [chatTab, setChatTab] = useState<"chat" | "summary">(hasSummary && !isChats ? "summary" : "chat");
   useEffect(() => {
-    setChatTab(hasSummary ? "summary" : "chat");
+    setChatTab(hasSummary && !isChats ? "summary" : "chat");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leadId]);
 
@@ -320,6 +321,9 @@ export function LeadDetailView({
   const acctName = lead.account_name || lead.Account || "";
   const hasActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
   const bookedDate = lead.booked_call_date || lead.bookedCallDate;
+  // A second appointment beside the main one (a callback next to a visit), set by the phone.
+  const sideDate = lead.side_booking_date || lead.sideBookingDate;
+  const sideKind = lead.side_booking_kind || lead.sideBookingKind;
   // Contact-later freeze: the lead named a date to be picked back up on, and
   // the bump scheduler re-engages them then. Surfaced next to the booked pill
   // so a deferred lead never reads as a dead one.
@@ -356,21 +360,21 @@ export function LeadDetailView({
     </div>
   );
 
-  const scoreCol = (
-    <div style={{ width: isNarrow ? "auto" : 200, flexShrink: 0, minHeight: isNarrow ? 360 : 0, display: "flex" }}>
-      <ScoreWidget score={score} lead={lead} status={status} showBreakdown={!isContacts} />
-    </div>
-  );
-
   // Agency chat card: Conversations / Summary toggle.
   const agencyChatCol = (
     <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 440 : 0, display: "flex" }}>
+      {/* Same glass panel + shadow as the Voice calls transcript (CallConversation). */}
       <div className="glass" style={{ flex: 1, minWidth: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column", minHeight: 0 }}>
-        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 8px 0" }}>
+        {/* Chats page: the recap sidebar replaces the Summary tab, so the strip only
+            appears there when the "Let AI continue" control needs a home. */}
+        {(!isChats || chatHumanTakeover) && (
+        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: isChats ? "flex-end" : "space-between", padding: "8px 8px 0" }}>
+          {!isChats && (
           <div className="la-seg la-seg--pill">
             <button className={`la-seg-btn${chatTab === "chat" ? " on" : ""}`} onClick={() => setChatTab("chat")}>Conversations</button>
             <button className={`la-seg-btn${chatTab === "summary" ? " on" : ""}`} onClick={() => setChatTab("summary")}>{t("detail.aiSummary", "Summary")}</button>
           </div>
+          )}
           {/* Let AI continue — opposite corner from the tab switcher, only while a human has taken over */}
           {chatTab === "chat" && chatHumanTakeover && (
             <Popover open={showAiResume} onOpenChange={setShowAiResume}>
@@ -403,7 +407,8 @@ export function LeadDetailView({
             </Popover>
           )}
         </div>
-        {chatTab === "summary" ? (
+        )}
+        {chatTab === "summary" && !isChats ? (
           <div style={{ flex: 1, minHeight: 0, display: "flex" }}>
             <LeadSummaryCard lead={lead} tier={tier} status={status} hideHeader />
           </div>
@@ -418,6 +423,37 @@ export function LeadDetailView({
   const clientSummaryCol = (
     <div style={{ flex: isNarrow ? undefined : "1 1 auto", minWidth: isNarrow ? "auto" : 180, minHeight: isNarrow ? 440 : 0, display: "flex" }}>
       <LeadSummaryCard lead={lead} tier={tier} status={status} />
+    </div>
+  );
+
+  // Chats page sidebar (left): recap, then the contact card.
+  const chatsSidebar = (
+    <div
+      className="neu-raised"
+      data-testid="chat-recap-sidebar"
+      style={{
+        width: isNarrow ? "auto" : 310, flexShrink: 0, minHeight: 0, borderRadius: "var(--r-card)", background: "var(--card)",
+        overflowX: "hidden", overflowY: isNarrow ? "visible" : "auto",
+      }}
+    >
+      <LeadRecap lead={lead} timeZone={accountTimezone} />
+      <div style={{ display: "flex", borderTop: "1px solid var(--line)" }}>
+        <ContactWidget
+          lead={lead}
+          onRefresh={onRefresh}
+          accountLogo={accountLogo}
+          campaignStickerUrl={campaignStickerUrl}
+          campaignsById={campaignsById}
+          onPdf={handlePdf}
+          onDelete={handleDelete}
+          isDeleting={deleting}
+          deleteConfirm={deleteConfirm}
+          setDeleteConfirm={setDeleteConfirm}
+          onToggleGradient={toggleGradientTester}
+          gradientTesterOpen={gradientTesterOpen}
+          isAgencyUser={isAgencyUser}
+        />
+      </div>
     </div>
   );
 
@@ -446,11 +482,17 @@ export function LeadDetailView({
               ) : (
                 <span onClick={startEdit} style={{ fontFamily: "var(--serif)", fontSize: isNarrow ? 22 : 27, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em", cursor: "text" }}>{name}</span>
               )}
-              {tier && <TempBadge temp={tier} />}
               <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", letterSpacing: "0.1em", textTransform: "uppercase", border: "1px solid var(--line-strong)", borderRadius: 4, padding: "2px 6px" }}>Lead {leadId}</span>
-              {bookedDate && (
+              {/* Chats: the recap already shows the booking, so the header leaves it out. */}
+              {bookedDate && !isChats && (
                 <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--warn-tint)", border: "1px solid rgba(196,138,47,0.4)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--stage-booked)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
                   <Calendar className="h-[11px] w-[11px]" />Booked · {formatBookedDate(bookedDate, accountTimezone)}
+                </span>
+              )}
+              {sideDate && !isChats && (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: 6, background: "var(--warn-tint)", border: "1px solid rgba(196,138,47,0.4)", borderRadius: "var(--r-pill)", padding: "3px 10px 3px 8px", color: "var(--stage-booked)", fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.08em", textTransform: "uppercase", fontWeight: 700 }}>
+                  <Phone className="h-[11px] w-[11px]" />
+                  {t(sideKind === "visit" ? "contact.sideVisit" : "contact.sideBooking", { date: formatBookedDate(sideDate, accountTimezone) })}
                 </span>
               )}
               {resumeRaw && (
@@ -472,20 +514,23 @@ export function LeadDetailView({
       </div>
 
       {/* ── Columns ── */}
-      {/* Contacts page: conversation/summary first, score, then Contact (agency only).
-          Chats page: Contact, conversation (agency only), score. */}
+      {/* Contacts page: conversation/summary first, then Contact (agency only).
+          Chats page: recap sidebar, then the conversation. */}
       <div style={{ flex: 1, minHeight: 0, width: "100%", display: "flex", flexDirection: isNarrow ? "column" : "row", gap: 14, overflowY: isNarrow ? "auto" : undefined, overflow: isNarrow ? "auto" : "visible" }}>
-        {isContacts ? (
+        {isChats ? (
+          <>
+            {chatsSidebar}
+            {conversationCol}
+          </>
+        ) : isContacts ? (
           <>
             {conversationCol}
-            {scoreCol}
             {isAgencyUser && contactCol}
           </>
         ) : (
           <>
             {contactCol}
             {isAgencyUser && agencyChatCol}
-            {scoreCol}
           </>
         )}
       </div>

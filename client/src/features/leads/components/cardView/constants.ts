@@ -149,8 +149,6 @@ export const LEAD_SORT_OPTIONS: { value: SortByOption; label: string }[] = [
   { value: "recent",     label: "Most Recent" },
   { value: "name_asc",   label: "Name A → Z" },
   { value: "name_desc",  label: "Name Z → A" },
-  { value: "score_desc", label: "Score ↓" },
-  { value: "score_asc",  label: "Score ↑" },
 ];
 
 // ── Timeline icon map ─────────────────────────────────────────────────────────

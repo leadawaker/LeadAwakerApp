@@ -77,14 +77,19 @@ function useSyncLanguage(lang: Lang) {
   useEffect(() => {
     // CRM pages: use stored preference instead of URL-derived lang
     const isCrmPage = window.location.pathname.startsWith("/platform");
-    const effectiveLang = isCrmPage ? (getStoredLang() ?? lang) : lang;
+    // The invite link carries the invitee's language: follow it, and never store "en" over it.
+    const isInvitePage = window.location.pathname.startsWith("/accept-invite");
+    const inviteLang = new URLSearchParams(window.location.search).get("lang");
+    const effectiveLang = isInvitePage && SUPPORTED_LANGS.includes(inviteLang as Lang)
+      ? (inviteLang as Lang)
+      : isCrmPage ? (getStoredLang() ?? lang) : lang;
 
     if (i18n.language !== effectiveLang) {
       i18n.changeLanguage(effectiveLang);
     }
 
     // Only store lang for non-CRM pages (CRM stores via the language toggle)
-    if (!isCrmPage) {
+    if (!isCrmPage && !isInvitePage) {
       storeLang(effectiveLang);
     }
   }, [lang]);
@@ -239,6 +244,8 @@ function Router() {
     location.startsWith("/review-demo") ||
     // A client's private upload page: its own branded shell, nothing around it.
     location.startsWith("/number-docs/") ||
+    // Pre-login invite acceptance: a client's first screen, its own branded card.
+    location.startsWith("/accept-invite") ||
     // The button in an alert email: a bare redirect card, then the CRM.
     location.startsWith("/go/");
 

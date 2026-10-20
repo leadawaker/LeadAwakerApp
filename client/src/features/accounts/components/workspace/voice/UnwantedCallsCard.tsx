@@ -2,7 +2,7 @@
 // away, plus the numbers blocked for abuse on this line and those on a first
 // warning, each clearable.
 import { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useVoiceT } from "./voiceGender";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ShieldBan, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
@@ -15,7 +15,7 @@ import {
 export function UnwantedCallsCard({ line, canEdit, saving, onSave }: {
   line: VoiceLine; canEdit: boolean; saving: boolean; onSave: (patch: VoiceLinePatch) => Promise<boolean>;
 }) {
-  const { t, i18n } = useTranslation("voiceTab");
+  const { t, i18n } = useVoiceT();
   const qc = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const blocked = useQuery({

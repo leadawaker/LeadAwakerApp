@@ -174,14 +174,8 @@ export function WidgetAppearance({ cfg, onPatch }: {
   return (
     <div>
       <span style={MONO}>{t("websiteChat.appearance")}</span>
+      {/* The chat itself is WidgetPreview, beside the whole card; only the launcher is previewed here. */}
       <div style={{ display: "flex", flexWrap: "wrap", gap: 18, marginTop: 6, alignItems: "flex-start" }}>
-        <iframe
-          key={previewRev}
-          title={t("websiteChat.preview")}
-          src={`/widget/frame?key=${encodeURIComponent(cfg.publicKey)}#v=preview0000preview00`}
-          allow="microphone"
-          style={{ display: "block", flex: "1 1 300px", maxWidth: 390, height: 520, border: "1px solid var(--line)", borderRadius: 20, background: "var(--card)" }}
-        />
         <div style={{ flex: "1 1 220px", display: "flex", flexDirection: "column", gap: 16 }}>
           <div style={col}>
             {label("orbFace")}
@@ -373,6 +367,25 @@ export function WidgetAppearance({ cfg, onPatch }: {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+/** The real chat, on the real key, in an iframe: the same document a visitor
+ *  gets, so a broken config shows up here rather than on the client's site.
+ *  `rev` reloads it after a saved change (the frame reads its look on load). */
+export function WidgetPreview({ cfg, rev }: { cfg: WidgetConfigRow; rev: number }) {
+  const { t } = useTranslation("accounts");
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 6 }} data-testid="widget-preview">
+      <span style={MONO}>{t("websiteChat.preview")}</span>
+      <iframe
+        key={rev}
+        title={t("websiteChat.preview")}
+        src={`/widget/frame?key=${encodeURIComponent(cfg.publicKey)}#v=preview0000preview00`}
+        allow="microphone"
+        style={{ display: "block", width: "100%", height: 600, border: "1px solid var(--line)", borderRadius: 20, background: "var(--card)" }}
+      />
     </div>
   );
 }

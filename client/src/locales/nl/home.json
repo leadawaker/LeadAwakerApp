@@ -38,10 +38,13 @@
     "tiles": { "calls": "Gesprekken", "booked": "Ingepland", "transferred": "Doorverbonden", "transfersFailed_one": "{{count}} mislukt", "transfersFailed_other": "{{count}} mislukt", "avgLength": "Gemiddelde duur" },
     "perDay": "Gesprekken per dag",
     "outcomes": "Uitkomsten",
-    "outcome": { "booked": "Ingepland", "callback": "Terugbellen", "transferred": "Doorverbonden", "hung_up": "Opgehangen", "other": "Overig" },
-    "outOfHours": "van de gesprekken kwam buiten kantooruren binnen",
+    "outcome": { "booked": "Ingepland", "callback": "Terugbellen", "transferred": "Doorverbonden", "hung_up": "Opgehangen", "answered": "Vragen beantwoord" },
+    "outOfHoursLabel": "Gesprekken buiten kantooruren",
     "screened_one": "verkoopgesprek of robocall geweerd",
     "screened_other": "verkoopgesprekken en robocalls geweerd",
+    "latency": "gemiddelde reactiesnelheid, van het laatste woord van de beller tot het antwoord",
+    "costPerMinute": "kosten per minuut (alleen jij ziet dit)",
+    "cost": "uitgegeven aan gesprekken (alleen jij ziet dit)",
     "recent": "Recente gesprekken",
     "recentEmpty": "In deze periode zijn er nog geen gesprekken."
   },
@@ -106,7 +109,8 @@
     "openCampaign": "Campagne openen",
     "newCampaign": "Nieuwe campagne",
     "importLeads": "Leads importeren",
-    "status": {"New": "Nieuw", "Contacted": "Gecontacteerd", "Responded": "Gereageerd", "MultipleResponses": "Meerdere Reacties", "Qualified": "Gekwalificeerd", "Booked": "Gesprek Gepland", "Closed": "Gesloten", "Lost": "Verloren", "DND": "Niet Storen", "Unknown": "Onbekend"}
+    "status": {"New": "Nieuw", "Contacted": "Gecontacteerd", "Responded": "Gereageerd", "MultipleResponses": "Meerdere Reacties", "Qualified": "Gekwalificeerd", "Booked": "Gesprek Gepland", "Closed": "Gesloten", "Lost": "Verloren", "DND": "Niet Storen", "Unknown": "Onbekend"},
+    "live": {"upcoming": "Hierna", "upcomingEmpty": "Geen geplande gesprekken in het verschiet.", "todayCount_one": "{{count}} vandaag", "todayCount_other": "{{count}} vandaag", "handoff": "Overgedragen", "activity": "Net gebeurd", "activityEmpty": "Geen berichten in de afgelopen 30 dagen.", "live": "Live", "replied": "Gereageerd", "sent": "Verstuurd", "bumps": "Opvolging vandaag", "sentToday": "Vandaag verstuurd", "dueToday": "Nog te gaan vandaag", "nextUp": "Volgende gepland", "nextEmpty": "Geen opvolging gepland.", "firstMessage": "Eerste bericht", "bump": "Opvolging {{n}}", "due": "Nu aan de beurt"}
   },
   "reputation": {
     "banner": "nieuwe Google-reviews",
@@ -144,5 +148,19 @@
     "recent": "Recente gesprekken",
     "recentEmpty": "Nog geen Instagram-gesprekken in deze periode.",
     "notConnected": "Er is nog geen Instagram-account gekoppeld."
+  },
+  "onboarding": {
+    "yourReceptionist": "Je receptionist",
+    "there": "daar",
+    "close": "Sluiten",
+    "welcome": "Welkom, {{firstName}}. {{agentName}} neemt de telefoon op voor {{company}}.",
+    "welcomeNoName": "Welkom. {{agentName}} neemt de telefoon op voor {{company}}.",
+    "where1": "Gesprekken, chats en afspraken zie je op deze pagina en op de pagina's {{calls}}, {{leads}} en {{calendar}}.",
+    "where2": "Je krijgt een dagelijks overzicht en directe meldingen zodra je jezelf daarvoor toevoegt.",
+    "guide": "Lees de handleiding",
+    "done": "Klaar",
+    "installIos": "Deel › Zet op beginscherm.",
+    "installAndroid": "⋮ menu › App installeren / Toevoegen aan startscherm.",
+    "items": { "details": "Controleer je bedrijfsgegevens", "alerts": "Voeg jezelf toe aan het overzicht en de meldingen", "call": "Open je eerste gesprek of chat", "install": "Zet het CRM op je telefoon" }
   }
 }

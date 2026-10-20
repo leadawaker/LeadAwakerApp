@@ -4,17 +4,15 @@ import { Mic, Square, Loader2, Save, CheckCircle2, Calendar, X, UserX } from "lu
 import { NoShowDialog, canReportNoShow } from "@/features/leads/components/NoShowDialog";
 import { updateLead } from "../../api/leadsApi";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { useScoreBreakdown } from "@/hooks/useScoreBreakdown";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
-import { getLeadId, getFullName, getStatus, getScore } from "./leadUtils";
+import { getLeadId, getFullName, getStatus } from "./leadUtils";
 import { formatBookedDate } from "./formatUtils";
 import { ConversationWidget } from "./ConversationWidget";
 import { LeadSummaryCard } from "./LeadSummaryCard";
-import { PipelineDashBar, ScoreArcDonut } from "./atoms";
-import { ScoreWidget } from "./ScoreWidgets";
+import { PipelineDashBar } from "./atoms";
 import { PIPELINE_HEX } from "./constants";
 
 const getStatusAvatarColor = getLeadStatusAvatarColor;
@@ -51,7 +49,6 @@ export function PipelineLeadPanel({
 
   const name = getFullName(lead);
   const status = getStatus(lead);
-  const score = getScore(lead);
   const leadId = getLeadId(lead);
   const avatarColor = getStatusAvatarColor(status);
   const phone = lead.phone || lead.Phone || "";
@@ -59,11 +56,10 @@ export function PipelineLeadPanel({
   const bookedDate = lead.booked_call_date || lead.bookedCallDate || lead.booked_date || lead.BookedDate || "";
   const isBooked = status === "Booked";
 
-  const { breakdown: detailBreakdown } = useScoreBreakdown(leadId ? Number(leadId) : null);
-  const tier = detailBreakdown?.tier ?? (score === 0 ? "Sleeping" : null);
+  const tier = null; // lead score/tier no longer shown on the Leads page
 
-  // ── Tab state (Summary, Chat for agency only, Score, Notes) ───────────────
-  const [activeTab, setActiveTab] = useState<"summary" | "chat" | "score" | "notes">("summary");
+  // ── Tab state (Summary, Chat for agency only, Notes) ───────────────
+  const [activeTab, setActiveTab] = useState<"summary" | "chat" | "notes">("summary");
 
   // ── No-show claim (48h window; covers calendar detail + contacts pipeline) ─
   const [noShowOpen, setNoShowOpen] = useState(false);
@@ -180,7 +176,7 @@ export function PipelineLeadPanel({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 12, padding: "14px 0", overflow: "hidden" }}>
-      {/* ── Lead Info Card (avatar, name, contact, score donut, conversion) ── */}
+      {/* ── Lead Info Card (avatar, name, contact, conversion) ── */}
       <div
         className="neu-raised"
         style={{
@@ -211,7 +207,7 @@ export function PipelineLeadPanel({
           </button>
         )}
         <div style={{ padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
-          {/* Avatar + Name (+ score donut on the right) */}
+          {/* Avatar + Name */}
           <div style={{ display: "flex", gap: 11, alignItems: "center", paddingRight: onClose ? 22 : 0 }}>
             <EntityAvatar
               name={name}
@@ -227,14 +223,13 @@ export function PipelineLeadPanel({
             </div>
           </div>
 
-          {/* Phone + Email (+ score donut aligned with the phone line) */}
-          {(phone || email || score > 0) && (
+          {/* Phone + Email */}
+          {(phone || email) && (
             <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
               <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 5, fontSize: 11.5, color: "var(--mute)", fontFamily: "var(--mono)", letterSpacing: "0.02em" }}>
                 {phone && <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{phone}</div>}
                 {email && <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{email}</div>}
               </div>
-              {score > 0 && <ScoreArcDonut score={score} />}
             </div>
           )}
         </div>
@@ -311,16 +306,13 @@ export function PipelineLeadPanel({
               {t("kanban.panelTabs.chat", "Chat")}
             </button>
           )}
-          <button className={`la-seg-btn${activeTab === "score" ? " on" : ""}`} onClick={() => setActiveTab("score")}>
-            {t("kanban.panelTabs.score", "Score")}
-          </button>
           <button className={`la-seg-btn${activeTab === "notes" ? " on" : ""}`} onClick={() => setActiveTab("notes")}>
             {t("kanban.panelTabs.notes", "Notes")}
           </button>
         </div>
       </div>
 
-      {/* ── Tab Content — summary/chat/score all read the same tight margin ── */}
+      {/* ── Tab Content — summary/chat/notes all read the same tight margin ── */}
       <div style={{ flex: 1, minHeight: 0, overflow: "auto", padding: activeTab === "notes" ? "0 12px" : activeTab === "chat" ? "0 2px" : "0 6px" }}>
         {activeTab === "summary" && <LeadSummaryCard lead={lead} tier={tier} status={status} hideHeader sidePad={8} />}
 
@@ -328,7 +320,6 @@ export function PipelineLeadPanel({
           <ConversationWidget lead={lead} showHeader={false} onTakeoverChange={() => {}} />
         )}
 
-        {activeTab === "score" && <ScoreWidget score={score} lead={lead} status={status} />}
 
         {activeTab === "notes" && (
           <div style={{ display: "flex", flexDirection: "column", height: "100%", gap: 8 }}>

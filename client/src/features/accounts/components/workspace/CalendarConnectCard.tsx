@@ -12,6 +12,7 @@ import {
   type CalendarProviderId, type CalendarProviderMeta, type CalendarConnection, type CaldiyCredentials,
 } from "../../api/calendarApi";
 import { CalendarProviderLogo } from "./integrationLogos";
+import { CustomDomainGuide } from "./CustomDomainGuide";
 import { IntegSection, IconTile, SectionHead, FlatRow } from "./integrationsAtoms";
 
 const CALENDAR_PROVIDER_ORDER: CalendarProviderId[] = ["google", "outlook", "calcom", "calendly", "ical"];
@@ -388,7 +389,7 @@ export function BookingPageCard({ accountId, noBorder }: { accountId: number; no
 // Hostname in Zero Trust, then marks it active here once DNS has propagated.
 const BOOKING_CNAME_TARGET = "75e02640-edf0-41dd-b681-6efc0469e8e2.cfargotunnel.com";
 
-export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: number; noBorder?: boolean }) {
+export function CustomBookingDomainCard({ accountId, noBorder, website }: { accountId: number; noBorder?: boolean; website?: string | null }) {
   const { t } = useTranslation("accounts");
   const [domain, setDomain] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -488,7 +489,8 @@ export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: nu
 
       {!open ? null : !domain ? (
         <>
-          <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 14, lineHeight: 1.5 }}>{t("customDomain.explainer")}</p>
+          <p style={{ fontSize: 12, color: "var(--mute)", marginBottom: 10, lineHeight: 1.5 }}>{t("customDomain.explainer")}</p>
+          <div style={{ marginBottom: 14 }}><CustomDomainGuide accountId={accountId} domain={null} cnameTarget={cnameTarget} website={website} /></div>
           {monoLabel(t("customDomain.domainLabel"))}
           <input
             className="neu-input"
@@ -514,7 +516,8 @@ export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: nu
             <>
               <p style={{ fontSize: 11.5, color: "var(--mute)", margin: "12px 0 8px", lineHeight: 1.5 }}>{t("customDomain.dnsInstructions")}</p>
               <FlatRow label={t("customDomain.recordType")} value="CNAME" />
-              <FlatRow label={t("customDomain.recordName")} value="book" />
+              {/* The host is the first label of the saved domain (afspraak.robbenrosmalen.nl -> afspraak). */}
+              <FlatRow label={t("customDomain.recordName")} value={domain.split(".")[0]} />
               <FlatRow
                 label={t("customDomain.recordTarget")}
                 value={cnameTarget}
@@ -524,6 +527,7 @@ export function CustomBookingDomainCard({ accountId, noBorder }: { accountId: nu
           )}
 
           <div className="row" style={{ gap: 10, marginTop: 12 }}>
+            {!active && <CustomDomainGuide accountId={accountId} domain={domain} cnameTarget={cnameTarget} website={website} />}
             {!active && (
               <button className="la-btn la-btn--soft" disabled={busy} onClick={handleVerify}>
                 {busy ? <Loader2 size={12} className="animate-spin" /> : <RefreshCw size={12} />}
@@ -560,10 +564,15 @@ export function BookingLinkReadOnly({ accountId, noBorder }: { accountId: number
   const [creds, setCreds] = useState<CaldiyCredentials | null>(null);
   const [copied, setCopied] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // The page only works once the client's own calendar is connected.
+  const [calendarConnected, setCalendarConnected] = useState(false);
 
   useEffect(() => {
     if (!accountId) return;
     fetchCaldiyCredentials(accountId).then(setCreds).catch(() => {}).finally(() => setLoaded(true));
+    fetchCalendarConnections(accountId)
+      .then((conns) => setCalendarConnected(conns.some((c) => (c.provider as string) !== "caldiy" && c.status === "connected")))
+      .catch(() => {});
   }, [accountId]);
 
   if (!loaded || !creds) return null;
@@ -581,7 +590,7 @@ export function BookingLinkReadOnly({ accountId, noBorder }: { accountId: number
       <SectionHead>
         <IconTile><Calendar size={18} style={{ color: "var(--mute-2)" }} /></IconTile>
         <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("calendar.booking.title")}</span>
-        <ConnectedPill on={true} connectedLabel={t("pills.connected")} notSetLabel={t("pills.notSet")} />
+        <ConnectedPill on={calendarConnected} connectedLabel={t("pills.connected")} notSetLabel={t("pills.waitingCalendar")} />
       </SectionHead>
 
       <FlatRow
@@ -595,7 +604,7 @@ export function BookingLinkReadOnly({ accountId, noBorder }: { accountId: number
         }
       />
 
-      <p style={{ fontSize: 12, color: "var(--mute)", marginTop: 14, lineHeight: 1.5 }}>{t("calendar.booking.clientExplainer")}</p>
+      <p style={{ fontSize: 12, color: "var(--mute)", marginTop: 14, lineHeight: 1.5 }}>{t(calendarConnected ? "calendar.booking.done" : "calendar.booking.clientExplainer")}</p>
     </>
   );
 

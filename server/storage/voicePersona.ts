@@ -2,9 +2,10 @@
  * Live persona helpers for the Account Voice tab (specs/voice-tab).
  *
  * A live persona is a Niche_Vocabulary row owned by one Account (accounts_id +
- * is_live). Its text fields are GENERATED from the account, never hand-edited,
- * and its kb_template stays empty because the engine reads Account_Knowledge_Base
- * directly for client lines.
+ * is_live). Its company, description and usp follow the account (see
+ * syncLivePersona); kb_template, question_bank and every other field are only
+ * ever set by hand and are never written here. A new row starts with an empty
+ * kb_template because the engine reads Account_Knowledge_Base for client lines.
  */
 import { and, eq } from "drizzle-orm";
 import type { PgDatabase } from "drizzle-orm/pg-core";
@@ -12,6 +13,7 @@ import type { NodePgQueryResultHKT } from "drizzle-orm/node-postgres";
 import type { db } from "../db";
 import type * as schema from "@shared/schema";
 import {
+  accountCommunicationProfile,
   nicheVocabulary,
   type Accounts,
   type AccountCommunicationProfile,
@@ -33,11 +35,16 @@ export function localeLanguage(locale: string | null | undefined): VoiceLang {
   return "nl";
 }
 
-/** One language's text from a {nl,en,pt} slot, falling back en, nl, pt. */
+/**
+ * One language's text from a {nl,en,pt} slot, falling back to en only: the
+ * same rule as the engine's `_slot` (voice/number_routing.py), so the Voice
+ * tab shows exactly what she says and a cleared field reads as empty instead
+ * of another language's leftover text.
+ */
 export function pickSlot(slot: unknown, lang: VoiceLang): string {
   if (!slot || typeof slot !== "object") return "";
   const s = slot as NicheText;
-  return (s[lang] || s.en || s.nl || s.pt || "").trim();
+  return (s[lang] || s.en || "").trim();
 }
 
 /** Existing slot with the voice-language slot and the `en` fallback set. */
@@ -73,8 +80,7 @@ export async function upsertLivePersona(
   const company = (account.name ?? "").trim();
   const description = (account.businessDescription ?? "").trim();
   const niche = (account.businessNiche ?? "").trim();
-  const usp = (profile?.differentiator ?? "")
-    .split("\n").map((l) => l.trim()).filter(Boolean).join("\n");
+  const usp = normalizeUsp(profile?.differentiator);
   const now = new Date();
 
   // An account may already own a persona row (created by the tab, or linked by
@@ -88,7 +94,7 @@ export async function upsertLivePersona(
       usp: withSlots(owned.usp, lang, usp),
       serviceName: withSlots(owned.serviceName, lang, niche),
       nicheLabel: withSlots(owned.nicheLabel, lang, niche),
-      kbTemplate: { nl: "", en: "" },
+      // kb_template is hand-made (e.g. row 75): a regenerate never touches it.
       updatedAt: now,
     }).where(eq(nicheVocabulary.id, owned.id)).returning();
     return row;
@@ -119,4 +125,69 @@ export async function upsertLivePersona(
     updatedAt: now,
   }).returning();
   return row;
+}
+
+/** USP lines as the persona stores them: trimmed, empty lines dropped. */
+export function normalizeUsp(v: string | null | undefined): string {
+  return (v ?? "").split("\n").map((l) => l.trim()).filter(Boolean).join("\n");
+}
+
+/** What changed at the source. Only the fields present are written. */
+export interface PersonaSourceChange {
+  /** The name she says. Written as given (the account name is never renamed from here). */
+  company?: string;
+  /** Accounts.name was renamed: the persona follows only while it still says the old name. */
+  accountRename?: { from: string | null; to: string | null };
+  /** Accounts.business_description. */
+  description?: string | null;
+  /** Profile differentiator. */
+  usp?: string | null;
+}
+
+/**
+ * Bring the account's live persona in step with a source edit (the Voice tab's
+ * persona card, account details, the onboarding wizard). Writes only the
+ * fields that changed, in the line's voice language slot plus the `en`
+ * fallback, the same slots upsertLivePersona fills. kb_template, question_bank,
+ * service name and niche label are left alone. No persona: nothing to do.
+ */
+export async function syncLivePersona(exec: DbLike, accountId: number, change: PersonaSourceChange): Promise<void> {
+  const persona = await getLivePersona(exec, accountId);
+  if (!persona) return;
+  const [profile] = await exec.select({ setup: accountCommunicationProfile.setup }).from(accountCommunicationProfile)
+    .where(eq(accountCommunicationProfile.accountsId, accountId));
+  const setup = (profile?.setup && typeof profile.setup === "object" ? profile.setup : {}) as Record<string, unknown>;
+  const voice = (setup.voice && typeof setup.voice === "object" ? setup.voice : {}) as Record<string, unknown>;
+  const lang = localeLanguage(typeof voice.locale === "string" ? voice.locale : null);
+
+  const put = (existing: unknown, value: string): NicheText | null => {
+    if (pickSlot(existing, lang) === value) return null;
+    const base: NicheText = existing && typeof existing === "object" ? { ...(existing as NicheText) } : {};
+    base[lang] = value;
+    base.en = value;
+    return base;
+  };
+  const set: Partial<typeof nicheVocabulary.$inferInsert> = {};
+
+  let company = change.company?.trim();
+  if (company === undefined && change.accountRename) {
+    const from = (change.accountRename.from ?? "").trim();
+    const to = (change.accountRename.to ?? "").trim();
+    const current = pickSlot(persona.companyNameTemplate, lang);
+    if (to && (!current || current === from)) company = to;
+  }
+  if (company) {
+    const v = put(persona.companyNameTemplate, company);
+    if (v) set.companyNameTemplate = v as never;
+  }
+  if (change.description !== undefined) {
+    const v = put(persona.descriptionTemplate, (change.description ?? "").trim());
+    if (v) set.descriptionTemplate = v as never;
+  }
+  if (change.usp !== undefined) {
+    const v = put(persona.usp, normalizeUsp(change.usp));
+    if (v) set.usp = v;
+  }
+  if (Object.keys(set).length === 0) return;
+  await exec.update(nicheVocabulary).set({ ...set, updatedAt: new Date() }).where(eq(nicheVocabulary.id, persona.id));
 }

@@ -182,6 +182,40 @@
         "onState": "On: smoother audio, up to {{max}} ms later. Takes effect on the next call.",
         "offState": "Off: lowest delay, small dropouts are possible.",
         "anchor": "Media routed through {{site}}."
+      },
+      "engines": {
+        "title": "Engine tests",
+        "hint": "Calls from these numbers to the demo line are answered by the engine, voice and prompt you pick here. Every other caller keeps the line's own setup. Takes effect within 30 seconds.",
+        "xaiReady": "Grok is set up for {{numbers}}.",
+        "xaiMissing": "Grok is not set up yet (missing {{missing}}): these calls stay on GPT-Live until it is.",
+        "number": "Phone number",
+        "numberPlaceholder": "+31 6 12345678",
+        "label": "Name",
+        "labelPlaceholder": "Name (optional)",
+        "enabled": "Test on",
+        "remove": "Remove",
+        "add": "Add a tester",
+        "lineVoice": "The line's own voice",
+        "engine": {
+          "gpt-live": "GPT-Live",
+          "xai": "Grok"
+        },
+        "gender": {
+          "female": "Female",
+          "male": "Male",
+          "neutral": "Neutral",
+          "other": "Other voices"
+        },
+        "prompt": "Prompt",
+        "promptOption": {
+          "standard": "Same as GPT-Live",
+          "lean": "Lean (xAI style)"
+        },
+        "reasoning": "Reasoning",
+        "reasoningOption": {
+          "high": "On",
+          "none": "Off"
+        }
       }
     }
   },

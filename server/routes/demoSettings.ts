@@ -229,6 +229,20 @@ export function registerDemoSettingsRoutes(app: Express) {
     // demo from your own phone always starts fresh. Stored as E.164 (see
     // FORGET_COUNTRIES): the engine compares them with the caller's number.
     forgetNumbers: z.array(z.string().trim().min(1).max(30)).max(20).optional(),
+    // Engine tests: a tester's own phone number gets this engine (GPT-Live or
+    // Grok), voice, prompt variant and reasoning on a conference-route line;
+    // every other caller keeps the line's setup. Read per call by the engine
+    // (src/automations/voice/voice_engines.py), which ignores a voice id the
+    // chosen engine does not have. Stored as E.164, like forgetNumbers.
+    engineTests: z.array(z.object({
+      number: z.string().trim().min(1).max(30),
+      label: z.string().trim().max(40).optional(),
+      enabled: z.boolean().optional(),
+      engine: z.enum(["gpt-live", "xai"]),
+      voice: z.string().trim().max(40).optional(),
+      prompt: z.enum(["standard", "lean"]).optional(),
+      reasoning: z.enum(["high", "none"]).optional(),
+    })).max(10).optional(),
   });
 
   // A number typed without +country code is read as Dutch, then British, then
@@ -248,6 +262,15 @@ export function registerDemoSettingsRoutes(app: Express) {
         });
       }
       parsed.data.forgetNumbers = Array.from(new Set(parsed.data.forgetNumbers.map((n) => forgetE164(n)!)));
+    }
+    if (parsed.data.engineTests) {
+      const bad = parsed.data.engineTests.filter((t) => !forgetE164(t.number)).map((t) => t.number);
+      if (bad.length) {
+        return res.status(400).json({
+          message: `Not a phone number: ${bad.join(", ")}. Use international format, e.g. +31612345678.`,
+        });
+      }
+      parsed.data.engineTests = parsed.data.engineTests.map((t) => ({ ...t, number: forgetE164(t.number)! }));
     }
     const current = await readSettings("voice");
     const next: Record<string, unknown> = { ...current, ...parsed.data };

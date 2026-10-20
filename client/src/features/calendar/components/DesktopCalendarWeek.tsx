@@ -2,10 +2,11 @@
 // busy overlay, and the WeekGrid container (with the edit-block dialog).
 import { useMemo, useState, useRef, useEffect } from "react";
 import type { TFunction } from "i18next";
+import { hourLabel } from "./hourLabel";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   type Appointment, HOUR0, HOUR1, SPAN, PX_PER_HOUR,
-  statusMetaOf, apptHm, dateKeyOf,
+  statusMetaOf, kindLabelOf, apptHm, dateKeyOf,
 } from "../lib/calendarDesign";
 import { AddBlockForm } from "./AddBlockForm";
 import type { CalendarBlock } from "../hooks/useCalendarBlocks";
@@ -15,6 +16,7 @@ import {
 
 export function WeekEvent({ ev, dayIdx, nCols, active, onClick, t }: { ev: Appointment; dayIdx: number; nCols: number; active: boolean; onClick: (e: React.MouseEvent) => void; t: TFunction }) {
   const sm = statusMetaOf(ev, t);
+  const kind = kindLabelOf(ev, t);
   const startH = Math.min(Math.max(apptHm(ev), HOUR0), HOUR1);
   const topPct = ((startH - HOUR0) / SPAN) * 100;
   const hPct = Math.max(((ev.callDurationMinutes || 60) / 60 / SPAN) * 100, 1.5);
@@ -40,7 +42,7 @@ export function WeekEvent({ ev, dayIdx, nCols, active, onClick, t }: { ev: Appoi
         <span style={{ fontSize: 11.5, fontWeight: 600, color: active ? "var(--paper)" : "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1, textDecoration: faded ? "line-through" : "none" }}>{ev.lead_name}</span>
       </div>
       {ev.campaign_name && <div style={{ fontSize: 9.5, color: active ? "rgba(255,250,240,0.82)" : "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", marginTop: 1 }}>{ev.campaign_name}</div>}
-      <div style={{ ...MONO, fontSize: 8, color: active ? "rgba(255,250,240,0.7)" : "var(--mute-2)", marginTop: 2 }}>{ev.time}{sm.key !== "booked" ? ` · ${sm.label}` : ""}</div>
+      <div style={{ ...MONO, fontSize: 8, color: active ? "rgba(255,250,240,0.7)" : "var(--mute-2)", marginTop: 2 }}>{ev.time}{kind ? ` · ${kind}` : ""}{sm.key !== "booked" ? ` · ${sm.label}` : ""}</div>
     </div>
   );
 }
@@ -273,7 +275,7 @@ export function WeekGrid(p: DesktopCalendarProps) {
               <div key={h}>
                 {i > 0 && <div style={{ position: "absolute", top: `${pct}%`, left: 56, right: 0, borderTop: "1px solid var(--line-strong)" }} />}
                 {i < SPAN && <div style={{ position: "absolute", top: `${halfPct}%`, left: 56, right: 0, borderTop: "1px dashed var(--line-strong)", opacity: 0.5 }} />}
-                <div style={{ position: "absolute", top: `calc(${pct}% - 7px)`, left: 0, width: 50, textAlign: "right", ...MONO, fontSize: 13, color: "var(--mute-2)" }}>{h <= 12 ? h : h - 12}{h < 12 ? "am" : "pm"}</div>
+                <div style={{ position: "absolute", top: `calc(${pct}% - 7px)`, left: 0, width: 50, textAlign: "right", ...MONO, fontSize: 13, color: "var(--mute-2)" }}>{hourLabel(h)}</div>
               </div>
             );
           })}

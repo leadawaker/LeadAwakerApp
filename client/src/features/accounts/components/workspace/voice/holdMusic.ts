@@ -12,6 +12,7 @@ export const HOLD_TRACKS = [
   { id: "grieg-morning-mood", seconds: 45 },
   { id: "vivaldi-winter-largo", seconds: 55 },
   { id: "romance-anonimo-guitar", seconds: 55 },
+  { id: "easy-funk", seconds: 50 },
 ] as const;
 
 export const DEFAULT_HOLD_TRACK = "satie-gymnopedie-1";

@@ -9,8 +9,8 @@ export type DesktopFilter = 'all' | 'next7' | 'overdue' | 'waiting' | 'completed
 export const AVATAR_BG = ['var(--wine)', '#3D2A66', '#2F5E4A', '#5E4A22'];
 
 // Users who still exist account-wide (comments, activity, Accounts page) but are
-// no longer assignable on Tasks. Finn (31) stepped back to Friday-only coaching.
-const HIDDEN_ASSIGNEE_IDS = new Set([31]);
+// no longer assignable on Tasks. Empty for now.
+const HIDDEN_ASSIGNEE_IDS = new Set<number>();
 
 export function assignableUsers<T extends { id: number }>(users: T[]): T[] {
   return users.filter(u => !HIDDEN_ASSIGNEE_IDS.has(u.id));

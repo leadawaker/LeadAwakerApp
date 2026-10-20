@@ -34,7 +34,14 @@
     "transfersFailed_one": "{{count}} mislukte doorverbinding",
     "transfersFailed_other": "{{count}} mislukte doorverbindingen",
     "minutes": "Minuten",
-    "empty": "Nog geen gesprekken deze maand."
+    "empty": "Nog geen gesprekken deze maand.",
+    "latency": "Reactiesnelheid",
+    "latencyValue": "{{ms}} ms",
+    "latencyHelp": "Laatste woord van de beller tot haar eerste, gemiddeld gesprek",
+    "latencyHelp_male": "Laatste woord van de beller tot zijn eerste, gemiddeld gesprek",
+    "costPerMinute": "Kosten per minuut",
+    "cost": "Kosten deze maand",
+    "ownerOnly": "Alleen jij ziet dit"
   },
   "number": {
     "title": "Telefoonnummer",
@@ -59,6 +66,7 @@
       "help": "Bellers horen een rustig kantoor op de achtergrond. Alleen de beller hoort het, en het stopt zodra je een doorverbonden gesprek aanneemt."
     },
     "summaryNone": "Nog geen nummer gekoppeld",
+    "summaryNoneClient": "Je telefoonnummer wordt ingesteld",
     "summaryHelp": "Het nummer, de documenten van de klant en Live gaan staan op het tabblad Integraties.",
     "summaryManage": "Beheren in Integraties",
     "region": {
@@ -75,11 +83,19 @@
   },
   "persona": {
     "title": "Live persona",
-    "help": "De bedrijfstekst waarmee de receptionist spreekt. Die wordt gegenereerd vanuit het account en niet met de hand bewerkt.",
+    "help": "De bedrijfstekst waarmee de receptionist antwoordt. Of je hem hier opslaat, in de accountgegevens of in het communicatieprofiel: hij blijft op alle drie de plekken gelijk.",
     "company": "Bedrijf",
+    "companyHelp": "Met deze naam neemt ze de telefoon op, en het is de bedrijfsnaam in haar instructies. Het account houdt zijn eigen naam.",
+    "companyHelp_male": "Met deze naam neemt hij de telefoon op, en het is de bedrijfsnaam in zijn instructies. Het account houdt zijn eigen naam.",
     "description": "Omschrijving",
+    "descriptionHelp": "Vertelt haar wat het bedrijf doet: het staat in haar stemprompt en als bedrijfsomschrijving in haar instructies. Wordt opgeslagen in de accountgegevens.",
+    "descriptionHelp_male": "Vertelt hem wat het bedrijf doet: het staat in zijn stemprompt en als bedrijfsomschrijving in zijn instructies. Wordt opgeslagen in de accountgegevens.",
     "usp": "Wat hen onderscheidt",
-    "generatedNote": "Pas de accountgegevens of het communicatieprofiel aan om deze tekst te wijzigen.",
+    "uspHelp": "Eén reden per regel. Ze vindt dit in haar kennis als antwoord op \"Waarom kiezen klanten voor ons?\". Wordt opgeslagen in het communicatieprofiel.",
+    "uspHelp_male": "Eén reden per regel. Hij vindt dit in zijn kennis als antwoord op \"Waarom kiezen klanten voor ons?\". Wordt opgeslagen in het communicatieprofiel.",
+    "generatedNote": "Met de hand geschreven kennis in deze persona blijft staan: opslaan hier overschrijft die nooit.",
+    "edit": "Bewerken",
+    "companyRequired": "Vul een bedrijfsnaam in.",
     "emptyTitle": "Nog geen live persona",
     "emptyHelp": "Maak er een aan op basis van de bedrijfsgegevens van dit account, zodat de receptionist als het bedrijf kan antwoorden.",
     "create": "Live persona aanmaken"
@@ -89,7 +105,23 @@
     "help": "Hoe de receptionist zich voorstelt en klinkt aan de telefoon.",
     "name": "Naam van de receptionist",
     "pronunciation": "Uitspraak",
-    "intake": "Wat het team wil weten vóór een afspraak"
+    "intake": "Wat het team wil weten vóór een afspraak",
+    "pickVoice": "Kies een stem",
+    "samplesHelp": "Speel een korte begroeting af in het Engels, Nederlands of Portugees en klik dan op een stem om die te kiezen.",
+    "playSample": "{{voice}} afspelen in {{lang}}",
+    "sampleFailed": "Dit voorbeeld kon niet worden afgespeeld",
+    "natural": "Natuurlijk",
+    "generated": "Gegenereerd",
+    "naturalHelp": "Opgenomen van een echt persoon.",
+    "generatedHelp": "Door OpenAI samengesteld. Kan minder menselijk klinken, vooral in het Nederlands.",
+    "spokenAs": "In gesprekken stelt ze zich voor als {{name}}.",
+    "greetingSwapped": "De begroeting noemt nu ook {{name}}.",
+    "pronunciationAdd": "Woord toevoegen",
+    "pronunciationCount_one": "{{count}} woord",
+    "pronunciationCount_other": "{{count}} woorden",
+    "pronunciationSaveNote": "Wijzigingen hier horen bij de kaart: druk op Opslaan op de kaart als je klaar bent.",
+    "spokenAs_male": "In gesprekken stelt hij zich voor als {{name}}.",
+    "pronunciationAutosave": "Opgeslagen als je dit sluit."
   },
   "transfer": {
     "title": "Doorverbinden",
@@ -144,6 +176,10 @@
         "romance-anonimo-guitar": {
           "title": "Romance Anónimo",
           "by": "Anoniem · klassieke gitaar"
+        },
+        "easy-funk": {
+          "title": "Make Funk",
+          "by": "HoliznaCC0 · funkgroove"
         }
       }
     },
@@ -182,16 +218,26 @@
     "kind": {
       "greeting": "Begroeting",
       "layer": "Hoe ze praat",
-      "backend": "Wat ze weet en doet"
+      "backend": "Wat ze weet en doet",
+      "layer_male": "Hoe hij praat",
+      "backend_male": "Wat hij weet en doet"
     },
     "kindHelp": {
       "greeting": "De instructie die ze krijgt als het gesprek begint.",
       "layer": "Haar stemprompt: toon, aanspreekvorm, uitspraak en hoe een telefoongesprek verloopt.",
-      "backend": "De backend die voor haar antwoordt: bedrijfsgegevens, kennis, openingstijden, buiten kantoortijd en afspraakregels."
+      "backend": "De backend die voor haar antwoordt: bedrijfsgegevens, kennis, openingstijden, buiten kantoortijd en afspraakregels.",
+      "greeting_male": "De instructie die hij krijgt als het gesprek begint.",
+      "layer_male": "Zijn stemprompt: toon, aanspreekvorm, uitspraak en hoe een telefoongesprek verloopt.",
+      "backend_male": "De backend die voor hem antwoordt: bedrijfsgegevens, kennis, openingstijden, buiten kantoortijd en afspraakregels."
     },
     "recentTitle": "Recente testgesprekken",
     "recentEmpty": "Nog geen testgesprekken. Klik op Test in browser om er een te doen.",
-    "callFailed": "Dit gesprek kon niet worden geladen."
+    "callFailed": "Dit gesprek kon niet worden geladen.",
+    "title_male": "Probeer hem uit",
+    "help_male": "Praat met hem in je browser, precies zoals een beller op deze lijn hem hoort: de persona, stem, begroeting, openingstijden en instellingen van deze klant. Geen telefoon nodig.",
+    "promptTitle_male": "Wat hij te horen krijgt",
+    "promptHelp": "De exacte prompt die ze in een gesprek krijgt, in drie delen. Alleen voor beheerders.",
+    "promptHelp_male": "De exacte prompt die hij in een gesprek krijgt, in drie delen. Alleen voor beheerders."
   },
   "live": {
     "goLive": "Live zetten",
@@ -201,7 +247,8 @@
     "cancel": "Annuleren",
     "isLive": "Live: gesprekken naar {{number}} worden door de AI-receptionist aangenomen.",
     "takeOffline": "Offline halen",
-    "notReady": "Kan live zodra dit klaar is: {{items}}."
+    "notReady": "Kan live zodra dit klaar is: {{items}}.",
+    "readyHelp_male": "Alles staat klaar. Live zetten betekent dat echte bellers op dit nummer hem krijgen."
   },
   "screening": {
     "title": "Ongewenste gesprekken",
@@ -212,11 +259,13 @@
     },
     "robocalls": {
       "label": "Robocalls ophangen",
-      "help": "Opnames en automatische stemmen worden zonder een woord beëindigd. Twijfelt ze of het een machine is, dan behandelt ze het als een mens."
+      "help": "Opnames en automatische stemmen worden zonder een woord beëindigd. Twijfelt ze of het een machine is, dan behandelt ze het als een mens.",
+      "help_male": "Opnames en automatische stemmen worden zonder een woord beëindigd. Twijfelt hij of het een machine is, dan behandelt hij het als een mens."
     },
     "abuse": {
       "label": "Misbruik beëindigen",
-      "help": "Na één rustige waarschuwing beëindigt ze het gesprek, en je krijgt een melding. Is hetzelfde nummer binnen 30 dagen opnieuw grensoverschrijdend, dan wordt het 14 dagen op deze lijn geblokkeerd."
+      "help": "Na één rustige waarschuwing beëindigt ze het gesprek, en je krijgt een melding. Is hetzelfde nummer binnen 30 dagen opnieuw grensoverschrijdend, dan wordt het 14 dagen op deze lijn geblokkeerd.",
+      "help_male": "Na één rustige waarschuwing beëindigt hij het gesprek, en je krijgt een melding. Is hetzelfde nummer binnen 30 dagen opnieuw grensoverschrijdend, dan wordt het 14 dagen op deze lijn geblokkeerd."
     },
     "blocked": {
       "label": "Geblokkeerde en gewaarschuwde nummers",
@@ -225,7 +274,8 @@
       "unblock": "Deblokkeren",
       "warned": "beëindigd wegens misbruik op {{date}}, geblokkeerd als het opnieuw gebeurt",
       "clear": "Wissen"
-    }
+    },
+    "help_male": "Wat de AI-receptionist afwijst. Elk gesprek dat hij zo beëindigt, wordt in het transcript gemarkeerd."
   },
   "followUp": {
     "title": "Na het gesprek",
@@ -242,6 +292,31 @@
       "placeholder": "bijv. Robben",
       "help": "Staat het nummer van de beller niet op WhatsApp, dan gaat hetzelfde bericht één keer als sms uit onder deze naam. Mensen kunnen er niet op antwoorden.",
       "invalid": "Gebruik maximaal 11 letters, cijfers of spaties, met minstens één letter."
+    },
+    "help_male": "Tijdens het gesprek vraagt hij of hij de gegevens via WhatsApp mag sturen. Zegt de beller ja, dan komt 30 seconden na het einde van het gesprek een WhatsApp-bericht van dit bedrijf met de link om een afspraak in te plannen.",
+    "preview": {
+      "title": "Wat de beller krijgt",
+      "help": "Het exacte WhatsApp-bericht, ingevuld met een voorbeeldnaam. Het echte bericht gebruikt de voornaam van de beller.",
+      "loading": "Bericht laden…",
+      "error": "Het voorbeeld van het bericht kon niet worden geladen.",
+      "kindLabel": "Welk bericht",
+      "languageLabel": "Taal",
+      "kind": {
+        "followup": "Nog geen afspraak",
+        "booked": "Afspraak gemaakt in het gesprek"
+      },
+      "lang": {
+        "en": "Engels",
+        "nl": "Nederlands"
+      },
+      "link": {
+        "short": "De link is de eigen afspraaklink van de beller: book.leadawaker.com met een code die voor die beller is gemaakt. Die opent de agenda van dit account ({{calendar}}) en koppelt de afspraak meteen aan de beller.",
+        "custom": "De link is de eigen afspraaklink van de beller, op het boekingsdomein van dit account. Die opent de agenda van dit account ({{calendar}}) en koppelt de afspraak meteen aan de beller.",
+        "none": "De campagne van dit account heeft geen agendalink, dus bellers zonder afspraak krijgen geen bericht. Voeg een agendalink toe aan de campagne om het te versturen."
+      },
+      "bookedNote": "Plant zij de afspraak tijdens het gesprek, dan bevestigt het bericht de tijd in plaats van een link te sturen. De getoonde tijd is een voorbeeld.",
+      "bookedNote_male": "Plant hij de afspraak tijdens het gesprek, dan bevestigt het bericht de tijd in plaats van een link te sturen. De getoonde tijd is een voorbeeld.",
+      "otherLanguages": "Bellers in een andere taal, ook Portugees, krijgen het Engelse bericht."
     }
   },
   "numberDocs": {
@@ -385,5 +460,98 @@
       "google": "Stemmen van Google"
     },
     "unsaved": "Nog niet opgeslagen. Druk op Fragment maken, luister, en kies dan Dit fragment gebruiken om op te slaan."
+  },
+  "rail": {
+    "overview": {
+      "label": "Overzicht",
+      "help": "Hoe deze maand ging en het telefoonnummer.",
+      "ready": "Klaar voor gesprekken",
+      "missing_one": "{{count}} onderdeel ontbreekt",
+      "missing_other": "{{count}} onderdelen ontbreken",
+      "help_male": "Hoe deze maand ging en het telefoonnummer."
+    },
+    "identity": {
+      "label": "Wie ze is",
+      "help": "Haar naam, stem, begroeting en het bedrijf waarvoor ze spreekt.",
+      "empty": "Nog geen naam of stem",
+      "label_male": "Wie hij is",
+      "help_male": "Zijn naam, stem, begroeting en het bedrijf waarvoor hij spreekt."
+    },
+    "knowledge": {
+      "label": "Wat ze weet",
+      "help": "Openingstijden en de antwoorden die ze kan geven.",
+      "detail_one": "{{count}} kennisitem",
+      "detail_other": "{{count}} kennisitems",
+      "label_male": "Wat hij weet",
+      "help_male": "Openingstijden en de antwoorden die hij kan geven."
+    },
+    "call": {
+      "label": "Tijdens het gesprek",
+      "help": "Doorverbinden, wat ze vraagt, wat bellers horen en wie ze afwijst.",
+      "noTransfer": "Niet doorverbinden",
+      "noNumber": "Nog geen doorverbindnummer",
+      "help_male": "Doorverbinden, wat hij vraagt, wat bellers horen en wie hij afwijst."
+    },
+    "after": {
+      "label": "Na het gesprek",
+      "help": "Het WhatsApp-bericht dat bellers daarna krijgen.",
+      "on": "WhatsApp na elk gesprek",
+      "off": "Geen bericht na het gesprek"
+    },
+    "prompt": {
+      "label": "Prompt & test",
+      "help": "Alles wat ze te horen krijgt, opgeslagen terwijl je typt, naast een testgesprek.",
+      "help_male": "Alles wat hij te horen krijgt, opgeslagen terwijl je typt, naast een testgesprek.",
+      "detail": "Bewerk en probeer haar uit",
+      "detail_male": "Bewerk en probeer hem uit"
+    }
+  },
+  "line": {
+    "title": "Aan de lijn",
+    "help": "Wat een beller rond haar stem hoort. Elke schakelaar slaat direct op.",
+    "needsNumber": "Koppel eerst een nummer bij Integraties > Telefoon: de opnamemelding, het kantoorgeluid en de regio horen bij dat nummer.",
+    "help_male": "Wat een beller rond zijn stem hoort. Elke schakelaar slaat direct op."
+  },
+  "conversation": {
+    "title": "Vragen en buiten openingstijden"
+  },
+  "prompt": {
+    "autosave": {
+      "saving": "Opslaan",
+      "saved": "Opgeslagen",
+      "error": "Niet opgeslagen"
+    },
+    "greeting": {
+      "title": "Het eerste wat ze zegt",
+      "title_male": "Het eerste wat hij zegt",
+      "help": "Letterlijk uitgesproken als ze opneemt. Alleen voor dit bedrijf.",
+      "help_male": "Letterlijk uitgesproken als hij opneemt. Alleen voor dit bedrijf."
+    },
+    "extra": {
+      "help": "Regels en feiten alleen voor dit bedrijf. Ze gaan naar het deel dat vragen beantwoordt en afspraken maakt, niet naar haar spreekstijl.",
+      "help_male": "Regels en feiten alleen voor dit bedrijf. Ze gaan naar het deel dat vragen beantwoordt en afspraken maakt, niet naar zijn spreekstijl."
+    },
+    "layer": {
+      "title": "Hoe ze spreekt ({{language}})",
+      "title_male": "Hoe hij spreekt ({{language}})",
+      "help": "Haar spraakinstructies: toon, tempo, uitspraak, wanneer ze doorverbindt. Plaatshouders tussen accolades worden per bedrijf ingevuld.",
+      "help_male": "Zijn spraakinstructies: toon, tempo, uitspraak, wanneer hij doorverbindt. Plaatshouders tussen accolades worden per bedrijf ingevuld."
+    },
+    "backend": {
+      "title": "Wat ze doet ({{language}})",
+      "title_male": "Wat hij doet ({{language}})",
+      "help": "De backend die voor haar antwoordt: afspraken, kennis en tools.",
+      "help_male": "De backend die voor hem antwoordt: afspraken, kennis en tools."
+    },
+    "shared": "Gedeeld: elke klantlijn in deze taal gebruikt deze tekst ({{useCase}}). Een wijziging hier geldt binnen 30 seconden voor hun volgende gesprek.",
+    "history": "Eerdere versies in de Prompt Library (#{{id}})",
+    "noLanguage": "Kies eerst een taal onder Wie ze is. De gedeelde prompts hangen daarvan af.",
+    "resolve": {
+      "show": "Toon ingevuld",
+      "edit": "Bewerken",
+      "failed": "De prompt kon niet worden ingevuld voor deze lijn.",
+      "valueLegend": "Ingevuld voor dit bedrijf",
+      "addedLegend": "Door het systeem toegevoegd tijdens het gesprek"
+    }
   }
 }

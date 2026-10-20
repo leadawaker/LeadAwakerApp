@@ -1,5 +1,4 @@
-// Scratch notes for the onboarding call, pinned to the bottom of the screen so
-// they stay in view while the wizard moves. They live in the account's own
+// Scratch notes for the onboarding call, below the wizard. They live in the account's own
 // internal `notes` field (the one the account dialog and table already edit),
 // so they never reach the knowledge base or the AI, and autosave as you type.
 import { useEffect, useRef, useState } from "react";
@@ -67,7 +66,7 @@ export function CallNotes({ account, onSave }: { account: AccountRow; onSave: (f
   return (
     <div
       className="neu-raised"
-      style={{ position: "sticky", bottom: 12, zIndex: 5, borderRadius: "var(--r-card)", background: "var(--bone)", padding: "12px 18px" }}
+      style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "12px 18px" }}
     >
       <button
         onClick={toggle}

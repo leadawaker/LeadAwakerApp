@@ -1,14 +1,41 @@
 {
+  "chatChannel": {
+    "all": "Todos os chats",
+    "website": "Site",
+    "whatsapp": "WhatsApp"
+  },
+  "chatRecap": {
+    "title": "Resumo",
+    "booked": "Agendado",
+    "noShow": "Não compareceu",
+    "cancelled": "Cancelado",
+    "via": "por {{channel}}",
+    "wanted": "O que a pessoa quer",
+    "facts": "Pontos principais",
+    "nextStep": "Próximo passo",
+    "noSummary": "Ainda sem resumo. Ele é escrito quando a conversa termina.",
+    "handoff": "Aguardando a sua equipe",
+    "followUp": "Retorno em {{date}}",
+    "appointment": "Horário marcado para {{date}}",
+    "messageCounts": "{{received}} recebidas, {{sent}} enviadas",
+    "bookingChannel": {
+      "whatsapp": "WhatsApp",
+      "website": "site",
+      "booking_page": "página de agendamento",
+      "phone": "telefone",
+      "sms": "SMS"
+    }
+  },
   "conversationType": {
     "label": "Tipo",
     "widget": "Widget",
     "voice": "Voz",
-    "dbr": "Reativa\u00e7\u00e3o / Or\u00e7amentos",
+    "dbr": "Reativação / Orçamentos",
     "instagram": "Instagram",
     "other": "Outros"
   },
   "page": {
-    "chatsTitle": "Conversas",
+    "chatsTitle": "Chats",
     "title": "Leads",
     "opportunities": "Oportunidades"
   },
@@ -20,7 +47,7 @@
   "toolbar": {
     "add": "Adicionar",
     "searchPlaceholder": "Buscar leads...",
-    "searchConversationsPlaceholder": "Buscar conversas...",
+    "searchConversationsPlaceholder": "Buscar chats...",
     "searchLeads": "Buscar leads",
     "group": "Agrupar",
     "sort": "Ordenar",
@@ -55,7 +82,7 @@
     "previous": "Anterior",
     "next": "Seguinte",
     "of": "de",
-    "chats": "Conversas",
+    "chats": "Chats",
     "chatsPeek": "Mostrar a última mensagem de cada lead",
     "minimizeList": "Minimizar lista",
     "expandList": "Expandir lista",
@@ -65,8 +92,8 @@
     "upcomingCalls": "Próximos agendamentos",
     "more": "Mais",
     "exportPdf": "Exportar PDF",
-    "showChats": "Mostrar conversas",
-    "hideChats": "Ocultar conversas"
+    "showChats": "Mostrar chats",
+    "hideChats": "Ocultar chats"
   },
   "sort": {
     "sortBy": "Ordenar por",
@@ -86,7 +113,9 @@
     "scoreDown": "Pontuação ↓",
     "scoreUp": "Pontuação ↑",
     "activity": "Última atividade",
-    "created": "Data de criação"
+    "created": "Data de criação",
+    "createdNewest": "Leads mais recentes",
+    "createdOldest": "Leads mais antigos"
   },
   "group": {
     "status": "Status",
@@ -97,7 +126,10 @@
     "untagged": "Sem Tag",
     "service": "Serviço",
     "source": "Origem",
-    "tag": "Etiqueta"
+    "tag": "Etiqueta",
+    "noAccount": "Sem conta",
+    "noService": "Sem serviço",
+    "noSource": "Sem origem"
   },
   "filters": {
     "title": "Filtros de Leads",
@@ -156,7 +188,9 @@
       "created": "Criado",
       "assignedTo": "Atribuído a",
       "chats": "Conversas",
-      "createdAt": "Criado"
+      "createdAt": "Criado",
+      "lastContact": "Último contato",
+      "appointment": "Agendamento"
     },
     "empty": {
       "noResults": "Nenhum lead corresponde à sua busca",
@@ -181,7 +215,10 @@
       "Closed": "Fechado",
       "Lost": "Perdido",
       "DND": "Não Perturbe",
-      "Unknown": "Desconhecido"
+      "Unknown": "Desconhecido",
+      "rx_new": "Nova solicitação",
+      "rx_answered": "Respondido",
+      "rx_done": "Concluído"
     },
     "dropHere": "Soltar aqui",
     "foldColumn": "Clique para recolher",
@@ -332,10 +369,12 @@
     "gradientTester": "Testador de gradiente"
   },
   "contact": {
+    "sideBooking": "Retorno · {{date}}", "sideVisit": "Visita · {{date}}",
     "title": "Contato",
     "firstName": "Nome",
     "lastName": "Sobrenome",
     "phone": "Telefone",
+    "callbackPhone": "Outro número",
     "email": "E-mail",
     "jobTitle": "Cargo",
     "company": "Empresa",
@@ -555,7 +594,7 @@
     "noMessagesHint": "Mensagens aparecerão aqui quando o contato começar",
     "typePlaceholder": "Digite uma mensagem…",
     "letAiContinue": "Deixar IA continuar",
-    "openInChats": "Abrir em Conversas",
+    "openInChats": "Abrir em Chats",
     "transcribing": "Transcrevendo…"
   },
   "team": {
@@ -622,7 +661,10 @@
     "confirm": "Confirmar",
     "cancel": "Cancelar",
     "clear": "Limpar",
-    "close": "Fechar"
+    "close": "Fechar",
+    "yes": "Sim",
+    "no": "Não",
+    "more": "Mais"
   },
   "addLead": {
     "title": "Adicionar Lead",
@@ -641,5 +683,29 @@
   "emptyState": {
     "noMatch": "Nenhum lead corresponde aos filtros",
     "noLeads": "Nenhum lead encontrado"
+  },
+  "leadChannel": {
+    "website": "Chat do site",
+    "whatsapp": "WhatsApp",
+    "phone": "Ligou",
+    "email": "E-mail",
+    "sms": "SMS"
+  },
+  "channelFilter": {
+    "all": "Todos os canais",
+    "website": "Site",
+    "whatsapp": "WhatsApp",
+    "phone": "Telefone"
+  },
+  "quickViews": {
+    "all": "Todos os leads",
+    "needsReply": "Aguardando resposta",
+    "upcoming": "Próximos agendamentos"
+  },
+  "names": {
+    "websiteVisitor": "Visitante do site"
+  },
+  "list": {
+    "loadingMore": "Carregando mais"
   }
 }

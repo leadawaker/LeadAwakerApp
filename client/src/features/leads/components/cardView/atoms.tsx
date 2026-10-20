@@ -558,7 +558,9 @@ export function GroupHeader({ label, count, isFirst }: { label: string; count: n
 }
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
-export function ListSkeleton({ compact = false }: { compact?: boolean } = {}) {
+import { CardListSkeleton } from "../LeadsSkeletons";
+
+export function ListSkeleton({ compact = false, peek = false }: { compact?: boolean; peek?: boolean } = {}) {
   // Compact (narrow) rail: a vertical strip of 38×38 avatar tiles, matching
   // CompactLeadCard, so the loading state fits the minimized toolbar width.
   if (compact) {
@@ -574,21 +576,5 @@ export function ListSkeleton({ compact = false }: { compact?: boolean } = {}) {
       </div>
     );
   }
-  return (
-    <div className="space-y-0 p-2">
-      {Array.from({ length: 8 }).map((_, i) => (
-        <div
-          key={i}
-          className="flex items-center gap-2.5 px-[11px] py-[10px] rounded-[var(--list-card-radius)] animate-pulse"
-          style={{ animationDelay: `${i * 50}ms` }}
-        >
-          <div className="h-9 w-9 rounded-[var(--r-surface)] bg-primary/10 shrink-0" />
-          <div className="flex-1 space-y-[5px]">
-            <div className="h-3 bg-primary/10 rounded-full w-3/5" />
-            <div className="h-2 bg-primary/5 rounded-full w-2/5" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  return <CardListSkeleton peek={peek} />;
 }

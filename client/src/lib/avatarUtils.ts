@@ -527,7 +527,6 @@ export function getProspectLogoUrl(
 
 // ── Per-user avatar color (named overrides + deterministic fallback) ──────────
 const USER_AVATAR_OVERRIDES: Record<string, string> = {
-  "Finn": "var(--wine)",
   "Gabriel": "#1E3A5F",    // navy
   "Gabriel Fronza": "#1E3A5F",
 };

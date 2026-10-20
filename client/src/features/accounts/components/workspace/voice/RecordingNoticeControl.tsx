@@ -5,12 +5,11 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
-import { Loader2, Megaphone, Pause, Play } from "lucide-react";
+import { Loader2, Pause, Play } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { ENGINE_BASE_URL } from "@/features/voiceDemo/engine";
 import { Chip } from "../communication/wizardAtoms";
-import { Panel } from "../atoms";
 import { FieldLabel, helpStyle, inputStyle } from "./voiceAtoms";
 import {
   applyRecordingNotice, draftRecordingNotice, resetRecordingNotice, voiceLineKey,
@@ -220,23 +219,6 @@ function NoticeEditor({ line }: { line: VoiceLine }) {
       {(error || player.failed) && (
         <p role="alert" style={{ ...helpStyle, margin: 0, color: "var(--stage-lost)" }}>{error ?? t("notice.loadFailed")}</p>
       )}
-    </div>
-  );
-}
-
-/** The notice as its own card on Integrations > Phone, with the editor open inline. */
-export function RecordingNoticeCard({ line, saving, onSave }: {
-  line: VoiceLine; saving: boolean; onSave: (patch: VoiceLinePatch) => Promise<boolean>;
-}) {
-  const { t } = useTranslation("voiceTab");
-  return (
-    <div data-testid="recording-notice-card">
-      <Panel icon={<Megaphone size={17} />} title={t("notice.title")} pad={20}>
-        <RecordingNoticeControl line={line} canEdit saving={saving} onSave={onSave} showEdit={false} />
-        <div style={{ marginTop: 18, paddingTop: 4, borderTop: "1px solid var(--line)" }}>
-          <NoticeEditor line={line} />
-        </div>
-      </Panel>
     </div>
   );
 }

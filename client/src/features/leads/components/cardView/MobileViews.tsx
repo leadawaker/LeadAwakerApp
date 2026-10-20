@@ -20,10 +20,9 @@ import { PIPELINE_HEX, getInitials } from "@/lib/avatarUtils";
 
 import type { ParsedNote } from "./types";
 import { ALL_MOBILE_KANBAN_STAGES, PIPELINE_STAGES } from "./constants";
-import { getLeadId, getFullName, getStatus, getScore } from "./leadUtils";
+import { getLeadId, getFullName, getStatus } from "./leadUtils";
 import { ContactWidget } from "./ContactWidget";
 import { ConversationWidget } from "./ConversationWidget";
-import { ScoreWidget } from "./ScoreWidgets";
 import { LeadSummaryCard } from "./LeadSummaryCard";
 
 // Re-export extracted components so existing imports from "./MobileViews" continue to work
@@ -39,29 +38,6 @@ function stageIndex(status: string): number {
   return idx < 0 ? 0 : idx;
 }
 
-// ── Temperature (derived from score, mirrors reference thresholds) ──────────────
-type Temp = "Hot" | "Warm" | "Cold";
-function scoreTemp(score: number): Temp {
-  if (score >= 55) return "Hot";
-  if (score >= 40) return "Warm";
-  return "Cold";
-}
-const TEMP_STYLE: Record<Temp, { bg: string; fg: string; br: string }> = {
-  Hot:  { bg: "rgba(162,75,63,0.10)",  fg: "#A24B3F", br: "rgba(162,75,63,0.22)" },
-  Warm: { bg: "rgba(185,130,31,0.10)", fg: "#B9821F", br: "rgba(185,130,31,0.22)" },
-  Cold: { bg: "rgba(84,123,176,0.10)", fg: "#547BB0", br: "rgba(84,123,176,0.22)" },
-};
-
-function MLTempBadge({ temp, label }: { temp: Temp; label: string }) {
-  const c = TEMP_STYLE[temp];
-  return (
-    <span style={{
-      fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.16em", textTransform: "uppercase",
-      padding: "3px 9px", borderRadius: "var(--r-pill)", background: c.bg, color: c.fg, border: `1px solid ${c.br}`,
-    }}>{label}</span>
-  );
-}
-
 // ── Square, stage-tinted avatar ─────────────────────────────────────────────────
 function MLAvatar({ name, status, size = 38, radius }: { name: string; status: string; size?: number; radius?: number }) {
   return (
@@ -73,28 +49,6 @@ function MLAvatar({ name, status, size = 38, radius }: { name: string; status: s
       fontSize: Math.round(size * 0.34), letterSpacing: "0.01em",
       boxShadow: "var(--sh-raised-crisp)",
     }}>{getInitials(name)}</div>
-  );
-}
-
-// ── Mini score donut 0–100 ───────────────────────────────────────────────────────
-function MLScoreArc({ score, size = 30, sw = 2.5 }: { score: number; size?: number; sw?: number }) {
-  const r = (size - sw) / 2;
-  const c = 2 * Math.PI * r;
-  const fill = (score / 100) * c;
-  const color = score >= 55 ? "var(--good)" : score >= 40 ? "var(--warn)" : "var(--stage-contacted)";
-  return (
-    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={sw}
-          strokeDasharray={`${fill} ${c - fill}`} strokeLinecap="round" />
-      </svg>
-      <div style={{
-        position: "absolute", inset: 0, display: "flex", alignItems: "center",
-        justifyContent: "center", fontFamily: "var(--mono)", fontSize: size < 34 ? 8.5 : 11,
-        fontWeight: 700, color: "var(--ink)",
-      }}>{score}</div>
-    </div>
   );
 }
 
@@ -348,8 +302,6 @@ export function MobileLeadDetailPanel({
   const name   = lead ? getFullName(lead) : "";
   const status = lead ? getStatus(lead) : "";
   const leadId = lead ? getLeadId(lead) : null;
-  const score  = lead ? getScore(lead) : 0;
-  const temp   = scoreTemp(score);
   const stageIdx = stageIndex(status);
   const isBooked = status === "Booked";
   const hasSummary = Boolean(lead?.ai_summary || lead?.aiSummary || lead?.ai_memory || lead?.aiMemory);
@@ -384,7 +336,6 @@ export function MobileLeadDetailPanel({
   const tabs: { key: MLTabKey; label: string }[] = [
     { key: "chat",    label: t("mobileDetail.tabs.chat") },
     { key: "summary", label: t("mobileDetail.tabs.summary", "Summary") },
-    { key: "score",   label: t("mobileDetail.tabs.score", "Score") },
     { key: "info",    label: t("mobileDetail.tabs.info") },
   ];
 
@@ -409,7 +360,6 @@ export function MobileLeadDetailPanel({
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="row" style={{ gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
               <span className="serif" style={{ fontSize: 22, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>{name}</span>
-              <MLTempBadge temp={temp} label={t(`detailView.${temp.toLowerCase()}`, temp)} />
             </div>
             <div className="row" style={{ gap: 9, fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute)", letterSpacing: "0.1em", textTransform: "uppercase", flexWrap: "wrap" }}>
               <span>{t("mobileDetail.leadLabel", "Lead")} {leadId}</span>
@@ -462,11 +412,6 @@ export function MobileLeadDetailPanel({
             {hasSummary
               ? <div style={{ padding: 16 }}><LeadSummaryCard lead={lead} status={status} hideHeader /></div>
               : <div style={{ padding: "50px 20px", textAlign: "center", fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)" }}>{t("mobileDetail.noSummary", "No summary yet")}</div>}
-          </div>
-        )}
-        {tab === "score" && (
-          <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: 16 }}>
-            <ScoreWidget score={score} lead={lead} status={status} />
           </div>
         )}
         {tab === "info" && (
@@ -553,7 +498,6 @@ export function MobileSimpleKanban({
                 stageLeads.map((lead) => {
                   const name   = getFullName(lead);
                   const leadId = getLeadId(lead);
-                  const score  = getScore(lead);
                   return (
                     <button
                       key={leadId}
@@ -569,7 +513,6 @@ export function MobileSimpleKanban({
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{name}</div>
                       </div>
-                      {score > 0 && <MLScoreArc score={score} size={26} />}
                     </button>
                   );
                 })

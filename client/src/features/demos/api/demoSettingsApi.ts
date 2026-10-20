@@ -56,6 +56,50 @@ export interface VoiceDemoSettings {
   phoneAmbienceLevel?: "low" | "medium" | "high";
   /** Numbers never greeted as returning callers (engine demo_settings.forgotten_numbers). */
   forgetNumbers?: string[];
+  /** Per tester phone: which engine answers, with which voice and prompt (engine voice_engines.py). */
+  engineTests?: EngineTest[];
+}
+
+export type VoiceEngine = "gpt-live" | "xai";
+
+/** One tester's engine choice. Their calls on a conference-route line only;
+ *  every other caller keeps the line's own setup. */
+export interface EngineTest {
+  number: string;
+  label?: string;
+  enabled?: boolean;
+  engine: VoiceEngine;
+  /** That engine's own voice id; empty keeps the line's voice. */
+  voice?: string;
+  /** Grok only: the shared GPT-Live prompt, or the lean Grok-style one. */
+  prompt?: "standard" | "lean";
+  /** Grok only: empty is xAI's default ("high"). */
+  reasoning?: "high" | "none";
+}
+
+export interface EngineVoice {
+  id: string;
+  label: string;
+  gender: "female" | "male" | "neutral" | null;
+}
+
+/** GET /voice/xai/options on the engine (src/webhooks/xai_voice_routes.py). */
+export interface EngineOptions {
+  engines: VoiceEngine[];
+  xai: { ready: boolean; missing: string[]; numbers: string[] };
+  voices: Record<VoiceEngine, EngineVoice[]>;
+}
+
+export function useEngineOptions() {
+  return useQuery({
+    queryKey: ["voice-engine-options"],
+    queryFn: async () => {
+      const res = await fetch(`${ENGINE_BASE_URL}/voice/xai/options`);
+      if (!res.ok) throw new Error("Could not reach the voice engine.");
+      return (await res.json()) as EngineOptions;
+    },
+    staleTime: 60_000,
+  });
 }
 
 /** The demo phone number's route at Telnyx (engine telnyx_bridge.get_route). */

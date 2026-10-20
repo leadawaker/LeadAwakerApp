@@ -133,5 +133,27 @@
     "yesterday": "Yesterday",
     "daysAgo": "{{count}}d ago",
     "weeksAgo": "{{count}}w ago"
+  },
+  "acceptInvite": {
+    "invalidTitle": "Invalid invite link",
+    "invalidBody": "This invite link is missing required information. Please check your email for the correct link or contact your administrator.",
+    "welcome": "Welcome to Lead Awaker",
+    "settingUp": "Setting up the account for",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Your full name",
+    "password": "Password",
+    "passwordPlaceholder": "At least 6 characters",
+    "confirmPassword": "Confirm password",
+    "confirmPlaceholder": "Re-enter your password",
+    "timezone": "Timezone",
+    "language": "Language",
+    "activating": "Activating...",
+    "getStarted": "Get started",
+    "changeLater": "You can change these settings later in your profile.",
+    "errName": "Please enter your full name.",
+    "errPasswordShort": "Password must be at least 6 characters.",
+    "errPasswordMismatch": "Passwords do not match.",
+    "errFailed": "Failed to activate the account. Please try again.",
+    "errNetwork": "Network error. Please try again."
   }
 }

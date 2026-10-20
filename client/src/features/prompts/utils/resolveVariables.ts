@@ -6,6 +6,8 @@ export interface CampaignForPreview {
   id: number;
   name: string;
   aiModel: string;
+  /** Campaign whose prompt this one borrows when it has none of its own (engine falls through to it). */
+  promptCampaignId?: number | null;
   agentName?: string | null;
   serviceName?: string | null;
   campaignService?: string | null;

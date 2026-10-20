@@ -8,10 +8,11 @@ import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { Phone, Mail, MessageSquare, Tag as TagIcon, Pencil, Trash2, Check, Clock } from "lucide-react";
 
 import { PIPELINE_HEX } from "./constants";
-import { getLeadId, getFullName, getInitials, getScore, getStatus, getPhone, getLastMessage, getLastMessageSender, getUnreadCount } from "./leadUtils";
+import { getLeadId, getFullName, getInitials, getStatus, getPhone, getLastMessage, getLastMessageSender, getUnreadCount } from "./leadUtils";
+import { displayStage, stageHex, stageColorKey, stageLabel, lastContactChannel, lastContactAt } from "../../lib/leadDisplay";
+import { ChannelGlyph } from "./ChannelGlyph";
 import { formatRelativeTime } from "./formatUtils";
 import { isDemoLead } from "@/features/leads/demoLead";
-import { ScoreArcDonut } from "./atoms";
 
 // ── Lead list card ─────────────────────────────────────────────────────────────
 const TRAY_WIDTH = 220;
@@ -62,15 +63,17 @@ export function LeadListCard({
   const { label: deleteLabel } = useDeleteAction("lead");
   const name        = getFullName(lead);
   const status      = getStatus(lead);
-  const score       = getScore(lead);
+  // Receptionist leads show their simpler stage (New inquiry / Answered / Booked / Done).
+  const stage       = displayStage(lead);
   const phone       = getPhone(lead);
   const email       = lead.email || lead.Email || "";
-  const statusHex   = PIPELINE_HEX[status] || "#6B7280";
+  const statusHex   = stageHex(stage);
   // Night-mode-friendly avatar: muted dark bg + light initials in dark mode,
   // keeping the solid saturated look untouched in light mode.
-  const avatarBg    = isDark ? (LEAD_AVATAR_BG_DARK[status] ?? "#2A2D33") : statusHex;
-  const avatarText  = isDark ? (LEAD_AVATAR_TEXT_DARK[status] ?? "#9CA3AF") : "#FFFFFF";
-  const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
+  const avatarBg    = isDark ? (LEAD_AVATAR_BG_DARK[stageColorKey(stage)] ?? "#2A2D33") : statusHex;
+  const avatarText  = isDark ? (LEAD_AVATAR_TEXT_DARK[stageColorKey(stage)] ?? "#9CA3AF") : "#FFFFFF";
+  const lastActivity = lastContactAt(lead);
+  const contactChannel = lastContactChannel(lead);
   // Contact-later leads sit at a normal pipeline stage but are frozen until a
   // date the lead themselves named. Without this the card is indistinguishable
   // from an actively-bumped lead. Gated on the tag, not on next_action_at
@@ -424,7 +427,7 @@ export function LeadListCard({
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
             <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusHex, flexShrink: 0 }} />
             <span className="text-[9px] max-md:text-[13px]" style={{ color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {t(`kanban.stageLabels.${status.replace(/ /g, "")}`, status)}{campaignName ? ` · ${campaignName}` : ''}{sourceLabel ? ` · ${sourceLabel}` : ''}
+              {stageLabel(t, stage)}{campaignName ? ` · ${campaignName}` : ''}{sourceLabel ? ` · ${sourceLabel}` : ''}
             </span>
             {resumeDate && (
               <span
@@ -460,14 +463,16 @@ export function LeadListCard({
           </div>
         </div>
 
-        {/* Right column: date (top-aligned with name) + score donut */}
+        {/* Right column: last contact time, with the channel it came through */}
         <div className="shrink-0 flex flex-col items-end gap-1.5" style={{ paddingTop: 1 }}>
           {lastActivity && (
             <span className="text-[9px] max-md:text-[11px] tabular-nums leading-none text-muted-foreground/60">
               {formatRelativeTime(lastActivity, t)}
             </span>
           )}
-          {score > 0 && <ScoreArcDonut score={score} />}
+          {contactChannel && (
+            <span title={t(`leadChannel.${contactChannel}`)} className="inline-flex"><ChannelGlyph channel={contactChannel} size={11} /></span>
+          )}
         </div>
 
         {/* Chat peek — full-width row below, left-aligned with the avatar (chats mode) */}

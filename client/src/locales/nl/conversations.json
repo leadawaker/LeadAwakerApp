@@ -1,7 +1,7 @@
 {
   "page": {
-    "title": "Gesprekken",
-    "searchPlaceholder": "Gesprekken zoeken...",
+    "title": "Chats",
+    "searchPlaceholder": "Chats zoeken...",
     "group": "Groeperen",
     "groupBy": "Groeperen op",
     "sort": "Sorteren",
@@ -12,11 +12,11 @@
     "allCampaigns": "Alle Campagnes"
   },
   "inbox": {
-    "title": "Gesprekken",
+    "title": "Chats",
     "prospectTitle": "Prospect-inbox",
     "newChat": "Nieuw gesprek",
     "startNewChat": "Nieuw gesprek starten",
-    "openInConversations": "Openen in Gesprekken",
+    "openInConversations": "Openen in Chats",
     "tabs": {
       "all": "Alle",
       "unread": "Ongelezen",
@@ -162,6 +162,8 @@
     },
     "attachment": "Bijlage",
     "clickToOpenFullSize": "Klik om op volledige grootte te openen",
+    "photoTitle": "Foto",
+    "downloadFullSize": "Download op ware grootte",
     "seek": "Zoeken",
     "playbackSpeed": "Afspeelsnelheid",
     "play": "Afspelen",

@@ -36,44 +36,52 @@ export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, 
   style?: React.CSSProperties;
   readOnly?: boolean;
 }) {
-  const { t } = useTranslation("accounts");
+  const { t, i18n } = useTranslation("accounts");
+  const lang = i18n.language.slice(0, 2);
+  const fmtTime = (v: string) => (lang === "nl" || lang === "pt" ? v.split(":").slice(0, 2).join(":") : formatTimeDisplay(v));
+  const languageName = (v: string) => t(`languageNames.${v}`, { defaultValue: v });
   const { isEditing, saving, startEdit, cancelEdit, set, val, save } = useAccountEdit(account, onSave);
-  const { isOwner } = useWorkspace();
+  const { isOwner, userRole, isAgencyUser } = useWorkspace();
+  // Agency-internal fields (status, niche, sends, opt-out keyword, tax id) are hidden from clients.
+  const clientView = !isAgencyUser;
+  // A client Manager edits only the opening hours; every other field stays read-only.
+  const hoursOnly = readOnly && userRole === "Manager";
+  const editAll = isEditing && !readOnly;
 
   const ColA = (
     <div>
-      <GroupLabel icon={<Shield size={13} />}>{t("detail.overview")}</GroupLabel>
-      <FieldRow label={t("fields.status")} value={val("status")} dropdown editChild={isEditing ? <EditSelectField value={val("status")} onChange={(v) => set("status", v)} options={STATUS_OPTIONS} /> : undefined} />
-      {isOwner && <FieldRow label={t("fields.type")} value={val("type")} dropdown editChild={isEditing ? <EditSelectField value={val("type")} onChange={(v) => set("type", v)} options={TYPE_OPTIONS} /> : undefined} />}
-      <FieldRow label={t("columns.niche", { defaultValue: t("fields.businessNiche") })} value={val("business_niche")} editChild={isEditing ? <EditInput value={val("business_niche")} onChange={(v) => set("business_niche", v)} placeholder={t("fields.businessNichePlaceholder")} /> : undefined} />
+      {!clientView && <GroupLabel icon={<Shield size={13} />}>{t("detail.overview")}</GroupLabel>}
+      {!clientView && <FieldRow label={t("fields.status")} value={val("status")} dropdown editChild={editAll ? <EditSelectField value={val("status")} onChange={(v) => set("status", v)} options={STATUS_OPTIONS} /> : undefined} />}
+      {isOwner && !clientView && <FieldRow label={t("fields.type")} value={val("type")} dropdown editChild={editAll ? <EditSelectField value={val("type")} onChange={(v) => set("type", v)} options={TYPE_OPTIONS} /> : undefined} />}
+      {!clientView && <FieldRow label={t("columns.niche", { defaultValue: t("fields.businessNiche") })} value={val("business_niche")} editChild={editAll ? <EditInput value={val("business_niche")} onChange={(v) => set("business_niche", v)} placeholder={t("fields.businessNichePlaceholder")} /> : undefined} />}
 
-      <div style={{ height: 10 }} />
+      {!clientView && <div style={{ height: 10 }} />}
       <GroupLabel icon={<Mail size={13} />}>{t("sections.contact")}</GroupLabel>
-      <FieldRow label={t("fields.email")} value={val("owner_email")} editChild={isEditing ? <EditInput value={val("owner_email")} onChange={(v) => set("owner_email", v)} type="email" placeholder={t("fields.ownerEmailPlaceholder")} /> : undefined} />
-      <FieldRow label={t("fields.phone")} value={val("phone")} mono editChild={isEditing ? <EditInput value={val("phone")} onChange={(v) => set("phone", v)} type="tel" placeholder={t("fields.phonePlaceholder")} /> : undefined} />
-      <FieldRow label={t("fields.website")} value={val("website")} mono editChild={isEditing ? <EditInput value={val("website")} onChange={(v) => set("website", v)} type="url" placeholder={t("fields.websitePlaceholder")} /> : undefined} />
-      <FieldRow label={t("fields.address")} value={val("address")} editChild={isEditing ? <EditInput value={val("address")} onChange={(v) => set("address", v)} placeholder="Street, City, Country" /> : undefined} />
+      <FieldRow label={t("fields.email")} value={val("owner_email")} editChild={editAll ? <EditInput value={val("owner_email")} onChange={(v) => set("owner_email", v)} type="email" placeholder={t("fields.ownerEmailPlaceholder")} /> : undefined} />
+      <FieldRow label={t("fields.phone")} value={val("phone")} mono editChild={editAll ? <EditInput value={val("phone")} onChange={(v) => set("phone", v)} type="tel" placeholder={t("fields.phonePlaceholder")} /> : undefined} />
+      <FieldRow label={t("fields.website")} value={val("website")} mono editChild={editAll ? <EditInput value={val("website")} onChange={(v) => set("website", v)} type="url" placeholder={t("fields.websitePlaceholder")} /> : undefined} />
+      <FieldRow label={t("fields.address")} value={val("address")} editChild={editAll ? <EditInput value={val("address")} onChange={(v) => set("address", v)} placeholder="Street, City, Country" /> : undefined} />
     </div>
   );
 
   const ColB = (
     <div>
       <GroupLabel icon={<Clock size={13} />}>{t("sections.schedule")}</GroupLabel>
-      <FieldRow label={t("fields.timezone")} value={val("timezone")} dropdown editChild={isEditing ? <EditSelectField value={val("timezone")} onChange={(v) => set("timezone", v)} options={TIMEZONE_OPTIONS} /> : undefined} />
-      <FieldRow label={t("fields.language")} value={val("language")} dropdown editChild={isEditing ? <EditSelectField value={val("language")} onChange={(v) => set("language", v)} options={LANGUAGE_OPTIONS} /> : undefined} />
+      <FieldRow label={t("fields.timezone")} value={val("timezone")} dropdown={!clientView} editChild={editAll ? <EditSelectField value={val("timezone")} onChange={(v) => set("timezone", v)} options={TIMEZONE_OPTIONS} /> : undefined} />
+      <FieldRow label={t("fields.language")} value={clientView ? languageName(val("language")) : val("language")} dropdown={!clientView} editChild={editAll ? <EditSelectField value={val("language")} onChange={(v) => set("language", v)} options={LANGUAGE_OPTIONS} /> : undefined} />
       {isEditing ? (
         <>
           <FieldRow label={t("fields.hoursOpen")} editChild={<EditInput value={val("business_hours_start")} onChange={(v) => set("business_hours_start", v)} type="time" />} />
           <FieldRow label={t("fields.hoursClose")} editChild={<EditInput value={val("business_hours_end")} onChange={(v) => set("business_hours_end", v)} type="time" />} />
         </>
       ) : (
-        <FieldRow label={t("fields.hoursOpen")} value={`${formatTimeDisplay(val("business_hours_start")) || "—"} – ${formatTimeDisplay(val("business_hours_end")) || "—"}`} mono />
+        <FieldRow label={t("fields.hoursOpen")} value={`${fmtTime(val("business_hours_start")) || "—"} – ${fmtTime(val("business_hours_end")) || "—"}`} mono />
       )}
-      <FieldRow
+      {!clientView && <FieldRow
         label={t("fields.dailySends")}
         value={val("max_daily_sends")}
         mono
-        editChild={isEditing ? <EditInput value={val("max_daily_sends")} onChange={(v) => set("max_daily_sends", v)} type="number" placeholder="0" /> : undefined}
+        editChild={editAll ? <EditInput value={val("max_daily_sends")} onChange={(v) => set("max_daily_sends", v)} type="number" placeholder="0" /> : undefined}
         suffix={!isEditing && account.whatsapp_max_daily_sends_is_manual ? (
           <span style={{ display: "flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0.06em", color: "var(--mute)", whiteSpace: "nowrap" }}>
             {t("fields.dailySendsManual")}
@@ -88,15 +96,15 @@ export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, 
             </button>
           </span>
         ) : undefined}
-      />
+      />}
 
       <div style={{ height: 10 }} />
       <GroupLabel icon={<FileText size={13} />}>{t("sections.notes")}</GroupLabel>
-      <FieldRow label={t("fields.optOutKeyword")} value={val("opt_out_keyword")} mono editChild={isEditing ? <EditInput value={val("opt_out_keyword")} onChange={(v) => set("opt_out_keyword", v)} placeholder="e.g. STOP" /> : undefined} />
-      <FieldRow label={t("fields.taxId")} value={val("tax_id")} mono muted editChild={isEditing ? <EditInput value={val("tax_id")} onChange={(v) => set("tax_id", v)} placeholder="Tax identifier" /> : undefined} />
+      {!clientView && <FieldRow label={t("fields.optOutKeyword")} value={val("opt_out_keyword")} mono editChild={editAll ? <EditInput value={val("opt_out_keyword")} onChange={(v) => set("opt_out_keyword", v)} placeholder="e.g. STOP" /> : undefined} />}
+      {!clientView && <FieldRow label={t("fields.taxId")} value={val("tax_id")} mono muted editChild={editAll ? <EditInput value={val("tax_id")} onChange={(v) => set("tax_id", v)} placeholder="Tax identifier" /> : undefined} />}
       <div style={{ padding: "7px 0" }}>
         <div style={{ fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0.13em", textTransform: "uppercase", color: "var(--mute)", marginBottom: 7 }}>{t("fields.description")}</div>
-        {isEditing ? (
+        {editAll ? (
           <EditArea value={val("business_description")} onChange={(v) => set("business_description", v)} placeholder="Business description…" rows={3} />
         ) : (
           <div style={{ padding: "4px 0", fontSize: 12.5, lineHeight: 1.55, color: "var(--ink-soft)" }}>
@@ -107,7 +115,7 @@ export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, 
     </div>
   );
 
-  const action = readOnly ? null : isEditing ? (
+  const action = readOnly && !hoursOnly ? null : isEditing ? (
     <div className="row" style={{ gap: 8 }}>
       <PanelAction onClick={cancelEdit} disabled={saving} icon={<X size={12} />}>{t("detail.cancel")}</PanelAction>
       <PanelAction wine onClick={save} disabled={saving} icon={<Check size={12} />}>{saving ? t("detail.saving") : t("detail.save")}</PanelAction>
@@ -117,7 +125,7 @@ export function AccountDetailsPanel({ account, onSave, cols = 2, inset = false, 
   );
 
   return (
-    <Panel eyebrow={eyebrow} title={t("panels.accountDetails")} action={action} inset={inset} style={style}>
+    <Panel eyebrow={clientView ? undefined : eyebrow} title={clientView ? t("panels.businessDetails") : t("panels.accountDetails")} action={action} inset={inset} style={style}>
       {cols === 2
         ? <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 30 }}>{ColA}{ColB}</div>
         : <div>{ColA}<div style={{ height: 10 }} />{ColB}</div>}

@@ -12,7 +12,7 @@
   --light-y: 50%;
   --light-intensity: 1;
   --light-warm: 255, 224, 168;
-  --light-strength: 0.5;
+  --light-strength: 0.65;   /* 0.5 before the ground was brightened (2026-10-15) */
 
   /* Depth scale */
   --depth-scale: 1;
@@ -45,10 +45,11 @@
   --d-large-b: 18px;
 
   /* Typography */
-  --serif: "Playfair Display", "Playfair Display", Georgia, serif;
-  /* --display: the site-wide title face (Playfair Display) — used for panel/page titles */
-  --display: "Playfair Display", "Playfair Display", Georgia, serif;
+  /* No serif in the CRM (Gabriel, 2026-10-15). --serif and --display stay as
+     names so existing styles keep working, but both resolve to the sans face. */
   --sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+  --serif: var(--sans);
+  --display: var(--sans);
   --mono: "Geist Mono", ui-monospace, monospace;
 
   /* Density */
@@ -173,7 +174,7 @@ body, html { margin: 0; padding: 0; }
     inset calc(var(--lx) * var(--d-crisp-o)  *  1 * var(--inset-highlight-scale))
     calc(var(--ly) * var(--d-crisp-o)  *  3 * var(--inset-highlight-scale))
     0px 0
-    rgba(255,253,245,0.95),
+    var(--neu-light),
 
     inset
     0
@@ -203,7 +204,7 @@ body, html { margin: 0; padding: 0; }
     calc(var(--ly) * var(--d-large-o) * 1.5 * var(--inset-highlight-scale))
     1px
     0
-    rgba(255,253,245,0.95),
+    var(--neu-light),
 
 
     inset
@@ -211,7 +212,7 @@ body, html { margin: 0; padding: 0; }
     calc(var(--ly) * var(--d-large-o) * -1.5 * var(--inset-highlight-scale))
     5px
     0
-    rgba(255,253,245,0.35),
+    rgba(255, 255, 255, 0.35),
 
 
     inset
@@ -242,7 +243,7 @@ body, html { margin: 0; padding: 0; }
     calc(var(--ly) * var(--d-large-o) * 1.8 * var(--inset-highlight-scale))
     1px
     0
-    rgba(255,253,245,0.95),
+    var(--neu-light),
 
 
     inset
@@ -250,7 +251,7 @@ body, html { margin: 0; padding: 0; }
     calc(var(--ly) * var(--d-large-o) * -1.8 * var(--inset-highlight-scale))
     12px
     0
-    rgba(255,253,245,0.35),
+    rgba(255, 255, 255, 0.35),
 
 
     inset
@@ -441,13 +442,13 @@ body, html { margin: 0; padding: 0; }
 .eyebrow-sm { font-size: 10px; letter-spacing: 0.18em; }
 .serif {
   font-family: var(--serif);
-  font-weight: 400;
+  font-weight: 700;
   letter-spacing: -0.012em;
 }
-/* .display — Playfair Display title face, used for panel & page titles */
+/* .display — the title face for panel & page titles (sans since 2026-10-15) */
 .display {
   font-family: var(--display);
-  font-weight: 500;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 .italic { font-style: italic; }
@@ -602,6 +603,10 @@ body, html { margin: 0; padding: 0; }
 /* --lg: a slightly larger track + items, for use as a panel's primary control */
 .la-seg--lg { padding: 4px; gap: 4px; }
 .la-seg--lg .la-seg-btn { padding: 9px 18px; font-size: 11px; letter-spacing: 0.14em; }
+/* --touch: readable, tappable items on phones (no change from 768px up) */
+@media (max-width: 767px) {
+  .la-seg--touch .la-seg-btn { font-size: 11px; min-height: 36px; }
+}
 
 /* ─── Tasks merged view — board primary + calendar ───────────────────
    Default (< 1800px): weekly calendar stacks above the board.
@@ -715,7 +720,7 @@ body, html { margin: 0; padding: 0; }
 }
 .la-nav-item:hover { background: var(--wine-tint); }
 .la-nav-item.active {
-  background: var(--surface);
+  background: var(--nav-active-bg);
   box-shadow: var(--sh-polished-crisp);
   color: var(--wine);
   font-weight: 600;

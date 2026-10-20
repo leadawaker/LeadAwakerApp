@@ -147,3 +147,12 @@ export const removeCustomDomain = async (accountId: number): Promise<void> => {
   const res = await apiFetch(`/api/accounts/${accountId}/custom-domain`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to remove domain");
 };
+
+export interface DnsHost { domain: string; apex: string; nameservers: string[]; registrar: string | null }
+
+/** Who manages a domain's DNS (nameservers + registrar), for the custom-domain setup guide. */
+export const fetchDnsHost = async (accountId: number, domain: string): Promise<DnsHost> => {
+  const res = await apiFetch(`/api/accounts/${accountId}/custom-domain/dns-host?domain=${encodeURIComponent(domain)}`);
+  if (!res.ok) throw new Error("Failed to look up the DNS host");
+  return res.json();
+};

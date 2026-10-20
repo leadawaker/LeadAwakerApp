@@ -24,7 +24,7 @@
 .tf-stat:first-child { border-left: none; }
 .tf-stat-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
 .tf-stat-value {
-  font-family: 'Playfair Display', serif;
+  font-family: var(--sans); font-weight: 700;
   font-size: clamp(30px, 3.4vw, 40px);
   line-height: 1;
   color: var(--ink);
@@ -64,7 +64,7 @@
   background: var(--surface);
   box-shadow: var(--sh-inset-super-crisp);
 }
-.tf-card-title { font-family: 'Playfair Display', serif; font-size: 19px; color: var(--ink); line-height: 1.2; }
+.tf-card-title { font-family: var(--sans); font-weight: 700; font-size: 19px; color: var(--ink); line-height: 1.2; }
 .tf-card-caption { font-size: 12.5px; color: var(--mute); line-height: 1.4; margin-top: 2px; }
 .tf-card-body { display: flex; flex-direction: column; gap: 22px; padding: 18px 20px 20px; }
 .tf-block { display: flex; flex-direction: column; gap: 8px; min-width: 0; }

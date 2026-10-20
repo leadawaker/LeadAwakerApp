@@ -21,6 +21,7 @@ export interface EngineJobsHealth {
 
 export interface ActionCounts {
   success: number;
+  /** Failures not cleared yet (resolved_at IS NULL). */
   failed: number;
   skipped: number;
   lastActionAt: string | null;
@@ -68,6 +69,8 @@ export interface DiaryLine {
   leadName: string | null;
   interactionId: number | null;
   voiceCallId: number | null;
+  /** Set when a failure was cleared as fixed. Cleared failures no longer count as failed. */
+  resolvedAt: string | null;
 }
 
 export interface DiaryPage {
@@ -108,3 +111,10 @@ export interface ClientAutomationsResponse {
 export const emptyPulse = (): HourlyPulse => ({ ok: Array(24).fill(0), failed: Array(24).fill(0) });
 
 export const EMPTY_COUNTS: ActionCounts = { success: 0, failed: 0, skipped: 0, lastActionAt: null, topFailureReason: null };
+
+/** POST /api/automations/resolve: clear the open failures of these automations (one client, or every client). */
+export interface ResolveFailuresBody {
+  automationIds: string[];
+  accountId?: number;
+  campaignId?: number;
+}

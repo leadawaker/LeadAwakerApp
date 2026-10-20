@@ -3,13 +3,15 @@ import { useTranslation } from "react-i18next";
 import {
   Filter, Check, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
   PanelLeft, PanelLeftClose, MoreHorizontal, Trash2,
-  Building2, Link2, MessagesSquare, Phone, Zap, BellRing,
+  Building2, Link2, MessagesSquare, MessageCircle, Phone, Zap, BellRing,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { myAccountLabelKey } from "@/components/crm/navGates";
+import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 import { ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import {
   STATUS_FILTER_OPTIONS, STATUS_I18N_KEY, GROUP_TKEYS,
@@ -23,6 +25,7 @@ const TAB_ICONS: Record<WorkspaceTab, ReactNode> = {
   integrations: <Link2 size={13} />,
   communication: <MessagesSquare size={13} />,
   voice: <Phone size={13} />,
+  chat: <MessageCircle size={13} />,
   alerts: <BellRing size={13} />,
   automations: <Zap size={13} />,
 };
@@ -61,7 +64,9 @@ const wineDot = (
 
 export function AccountsTopBar(p: Props) {
   const { t } = useTranslation("accounts");
+  const { t: tc } = useTranslation("crm");
   const { isAgencyUser } = useWorkspace();
+  const navFacts = useClientNavFacts();
   const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   const handleDelete = () => {
@@ -71,13 +76,13 @@ export function AccountsTopBar(p: Props) {
 
   return (
     <div className="shrink-0 hidden md:flex items-center gap-2 px-[17px]" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)" }}>
-      <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
-      <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)", marginLeft: 4 }}>#{p.count}</span>
+      <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{isAgencyUser ? t("page.title") : tc(myAccountLabelKey(navFacts))}</span>
+      {isAgencyUser && <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)", marginLeft: 4 }}>#{p.count}</span>}
 
       {p.showTabs && (
         <div className="la-seg shrink-0" style={{ marginLeft: 10 }}>
           {p.tabs.map((k) => (
-            <button key={k} onClick={() => p.onTabChange(k)} className={`la-seg-btn${p.tab === k ? " on" : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", fontSize: 11, letterSpacing: "0.13em" }}>
+            <button key={k} onClick={() => p.onTabChange(k)} data-testid={`account-topbar-tab-${k}`} className={`la-seg-btn${p.tab === k ? " on" : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", fontSize: 11, letterSpacing: "0.13em" }}>
               <span style={{ display: "flex" }}>{TAB_ICONS[k]}</span>
               {t(`workspace.tabs.${k}`)}
             </button>
@@ -85,15 +90,18 @@ export function AccountsTopBar(p: Props) {
         </div>
       )}
 
-      {/* Fold/cycle list panel */}
+      {/* Fold/cycle list panel (agency only: a client has no account list) */}
+      {isAgencyUser && (
       <button className="la-btn la-btn--soft la-btn--icon" onClick={p.onCycle}
         title={p.listPanelState === "full" ? t("workspace.compactPanel") : p.listPanelState === "compact" ? t("workspace.hidePanel") : t("workspace.showPanel")}>
         {p.listPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
       </button>
+      )}
 
       <div className="flex-1" />
 
-      {/* Search */}
+      {/* Search, filter, sort and group: agency only */}
+      {isAgencyUser && (<>
       <div className="relative shrink-0" style={{ width: 180 }}>
         <input value={p.listSearch} onChange={(e) => p.onListSearchChange(e.target.value)} placeholder={t("page.searchPlaceholder")} className="neu-input" style={{ paddingLeft: 28, paddingTop: 0, paddingBottom: 0, paddingRight: 10, height: 32, fontSize: 12 }} />
         <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
@@ -176,6 +184,8 @@ export function AccountsTopBar(p: Props) {
           ))}
         </DropdownMenuContent>
       </DropdownMenu>
+
+      </>)}
 
       {/* Overflow menu and Create — agency only */}
       {isAgencyUser && (

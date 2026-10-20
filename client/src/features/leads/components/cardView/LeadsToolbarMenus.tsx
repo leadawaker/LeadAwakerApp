@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { PIPELINE_HEX } from "./constants";
+import { ALL_STAGE_KEYS, stageHex, stageLabel } from "../../lib/leadDisplay";
 import { CONVERSATION_TYPES, type ConversationType } from "../conversationType";
 
 type NamedOption = { id: string; name: string };
@@ -69,10 +69,10 @@ export function FilterMenuItems({
           </Section>
       )}
       <Section label={t("group.status")} count={filterStatus.length} subClass="w-48">
-          {["New", "Contacted", "Responded", "Multiple Responses", "Qualified", "Booked", "Lost", "DND"].map((s) => (
+          {ALL_STAGE_KEYS.map((s) => (
             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PIPELINE_HEX[s] ?? "#6B7280" }} />
-              <span className="flex-1">{s}</span>
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: stageHex(s) }} />
+              <span className="flex-1">{stageLabel(t, s)}</span>
               {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
             </DropdownMenuItem>
           ))}
@@ -142,12 +142,12 @@ export function FilterMenuItems({
 export function SortMenuItems({ sortBy, onSortByChange }: { sortBy: string; onSortByChange: (v: any) => void }) {
   const { t } = useTranslation("leads");
   const labels: Record<string, string> = {
-    recent: t("sort.mostRecent"), latest_message: t("sort.latestMessage"), name_asc: t("sort.nameAZ"), name_desc: t("sort.nameZA"),
-    score_desc: t("sort.scoreDown"), score_asc: t("sort.scoreUp"),
+    recent: t("sort.mostRecent"), name_asc: t("sort.nameAZ"), name_desc: t("sort.nameZA"),
+    created_desc: t("sort.createdNewest"), created_asc: t("sort.createdOldest"),
   };
   return (
     <>
-      {(["recent", "latest_message", "name_asc", "name_desc", "score_desc", "score_asc"] as const).map((value) => (
+      {(["recent", "name_asc", "name_desc", "created_desc", "created_asc"] as const).map((value) => (
         <DropdownMenuItem key={value} onClick={() => onSortByChange(value)} className={cn("text-[12px]", sortBy === value && "font-semibold text-brand-indigo")}>
           {labels[value]}
           {sortBy === value && <Check className="h-3 w-3 ml-auto" />}

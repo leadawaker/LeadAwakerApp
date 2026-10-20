@@ -28,7 +28,7 @@ function highlight(text: string, query: string): ReactNode {
 
 /**
  * Read-only call transcript in the Chats bubble style: caller on the left
- * (inset), AI on the right (ink). Each side is named once, the first time it
+ * (white), AI on the right (ink). Each side is named once, the first time it
  * speaks. When the recording is available each bubble shows where it starts
  * in the call and clicking that jumps the player there.
  */
@@ -74,11 +74,12 @@ export const CallTranscript = memo(forwardRef<HTMLDivElement, {
                 borderRadius: ai
                   ? `13px ${firstInRun ? 13 : 5}px ${lastInRun ? 3 : 5}px 13px`
                   : `${firstInRun ? 13 : 5}px 13px 13px ${lastInRun ? 3 : 5}px`,
-                background: ai ? "var(--ink)" : "transparent",
-                color: ai ? "var(--paper)" : "var(--ink-soft)",
+                // Caller lines sit on white for readability (Gabriel, 2026-10-15); AI stays ink.
+                background: ai ? "var(--ink)" : "var(--card)",
+                color: ai ? "var(--paper)" : "var(--ink)",
                 // Playing line: a white ring inside a thin dark edge, visible on both
-                // the ink AI bubble and the see-through caller bubble.
-                boxShadow: [isActive ? "inset 0 0 0 2px var(--paper), 0 0 0 1.5px var(--ink)" : null, ai ? null : "var(--sh-inset-crisp)"].filter(Boolean).join(", ") || "none",
+                // the ink AI bubble and the white caller bubble.
+                boxShadow: [isActive ? "inset 0 0 0 2px var(--paper), 0 0 0 1.5px var(--ink)" : null, ai ? null : "0 0 0 1px var(--line)"].filter(Boolean).join(", ") || "none",
                 transition: "box-shadow 160ms",
               }}
             >

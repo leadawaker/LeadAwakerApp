@@ -1,5 +1,6 @@
 // Lead data accessor utilities extracted from LeadsCardView.tsx
 
+import i18n from "@/i18n";
 import { getInitials as getInitialsUtil } from "@/lib/avatarUtils";
 import { AVATAR_PASTELS } from "./constants";
 
@@ -9,8 +10,14 @@ export function getLeadId(lead: Record<string, any>): number {
   return lead.Id ?? lead.id ?? 0;
 }
 
+// Never show "Unknown": a lead without a name falls back to its phone number,
+// then to "Website visitor" (widget chats often arrive without either).
 export function getFullName(lead: Record<string, any>): string {
-  return lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
+  const name = String(lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "").trim();
+  if (name && !/^unknown\b/i.test(name)) return name;
+  const phone = String(lead.phone || lead.Phone || "").trim();
+  if ((phone.match(/\d/g) || []).length >= 6) return phone;
+  return i18n.t("leads:names.websiteVisitor", { defaultValue: "Website visitor" });
 }
 
 export function getInitials(name: string): string {

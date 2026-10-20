@@ -15,6 +15,10 @@ export interface AlertEmailInput {
   accountName: string;
   link: string;
   data: Record<string, any>;
+  /** new_photo: the bundle's photos that made it into the email, each sent
+   *  inline (cid) and as an attachment; `shown` is each one's index in
+   *  data.photos; `left` how many were left out (caps). */
+  photos?: { contentIds: string[]; shown?: number[]; left: number } | null;
 }
 
 export interface RenderedEmail { subject: string; html: string; text: string }
@@ -74,6 +78,11 @@ type Fact = [label: string, value: string, icon: string];
  *  the account's Recaps & alerts tab (GoLink, /api/go/:code). */
 const settingsLink = (c: Copy, link: string) => ({ label: c.manage, url: `${link}?to=settings` });
 
+const ALERT_ART: Record<AlertEmailType, "booked" | "moved" | "cancelled" | "callback" | "reply" | "photo"> = {
+  appointment_booked: "booked", appointment_rescheduled: "moved", appointment_cancelled: "cancelled",
+  callback_requested: "callback", lead_needs_reply: "reply", new_photo: "photo",
+};
+
 function renderAlert(input: AlertEmailInput & { type: AlertEmailType }): RenderedEmail {
   const c = copyFor(input.language);
   const d = input.data;
@@ -84,7 +93,10 @@ function renderAlert(input: AlertEmailInput & { type: AlertEmailType }): Rendere
   const [day, clock] = splitWhen(time);
   // The call recap first: it says what the rest is about.
   const facts: Fact[] = [[L.summary, str(d.summary).slice(0, 400), "d-summary.png"],
-    [L.customer, name, "d-person.png"], [L.phone, phone, "d-phone.png"], [L.email, str(d.customer?.email), "d-mail.png"]];
+    [L.customer, name, "d-person.png"], [L.phone, phone, "d-phone.png"],
+    // Another number the caller asked to be called back on (phone receptionist).
+    [L.callbackPhone, displayPhone(d.callback_phone), "d-phone.png"],
+    [L.email, str(d.customer?.email), "d-mail.png"]];
   if (input.type === "appointment_booked" || input.type === "appointment_cancelled" || input.type === "appointment_rescheduled") {
     facts.push([L.when, dot(day, clock), "d-date.png"]);
   }
@@ -93,30 +105,79 @@ function renderAlert(input: AlertEmailInput & { type: AlertEmailType }): Rendere
   }
   if (input.type === "appointment_booked") facts.push([L.source, str(d.sourceText), "d-source.png"]);
   if (input.type === "callback_requested") facts.push([L.about, str(d.about), "d-note.png"]);
+  // new_photo: one bundle of 1+ photos (photos[], or one top-level photo on older rows).
+  const items: any[] = Array.isArray(d.photos) && d.photos.length ? d.photos : [{ description: d.description, caption: d.caption }];
+  const count = items.length;
+  const bundle = input.type === "new_photo" && count > 1;
+  const cids = input.photos?.contentIds ?? [];
+  if (input.type === "new_photo") {
+    const described = items.map((p) => str(p?.description).trim()).filter(Boolean);
+    const captions = items.map((p) => str(p?.caption).trim()).filter(Boolean);
+    // Under each thumbnail when the photos are in the email, else listed here.
+    if (!bundle || !cids.length) facts.push([L.description, described.join(" / ").slice(0, 600), "d-summary.png"]);
+    facts.push([L.caption, captions.join(" / ").slice(0, 300), "d-chat.png"], [L.channel, str(d.sourceText), "d-source.png"]);
+  }
   if (input.type === "lead_needs_reply") {
     facts.push([L.reason, str(d.reasonText), "d-reason.png"], [L.lastMessage, str(d.message).slice(0, 300), "d-chat.png"],
       [L.since, str(d.sinceText), "d-since.png"]);
   }
   const kept = facts.filter(([, v]) => v);
-  const note = c.notes[input.type];
-  const bodyHtml = emailDetails(kept.map(([label, v, icon]) => ({ label, valueHtml: e(v), icon })))
+  const left = input.photos?.left ?? 0;
+  const note = input.type === "new_photo"
+    ? [cids.length ? (bundle ? c.photoBundle.attached : c.photoAttached) : c.photoMissing,
+      cids.length && left ? c.photoBundle.more(left) : ""].filter(Boolean).join(" ")
+    : c.notes[input.type];
+  const photoHtml = input.type !== "new_photo" || !cids.length ? ""
+    : bundle ? photoGrid(c.labels.photo, cids.map((cid, i) => ({ cid, text: str(items[input.photos?.shown?.[i] ?? i]?.description).slice(0, 140) })))
+    : photoCard(c.labels.photo, cids[0]);
+  const bodyHtml = photoHtml + emailDetails(kept.map(([label, v, icon]) => ({ label, valueHtml: e(v), icon })))
     + (note ? `<p style="margin:12px 4px 0;font-family:${T.sans};font-size:12px;line-height:1.5;color:${T.mute};">${e(note)}</p>` : "");
-  const intro = c.intro[input.type](input.accountName);
-  const heading = c.heading[input.type];
+  const intro = bundle ? c.photoBundle.intro(input.accountName, count) : c.intro[input.type](input.accountName);
+  const heading = bundle ? c.photoBundle.heading : c.heading[input.type];
+  const sender = str(d.customerName) || phone || c.someone.toLowerCase();
+  const photoText = bundle && cids.length
+    ? `\n\n${L.description}:\n${items.map((p, i) => `${i + 1}. ${str(p?.description).trim() || "-"}`).join("\n")}`
+    : "";
   const cta = { label: c.cta, url: input.link };
   const footerNote = c.footer(input.accountName);
   const footerLink = settingsLink(c, input.link);
   return {
-    subject: c.subject[input.type](name, time, phone || c.unknown),
+    subject: bundle ? c.photoBundle.subject(sender, count)
+      : c.subject[input.type](input.type === "new_photo" ? sender : name, time, phone || c.unknown),
     html: renderEmailLayout({
-      lang: input.language, preheader: intro, eyebrow: input.accountName, heading, art: "alert",
+      lang: input.language, preheader: intro, eyebrow: input.accountName, heading, art: ALERT_ART[input.type],
       bodyHtml, cta, footerNote, footerLink,
     }),
     text: renderEmailText({
       heading, cta, footerNote, footerLink,
-      bodyText: `${intro}\n\n${kept.map(([label, v]) => `${label}: ${v}`).join("\n")}${note ? `\n\n${note}` : ""}`,
+      bodyText: `${intro}\n\n${kept.map(([label, v]) => `${label}: ${v}`).join("\n")}${photoText}${note ? `\n\n${note}` : ""}`,
     }),
   };
+}
+
+/** The lead's photo, full card width, above the facts. */
+function photoCard(alt: string, contentId: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${T.card}" style="background-color:${T.card};border:1px solid ${T.line};border-radius:14px;margin:0 0 10px;">
+<tr><td style="padding:10px;">
+  <img src="cid:${e(contentId)}" alt="${e(alt)}" width="520" style="display:block;width:100%;max-width:520px;height:auto;border:0;border-radius:10px;margin:0 auto;">
+</td></tr>
+</table>`;
+}
+
+/** Two or more photos: thumbnails two to a row, each with what it shows.
+ *  The images are the attached originals shown small (no resizing on the Pi). */
+function photoGrid(alt: string, photos: { cid: string; text: string }[]): string {
+  const cell = (p?: { cid: string; text: string }) => p
+    ? `<td width="50%" valign="top" style="padding:5px;">
+  <img src="cid:${e(p.cid)}" alt="${e(alt)}" width="250" style="display:block;width:100%;max-width:250px;height:auto;border:0;border-radius:10px;">
+  ${p.text ? `<p style="margin:6px 2px 0;font-family:${T.sans};font-size:12px;line-height:1.45;color:${T.mute};">${e(p.text)}</p>` : ""}
+</td>`
+    : `<td width="50%" style="padding:5px;"></td>`;
+  const rows: string[] = [];
+  for (let i = 0; i < photos.length; i += 2) rows.push(`<tr>${cell(photos[i])}${cell(photos[i + 1])}</tr>`);
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${T.card}" style="background-color:${T.card};border:1px solid ${T.line};border-radius:14px;margin:0 0 10px;">
+<tr><td style="padding:5px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${rows.join("")}</table></td></tr>
+</table>`;
 }
 
 /** One agenda row from an engine item ("do 16 okt 14:30"). */

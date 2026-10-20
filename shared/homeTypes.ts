@@ -22,6 +22,8 @@ export interface ActivityRow {
   callId: string | null;
   name: string | null;
   at: string;
+  /** One-line summary of the call (as on the Voice calls inbox); null for non-call rows. */
+  headline: string | null;
 }
 export interface HomeOverview {
   conversations: Compared; bookings: Compared; callbacks: Compared; newContacts: Compared;
@@ -31,7 +33,7 @@ export interface HomeOverview {
   attention: AttentionRow[];
   activity: ActivityRow[];
 }
-export type CallOutcome = "booked" | "callback" | "transferred" | "hung_up" | "other";
+export type CallOutcome = "booked" | "callback" | "transferred" | "hung_up" | "answered";
 export interface HomePhone {
   calls: Compared; booked: Compared; transferred: Compared; avgSeconds: Compared;
   transfersFailed: number;
@@ -39,7 +41,11 @@ export interface HomePhone {
   outcomes: { outcome: CallOutcome; count: number }[];
   outOfHoursPct: number | null;
   screened: number;
-  recent: { callId: string; name: string | null; callerNumber: string | null; outcome: CallOutcome; seconds: number | null; at: string }[];
+  /** Typical gap from the caller's last word to hers, in ms. Null before a measured call. */
+  latencyMs: number | null;
+  /** Owner only (the route strips it for everyone else). Null before a priced call. */
+  cost?: { total: number; perMinute: number | null } | null;
+  recent: { callId: string; name: string | null; callerNumber: string | null; outcome: CallOutcome; seconds: number | null; at: string; headline: string | null }[];
 }
 export interface RecentLead { leadId: number; name: string | null; at: string; snippet: string }
 export interface HomeWhatsapp {
@@ -62,6 +68,24 @@ export interface HomeReactivation {
   perDay: { day: string; replies: number; bookings: number }[];
   pipeline: { status: string; count: number }[];
   campaigns: { id: number; name: string }[];
+}
+/** Live panels of the Reactivation tab. Not tied to the period: "now", "today" and "next". */
+export interface HomeReactivationLive {
+  /** Timezone the times should be shown in (the account's, or the agency's for all accounts). */
+  tz: string;
+  /** Booked calls from now on, soonest first. */
+  upcoming: { leadId: number; name: string | null; campaign: string | null; at: string; handoff: boolean }[];
+  /** Latest messages either way, newest first. */
+  activity: { id: number; leadId: number; name: string | null; campaign: string | null; direction: "in" | "out"; preview: string; at: string }[];
+  bumps: {
+    /** First messages and bumps sent since midnight. stage 0 = first message. */
+    sentToday: number;
+    sentByStage: { stage: number; count: number }[];
+    /** Bumps still due before midnight (overdue ones included). */
+    dueToday: number;
+    /** The next scheduled bumps, soonest first. */
+    next: { leadId: number; name: string | null; campaign: string | null; stage: number; at: string }[];
+  };
 }
 export interface HomeReputation {
   /** Google Business Profile is connected for the account (always false in the all-accounts view). */

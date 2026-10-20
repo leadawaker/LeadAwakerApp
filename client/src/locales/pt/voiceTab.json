@@ -34,7 +34,14 @@
     "transfersFailed_one": "{{count}} transferência com falha",
     "transfersFailed_other": "{{count}} transferências com falha",
     "minutes": "Minutos",
-    "empty": "Ainda não há chamadas neste mês."
+    "empty": "Ainda não há chamadas neste mês.",
+    "latency": "Velocidade de resposta",
+    "latencyValue": "{{ms}} ms",
+    "latencyHelp": "Da última palavra de quem liga até a primeira dela, chamada típica",
+    "latencyHelp_male": "Da última palavra de quem liga até a primeira dele, chamada típica",
+    "costPerMinute": "Custo por minuto",
+    "cost": "Custo este mês",
+    "ownerOnly": "Só você vê isto"
   },
   "number": {
     "title": "Número de telefone",
@@ -59,6 +66,7 @@
       "help": "Quem liga ouve um escritório tranquilo ao fundo. Só quem liga ouve, e o som para quando você atende uma ligação transferida."
     },
     "summaryNone": "Nenhum número vinculado ainda",
+    "summaryNoneClient": "Seu número de telefone está sendo configurado",
     "summaryHelp": "O número, os documentos do cliente e a ativação ficam na aba Integrações.",
     "summaryManage": "Gerenciar em Integrações",
     "region": {
@@ -75,11 +83,19 @@
   },
   "persona": {
     "title": "Persona ao vivo",
-    "help": "O texto da empresa com o qual a recepcionista fala. Ele é gerado a partir da conta, não editado à mão.",
+    "help": "O texto da empresa com o qual a recepcionista responde. Salvo aqui, nos dados da conta ou no perfil de comunicação, ele fica igual nos três lugares.",
     "company": "Empresa",
+    "companyHelp": "Ela atende o telefone com esse nome, e ele é o nome da empresa nas instruções dela. A conta mantém o próprio nome.",
+    "companyHelp_male": "Ele atende o telefone com esse nome, e esse é o nome da empresa nas instruções dele. A conta mantém o próprio nome.",
     "description": "Descrição",
+    "descriptionHelp": "Diz a ela o que a empresa faz: entra no prompt de voz dela e nas instruções dela como descrição da empresa. É salva nos dados da conta.",
+    "descriptionHelp_male": "Diz a ele o que a empresa faz: entra no prompt de voz dele e nas instruções dele como descrição da empresa. É salva nos dados da conta.",
     "usp": "Diferencial",
-    "generatedNote": "Altere os dados da conta ou o perfil de comunicação para mudar este texto.",
+    "uspHelp": "Um motivo por linha. Ela encontra isso no conhecimento dela como resposta a \"Por que os clientes nos escolhem?\". É salvo no perfil de comunicação.",
+    "uspHelp_male": "Um motivo por linha. Ele encontra isso no conhecimento dele como resposta a \"Por que os clientes nos escolhem?\". É salvo no perfil de comunicação.",
+    "generatedNote": "O conhecimento escrito à mão nesta persona é mantido: salvar aqui nunca o sobrescreve.",
+    "edit": "Editar",
+    "companyRequired": "Informe o nome da empresa.",
     "emptyTitle": "Ainda não há persona ao vivo",
     "emptyHelp": "Crie uma a partir dos dados da empresa desta conta para que a recepcionista responda em nome do negócio.",
     "create": "Criar persona ao vivo"
@@ -89,7 +105,23 @@
     "help": "Como a recepcionista se apresenta e soa ao telefone.",
     "name": "Nome da recepcionista",
     "pronunciation": "Pronúncia",
-    "intake": "O que a equipe quer saber antes de um agendamento"
+    "intake": "O que a equipe quer saber antes de um agendamento",
+    "pickVoice": "Escolha uma voz",
+    "samplesHelp": "Ouça uma saudação curta em inglês, holandês ou português e clique em uma voz para escolher.",
+    "playSample": "Ouvir {{voice}} em {{lang}}",
+    "sampleFailed": "Não foi possível tocar este exemplo",
+    "natural": "Natural",
+    "generated": "Gerada",
+    "naturalHelp": "Gravada a partir de uma pessoa de verdade.",
+    "generatedHelp": "Sintetizada pela OpenAI. Pode soar menos humana, principalmente em holandês.",
+    "spokenAs": "Nas ligações ela se apresenta como {{name}}.",
+    "greetingSwapped": "A saudação agora também diz {{name}}.",
+    "pronunciationAdd": "Adicionar palavra",
+    "pronunciationCount_one": "{{count}} palavra",
+    "pronunciationCount_other": "{{count}} palavras",
+    "pronunciationSaveNote": "As mudanças aqui ficam no cartão: clique em Salvar no cartão quando terminar.",
+    "spokenAs_male": "Nas ligações ele se apresenta como {{name}}.",
+    "pronunciationAutosave": "Salvo quando você fechar."
   },
   "transfer": {
     "title": "Transferência",
@@ -144,6 +176,10 @@
         "romance-anonimo-guitar": {
           "title": "Romance Anônimo",
           "by": "Anônimo · violão clássico"
+        },
+        "easy-funk": {
+          "title": "Make Funk",
+          "by": "HoliznaCC0 · groove de funk"
         }
       }
     },
@@ -182,16 +218,26 @@
     "kind": {
       "greeting": "Saudação",
       "layer": "Como ela fala",
-      "backend": "O que ela sabe e faz"
+      "backend": "O que ela sabe e faz",
+      "layer_male": "Como ele fala",
+      "backend_male": "O que ele sabe e faz"
     },
     "kindHelp": {
       "greeting": "A instrução que ela recebe quando a ligação começa.",
       "layer": "O prompt de voz: tom, forma de tratamento, pronúncia e como uma ligação acontece.",
-      "backend": "O backend que responde por ela: dados do negócio, conhecimento, horários, fora do horário e regras de agendamento."
+      "backend": "O backend que responde por ela: dados do negócio, conhecimento, horários, fora do horário e regras de agendamento.",
+      "greeting_male": "A instrução que ele recebe quando a ligação começa.",
+      "layer_male": "O prompt de voz: tom, forma de tratamento, pronúncia e como uma ligação acontece.",
+      "backend_male": "O backend que responde por ele: dados do negócio, conhecimento, horários, fora do horário e regras de agendamento."
     },
     "recentTitle": "Ligações de teste recentes",
     "recentEmpty": "Nenhuma ligação de teste ainda. Clique em Testar no navegador para fazer uma.",
-    "callFailed": "Não foi possível carregar esta ligação."
+    "callFailed": "Não foi possível carregar esta ligação.",
+    "title_male": "Teste o recepcionista",
+    "help_male": "Fale com ele no navegador, exatamente como quem liga para esta linha o ouviria: persona, voz, saudação, horários e configuração deste cliente. Sem telefone.",
+    "promptTitle_male": "O que ele recebe",
+    "promptHelp": "O prompt exato que ela recebe numa ligação, em três partes. Só para administradores.",
+    "promptHelp_male": "O prompt exato que ele recebe numa ligação, em três partes. Só para administradores."
   },
   "live": {
     "goLive": "Ativar",
@@ -201,7 +247,8 @@
     "cancel": "Cancelar",
     "isLive": "Ativa: as ligações para {{number}} são atendidas pela recepcionista IA.",
     "takeOffline": "Desativar",
-    "notReady": "Pode ser ativada quando isto estiver pronto: {{items}}."
+    "notReady": "Pode ser ativada quando isto estiver pronto: {{items}}.",
+    "readyHelp_male": "Tudo pronto. Ao ativar, quem ligar para este número fala com ele."
   },
   "screening": {
     "title": "Ligações indesejadas",
@@ -212,11 +259,13 @@
     },
     "robocalls": {
       "label": "Desligar robocalls",
-      "help": "Gravações e vozes automáticas são encerradas sem uma palavra. Se ela não tiver certeza de que é uma máquina, trata como uma pessoa."
+      "help": "Gravações e vozes automáticas são encerradas sem uma palavra. Se ela não tiver certeza de que é uma máquina, trata como uma pessoa.",
+      "help_male": "Gravações e vozes automáticas são encerradas sem uma palavra. Se ele não tiver certeza de que é uma máquina, trata como uma pessoa."
     },
     "abuse": {
       "label": "Encerrar ligações abusivas",
-      "help": "Depois de um aviso calmo ela encerra a ligação, e você recebe uma notificação. Se o mesmo número for abusivo de novo em até 30 dias, ele fica bloqueado nesta linha por 14 dias."
+      "help": "Depois de um aviso calmo ela encerra a ligação, e você recebe uma notificação. Se o mesmo número for abusivo de novo em até 30 dias, ele fica bloqueado nesta linha por 14 dias.",
+      "help_male": "Depois de um aviso calmo ele encerra a ligação, e você recebe uma notificação. Se o mesmo número for abusivo de novo em até 30 dias, ele fica bloqueado nesta linha por 14 dias."
     },
     "blocked": {
       "label": "Números bloqueados e avisados",
@@ -225,7 +274,8 @@
       "unblock": "Desbloquear",
       "warned": "encerrada por abuso em {{date}}, bloqueado se acontecer de novo",
       "clear": "Limpar"
-    }
+    },
+    "help_male": "O que o Recepcionista IA recusa. Toda ligação encerrada assim fica marcada na transcrição."
   },
   "followUp": {
     "title": "Depois da ligação",
@@ -242,6 +292,31 @@
       "placeholder": "ex.: Robben",
       "help": "Se o número de quem ligou não estiver no WhatsApp, a mesma mensagem é enviada uma vez por SMS com este nome. As pessoas não conseguem responder a ele.",
       "invalid": "Use até 11 letras, números ou espaços, com pelo menos uma letra."
+    },
+    "help_male": "Durante a ligação, ele pergunta se pode mandar os detalhes pelo WhatsApp. Se a pessoa disser que sim, 30 segundos depois que a ligação termina chega uma mensagem desta empresa com o link para agendar um horário.",
+    "preview": {
+      "title": "O que a pessoa recebe",
+      "help": "A mensagem exata de WhatsApp, preenchida com um nome de exemplo. A mensagem real usa o primeiro nome de quem ligou.",
+      "loading": "Carregando a mensagem…",
+      "error": "Não foi possível carregar a prévia da mensagem.",
+      "kindLabel": "Qual mensagem",
+      "languageLabel": "Idioma",
+      "kind": {
+        "followup": "Sem horário marcado",
+        "booked": "Marcado na ligação"
+      },
+      "lang": {
+        "en": "Inglês",
+        "nl": "Holandês"
+      },
+      "link": {
+        "short": "O link é o link de agendamento pessoal de quem ligou: book.leadawaker.com seguido de um código criado para essa pessoa. Ele abre a agenda desta conta ({{calendar}}) já vinculada a quem ligou, então o agendamento cai no cadastro dela.",
+        "custom": "O link é o link de agendamento pessoal de quem ligou, no domínio de agendamento desta conta. Ele abre a agenda desta conta ({{calendar}}) já vinculada a quem ligou, então o agendamento cai no cadastro dela.",
+        "none": "A campanha desta conta não tem link de agenda, então quem ligou sem marcar horário não recebe mensagem. Adicione um link de agenda à campanha para enviar."
+      },
+      "bookedNote": "Quando ela marca o horário durante a ligação, a mensagem confirma o horário em vez de mandar um link. O horário mostrado é um exemplo.",
+      "bookedNote_male": "Quando ele marca o horário durante a ligação, a mensagem confirma o horário em vez de mandar um link. O horário mostrado é um exemplo.",
+      "otherLanguages": "Quem liga em outro idioma, inclusive português, recebe a mensagem em inglês."
     }
   },
   "numberDocs": {
@@ -385,5 +460,98 @@
       "google": "Vozes do Google"
     },
     "unsaved": "Ainda não foi salvo. Aperte Gerar áudio, ouça e depois Usar este áudio para salvar."
+  },
+  "rail": {
+    "overview": {
+      "label": "Visão geral",
+      "help": "Como foi este mês e o número de telefone.",
+      "ready": "Pronta para atender",
+      "missing_one": "{{count}} item faltando",
+      "missing_other": "{{count}} itens faltando",
+      "help_male": "Como foi este mês e o número de telefone."
+    },
+    "identity": {
+      "label": "Quem ela é",
+      "help": "Nome, voz, saudação e a empresa que ela representa.",
+      "empty": "Ainda sem nome ou voz",
+      "label_male": "Quem ele é",
+      "help_male": "Nome, voz, saudação e a empresa que ele representa."
+    },
+    "knowledge": {
+      "label": "O que ela sabe",
+      "help": "Horário de funcionamento e as respostas que ela pode dar.",
+      "detail_one": "{{count}} item de conhecimento",
+      "detail_other": "{{count}} itens de conhecimento",
+      "label_male": "O que ele sabe",
+      "help_male": "Horário de funcionamento e as respostas que ele pode dar."
+    },
+    "call": {
+      "label": "Durante a ligação",
+      "help": "Transferências, o que ela pergunta, o que quem liga ouve e quem ela recusa.",
+      "noTransfer": "Sem transferências",
+      "noNumber": "Ainda sem número de transferência",
+      "help_male": "Transferências, o que ele pergunta, o que quem liga ouve e quem ele recusa."
+    },
+    "after": {
+      "label": "Depois da ligação",
+      "help": "A mensagem de WhatsApp que quem liga recebe depois.",
+      "on": "WhatsApp depois de cada ligação",
+      "off": "Sem mensagem depois da ligação"
+    },
+    "prompt": {
+      "label": "Prompt e teste",
+      "help": "Tudo o que ela recebe, salvo enquanto você digita, ao lado de uma ligação de teste.",
+      "help_male": "Tudo o que ele recebe, salvo enquanto você digita, ao lado de uma ligação de teste.",
+      "detail": "Edite e teste ela",
+      "detail_male": "Edite e teste ele"
+    }
+  },
+  "line": {
+    "title": "Na linha",
+    "help": "O que quem liga ouve em volta da voz dela. Cada chave salva na hora.",
+    "needsNumber": "Primeiro vincule um número em Integrações > Telefone: o aviso de gravação, o som de escritório e a região valem para esse número.",
+    "help_male": "O que quem liga ouve em volta da voz dele. Cada chave salva na hora."
+  },
+  "conversation": {
+    "title": "Perguntas e fora do horário"
+  },
+  "prompt": {
+    "autosave": {
+      "saving": "Salvando",
+      "saved": "Salvo",
+      "error": "Não salvo"
+    },
+    "greeting": {
+      "title": "A primeira coisa que ela diz",
+      "title_male": "A primeira coisa que ele diz",
+      "help": "Dito palavra por palavra quando ela atende. Só para esta empresa.",
+      "help_male": "Dito palavra por palavra quando ele atende. Só para esta empresa."
+    },
+    "extra": {
+      "help": "Regras e fatos só desta empresa. Vão para a parte que responde perguntas e agenda, não para o jeito dela falar.",
+      "help_male": "Regras e fatos só desta empresa. Vão para a parte que responde perguntas e agenda, não para o jeito dele falar."
+    },
+    "layer": {
+      "title": "Como ela fala ({{language}})",
+      "title_male": "Como ele fala ({{language}})",
+      "help": "As instruções de voz dela: tom, ritmo, pronúncia, quando transferir. Os marcadores entre chaves são preenchidos por empresa.",
+      "help_male": "As instruções de voz dele: tom, ritmo, pronúncia, quando transferir. Os marcadores entre chaves são preenchidos por empresa."
+    },
+    "backend": {
+      "title": "O que ela faz ({{language}})",
+      "title_male": "O que ele faz ({{language}})",
+      "help": "O backend que responde por ela: agendamentos, conhecimento e ferramentas.",
+      "help_male": "O backend que responde por ele: agendamentos, conhecimento e ferramentas."
+    },
+    "shared": "Compartilhado: toda linha de cliente neste idioma usa este texto ({{useCase}}). Uma mudança aqui chega à próxima ligação deles em até 30 segundos.",
+    "history": "Versões anteriores na Prompt Library (#{{id}})",
+    "noLanguage": "Escolha primeiro um idioma em Quem ela é. Os prompts compartilhados dependem disso.",
+    "resolve": {
+      "show": "Mostrar preenchido",
+      "edit": "Editar",
+      "failed": "Não foi possível preencher o prompt para esta linha.",
+      "valueLegend": "Preenchido para esta empresa",
+      "addedLegend": "Adicionado pelo sistema na ligação"
+    }
   }
 }

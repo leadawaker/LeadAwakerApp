@@ -35,6 +35,12 @@ import { toast } from "@/hooks/use-toast";
 import { ToastAction } from "@/components/ui/toast";
 import { getLeadStatusAvatarColor, getInitials as getInitialsUtil, PIPELINE_HEX as PIPELINE_HEX_UTIL } from "@/lib/avatarUtils";
 import { useTheme } from "@/hooks/useTheme";
+import { getFullName as getFullNameUtil } from "./cardView/leadUtils";
+import { ChannelGlyph } from "./cardView/ChannelGlyph";
+import { KanbanSkeleton } from "./LeadsSkeletons";
+import {
+  displayStage, stageHex, stageColorKey, lastContactAt, lastContactChannel, lastContactText, ALL_STAGE_KEYS,
+} from "../lib/leadDisplay";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import {
   Phone,
@@ -136,46 +142,12 @@ function stageKey(stage: string): string {
 /* ─────────── Infinite scroll batch size ─────────── */
 const COLUMN_BATCH_SIZE = 30;
 
-/* ─────────── Score arc — mini donut (matches design ScoreArc) ─────────── */
-
-function ScoreArc({ score, size = 26, sw = 2.5 }: { score: number; size?: number; sw?: number }) {
-  const { t } = useTranslation("leads");
-  const r = (size - sw) / 2;
-  const c = 2 * Math.PI * r;
-  const fill = (Math.max(0, Math.min(100, score)) / 100) * c;
-  const color = score >= 55 ? "var(--good)" : score >= 40 ? "var(--warn)" : "var(--stage-contacted)";
-  return (
-    <div
-      style={{ position: "relative", width: size, height: size, flexShrink: 0 }}
-      data-testid="kanban-card-score"
-      title={t("kanban.leadScore", { score })}
-    >
-      <svg width={size} height={size} style={{ transform: "rotate(-90deg)", display: "block" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--line)" strokeWidth={sw} />
-        <circle
-          cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={sw}
-          strokeDasharray={`${fill} ${c - fill}`} strokeLinecap="round"
-        />
-      </svg>
-      <div
-        style={{
-          position: "absolute", inset: 0, display: "flex", alignItems: "center",
-          justifyContent: "center", fontFamily: "var(--mono)", fontSize: size < 38 ? 8 : 11,
-          fontWeight: 700, color: "var(--ink)",
-        }}
-      >
-        {score}
-      </div>
-    </div>
-  );
-}
-
 /* ─────────── Stage avatar — colored rounded square with mono initials ─────────── */
 
 function StageAvatar({ name, status, size = 30, radius = 8 }: { name: string; status: string; size?: number; radius?: number }) {
   const { isDark } = useTheme();
-  const hex = PIPELINE_HEX[status] || "#6B7280";
-  const avatarColor = getLeadStatusAvatarColor(status);
+  const hex = stageHex(status);
+  const avatarColor = getLeadStatusAvatarColor(stageColorKey(status));
   return (
     <div
       style={{
@@ -194,19 +166,14 @@ function StageAvatar({ name, status, size = 30, radius = 8 }: { name: string; st
 
 /* ─────────── Data helpers ─────────── */
 
-function getFullName(lead: any): string {
-  return lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "Unknown";
-}
+const getFullName = getFullNameUtil;
 
 // getInitials moved to @/lib/avatarUtils
 const getInitials = getInitialsUtil;
 
-function getScore(lead: any): number {
-  return Number(lead.lead_score ?? lead.leadScore ?? lead.Lead_Score ?? 0);
-}
-
+/** Column/stage key: receptionist leads use their simpler display stage. */
 function getStatus(lead: any): string {
-  return lead.conversion_status || lead.Conversion_Status || "New";
+  return displayStage(lead);
 }
 
 function getPhone(lead: any): string {
@@ -279,13 +246,12 @@ function KanbanCardContent({
   const name        = getFullName(lead);
   const initials    = getInitials(name);
   const status      = getStatus(lead);
-  const score       = getScore(lead);
   const phone       = getPhone(lead);
   const email       = getEmail(lead);
   const lastMessage = getLastMessage(lead);
-  const avatarColor = getLeadStatusAvatarColor(status);
-  const statusHex   = PIPELINE_HEX[status] || "#6B7280";
-  const lastActivity = lead.last_interaction_at || lead.last_message_received_at || lead.last_message_sent_at;
+  const avatarColor = getLeadStatusAvatarColor(stageColorKey(status));
+  const lastActivity = lastContactAt(lead);
+  const contactChannel = lastContactChannel(lead);
   const visibleTags  = (cardTags || []).slice(0, 3);
 
   const isBookedStatus = status === "Booked";
@@ -312,9 +278,6 @@ function KanbanCardContent({
       </button>
     </div>
   );
-
-  // Score bar hidden for Booked (score=100) and Closed
-  const showScoreBar = !isBookedStatus && !isClosedStatus && score > 0;
 
   // Compact density tiers — progressive avatar sizing
   const isUltraNarrow = compactMode && colWidth < 80;
@@ -362,7 +325,7 @@ function KanbanCardContent({
           "flex items-center justify-center py-0.5",
           isDragging && "opacity-95"
         )}
-        title={`${name}${score > 0 ? ` • ${score}pts` : ""}${phone ? ` • ${phone}` : ""}${email ? ` • ${email}` : ""}`}
+        title={`${name}${phone ? ` • ${phone}` : ""}${email ? ` • ${email}` : ""}`}
       >
         <EntityAvatar
           name={name}
@@ -391,12 +354,12 @@ function KanbanCardContent({
         }}
       >
         <div className="flex flex-col gap-0">
-          {/* Main row: [avatar center-aligned] | name+score stacked | last interaction */}
+          {/* Main row: [avatar center-aligned] | name stacked | last interaction */}
           <div className="flex items-center gap-1.5 min-w-0">
             {compactAvatarPx !== null && (
               <StageAvatar name={name} status={status} size={compactAvatarPx} radius={6} />
             )}
-            {/* Name + score + booked date stacked, center-aligned with avatar */}
+            {/* Name + booked date stacked, center-aligned with avatar */}
             <div className="flex-1 min-w-0 flex flex-col justify-center">
               <div className="flex items-center gap-1 min-w-0">
                 <span
@@ -415,12 +378,6 @@ function KanbanCardContent({
                   </span>
                 )}
               </div>
-              {/* Score bar — under name */}
-              {showScoreBar && (
-                <div className="mt-0.5 h-[4px] overflow-hidden" style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)" }}>
-                  <div className="h-full" style={{ width: `${Math.min(100, score)}%`, borderRadius: "var(--r-pill)", background: score >= 55 ? "var(--good)" : score >= 40 ? "var(--warn)" : "var(--stage-contacted)" }} />
-                </div>
-              )}
               {/* Booked date under name, action buttons right-aligned */}
               {isBookedStatus && bookedDateStr && (
                 <div className="flex items-center mt-0.5">
@@ -477,12 +434,14 @@ function KanbanCardContent({
           >
             {name}
           </div>
-          {lastActivity && (
+          {(lastActivity || contactChannel) && (
             <div
+              className="flex items-center gap-1 min-w-0"
               style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", letterSpacing: "0.06em", marginTop: 2 }}
               data-testid="kanban-card-last-activity"
             >
-              {formatRelativeDate(lastActivity, t)}
+              {contactChannel && <ChannelGlyph channel={contactChannel} size={10} />}
+              <span className="truncate">{lastContactText(lead, t)}</span>
             </div>
           )}
           {/* Booked date under name, action buttons right-aligned */}
@@ -496,8 +455,6 @@ function KanbanCardContent({
           )}
         </div>
 
-        {/* Score arc on the right */}
-        {showScoreBar && <ScoreArc score={score} size={26} sw={2.5} />}
       </div>
 
       {/* Tags — always visible when showTagsAlways is on */}
@@ -598,6 +555,8 @@ function KanbanColumn({
   useCompactCards,
   onMoveLead,
   colWidth,
+  totalCount,
+  onLoadMore,
 }: {
   stage: string;
   leads: any[];
@@ -613,9 +572,13 @@ function KanbanColumn({
   useCompactCards?: boolean;
   onMoveLead?: (leadId: number | string, newStage: string) => void | Promise<void>;
   colWidth?: number;
+  /** Server count for this stage (all matching leads). */
+  totalCount?: number;
+  onLoadMore?: (stage: string) => void | Promise<void>;
 }) {
   const { t } = useTranslation("leads");
-  const hex = PIPELINE_HEX[stage] || "#6B7280";
+  const hex = stageHex(stage);
+  const total = totalCount ?? leads.length;
   const headerTextColor = hex;
   const iconBg = STAGE_ICON_BG[stage] || hex;
   const iconText = STAGE_ICON_TEXT[stage] || DEFAULT_ICON_TEXT;
@@ -631,14 +594,15 @@ function KanbanColumn({
   const [visibleCount, setVisibleCount] = useState(COLUMN_BATCH_SIZE);
 
   useEffect(() => {
-    setVisibleCount(COLUMN_BATCH_SIZE);
+    setVisibleCount((v) => Math.max(COLUMN_BATCH_SIZE, Math.min(v, leads.length)));
   }, [stage, leads.length]);
 
   // Load more is triggered by button click — no IntersectionObserver needed
 
   const visibleLeads    = leads.slice(0, visibleCount);
-  const hasMore         = visibleCount < leads.length;
-  const remainingCount  = leads.length - visibleCount;
+  // More to show locally, or more on the server than loaded.
+  const hasMore         = visibleCount < leads.length || leads.length < total;
+  const remainingCount  = total - Math.min(visibleCount, leads.length);
 
   /* ── Collapsed state ── */
   if (isCollapsed) {
@@ -648,7 +612,7 @@ function KanbanColumn({
         style={{ background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)" }}
         data-testid={`kanban-column-${stage}`}
         data-collapsed="true"
-        title={`${t(`kanban.stageLabels.${stageKey(stage)}`)} (${leads.length})`}
+        title={`${t(`kanban.stageLabels.${stageKey(stage)}`)} (${total})`}
         onClick={() => onToggleCollapse?.(stage)}
       >
         {/* Top section: expand arrow + colored circle + count — all at the TOP */}
@@ -667,7 +631,7 @@ function KanbanColumn({
             style={{ color: hex }}
             data-testid={`kanban-column-count-${stage}`}
           >
-            {leads.length}
+            {total}
           </span>
         </div>
         <div className="flex-1 flex items-start pt-1">
@@ -705,7 +669,7 @@ function KanbanColumn({
       data-stage={stage}
       data-collapsed="false"
       data-visible-count={visibleCount}
-      data-total-count={leads.length}
+      data-total-count={total}
     >
       {/* Column Header — stage dot + mono uppercase label + count pill. Click the label to fold the column. */}
       <div
@@ -766,7 +730,7 @@ function KanbanColumn({
           }}
           data-testid={`kanban-column-count-${stage}`}
         >
-          {leads.length}
+          {total}
         </span>
       </div>
 
@@ -847,11 +811,10 @@ function KanbanColumn({
               {/* Load more button */}
               {hasMore && (
                 <button
-                  onClick={() =>
-                    setVisibleCount((prev) =>
-                      Math.min(prev + COLUMN_BATCH_SIZE, leads.length)
-                    )
-                  }
+                  onClick={async () => {
+                    if (visibleCount >= leads.length && leads.length < total) await onLoadMore?.(stage);
+                    setVisibleCount((prev) => prev + COLUMN_BATCH_SIZE);
+                  }}
                   data-testid={`kanban-column-load-more-${stage}`}
                   className="w-full"
                   style={{
@@ -881,6 +844,10 @@ function KanbanColumn({
 /* ─────────── Main Kanban Board ─────────── */
 
 interface LeadsKanbanProps {
+  /** Server counts per stage (all matching leads, not just the loaded ones). */
+  stageCounts?: Record<string, number>;
+  /** Fetch the next page of one column from the server. */
+  onLoadMoreStage?: (stage: string) => void | Promise<void>;
   leads: any[];
   loading?: boolean;
   campaignId?: string;
@@ -894,7 +861,7 @@ interface LeadsKanbanProps {
   onCollapsedChange?: (hasAny: boolean) => void;
   /** When true, tags/message/contact info are always visible on cards (not just on hover) */
   showTagsAlways?: boolean;
-  /** Compact mode: narrow cards showing only name + last activity, hover reveals score/phone/email */
+  /** Compact mode: narrow cards showing only name + last activity, hover reveals phone/email */
   compactMode?: boolean;
 }
 
@@ -902,6 +869,8 @@ interface LeadsKanbanProps {
 const COMPACT_CARD_THRESHOLD = 260;
 
 export function LeadsKanban({
+  stageCounts,
+  onLoadMoreStage,
   leads,
   loading,
   onLeadMove,
@@ -983,11 +952,8 @@ export function LeadsKanban({
       setCollapsedStages((_prev) => {
         const emptyStages = new Set<string>();
         for (const stage of PIPELINE_STAGES) {
-          const stageLeads = localLeads.filter((l) => {
-            const s = l.conversion_status || l.Conversion_Status || "New";
-            return s === stage;
-          });
-          if (stageLeads.length === 0) emptyStages.add(stage);
+          const n = stageCounts?.[stage] ?? localLeads.filter((l) => getStatus(l) === stage).length;
+          if (n === 0) emptyStages.add(stage);
         }
         try { localStorage.setItem("kanban_collapsed_stages", JSON.stringify(Array.from(emptyStages))); } catch {}
         return emptyStages;
@@ -998,10 +964,7 @@ export function LeadsKanban({
       setCollapsedStages((_prev) => {
         const stagesToFold = new Set<string>();
         for (const stage of PIPELINE_STAGES) {
-          const count = localLeads.filter((l) => {
-            const s = l.conversion_status || l.Conversion_Status || "New";
-            return s === stage;
-          }).length;
+          const count = stageCounts?.[stage] ?? localLeads.filter((l) => getStatus(l) === stage).length;
           if (count <= threshold) stagesToFold.add(stage);
         }
         try { localStorage.setItem("kanban_collapsed_stages", JSON.stringify(Array.from(stagesToFold))); } catch {}
@@ -1025,11 +988,18 @@ export function LeadsKanban({
     return () => cancelAnimationFrame(raf);
   }, [selectedLeadId]);
 
+  // DBR pipeline columns, plus the receptionist columns (New inquiry, Answered,
+  // Done) only when leads sit in them.
+  const stages = useMemo(() => ALL_STAGE_KEYS.filter((s) =>
+    (PIPELINE_STAGES as readonly string[]).includes(s)
+    || (stageCounts?.[s] ?? 0) > 0
+    || localLeads.some((l) => getStatus(l) === s)), [stageCounts, localLeads]);
+
   const groupedLeads = useMemo(() => {
     const groups: Record<string, any[]> = {};
-    for (const stage of PIPELINE_STAGES) groups[stage] = [];
+    for (const stage of stages) groups[stage] = [];
     for (const lead of localLeads) {
-      const status = lead.conversion_status || lead.Conversion_Status || "New";
+      const status = getStatus(lead);
       if (groups[status]) {
         groups[status].push(lead);
       } else {
@@ -1037,15 +1007,15 @@ export function LeadsKanban({
       }
     }
     return groups;
-  }, [localLeads]);
+  }, [localLeads, stages]);
 
   // ── Derive card density from actual column width ────────────────────
   // compactMode controls layout (flex-fill vs fixed scroll)
   // useCompactCards controls card rendering — auto-switches when columns are wide enough
-  const visibleColumnCount = PIPELINE_STAGES.length - collapsedStages.size;
+  const visibleColumnCount = stages.length - collapsedStages.size;
   const collapsedWidth = collapsedStages.size * 43; // 40px + 3px gap
   const rawColWidth = visibleColumnCount > 0
-    ? (containerWidth - collapsedWidth - (PIPELINE_STAGES.length - 1) * 3) / visibleColumnCount
+    ? (containerWidth - collapsedWidth - (stages.length - 1) * 3) / visibleColumnCount
     : 0;
   // Use 200 as fallback before ResizeObserver fires to avoid ultra-narrow flash
   const effectiveColWidth = containerWidth > 0 ? rawColWidth : 200;
@@ -1074,13 +1044,13 @@ export function LeadsKanban({
       if (!over) return;
 
       const targetStage = String(over.id).replace(/^column-/, "");
-      if (!PIPELINE_STAGES.includes(targetStage as (typeof PIPELINE_STAGES)[number])) return;
+      if (!stages.includes(targetStage)) return;
 
       const draggedId   = String(active.id);
       const draggedLead = localLeads.find((l) => String(l.Id || l.id) === draggedId);
       if (!draggedLead) return;
 
-      const currentStage = draggedLead.conversion_status || draggedLead.Conversion_Status || "New";
+      const currentStage = getStatus(draggedLead);
       if (currentStage === targetStage) return;
 
       snapshotRef.current = [...localLeads];
@@ -1088,7 +1058,7 @@ export function LeadsKanban({
       setLocalLeads((prev) =>
         prev.map((l) =>
           String(l.Id || l.id) === draggedId
-            ? { ...l, conversion_status: targetStage, Conversion_Status: targetStage }
+            ? { ...l, stage_key: targetStage }
             : l
         )
       );
@@ -1132,69 +1102,11 @@ export function LeadsKanban({
         });
       }
     },
-    [localLeads, onLeadMove]
+    [localLeads, onLeadMove, stages]
   );
 
   /* ── Loading skeleton ── */
-  if (loading) {
-    return (
-      <div
-        className="flex gap-[3px] overflow-x-auto pb-4 scroll-smooth snap-x snap-mandatory md:snap-none"
-        style={{ overscrollBehaviorX: "contain" } as React.CSSProperties}
-        data-testid="kanban-loading-skeleton"
-      >
-        {PIPELINE_STAGES.map((stage) => {
-          const SkelIcon = STAGE_ICONS[stage] || AlertCircle;
-          const skelBg = STAGE_ICON_BG[stage] || "#6B7280";
-          return (
-            <div
-              key={stage}
-              className="flex flex-col bg-card rounded-lg w-[calc(100vw-24px)] md:w-[210px] min-w-[calc(100vw-24px)] md:min-w-[195px] flex-shrink-0 snap-start snap-always"
-              data-testid="kanban-skeleton-column"
-            >
-              {/* Header skeleton */}
-              <div className="px-3 py-2.5 flex items-center gap-2">
-                <div
-                  className="h-6 w-6 rounded-full shrink-0 flex items-center justify-center opacity-40"
-                  style={{ backgroundColor: skelBg }}
-                >
-                  <SkelIcon className="h-3.5 w-3.5 text-white" />
-                </div>
-                <div className="h-3.5 bg-foreground/10 animate-pulse rounded flex-1 max-w-[5rem]" />
-                <div className="h-3 w-5 bg-foreground/8 animate-pulse rounded shrink-0" />
-              </div>
-              {/* Card skeletons */}
-              <div className="px-[3px] pb-2 space-y-0">
-                {[1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="mx-0.5 my-0.5 rounded-xl bg-card px-2.5 pt-2 pb-1.5 animate-pulse"
-                    data-testid="kanban-skeleton-card"
-                    style={{ animationDelay: `${i * 80}ms` }}
-                  >
-                    <div className="flex items-stretch gap-2">
-                      <div className="w-10 h-10 rounded-full bg-foreground/10 shrink-0 self-start mt-0.5" />
-                      <div className="flex-1 min-w-0 pt-0.5 space-y-[5px]">
-                        <div className="h-[14px] bg-foreground/10 rounded w-3/4" />
-                        <div className="flex items-center gap-1.5">
-                          <div className="h-1.5 w-1.5 rounded-full bg-foreground/10 shrink-0" />
-                          <div className="h-2 bg-foreground/8 rounded-full w-2/5" />
-                        </div>
-                      </div>
-                      <div className="shrink-0 flex flex-col items-end justify-between py-0.5">
-                        <div className="h-2 w-8 bg-foreground/8 rounded-full" />
-                        <div className="h-6 w-6 rounded-full bg-foreground/10 mt-1" />
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  }
+  if (loading) return <KanbanSkeleton />;
 
   return (
     <DndContext
@@ -1221,7 +1133,7 @@ export function LeadsKanban({
         }}
         data-testid="kanban-board"
       >
-        {PIPELINE_STAGES.map((stage) => (
+        {stages.map((stage) => (
           <KanbanColumn
             key={stage}
             stage={stage}
@@ -1236,6 +1148,8 @@ export function LeadsKanban({
             useCompactCards={useCompactCards}
             onMoveLead={onLeadMove}
             colWidth={compactMode ? effectiveColWidth : 280}
+            totalCount={stageCounts?.[stage]}
+            onLoadMore={onLoadMoreStage}
           />
         ))}
       </div>

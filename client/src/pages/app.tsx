@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useMemo, useState, type ReactElement } from "react";
+import { Suspense, lazy, useEffect, useMemo, useState, type ReactElement, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Switch, Route, Redirect, useLocation } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
@@ -7,6 +7,8 @@ import { AgentWidgetProvider } from "@/contexts/AgentWidgetContext";
 import { PageEntityProvider } from "@/contexts/PageEntityContext";
 import { AgentChatWidget } from "@/features/ai-agents/components/AgentChatWidget";
 import { Loader2 } from "lucide-react";
+// Small, dependency-free skeleton so the Chats/Leads loader matches those pages.
+import { LeadsRouteSkeleton } from "@/features/leads/components/LeadsSkeletons";
 import { apiFetch } from "@/lib/apiUtils";
 import { useVoiceCapabilities } from "@/features/voiceCalls/api/voiceCallsApi";
 import {
@@ -16,6 +18,7 @@ import {
   useServicePageToggles,
   type ServicePageKey,
 } from "@/hooks/useServicePageToggles";
+import { hydrateUserLanguage } from "@/lib/userLanguage";
 import { hydrateLandingPage, isLandingHydrated, resolveLandingPath } from "@/lib/landingPage";
 import { getQueryFn } from "@/lib/queryClient";
 import { parsePrefs } from "@/lib/userPrefs";
@@ -129,6 +132,7 @@ function useFreshSessionPrefs(): { loading: boolean; fetching: boolean; authenti
     const prefs = parsePrefs(user.preferences);
     hydrateServicePageToggles(prefs);
     hydrateLandingPage(prefs);
+    hydrateUserLanguage(prefs);
   }, [user]);
   useEffect(() => {
     if (user) window.dispatchEvent(new Event(PREFS_CHANGED_EVENT));
@@ -186,7 +190,7 @@ function VoiceCallsGuard({ prefix }: { prefix: string }) {
  * to its right — so the loader never overlays the navbar. All surfaces use
  * semantic tokens, so it adapts to dark mode automatically.
  */
-function PageLoader() {
+function PageLoader({ children }: { children?: ReactNode } = {}) {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Nav rail placeholder — matches the 188px fixed navbar (desktop only) */}
@@ -213,7 +217,8 @@ function PageLoader() {
           </div>
           <div className="ml-auto h-8 w-48 animate-pulse rounded-full bg-primary/10" />
         </div>
-        {/* Body: toolbar list panel + content */}
+        {/* Body: a page-shaped skeleton when given (Chats / Leads), else the generic one */}
+        {children ?? (
         <div className="flex min-h-0 flex-1">
           {/* Toolbar / list panel */}
           <div className="hidden w-[300px] shrink-0 flex-col gap-2 border-r border-border bg-muted p-3 md:flex">
@@ -232,6 +237,7 @@ function PageLoader() {
             <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
           </div>
         </div>
+        )}
       </div>
     </div>
   );
@@ -255,10 +261,10 @@ export default function AppArea() {
           <Route path="/platform/conversations"><Redirect to="/platform/chat" /></Route>
           <Route path="/platform/chat">
             {isAgencyUser()
-              ? <AppLeads mode="conversations" />
+              ? <Suspense fallback={<PageLoader><LeadsRouteSkeleton mode="conversations" /></PageLoader>}><AppLeads mode="conversations" /></Suspense>
               : <Redirect to="/platform/contacts" />}
           </Route>
-          <Route path="/platform/contacts"><AppLeads mode="contacts" /></Route>
+          <Route path="/platform/contacts"><Suspense fallback={<PageLoader><LeadsRouteSkeleton mode="contacts" /></PageLoader>}><AppLeads mode="contacts" /></Suspense></Route>
           <Route path="/platform/leads"><AppLeads /></Route>
           <Route path="/platform/outreach-inbox">
             <AgencyOnly prefix="/platform"><OutreachInbox /></AgencyOnly>

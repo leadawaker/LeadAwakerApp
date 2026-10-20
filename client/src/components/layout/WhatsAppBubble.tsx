@@ -72,7 +72,7 @@ function BubbleInner({ hidden }: { hidden: boolean }) {
             {t("bubble.tryDemo")}
           </a>
           <a
-            href={`https://wa.me/558481118224?text=${encodeURIComponent(t("bubble.founderPrefill"))}`}
+            href={`https://wa.me/31684446349?text=${encodeURIComponent(t("bubble.founderPrefill"))}`}
             target="_blank"
             rel="noopener noreferrer"
             onClick={() => setOpen(false)}
