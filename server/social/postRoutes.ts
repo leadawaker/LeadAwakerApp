@@ -197,6 +197,8 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     const ctx = await accountGate(req, res);
     if (!ctx) return;
     if (!isAgency(req.user)) return forbidden(res);
+    const userId = actorId(req, res);
+    if (userId === null) return;
     const parsed = parseNewPostBody(req.body);
     if (!parsed.ok) return res.status(400).json({ message: parsed.message });
     const input = parsed.input;
@@ -208,8 +210,6 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     if (!video) return refused(res, 422, "upload_missing");
     if ("ok" in video) return refused(res, 422, video.reason);
 
-    const userId = actorId(req, res);
-    if (userId === null) return;
     const plan = planNewPost(input, {
       timeZone: ctx.timeZone, now: deps.now(), userId, accountId: ctx.accountId, connectionId: connection.id, video,
     });
