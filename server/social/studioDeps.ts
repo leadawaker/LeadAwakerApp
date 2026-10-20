@@ -35,6 +35,7 @@ export interface StudioDeps {
     updateSocialScript(accountId: number, scriptId: number, fields: Partial<InsertSocialScript>): Promise<SocialScript | null>;
     listHeygenPulls(accountId: number): Promise<SocialHeygenPull[]>;
     insertHeygenPull(row: { accountsId: number; heygenVideoId: string; scriptId: number | null; uploadId: string; pulledByUserId: number | null }): Promise<SocialHeygenPull>;
+    deleteHeygenPull(accountId: number, heygenVideoId: string): Promise<void>;
     listSocialPosts(accountId: number): Promise<SocialPost[]>;
     getSocialPost(accountId: number, postId: number): Promise<SocialPost | null>;
     getSocialPostByPublicId(publicId: string): Promise<SocialPost | null>;

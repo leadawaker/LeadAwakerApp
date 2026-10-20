@@ -1,6 +1,7 @@
 // Pure rules for studio topics and scripts: request bodies, what each role sees, the script-draft
 // prompt (the account's voice guide is the system prompt, data not code) and parsing its answer.
 // Spec: docs/superpowers/specs/2026-10-20-caption-writer-and-studio-design.md
+import { createHash } from "node:crypto";
 import type { SocialPost, SocialScript, SocialTopic } from "@shared/schema";
 import {
   effectiveScriptStatus,
@@ -54,8 +55,15 @@ export function parseNewTopicBody(body: unknown): Parsed<{ text: string; source:
 
 // ─── Scripts ───────────────────────────────────────────────────────────────
 
+/** What the Manager says yes to: the title and the text. Sent back with his answer (like contentVersion for posts). */
+export function scriptVersion(s: Pick<SocialScript, "title" | "body">): string {
+  return createHash("sha256").update(`${s.title}\n${s.body}`).digest("hex").slice(0, 16);
+}
+
 export interface ScriptView {
   id: number;
+  /** scriptVersion(): sent back with the Manager's answer, so an edit since he loaded it is refused. */
+  version: string;
   title: string;
   body: string;
   status: ScriptStatus;
@@ -75,6 +83,7 @@ export function toScriptView(s: SocialScript, post: SocialPost | null | undefine
   const linked = post && post.status !== "cancelled" ? post : null;
   return {
     id: s.id,
+    version: scriptVersion(s),
     title: s.title,
     body: s.body,
     status: effectiveScriptStatus(s.status as ScriptStatus, linked),
@@ -136,12 +145,14 @@ export function parseScriptEditBody(body: unknown): Parsed<ScriptEdit> {
 }
 
 /**
- * What an agency edit writes. A new body after the Manager answered drops the review back to "none":
- * he said yes (or no) to the old text, so Gabriel sends it again when it is ready.
+ * What an agency edit writes. A new title or body after the script was sent drops the review back to
+ * "none": the Manager saw (or said yes or no to) the old text, so Gabriel sends it again when it is ready.
  */
 export function planScriptEdit(s: SocialScript, edit: ScriptEdit): Partial<SocialScript> {
   const fields: Partial<SocialScript> = { ...edit };
-  if (edit.body !== undefined && edit.body !== s.body && (s.reviewStatus === "ok" || s.reviewStatus === "changes")) {
+  const textChanged = (edit.body !== undefined && edit.body !== s.body) || (edit.title !== undefined && edit.title !== s.title);
+  // Waiting too: the Manager has the old text on his screen, so Gabriel sends the new one again.
+  if (textChanged && s.reviewStatus !== "none") {
     fields.reviewStatus = "none";
     fields.reviewNote = null;
   }
@@ -149,19 +160,21 @@ export function planScriptEdit(s: SocialScript, edit: ScriptEdit): Partial<Socia
   return fields;
 }
 
-export function parseReviewBody(body: unknown): Parsed<{ decision: "ok" | "changes"; note: string | null }> {
+export function parseReviewBody(body: unknown): Parsed<{ decision: "ok" | "changes"; note: string | null; version: string }> {
   const b = obj(body);
   if (!b) return { ok: false, message: "Body must be an object" };
   if (b.decision !== "ok" && b.decision !== "changes") return { ok: false, message: "decision must be ok or changes" };
+  if (typeof b.version !== "string" || !b.version) return { ok: false, message: "version is required" };
   const note = typeof b.note === "string" ? b.note.trim().slice(0, TEXT_LIMITS.reviewNote) : "";
   if (b.decision === "changes" && !note) return { ok: false, message: "A note is required when asking for changes" };
-  return { ok: true, input: { decision: b.decision, note: note || null } };
+  return { ok: true, input: { decision: b.decision, note: note || null, version: b.version } };
 }
 
-/** The Manager's answer. "ok" on a script that is still a draft makes it approved. */
+/** The Manager's answer. "ok" on a draft makes it approved; "changes" on an approved script makes it a draft again. */
 export function planReview(s: SocialScript, decision: "ok" | "changes", note: string | null, userId: number, now: Date): Partial<SocialScript> {
   const fields: Partial<SocialScript> = { reviewStatus: decision, reviewNote: note, reviewedByUserId: userId, reviewedAt: now };
   if (decision === "ok" && (s.status === "idea" || s.status === "draft")) fields.status = "approved";
+  if (decision === "changes" && s.status === "approved") fields.status = "draft";
   return fields;
 }
 

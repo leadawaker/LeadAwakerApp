@@ -62,6 +62,8 @@ let probeResult: { ok: true; durationS: number; width: number; height: number; b
 /** Runs inside updateIf just before it checks the row: simulates another writer (the publisher, a Manager). */
 let beforeUpdate: ((p: SocialPost) => void) | null;
 let realReceive: boolean;
+/** Upload ids a studio script still holds. */
+let heldByScript: Set<string>;
 
 function writeUpload(accountId: number, id: string, ext = "mp4"): string {
   const p = join(tmp, "social", String(accountId), `${id}.${ext}`);
@@ -106,6 +108,7 @@ const deps: PostRouteDeps = {
       return p;
     },
     async getSocialUserNames(ids) { return new Map(ids.filter((i) => i === 21).map((i) => [i, "Augusto"])); },
+    async isUploadHeldByScript(publicId) { return heldByScript.has(publicId); },
   },
   video: {
     async receive(src, dest, max) {
@@ -144,6 +147,7 @@ beforeEach(() => {
   probeResult = { ok: true, durationS: 58, width: 1080, height: 1920, bytes: 1000 };
   beforeUpdate = null;
   realReceive = false;
+  heldByScript = new Set();
   rmSync(join(tmp, "social"), { recursive: true, force: true });
 });
 
@@ -404,6 +408,15 @@ test("cancelling deletes the video file", async () => {
   assert.equal((await call("DELETE", `/api/social/accounts/${A}/posts/1`, AGENCY)).status, 200);
   assert.equal(posts[0].status, "cancelled");
   assert.equal(existsSync(path), false);
+});
+
+test("cancelling keeps the file when a studio script still holds the same upload", async () => {
+  const path = writeUpload(A, ID1);
+  posts = [makePost({ id: 1, videoPath: path })];
+  heldByScript.add(ID1);
+  assert.equal((await call("DELETE", `/api/social/accounts/${A}/posts/1`, AGENCY)).status, 200);
+  assert.equal(posts[0].status, "cancelled");
+  assert.equal(existsSync(path), true);
 });
 
 // ─── Public media ────────────────────────────────────────────────────────────

@@ -52,9 +52,18 @@ export function useTopicRecorder(accountId: number, onText: (text: string) => vo
       setError("mic_denied");
       return;
     }
-    const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
     const chunks: Blob[] = [];
-    const rec = new MediaRecorder(stream.current, { mimeType });
+    let mimeType = "audio/webm";
+    let rec: MediaRecorder;
+    try {
+      // Some in-app browsers have no MediaRecorder, or not for these types: release the mic and say so.
+      mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/mp4";
+      rec = new MediaRecorder(stream.current, { mimeType });
+    } catch {
+      stopTracks();
+      setError("no_recorder");
+      return;
+    }
     rec.ondataavailable = (e) => { if (e.data.size > 0) chunks.push(e.data); };
     rec.onstop = async () => {
       stopTracks();

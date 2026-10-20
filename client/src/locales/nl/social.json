@@ -180,6 +180,8 @@
     "size": "De video is groter dan 100 MB.",
     "duration_short": "De video is korter dan 3 seconden.",
     "duration_long": "De video is langer dan 15 minuten.",
-    "mic_denied": "Toegang tot de microfoon is geweigerd. Sta het toe in de browser om op te nemen."
+    "mic_denied": "Toegang tot de microfoon is geweigerd. Sta het toe in de browser om op te nemen.",
+    "changed": "Dit script is intussen aangepast. Lees de nieuwe versie.",
+    "no_recorder": "Deze browser kan geen geluid opnemen. Typ het onderwerp."
   }
 }

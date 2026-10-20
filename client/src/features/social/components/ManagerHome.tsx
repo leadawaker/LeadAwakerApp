@@ -25,8 +25,10 @@ function ScriptToReview({ script, accountId, canAnswer }: { script: ScriptView; 
   const [asking, setAsking] = useState(false);
   const [note, setNote] = useState("");
   const answer = useMutation({
-    mutationFn: (decision: "ok" | "changes") => reviewScript(accountId, script.id, decision, note.trim()),
+    mutationFn: (decision: "ok" | "changes") => reviewScript(accountId, script, decision, note.trim()),
     onSuccess: () => { setAsking(false); setNote(""); qc.invalidateQueries({ queryKey: socialScriptsKey(accountId) }); },
+    // Gabriel changed the text meanwhile: show the new version.
+    onError: (err) => { if (err instanceof SocialApiError && err.status === 409) qc.invalidateQueries({ queryKey: socialScriptsKey(accountId) }); },
   });
   return (
     <li className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }} data-testid={`review-script-${script.id}`}>

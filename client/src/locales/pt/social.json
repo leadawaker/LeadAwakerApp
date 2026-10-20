@@ -180,6 +180,8 @@
     "size": "O vídeo tem mais de 100 MB.",
     "duration_short": "O vídeo tem menos de 3 segundos.",
     "duration_long": "O vídeo tem mais de 15 minutos.",
-    "mic_denied": "O acesso ao microfone foi negado. Permita no navegador para gravar."
+    "mic_denied": "O acesso ao microfone foi negado. Permita no navegador para gravar.",
+    "changed": "O Gabriel mudou este roteiro nesse meio tempo. Leia a nova versão.",
+    "no_recorder": "Este navegador não grava áudio. Escreva o tema."
   }
 }

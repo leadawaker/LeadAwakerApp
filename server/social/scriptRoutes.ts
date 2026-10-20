@@ -29,6 +29,7 @@ import {
   planReview,
   planScriptEdit,
   recentCloses,
+  scriptVersion,
   SCRIPT_SCHEMA,
   SCRIPT_TIMEOUT_MS,
   toScriptView,
@@ -47,6 +48,15 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
   const drafting = new Set<number>();
 
   const postsById = async (accountId: number) => new Map((await store.listSocialPosts(accountId)).map((p) => [p.id, p] as [number, SocialPost]));
+
+  /** Upload ids still in use: held by a script, or the video of a post that was not cancelled. */
+  async function uploadsInUse(accountId: number): Promise<Set<string>> {
+    const [scripts, posts] = await Promise.all([store.listSocialScripts(accountId), store.listSocialPosts(accountId)]);
+    const held = new Set<string>();
+    for (const sc of scripts) if (sc.videoUploadId) held.add(sc.videoUploadId);
+    for (const p of posts) if (p.videoPublicId && p.status !== "cancelled") held.add(p.videoPublicId);
+    return held;
+  }
 
   async function scriptView(accountId: number, scriptId: number) {
     const s = await store.getSocialScript(accountId, scriptId);
@@ -198,7 +208,10 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
       }
       const draft = parseScriptDraft(answer.text);
       if (!draft) return refused(res, 502, "no_options");
-      await store.updateSocialScript(ctx.accountId, scriptId, planScriptEdit(script, { body: draft.body }));
+      // The model took a while: plan the edit on the script as it is now (the Manager may have answered meanwhile).
+      const fresh = await store.getSocialScript(ctx.accountId, scriptId);
+      if (!fresh) return res.status(404).json({ message: "Script not found" });
+      await store.updateSocialScript(ctx.accountId, scriptId, planScriptEdit(fresh, { body: draft.body }));
       res.json(await scriptView(ctx.accountId, scriptId));
     } finally {
       drafting.delete(userId);
@@ -236,6 +249,8 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
     const script = await store.getSocialScript(ctx.accountId, scriptId);
     if (!script || (!isAgency(req.user) && !visibleToClient(script))) return res.status(404).json({ message: "Script not found" });
     if (script.reviewStatus === "none") return refused(res, 409, "not_sent");
+    // He answers the text he saw: an edit since he loaded it is refused, never approved unseen.
+    if (parsed.input.version !== scriptVersion(script)) return refused(res, 409, "changed");
     await store.updateSocialScript(ctx.accountId, scriptId, planReview(script, parsed.input.decision, parsed.input.note, userId, deps.now()));
     if (!isAgency(req.user)) {
       void deps.notifyAgency({
@@ -261,6 +276,7 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
     const script = await store.getSocialScript(ctx.accountId, scriptId);
     if (!script) return res.status(404).json({ message: "Script not found" });
     if (await store.getSocialPostByPublicId(uploadId)) return refused(res, 409, "upload_used");
+    if ((await store.listSocialScripts(ctx.accountId)).some((x) => x.id !== scriptId && x.videoUploadId === uploadId)) return refused(res, 409, "upload_used");
     let found = false;
     for (const ext of ["mp4", "mov"]) {
       const check = await deps.video.inspect(pathFor(ctx.accountId, uploadId, ext));
@@ -289,12 +305,14 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
       console.warn(`[social-heygen] list failed: ${err?.message ?? err}`);
       return refused(res, 502, "heygen_failed");
     }
-    const used = new Map((await store.listHeygenPulls(ctx.accountId)).map((p) => [p.heygenVideoId, p.scriptId]));
+    // "Already used" only while its copy is still on a script or a live post: a replaced or cancelled one can be pulled again.
+    const inUse = await uploadsInUse(ctx.accountId);
+    const used = new Map((await store.listHeygenPulls(ctx.accountId)).filter((p) => inUse.has(p.uploadId)).map((p) => [p.heygenVideoId, p.scriptId]));
     res.json({
       configured: true,
       nextToken: page.nextToken,
-      // Never the presigned link: the server downloads it itself when the video is picked.
-      videos: page.videos.map(({ videoUrl: _omit, ...v }) => ({ ...v, selectable: v.status === "completed", alreadyUsed: used.has(v.id), usedByScriptId: used.get(v.id) ?? null })),
+      // Never a presigned link (the video, and the thumbnail, which may be signed too): the server downloads the video itself.
+      videos: page.videos.map(({ videoUrl: _v, thumbnailUrl: _t, ...v }) => ({ ...v, selectable: v.status === "completed", alreadyUsed: used.has(v.id), usedByScriptId: used.get(v.id) ?? null })),
     });
   }));
 
@@ -313,7 +331,11 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
     if (!client) return refused(res, 501, "heygen_not_configured");
     const script = await store.getSocialScript(ctx.accountId, scriptId);
     if (!script) return res.status(404).json({ message: "Script not found" });
-    if ((await store.listHeygenPulls(ctx.accountId)).some((p) => p.heygenVideoId === videoId)) return refused(res, 409, "already_used");
+    const earlier = (await store.listHeygenPulls(ctx.accountId)).find((p) => p.heygenVideoId === videoId);
+    if (earlier) {
+      if ((await uploadsInUse(ctx.accountId)).has(earlier.uploadId)) return refused(res, 409, "already_used");
+      await store.deleteHeygenPull(ctx.accountId, videoId); // its copy is gone: pull it again
+    }
 
     const uploadId = randomUUID();
     const destPath = pathFor(ctx.accountId, uploadId, "mp4");
@@ -350,8 +372,13 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
     const [script, post] = await Promise.all([store.getSocialScript(ctx.accountId, scriptId), store.getSocialPost(ctx.accountId, postId)]);
     if (!script) return res.status(404).json({ message: "Script not found" });
     if (!post) return res.status(404).json({ message: "Post not found" });
-    // The video now belongs to the post; the script no longer holds it.
-    await store.updateSocialScript(ctx.accountId, scriptId, { postId, status: "scheduled", videoUploadId: post.videoPublicId === script.videoUploadId ? null : script.videoUploadId });
+    // The video now belongs to the post; the script no longer holds it. "scheduled" and "published" are read from
+    // the post (effectiveScriptStatus); stored, the script is approved, so a cancelled post leaves it workable again.
+    await store.updateSocialScript(ctx.accountId, scriptId, {
+      postId,
+      status: "approved",
+      videoUploadId: post.videoPublicId === script.videoUploadId ? null : script.videoUploadId,
+    });
     res.json(await scriptView(ctx.accountId, scriptId));
   }));
 }

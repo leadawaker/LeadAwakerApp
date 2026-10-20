@@ -13,6 +13,7 @@ import type { SocialHeygenPull, SocialPost, SocialScript, SocialSettings, Social
 import type { HeygenClient, HeygenVideo } from "./heygen";
 import { createRateLimiter } from "./rateLimit";
 import { registerScriptRoutes } from "./scriptRoutes";
+import { scriptVersion } from "./scripts";
 import type { StudioDeps } from "./studioDeps";
 import { registerStudioRoutes } from "./studioRoutes";
 
@@ -88,6 +89,7 @@ const deps: StudioDeps = {
     },
     async updateSocialScript(accountId, scriptId, fields) { const s = scripts.find((x) => x.id === scriptId && x.accountsId === accountId); if (!s) return null; Object.assign(s, fields); return s; },
     async listHeygenPulls(id) { return pulls.filter((p) => p.accountsId === id); },
+    async deleteHeygenPull(accountId, videoId) { pulls = pulls.filter((p) => !(p.accountsId === accountId && p.heygenVideoId === videoId)); },
     async insertHeygenPull(r) {
       if (pulls.some((p) => p.accountsId === r.accountsId && p.heygenVideoId === r.heygenVideoId)) throw Object.assign(new Error("dup"), { code: "23505" });
       const p = row<SocialHeygenPull>(r as Partial<SocialHeygenPull>, { id: pulls.length + 1, pulledAt: NOW });
@@ -313,7 +315,8 @@ test("scripts: clients see only what was sent to them", async () => {
   assert.equal((await call("GET", P(A, "/scripts"), AGENCY)).json.length, 2);
   const mine = (await call("GET", P(A, "/scripts"), MANAGER_A)).json;
   assert.deepEqual(mine.map((s: any) => s.title), ["Sent"]);
-  assert.equal((await call("POST", P(A, "/scripts/1/review"), MANAGER_A, { decision: "ok" })).status, 404, "an unsent script is invisible to the Manager");
+  assert.equal((await call("POST", P(A, "/scripts/1/review"), MANAGER_A, { decision: "ok", version: scriptVersion(scripts[0]) })).status, 404, "an unsent script is invisible to the Manager");
+  assert.equal((await call("POST", P(A, "/captions/suggest"), MANAGER_A, { scriptId: 1 })).status, 404, "nor can he write captions from it");
 });
 
 test("scripts: AI draft uses the voice guide as the system prompt and avoids earlier closes", async () => {
@@ -338,13 +341,17 @@ test("scripts: AI draft uses the voice guide as the system prompt and avoids ear
 
 test("scripts: send for review, the Manager's answer, and an edit afterwards resets it", async () => {
   scripts.push({ id: 1, accountsId: A, title: "Fome", body: "Texto", status: "draft", reviewStatus: "none", reviewNote: null, postId: null, updatedAt: NOW } as SocialScript);
-  assert.equal((await call("POST", P(A, "/scripts/1/review"), AGENCY, { decision: "ok" })).status, 409, "not sent yet");
+  const v = () => scriptVersion(scripts[0]);
+  assert.equal((await call("POST", P(A, "/scripts/1/review"), AGENCY, { decision: "ok", version: v() })).status, 409, "not sent yet");
   const sent = await call("POST", P(A, "/scripts/1/send-for-review"), AGENCY);
   assert.equal(sent.json.reviewStatus, "waiting");
+  assert.equal(sent.json.version, v());
   assert.deepEqual(managerNotes, [{ accountId: A, key: "script_review", link: "/platform/social?account=7&section=home" }]);
-  assert.equal((await call("POST", P(A, "/scripts/1/review"), VIEWER_A, { decision: "ok" })).status, 403);
-  assert.equal((await call("POST", P(A, "/scripts/1/review"), MANAGER_A, { decision: "changes" })).status, 400, "changes need a note");
-  const ok = await call("POST", P(A, "/scripts/1/review"), MANAGER_A, { decision: "ok" });
+  assert.equal((await call("POST", P(A, "/scripts/1/review"), VIEWER_A, { decision: "ok", version: v() })).status, 403);
+  assert.equal((await call("POST", P(A, "/scripts/1/review"), MANAGER_A, { decision: "changes", version: v() })).status, 400, "changes need a note");
+  assert.equal((await call("POST", P(A, "/scripts/1/review"), MANAGER_A, { decision: "ok" })).status, 400, "the version he saw is required");
+  assert.equal((await call("POST", P(A, "/scripts/1/review"), MANAGER_A, { decision: "ok", version: "stale" })).json.reason, "changed");
+  const ok = await call("POST", P(A, "/scripts/1/review"), MANAGER_A, { decision: "ok", version: v() });
   assert.equal(ok.json.reviewStatus, "ok");
   assert.equal(ok.json.status, "approved");
   assert.equal(agencyNotes.at(-1)?.type, "social_script_review");
@@ -354,6 +361,32 @@ test("scripts: send for review, the Manager's answer, and an edit afterwards res
   assert.equal((await call("PATCH", P(A, "/scripts/1"), MANAGER_A, { body: "hack" })).status, 403);
   scripts[0].body = "";
   assert.equal((await call("POST", P(A, "/scripts/1/send-for-review"), AGENCY)).json.reason, "empty_script");
+});
+
+test("scripts: an edit while the Manager has it open takes it back; his stale ok is refused", async () => {
+  scripts.push({ id: 1, accountsId: A, title: "Fome", body: "v1", status: "draft", reviewStatus: "waiting", reviewNote: null, postId: null, updatedAt: NOW } as SocialScript);
+  const seen = scriptVersion(scripts[0]);
+  assert.equal((await call("PATCH", P(A, "/scripts/1"), AGENCY, { body: "v2" })).json.reviewStatus, "none");
+  scripts[0].reviewStatus = "waiting"; // sent again
+  assert.equal((await call("POST", P(A, "/scripts/1/review"), MANAGER_A, { decision: "ok", version: seen })).json.reason, "changed");
+  assert.equal(scripts[0].status, "draft");
+});
+
+test("scripts: an AI draft finishing after the Manager's ok does not ride on his approval", async () => {
+  scripts.push({ id: 1, accountsId: A, title: "Fome", body: "v1", status: "draft", reviewStatus: "waiting", reviewNote: null, postId: null, updatedAt: NOW } as SocialScript);
+  const realAi = deps.ai;
+  deps.ai = async () => {
+    // The Manager answers while the model is writing.
+    Object.assign(scripts[0], { reviewStatus: "ok", status: "approved" });
+    return { text: JSON.stringify({ title: "Fome", body: "v2 from the AI" }) };
+  };
+  try {
+    const r = await call("POST", P(A, "/scripts/1/draft"), freshAgency());
+    assert.equal(r.json.body, "v2 from the AI");
+    assert.equal(r.json.reviewStatus, "none");
+  } finally {
+    deps.ai = realAi;
+  }
 });
 
 test("scripts: attach an uploaded video; a missing or used upload is refused", async () => {
@@ -378,6 +411,11 @@ test("scripts: link the post; the script then shows the post's state", async () 
   assert.equal(r.json.status, "published");
   assert.equal(r.json.post.permalink, "https://ig/p/1");
   assert.equal(r.json.videoUploadId, null, "the video belongs to the post now");
+  assert.equal(scripts[0].status, "approved", "scheduled / published are read from the post");
+  posts[0].status = "cancelled";
+  const after = (await call("GET", P(A, "/scripts"), AGENCY)).json[0];
+  assert.equal(after.status, "approved", "a cancelled post leaves the script workable");
+  assert.equal(after.post, null);
 });
 
 // ─── HeyGen ──────────────────────────────────────────────────────────────────
@@ -387,10 +425,12 @@ const vid = (id: string, status = "completed"): HeygenVideo => ({ id, title: `Vi
 test("HeyGen list: agency only, never the presigned link, marks used and unfinished videos", async () => {
   heygenVideos = [vid("v1"), vid("v2", "processing")];
   pulls.push({ id: 1, accountsId: A, heygenVideoId: "v1", scriptId: 3, uploadId: UP1, pulledByUserId: 1, pulledAt: NOW });
+  scripts.push({ id: 3, accountsId: A, title: "x", body: "", status: "video_ready", videoUploadId: UP1, reviewStatus: "none", postId: null, updatedAt: NOW } as SocialScript);
   const r = await call("GET", P(A, "/heygen/videos"), AGENCY);
   assert.equal(r.json.configured, true);
   assert.equal(r.json.nextToken, "next1");
   assert.equal(JSON.stringify(r.json).includes("sig=secret"), false);
+  assert.equal(JSON.stringify(r.json).includes("https://t/"), false, "nor the thumbnail link");
   assert.deepEqual(r.json.videos.map((v: any) => [v.id, v.selectable, v.alreadyUsed, v.usedByScriptId]), [["v1", true, true, 3], ["v2", false, false, null]]);
   assert.equal((await call("GET", P(A, "/heygen/videos"), MANAGER_A)).status, 403);
   heygenOn = false;
@@ -414,6 +454,11 @@ test("HeyGen pull: downloads into the upload layout once, then refuses the same 
   assert.equal((await call("POST", P(A, "/scripts/1/heygen"), AGENCY, { videoId: "../x" })).status, 400);
   assert.equal((await call("POST", P(A, "/scripts/1/heygen"), MANAGER_A, { videoId: "v1" })).status, 403);
   assert.equal(receiveCalls, 1);
+  // The script lets go of the video (replaced): the HeyGen video can be pulled again.
+  scripts[0].videoUploadId = null;
+  assert.equal((await call("GET", P(A, "/heygen/videos"), AGENCY)).json.videos[0].alreadyUsed, false);
+  assert.equal((await call("POST", P(A, "/scripts/1/heygen"), AGENCY, { videoId: "v1" })).status, 200);
+  assert.equal(pulls.length, 1, "the old pull row was replaced");
   heygenOn = false;
   assert.equal((await call("POST", P(A, "/scripts/1/heygen"), AGENCY, { videoId: "v3" })).status, 501);
 });

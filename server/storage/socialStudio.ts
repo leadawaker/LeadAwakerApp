@@ -93,6 +93,10 @@ export const socialStudioStorage = {
     return db.select().from(socialHeygenPulls).where(eq(socialHeygenPulls.accountsId, accountId));
   },
 
+  async deleteHeygenPull(accountId: number, heygenVideoId: string): Promise<void> {
+    await db.delete(socialHeygenPulls).where(and(eq(socialHeygenPulls.accountsId, accountId), eq(socialHeygenPulls.heygenVideoId, heygenVideoId)));
+  },
+
   /** Throws a unique violation (23505) when this video was already pulled for the account. */
   async insertHeygenPull(row: { accountsId: number; heygenVideoId: string; scriptId: number | null; uploadId: string; pulledByUserId: number | null }): Promise<SocialHeygenPull> {
     const [created] = await db.insert(socialHeygenPulls).values(row).returning();

@@ -180,6 +180,8 @@
     "size": "The video is larger than 100 MB.",
     "duration_short": "The video is shorter than 3 seconds.",
     "duration_long": "The video is longer than 15 minutes.",
-    "mic_denied": "Microphone access was refused. Allow it in the browser to record."
+    "mic_denied": "Microphone access was refused. Allow it in the browser to record.",
+    "changed": "Gabriel changed this script meanwhile. Read the new version.",
+    "no_recorder": "This browser cannot record audio. Type the topic instead."
   }
 }

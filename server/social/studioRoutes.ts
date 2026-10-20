@@ -12,6 +12,7 @@ import { TEXT_LIMITS } from "@shared/socialStudio";
 import { wrapAsync } from "../routes/_helpers";
 import { canManageSocial, isAgency } from "./access";
 import { suggestCaptions } from "./captions";
+import { visibleToClient } from "./scripts";
 import { actorIdOf, forbidden, makeAccountGate, refused } from "./gate";
 import { createRateLimiter, type RateLimiter } from "./rateLimit";
 import { parseAboutBody, parseAgencySettingsBody, toSettingsView } from "./studioSettings";
@@ -74,7 +75,8 @@ export function registerStudioRoutes(app: Express, deps: StudioDeps, limiter: Ra
     if (scriptId !== undefined && scriptId !== null) {
       if (!Number.isInteger(scriptId) || scriptId <= 0) return res.status(400).json({ message: "Invalid scriptId" });
       const script = await store.getSocialScript(ctx.accountId, scriptId);
-      if (!script) return res.status(404).json({ message: "Script not found" });
+      // A client user only reaches the scripts that were sent to him.
+      if (!script || (!isAgency(req.user) && !visibleToClient(script))) return res.status(404).json({ message: "Script not found" });
       source = { kind: "script", text: script.body.trim() || script.title };
     } else {
       const about = typeof req.body?.about === "string" ? req.body.about.slice(0, TEXT_LIMITS.captionAbout) : "";

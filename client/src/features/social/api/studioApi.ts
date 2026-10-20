@@ -52,6 +52,8 @@ export const transcribeTopic = (accountId: number, audioData: string, mimeType: 
 
 export interface ScriptView {
   id: number;
+  /** Sent back with the Manager's answer: an edit since the list loaded is refused, not approved unseen. */
+  version: string;
   title: string;
   body: string;
   status: ScriptStatus;
@@ -72,8 +74,8 @@ export const updateScript = (accountId: number, scriptId: number, body: { title?
   sendJson<ScriptView>(`${base(accountId)}/scripts/${scriptId}`, "PATCH", body);
 export const draftScript = (accountId: number, scriptId: number, notes: string) => sendJson<ScriptView>(`${base(accountId)}/scripts/${scriptId}/draft`, "POST", { notes });
 export const sendScriptForReview = (accountId: number, scriptId: number) => sendJson<ScriptView>(`${base(accountId)}/scripts/${scriptId}/send-for-review`, "POST");
-export const reviewScript = (accountId: number, scriptId: number, decision: "ok" | "changes", note: string) =>
-  sendJson<ScriptView>(`${base(accountId)}/scripts/${scriptId}/review`, "POST", { decision, note });
+export const reviewScript = (accountId: number, script: Pick<ScriptView, "id" | "version">, decision: "ok" | "changes", note: string) =>
+  sendJson<ScriptView>(`${base(accountId)}/scripts/${script.id}/review`, "POST", { decision, note, version: script.version });
 export const attachScriptVideo = (accountId: number, scriptId: number, uploadId: string) => sendJson<ScriptView>(`${base(accountId)}/scripts/${scriptId}/video`, "POST", { uploadId });
 export const linkScriptPost = (accountId: number, scriptId: number, postId: number) => sendJson<ScriptView>(`${base(accountId)}/scripts/${scriptId}/link-post`, "POST", { postId });
 
@@ -85,7 +87,6 @@ export interface HeygenVideoView {
   status: string;
   durationS: number | null;
   createdAt: string | null;
-  thumbnailUrl: string | null;
   videoPageUrl: string | null;
   selectable: boolean;
   alreadyUsed: boolean;

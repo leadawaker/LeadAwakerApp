@@ -38,6 +38,7 @@ export function registerSocialStudioRoutes(app: Express): void {
       updateSocialScript: (accountId, scriptId, fields) => storage.updateSocialScript(accountId, scriptId, fields),
       listHeygenPulls: (id) => storage.listHeygenPulls(id),
       insertHeygenPull: (row) => storage.insertHeygenPull(row),
+      deleteHeygenPull: (accountId, videoId) => storage.deleteHeygenPull(accountId, videoId),
       listSocialPosts: (id) => storage.listSocialPosts(id),
       getSocialPost: (accountId, postId) => storage.getSocialPost(accountId, postId),
       getSocialPostByPublicId: (publicId) => storage.getSocialPostByPublicId(publicId),

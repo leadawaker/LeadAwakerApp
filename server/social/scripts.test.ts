@@ -25,9 +25,10 @@ test("recent closes: last spoken line of the other scripts, no fences, no repeat
   assert.deepEqual(recentCloses([{ id: 9, body: "x\nmine" }], 9), []);
 });
 
-test("an edit after the Manager answered drops the review; a body on an idea makes it a draft", () => {
+test("an edit after the script was sent drops the review; a body on an idea makes it a draft", () => {
   assert.deepEqual(planScriptEdit(s({ body: "old", reviewStatus: "ok" }), { body: "new" }), { body: "new", reviewStatus: "none", reviewNote: null });
-  assert.deepEqual(planScriptEdit(s({ body: "old", reviewStatus: "waiting" }), { body: "new" }), { body: "new" });
+  assert.deepEqual(planScriptEdit(s({ body: "old", reviewStatus: "waiting" }), { body: "new" }), { body: "new", reviewStatus: "none", reviewNote: null });
+  assert.deepEqual(planScriptEdit(s({ title: "a", body: "old", reviewStatus: "waiting" }), { title: "b" }), { title: "b", reviewStatus: "none", reviewNote: null });
   assert.deepEqual(planScriptEdit(s({ body: "same", reviewStatus: "ok" }), { body: "same" }), { body: "same" });
   assert.equal(planScriptEdit(s({ status: "idea" }), { body: "texto" }).status, "draft");
   assert.equal(planScriptEdit(s({ status: "idea" }), { title: "t" }).status, undefined);
@@ -38,6 +39,7 @@ test("the Manager's ok approves a draft, never moves a script back", () => {
   assert.equal(planReview(s({ status: "draft" }), "ok", null, 21, now).status, "approved");
   assert.equal(planReview(s({ status: "video_ready" }), "ok", null, 21, now).status, undefined);
   assert.equal(planReview(s({ status: "draft" }), "changes", "mais curto", 21, now).status, undefined);
+  assert.equal(planReview(s({ status: "approved" }), "changes", "mais curto", 21, now).status, "draft");
 });
 
 test("edit body: only idea, draft and approved by hand", () => {

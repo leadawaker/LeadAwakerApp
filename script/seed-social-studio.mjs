@@ -43,10 +43,11 @@ try {
        "voice_guide"   = COALESCE(NULLIF(${S}."Social_Settings"."voice_guide", ''), EXCLUDED."voice_guide"),
        "about_me"      = COALESCE(NULLIF(${S}."Social_Settings"."about_me", ''), EXCLUDED."about_me"),
        "updated_at"    = now()
+     WHERE ${S}."Social_Settings"."caption_style" = '' OR ${S}."Social_Settings"."voice_guide" = '' OR ${S}."Social_Settings"."about_me" = ''
      RETURNING (xmax = 0) AS inserted`,
     [accountId, data.captionStyle ?? "", data.voiceGuide ?? "", data.aboutMe ?? ""],
   );
-  console.log(`Social_Settings: ${settings.rows[0].inserted ? "created" : "kept (only empty fields filled)"}`);
+  console.log(`Social_Settings: ${settings.rowCount === 0 ? "kept as it is (nothing empty to fill)" : settings.rows[0].inserted ? "created" : "empty fields filled"}`);
 
   let added = 0;
   for (const s of data.scripts ?? []) {

@@ -72,6 +72,8 @@ export interface PostRouteDeps {
       },
     ): Promise<SocialPost | null>;
     getSocialUserNames(ids: number[]): Promise<Map<number, string>>;
+    /** A studio script still holds this upload: its file must stay when the post lets go of it. */
+    isUploadHeldByScript?(publicId: string): Promise<boolean>;
   };
   video: {
     /** Stream, faststart, probe, spec check (upload.receiveVideo). Leaves no file on failure. */
@@ -89,6 +91,12 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
   const uploadRoot = resolve(deps.uploadDir);
   const pathFor = (accountId: number, publicId: string, ext: VideoExt) => resolve(uploadRoot, String(accountId), `${publicId}.${ext}`);
   const insideUploads = (path: string | null): path is string => !!path && resolve(path).startsWith(uploadRoot + sep);
+
+  /** Deletes a post's old video, unless a studio script still holds the same upload. */
+  async function removePostVideo(p: Pick<SocialPost, "videoPath" | "videoPublicId">): Promise<void> {
+    if (p.videoPublicId && (await store.isUploadHeldByScript?.(p.videoPublicId))) return;
+    await removeFile(p.videoPath);
+  }
 
   async function removeFile(path: string | null): Promise<void> {
     if (!insideUploads(path)) return;
@@ -248,7 +256,7 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
       const stillEditable = now && (now.status === "scheduled" || now.status === "held");
       return refused(res, 409, stillEditable ? "changed" : "not_editable");
     }
-    if (newVideo && post.videoPath !== updated.videoPath) await removeFile(post.videoPath);
+    if (newVideo && post.videoPath !== updated.videoPath) await removePostVideo(post);
     if (plan.notifyManagers) notifyNeedsApproval(ctx, updated);
     res.json(await viewOf(updated));
   }));
@@ -338,7 +346,7 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     if (!post) return res.status(404).json({ message: "Post not found" });
     const updated = await store.updateSocialPostIf(postId, CANCELLABLE_STATUSES, { status: "cancelled" });
     if (!updated) return refused(res, 409, "not_editable");
-    await removeFile(post.videoPath);
+    await removePostVideo(post);
     res.json({ ok: true });
   }));
 
