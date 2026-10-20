@@ -2273,6 +2273,80 @@ export const socialPosts = nocodb.table("Social_Posts", {
 export type SocialPost = typeof socialPosts.$inferSelect;
 export type InsertSocialPost = typeof socialPosts.$inferInsert;
 
+// Socials studio (docs/superpowers/specs/2026-10-20-caption-writer-and-studio-design.md).
+// Created by script/create-social-studio-tables.mjs. One settings row per account: the caption style
+// and voice guide (agency), "Sobre mim" (agency or the account's Managers), comment-to-DM mode.
+export const socialSettings = nocodb.table("Social_Settings", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  captionStyle: text("caption_style").notNull().default(""),
+  voiceGuide: text("voice_guide").notNull().default(""),
+  aboutMe: text("about_me").notNull().default(""),
+  dmMode: text("dm_mode").notNull().default("off"),            // off | dry_run | live (live also needs INSTAGRAM_DM_LIVE=1)
+  dmHourlyCap: integer("dm_hourly_cap").notNull().default(20),
+  updatedByUserId: integer("updated_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_settings_accounts_id").on(t.accountsId),
+]);
+export type SocialSettings = typeof socialSettings.$inferSelect;
+
+export const socialTopics = nocodb.table("Social_Topics", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  text: text("text").notNull(),
+  source: text("source").notNull().default("typed"),           // typed | voice | seed
+  status: text("status").notNull().default("new"),             // new | used | dismissed
+  scriptId: integer("script_id"),
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_topics_accounts_id_idx").on(t.accountsId),
+]);
+export type SocialTopic = typeof socialTopics.$inferSelect;
+export type InsertSocialTopic = typeof socialTopics.$inferInsert;
+
+export const socialScripts = nocodb.table("Social_Scripts", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull().default(""),
+  status: text("status").notNull().default("idea"),            // shared/socialStudio.ts SCRIPT_STATUSES
+  topicId: integer("topic_id"),
+  postId: integer("post_id"),
+  videoUploadId: text("video_upload_id"),                      // an upload (server/social/media.ts layout) waiting to be scheduled
+  heygenVideoId: text("heygen_video_id"),
+  reviewStatus: text("review_status").notNull().default("none"), // none | waiting | ok | changes
+  reviewNote: text("review_note"),
+  reviewedByUserId: integer("reviewed_by_user_id"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  seedKey: text("seed_key"),                                   // set by the seed script, so a re-run adds nothing twice
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_scripts_accounts_id_idx").on(t.accountsId),
+  uniqueIndex("social_scripts_account_seed_key").on(t.accountsId, t.seedKey).where(sql`${t.seedKey} IS NOT NULL`),
+]);
+export type SocialScript = typeof socialScripts.$inferSelect;
+export type InsertSocialScript = typeof socialScripts.$inferInsert;
+
+/** HeyGen videos already downloaded for an account, so the list can mark them "already used". */
+export const socialHeygenPulls = nocodb.table("Social_Heygen_Pulls", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  heygenVideoId: text("heygen_video_id").notNull(),
+  scriptId: integer("script_id"),
+  uploadId: text("upload_id").notNull(),
+  pulledByUserId: integer("pulled_by_user_id"),
+  pulledAt: timestamp("pulled_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_heygen_pulls_account_video").on(t.accountsId, t.heygenVideoId),
+]);
+export type SocialHeygenPull = typeof socialHeygenPulls.$inferSelect;
+
 // Daily estimated spend ledger for public demos (Europe/Amsterdam day).
 export const publicDemoSpend = nocodb.table("Public_Demo_Spend", {
   day: date("day").primaryKey(),

@@ -53,6 +53,7 @@ import { registerClientAlertsRoutes } from "./clientAlerts";
 import { registerHomeRoutes } from "./home";
 import { registerSocialRoutes } from "./social";
 import { registerSocialPostRoutes } from "./socialPosts";
+import { registerSocialStudioRoutes } from "./socialStudio";
 import { startPublicDemoPoller } from "../publicDemo/poller";
 import { startSocialPublisher } from "../social/publisher";
 import { startSocialTokenRefresher } from "../social/tokenRefresher";
@@ -121,6 +122,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerHomeRoutes(app);
   registerSocialRoutes(app);
   registerSocialPostRoutes(app);
+  registerSocialStudioRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)
@@ -130,6 +132,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   await seedSupportBotPrompt();
 
   // ── Background notifiers ──────────────────────────────────────────────
+  // DISABLE_BACKGROUND_JOBS=1 skips every timer below: for a second server (a test copy on other
+  // ports) that must never publish, notify or poll on its own.
+  if (process.env.DISABLE_BACKGROUND_JOBS === "1") {
+    console.log("[jobs] DISABLE_BACKGROUND_JOBS=1: background jobs not started");
+    return httpServer;
+  }
   startSupportCleanup();            // daily support session cleanup
   startTaskNotifiers();             // task due-soon (30min) + task overdue (30min)
   startBookingReminders();          // booking reminder 1h before call (10min check)

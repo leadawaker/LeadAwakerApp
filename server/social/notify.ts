@@ -10,15 +10,18 @@ export type SocialNotifType =
   | "social_post_failed"
   | "social_post_published"
   | "social_post_rejected"
-  | "social_token_problem";
+  | "social_token_problem"
+  | "social_topic_new"
+  | "social_script_review"
+  | "social_dm_problem";
 
 type Lang = "en" | "nl" | "pt";
-type ClientKey = "needs_approval" | "published";
+type ClientKey = "needs_approval" | "published" | "script_review";
 
 const AGENCY_ACCOUNT_ID = 1;
 const CAPTION_PREVIEW_MAX = 80;
 
-/** Client-facing copy. pt is Brazilian Portuguese. Placeholders: {caption}, {when}. */
+/** Client-facing copy. pt is Brazilian Portuguese. Placeholders: {caption}, {when}, {title}. */
 const CLIENT_COPY: Record<ClientKey, Record<Lang, { title: string; body: string }>> = {
   needs_approval: {
     en: { title: "New video to approve", body: "\"{caption}\" is scheduled for {when}. Tap to view and approve." },
@@ -29,6 +32,11 @@ const CLIENT_COPY: Record<ClientKey, Record<Lang, { title: string; body: string 
     en: { title: "Your video is live on Instagram", body: "\"{caption}\" was published on Instagram. Tap to view." },
     nl: { title: "Je video staat op Instagram", body: "\"{caption}\" is op Instagram geplaatst. Tik om te bekijken." },
     pt: { title: "Seu vídeo está no Instagram", body: "\"{caption}\" foi publicado no Instagram. Toque para ver." },
+  },
+  script_review: {
+    en: { title: "A script to look at", body: "\"{title}\" is ready for your video. Tap to read it and say if it is good to go." },
+    nl: { title: "Een script om te bekijken", body: "\"{title}\" is klaar voor je video. Tik om het te lezen en te zeggen of het goed is." },
+    pt: { title: "Um roteiro para você ver", body: "\"{title}\" está pronto para o seu vídeo. Toque para ler e dizer se está bom." },
   },
 };
 
