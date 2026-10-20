@@ -13,7 +13,8 @@
       "calendar": "Calendário",
       "about": "Sobre mim",
       "settings": "Configurações",
-      "comments": "Comentário para DM"
+      "comments": "Comentário para DM",
+      "insights": "Resultados"
     }
   },
   "captions": {
@@ -252,7 +253,63 @@
       "hourly_cap": "O limite por hora foi atingido.",
       "not_connected": "O Instagram não está conectado.",
       "engine_not_connected": "Não enviada: o motor de IA ainda não tem canal do Instagram.",
-      "dm_off": "Comentário para DM está desligado nesta conta."
-    }
+      "dm_off": "Comentário para DM está desligado nesta conta.",
+      "already_messaged": "Esta pessoa já recebeu a mensagem desta palavra-chave.",
+      "too_long": "Mais de 1.000 caracteres.",
+      "empty": "Mensagem vazia.",
+      "unsupported": "Só texto pode ser enviado como DM do Instagram."
+    },
+    "postGone": "Post #{{id}} (não está mais no ar)"
+  },
+  "insights": {
+    "period": "Período",
+    "days_one": "{{count}} dia",
+    "days_other": "{{count}} dias",
+    "updated": "Atualizado {{when}}",
+    "empty": "Ainda sem resultados. Eles são lidos do Instagram a cada poucas horas depois que a conta está conectada; os primeiros números aparecem em algumas horas.",
+    "tiles": {
+      "views": "Visualizações",
+      "reach": "Contas alcançadas",
+      "interactions": "Interações",
+      "profileViews": "Visitas ao perfil",
+      "followers": "Seguidores"
+    },
+    "vsStart": "{{delta}} em {{days}} dias",
+    "followersTitle": "Seguidores",
+    "followers": "Seguidores",
+    "followersNotEnough": "A tendência aparece depois de um segundo dia de dados.",
+    "date": "Data",
+    "asTable": "Mostrar como tabela",
+    "bestTitle": "Melhor horário para postar",
+    "bestSummary": "Seus posts vão melhor na {{day}} por volta das {{hour}}.",
+    "bestUnclear": "Nenhum dia ou horário se destaca ainda.",
+    "byWeekday": "Média de visualizações por dia da semana",
+    "byHour": "Média de visualizações por hora",
+    "bestHelp": "Com base nas visualizações dos seus posts, pelo horário em que foram ao ar ({{zone}}).",
+    "notEnough_one": "Ainda não há dados suficientes: {{count}} post com visualizações, são necessários {{min}}.",
+    "notEnough_other": "Ainda não há dados suficientes: {{count}} posts com visualizações, são necessários {{min}}.",
+    "best": "Melhor",
+    "slot": "Quando",
+    "avgViews": "Média de visualizações",
+    "avgViewsTip_one": "{{views}} visualizações em média ({{count}} post)",
+    "avgViewsTip_other": "{{views}} visualizações em média ({{count}} posts)",
+    "posts_one": "{{count}} post",
+    "posts_other": "{{count}} posts",
+    "postsTitle": "Posts",
+    "post": "Post",
+    "noPosts": "Nenhum post lido ainda.",
+    "noCaption": "(sem legenda)",
+    "open": "Abrir no Instagram",
+    "columns": {
+      "views": "Visualizações",
+      "reach": "Alcance",
+      "likes": "Curtidas",
+      "comments": "Comentários",
+      "shares": "Compart.",
+      "saved": "Salvos",
+      "ig_reels_avg_watch_time": "Tempo médio",
+      "reels_skip_rate": "Pularam"
+    },
+    "skipped": "Não disponível no Instagram para esta conta agora: {{metrics}}."
   }
 }

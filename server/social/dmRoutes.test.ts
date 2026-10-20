@@ -106,6 +106,8 @@ test("rules: create for all posts or a published post; bad keyword, message or p
   assert.equal((await call("POST", P("/dm/rules"), AGENCY, { keyword: "X", firstMessage: "x", postId: 2 })).json.reason, "post_not_published");
   assert.equal((await call("POST", P("/dm/rules"), AGENCY, { keyword: "X", firstMessage: "x", postId: 3 })).json.reason, "post_not_published", "another account's post");
   assert.equal((await call("POST", P("/dm/rules"), AGENCY, { keyword: "!!!", firstMessage: "x" })).status, 400);
+  assert.equal((await call("POST", P("/dm/rules"), AGENCY, { keyword: "E-BOOK", firstMessage: "x" })).status, 400, "would never match a comment");
+  assert.equal((await call("POST", P("/dm/rules"), AGENCY, { keyword: "free guide", firstMessage: "x" })).status, 400);
   assert.equal((await call("POST", P("/dm/rules"), AGENCY, { keyword: "A".repeat(31), firstMessage: "x" })).status, 400);
   assert.equal((await call("POST", P("/dm/rules"), AGENCY, { keyword: "OK", firstMessage: "  " })).status, 400);
 });
@@ -120,6 +122,15 @@ test("rules: edit, pause, move to all posts, delete; another account's rule is n
   assert.equal((await call("PATCH", P("/dm/rules/1", B), AGENCY, { active: true })).status, 404);
   assert.equal((await call("DELETE", P("/dm/rules/1"), AGENCY)).status, 200);
   assert.equal(rules.length, 0);
+});
+
+test("rules: a rule whose post is no longer live can still get a new message", async () => {
+  await call("POST", P("/dm/rules"), AGENCY, { keyword: "FOME", firstMessage: "x", postId: 1 });
+  posts[0].status = "failed"; // say the post went away
+  const r = await call("PATCH", P("/dm/rules/1"), AGENCY, { firstMessage: "new text", postId: 1 });
+  assert.equal(r.status, 200);
+  assert.equal(r.json.firstMessage, "new text");
+  assert.equal((await call("PATCH", P("/dm/rules/1"), AGENCY, { postId: 2 })).json.reason, "post_not_published", "a real change is still checked");
 });
 
 test("log: newest rows, limited", async () => {

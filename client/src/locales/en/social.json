@@ -13,7 +13,8 @@
       "calendar": "Calendar",
       "about": "About me",
       "settings": "Settings",
-      "comments": "Comments to DM"
+      "comments": "Comments to DM",
+      "insights": "Insights"
     }
   },
   "captions": {
@@ -252,7 +253,63 @@
       "hourly_cap": "The hourly limit was reached.",
       "not_connected": "Instagram is not connected.",
       "engine_not_connected": "Not sent: the AI engine has no Instagram channel yet.",
-      "dm_off": "Comment to DM is off for this account."
-    }
+      "dm_off": "Comment to DM is off for this account.",
+      "already_messaged": "This person already got this keyword's message.",
+      "too_long": "Longer than 1,000 characters.",
+      "empty": "Empty message.",
+      "unsupported": "Only text can be sent as an Instagram DM."
+    },
+    "postGone": "Post #{{id}} (no longer live)"
+  },
+  "insights": {
+    "period": "Period",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "updated": "Updated {{when}}",
+    "empty": "No insights yet. They are read from Instagram every few hours once the account is connected; the first numbers show up within a few hours.",
+    "tiles": {
+      "views": "Views",
+      "reach": "Accounts reached",
+      "interactions": "Interactions",
+      "profileViews": "Profile visits",
+      "followers": "Followers"
+    },
+    "vsStart": "{{delta}} in {{days}} days",
+    "followersTitle": "Followers",
+    "followers": "Followers",
+    "followersNotEnough": "The trend appears after a second day of data.",
+    "date": "Date",
+    "asTable": "Show as a table",
+    "bestTitle": "Best time to post",
+    "bestSummary": "Your posts do best on {{day}} around {{hour}}.",
+    "bestUnclear": "No weekday or hour stands out yet.",
+    "byWeekday": "Average views by weekday",
+    "byHour": "Average views by hour",
+    "bestHelp": "From your posts' views, by when they went out ({{zone}}).",
+    "notEnough_one": "Not enough data yet: {{count}} post with views, {{min}} needed.",
+    "notEnough_other": "Not enough data yet: {{count}} posts with views, {{min}} needed.",
+    "best": "Best",
+    "slot": "When",
+    "avgViews": "Average views",
+    "avgViewsTip_one": "{{views}} views on average ({{count}} post)",
+    "avgViewsTip_other": "{{views}} views on average ({{count}} posts)",
+    "posts_one": "{{count}} post",
+    "posts_other": "{{count}} posts",
+    "postsTitle": "Posts",
+    "post": "Post",
+    "noPosts": "No posts read yet.",
+    "noCaption": "(no caption)",
+    "open": "Open on Instagram",
+    "columns": {
+      "views": "Views",
+      "reach": "Reach",
+      "likes": "Likes",
+      "comments": "Comments",
+      "shares": "Shares",
+      "saved": "Saves",
+      "ig_reels_avg_watch_time": "Avg. watch",
+      "reels_skip_rate": "Skip rate"
+    },
+    "skipped": "Not available from Instagram for this account right now: {{metrics}}."
   }
 }

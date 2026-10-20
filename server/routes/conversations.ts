@@ -203,7 +203,10 @@ export function registerConversationsRoutes(app: Express): void {
           // Never the Telegram default below.
           if (rawChannelId.startsWith("ig:")) {
             const { deliverInstagramReply } = await import("./socialDm");
-            const r = await deliverInstagramReply(lead as any, String((interaction as any).content ?? ""));
+            const text = String((interaction as any).content ?? "");
+            // Text only: a voice memo (data: URL) or a photo is not sent as an Instagram DM.
+            const unsupported = text.startsWith("data:") || (parsed.data as any).type === "audio" || !!(req.body as any).attachment;
+            const r = unsupported ? { status: "failed" as const, reason: "unsupported" } : await deliverInstagramReply(lead as any, text);
             const status = r.status === "delivered" ? "delivered" : r.status === "dry_run" ? "dry_run" : "failed";
             const stamp = status === "delivered" ? { deliveredAt: new Date() } : status === "failed" ? { failedAt: new Date() } : {};
             await storage.updateInteraction(interaction.id!, { status, ...stamp } as any);

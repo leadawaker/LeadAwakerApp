@@ -13,7 +13,8 @@
       "calendar": "Kalender",
       "about": "Over mij",
       "settings": "Instellingen",
-      "comments": "Reactie naar DM"
+      "comments": "Reactie naar DM",
+      "insights": "Inzichten"
     }
   },
   "captions": {
@@ -252,7 +253,63 @@
       "hourly_cap": "Het maximum per uur is bereikt.",
       "not_connected": "Instagram is niet gekoppeld.",
       "engine_not_connected": "Niet verstuurd: de AI-motor heeft nog geen Instagram-kanaal.",
-      "dm_off": "Reactie naar DM staat uit voor dit account."
-    }
+      "dm_off": "Reactie naar DM staat uit voor dit account.",
+      "already_messaged": "Deze persoon kreeg het bericht van dit trefwoord al.",
+      "too_long": "Langer dan 1.000 tekens.",
+      "empty": "Leeg bericht.",
+      "unsupported": "Alleen tekst kan als Instagram-DM worden verstuurd."
+    },
+    "postGone": "Post #{{id}} (niet meer online)"
+  },
+  "insights": {
+    "period": "Periode",
+    "days_one": "{{count}} dag",
+    "days_other": "{{count}} dagen",
+    "updated": "Bijgewerkt {{when}}",
+    "empty": "Nog geen inzichten. Ze worden om de paar uur uit Instagram gelezen zodra het account gekoppeld is; de eerste cijfers verschijnen binnen een paar uur.",
+    "tiles": {
+      "views": "Weergaven",
+      "reach": "Bereikte accounts",
+      "interactions": "Interacties",
+      "profileViews": "Profielbezoeken",
+      "followers": "Volgers"
+    },
+    "vsStart": "{{delta}} in {{days}} dagen",
+    "followersTitle": "Volgers",
+    "followers": "Volgers",
+    "followersNotEnough": "De trend verschijnt na een tweede dag met gegevens.",
+    "date": "Datum",
+    "asTable": "Als tabel tonen",
+    "bestTitle": "Beste moment om te posten",
+    "bestSummary": "Je posts doen het het best op {{day}} rond {{hour}}.",
+    "bestUnclear": "Er springt nog geen dag of uur uit.",
+    "byWeekday": "Gemiddelde weergaven per weekdag",
+    "byHour": "Gemiddelde weergaven per uur",
+    "bestHelp": "Op basis van de weergaven van je posts, naar het moment waarop ze online kwamen ({{zone}}).",
+    "notEnough_one": "Nog niet genoeg gegevens: {{count}} post met weergaven, {{min}} nodig.",
+    "notEnough_other": "Nog niet genoeg gegevens: {{count}} posts met weergaven, {{min}} nodig.",
+    "best": "Best",
+    "slot": "Wanneer",
+    "avgViews": "Gemiddelde weergaven",
+    "avgViewsTip_one": "gemiddeld {{views}} weergaven ({{count}} post)",
+    "avgViewsTip_other": "gemiddeld {{views}} weergaven ({{count}} posts)",
+    "posts_one": "{{count}} post",
+    "posts_other": "{{count}} posts",
+    "postsTitle": "Posts",
+    "post": "Post",
+    "noPosts": "Nog geen posts gelezen.",
+    "noCaption": "(geen bijschrift)",
+    "open": "Openen op Instagram",
+    "columns": {
+      "views": "Weergaven",
+      "reach": "Bereik",
+      "likes": "Likes",
+      "comments": "Reacties",
+      "shares": "Gedeeld",
+      "saved": "Bewaard",
+      "ig_reels_avg_watch_time": "Gem. kijktijd",
+      "reels_skip_rate": "Overslaan"
+    },
+    "skipped": "Nu niet beschikbaar vanuit Instagram voor dit account: {{metrics}}."
   }
 }

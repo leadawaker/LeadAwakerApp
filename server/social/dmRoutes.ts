@@ -9,7 +9,7 @@ import type { InsertSocialDmRule, SocialDmLogRow, SocialDmRule, SocialPost, Soci
 import { isDmMode, type DmMode } from "@shared/socialStudio";
 import { wrapAsync } from "../routes/_helpers";
 import { isAgency } from "./access";
-import { DM_TEXT_MAX, KEYWORD_MAX, keywordNorm } from "./dmMatch";
+import { DM_TEXT_MAX, KEYWORD_MAX, keywordNorm, words } from "./dmMatch";
 import { dmLiveSwitchOn, effectiveDmMode } from "./dmSafety";
 import { actorIdOf, forbidden, makeAccountGate, positiveIntParam, refused, type GetAccount } from "./gate";
 import { DEFAULT_DM_HOURLY_CAP } from "./studioSettings";
@@ -51,7 +51,10 @@ export function parseRuleBody(body: unknown, partial: boolean): { ok: true; inpu
   const b = body as Record<string, unknown>;
   const input: RuleInput = {};
   if (b.keyword !== undefined || !partial) {
-    if (typeof b.keyword !== "string" || b.keyword.trim().length > KEYWORD_MAX || !keywordNorm(b.keyword)) return { ok: false, message: `keyword must be 1 to ${KEYWORD_MAX} letters or digits` };
+    // One word: "E-BOOK" or "free guide" would be stored as one run but a comment splits it in two and it never matches.
+    if (typeof b.keyword !== "string" || b.keyword.trim().length > KEYWORD_MAX || words(b.keyword).length !== 1) {
+      return { ok: false, message: `keyword must be one word of letters or digits (at most ${KEYWORD_MAX})` };
+    }
     input.keyword = b.keyword.trim();
   }
   if (b.firstMessage !== undefined || !partial) {
@@ -143,9 +146,13 @@ export function registerDmRoutes(app: Express, deps: DmRouteDeps): void {
     if (ruleId === null) return;
     const parsed = parseRuleBody(req.body, true);
     if (!parsed.ok) return res.status(400).json({ message: parsed.message });
+    const current = (await store.listDmRules(ctx.accountId)).find((r) => r.id === ruleId);
+    if (!current) return res.status(404).json({ message: "Rule not found" });
     const fields: Partial<InsertSocialDmRule> = { ...parsed.input };
     if (parsed.input.keyword !== undefined) fields.keywordNorm = keywordNorm(parsed.input.keyword);
-    if (parsed.input.postId !== undefined) {
+    // The post is only checked again when it changes: a rule whose post went away can still get a new message.
+    if (parsed.input.postId === current.postId) delete fields.postId;
+    else if (parsed.input.postId !== undefined) {
       const media = await mediaFor(ctx.accountId, parsed.input.postId);
       if (media === "not_published") return refused(res, 422, "post_not_published");
       fields.igMediaId = media.igMediaId;

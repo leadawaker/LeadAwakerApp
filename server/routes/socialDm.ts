@@ -42,15 +42,17 @@ export function liveDmDeps(): DmDeps {
     countSentSince: (accountId, since) => storage.countDmSentSince(accountId, since),
     insertLog: (row) => storage.insertDmLog(row),
     updateLog: (id, fields) => storage.updateDmLog(id, fields),
-    async findPrivateReply(accountId, igUserId) {
-      const row = await storage.findDmPrivateReply(accountId, igUserId);
+    async findPrivateReply(accountId, igUserId, statuses) {
+      const row = await storage.findDmPrivateReply(accountId, igUserId, statuses);
       return row ? { ruleId: row.ruleId, status: row.status, mode: row.mode } : null;
     },
+    hasPrivateReplyForRule: (accountId, igUserId, ruleId) => storage.hasDmPrivateReplyForRule(accountId, igUserId, ruleId),
     lastInboundAt: (accountId, igUserId) => storage.lastDmInboundAt(accountId, igUserId),
     hasInbound: async (accountId, igUserId) => (await storage.lastDmInboundAt(accountId, igUserId)) !== null,
     crm: {
       async findOrCreateLead(accountId, igUserId, username) {
-        return (await storage.findIgLead(accountId, igUserId)) ?? storage.createIgLead(accountId, igUserId, username);
+        const found = await storage.findIgLead(accountId, igUserId);
+        return found ? { id: found.id } : storage.createIgLead(accountId, igUserId, username);
       },
       findLead: (accountId, igUserId) => storage.findIgLead(accountId, igUserId),
       async addInteraction(row) {

@@ -35,6 +35,7 @@ function RuleRow({ accountId, rule, postLabel, onEdit }: { accountId: number; ru
         <IconBtn onClick={() => setConfirm(true)} title={t("comments.delete")} aria-label={t("comments.delete")}><Trash2 className="w-4 h-4" /></IconBtn>
       </div>
       <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-soft)", whiteSpace: "pre-wrap" }}>{rule.firstMessage}</p>
+      {(toggle.isError || remove.isError) && <p role="alert" style={{ margin: 0, fontSize: 12, color: "hsl(var(--destructive))" }}>{t("errors.failed")}</p>}
       {confirm && (
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
           <span style={{ fontSize: 12, color: "var(--ink-soft)", flex: 1 }}>{t("comments.deleteConfirm")}</span>
@@ -84,6 +85,7 @@ export function CommentsSection({ accountId }: { accountId: number }) {
       <section className="neu-raised" style={card} data-testid="dm-log">
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>{t("comments.logTitle")}</h3>
         <p style={{ margin: 0, fontSize: 12, color: "var(--mute)" }}>{t("comments.logHelp")}</p>
+        {log.isError && <p role="alert" style={{ margin: 0, fontSize: 12.5, color: "hsl(var(--destructive))" }}>{t("errors.failed")}</p>}
         {log.data?.length === 0 && <p style={{ margin: 0, fontSize: 12.5, color: "var(--mute)" }}>{t("comments.logEmpty")}</p>}
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>
           {(log.data ?? []).map((l) => (

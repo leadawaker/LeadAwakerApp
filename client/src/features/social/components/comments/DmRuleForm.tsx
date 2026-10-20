@@ -16,9 +16,28 @@ export function DmRuleForm({ accountId, posts, rule, onDone }: { accountId: numb
   const [form, setForm] = useState<RuleBody>({
     keyword: rule?.keyword ?? "", firstMessage: rule?.firstMessage ?? t("comments.defaultMessage"), postId: rule?.postId ?? null, aiFollowUp: rule?.aiFollowUp ?? false,
   });
-  const save = useMutation({ mutationFn: () => (rule ? updateDmRule(accountId, rule.id, form) : createDmRule(accountId, form)), onSuccess: onDone });
+  // An edit sends only what changed: a rule whose post is no longer live can still get a new message.
+  const changes = (): Partial<RuleBody> => {
+    if (!rule) return form;
+    const out: Partial<RuleBody> = {};
+    if (form.keyword !== rule.keyword) out.keyword = form.keyword;
+    if (form.firstMessage !== rule.firstMessage) out.firstMessage = form.firstMessage;
+    if (form.postId !== rule.postId) out.postId = form.postId;
+    if (form.aiFollowUp !== rule.aiFollowUp) out.aiFollowUp = form.aiFollowUp;
+    return out;
+  };
+  const save = useMutation({
+    mutationFn: async () => {
+      if (!rule) return createDmRule(accountId, form);
+      const body = changes();
+      return Object.keys(body).length ? updateDmRule(accountId, rule.id, body) : rule;
+    },
+    onSuccess: onDone,
+  });
+  const missingPost = rule?.postId != null && !posts.some((p) => p.id === rule.postId);
   const reason = save.error instanceof SocialApiError ? save.error.reason : save.error ? "failed" : null;
-  const valid = /[\p{L}\p{N}]/u.test(form.keyword) && form.keyword.trim().length <= 30 && form.firstMessage.trim().length > 0 && form.firstMessage.length <= 1000;
+  // One word (letters and digits, punctuation at the end is fine): the server refuses anything else.
+  const valid = /^[\p{L}\p{M}\p{N}]+[!?.,]*$/u.test(form.keyword.trim()) && form.keyword.trim().length <= 30 && form.firstMessage.trim().length > 0 && form.firstMessage.length <= 1000;
 
   return (
     <form className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "14px 16px", display: "flex", flexDirection: "column", gap: 12 }}
@@ -34,6 +53,7 @@ export function DmRuleForm({ accountId, posts, rule, onDone }: { accountId: numb
           <select id="dm-post" className="neu-input" value={form.postId ?? ""} onChange={(e) => setForm({ ...form, postId: e.target.value ? Number(e.target.value) : null })}
             style={{ fontSize: 12.5, padding: "8px 11px", width: "100%" }} data-testid="dm-post">
             <option value="">{t("comments.allPosts")}</option>
+            {missingPost && <option value={rule!.postId!}>{t("comments.postGone", { id: rule!.postId })}</option>}
             {posts.map((p) => <option key={p.id} value={p.id}>{p.caption || `#${p.id}`}</option>)}
           </select>
         </div>

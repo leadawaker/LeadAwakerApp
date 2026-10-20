@@ -74,14 +74,16 @@ export interface DmDeps {
   /** null when the account already has a private reply for this comment (unique index). */
   insertLog(row: LogRow): Promise<{ id: number } | null>;
   updateLog(id: number, fields: Partial<LogRow>): Promise<void>;
-  /** The private reply that started a conversation with this person, if any (newest first). */
-  findPrivateReply(accountId: number, igUserId: string): Promise<{ ruleId: number | null; status: string; mode: string } | null>;
+  /** The newest private reply to this person with one of these statuses (live follows only "sent"). */
+  findPrivateReply(accountId: number, igUserId: string, statuses: string[]): Promise<{ ruleId: number | null; status: string; mode: string } | null>;
+  /** This person already got (or, in dry run, would have got) this rule's message: one per person and rule. */
+  hasPrivateReplyForRule(accountId: number, igUserId: string, ruleId: number): Promise<boolean>;
   /** The last message this person sent the account (inbound log row), for the 24 h window. */
   lastInboundAt(accountId: number, igUserId: string): Promise<Date | null>;
   hasInbound(accountId: number, igUserId: string): Promise<boolean>;
   crm: {
     findOrCreateLead(accountId: number, igUserId: string, username: string | null): Promise<{ id: number }>;
-    findLead(accountId: number, igUserId: string): Promise<{ id: number } | null>;
+    findLead(accountId: number, igUserId: string): Promise<{ id: number; optedOut: boolean } | null>;
     addInteraction(row: { accountId: number; leadId: number; direction: "inbound" | "outbound"; content: string; status: string; kind: string }): Promise<{ id: number } | null>;
     markOptedOut(leadId: number): Promise<void>;
   };
@@ -90,6 +92,12 @@ export interface DmDeps {
     directMessage(conn: DmConnection, mode: DmMode, recipientId: string, text: string): Promise<string | null>;
   };
   notifyAgency(n: { title: string; body: string; accountId: number }): Promise<void>;
+}
+
+/** Opted out by a stop word here, or marked do-not-contact on the lead in the CRM. */
+async function optedOut(d: DmDeps, accountId: number, igUserId: string): Promise<boolean> {
+  if (await d.isOptedOut(accountId, igUserId)) return true;
+  return (await d.crm.findLead(accountId, igUserId))?.optedOut === true;
 }
 
 export interface LogRow {
@@ -122,7 +130,8 @@ async function handleComment(d: DmDeps, ev: Extract<WebhookEvent, { field: "comm
     await d.insertLog({ ...base, kind: "private_reply", status: "skipped", reason });
     return reason;
   };
-  if (await d.isOptedOut(conn.accountId, ev.fromId)) return skip("opted_out");
+  if (await optedOut(d, conn.accountId, ev.fromId)) return skip("opted_out");
+  if (await d.hasPrivateReplyForRule(conn.accountId, ev.fromId, rule.id)) return skip("already_messaged");
   if (!withinPrivateReplyWindow(ev.at, now)) return skip("window_closed");
   if ((await d.countSentSince(conn.accountId, new Date(now.getTime() - 3_600_000))) >= (settings?.dmHourlyCap ?? 20)) return skip("hourly_cap");
 
@@ -143,10 +152,17 @@ async function handleComment(d: DmDeps, ev: Extract<WebhookEvent, { field: "comm
     void d.notifyAgency({ title: "Instagram private reply failed", body: `Account ${conn.accountId}, comment by @${ev.fromUsername ?? ev.fromId}: ${reason}`, accountId: conn.accountId }).catch(() => {});
     return "failed";
   }
-  const lead = await d.crm.findOrCreateLead(conn.accountId, ev.fromId, ev.fromUsername);
-  await d.crm.addInteraction({ accountId: conn.accountId, leadId: lead.id, direction: "inbound", content: ev.text, status: "received", kind: "instagram_comment" });
-  const out = await d.crm.addInteraction({ accountId: conn.accountId, leadId: lead.id, direction: "outbound", content: text, status: "delivered", kind: "instagram_private_reply" });
-  await d.updateLog(log.id, { status: "sent", leadId: lead.id, interactionId: out?.id ?? null });
+  // It went out: record that first, so their reply is followed even if the CRM write below fails.
+  await d.updateLog(log.id, { status: "sent" });
+  try {
+    const lead = await d.crm.findOrCreateLead(conn.accountId, ev.fromId, ev.fromUsername);
+    await d.crm.addInteraction({ accountId: conn.accountId, leadId: lead.id, direction: "inbound", content: ev.text, status: "received", kind: "instagram_comment" });
+    const out = await d.crm.addInteraction({ accountId: conn.accountId, leadId: lead.id, direction: "outbound", content: text, status: "delivered", kind: "instagram_private_reply" });
+    await d.updateLog(log.id, { leadId: lead.id, interactionId: out?.id ?? null });
+  } catch (err) {
+    console.error(`[social-dm] comment ${ev.commentId}: sent, but the CRM write failed: ${errText(err)}`);
+    void d.notifyAgency({ title: "Instagram reply sent, Chats not updated", body: `Account ${conn.accountId}: a private reply to @${ev.fromUsername ?? ev.fromId} went out but could not be added to Chats (${errText(err)}).`, accountId: conn.accountId }).catch(() => {});
+  }
   return "sent";
 }
 
@@ -155,10 +171,9 @@ async function handleMessage(d: DmDeps, ev: Extract<WebhookEvent, { field: "mess
   const mode = effectiveDmMode((await d.getSettings(conn.accountId))?.dmMode, d.env());
   if (mode === "off") return "off";
   // Only people this flow wrote to: the rest of the account's DMs are not the CRM's business.
-  const started = await d.findPrivateReply(conn.accountId, ev.senderId);
   // Live: only after a real private reply. Dry run: also after one that would have gone out.
-  const inFlow = !!started && (started.status === "sent" || (mode === "dry_run" && started.status === "would_send"));
-  if (!inFlow) return "not_in_flow";
+  const started = await d.findPrivateReply(conn.accountId, ev.senderId, mode === "live" ? ["sent"] : ["sent", "would_send"]);
+  if (!started) return "not_in_flow";
   const base = { accountsId: conn.accountId, igUserId: ev.senderId, mode, ruleId: started!.ruleId } as const;
 
   if (isStopMessage(ev.text)) {
@@ -198,7 +213,8 @@ async function handleMessage(d: DmDeps, ev: Extract<WebhookEvent, { field: "mess
 export async function processWebhookEvents(d: DmDeps, events: WebhookEvent[]): Promise<string[]> {
   const outcomes: string[] = [];
   for (const ev of events) {
-    const key = ev.field === "comments" ? `comment:${ev.commentId}` : `message:${ev.mid}`;
+    // Scoped to the receiving professional account: one message id can show up on both sides of a chat.
+    const key = ev.field === "comments" ? `${ev.igAccountId}:comment:${ev.commentId}` : `${ev.igAccountId}:message:${ev.mid}`;
     let outcome = "error";
     try {
       const conn = await d.findConnection(ev.igAccountId);
@@ -233,7 +249,9 @@ export async function deliverManualReply(d: DmDeps, p: { accountId: number; igUs
     await d.insertLog({ ...base, mode, status: "skipped", reason });
     return { status: "failed", reason };
   };
-  if (await d.isOptedOut(p.accountId, p.igUserId)) return refuse("opted_out");
+  if (!p.text.trim()) return refuse("empty");
+  if (p.text.length > DM_TEXT_MAX) return refuse("too_long");
+  if (await optedOut(d, p.accountId, p.igUserId)) return refuse("opted_out");
   if (!withinMessagingWindow(await d.lastInboundAt(p.accountId, p.igUserId), now)) return refuse("window_closed");
   if ((await d.countSentSince(p.accountId, new Date(now.getTime() - 3_600_000))) >= (settings?.dmHourlyCap ?? 20)) return refuse("hourly_cap");
   if (mode === "dry_run") {
@@ -242,13 +260,16 @@ export async function deliverManualReply(d: DmDeps, p: { accountId: number; igUs
   }
   const conn = await d.findConnectionForAccount(p.accountId);
   if (!conn?.token || conn.status === "disconnected") return refuse("not_connected");
+  // Logged before the send: if the request goes out and the update below fails, the row says "sending",
+  // never "failed", so nobody resends a message that may have arrived.
+  const log = await d.insertLog({ ...base, mode, status: "sending" });
   try {
     await d.send.directMessage(conn, mode, p.igUserId, p.text);
   } catch (err) {
     const reason = err instanceof DmBlockedError ? `blocked: ${err.reason}` : errText(err);
-    await d.insertLog({ ...base, mode, status: "failed", reason });
+    if (log) await d.updateLog(log.id, { status: "failed", reason });
     return { status: "failed", reason };
   }
-  await d.insertLog({ ...base, mode, status: "sent" });
+  if (log) await d.updateLog(log.id, { status: "sent" }).catch(() => {});
   return { status: "delivered" };
 }

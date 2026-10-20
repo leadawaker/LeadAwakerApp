@@ -19,6 +19,8 @@ let optOuts: Set<string>;
 let leads: Map<string, number>;
 let interactions: Array<{ leadId: number; direction: string; content: string; kind: string }>;
 let optedOutLeads: number[];
+let dncLeads: Set<string>;
+let crmFails: boolean;
 let fetchCalls: Array<{ url: string; body: any }>;
 let fetchFails: boolean;
 let notes: string[];
@@ -54,13 +56,14 @@ const deps: DmDeps = {
     return { id: r.id };
   },
   async updateLog(id, fields) { Object.assign(logs.find((l) => l.id === id)!, fields); },
-  async findPrivateReply(_a, u) { const l = [...logs].reverse().find((x) => x.kind === "private_reply" && x.igUserId === u && x.status !== "skipped"); return l ? { ruleId: l.ruleId ?? null, status: l.status, mode: l.mode } : null; },
+  async findPrivateReply(_a, u, statuses) { const l = [...logs].reverse().find((x) => x.kind === "private_reply" && x.igUserId === u && statuses.includes(x.status)); return l ? { ruleId: l.ruleId ?? null, status: l.status, mode: l.mode } : null; },
+  async hasPrivateReplyForRule(_a, u, ruleId) { return logs.some((x) => x.kind === "private_reply" && x.igUserId === u && x.ruleId === ruleId && ["sent", "would_send", "sending"].includes(x.status)); },
   async lastInboundAt(_a, u) { return logs.filter((l) => l.kind === "inbound" && l.igUserId === u).length ? NOW : null; },
   async hasInbound(_a, u) { return logs.some((l) => l.kind === "inbound" && l.igUserId === u); },
   crm: {
-    async findOrCreateLead(_a, u) { if (!leads.has(u)) leads.set(u, 100 + leads.size); return { id: leads.get(u)! }; },
-    async findLead(_a, u) { return leads.has(u) ? { id: leads.get(u)! } : null; },
-    async addInteraction(row) { interactions.push(row); return { id: interactions.length }; },
+    async findOrCreateLead(_a, u) { if (crmFails) throw new Error("db down"); if (!leads.has(u)) leads.set(u, 100 + leads.size); return { id: leads.get(u)! }; },
+    async findLead(_a, u) { return leads.has(u) ? { id: leads.get(u)!, optedOut: dncLeads.has(u) } : null; },
+    async addInteraction(row) { if (crmFails) throw new Error("db down"); interactions.push(row); return { id: interactions.length }; },
     async markOptedOut(id) { optedOutLeads.push(id); },
   },
   send: {
@@ -80,6 +83,8 @@ beforeEach(() => {
   leads = new Map();
   interactions = [];
   optedOutLeads = [];
+  dncLeads = new Set();
+  crmFails = false;
   fetchCalls = [];
   fetchFails = false;
   notes = [];
@@ -155,8 +160,17 @@ test("live with both switches: one private reply, the conversation lands in the 
 test("the same comment delivered twice is processed once; a second comment by the same person on the same comment id is refused", async () => {
   assert.deepEqual(await run(commentPayload()), ["sent"]);
   assert.deepEqual(await run(commentPayload()), ["duplicate"]);
-  events.clear(); // even if the event table lost it, the one-private-reply index holds
-  assert.deepEqual(await run(commentPayload()), ["already_replied"]);
+  events.clear(); // even if the event table lost it, the person already got this rule's message
+  assert.deepEqual(await run(commentPayload()), ["already_messaged"]);
+  // And under that, the one-private-reply-per-comment index (proven against Postgres in the storage smoke run).
+  const realHas = deps.hasPrivateReplyForRule;
+  deps.hasPrivateReplyForRule = async () => false;
+  events.clear();
+  try {
+    assert.deepEqual(await run(commentPayload()), ["already_replied"]);
+  } finally {
+    deps.hasPrivateReplyForRule = realHas;
+  }
   assert.equal(fetchCalls.length, 1);
 });
 
@@ -253,4 +267,56 @@ test("manual reply: delivered only inside 24 h, never to an opted-out person, dr
   settings = { dmMode: "off", dmHourlyCap: 20 };
   assert.deepEqual(await deliverManualReply(deps, { accountId: A, igUserId: "u1", leadId: 100, text: "x" }), { status: "failed", reason: "dm_off" });
   assert.equal(fetchCalls.length, before);
+});
+
+// ─── Review fixes ────────────────────────────────────────────────────────────
+
+test("the CRM's do-not-contact flag stops the flow too, for comments and Chats replies", async () => {
+  await run(commentPayload());
+  await run(messagePayload());
+  dncLeads.add("u1"); // an agent switched DNC on in the CRM
+  assert.deepEqual(await run(commentPayload({ id: "c2", text: "guia de novo" })), ["opted_out"]);
+  assert.deepEqual(await deliverManualReply(deps, { accountId: A, igUserId: "u1", leadId: 100, text: "Oi" }), { status: "failed", reason: "opted_out" });
+  assert.equal(fetchCalls.length, 1);
+});
+
+test("a sent reply whose CRM write fails is still recorded as sent, followed, and agency is told", async () => {
+  crmFails = true;
+  assert.deepEqual(await run(commentPayload()), ["sent"]);
+  assert.equal(logs[0].status, "sent");
+  assert.ok(notes.includes("Instagram reply sent, Chats not updated"));
+  crmFails = false;
+  assert.deepEqual(await run(messagePayload()), ["received"], "their reply is still in the flow");
+});
+
+test("a newer dry-run row never hides a real live reply", async () => {
+  await run(commentPayload({ id: "c1" })); // live, sent
+  settings = { dmMode: "dry_run", dmHourlyCap: 20 };
+  rules.push(rule({ id: 2, keyword: "FOME", keywordNorm: "FOME" }));
+  await run(commentPayload({ id: "c2", text: "fome" })); // would_send for rule 2
+  settings = { dmMode: "live", dmHourlyCap: 20 };
+  assert.deepEqual(await run(messagePayload()), ["received"]);
+});
+
+test("one message per person and rule: commenting the keyword three times sends once", async () => {
+  assert.deepEqual(await run(commentPayload({ id: "c1" })), ["sent"]);
+  assert.deepEqual(await run(commentPayload({ id: "c2" })), ["already_messaged"]);
+  assert.deepEqual(await run(commentPayload({ id: "c3" })), ["already_messaged"]);
+  assert.equal(fetchCalls.length, 1);
+});
+
+test("a Chats reply that is too long or empty is refused before any request", async () => {
+  await run(commentPayload());
+  await run(messagePayload());
+  const before = fetchCalls.length;
+  assert.deepEqual(await deliverManualReply(deps, { accountId: A, igUserId: "u1", leadId: 100, text: "x".repeat(1001) }), { status: "failed", reason: "too_long" });
+  assert.deepEqual(await deliverManualReply(deps, { accountId: A, igUserId: "u1", leadId: 100, text: "  " }), { status: "failed", reason: "empty" });
+  assert.equal(fetchCalls.length, before);
+  assert.deepEqual(await deliverManualReply(deps, { accountId: A, igUserId: "u1", leadId: 100, text: "Oi" }), { status: "delivered" });
+  assert.equal(logs.at(-1)?.status, "sent", "logged as sending, then sent");
+});
+
+test("the dedupe key is scoped to the receiving account", async () => {
+  await run(commentPayload());
+  assert.ok([...events.keys()].every((k) => k.startsWith(`${IG}:`)));
 });

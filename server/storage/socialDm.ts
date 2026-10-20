@@ -87,12 +87,21 @@ export const socialDmStorage = {
     await db.update(socialDmLog).set(fields).where(eq(socialDmLog.id, id));
   },
 
-  async findDmPrivateReply(accountId: number, igUserId: string): Promise<SocialDmLogRow | null> {
+  async findDmPrivateReply(accountId: number, igUserId: string, statuses: string[]): Promise<SocialDmLogRow | null> {
+    if (statuses.length === 0) return null;
     const [row] = await db.select().from(socialDmLog).where(and(
       eq(socialDmLog.accountsId, accountId), eq(socialDmLog.igUserId, igUserId), eq(socialDmLog.kind, "private_reply"),
-      inArray(socialDmLog.status, ["sent", "would_send"]),
+      inArray(socialDmLog.status, statuses),
     )).orderBy(desc(socialDmLog.id)).limit(1);
     return row ?? null;
+  },
+
+  async hasDmPrivateReplyForRule(accountId: number, igUserId: string, ruleId: number): Promise<boolean> {
+    const [row] = await db.select({ id: socialDmLog.id }).from(socialDmLog).where(and(
+      eq(socialDmLog.accountsId, accountId), eq(socialDmLog.igUserId, igUserId), eq(socialDmLog.kind, "private_reply"),
+      eq(socialDmLog.ruleId, ruleId), inArray(socialDmLog.status, ["sent", "would_send", "sending"]),
+    )).limit(1);
+    return !!row;
   },
 
   async lastDmInboundAt(accountId: number, igUserId: string): Promise<Date | null> {
@@ -108,10 +117,11 @@ export const socialDmStorage = {
 
   // ─── The CRM side of a live conversation ──────────────────────────────────
 
-  async findIgLead(accountId: number, igUserId: string): Promise<{ id: number } | null> {
-    const [row] = await db.select({ id: leads.id }).from(leads)
+  /** The lead and its do-not-contact flag (Leads.opted_out, the CRM's DNC switch). */
+  async findIgLead(accountId: number, igUserId: string): Promise<{ id: number; optedOut: boolean } | null> {
+    const [row] = await db.select({ id: leads.id, optedOut: leads.optedOut }).from(leads)
       .where(and(eq(leads.accountsId, accountId), eq(leads.channelIdentifier, `${IG_CHANNEL_PREFIX}${igUserId}`))).limit(1);
-    return row?.id != null ? { id: row.id } : null;
+    return row?.id != null ? { id: row.id, optedOut: row.optedOut === true } : null;
   },
 
   /** No campaign, so the lead is "paused" for the automation engine: only people and this flow write to it. */
