@@ -1,4 +1,14 @@
 {
+  "statusPill": {
+    "booked": "Booked",
+    "callback": "Callback",
+    "transferred": "Transferred",
+    "answered": "Answered",
+    "hungUp": "Hung up",
+    "newInquiry": "New inquiry",
+    "done": "Done",
+    "needsYou": "Needs you"
+  },
   "requestChange": {
     "note": "Lead Awaker looks after these settings for you.",
     "button": "Request a change",
@@ -10,8 +20,8 @@
     "menu": "Menu",
     "home": "Home",
     "calls": "Calls",
-    "myReceptionist": "My receptionist",
-    "myReceptionistShort": "Receptionist",
+    "myReceptionist": "Account",
+    "myReceptionistShort": "Account",
     "myAccount": "My account",
     "services": "Services",
     "reactivation": "Campaigns",
@@ -35,7 +45,7 @@
     "contracts": "Contracts",
     "tasks": "Tasks",
     "demos": "Demos",
-    "voiceCalls": "Voice calls",
+    "voiceCalls": "Calls",
     "automations": "Automation logs",
     "traffic": "Traffic",
     "settings": "Settings",

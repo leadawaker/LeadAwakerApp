@@ -1,6 +1,6 @@
 import type { TFunction } from "i18next";
 import type { VoiceCallListItem, VoiceOutcome } from "./api/voiceCallsApi";
-import { isToday } from "./format";
+import { groupByDate } from "./dateGroups";
 import { callStatus, normalizeOutcome, VOICE_CALL_STATUSES, type VoiceCallStatus } from "./status";
 
 export type VoiceCallSort = "recent" | "oldest" | "longest" | "shortest" | "name";
@@ -58,14 +58,18 @@ export function sortCalls(calls: VoiceCallListItem[], sort: VoiceCallSort): Voic
 
 export interface CallGroup { key: string; label: string; items: VoiceCallListItem[] }
 
-export function groupCalls(calls: VoiceCallListItem[], group: VoiceCallGroup, t: TFunction): CallGroup[] {
+/** Date groups (Today, Yesterday, This week, Last week, then months) in the account timezone. */
+export function dateSections<T>(items: T[], isoOf: (item: T) => string, t: TFunction, opts: { timeZone?: string; locale?: string }): { key: string; label: string; items: T[] }[] {
+  return groupByDate(items, isoOf, opts).map((g) => ({
+    key: g.key,
+    label: g.monthLabel ?? (g.key === "unknown" ? t("groups.earlier") : t(`groups.${g.key}`)),
+    items: g.items,
+  }));
+}
+
+export function groupCalls(calls: VoiceCallListItem[], group: VoiceCallGroup, t: TFunction, opts: { timeZone?: string; locale?: string } = {}): CallGroup[] {
   if (group === "none") return [{ key: "all", label: "", items: calls }];
-  if (group === "date") {
-    return [
-      { key: "today", label: t("groups.today"), items: calls.filter((c) => isToday(c.startedAt)) },
-      { key: "earlier", label: t("groups.earlier"), items: calls.filter((c) => !isToday(c.startedAt)) },
-    ].filter((g) => g.items.length > 0);
-  }
+  if (group === "date") return dateSections(calls, (c) => c.startedAt, t, opts);
   if (group === "status") {
     return VOICE_CALL_STATUSES
       .map((s) => ({ key: s, label: t(`status.${s}`), items: calls.filter((c) => callStatus(c) === s) }))

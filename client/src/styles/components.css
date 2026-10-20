@@ -489,3 +489,24 @@
   100% { background: var(--nav-active-bg); box-shadow: var(--sh-polished-crisp); }
 }
 
+
+/* ─── Phone chrome (client mobile polish, 2026-10-20) ───────────────
+   Everything here applies below 768px only, so desktop keeps its look.
+   .la-m-chrome  mobile headers, bottom bar and the More page sit on the
+                 deeper sand; bone segments and buttons stand out on it.
+   .la-hit       a 36px control with a 44px tap target.
+   .la-m-crisp   inset fields stay crisp on phones. */
+@media (max-width: 767px) {
+  .la-m-chrome { background: var(--chrome-deep) !important; }
+  .la-m-chrome .la-seg {
+    background: var(--surface);
+    box-shadow: var(--sh-raised-crisp);
+  }
+  .la-m-chrome .la-seg-btn { color: var(--chrome-deep-ink); }
+  .la-m-chrome .la-seg-btn.on { background: var(--card); color: var(--wine); }
+  .la-m-crisp,
+  .la-m-chrome .neu-inset,
+  .la-m-chrome .neu-inset-medium { box-shadow: var(--sh-inset-crisp) !important; }
+}
+.la-hit { position: relative; }
+.la-hit::after { content: ""; position: absolute; inset: -4px; border-radius: inherit; }

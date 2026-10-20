@@ -90,8 +90,8 @@ export function CommandPalette() {
     { href: `${prefix}/reputation`, labelKey: "sidebar.reputation", icon: Star, keywords: "reputation reviews google ratings", serviceKey: "reputation" },
     { href: `${prefix}/missed-calls`, labelKey: "sidebar.missedCalls", icon: PhoneMissed, keywords: "missed calls text back phone", serviceKey: "missedcall" },
     { href: `${prefix}/voice-calls`, labelKey: "sidebar.voiceCalls", icon: AudioLines, keywords: "voice calls phone receptionist recordings transcripts callers", voiceCallsOnly: true },
-    // /chat redirects client users to /contacts, so only agency users get this entry.
-    { href: `${prefix}/chat`, labelKey: "sidebar.conversations", icon: MessageSquare, keywords: "conversations chats interactions whatsapp threads leads messages inbox", agencyOnly: true },
+    // Clients reach it through the client list below (only when the account has chats).
+    { href: `${prefix}/chat`, labelKey: "sidebar.conversations", icon: MessageSquare, keywords: "conversations chats interactions whatsapp website threads leads messages inbox", agencyOnly: true },
     { href: `${prefix}/calendar`, labelKey: "sidebar.calendar", icon: Calendar, keywords: "events schedule appointments bookings" },
     { href: `${prefix}/contacts`, labelKey: "sidebar.leads", icon: BookUser, keywords: "leads contacts people directory table pipeline" },
     { href: `${prefix}/tasks`, labelKey: "sidebar.tasks", icon: ClipboardList, keywords: "tasks todo kanban gantt", agencyOnly: true },

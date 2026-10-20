@@ -5,6 +5,8 @@ import { MonoLabel } from "@/features/voice/components/atoms";
 import { CallListSkeleton } from "./VoiceCallsSkeleton";
 import type { VoiceCaller, VoiceCallListItem, VoiceScope } from "../api/voiceCallsApi";
 import { filterCallers } from "../callers";
+import { dateSections } from "../listOptions";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { CallerDetail } from "./CallerDetail";
 import { CallerListCard } from "./CallerListCard";
 
@@ -28,11 +30,26 @@ interface Props {
   isOwner: boolean;
   selection: string | null;
   setSelection: (key: string | null) => void;
+  accountId?: number;
+  /** A call handed over by a link: that person opens with this call expanded. */
+  linkedCall?: { key: string; callId: string } | null;
+}
+
+function GroupHeader({ label, count }: { label: string; count: number }) {
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 8px 5px" }}>
+      <MonoLabel>{label}</MonoLabel>
+      <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, color: "var(--mute-2)" }}>{count}</span>
+      <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
+    </div>
+  );
 }
 
 /** Same split as VoiceCallsInbox: 348px list of people, the chosen person on the right. */
-export function CallersInbox({ callers, calls, isLoading, error, query, scope, masked, isOwner, selection, setSelection }: Props) {
-  const { t } = useTranslation("voiceCalls");
+export function CallersInbox({ callers, calls, isLoading, error, query, scope, masked, isOwner, selection, setSelection, accountId, linkedCall }: Props) {
+  const { t, i18n } = useTranslation("voiceCalls");
+  const { currentAccount } = useWorkspace();
+  const timeZone = (currentAccount?.timezone as string | undefined) || undefined;
   const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 1600);
   useEffect(() => {
     const onR = () => setVw(window.innerWidth);
@@ -42,6 +59,11 @@ export function CallersInbox({ callers, calls, isLoading, error, query, scope, m
   const narrow = vw < 920;
 
   const items = useMemo(() => filterCallers(callers, query), [callers, query]);
+  // Grouped by each person's latest call, in the account timezone.
+  const sections = useMemo(
+    () => dateSections(items, (c) => c.lastCallAt, t, { timeZone, locale: i18n.language }),
+    [items, t, timeZone, i18n.language],
+  );
   const selected = callers.find((c) => c.key === selection) ?? null;
 
   // Open onto the first caller, desktop only.
@@ -67,11 +89,16 @@ export function CallersInbox({ callers, calls, isLoading, error, query, scope, m
   ) : items.length === 0 ? (
     <Centered><MonoLabel>{t("nothingHere")}</MonoLabel></Centered>
   ) : (
-    <div style={{ display: "flex", flexDirection: "column", gap: 5, paddingTop: 6 }}>
-      {items.map((c) => (
-        <CallerListCard key={c.key} caller={c} masked={masked} showAccount={scope === "live"} active={selection === c.key} onClick={() => setSelection(c.key)} />
-      ))}
-    </div>
+    sections.map((sec) => (
+      <div key={sec.key}>
+        <GroupHeader label={sec.label} count={sec.items.length} />
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          {sec.items.map((c) => (
+            <CallerListCard key={c.key} caller={c} masked={masked} showAccount={scope === "live"} active={selection === c.key} onClick={() => setSelection(c.key)} />
+          ))}
+        </div>
+      </div>
+    ))
   );
 
   const listPane = (
@@ -95,7 +122,7 @@ export function CallersInbox({ callers, calls, isLoading, error, query, scope, m
         </button>
       )}
       {selected ? (
-        <CallerDetail key={selected.key} caller={selected} calls={calls} masked={masked} isOwner={isOwner} />
+        <CallerDetail key={selected.key} caller={selected} calls={calls} masked={masked} isOwner={isOwner} scope={scope} accountId={accountId} initialCallId={linkedCall?.key === selected.key ? linkedCall.callId : null} />
       ) : (
         <Centered><AudioLines size={28} />{callers.length > 0 && <MonoLabel>{t("callers.empty")}</MonoLabel>}</Centered>
       )}

@@ -1,4 +1,8 @@
 {
+  "stats": {
+    "channel": "Kanaal",
+    "noChats": "Websitechat en WhatsApp staan voor dit account niet aan."
+  },
   "title": "Home",
   "greeting": { "morning": "Goedemorgen", "afternoon": "Goedemiddag", "evening": "Goedenavond" },
   "tabs": { "overview": "Overzicht", "phone": "Telefoon", "whatsapp": "WhatsApp", "website": "Website", "reactivation": "Reactivatie", "reputation": "Reputatie", "social": "Social" },
@@ -155,12 +159,12 @@
     "close": "Sluiten",
     "welcome": "Welkom, {{firstName}}. {{agentName}} neemt de telefoon op voor {{company}}.",
     "welcomeNoName": "Welkom. {{agentName}} neemt de telefoon op voor {{company}}.",
-    "where1": "Gesprekken, chats en afspraken zie je op deze pagina en op de pagina's {{calls}}, {{leads}} en {{calendar}}.",
+    "where1": "Gesprekken, chats en afspraken vind je onder {{calls}}, {{chats}} en {{calendar}}. De cijfers staan op het tabblad Statistieken van Gesprekken en Chats, het overzicht op deze pagina.",
     "where2": "Je krijgt een dagelijks overzicht en directe meldingen zodra je jezelf daarvoor toevoegt.",
     "guide": "Lees de handleiding",
     "done": "Klaar",
     "installIos": "Deel › Zet op beginscherm.",
     "installAndroid": "⋮ menu › App installeren / Toevoegen aan startscherm.",
-    "items": { "details": "Controleer je bedrijfsgegevens", "alerts": "Voeg jezelf toe aan het overzicht en de meldingen", "call": "Open je eerste gesprek of chat", "install": "Zet het CRM op je telefoon" }
+    "items": { "details": "Controleer je bedrijfsgegevens onder {{account}}", "alerts": "Voeg jezelf toe aan het overzicht en de meldingen", "call": "Open je eerste gesprek of chat", "install": "Zet het CRM op je telefoon" }
   }
 }

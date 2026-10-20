@@ -1,4 +1,14 @@
 {
+  "statusPill": {
+    "booked": "Agendado",
+    "callback": "Retorno",
+    "transferred": "Transferida",
+    "answered": "Atendido",
+    "hungUp": "Desligou",
+    "newInquiry": "Novo contato",
+    "done": "Concluído",
+    "needsYou": "Aguarda você"
+  },
   "requestChange": {
     "note": "A Lead Awaker cuida dessas configura\u00e7\u00f5es para voc\u00ea.",
     "button": "Pedir uma altera\u00e7\u00e3o",
@@ -10,8 +20,8 @@
     "menu": "Menu",
     "home": "Início",
     "calls": "Chamadas",
-    "myReceptionist": "Recepcionista",
-    "myReceptionistShort": "Recepcionista",
+    "myReceptionist": "Conta",
+    "myReceptionistShort": "Conta",
     "myAccount": "Minha conta",
     "services": "Serviços",
     "reactivation": "Campanhas",
@@ -35,7 +45,7 @@
     "contracts": "Contratos",
     "tasks": "Tarefas",
     "demos": "Demos",
-    "voiceCalls": "Chamadas de voz",
+    "voiceCalls": "Chamadas",
     "automations": "Logs de automação",
     "traffic": "Tráfego",
     "settings": "Configurações",

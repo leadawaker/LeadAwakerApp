@@ -19,10 +19,8 @@ import {
   MessageSquare,
   Inbox,
   X,
-  Megaphone,
   BookUser,
   Settings,
-  AudioLines,
   Send,
   Star,
   PhoneMissed,
@@ -38,7 +36,8 @@ import { ProfileSection } from "@/features/settings/components/ProfileSection";
 import { NotificationsSection } from "@/features/settings/components/NotificationsSection";
 import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
 import { APP_LANGUAGES } from "@/lib/languages";
-import { clientMoreItems, clientNavLabelKey, CLIENT_NAV_HREF, type ClientNavKey } from "@/components/crm/navGates";
+import { agencyBottomBar, clientMoreItems, clientNavLabelKey, isSameRoute, CLIENT_NAV_HREF } from "@/components/crm/navGates";
+import { NAV_ICON } from "@/components/crm/navIcons";
 import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 
 const THEME_CYCLE: { mode: ThemeMode; icon: LucideIcon; labelKey: string }[] = [
@@ -47,10 +46,14 @@ const THEME_CYCLE: { mode: ThemeMode; icon: LucideIcon; labelKey: string }[] = [
   { mode: "system", icon: Monitor, labelKey: "sidebar.themeSystem" },
 ];
 
-/** A standalone raised nav button (icon + label) — one per page. */
-function NavButton({ icon: Icon, label, href, onClick, testId }: {
-  icon: LucideIcon; label: string; href?: string; onClick?: () => void; testId?: string;
+/**
+ * A standalone raised nav button (icon + label) — one per page. The overlay only
+ * closes on a route change, so a link to the page already open closes it itself.
+ */
+function NavButton({ icon: Icon, label, href, onClick, onSameRoute, testId }: {
+  icon: LucideIcon; label: string; href?: string; onClick?: () => void; onSameRoute?: () => void; testId?: string;
 }) {
+  const [location] = useLocation();
   const inner = (
     <>
       <span style={{ color: "var(--wine)", display: "flex" }}><Icon size={19} /></span>
@@ -64,7 +67,13 @@ function NavButton({ icon: Icon, label, href, onClick, testId }: {
     background: "var(--surface)", border: "none", cursor: "pointer", textDecoration: "none",
   };
   return href ? (
-    <Link href={href} className="neu-raised-crisp" style={style} data-testid={testId}>{inner}</Link>
+    <Link
+      href={href}
+      onClick={(e) => { if (isSameRoute(href, location)) { e.preventDefault(); onSameRoute?.(); } }}
+      className="neu-raised-crisp"
+      style={style}
+      data-testid={testId}
+    >{inner}</Link>
   ) : (
     <button onClick={onClick} className="neu-raised-crisp" style={style} data-testid={testId}>{inner}</button>
   );
@@ -82,19 +91,21 @@ function NavButton({ icon: Icon, label, href, onClick, testId }: {
  */
 export function MobileMorePage({
   open,
+  onClose,
   onOpenAi,
   onToggleHelp: _onToggleHelp,
   onLogout,
 }: {
   open: boolean;
+  onClose?: () => void;
   onOpenAi?: () => void;
   onToggleHelp: () => void;
   onLogout?: () => void;
 }) {
   const { t, i18n } = useTranslation("crm");
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { isAgencyUser, isOwner, currentAccountId, setCurrentAccountId, currentAccount, accounts } = useWorkspace();
-  const { themeMode, setThemeMode } = useTheme();
+  const { themeMode, setThemeMode, isDark } = useTheme();
   const { openNotifications, unreadCount } = useMobileChrome();
   const [langOpen, setLangOpen] = useState(false);
   const [profileSheetOpen, setProfileSheetOpen] = useState(false);
@@ -132,19 +143,19 @@ export function MobileMorePage({
   type Item = NavGate & { label: string; href: string; icon: LucideIcon };
   // Clients get their own flat list (clientMoreItems) instead of the agency groups.
   const clientFacts = useClientNavFacts();
-  const CLIENT_ICON: Partial<Record<ClientNavKey, LucideIcon>> = { calls: AudioLines, billing: Receipt, campaigns: Megaphone };
   const clientItems = isAgencyUser ? [] : clientMoreItems(clientFacts).map((k) => ({
-    key: k, label: t(clientNavLabelKey(k, clientFacts)), href: CLIENT_NAV_HREF[k], icon: CLIENT_ICON[k] ?? Megaphone,
+    key: k, label: t(clientNavLabelKey(k, clientFacts)), href: CLIENT_NAV_HREF[k], icon: NAV_ICON[k],
   }));
   const visible = (items: Item[]) => (isAgencyUser ? items.filter((it) => isNavItemVisible(it, navCtx)) : []);
+  // Campaigns stays on the desktop nav only; Calendar lives here unless the bar already holds it.
+  const calendarInBar = agencyBottomBar(navCtx.hasVoiceCalls).includes("calendar");
   const serviceItems = visible([
-    { label: t("sidebar.reactivation"), href: `${prefix}/campaigns`, icon: Megaphone },
     { label: t("sidebar.speedToLead"), href: `${prefix}/speed-to-lead`, icon: Send, agencyOnly: true, serviceKey: "speed" },
     { label: t("sidebar.reputation"), href: `${prefix}/reputation`, icon: Star, serviceKey: "reputation" },
     { label: t("sidebar.missedCalls"), href: `${prefix}/missed-calls`, icon: PhoneMissed, serviceKey: "missedcall" },
   ]);
   const engageItems = visible([
-    { label: t("sidebar.voiceCalls"), href: `${prefix}/voice-calls`, icon: AudioLines, voiceCallsOnly: true },
+    ...(calendarInBar ? [] : [{ label: t("sidebar.calendar"), href: `${prefix}/calendar`, icon: NAV_ICON.calendar }]),
     { label: t("sidebar.leads"), href: `${prefix}/contacts`, icon: BookUser, agencyOnly: true },
   ]);
   const adminItems = visible([
@@ -176,14 +187,14 @@ export function MobileMorePage({
   return (
     <div
       className="md:hidden"
-      style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", background: "var(--bg)" }}
+      style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", background: "var(--chrome-deep)" }}
       data-testid="mobile-more-page"
     >
-      {/* ── Topbar: title + Lead Awaker AI ── */}
+      {/* ── Topbar: the Lead Awaker logo + Lead Awaker AI ── */}
       <div
         style={{
           flexShrink: 0,
-          background: "var(--bg)",
+          background: "var(--chrome-deep)",
           borderBottom: "1px solid var(--line)",
           padding: "12px 14px 12px 18px",
           paddingTop: "max(env(safe-area-inset-top, 0px), 14px)",
@@ -192,9 +203,14 @@ export function MobileMorePage({
           gap: 8,
         }}
       >
-        <span className="serif" style={{ flex: 1, minWidth: 0, fontSize: 30, color: "var(--ink)", letterSpacing: "-0.02em" }}>
-          {t("sidebar.more")}
-        </span>
+        <h1 style={{ flex: 1, minWidth: 0, margin: 0, display: "flex" }} aria-label={t("sidebar.more")}>
+          <img
+            src={isDark ? "/premium/logo-v2-dark.svg" : "/premium/logo-v2.svg"}
+            alt="Lead Awaker"
+            style={{ height: 38, ...(isDark ? null : { background: "var(--logo-plate)", borderRadius: "var(--r-button)", padding: "3px 10px" }) }}
+            data-testid="mobile-more-logo"
+          />
+        </h1>
         {isOwner && (
           <button
             onClick={onOpenAi}
@@ -250,7 +266,7 @@ export function MobileMorePage({
           <div key={key} style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div className="eyebrow" style={{ padding: "2px 4px" }}>{heading}</div>
             {items.map((it) => (
-              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} testId={`mobile-more-link-${it.label.toLowerCase().replace(/\s+/g, "-")}`} />
+              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} onSameRoute={onClose} testId={`mobile-more-link-${it.label.toLowerCase().replace(/\s+/g, "-")}`} />
             ))}
           </div>
         ))}
@@ -258,7 +274,7 @@ export function MobileMorePage({
         {clientItems.length > 0 && (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             {clientItems.map((it) => (
-              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} testId={`mobile-more-link-${it.key}`} />
+              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} onSameRoute={onClose} testId={`mobile-more-link-${it.key}`} />
             ))}
           </div>
         )}
@@ -268,7 +284,7 @@ export function MobileMorePage({
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div className="eyebrow" style={{ padding: "2px 4px" }}>{t("sidebarSections.admin", "Admin")}</div>
             {adminItems.map((it) => (
-              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} testId={`mobile-more-link-${it.label.toLowerCase().replace(/\s+/g, "-")}`} />
+              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} onSameRoute={onClose} testId={`mobile-more-link-${it.label.toLowerCase().replace(/\s+/g, "-")}`} />
             ))}
           </div>
         )}
@@ -278,7 +294,7 @@ export function MobileMorePage({
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <div className="eyebrow" style={{ padding: "2px 4px" }}>{t("sidebarSections.backend", "Backend")}</div>
             {backendItems.map((it) => (
-              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} testId={`mobile-more-link-${it.label.toLowerCase().replace(/\s+/g, "-")}`} />
+              <NavButton key={it.href} icon={it.icon} label={it.label} href={it.href} onSameRoute={onClose} testId={`mobile-more-link-${it.label.toLowerCase().replace(/\s+/g, "-")}`} />
             ))}
           </div>
         )}
@@ -286,7 +302,7 @@ export function MobileMorePage({
         {/* Help: Documentation + Support inbox (owner) or Assistance (others) */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div className="eyebrow" style={{ padding: "2px 4px" }}>{t("sidebar.help", "Help")}</div>
-          <NavButton icon={BookOpen} label={t("sidebar.documentation", "Documentation")} onClick={() => setLocation(`${prefix}/docs`)} testId="mobile-more-docs" />
+          <NavButton icon={BookOpen} label={t("sidebar.documentation", "Documentation")} href={`${prefix}/docs`} onSameRoute={onClose} testId="mobile-more-docs" />
           {isOwner ? (
             <NavButton icon={Inbox} label={t("sidebar.founderInbox", "Support inbox")} onClick={() => setInboxSheetOpen(true)} testId="mobile-more-inbox" />
           ) : (
@@ -373,10 +389,13 @@ export function MobileMorePage({
             <span style={{ color: "var(--mute-2)", display: "flex" }}><ChevronRight size={15} /></span>
           </button>
 
+          {/* Settings: agency only. Clients reach their profile above; the separate row was a dead end for them. */}
+          {isAgencyUser && (<>
           <div style={{ margin: "2px 12px", borderTop: "1px solid var(--line)" }} />
 
           <Link
             href={`${prefix}/settings`}
+            onClick={(e) => { if (isSameRoute(`${prefix}/settings`, location)) { e.preventDefault(); onClose?.(); } }}
             className="row"
             style={{ gap: 14, padding: "14px 14px", width: "100%", textDecoration: "none", color: "var(--ink)" }}
             data-testid="mobile-more-settings"
@@ -387,11 +406,13 @@ export function MobileMorePage({
           </Link>
 
           <div style={{ margin: "2px 12px", borderTop: "1px solid var(--line)" }} />
+          </>)}
+          {!isAgencyUser && <div style={{ margin: "2px 12px", borderTop: "1px solid var(--line)" }} />}
 
           <button
             onClick={onLogout}
             className="row"
-            style={{ gap: 14, padding: "14px 14px", border: "none", background: "transparent", width: "100%", textAlign: "left", cursor: "pointer", color: "#A24B3F" }}
+            style={{ gap: 14, padding: "14px 14px", border: "none", background: "transparent", width: "100%", textAlign: "left", cursor: "pointer", color: "hsl(var(--destructive))" }}
             data-testid="mobile-more-logout"
           >
             <span style={{ display: "flex" }}><LogOut size={18} /></span>

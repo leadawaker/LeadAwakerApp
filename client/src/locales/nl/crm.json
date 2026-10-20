@@ -1,4 +1,14 @@
 {
+  "statusPill": {
+    "booked": "Geboekt",
+    "callback": "Terugbellen",
+    "transferred": "Doorverbonden",
+    "answered": "Beantwoord",
+    "hungUp": "Opgehangen",
+    "newInquiry": "Nieuwe aanvraag",
+    "done": "Afgerond",
+    "needsYou": "Wacht op jou"
+  },
   "requestChange": {
     "note": "Lead Awaker beheert deze instellingen voor je.",
     "button": "Wijziging aanvragen",
@@ -10,8 +20,8 @@
     "menu": "Menu",
     "home": "Home",
     "calls": "Gesprekken",
-    "myReceptionist": "Receptionist",
-    "myReceptionistShort": "Receptionist",
+    "myReceptionist": "Account",
+    "myReceptionistShort": "Account",
     "myAccount": "Mijn account",
     "services": "Diensten",
     "reactivation": "Campagnes",
@@ -35,7 +45,7 @@
     "contracts": "Contracten",
     "tasks": "Taken",
     "demos": "Demo's",
-    "voiceCalls": "Spraakgesprekken",
+    "voiceCalls": "Gesprekken",
     "automations": "Automatiseringslogs",
     "traffic": "Websiteverkeer",
     "settings": "Instellingen",

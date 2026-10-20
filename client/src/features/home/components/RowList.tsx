@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { LucideIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 const DAY_MS = 86_400_000;
@@ -24,6 +25,8 @@ export interface RowListItem {
   tag?: ReactNode;
   time: string;
   onClick?: () => void;
+  /** Leading event icon on a tinted square (Overview activity). */
+  icon?: { icon: LucideIcon; tone: string };
 }
 
 export function RowList({ rows, empty }: { rows: RowListItem[]; empty: string }) {
@@ -34,8 +37,17 @@ export function RowList({ rows, empty }: { rows: RowListItem[]; empty: string })
   return (
     <div>
       {rows.map((r) => {
+        const Icon = r.icon?.icon;
         const inner = (
           <>
+            {Icon && r.icon && (
+              <span aria-hidden="true" style={{
+                width: 30, height: 30, flexShrink: 0, borderRadius: "var(--r-button)", display: "flex", alignItems: "center", justifyContent: "center",
+                background: `color-mix(in srgb, ${r.icon.tone} 14%, transparent)`, color: `color-mix(in srgb, ${r.icon.tone} 80%, var(--ink))`,
+              }}>
+                <Icon size={15} />
+              </span>
+            )}
             <span style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
               <span style={{ fontSize: 13.5, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</span>
               {r.meta && <span style={{ fontSize: 12, color: "var(--mute)" }}>{r.meta}</span>}

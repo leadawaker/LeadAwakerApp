@@ -77,6 +77,12 @@
   --bg-2: hsl(var(--ground-chrome));          /* nav rail / sidebar */
   --chrome: var(--bg-2);
   --footer-bg: var(--ground-panel);           /* mobile bottom bar */
+  /* Phone chrome (mobile headers, bottom bar, More page): a light sand, clearly
+     darker than the bone ground so raised bone buttons and their white
+     highlight still read on it. One value, used everywhere below 768px. */
+  --chrome-deep: hsl(var(--ground-h) 30% 84%);
+  --chrome-deep-ink: #5A5244;                 /* muted ink on the sand: 5.5:1, AA at 10px */
+  --on-wine: #FBF8F2;                         /* bone icon + label on a filled wine pill */
   --sidebar-bg: var(--ground-panel);          /* topbar chrome */
   --panel-list-bg: var(--ground-panel);       /* page toolbars (sticky header rows) */
   --secondary: var(--ground-chrome);
@@ -232,6 +238,8 @@
   --surface: #1E1A16;                 /* topbar, toolbars, raised chips */
   --bg-2: #1B1714;                    /* nav rail / sidebar */
   --footer-bg: 30 12% 14%;
+  --chrome-deep: hsl(30 12% 11%);     /* one step deeper than the bottom bar, never lighter */
+  --chrome-deep-ink: var(--mute);
   --sidebar-bg: 30 12% 11%;
   --panel-list-bg: 30 12% 11%;
   --secondary: 30 10% 19%;

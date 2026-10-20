@@ -82,7 +82,12 @@ export function registerVoiceCallsRoutes(app: Express): void {
     const access = accessOf(req);
     const decision = decideScope(access, req.query);
     if (!decision.ok) return res.status(decision.status).json({ message: "Owner access required" });
-    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), 200);
+    // One person's calls (People tab) are never capped by the list's 200 rows.
+    const leadId = Number(req.query.leadId);
+    const callerNumber = typeof req.query.number === "string" && req.query.number.trim() ? req.query.number.trim() : undefined;
+    const person = Number.isInteger(leadId) && leadId > 0 ? { leadId } : callerNumber ? { callerNumber } : null;
+    const maxLimit = person ? 1000 : 200;
+    const limit = Math.min(Math.max(Number(req.query.limit) || 50, 1), maxLimit);
     const offset = Math.max(Number(req.query.offset) || 0, 0);
     const calls = await storage.listVoiceCalls({
       limit,
@@ -91,6 +96,7 @@ export function registerVoiceCallsRoutes(app: Express): void {
       accountId: decision.accountId,
       includeAccountName: access.isAgency,
       hideTest: hidesTestData(access),
+      ...person,
     });
     res.json({ calls });
   }));

@@ -11,6 +11,7 @@ import { EmptyState } from "../components/EmptyState";
 import banner from "@/assets/home/overview.webp";
 import { HomeBanner } from "../components/HomeBanner";
 import { RowList, type RowListItem } from "../components/RowList";
+import { EVENT_ICON } from "../components/activityIcons";
 import { StatRow } from "../components/StatRow";
 import { openCall } from "../lib/openCall";
 import { trendOf } from "../lib/homeFormat";
@@ -58,6 +59,7 @@ export default function OverviewTab({ scope, services, onOpenTab }: HomeTabProps
     title: nameOf(r),
     meta: t(`overview.attentionKind.${r.kind}`),
     tag: channelPill(r.channel),
+    icon: EVENT_ICON[r.kind],
     time: r.at,
     onClick: r.callId || r.leadId ? () => open(r) : undefined,
   }));
@@ -66,6 +68,7 @@ export default function OverviewTab({ scope, services, onOpenTab }: HomeTabProps
     title: t(`overview.activityKind.${r.kind}`),
     meta: [r.name, r.headline].filter(Boolean).join(" · ") || undefined,
     tag: channelPill(r.channel),
+    icon: EVENT_ICON[r.kind],
     time: r.at,
     onClick: r.callId || r.leadId ? () => open(r) : undefined,
   }));

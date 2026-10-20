@@ -1,5 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "wouter";
+import { writeLastTab } from "@/lib/lastTab";
+import { rememberStatsChannel } from "../stats/StatsPanel";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
@@ -10,29 +13,28 @@ import { EmptyState } from "../components/EmptyState";
 import "../home.css";
 
 const OverviewTab = lazy(() => import("../tabs/OverviewTab"));
-const PhoneTab = lazy(() => import("../tabs/PhoneTab"));
-const WhatsappTab = lazy(() => import("../tabs/WhatsappTab"));
-const WebsiteTab = lazy(() => import("../tabs/WebsiteTab"));
 const ReactivationTab = lazy(() => import("../tabs/ReactivationTab"));
 const ReputationTab = lazy(() => import("../tabs/ReputationTab"));
 const SocialTab = lazy(() => import("../tabs/SocialTab"));
 
-const PANELS = {
-  overview: OverviewTab, phone: PhoneTab, whatsapp: WhatsappTab, website: WebsiteTab,
-  reactivation: ReactivationTab, reputation: ReputationTab, social: SocialTab,
+// Phone moved to Calls › Stats, Website and WhatsApp to Chats › Stats: Home is the overview.
+// Reactivation, Reputation and Social stay until their pages get a Stats tab of their own.
+type HomePanelTab = Exclude<HomeTab, "phone" | "whatsapp" | "website">;
+const PANELS: Record<HomePanelTab, typeof OverviewTab> = {
+  overview: OverviewTab, reactivation: ReactivationTab, reputation: ReputationTab, social: SocialTab,
 };
-const ORDER: HomeTab[] = ["overview", "phone", "whatsapp", "website", "reactivation", "reputation", "social"];
+const ORDER: HomePanelTab[] = ["overview", "reactivation", "reputation", "social"];
 const DATE_LOCALE: Record<string, string> = { en: "en-US", pt: "pt-BR", nl: "nl-NL" };
 const PERIOD_KEY = "leadawaker_home_period";
 
-export function visibleTabs(services: HomeServices | undefined): HomeTab[] {
+export function visibleTabs(services: HomeServices | undefined): HomePanelTab[] {
   if (!services) return ["overview"];
   return ORDER.filter((tab) => tab === "overview" || services[tab]);
 }
 
-function readTab(): HomeTab {
+function readTab(): HomePanelTab {
   const wanted = new URLSearchParams(window.location.search).get("tab");
-  return (ORDER as string[]).includes(wanted ?? "") ? (wanted as HomeTab) : "overview";
+  return (ORDER as string[]).includes(wanted ?? "") ? (wanted as HomePanelTab) : "overview";
 }
 
 function readPeriod(): HomePeriod {
@@ -46,7 +48,21 @@ function readPeriod(): HomePeriod {
 function HomeDashboard() {
   const { t, i18n } = useTranslation("home");
   const { currentAccountId, isAgencyUser } = useWorkspace();
-  const [tab, setTab] = useState<HomeTab>(readTab);
+  const [tab, setTab] = useState<HomePanelTab>(readTab);
+  const [, setLocation] = useLocation();
+  // The channel figures live on their own pages now: open Calls › Stats or Chats › Stats.
+  const openTab = (next: HomeTab) => {
+    if (next === "phone") {
+      writeLastTab("calls", "stats");
+      setLocation("/platform/voice-calls");
+    } else if (next === "website" || next === "whatsapp") {
+      writeLastTab("chats", "stats");
+      rememberStatsChannel(next);
+      setLocation("/platform/chat");
+    } else {
+      setTab(next);
+    }
+  };
   const [period, setPeriod] = useState<HomePeriod>(readPeriod);
   const { data: services, isLoading, isError } = useHomeServices(currentAccountId);
   const tabs = useMemo(() => visibleTabs(services), [services]);
@@ -86,14 +102,14 @@ function HomeDashboard() {
 
   const scope: HomeScope = { accountId: currentAccountId, period };
   const Panel = PANELS[active];
-  const noServices = !isLoading && services && tabs.length === 1;
+  const noServices = !isLoading && services && !Object.values(services).some(Boolean);
 
   return (
     <div className="la-page" data-testid="page-home" style={{ background: "var(--bg)", overflow: "hidden" }}>
       {/* Fixed header: greeting + tabs never scroll. The tab content scrolls in
           its own container below, so cards (and their shadows) are cut off at
           the header's bottom edge instead of painting over it. */}
-      <div className="shrink-0" style={{ background: "var(--bg)", position: "relative", zIndex: 1 }}>
+      <div className="shrink-0 la-m-chrome" style={{ background: "var(--bg)", position: "relative", zIndex: 1 }}>
         <div className="mr-auto flex max-w-[1386px] flex-col gap-5 px-4 pb-3 pt-7 md:px-9">
           <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
             <h1 className="text-[26px] md:text-[32px]" style={{ margin: 0, fontWeight: 700, color: "var(--ink)", lineHeight: 1.1 }}>
@@ -103,14 +119,14 @@ function HomeDashboard() {
           </div>
 
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="la-seg la-seg--fill la-seg--touch max-w-full" role="tablist" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
+            {tabs.length > 1 ? <div className="la-seg la-seg--fill la-seg--touch max-w-full" role="tablist" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
               {tabs.map((k) => (
                 <button key={k} role="tab" aria-selected={active === k} data-testid={`home-tab-${k}`}
                   className={cn("la-seg-btn shrink-0", active === k && "on")} onClick={() => setTab(k)}>
                   {t(`tabs.${k}`)}
                 </button>
               ))}
-            </div>
+            </div> : <span />}
             <select value={period} onChange={(e) => choosePeriod(e.target.value as HomePeriod)} aria-label={t("period.label")}
               className="neu-inset-crisp" data-testid="home-period"
               style={{ padding: "7px 12px", borderRadius: "var(--r-button)", fontSize: 13, border: "none", background: "var(--bg)", color: "var(--ink-soft)" }}>
@@ -131,7 +147,7 @@ function HomeDashboard() {
             <EmptyState title={t("empty.noServicesTitle")} body={t(isAgencyUser ? "empty.noServicesAgency" : "empty.noServicesClient")} />
           ) : (
             <Suspense fallback={<div className="eyebrow eyebrow-sm" style={{ padding: 24 }}>{t("loading")}</div>}>
-              {services ? <Panel key={currentAccountId} scope={scope} services={services} onOpenTab={setTab} /> : (
+              {services ? <Panel key={currentAccountId} scope={scope} services={services} onOpenTab={openTab} /> : (
                 <div className="eyebrow eyebrow-sm" style={{ padding: 24 }}>{t("loading")}</div>
               )}
             </Suspense>

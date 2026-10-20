@@ -7,6 +7,7 @@ import type { VoiceCallListItem, VoiceScope } from "../api/voiceCallsApi";
 import { filterCalls, groupCalls, sortCalls, type ListOptions } from "../listOptions";
 import { VoiceCallListCard } from "./VoiceCallListCard";
 import { VoiceCallDetail } from "./VoiceCallDetail";
+import { useWorkspace } from "@/hooks/useWorkspace";
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
@@ -38,7 +39,9 @@ interface Props {
 }
 
 export function VoiceCallsInbox({ calls, isLoading, error, options, scope, masked, selection, setSelection }: Props) {
-  const { t } = useTranslation("voiceCalls");
+  const { t, i18n } = useTranslation("voiceCalls");
+  const { currentAccount } = useWorkspace();
+  const timeZone = (currentAccount?.timezone as string | undefined) || undefined;
   const [vw, setVw] = useState(typeof window !== "undefined" ? window.innerWidth : 1600);
   useEffect(() => {
     const onR = () => setVw(window.innerWidth);
@@ -48,7 +51,10 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
   const narrow = vw < 920;
 
   const items = useMemo(() => sortCalls(filterCalls(calls, options), options.sort), [calls, options]);
-  const sections = useMemo(() => groupCalls(items, options.group, t), [items, options.group, t]);
+  const sections = useMemo(
+    () => groupCalls(items, options.group, t, { timeZone, locale: i18n.language }),
+    [items, options.group, t, timeZone, i18n.language],
+  );
 
   // Open onto the first call, desktop only.
   useEffect(() => {
@@ -76,7 +82,7 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
     sections.map((sec) => (
       <div key={sec.key}>
         {sec.label && <GroupHeader label={sec.label} count={sec.items.length} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: 5 }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {sec.items.map((c) => (
             <VoiceCallListCard key={c.callId} call={c} masked={masked} active={selection === c.callId} onClick={() => setSelection(c.callId)} />
           ))}

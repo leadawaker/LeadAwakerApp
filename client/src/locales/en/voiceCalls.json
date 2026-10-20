@@ -1,5 +1,11 @@
 {
-  "title": "Voice calls",
+  "tabs": {
+    "stats": "Stats",
+    "people": "People",
+    "calls": "All calls",
+    "aria": "View"
+  },
+  "title": "Calls",
   "webCaller": "Web caller",
   "booked": "Booked",
   "empty": "No voice calls yet. Calls made on the voice demo will appear here.",
@@ -47,6 +53,9 @@
   },
   "search": "Search calls…",
   "groups": {
+    "yesterday": "Yesterday",
+    "thisWeek": "This week",
+    "lastWeek": "Last week",
     "today": "Today",
     "earlier": "Earlier"
   },
@@ -122,7 +131,7 @@
     "callback": "Callback",
     "transferred": "Transferred",
     "hungUp": "Hung up",
-    "other": "Chat"
+    "other": "Answered"
   },
   "testData": {
     "label": "Test data (hidden from the client)"

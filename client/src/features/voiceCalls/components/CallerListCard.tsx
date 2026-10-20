@@ -4,7 +4,8 @@ import type { VoiceCaller } from "../api/voiceCallsApi";
 import { callerStatus, lastContactAttempt, maskVoiceCaller } from "../callers";
 import { formatListTime } from "../format";
 import { CallAvatar, callerIni, callerTitle } from "./bits";
-import { OutcomePill } from "./OutcomePill";
+import { callerNeedsYou, callerStage, NeedsYouMarker, StatusPill } from "@/components/crm/status/StatusPill";
+import { slotLabel } from "./OutcomePill";
 
 interface Props {
   caller: VoiceCaller;
@@ -26,19 +27,23 @@ export function CallerListCard({ caller: rawCaller, active, masked, showAccount,
   const count = t("callers.callCount", { count: caller.callCount });
   const second = [caller.personaCompany, showAccount ? caller.accountName : null].filter(Boolean).join(" · ");
   const calledBack = lastContactAttempt(caller, t, i18n.language);
+  // One stage per person, plus "Needs you" while a callback waits.
+  const stage = callerStage(rawCaller);
+  const needsYou = callerNeedsYou(rawCaller);
   return (
     <div
       onClick={onClick}
       data-testid="voice-caller-row"
       style={{
-        borderRadius: "var(--r-surface)", position: "relative", cursor: "pointer",
-        background: active ? "var(--card)" : "transparent",
-        boxShadow: active ? "var(--sh-raised-medium), inset 0 0 0 1px var(--line-strong)" : "none",
+        // Every row is a raised card (same tokens as ListCard); the open one lifts and gets the wine bar.
+        borderRadius: "var(--list-card-radius)", position: "relative", cursor: "pointer",
+        background: "var(--card)",
+        boxShadow: active ? "var(--sh-raised-medium), inset 0 0 0 1px var(--line-strong)" : "var(--list-card-shadow)",
         transform: active ? "translateX(2px)" : "none",
         transition: "background 130ms, transform 130ms, box-shadow 130ms",
       }}
-      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "var(--wine-tint)"; }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
+      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "hsl(var(--card-hover))"; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "var(--card)"; }}
     >
       {active && (
         <div style={{ position: "absolute", left: 0, top: 6, bottom: 6, width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0" }} />
@@ -71,7 +76,10 @@ export function CallerListCard({ caller: rawCaller, active, masked, showAccount,
                 {caller.name && caller.phone ? caller.phone : t("voiceCall")}
               </span>
             </span>
-            <OutcomePill outcome={caller.latestOutcome} bookedSlot={caller.bookedSlot} bookedIso={caller.bookedIso} small={!active} />
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+              {needsYou && <NeedsYouMarker small />}
+              <StatusPill status={stage} detail={stage === "booked" ? slotLabel(caller.bookedIso, caller.bookedSlot, i18n.language) : null} small={!active} />
+            </span>
           </div>
         </div>
       </div>

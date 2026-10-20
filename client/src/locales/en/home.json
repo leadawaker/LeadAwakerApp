@@ -1,4 +1,8 @@
 {
+  "stats": {
+    "channel": "Channel",
+    "noChats": "Website chat and WhatsApp are not switched on for this account."
+  },
   "title": "Home",
   "greeting": { "morning": "Good morning", "afternoon": "Good afternoon", "evening": "Good evening" },
   "tabs": { "overview": "Overview", "phone": "Phone", "whatsapp": "WhatsApp", "website": "Website", "reactivation": "Reactivation", "reputation": "Reputation", "social": "Social" },
@@ -155,12 +159,12 @@
     "close": "Close",
     "welcome": "Welcome, {{firstName}}. {{agentName}} answers for {{company}}.",
     "welcomeNoName": "Welcome. {{agentName}} answers for {{company}}.",
-    "where1": "Calls, chats and bookings show up on this page and in the {{calls}}, {{leads}} and {{calendar}} pages.",
+    "where1": "Calls, chats and bookings show up under {{calls}}, {{chats}} and {{calendar}}. The figures sit on the Stats tab of Calls and Chats, the summary on this page.",
     "where2": "You get a daily recap and instant alerts once you add yourself to them.",
     "guide": "Read the guide",
     "done": "Done",
     "installIos": "Share › Add to Home Screen.",
     "installAndroid": "⋮ menu › Install app / Add to Home screen.",
-    "items": { "details": "Check your business details", "alerts": "Add yourself to the recap and alerts", "call": "Open your first call or chat", "install": "Put the CRM on your phone" }
+    "items": { "details": "Check your business details under {{account}}", "alerts": "Add yourself to the recap and alerts", "call": "Open your first call or chat", "install": "Put the CRM on your phone" }
   }
 }

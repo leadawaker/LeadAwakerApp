@@ -85,7 +85,10 @@ export function useVoiceCalls(scope: VoiceScope, accountId?: number) {
   });
 }
 
-/** Rolling 7 days, computed server-side so the 200-row list cap does not matter. */
+/**
+ * The last 7 × 24 hours up to now (not the calendar week), computed in SQL so the
+ * 200-row list cap does not matter.
+ */
 export function useVoiceStats(scope: VoiceScope, accountId?: number) {
   return useQuery<VoiceStats>({
     queryKey: ["/api/voice-calls/stats", scope, accountId ?? null],
@@ -95,6 +98,27 @@ export function useVoiceStats(scope: VoiceScope, accountId?: number) {
       const res = await apiFetch(`/api/voice-calls/stats?${qs}`);
       if (!res.ok) throw new Error("Failed to load voice stats");
       return res.json();
+    },
+    staleTime: 30 * 1000,
+    refetchInterval: 60 * 1000,
+  });
+}
+
+/** One person's calls, newest first, straight from the server (no 200-row ceiling). */
+export function useCallerCalls(caller: Pick<VoiceCaller, "leadsId" | "key"> | null, scope: VoiceScope, accountId?: number) {
+  // "num:<stored number>" keys carry the number exactly as the calls store it (caller.phone is reformatted).
+  const person = caller?.leadsId != null
+    ? { leadId: String(caller.leadsId) }
+    : caller?.key.startsWith("num:") ? { number: caller.key.slice(4) } : null;
+  return useQuery<VoiceCallListItem[]>({
+    queryKey: [...LIST_KEY, "person", scope, accountId ?? null, person?.leadId ?? null, person?.number ?? null],
+    enabled: !!person,
+    queryFn: async () => {
+      const qs = new URLSearchParams({ scope, limit: "1000", ...person });
+      if (accountId != null) qs.set("accountId", String(accountId));
+      const res = await apiFetch(`/api/voice-calls?${qs}`);
+      if (!res.ok) throw new Error("Failed to load the caller's calls");
+      return (await res.json()).calls ?? [];
     },
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,

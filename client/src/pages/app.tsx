@@ -259,10 +259,9 @@ export default function AppArea() {
           {/* Conversations / Contacts split: same workspace component, two modes.
               Conversations = chat threads only; Contacts = directory (table + pipeline). */}
           <Route path="/platform/conversations"><Redirect to="/platform/chat" /></Route>
+          {/* Chats is open to clients too: they read and answer their website and WhatsApp chats. */}
           <Route path="/platform/chat">
-            {isAgencyUser()
-              ? <Suspense fallback={<PageLoader><LeadsRouteSkeleton mode="conversations" /></PageLoader>}><AppLeads mode="conversations" /></Suspense>
-              : <Redirect to="/platform/contacts" />}
+            <Suspense fallback={<PageLoader><LeadsRouteSkeleton mode="conversations" /></PageLoader>}><AppLeads mode="conversations" /></Suspense>
           </Route>
           <Route path="/platform/contacts"><Suspense fallback={<PageLoader><LeadsRouteSkeleton mode="contacts" /></PageLoader>}><AppLeads mode="contacts" /></Suspense></Route>
           <Route path="/platform/leads"><AppLeads /></Route>

@@ -46,7 +46,7 @@ export function WelcomeChecklistCard() {
       <h2 className="pr-8 text-[18px] font-bold" style={{ margin: 0, color: "var(--ink)" }}>
         {firstName ? t("onboarding.welcome", { firstName, agentName, company }) : t("onboarding.welcomeNoName", { agentName, company })}
       </h2>
-      <p className="mt-2 text-[13px]" style={{ color: "var(--ink-soft)", margin: "8px 0 0" }}>{t("onboarding.where1", { calls: t("crm:sidebar.calls"), leads: t("crm:sidebar.leads"), calendar: t("crm:sidebar.calendar") })}</p>
+      <p className="mt-2 text-[13px]" style={{ color: "var(--ink-soft)", margin: "8px 0 0" }}>{t("onboarding.where1", { calls: t("crm:sidebar.calls"), chats: t("crm:sidebar.chats"), calendar: t("crm:sidebar.calendar") })}</p>
       <p className="text-[13px]" style={{ color: "var(--ink-soft)", margin: "2px 0 0" }}>{t("onboarding.where2")}</p>
       <button type="button" onClick={() => setLocation("/platform/docs")} className="mt-2 text-[13px] font-semibold underline" style={{ color: "var(--ink)" }}>
         {t("onboarding.guide")}
@@ -62,7 +62,7 @@ export function WelcomeChecklistCard() {
                 {done && <Check size={12} />}
               </span>
               <span className="flex-1 text-[14px]" style={{ color: done ? "var(--ink-soft)" : "var(--ink)", textDecoration: done ? "line-through" : "none" }}>
-                {t(`onboarding.items.${key}`)}
+                {t(`onboarding.items.${key}`, { account: t("crm:sidebar.myReceptionist") })}
               </span>
               <ChevronRight size={16} style={{ color: "var(--ink-soft)" }} />
             </button>

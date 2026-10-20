@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Pill } from "@/components/crm/primitives";
+import { callOutcomeStatus, StatusPill } from "@/components/crm/status/StatusPill";
 import type { VoiceOutcome } from "../api/voiceCallsApi";
-import { normalizeOutcome, OUTCOME_LABEL_KEY, outcomeColors } from "../status";
+import { normalizeOutcome } from "../status";
 
 /** "Thu 14:30" from the booked timestamp, else whatever text the call stored. */
 export function slotLabel(bookedIso: string | null | undefined, bookedSlot: string | null | undefined, locale: string): string | null {
@@ -25,28 +25,10 @@ interface Props {
   prefix?: string;
 }
 
-/** What the call amounted to, as a pill. Booked calls carry their slot inside it. */
+/** What the call amounted to, as the shared status pill. Booked calls carry their slot inside it. */
 export function OutcomePill({ outcome, bookedSlot, bookedIso, small, prefix }: Props) {
-  const { t, i18n } = useTranslation("voiceCalls");
-  const key = normalizeOutcome(outcome);
-  const c = outcomeColors(key);
-  const slot = key === "booked" ? slotLabel(bookedIso, bookedSlot, i18n.language) : null;
-  return (
-    <Pill
-      data-testid="voice-outcome-pill"
-      data-outcome={key}
-      style={{
-        gap: 6, flexShrink: 0, background: c.bg, color: c.text,
-        boxShadow: c.inset ? "var(--sh-inset-super-crisp)" : c.ring ? `inset 0 0 0 1px ${c.ring}` : "none",
-        fontFamily: "var(--mono)", fontSize: small ? 9 : 10, fontWeight: 700,
-        letterSpacing: "0.12em", textTransform: "uppercase",
-        padding: small ? "4px 8px" : "5px 10px",
-      }}
-    >
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: c.text, flexShrink: 0 }} />
-      {prefix && <span>{`${prefix} ·`}</span>}
-      {t(`outcomes.${OUTCOME_LABEL_KEY[key]}`)}
-      {slot && <span style={{ fontWeight: 600, letterSpacing: "0.04em" }}>{`· ${slot}`}</span>}
-    </Pill>
-  );
+  const { i18n } = useTranslation("voiceCalls");
+  const status = callOutcomeStatus(normalizeOutcome(outcome));
+  const slot = status === "booked" ? slotLabel(bookedIso, bookedSlot, i18n.language) : null;
+  return <StatusPill status={status} detail={slot} small={small} prefix={prefix} />;
 }

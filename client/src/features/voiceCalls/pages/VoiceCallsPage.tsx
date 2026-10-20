@@ -1,9 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AudioLines } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
-import { useVoiceCallers, useVoiceCalls, useVoiceCapabilities, type VoiceCapabilities, type VoiceScope } from "../api/voiceCallsApi";
-import { VIEW_KEY, type VoiceView } from "../callers";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { readLastTab, writeLastTab } from "@/lib/lastTab";
+import { OPEN_VOICE_CALL_EVENT } from "@/features/home/lib/openCall";
+import { useVoiceCall, useVoiceCallers, useVoiceCalls, useVoiceCapabilities, type VoiceCapabilities, type VoiceCaller, type VoiceCallListItem, type VoiceScope } from "../api/voiceCallsApi";
+import { AGENCY_TABS, CLIENT_TABS, LAST_TAB_PAGE, type CallsTab } from "../callers";
 import type { AccountOption } from "../components/AccountFilter";
 import { CallersInbox } from "../components/CallersInbox";
 import { VoiceCallsInbox } from "../components/VoiceCallsInbox";
@@ -12,6 +15,8 @@ import type { ListOptions } from "../listOptions";
 import { readPref, writePref } from "../localPref";
 import { usePresenting } from "../usePresenting";
 
+const StatsPanel = lazy(() => import("@/features/home/stats/StatsPanel").then((m) => ({ default: m.StatsPanel })));
+
 const SCOPE_KEY = "la.voiceCalls.scope";
 
 function initialScope(): VoiceScope | null {
@@ -19,11 +24,7 @@ function initialScope(): VoiceScope | null {
   return saved === "live" || saved === "demo" ? saved : null;
 }
 
-function initialView(): VoiceView {
-  return readPref(VIEW_KEY) === "callers" ? "callers" : "calls";
-}
-
-/** A call opened from a client alert link (/go/:code): read once, then cleared. */
+/** A call opened from a client alert link (/go/:code) or a Stats row: read once, then cleared. */
 function consumeCallDeepLink(): string | null {
   try {
     const id = localStorage.getItem("selected-voice-call-id");
@@ -34,8 +35,18 @@ function consumeCallDeepLink(): string | null {
   }
 }
 
+/**
+ * The People row a call belongs to: its lead's row, or (a call without a lead)
+ * the row whose latest call it is. Null while the people list is not loaded.
+ */
+function callerKeyOf(call: Pick<VoiceCallListItem, "callId" | "leadsId">, callers: VoiceCaller[] | undefined): string | null {
+  if (call.leadsId != null) return `lead:${call.leadsId}`;
+  return callers?.find((c) => c.lastCallId === call.callId)?.key ?? null;
+}
+
 function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }) {
-  const [deepLinkCall] = useState(consumeCallDeepLink);
+  const { isAgencyUser } = useWorkspace();
+  const [deepLinkCall, setDeepLinkCall] = useState<string | null>(consumeCallDeepLink);
   // The server decides: only an Owner (not impersonating) gets `demo`.
   const isOwner = capabilities.demo;
   const [savedScope, setSavedScope] = useState<VoiceScope | null>(() => (deepLinkCall ? "live" : initialScope()));
@@ -44,15 +55,51 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
   const accountId = scope === "live" ? accountPick : undefined;
   const { masked, toggle } = usePresenting(isOwner);
 
+  // Stats · People for everyone, All calls for the agency. First visit opens Stats, then the last tab used.
+  const tabs = isAgencyUser ? AGENCY_TABS : CLIENT_TABS;
+  // A link to one call opens it: the person (clients) or the call itself (agency).
+  const linkTab: CallsTab = isAgencyUser ? "calls" : "people";
+  const [view, setView] = useState<CallsTab>(() => (deepLinkCall ? linkTab : readLastTab(LAST_TAB_PAGE, tabs, "stats")));
+  const activeView: CallsTab = tabs.includes(view) ? view : "stats";
+
   const { data: calls = [], isLoading, error } = useVoiceCalls(scope, accountId);
   const [selection, setSelection] = useState<string | null>(deepLinkCall);
-  // A link to one call opens the calls list, whatever view was used last.
-  const [view, setView] = useState<VoiceView>(() => (deepLinkCall ? "calls" : initialView()));
-  const callersQuery = useVoiceCallers(scope, accountId, view === "callers");
+  const callersQuery = useVoiceCallers(scope, accountId, activeView === "people");
   const [callerSelection, setCallerSelection] = useState<string | null>(null);
   const [options, setOptionsState] = useState<ListOptions>({ query: "", outcomes: [], statuses: [], languages: [], sort: "recent", group: "date" });
   const setOptions = (patch: Partial<ListOptions>) => setOptionsState((o) => ({ ...o, ...patch }));
   const languages = useMemo(() => Array.from(new Set(calls.map((c) => c.language ?? ""))).sort(), [calls]);
+
+  // A deep-linked call that is not in the loaded list is fetched by id, so its person can be found.
+  const loadedLinkCall = deepLinkCall ? calls.find((c) => c.callId === deepLinkCall) ?? null : null;
+  const { data: fetchedLinkCall } = useVoiceCall(deepLinkCall && !loadedLinkCall && !isLoading ? deepLinkCall : null);
+  const linkCall = loadedLinkCall ?? fetchedLinkCall ?? null;
+  // Select the linked person once per link (the people list refetches every minute).
+  const [linkKey, setLinkKey] = useState<string | null>(null);
+  useEffect(() => {
+    if (!linkCall || activeView !== "people" || linkKey) return;
+    const key = callerKeyOf(linkCall, callersQuery.data);
+    if (key) {
+      setLinkKey(key);
+      setCallerSelection(key);
+    }
+  }, [linkCall, activeView, callersQuery.data, linkKey]);
+
+  // Opening a call while the page is already up (a row on the Stats tab).
+  useEffect(() => {
+    const onOpen = (e: Event) => {
+      const id = (e as CustomEvent<string>).detail;
+      try { localStorage.removeItem("selected-voice-call-id"); } catch { /* ignore */ }
+      if (!id) return;
+      setDeepLinkCall(id);
+      setLinkKey(null);
+      setSelection(id);
+      setCallerSelection(null);
+      setView(linkTab);
+    };
+    window.addEventListener(OPEN_VOICE_CALL_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_VOICE_CALL_EVENT, onOpen);
+  }, [linkTab]);
 
   // Accounts seen so far, so the chip keeps listing every client after one is picked.
   const [known, setKnown] = useState<Map<number, string>>(new Map());
@@ -76,9 +123,9 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
     setSelection(null);
     setCallerSelection(null);
   };
-  const changeView = (v: VoiceView) => {
+  const changeView = (v: CallsTab) => {
     setView(v);
-    writePref(VIEW_KEY, v);
+    writeLastTab(LAST_TAB_PAGE, v);
   };
   const changeAccount = (id: number | undefined) => {
     setAccountPick(id);
@@ -92,7 +139,8 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
         scope={scope}
         isOwner={isOwner}
         onScope={changeScope}
-        view={view}
+        tabs={tabs}
+        view={activeView}
         onView={changeView}
         options={options}
         setOptions={setOptions}
@@ -105,7 +153,11 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
       />
 
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
-        {view === "callers" ? (
+        {activeView === "stats" ? (
+          <Suspense fallback={<div className="la-page" aria-busy="true" />}>
+            <StatsPanel kind="phone" />
+          </Suspense>
+        ) : activeView === "people" ? (
           <CallersInbox
             callers={callersQuery.data ?? []}
             calls={calls}
@@ -117,6 +169,8 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
             isOwner={isOwner}
             selection={callerSelection}
             setSelection={setCallerSelection}
+            accountId={accountId}
+            linkedCall={linkKey && deepLinkCall ? { key: linkKey, callId: deepLinkCall } : null}
           />
         ) : (
           <VoiceCallsInbox

@@ -1,4 +1,5 @@
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
+import { STATUS_TONE } from "@/components/crm/status/statusPill";
 import { VOICE_OUTCOMES, type VoiceCallListItem, type VoiceOutcome } from "./api/voiceCallsApi";
 
 /** What a call amounted to, strongest first. */
@@ -43,10 +44,12 @@ export function statusColors(status: VoiceCallStatus): { bg: string; text: strin
 // (the Booked pill in the lead header: a pale wash of the stage colour, a
 // faint ring, the stage colour as text) instead of the saturated avatar
 // pastels. The two quiet outcomes (hung up, other) stay recessed and muted.
+// Same tones as the shared StatusPill (components/crm/status), so a menu swatch matches the pill.
 const OUTCOME_STAGE: Partial<Record<VoiceOutcome, string>> = {
-  booked: "var(--stage-booked)",
-  callback: "var(--stage-responded)",
-  transferred: "var(--stage-contacted)",
+  booked: STATUS_TONE.booked ?? undefined,
+  callback: STATUS_TONE.callback ?? undefined,
+  transferred: STATUS_TONE.transferred ?? undefined,
+  other: STATUS_TONE.answered ?? undefined,
 };
 
 /** Pill colours for an outcome. `inset` marks the quiet, recessed look; `ring` is the faint edge of a tinted pill. */

@@ -30,14 +30,15 @@ export function VoiceCallListCard({ call: rawCall, active, masked, onClick }: Pr
       onClick={onClick}
       data-testid="voice-call-row"
       style={{
-        borderRadius: "var(--r-surface)", position: "relative", cursor: "pointer",
-        background: active ? "var(--card)" : "transparent",
-        boxShadow: active ? "var(--sh-raised-medium), inset 0 0 0 1px var(--line-strong)" : "none",
+        // Every row is a raised card (same tokens as ListCard); the open one lifts and gets the wine bar.
+        borderRadius: "var(--list-card-radius)", position: "relative", cursor: "pointer",
+        background: "var(--card)",
+        boxShadow: active ? "var(--sh-raised-medium), inset 0 0 0 1px var(--line-strong)" : "var(--list-card-shadow)",
         transform: active ? "translateX(2px)" : "none",
         transition: "background 130ms, transform 130ms, box-shadow 130ms",
       }}
-      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "var(--wine-tint)"; }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "transparent"; }}
+      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "hsl(var(--card-hover))"; }}
+      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "var(--card)"; }}
     >
       {active && (
         <div style={{ position: "absolute", left: 0, top: 6, bottom: 6, width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0" }} />

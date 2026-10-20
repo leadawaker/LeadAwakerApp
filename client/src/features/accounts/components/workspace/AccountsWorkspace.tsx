@@ -230,7 +230,7 @@ export function AccountsWorkspace(p: Props) {
       <div className="flex flex-col h-full w-full" data-testid="accounts-workspace-client">
         {/* Topbar: the page title, with the tabs on their own full-width row under it */}
         <div
-          className="shrink-0"
+          className="shrink-0 la-m-chrome"
           style={{
             display: "flex", flexDirection: "column", gap: 10,
             padding: "14px 16px 12px", borderBottom: "1px solid var(--line)", background: "var(--bg)",

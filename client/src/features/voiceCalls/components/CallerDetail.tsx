@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { VoiceCaller, VoiceCallListItem } from "../api/voiceCallsApi";
+import { useCallerCalls, type VoiceCaller, type VoiceCallListItem, type VoiceScope } from "../api/voiceCallsApi";
 import { callsOfCaller, maskVoiceCaller } from "../callers";
 import type { CallerContext } from "./CallSidebar";
 import { VoiceCallDetail } from "./VoiceCallDetail";
@@ -9,17 +9,24 @@ interface Props {
   calls: VoiceCallListItem[];
   masked: boolean;
   isOwner: boolean;
+  scope: VoiceScope;
+  accountId?: number;
+  /** A call handed over by a link (/go/<code>?call=…): opened instead of the latest one. */
+  initialCallId?: string | null;
 }
 
 /**
  * One person: the same call workspace as the Calls view (header, transcript,
  * sidebar), with the caller actions in the header and their call history in
  * the sidebar. Picking a call in the history swaps the transcript; the history
- * stays up while the next call loads.
+ * stays up while the next call loads. The history comes from a per-person
+ * query, so it is complete however many calls the account has.
  */
-export function CallerDetail({ caller: rawCaller, calls, masked, isOwner }: Props) {
-  const [callId, setCallId] = useState<string>(rawCaller.lastCallId);
-  const mine = useMemo(() => callsOfCaller(calls, rawCaller), [calls, rawCaller]);
+export function CallerDetail({ caller: rawCaller, calls, masked, isOwner, scope, accountId, initialCallId }: Props) {
+  const [callId, setCallId] = useState<string>(initialCallId || rawCaller.lastCallId);
+  const { data: personCalls } = useCallerCalls(rawCaller, scope, accountId);
+  // Until the person's own query lands, show what the loaded list already has.
+  const mine = useMemo(() => personCalls ?? callsOfCaller(calls, rawCaller), [personCalls, calls, rawCaller]);
   const caller = useMemo(() => maskVoiceCaller(rawCaller, masked), [rawCaller, masked]);
   const context: CallerContext = { caller, rawCaller, isOwner, selectedId: callId, calls: mine, onSelectCall: setCallId };
 

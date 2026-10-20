@@ -1,4 +1,8 @@
 {
+  "stats": {
+    "channel": "Canal",
+    "noChats": "O chat do site e o WhatsApp não estão ativos nesta conta."
+  },
   "title": "Início",
   "greeting": { "morning": "Bom dia", "afternoon": "Boa tarde", "evening": "Boa noite" },
   "tabs": { "overview": "Visão geral", "phone": "Telefone", "whatsapp": "WhatsApp", "website": "Site", "reactivation": "Reativação", "reputation": "Reputação", "social": "Redes sociais" },
@@ -155,12 +159,12 @@
     "close": "Fechar",
     "welcome": "Bem-vindo, {{firstName}}. {{agentName}} atende pela {{company}}.",
     "welcomeNoName": "Bem-vindo. {{agentName}} atende pela {{company}}.",
-    "where1": "Ligações, conversas e agendamentos aparecem nesta página e nas páginas de {{calls}}, {{leads}} e {{calendar}}.",
+    "where1": "Ligações, conversas e agendamentos aparecem em {{calls}}, {{chats}} e {{calendar}}. Os números ficam na aba Estatísticas de Chamadas e Chats, e o resumo nesta página.",
     "where2": "Você recebe um resumo diário e alertas na hora assim que se adicionar a eles.",
     "guide": "Ler o guia",
     "done": "Pronto",
     "installIos": "Compartilhar › Adicionar à Tela de Início.",
     "installAndroid": "Menu ⋮ › Instalar app / Adicionar à tela inicial.",
-    "items": { "details": "Confira os dados da sua empresa", "alerts": "Adicione-se ao resumo e aos alertas", "call": "Abra sua primeira ligação ou conversa", "install": "Coloque o CRM no seu celular" }
+    "items": { "details": "Confira os dados da sua empresa em {{account}}", "alerts": "Adicione-se ao resumo e aos alertas", "call": "Abra sua primeira ligação ou conversa", "install": "Coloque o CRM no seu celular" }
   }
 }

@@ -13,8 +13,8 @@ interface HeaderIconBtnProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 /**
- * Round 44×44 icon button matching the prototype's IconBtn (mobile-shell.jsx).
- * Forwards its ref + extra props so it can act as a Radix dropdown trigger.
+ * Round 36px header icon button (the IconBtn size) with a 44px tap target
+ * (`la-hit`). Forwards its ref + extra props so it can act as a Radix dropdown trigger.
  */
 export const MobileHeaderIconBtn = forwardRef<HTMLButtonElement, HeaderIconBtnProps>(function HeaderIconBtn(
   { dot, badge, active, children, style, ...rest },
@@ -25,9 +25,10 @@ export const MobileHeaderIconBtn = forwardRef<HTMLButtonElement, HeaderIconBtnPr
       ref={ref}
       type="button"
       {...rest}
+      className={`la-hit${rest.className ? ` ${rest.className}` : ""}`}
       style={{
-        width: 44,
-        height: 44,
+        width: 36,
+        height: 36,
         borderRadius: "var(--r-pill)",
         position: "relative",
         border: "none",
@@ -44,7 +45,7 @@ export const MobileHeaderIconBtn = forwardRef<HTMLButtonElement, HeaderIconBtnPr
     >
       {children}
       {dot && !badge && (
-        <span style={{ position: "absolute", top: 9, right: 9, width: 6, height: 6, borderRadius: "50%", background: "var(--wine)" }} />
+        <span style={{ position: "absolute", top: 6, right: 6, width: 6, height: 6, borderRadius: "50%", background: "var(--wine)" }} />
       )}
       {!!badge && badge > 0 && (
         <span
@@ -52,7 +53,7 @@ export const MobileHeaderIconBtn = forwardRef<HTMLButtonElement, HeaderIconBtnPr
             position: "absolute", top: 4, right: 4, minWidth: 15, height: 15, padding: "0 3px",
             borderRadius: "var(--r-pill)", background: "var(--wine)", color: "#fff",
             fontSize: 9, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center",
-            border: "2px solid var(--bg)",
+            border: "2px solid var(--chrome-deep)",
           }}
         >
           {badge > 9 ? "9+" : badge}
@@ -459,8 +460,8 @@ export function MobileListHeader({
 
   return (
     <div
-      className="md:hidden"
-      style={{ flexShrink: 0, background: "var(--bg)", borderBottom: "1px solid var(--line)", paddingTop: "var(--safe-top)" }}
+      className="md:hidden la-m-chrome"
+      style={{ flexShrink: 0, background: "var(--chrome-deep)", borderBottom: "1px solid var(--line)", paddingTop: "var(--safe-top)" }}
       data-testid="mobile-list-header"
     >
       <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 10, padding: "12px 16px" }}>

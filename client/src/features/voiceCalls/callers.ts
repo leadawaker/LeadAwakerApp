@@ -2,9 +2,11 @@ import type { VoiceCaller, VoiceCallListItem } from "./api/voiceCallsApi";
 import { maskName, maskNumber } from "./maskIdentity";
 import { callStatus, type VoiceCallStatus } from "./status";
 
-export type VoiceView = "calls" | "callers";
-export const VIEWS: VoiceView[] = ["calls", "callers"];
-export const VIEW_KEY = "la.voiceCalls.view";
+/** Calls page tabs: Stats and People for everyone, All calls for the agency only. */
+export type CallsTab = "stats" | "people" | "calls";
+export const AGENCY_TABS: CallsTab[] = ["stats", "people", "calls"];
+export const CLIENT_TABS: CallsTab[] = ["stats", "people"];
+export const LAST_TAB_PAGE = "calls";
 
 /** Presenting mode, applied once at the render edge (same rule as maskCaller for calls). */
 export function maskVoiceCaller(caller: VoiceCaller, masked: boolean): VoiceCaller {

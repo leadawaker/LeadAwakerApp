@@ -182,11 +182,17 @@ export const voiceCallsStorage = {
     accountId: number | null;
     includeAccountName: boolean;
     hideTest?: boolean;
+    /** One person's calls (People tab): their lead, or a number without a lead. */
+    leadId?: number;
+    callerNumber?: string;
   }): Promise<VoiceCallListItem[]> {
+    const conds: SQL[] = [scopeWhere(opts.scope, opts.accountId, opts.hideTest)];
+    if (opts.leadId !== undefined) conds.push(eq(voiceCalls.leadsId, opts.leadId));
+    else if (opts.callerNumber !== undefined) conds.push(sql`${voiceCalls.leadsId} IS NULL AND ${voiceCalls.callerNumber} = ${opts.callerNumber}`);
     const rows = await db
       .select(itemColumns(opts.includeAccountName))
       .from(voiceCalls)
-      .where(scopeWhere(opts.scope, opts.accountId, opts.hideTest))
+      .where(and(...conds))
       .orderBy(desc(voiceCalls.startedAt))
       .limit(opts.limit)
       .offset(opts.offset);

@@ -2,20 +2,21 @@ import { useTranslation } from "react-i18next";
 import { MobileDrawerOption, MobileDrawerSubheading, MobileListHeader, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
 import type { VoiceScope } from "../api/voiceCallsApi";
 import { VOICE_OUTCOMES } from "../api/voiceCallsApi";
-import { VIEWS, type VoiceView } from "../callers";
+import type { CallsTab } from "../callers";
+import { CALLS_TAB_ICON } from "./callsTabs";
 import { GROUPS, SORTS, type ListOptions } from "../listOptions";
 import { OUTCOME_LABEL_KEY, VOICE_CALL_STATUSES } from "../status";
 import { AccountFilter, type AccountOption } from "./AccountFilter";
 import { PresentingToggle } from "./PresentingToggle";
 import { ScopeSwitch } from "./ScopeSwitch";
-import { WeekSummary } from "./WeekSummary";
 
 interface Props {
   scope: VoiceScope;
   isOwner: boolean;
   onScope: (s: VoiceScope) => void;
-  view: VoiceView;
-  onView: (v: VoiceView) => void;
+  tabs: CallsTab[];
+  view: CallsTab;
+  onView: (v: CallsTab) => void;
   options: ListOptions;
   setOptions: (patch: Partial<ListOptions>) => void;
   languages: string[];
@@ -27,13 +28,13 @@ interface Props {
 }
 
 /**
- * Phone layout of the Voice calls topbar: title + search icon + one settings
- * drawer (Filter / Sort / Group). The second row, in the desktop order: the
- * view tabs, the week numbers, then (Owner) the Live / Demo switch.
- * Owners also get the Presenting toggle (icon only) on that row, so they can
- * unmask caller names on a phone.
+ * Phone layout of the Calls topbar: title + search icon + one settings drawer
+ * (Filter / Sort / Group). The second row: the tabs with icons (Stats, People,
+ * All calls for the agency), then (Owner) the Live / Demo switch and the
+ * Presenting toggle (icon only), so names can be unmasked on a phone.
+ * The week numbers live in the Stats tab now, not in the header.
  */
-export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, view, onView, options, setOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
+export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, tabs, view, onView, options, setOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
   const { t } = useTranslation("voiceCalls");
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
   const filtered = options.outcomes.length > 0 || options.statuses.length > 0 || options.languages.length > 0;
@@ -73,23 +74,23 @@ export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, view, onView, 
 
   const subRow = (
     <>
-      <MobileTabSeg tabs={VIEWS.map((v) => ({ id: v, label: t(`callers.view.${v}`) }))} activeId={view} onChange={onView} />
-      <WeekSummary scope={scope} accountId={accountId} />
-      {isOwner && <ScopeSwitch scope={scope} onScope={onScope} compact />}
-      {isOwner && scope === "live" && (accounts.length > 1 || accountId != null) && (
+      <MobileTabSeg tabs={tabs.map((v) => ({ id: v, label: t(`tabs.${v}`), icon: CALLS_TAB_ICON[v] }))} activeId={view} onChange={onView} />
+      {isOwner && view !== "stats" && <ScopeSwitch scope={scope} onScope={onScope} compact />}
+      {isOwner && view !== "stats" && scope === "live" && (accounts.length > 1 || accountId != null) && (
         <AccountFilter accounts={accounts} value={accountId} onChange={onAccount} />
       )}
       {isOwner && <PresentingToggle masked={masked} onToggle={onTogglePresenting} />}
     </>
   );
 
-  const searchLabel = view === "callers" ? t("callers.search") : t("search");
+  const searchLabel = view === "people" ? t("callers.search") : t("search");
+  const hasList = view !== "stats";
 
   return (
     <MobileListHeader
       title={t("title")}
-      searchValue={options.query}
-      onSearchChange={(q) => setOptions({ query: q })}
+      searchValue={hasList ? options.query : undefined}
+      onSearchChange={hasList ? (q) => setOptions({ query: q }) : undefined}
       searchPlaceholder={searchLabel}
       filterPanel={isCalls ? filterPanel : undefined}
       filterActive={filtered}

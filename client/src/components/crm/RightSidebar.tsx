@@ -7,7 +7,6 @@ import {
   MessageSquare,
   Send,
   Calendar,
-  CalendarDays,
   ScrollText,
   ChartNoAxesColumn,
   MonitorPlay,
@@ -50,7 +49,8 @@ import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
 import { useVoiceRecorderState, toggleVoiceRecording, MAX_RECORDING_SECONDS } from "@/lib/voiceRecorder";
 import { useToast } from "@/hooks/use-toast";
 import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
-import { clientNavItems, clientBottomBar, clientNavLabelKey, CLIENT_NAV_HREF, type ClientNavKey } from "@/components/crm/navGates";
+import { agencyBottomBar, clientNavItems, clientBottomBar, clientNavLabelKey, CLIENT_NAV_HREF, type AgencyBarKey } from "@/components/crm/navGates";
+import { NAV_ICON } from "@/components/crm/navIcons";
 import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 import { APP_LANGUAGES } from "@/lib/languages";
 import type { ServicePageKey } from "@/hooks/useServicePageToggles";
@@ -205,10 +205,6 @@ export function RightSidebar({
   const navCtx = useNavGateContext();
   // Client mode (!isAgencyUser): one flat list driven by what the account actually has.
   const clientFacts = useClientNavFacts();
-  const CLIENT_ICON: Record<ClientNavKey, any> = {
-    home: Home, calls: AudioLines, leads: BookUser, calendar: Calendar,
-    myReceptionist: Building2, billing: Receipt, campaigns: Megaphone,
-  };
 
   // Owner-only voice memo mic — recording state lives outside React (see voiceRecorder.ts)
   // so it survives navigation between pages, since every page remounts CrmShell.
@@ -319,6 +315,45 @@ export function RightSidebar({
   // Filter nav items based on user role and current view context
   const visibleNavItems = navItems.filter((it) => isNavItemVisible(it, navCtx));
 
+  // Bottom bar tabs (More is appended by the bar). One icon map for every nav surface.
+  const AGENCY_BAR: Record<AgencyBarKey, { href: string; labelKey: string }> = {
+    home: { href: `${prefix}/home`, labelKey: "sidebar.home" },
+    calls: { href: `${prefix}/voice-calls`, labelKey: "sidebar.voiceCalls" },
+    chats: { href: `${prefix}/chat`, labelKey: "sidebar.conversations" },
+    calendar: { href: `${prefix}/calendar`, labelKey: "sidebar.calendar" },
+    tasks: { href: `${prefix}/tasks`, labelKey: "sidebar.tasks" },
+  };
+  const barTabs = isAgencyUser
+    ? agencyBottomBar(navCtx.hasVoiceCalls).map((k) => ({
+        key: k, href: AGENCY_BAR[k].href, icon: NAV_ICON[k], label: t(AGENCY_BAR[k].labelKey), testId: `mobile-nav-${k}`,
+      }))
+    : clientBottomBar(clientFacts).map((k) => ({
+        key: k,
+        href: CLIENT_NAV_HREF[k],
+        icon: NAV_ICON[k],
+        label: t(k === "myReceptionist" ? "sidebar.myReceptionistShort" : clientNavLabelKey(k, clientFacts)),
+        testId: `mobile-nav-${k === "myReceptionist" ? "accounts" : k}`,
+      }));
+  // Unselected: muted ink on the sand. Selected: a filled wine pill, bone icon + label.
+  const barTabStyle = (active: boolean): React.CSSProperties => ({
+    borderRadius: "var(--r-card)",
+    color: active ? "var(--on-wine)" : "var(--chrome-deep-ink)",
+    background: active ? "var(--wine)" : "transparent",
+    transition: "background-color 160ms, color 160ms",
+  });
+  const barLabelStyle = (active: boolean): React.CSSProperties => ({
+    fontFamily: "var(--mono)",
+    fontSize: 10,
+    letterSpacing: "0.04em",
+    textTransform: "uppercase",
+    color: "inherit",
+    fontWeight: active ? 700 : 500,
+    whiteSpace: "nowrap",
+    maxWidth: "100%",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+  });
+
   /** Check if a nav item is active (exact match or sub-route match) */
   const isActive = (href: string) => {
     if (location === href) return true;
@@ -334,43 +369,29 @@ export function RightSidebar({
       <div className="md:hidden fixed inset-0 z-[80]" style={{ display: isMobileMenuOpen ? "block" : "none" }} data-testid="mobile-more-overlay">
         <MobileMorePage
           open={isMobileMenuOpen}
+          onClose={onCloseMobileMenu}
           onOpenAi={() => { onOpenAi?.(); onCloseMobileMenu?.(); }}
           onToggleHelp={() => { onToggleHelp(); onCloseMobileMenu?.(); }}
           onLogout={() => { onLogout?.(); onCloseMobileMenu?.(); }}
         />
       </div>
 
-      {/* MOBILE BOTTOM BAR — wine/paper neumorphic, 5 tabs: Reactivation, Leads, Calendar, Tasks, More */}
+      {/* MOBILE BOTTOM BAR — deep sand; the selected tab is a filled wine pill.
+          Clients: Home, Calls, Calendar, Chats (or Leads), More.
+          Agency: Home, Calls, Chats, Tasks, More. */}
       <div
-        className="md:hidden fixed bottom-0 left-0 right-0 z-[100] grid grid-cols-5 items-stretch"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-[100] grid items-stretch"
         style={{
+          gridTemplateColumns: `repeat(${barTabs.length + 1}, minmax(0, 1fr))`,
           height: "var(--bottombar-h)",
           paddingTop: 7,
           paddingBottom: "calc(var(--safe-bottom) + 9px)",
-          background: "hsl(var(--footer-bg))",
+          background: "var(--chrome-deep)",
           borderTop: "1px solid var(--line)",
         }}
         data-testid="mobile-bottom-bar"
       >
-        {(!isAgencyUser ? clientBottomBar(clientFacts).map((k) => ({
-          key: k,
-          href: CLIENT_NAV_HREF[k],
-          icon: k === "calendar" ? CalendarDays : CLIENT_ICON[k],
-          label: t(k === "myReceptionist" ? "sidebar.myReceptionistShort" : clientNavLabelKey(k, clientFacts)),
-          testId: `mobile-nav-${k === "myReceptionist" ? "accounts" : k}`,
-        })) : [
-          // Home is the first slot for every role.
-          { key: "home", href: `${prefix}/home`, icon: Home, label: t("sidebar.home"), testId: "mobile-nav-home" },
-          // Agency = Conversations inbox; clients go straight to Leads (/chat redirects them there anyway).
-          isAgencyUser
-            ? { key: "conversations", href: `${prefix}/chat`, icon: MessageSquare, label: t("sidebar.conversations"), testId: "mobile-nav-conversations" }
-            : { key: "leads", href: `${prefix}/contacts`, icon: BookUser, label: t("sidebar.leads"), testId: "mobile-nav-leads" },
-          { key: "calendar", href: `${prefix}/calendar`, icon: CalendarDays, label: t("sidebar.calendar"), testId: "mobile-nav-calendar" },
-          // Agency users get Tasks; clients get their Accounts page instead.
-          isAgencyUser
-            ? { key: "tasks", href: `${prefix}/tasks`, icon: ClipboardList, label: t("sidebar.tasks"), testId: "mobile-nav-tasks" }
-            : { key: "accounts", href: `${prefix}/accounts`, icon: Building2, label: t("sidebar.accounts"), testId: "mobile-nav-accounts" },
-        ]).map((tab) => {
+        {barTabs.map((tab) => {
           // Don't double-highlight a tab when the More drawer is open over it.
           const active = isActive(tab.href) && !isMobileMenuOpen;
           const Icon = tab.icon;
@@ -383,31 +404,13 @@ export function RightSidebar({
                 window.dispatchEvent(new CustomEvent("close-founder-chat"));
                 setLocation(tab.href);
               }}
-              className="flex flex-col items-center justify-center gap-[5px] mx-[5px] h-full"
-              style={{
-                borderRadius: "var(--r-card)",
-                color: active ? "var(--wine)" : "var(--mute)",
-                background: active ? "var(--card)" : "transparent",
-                boxShadow: active ? "var(--sh-raised-crisp)" : "none",
-                transition: "background-color 160ms, color 160ms, box-shadow 160ms",
-              }}
+              className="flex flex-col items-center justify-center gap-[4px] mx-[4px] h-full min-w-0"
+              style={barTabStyle(active)}
               data-testid={tab.testId}
               data-active={active || undefined}
             >
-              <Icon className="h-6 w-6" />
-              <span
-                style={{
-                  fontFamily: "var(--mono)",
-                  fontSize: 11,
-                  letterSpacing: "0.04em",
-                  textTransform: "uppercase",
-                  color: active ? "var(--wine)" : "var(--mute-2)",
-                  fontWeight: active ? 700 : 400,
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {tab.label}
-              </span>
+              <Icon className="h-[22px] w-[22px]" />
+              <span style={barLabelStyle(active)}>{tab.label}</span>
             </button>
           );
         })}
@@ -419,31 +422,13 @@ export function RightSidebar({
             window.dispatchEvent(new CustomEvent("close-founder-chat"));
             onToggleMobileMenu?.();
           }}
-          className="flex flex-col items-center justify-center gap-[5px] mx-[5px] h-full"
-          style={{
-            borderRadius: "var(--r-card)",
-            color: isMobileMenuOpen ? "var(--wine)" : "var(--mute)",
-            background: isMobileMenuOpen ? "var(--card)" : "transparent",
-            boxShadow: isMobileMenuOpen ? "var(--sh-raised-crisp)" : "none",
-            transition: "background-color 160ms, color 160ms, box-shadow 160ms",
-          }}
+          className="flex flex-col items-center justify-center gap-[4px] mx-[4px] h-full min-w-0"
+          style={barTabStyle(isMobileMenuOpen)}
           data-testid="mobile-nav-more"
           data-active={isMobileMenuOpen || undefined}
         >
-          <MoreHorizontal className="h-6 w-6" />
-          <span
-            style={{
-              fontFamily: "var(--mono)",
-              fontSize: 10,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              color: isMobileMenuOpen ? "var(--wine)" : "var(--mute-2)",
-              fontWeight: isMobileMenuOpen ? 700 : 400,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {t("sidebar.more")}
-          </span>
+          <MoreHorizontal className="h-[22px] w-[22px]" />
+          <span style={barLabelStyle(isMobileMenuOpen)}>{t("sidebar.more")}</span>
         </button>
       </div>
 
@@ -518,7 +503,7 @@ export function RightSidebar({
           {!isAgencyUser ? (
             clientNavItems(clientFacts).map((k) => {
               const href = CLIENT_NAV_HREF[k];
-              const Icon = CLIENT_ICON[k];
+              const Icon = NAV_ICON[k];
               return (
                 <Link key={k} href={href}
                   className={`la-nav-item ${isActive(href) ? "active" : ""}`}
