@@ -41,6 +41,7 @@ import { homeSocialStorage } from "./storage/homeSocial";
 import { socialStorage } from "./storage/social";
 import { socialStudioStorage } from "./storage/socialStudio";
 import { socialDmStorage } from "./storage/socialDm";
+import { socialInsightsStorage } from "./storage/socialInsights";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -123,4 +124,5 @@ export const storage = {
   ...socialStorage,
   ...socialStudioStorage,
   ...socialDmStorage,
+  ...socialInsightsStorage,
 };

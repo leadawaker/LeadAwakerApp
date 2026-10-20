@@ -136,6 +136,9 @@
 
   /* ── Charts ── */
   --chart-1: var(--brand);
+  /* The wine as a data mark: --brand is too dark to read as a series on the bone surface. Checked
+     with the dataviz validator (lightness band, chroma floor, 3:1 contrast) on light and dark. */
+  --chart-wine: 343 47% 43%;
   --chart-2: 150 52% 38%;
   --chart-3: 37 70% 50%;
   --chart-4: 260 23% 45%;
@@ -288,6 +291,7 @@
 
   /* ── Charts ── */
   --chart-1: var(--brand-h) 50% calc(var(--brand-l) + 9%);
+  --chart-wine: 347 52% 56%;
   --chart-2: 150 50% 50%;
   --chart-3: 37 75% 58%;
   --chart-4: 260 35% 64%;

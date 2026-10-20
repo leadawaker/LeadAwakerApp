@@ -14,6 +14,7 @@ import {
   json,
   jsonb,
   real,
+  doublePrecision,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -2406,6 +2407,59 @@ export const socialDmLog = nocodb.table("Social_Dm_Log", {
 ]);
 export type SocialDmLogRow = typeof socialDmLog.$inferSelect;
 export type InsertSocialDmLog = typeof socialDmLog.$inferInsert;
+
+// Insights (docs/superpowers/specs/2026-10-20-insights-design.md). The account's media as Instagram
+// lists them (CRM posts and posts made in the app), and metric snapshots over time.
+export const socialInsightMedia = nocodb.table("Social_Insight_Media", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  igMediaId: text("ig_media_id").notNull(),
+  mediaType: text("media_type"),
+  productType: text("product_type"),                         // REELS | FEED | ...
+  permalink: text("permalink"),
+  caption: text("caption").notNull().default(""),
+  postedAt: timestamp("posted_at", { withTimezone: true }),
+  postId: integer("post_id"),                                // the CRM post, when it was published from here
+  firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).defaultNow().notNull(),
+  lastPolledAt: timestamp("last_polled_at", { withTimezone: true }),
+}, (t) => [
+  uniqueIndex("social_insight_media_account_media").on(t.accountsId, t.igMediaId),
+]);
+export type SocialInsightMedia = typeof socialInsightMedia.$inferSelect;
+
+/**
+ * One value per account, scope, media, metric and bucket ("YYYY-MM-DDTHH" for a media item's lifetime
+ * value at that hour, "YYYY-MM-DD" for a day's account total or the day's follower count). Writing the
+ * same bucket again replaces it, so a re-run never duplicates. A metric Meta refused has no value and
+ * its reason in skipped_reason.
+ */
+export const socialInsightSnapshots = nocodb.table("Social_Insight_Snapshots", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  scope: text("scope").notNull(),                            // account | media
+  igMediaId: text("ig_media_id").notNull().default(""),      // "" for account rows
+  metric: text("metric").notNull(),
+  value: doublePrecision("value"),
+  skippedReason: text("skipped_reason"),
+  bucket: text("bucket").notNull(),
+  capturedAt: timestamp("captured_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_insight_snapshots_key").on(t.accountsId, t.scope, t.igMediaId, t.metric, t.bucket),
+  index("social_insight_snapshots_account_metric_idx").on(t.accountsId, t.metric),
+]);
+export type SocialInsightSnapshot = typeof socialInsightSnapshots.$inferSelect;
+export type InsertSocialInsightSnapshot = typeof socialInsightSnapshots.$inferInsert;
+
+export const socialInsightState = nocodb.table("Social_Insight_State", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  backfilledAt: timestamp("backfilled_at", { withTimezone: true }),
+  lastAccountRunAt: timestamp("last_account_run_at", { withTimezone: true }),
+  lastError: text("last_error"),
+}, (t) => [
+  uniqueIndex("social_insight_state_account").on(t.accountsId),
+]);
+export type SocialInsightState = typeof socialInsightState.$inferSelect;
 
 /** People who wrote a stop word: no automated message reaches them again. */
 export const socialDmOptOuts = nocodb.table("Social_Dm_Opt_Outs", {

@@ -44,15 +44,15 @@ export function pickSocialAccount(
   return p.options.find((o) => o.id === p.currentAccountId) ?? p.options[0] ?? null;
 }
 
-export type SocialSection = "home" | "posts" | "studio" | "calendar" | "comments" | "about" | "settings";
+export type SocialSection = "home" | "posts" | "studio" | "calendar" | "comments" | "insights" | "about" | "settings";
 
 /**
  * Sections in display order; the first one opens by default. Agency gets the full studio layout; a
  * client user (Manager, Viewer) opens on the phone-first home. The server checks every action again.
  */
 export function socialSections(who: { isAgency: boolean; userRole: string }): SocialSection[] {
-  if (who.isAgency) return ["posts", "studio", "calendar", "comments", "about", "settings"];
-  return ["home", "posts", "calendar", "about"];
+  if (who.isAgency) return ["posts", "studio", "calendar", "comments", "insights", "about", "settings"];
+  return ["home", "posts", "calendar", "insights", "about"];
 }
 
 /** Old notification links pointed at the account workspace tab; they now open the Socials page. */
