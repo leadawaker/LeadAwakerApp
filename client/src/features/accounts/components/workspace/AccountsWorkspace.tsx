@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { parseInstagramReturn, stripInstagramParams } from "@/features/social/lib/socialState";
+import { showSocialTab } from "@/features/social/lib/posts";
+import { useSocialStatus } from "@/features/social/components/InstagramConnectCard";
 import type { ConnectionGroup } from "./ConnectionsOverview";
 import { useMarkVisited } from "@/features/home/onboarding/useOnboarding";
 import { useTranslation } from "react-i18next";
@@ -30,7 +32,7 @@ import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
 // Onboarding ("communication") has no tab: it opens from a button on Overview.
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "voice", "chat", "alerts", "automations"];
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "voice", "chat", "social", "alerts", "automations"];
 
 interface Props {
   accounts: AccountRow[];
@@ -122,6 +124,14 @@ export function AccountsWorkspace(p: Props) {
   const accountId = account ? (account.Id ?? account.id ?? 0) : 0;
 
   const detailData = useAccountDetailData(accountId);
+
+  // Social shows for agency always, for client users once the agency switched it on.
+  const { data: socialStatus, isFetched: socialFetched } = useSocialStatus(accountId);
+  const socialVisible = showSocialTab({ isAgency: isAgencyUser, enabled: socialStatus?.enabled === true });
+  const tabs = useMemo(() => (socialVisible ? visibleTabs : visibleTabs.filter((k) => k !== "social")), [visibleTabs, socialVisible]);
+  useEffect(() => {
+    if (tab === "social" && !socialVisible && socialFetched) setTab("overview");
+  }, [tab, socialVisible, socialFetched]);
   const d = useMemo(() => (account ? toAccountDetail(account, t) : null), [account, t]);
   // Header figures that point at the tabs (calls, phone line, WhatsApp, alerts).
   const metrics = useHeaderMetrics(accountId);
@@ -214,7 +224,7 @@ export function AccountsWorkspace(p: Props) {
   // ── Shared mobile detail blocks (used by the client page + the agency sheet) ──
   const mobileTabSeg = (
     <div className={`la-seg la-seg--fill${isClient ? " la-seg--touch" : ""}`} style={{ overflowX: "auto", scrollbarWidth: "none" }}>
-      {visibleTabs.map((k) => (
+      {tabs.map((k) => (
         <button
           key={k}
           onClick={() => pickTab(k)}
@@ -350,7 +360,7 @@ export function AccountsWorkspace(p: Props) {
       />
       <AccountsTopBar
         tab={tab}
-        tabs={visibleTabs}
+        tabs={tabs}
         onTabChange={pickTab}
         showTabs={!isNarrow}
         count={p.count}

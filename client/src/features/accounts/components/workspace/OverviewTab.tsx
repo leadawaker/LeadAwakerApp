@@ -8,6 +8,8 @@ import { ServicesPanel } from "./ServicesPanel";
 import { ContractsPanel } from "./ContractsPanel";
 import { InvoicesPanel } from "./InvoicesPanel";
 import { IntegrationsPanel } from "./IntegrationsPanel";
+import { SocialTab } from "@/features/social/components/SocialTab";
+import { DEFAULT_TIMEZONE } from "@shared/socialPosts";
 import type { ConnectionGroup } from "./ConnectionsOverview";
 import { CommunicationProfilePanel } from "./communication/CommunicationProfilePanel";
 import { CallNotes } from "./communication/CallNotes";
@@ -187,6 +189,7 @@ export function TabContent({ tab, isMobile, data, readOnly = false, onOpenTab, i
   );
   if (tab === "voice") return <VoiceTab accountId={data.accountId} readOnly={readOnly} stacked={isMobile} onOpenIntegrations={onOpenTab ? () => onOpenTab("integrations") : undefined} />;
   if (tab === "chat") return <ChatTab accountId={data.accountId} inboundCampaignId={data.account.inbound_campaign_id} readOnly={readOnly} stacked={isMobile} onOpenIntegrations={onOpenTab ? () => onOpenTab("integrations") : undefined} />;
+  if (tab === "social") return <SocialTab accountId={data.accountId} timeZone={String(data.account.timezone || DEFAULT_TIMEZONE)} />;
   if (tab === "alerts") return <AlertsTab accountId={data.accountId} stacked={isMobile} />;
   if (tab === "automations") return <ClientAutomationsTab accountId={data.accountId} onOpenTab={onOpenTab} />;
   return null;

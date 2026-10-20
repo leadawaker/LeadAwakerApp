@@ -39,3 +39,12 @@ test("every connect error reason the server sends has a message", () => {
   const reasons = ["access_denied", "missing_code", "invalid_state", "not_professional", "already_connected", "failed"];
   for (const lang of ["en", "nl", "pt"]) for (const r of reasons) assert.ok(load(lang).social?.connect?.errors?.[r], `${lang}:${r}`);
 });
+
+test("every post error reason (lib/posts KNOWN_REASONS) and the fallback has a message", async () => {
+  const { KNOWN_REASONS } = await import("./posts");
+  for (const lang of ["en", "nl", "pt"]) for (const r of [...KNOWN_REASONS, "failed"]) assert.ok(load(lang).social?.posts?.errors?.[r], `${lang}:${r}`);
+});
+
+test("the Social tab has a label", () => {
+  for (const lang of ["en", "nl", "pt"]) assert.ok(load(lang).workspace?.tabs?.social, lang);
+});

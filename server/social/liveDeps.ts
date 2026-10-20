@@ -15,6 +15,7 @@ import { SOCIAL_UPLOAD_DIR } from "./media";
 import { notifyAccountManagers, notifyAgency } from "./notify";
 import type { PublisherDeps } from "./publisher";
 import { cleanupOrphanUploads, type RefresherDeps } from "./tokenRefresher";
+import { DEFAULT_TIMEZONE } from "@shared/socialPosts";
 
 const DEFAULT_MEDIA_BASE = "https://app.leadawaker.com";
 
@@ -36,7 +37,7 @@ export function livePublisherDeps(): PublisherDeps {
     },
     async getAccount(accountId) {
       const a = await storage.getAccountById(accountId);
-      return a ? { timeZone: a.timezone || "UTC", language: a.language } : null;
+      return a ? { timeZone: a.timezone || DEFAULT_TIMEZONE, language: a.language } : null;
     },
     updateIf: (postId, allowed, fields, opts) => storage.updateSocialPostIf(postId, allowed, fields, opts),
     ig: {

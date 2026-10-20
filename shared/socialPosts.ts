@@ -3,6 +3,9 @@
 export type SocialPostStatus = "scheduled" | "held" | "publishing" | "published" | "failed" | "cancelled";
 export type ApprovalStatus = "not_required" | "pending" | "approved" | "rejected";
 
+/** Accounts.timezone's column default: server and client fall back to the same zone. */
+export const DEFAULT_TIMEZONE = "Europe/Amsterdam";
+
 export const IG_CAPTION_MAX = 2200;
 export const IG_MAX_HASHTAGS = 30;
 export const IG_MAX_MENTIONS = 20;

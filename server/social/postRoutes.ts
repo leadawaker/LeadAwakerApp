@@ -19,7 +19,7 @@ import { unlink } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import type { Express, Request, RequestHandler, Response } from "express";
 import type { InsertSocialPost, SocialConnection, SocialPost } from "@shared/schema";
-import type { ApprovalStatus, SocialPostStatus } from "@shared/socialPosts";
+import { DEFAULT_TIMEZONE, type ApprovalStatus, type SocialPostStatus } from "@shared/socialPosts";
 import { accountIdFor, wrapAsync } from "../routes/_helpers";
 import { canManageSocial, isAgency } from "./access";
 import type { SocialNotifType } from "./notify";
@@ -124,7 +124,7 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
       res.status(403).json({ message: "Social is not enabled for this account", reason: "not_enabled" });
       return null;
     }
-    return { accountId, timeZone: account.timezone || "UTC", language: account.language };
+    return { accountId, timeZone: account.timezone || DEFAULT_TIMEZONE, language: account.language };
   }
 
   function postIdOf(req: Request, res: Response): number | null {

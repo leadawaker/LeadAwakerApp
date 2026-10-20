@@ -11,7 +11,7 @@
 // from: if a Manager rejects or the agency edits mid-tick, their change wins and nothing goes out.
 // Each post has its own try/catch; one failure never stops the tick.
 import type { InsertSocialPost, SocialPost } from "@shared/schema";
-import { classifyScheduledPost, type ApprovalStatus, type SocialPostStatus } from "@shared/socialPosts";
+import { DEFAULT_TIMEZONE, classifyScheduledPost, type ApprovalStatus, type SocialPostStatus } from "@shared/socialPosts";
 import { isTransientIgError } from "./instagramApi";
 import type { SocialNotifType } from "./notify";
 import { formatWhen } from "./postService";
@@ -200,7 +200,7 @@ async function handleReminder(d: PublisherDeps, p: SocialPost, now: Date): Promi
   await d.notifyAccountManagers(p.accountsId, {
     type: "social_post_needs_approval",
     key: "needs_approval",
-    vars: { caption: p.caption, when: formatWhen(p.scheduledAt, account?.timeZone || "UTC", account?.language) },
+    vars: { caption: p.caption, when: formatWhen(p.scheduledAt, account?.timeZone || DEFAULT_TIMEZONE, account?.language) },
     link: POST_LINK,
   });
 }
