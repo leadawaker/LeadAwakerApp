@@ -7,6 +7,9 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { findUpload, inspectVideo, receiveVideo } from "./upload";
 
+// ffmpeg-backed tests run where ffmpeg exists (the Pi); elsewhere they are skipped, not failed.
+const NEEDS_FFMPEG = { skip: (() => { try { execFileSync("ffmpeg", ["-version"], { stdio: "ignore" }); return false; } catch { return "ffmpeg not installed"; } })() };
+
 const tmp = mkdtempSync(join(tmpdir(), "social-upload-"));
 after(() => rmSync(tmp, { recursive: true, force: true }));
 
@@ -16,7 +19,7 @@ function clip(name: string, seconds: number): string {
   return f;
 }
 
-test("a good clip is stored, made faststart and described", async () => {
+test("a good clip is stored, made faststart and described", NEEDS_FFMPEG, async () => {
   const src = clip("src-good.mp4", 4);
   const dest = join(tmp, "in", "good.mp4");
   const r = await receiveVideo(createReadStream(src), dest);
@@ -31,7 +34,7 @@ test("garbage is refused as format and leaves no file", async () => {
   assert.deepEqual(r, { ok: false, status: 422, reason: "format" });
   assert.equal(existsSync(dest), false);
 });
-test("a clip outside the Reel specs is refused with the reason and leaves no file", async () => {
+test("a clip outside the Reel specs is refused with the reason and leaves no file", NEEDS_FFMPEG, async () => {
   const src = clip("src-short.mp4", 2);
   const dest = join(tmp, "in", "short.mp4");
   assert.deepEqual(await receiveVideo(createReadStream(src), dest), { ok: false, status: 422, reason: "duration_short" });
@@ -48,7 +51,7 @@ test("an aborted upload leaves no file", async () => {
   assert.deepEqual(await receiveVideo(src, dest), { ok: false, status: 400, reason: "aborted" });
   assert.equal(existsSync(dest), false);
 });
-test("inspectVideo re-checks a stored file; a missing file is null", async () => {
+test("inspectVideo re-checks a stored file; a missing file is null", NEEDS_FFMPEG, async () => {
   const good = clip("stored.mp4", 4);
   const r = await inspectVideo(good);
   assert.ok(r && r.ok); assert.equal(r.bytes, statSync(good).size);

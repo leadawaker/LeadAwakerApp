@@ -52,6 +52,7 @@ import { registerNumberRequestRoutes } from "./numberRequests";
 import { registerClientAlertsRoutes } from "./clientAlerts";
 import { registerHomeRoutes } from "./home";
 import { registerSocialRoutes } from "./social";
+import { registerSocialPostRoutes } from "./socialPosts";
 import { startPublicDemoPoller } from "../publicDemo/poller";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
@@ -117,6 +118,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerClientAlertsRoutes(app);
   registerHomeRoutes(app);
   registerSocialRoutes(app);
+  registerSocialPostRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)
