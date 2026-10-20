@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { z } from "zod";
 import { randomInt } from "crypto";
 import { storage } from "../storage";
-import { requireAgency } from "../auth";
+import { requireAgency, requireAuth, scopeToAccount } from "../auth";
 import { accountIdFor, getEngineUrl, handleZodError, wrapAsync } from "./_helpers";
 import { WhatsappSenderError } from "../storage/whatsappSenders";
 
@@ -169,6 +169,16 @@ const rowsOf = (data: Record<string, any>) => (Array.isArray(data.rows) ? data.r
 
 
 export function registerWhatsappCloudRoutes(app: Express): void {
+  // Chats reply box (clients): can a human reply reach a WhatsApp contact? Only
+  // when the account has its own connected sender. Yes/no only, no sender details.
+  app.get("/api/whatsapp-sender/has-own", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
+    const forced = (req as any).forcedAccountId as number | undefined;
+    const accountId = forced ?? Number(req.query.accountId);
+    if (!Number.isInteger(accountId) || accountId <= 0) return res.json({ hasOwn: false });
+    const sender = await storage.getWhatsappSender(accountId);
+    res.json({ hasOwn: !!sender && sender.status === "connected" });
+  }));
+
   app.get("/api/accounts/:id/whatsapp-sender", requireAgency, wrapAsync(async (req, res) => {
     const accountId = accountIdFor(req, res);
     if (accountId == null) return;

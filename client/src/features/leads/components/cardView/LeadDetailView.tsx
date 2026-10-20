@@ -206,10 +206,8 @@ export function LeadDetailView({
   const [saving, setSaving] = useState(false);
 
   const startEdit = useCallback(() => {
-    setEditFields({
-      full_name: getFullName(lead),
-      source:    lead.source || lead.Source || "",
-    });
+    // Only the name is edited here; re-sending the unchanged Source would also be refused for clients.
+    setEditFields({ full_name: getFullName(lead) });
     setIsEditing(true);
   }, [lead]);
 
@@ -394,14 +392,14 @@ export function LeadDetailView({
                 align="end"
                 side="bottom"
                 sideOffset={6}
-                className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
+                className="w-auto p-3 shadow-md border border-black/[0.08] bg-popover rounded-xl"
               >
                 <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
-                  AI will resume this conversation. You can take over again anytime.
+                  {t("chat.aiResumeBody")}
                 </p>
                 <div className="flex items-center gap-2 justify-end">
-                  <button type="button" onClick={() => setShowAiResume(false)} className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors">Cancel</button>
-                  <button type="button" onClick={handleChatAiResume} className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors">Confirm</button>
+                  <button type="button" onClick={() => setShowAiResume(false)} className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors">{t("chat.cancel")}</button>
+                  <button type="button" onClick={handleChatAiResume} className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors">{t("chat.confirm")}</button>
                 </div>
               </PopoverContent>
             </Popover>
@@ -457,8 +455,9 @@ export function LeadDetailView({
     </div>
   );
 
-  // The conversation/summary surface for whoever is viewing.
-  const conversationCol = isAgencyUser ? agencyChatCol : clientSummaryCol;
+  // The conversation/summary surface for whoever is viewing. On Chats, clients
+  // read the real conversation and can reply (the composer decides if a reply can reach them).
+  const conversationCol = isAgencyUser || isChats ? agencyChatCol : clientSummaryCol;
 
   return (
     <div ref={setRefs} className="relative flex flex-col h-full" style={{ padding: 14 }}>

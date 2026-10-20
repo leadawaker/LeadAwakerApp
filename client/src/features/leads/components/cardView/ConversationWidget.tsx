@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSession, type SessionUser } from "@/hooks/useSession";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useInteractions } from "@/hooks/useApiData";
+import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { sendMessage } from "@/features/conversations/api/conversationsApi";
 import { updateLead } from "../../api/leadsApi";
@@ -45,7 +46,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
   const { t } = useTranslation("leads");
   const leadId = getLeadId(lead);
   const { interactions, loading, refresh } = useInteractions(undefined, leadId);
-  const { isAgencyView } = useWorkspace();
+  const { isAgencyView, isAgencyUser } = useWorkspace();
   const [, setLocation] = useLocation();
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
@@ -195,6 +196,9 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
     setSending(true);
     try {
       const accountsId = Number(lead.account_id || lead.accounts_id || lead.Accounts_id || 0);
+      // A human reply is a takeover: pause the AI first (the engine skips its turns
+      // while manual_takeover is set), so it never answers over the human.
+      if (!isHumanTakeover) await updateLead(leadId, { manual_takeover: true });
       await sendMessage({
         leadsId: leadId,
         accountsId,
@@ -210,10 +214,28 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
       await refresh();
     } catch (err) {
       console.error("Failed to send message", err);
+      setDraft(content);
+      toast({ variant: "destructive", title: t("chat.sendFailed") });
     } finally {
       setSending(false);
     }
-  }, [draft, sending, leadId, lead, refresh]);
+  }, [draft, sending, leadId, lead, refresh, isHumanTakeover, toast, t]);
+
+  // Clients only get a reply box when the reply can reach the person: a website
+  // chat visitor, or an account with its own connected WhatsApp number.
+  const channelId = String(lead.channel_identifier ?? lead.channelIdentifier ?? "");
+  const isWebVisitor = /^web(-demo)?:/.test(channelId);
+  const leadAccountId = Number(lead.account_id || lead.accounts_id || lead.Accounts_id || 0);
+  const { data: ownSender } = useQuery<{ hasOwn: boolean }>({
+    queryKey: ["/api/whatsapp-sender/has-own", leadAccountId],
+    enabled: !isAgencyUser && !isWebVisitor && leadAccountId > 0,
+    queryFn: async () => {
+      const res = await apiFetch(`/api/whatsapp-sender/has-own?accountId=${leadAccountId}`);
+      return res.ok ? res.json() : { hasOwn: false };
+    },
+    staleTime: 5 * 60 * 1000,
+  });
+  const reachable = isAgencyUser || isWebVisitor || !!ownSender?.hasOwn;
 
   const handleAiResume = useCallback(async () => {
     setShowAiResumeConfirm(false);
@@ -473,10 +495,10 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
         align="end"
         side="bottom"
         sideOffset={6}
-        className="w-auto p-3 shadow-md border border-black/[0.08] bg-white dark:bg-popover rounded-xl"
+        className="w-auto p-3 shadow-md border border-black/[0.08] bg-popover rounded-xl"
       >
         <p className="text-[12px] text-foreground/70 mb-2.5 max-w-[200px]">
-          AI will resume this conversation. You can take over again anytime.
+          {t("chat.aiResumeBody")}
         </p>
         <div className="flex items-center gap-2 justify-end">
           <button
@@ -484,14 +506,14 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
             onClick={() => setShowAiResumeConfirm(false)}
             className="text-[12px] text-muted-foreground hover:text-foreground px-2 py-1 rounded-md hover:bg-muted/60 transition-colors"
           >
-            Cancel
+            {t("chat.cancel")}
           </button>
           <button
             type="button"
             onClick={handleAiResume}
             className="text-[12px] font-medium text-white bg-brand-indigo hover:bg-brand-indigo/90 px-3 py-1 rounded-md transition-colors"
           >
-            Confirm
+            {t("chat.confirm")}
           </button>
         </div>
       </PopoverContent>
@@ -536,7 +558,11 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
       </div>
 
       {/* Compose area — ChatPanel style: white bar with border + shadow */}
-      {!readOnly && isRecording ? (
+      {!readOnly && !reachable ? (
+        <div className="shrink-0" data-testid="chat-unreachable-note" style={{ padding: "12px 16px", borderTop: "1px solid var(--line)", fontSize: 12.5, lineHeight: 1.5, color: "var(--mute)" }}>
+          {t("chat.unreachable")}
+        </div>
+      ) : !readOnly && isRecording ? (
         <div className="shrink-0 px-3 pb-3 pt-1">
           <div className="flex items-center gap-3 bg-white dark:bg-card rounded-lg border border-red-200 shadow-sm px-3 py-2 h-[48px]">
             <span className="relative flex h-3 w-3 shrink-0">
@@ -564,7 +590,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
             </button>
           </div>
         </div>
-      ) : !readOnly && <div className="shrink-0" style={{ padding: "10px 14px", borderTop: "1px solid var(--line)", display: "flex", gap: 8, alignItems: "flex-end" }}>
+      ) : !readOnly && <div className="shrink-0 la-m-crisp" style={{ padding: "10px 14px", borderTop: "1px solid var(--line)", display: "flex", gap: 8, alignItems: "flex-end" }}>
         <div className="flex items-end gap-1" style={{ flex: 1, minWidth: 0, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", borderRadius: 20, padding: "3px 6px 3px 8px" }}>
           <div
             className="h-7 w-7 rounded-full flex items-center justify-center shrink-0 opacity-30 cursor-not-allowed"
@@ -612,41 +638,49 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
                 disabled={sending}
                 className="la-btn la-btn--wine la-btn--pill disabled:opacity-40"
                 style={{ width: 36, height: 36, padding: 0 }}
-                title="Send message"
+                title={t("chat.send")}
+                aria-label={t("chat.send")}
                 data-testid="btn-send-message"
               >
                 {sending
                   ? <div className="h-3.5 w-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
                   : <Send className="h-3.5 w-3.5" />}
               </button>
-            ) : (
+            ) : isAgencyUser ? (
               <button
                 type="button"
                 onClick={startRecording}
                 className="la-btn la-btn--wine la-btn--pill"
                 style={{ width: 36, height: 36, padding: 0 }}
-                title="Record voice message"
+                title={t("chat.record")}
+                aria-label={t("chat.record")}
               >
                 <Mic className="h-4 w-4" />
+              </button>
+            ) : (
+              // Clients: no voice memos, just the (idle) send button.
+              <button type="button" disabled className="la-btn la-btn--wine la-btn--pill disabled:opacity-40"
+                style={{ width: 36, height: 36, padding: 0 }} title={t("chat.send")} aria-label={t("chat.send")}>
+                <Send className="h-3.5 w-3.5" />
               </button>
             )}
 
             {showBypassConfirm && (
-              <div className="absolute bottom-10 right-0 z-50 w-52 bg-white dark:bg-popover rounded-xl shadow-lg border border-border/40 p-3 space-y-2">
-                <p className="text-[11px] font-semibold text-foreground">Bypass AI for this message?</p>
-                <p className="text-[10px] text-muted-foreground/70 leading-snug">This will send as a human takeover and pause the AI agent.</p>
+              <div className="absolute bottom-10 right-0 z-50 w-56 bg-popover rounded-xl shadow-lg border border-border/40 p-3 space-y-2">
+                <p className="text-[12px] font-semibold text-foreground">{isHumanTakeover ? t("chat.send") : t("chat.takeoverTitle")}</p>
+                {!isHumanTakeover && <p className="text-[11px] text-muted-foreground leading-snug">{t("chat.takeoverBody")}</p>}
                 <div className="flex items-center gap-1.5">
                   <button
                     onClick={() => { setShowBypassConfirm(false); handleSend(); }}
-                    className="flex-1 px-2 py-1.5 rounded-lg bg-brand-indigo text-white text-[11px] font-semibold hover:bg-brand-indigo/90 transition-colors"
+                    className="flex-1 px-2 py-1.5 rounded-lg bg-primary text-primary-foreground text-[11px] font-semibold hover:opacity-90 transition-opacity"
                   >
-                    Yes, send
+                    {t("chat.takeoverYes")}
                   </button>
                   <button
                     onClick={() => setShowBypassConfirm(false)}
                     className="flex-1 px-2 py-1.5 rounded-lg border border-border/50 text-[11px] font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
-                    Cancel
+                    {t("chat.cancel")}
                   </button>
                 </div>
               </div>

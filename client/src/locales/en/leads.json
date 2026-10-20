@@ -1,4 +1,9 @@
 {
+  "chatsTabs": {
+    "stats": "Stats",
+    "chats": "Chats",
+    "aria": "View"
+  },
   "chatChannel": {
     "all": "All chats",
     "website": "Website",
@@ -132,6 +137,9 @@
     "noSource": "No source"
   },
   "filters": {
+    "stage": "Stage",
+    "channel": "Channel",
+    "show": "Show",
     "title": "Lead Filters",
     "pipelineStage": "Pipeline Stage",
     "allStages": "All stages",
@@ -591,6 +599,16 @@
     "assignment": "Assignment"
   },
   "chat": {
+    "takeoverTitle": "Reply yourself?",
+    "takeoverBody": "The assistant pauses for this chat while you answer. You can let it continue later.",
+    "takeoverYes": "Yes, send",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "send": "Send message",
+    "record": "Record voice message",
+    "aiResumeBody": "The assistant picks this conversation up again. You can take over again any time.",
+    "sendFailed": "The message could not be sent. Try again.",
+    "unreachable": "Replies from here cannot reach this person: they did not write through your website chat, and your account has no WhatsApp number of its own yet. Ask Gabriel to connect one.",
     "title": "Chat",
     "noMessages": "No messages yet",
     "noMessagesHint": "Messages will appear here once outreach begins",

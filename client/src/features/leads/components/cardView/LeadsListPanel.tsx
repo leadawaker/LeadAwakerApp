@@ -91,6 +91,7 @@ export function LeadsListPanel({
   onToggleFilterTag,
   isConversationsMode,
   channelTabs,
+  mobilePageTabs,
   filterType,
   onToggleFilterType,
   allTags,
@@ -154,6 +155,8 @@ export function LeadsListPanel({
   isConversationsMode?: boolean;
   /** Chats page inbox tabs, shown above the card list. */
   channelTabs?: ReactNode;
+  /** Chats page: Stats · Chats in the mobile header, in place of the (dead) List switch. */
+  mobilePageTabs?: ReactNode;
   filterType: ConversationType[];
   onToggleFilterType: (v: ConversationType) => void;
   allTags: { name: string; color: string }[];
@@ -365,7 +368,7 @@ export function LeadsListPanel({
           {/* True mobile (<768): shared two-row header (switcher+search+bell / title+filter+actions) */}
           <MobileListHeader
             title={isConversationsMode ? t("page.chatsTitle") : t("page.title")}
-            tabSwitcher={(
+            tabSwitcher={isConversationsMode ? mobilePageTabs : (
               <MobileTabSeg
                 // Mobile: List + Pipeline only (no Table). The tab drives the
                 // existing mobile bodies directly via mobileListMode.

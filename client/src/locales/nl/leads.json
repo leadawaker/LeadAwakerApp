@@ -1,4 +1,9 @@
 {
+  "chatsTabs": {
+    "stats": "Statistieken",
+    "chats": "Chats",
+    "aria": "Weergave"
+  },
   "chatChannel": {
     "all": "Alle chats",
     "website": "Website",
@@ -132,6 +137,9 @@
     "noSource": "Geen bron"
   },
   "filters": {
+    "stage": "Fase",
+    "channel": "Kanaal",
+    "show": "Toon",
     "title": "Leadfilters",
     "pipelineStage": "Pipelinefase",
     "allStages": "Alle fases",
@@ -591,6 +599,16 @@
     "assignment": "Toewijzing"
   },
   "chat": {
+    "takeoverTitle": "Zelf antwoorden?",
+    "takeoverBody": "De assistent pauzeert voor deze chat terwijl jij antwoordt. Je kunt hem later laten verdergaan.",
+    "takeoverYes": "Ja, versturen",
+    "cancel": "Annuleren",
+    "confirm": "Bevestigen",
+    "send": "Bericht versturen",
+    "record": "Spraakbericht opnemen",
+    "aiResumeBody": "De assistent neemt dit gesprek weer over. Je kunt altijd opnieuw overnemen.",
+    "sendFailed": "Het bericht kon niet worden verstuurd. Probeer het opnieuw.",
+    "unreachable": "Een antwoord vanaf hier bereikt deze persoon niet: hij of zij schreef niet via je websitechat, en je account heeft nog geen eigen WhatsApp-nummer. Vraag Gabriel er een te koppelen.",
     "title": "Chat",
     "noMessages": "Nog geen berichten",
     "noMessagesHint": "Berichten verschijnen hier zodra het contact begint",

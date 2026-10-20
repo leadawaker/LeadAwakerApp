@@ -11,7 +11,8 @@ import { db, pool } from "../db";
 import { createAndDispatchNotification } from "../notification-dispatcher";
 import { pushBookingEvent } from "../calendar";
 import { handleZodError, wrapAsync, getPagination, getEngineUrl, coerceDates } from "./_helpers";
-import { eq, and, gte, lte, ne, type SQL } from "drizzle-orm";
+import { disallowedClientLeadFields, leadWriteLevelForRequest } from "./leadWriteAccess";
+import { eq, and, gte, lte, ne, getTableColumns, type SQL } from "drizzle-orm";
 import { registerLeadsBulkTagsRoutes } from "./leadsBulkTags";
 import { registerLeadsDemoScoreRoutes } from "./leadsDemoScore";
 import { registerLeadsPageRoutes } from "./leadsPage";
@@ -186,9 +187,17 @@ export function registerLeadsRoutes(app: Express): void {
   app.patch("/api/leads/:id", requireAuth, wrapAsync(async (req, res) => {
     const existing = await storage.getLeadById(Number(req.params.id));
     if (!existing) return res.status(404).json({ message: "Lead not found" });
-    // Subaccount users can only modify their own leads
-    if (req.user!.accountsId !== 1 && existing.accountsId !== req.user!.accountsId) {
-      return res.status(403).json({ message: "Forbidden" });
+    // Effective role (impersonation aware): clients only touch their own account's
+    // leads, and only the fields their UI sends; Viewers never write.
+    const level = leadWriteLevelForRequest(req as any, existing.accountsId ?? null);
+    if (level === "none") return res.status(403).json({ message: "Forbidden" });
+    if (level === "readonly") return res.status(403).json({ message: "Read-only access" });
+    if (level === "client") {
+      // Keys that are not lead columns are dropped by the schema anyway; only real columns count.
+      const columns = new Set(Object.keys(getTableColumns(leads)));
+      const sent = fromDbKeys(req.body, leads) as Record<string, unknown>;
+      const disallowed = disallowedClientLeadFields(Object.fromEntries(Object.entries(sent).filter(([k]) => columns.has(k))));
+      if (disallowed.length) return res.status(403).json({ message: "Field not editable", fields: disallowed });
     }
     const LEAD_DATE_FIELDS = [
       "bookedCallDate", "lastMessageSentAt", "lastMessageReceivedAt",

@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import React, { lazy, Suspense, useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -17,18 +17,26 @@ import { LeadsInlineTable } from "./LeadsInlineTable";
 import { LeadsKanban } from "./LeadsKanban";
 import { PipelineLeadPanel } from "./cardView/PipelineLeadPanel";
 import { isRealTag } from "./cardView/constants";
+import { isStageTag } from "@/components/crm/status/statusPill";
 import { exportLeadsCsv } from "./cardView/exportLeadsCsv";
 import { CsvImportWizard } from "./CsvImportWizard";
 import { createLead, bulkDeleteLeads, updateLead, deleteLead } from "../api/leadsApi";
 import { usePagedLeads, fetchLeadsByIds, fetchAllLeads, useDebouncedValue, type PagedLeadsQuery } from "../hooks/usePagedLeads";
 import { buildServerRows } from "../lib/serverRows";
-import { RX_STAGE_DB_STATUS } from "../lib/leadDisplay";
+import { ALL_STAGE_KEYS, RX_STAGES, RX_STAGE_DB_STATUS } from "../lib/leadDisplay";
 import { CHAT_CHANNEL_TABS, type ChatChannelTab } from "./chatChannel";
 import type { ConversationType } from "./conversationType";
 import { LeadsTableTopbar, type TableFilters } from "./LeadsTableTopbar";
 import { LeadsPipelineTopbar } from "./LeadsPipelineTopbar";
 import { LeadsQuickFilters } from "./LeadsQuickFilters";
 import { useLeadsLookups } from "./useLeadsLookups";
+import { ChatsPageTabs, CHATS_LAST_TAB_PAGE, CHATS_TABS, type ChatsTab } from "./cardView/ChatsPageTabs";
+import { MobileListHeader } from "@/components/crm/mobile/MobileListHeader";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { readLastTab, writeLastTab } from "@/lib/lastTab";
+import { useHomeServices } from "@/features/home/api/homeApi";
+
+const StatsPanel = lazy(() => import("@/features/home/stats/StatsPanel").then((m) => ({ default: m.StatsPanel })));
 import {
   VIEW_MODE_KEY, VISIBLE_COLS_KEY, LIST_PREFS_KEY, TABLE_PREFS_KEY, PIPE_PREFS_KEY, COL_ORDER_KEY, COL_WIDTHS_KEY,
   QUICK_PREFS_KEY, DEFAULT_VISIBLE_COLS, VIEW_TAB_KEYS, ALLOWED_VIEWS_BY_MODE, safeListSort, safeTableSort, normalizeLead,
@@ -62,7 +70,12 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     if (mode === "conversations") return "list";
     const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-    if (role !== "Owner" && role !== "Admin" && allowedViews.includes("pipeline")) return "pipeline";
+    // Clients open in Table on a phone (the board is cramped at 390px), Pipeline on a desktop.
+    if (role !== "Owner" && role !== "Admin") {
+      const phone = typeof window !== "undefined" && window.innerWidth < 768;
+      if (phone && allowedViews.includes("table")) return "table";
+      if (allowedViews.includes("pipeline")) return "pipeline";
+    }
     try {
       const stored = localStorage.getItem(viewModeKey);
       if (stored && allowedViews.includes(stored as ViewMode)) return stored as ViewMode;
@@ -89,7 +102,15 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   const [listFilterType, setListFilterType] = useState<ConversationType[]>([]);
   const toggleListFilterType = useCallback((v: ConversationType) => setListFilterType((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v])), []);
   const clearListFilterType = useCallback(() => setListFilterType([]), []);
-  const [channelTab, setChannelTab] = usePersistedState<ChatChannelTab>("chats-channel-tab", "all", (v) => CHAT_CHANNEL_TABS.includes(v as ChatChannelTab));
+  const [storedChannelTab, setChannelTab] = usePersistedState<ChatChannelTab>("chats-channel-tab", "all", (v) => CHAT_CHANNEL_TABS.includes(v as ChatChannelTab));
+  // Chats page: [chart] Stats · [chat] Chats, opening on Stats the first time, then the last tab used.
+  const [chatsTab, setChatsTabState] = useState<ChatsTab>(() => readLastTab(CHATS_LAST_TAB_PAGE, CHATS_TABS, "stats"));
+  const setChatsTab = useCallback((tab: ChatsTab) => { setChatsTabState(tab); writeLastTab(CHATS_LAST_TAB_PAGE, tab); }, []);
+  const isPhone = useIsMobile(768);
+  // The All / Website / WhatsApp filter only exists when the account runs both channels.
+  const { data: chatServices } = useHomeServices(currentAccountId);
+  const showChannelFilter = !!(chatServices?.website && chatServices?.whatsapp) || (currentAccountId === 0 && !!isAgencyUser);
+  const channelTab: ChatChannelTab = showChannelFilter ? storedChannelTab : "all";
 
   /* ── Table prefs ── */
   const [tableSearch, setTableSearch] = useState("");
@@ -185,6 +206,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     accountId: filterAccountId, search: dListSearch.trim(), sort: sortBy, groupBy,
     status: filterStatus, tags: filterTags, account: listFilterAccount, campaign: listFilterCampaign, type: listFilterType,
     chatChannel: mode === "conversations" && channelTab !== "all" ? channelTab : undefined,
+    chatsOnly: mode === "conversations",
   }), [filterAccountId, dListSearch, sortBy, groupBy, filterStatus, filterTags, listFilterAccount, listFilterCampaign, listFilterType, mode, channelTab]);
   const tableQuery = useMemo<PagedLeadsQuery>(() => ({
     accountId: filterAccountId, search: dTableSearch.trim(),
@@ -198,7 +220,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     hasPhone: pipePrefs.filterHasPhone, hasEmail: pipePrefs.filterHasEmail, ...quick,
   }), [filterAccountId, dKanbanSearch, pipelineSortBy, pipePrefs.filterHasPhone, pipePrefs.filterHasEmail, JSON.stringify(quick)]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const listData = usePagedLeads(listQuery, { enabled: viewMode === "list" });
+  const listData = usePagedLeads(listQuery, { enabled: viewMode === "list" && !(mode === "conversations" && chatsTab === "stats") });
   const tableData = usePagedLeads(tableQuery, { enabled: viewMode === "table" });
   const pipeData = usePagedLeads(pipeQuery, { enabled: viewMode === "pipeline", perGroup: 30 });
   const active = viewMode === "list" ? listData : viewMode === "table" ? tableData : pipeData;
@@ -263,11 +285,14 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   const leadTagsInfo = useMemo(() => {
     const info = new Map<number, { name: string; color: string }[]>();
     items.forEach((l: any) => {
-      const tags = (Array.isArray(l.tag_ids) ? l.tag_ids : []).map((id: number) => allTagsById.get(id)).filter(Boolean);
+      // Stage-named tags repeat the stage pill: hidden everywhere. Clients see no Lead Tags on
+      // their lists; "Contact Later" stays because it drives the resume date.
+      const tags = (Array.isArray(l.tag_ids) ? l.tag_ids : []).map((id: number) => allTagsById.get(id))
+        .filter((tg: { name: string } | undefined) => !!tg && !isStageTag(tg.name) && (isAgencyUser || tg.name === "Contact Later"));
       if (tags.length) info.set(Number(l.Id ?? l.id), tags);
     });
     return info;
-  }, [items, allTagsById]);
+  }, [items, allTagsById, isAgencyUser]);
   const allTags = useMemo(() => Array.from(allTagsById.values()).filter((tg) => isRealTag(tg.name)), [allTagsById]);
 
   /* ── AI agent context ── */
@@ -337,6 +362,23 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     if ((selectedLead.Id ?? selectedLead.id) !== (selectedKanbanLead?.Id ?? selectedKanbanLead?.id)) setSelectedKanbanLead(selectedLead);
   }, [selectedLead, viewMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Clients never see the campaign or account columns (agency detail), nor Lead Tags.
+  const tableCols = useMemo(() => {
+    if (isAgencyUser) return visibleCols;
+    const next = new Set(visibleCols);
+    ["campaign", "account", "tags", "source", "bumpStage"].forEach((k) => next.delete(k));
+    return next;
+  }, [visibleCols, isAgencyUser]);
+  // Phones: empty pipeline columns start folded (there is no Fold toggle there).
+  const foldedOnPhoneRef = useRef(false);
+  useEffect(() => {
+    if (!isPhone || viewMode !== "pipeline" || pipeData.loading || foldedOnPhoneRef.current) return;
+    foldedOnPhoneRef.current = true;
+    setFoldAction((prev) => ({ type: "fold-empty", seq: prev.seq + 1 }));
+  }, [isPhone, viewMode, pipeData.loading]);
+  // Receptionist-only accounts see exactly New inquiry, Answered, Booked, Done.
+  const receptionistOnly = !!chatServices && !chatServices.reactivation && currentAccountId > 0;
+
   /* ── Table rows (server-ordered, headers from server counts) ── */
   const tableFlatItems = useMemo((): VirtualListItem[] => buildServerRows(
     viewMode === "table" ? leads : [], quickPrefs.view === "upcoming" ? "none" : tableGroupBy, tableData.groups, leadTagsInfo, t,
@@ -361,9 +403,30 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
       total={active.total}
       viewCounts={active.viewCounts}
       channelCounts={active.channelCounts}
+      stages={viewMode === "table" ? (receptionistOnly ? RX_STAGES : ALL_STAGE_KEYS) : undefined}
+      selectedStages={tableFilters.status}
+      onToggleStage={(st) => toggleTableFilter("status", st)}
     />
   );
   const sidePanelStyle: React.CSSProperties = { flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" };
+
+  if (mode === "conversations" && chatsTab === "stats") {
+    return (
+      <div className="flex flex-col h-full" data-onboarding="leads-table">
+        {isPhone ? (
+          <MobileListHeader title={t("page.chatsTitle")} tabSwitcher={<ChatsPageTabs variant="mobile" active={chatsTab} onChange={setChatsTab} />} />
+        ) : (
+          <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
+            <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.chatsTitle")}</span>
+            <ChatsPageTabs active={chatsTab} onChange={setChatsTab} />
+          </div>
+        )}
+        <Suspense fallback={<div className="flex-1" aria-busy="true" />}>
+          <StatsPanel kind="chats" />
+        </Suspense>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full" data-onboarding="leads-table">
@@ -411,6 +474,9 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             onLoadMore={listData.loadMore}
             channelTab={channelTab}
             onChannelTabChange={setChannelTab}
+            showChannelFilter={showChannelFilter}
+            pageTabs={mode === "conversations" ? <ChatsPageTabs active={chatsTab} onChange={setChatsTab} /> : undefined}
+            mobilePageTabs={mode === "conversations" ? <ChatsPageTabs variant="mobile" active={chatsTab} onChange={setChatsTab} /> : undefined}
             chatChannelCounts={listData.chatChannelCounts}
             listFilters={{
               filterAccount: listFilterAccount, filterCampaign: listFilterCampaign, filterType: listFilterType,
@@ -460,6 +526,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             onResetColumnOrder={() => setColumnOrder([])}
             onResetColumnWidths={() => setColumnWidths({})}
             onAdd={handleAddLead}
+            isAgency={!!isAgencyUser}
           />
           {quickFilters}
           <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
@@ -470,7 +537,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
                 selectedLeadId={selectedLead ? (selectedLead.Id ?? selectedLead.id ?? null) : null}
                 onSelectLead={setSelectedLead}
                 onRefresh={handleRefresh}
-                visibleCols={visibleCols}
+                visibleCols={tableCols}
                 tableSearch={tableSearch}
                 selectedIds={tableSelectedIds}
                 onSelectionChange={setTableSelectedIds}
@@ -505,7 +572,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
         <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
           <LeadsPipelineTopbar
             total={pipeData.total}
-            showTabs={isAgencyUser}
+            showTabs
             viewTabs={viewTabs}
             viewMode={viewMode}
             onViewSwitch={handleViewSwitch}
@@ -541,7 +608,8 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
                 foldAction={foldAction}
                 onCollapsedChange={setHasAnyCollapsed}
                 showTagsAlways={false}
-                compactMode={compactMode}
+                compactMode={compactMode && !isPhone}
+                receptionistOnly={receptionistOnly}
                 stageCounts={Object.fromEntries(pipeData.groups.map((g) => [g.key, g.count]))}
                 onLoadMoreStage={pipeData.loadMoreGroup}
               />

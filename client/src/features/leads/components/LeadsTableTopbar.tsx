@@ -66,6 +66,8 @@ export function LeadsTableTopbar(p: {
   onResetColumnOrder: () => void;
   onResetColumnWidths: () => void;
   onAdd: () => void;
+  /** Agency only: the column settings gear and "+". Clients get neither. */
+  isAgency: boolean;
 }) {
   const { t } = useTranslation("leads");
   const f = p.filters;
@@ -74,10 +76,10 @@ export function LeadsTableTopbar(p: {
   const check = (on: boolean) => on && <Check className="h-3 w-3 text-brand-indigo shrink-0" />;
 
   return (
-    <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
+    <div className="shrink-0 flex items-center gap-3 max-md:gap-2 la-m-chrome max-md:!px-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
       <div className="flex items-baseline gap-2 shrink-0">
-        <span style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
-        <span className="eyebrow eyebrow-sm tabular-nums" style={{ color: "var(--mute-2)" }} data-testid="leads-total">#{p.total}</span>
+        <span className="max-md:!text-[18px]" style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
+        <span className="eyebrow eyebrow-sm tabular-nums max-md:hidden" style={{ color: "var(--mute-2)" }} data-testid="leads-total">#{p.total}</span>
       </div>
       <div className="la-seg shrink-0">
         {p.viewTabs.map((tab) => (
@@ -203,7 +205,7 @@ export function LeadsTableTopbar(p: {
 
         {/* Sort */}
         <DropdownMenu>
-          <div style={{ position: "relative" }}>
+          <div className="max-md:hidden" style={{ position: "relative" }}>
             <DropdownMenuTrigger asChild>
               <button className="la-btn la-btn--soft la-btn--icon" title={t("toolbar.sort")}><ArrowUpDown className="h-4 w-4 shrink-0" /></button>
             </DropdownMenuTrigger>
@@ -230,7 +232,7 @@ export function LeadsTableTopbar(p: {
 
         {/* Group */}
         <DropdownMenu>
-          <div style={{ position: "relative" }}>
+          <div className="max-md:hidden" style={{ position: "relative" }}>
             <DropdownMenuTrigger asChild>
               <button className="la-btn la-btn--soft la-btn--icon" title={t("toolbar.group")}><Layers className="h-4 w-4 shrink-0" /></button>
             </DropdownMenuTrigger>
@@ -253,7 +255,7 @@ export function LeadsTableTopbar(p: {
         </DropdownMenu>
 
         {/* Settings */}
-        <DropdownMenu>
+        {p.isAgency && <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <button className="la-btn la-btn--soft la-btn--icon" title={t("toolbar.settings")}><Settings className="h-4 w-4 shrink-0" /></button>
           </DropdownMenuTrigger>
@@ -286,11 +288,13 @@ export function LeadsTableTopbar(p: {
             <DropdownMenuItem onClick={p.onResetColumnWidths} className="text-[12px] text-muted-foreground">{t("toolbar.resetColumnWidths")}</DropdownMenuItem>
             <DropdownMenuItem onClick={() => p.setVisibleCols(() => new Set(DEFAULT_VISIBLE_COLS))} className="text-[12px] text-muted-foreground">{t("toolbar.resetToDefault")}</DropdownMenuItem>
           </DropdownMenuContent>
-        </DropdownMenu>
+        </DropdownMenu>}
 
-        <button onClick={p.onAdd} className="la-btn la-btn--wine la-btn--icon" title={t("toolbar.add")}>
-          <Plus className="h-[14px] w-[14px] shrink-0" />
-        </button>
+        {p.isAgency && (
+          <button onClick={p.onAdd} className="la-btn la-btn--wine la-btn--icon" title={t("toolbar.add")}>
+            <Plus className="h-[14px] w-[14px] shrink-0" />
+          </button>
+        )}
       </div>
     </div>
   );

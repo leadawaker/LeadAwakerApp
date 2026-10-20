@@ -99,6 +99,7 @@ export function LeadsDesktopToolbar({
   filterType,
   onToggleFilterType,
   channelTabs,
+  pageTabs,
 }: {
   leadsCount: number;
   viewTabs: ViewTab[];
@@ -155,6 +156,8 @@ export function LeadsDesktopToolbar({
   onToggleFilterType: (v: ConversationType) => void;
   /** Chats page: All / Website / WhatsApp inbox tabs, shown in place of the view switcher. */
   channelTabs?: ReactNode;
+  /** Page-level tabs (Chats: Stats · Chats), before the channel filter. */
+  pageTabs?: ReactNode;
 }) {
   const { t } = useTranslation("leads");
   const [leadDeleteConfirm, setLeadDeleteConfirm] = useState(false);
@@ -169,9 +172,10 @@ export function LeadsDesktopToolbar({
         <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{title ?? t("page.title")}</span>
         <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leadsCount}</span>
       </div>
+      {pageTabs}
       {channelTabs}
       {/* Single-view pages (e.g. Conversations) hide the segmented switcher. */}
-      {!channelTabs && viewTabs.length > 1 && (
+      {!channelTabs && !pageTabs && viewTabs.length > 1 && (
         <div className="la-seg shrink-0">
           {viewTabs.map((tab) => (
             <button

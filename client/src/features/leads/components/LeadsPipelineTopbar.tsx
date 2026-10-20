@@ -34,10 +34,10 @@ export function LeadsPipelineTopbar(p: {
   const filterOn = p.hasPhone || p.hasEmail;
   const row = "flex items-center gap-2 cursor-pointer rounded-xl";
   return (
-    <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
+    <div className="shrink-0 flex items-center gap-3 max-md:gap-2 la-m-chrome max-md:!px-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
       <div className="flex items-baseline gap-2 shrink-0">
         <span style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.title")}</span>
-        <span className="eyebrow eyebrow-sm tabular-nums" style={{ color: "var(--mute-2)" }} data-testid="leads-total">#{p.total}</span>
+        <span className="eyebrow eyebrow-sm tabular-nums max-md:hidden" style={{ color: "var(--mute-2)" }} data-testid="leads-total">#{p.total}</span>
       </div>
       {p.showTabs && (
         <div className="la-seg shrink-0">
@@ -51,11 +51,12 @@ export function LeadsPipelineTopbar(p: {
       )}
       <div className="flex-1 min-w-0" />
       <div className="shrink-0 flex items-center gap-[5px]">
-        <button onClick={() => p.setCompactMode((v) => !v)} className={cn("la-btn la-btn--soft", p.compactMode && "on")} title={t("toolbar.compactView")} style={{ fontSize: 11 }}>
+        {/* Phones: no Compact and no Fold toggle; empty columns start folded instead. */}
+        <button onClick={() => p.setCompactMode((v) => !v)} className={cn("la-btn la-btn--soft max-md:hidden", p.compactMode && "on")} title={t("toolbar.compactView")} style={{ fontSize: 11 }}>
           {p.compactMode ? <Expand size={13} /> : <Shrink size={13} />}
           {t("toolbar.compactView")}
         </button>
-        <button onClick={p.onFoldToggle} className="la-btn la-btn--soft" title={p.hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")} style={{ fontSize: 11 }}>
+        <button onClick={p.onFoldToggle} className="la-btn la-btn--soft max-md:hidden" title={p.hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")} style={{ fontSize: 11 }}>
           <Rows3 size={13} />
           {p.hasAnyCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
         </button>

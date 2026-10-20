@@ -25,7 +25,8 @@ Files: `client/src/styles/variables.css`, `client/src/styles/components.css`.
   `.la-m-chrome` (header/bar background), `.la-m-seg` (bone raised segments, wine text on the
   active one), `.la-hit` (36px visual, 44px tap target), `.la-m-crisp` (inset fields crisp).
 - [x] Apply: `MobileListHeader`, Home header, More page (topbar + body), bottom bar,
-  `MobileTabSeg`, `AccountsWorkspace` mobile header, Settings mobile header.
+  `MobileTabSeg`, `AccountsWorkspace` mobile header, Leads Table/Pipeline topbars.
+  My profile is a sheet today; it gets the sand with F (Round 2).
 
 ### Step 2. Navigation (B1-B8, F4)
 
@@ -45,7 +46,7 @@ new `navIcons.ts`, `pages/app.tsx`, `CommandPalette.tsx`, locales `crm.json`.
 - [x] B7: agency More: logo on top, Campaigns removed, Calendar added, "Calls" label.
 - [x] B8: one shared icon map (`navIcons.ts`) for RightSidebar + More; pure rules in `navGates.ts`
   with node tests (`npx tsx --test client/src/components/crm/navGates.test.ts`).
-- [x] F4: any More link to the current route closes the overlay itself.
+- [x] F4: any More link to the current route closes the overlay itself (the Settings row stays for agency only).
 - [x] B9: `lastTab.ts` stores the last tab per user and per page (`la.lastTab.<userId>.<page>`),
   default Stats. Used by Calls and Chats.
 
@@ -61,6 +62,7 @@ Files: new `client/src/components/crm/status/` (`statusPill.ts` pure + test, `St
   Booked (`Booked`), Done (`rx_done`). DBR stages keep their own labels for reactivation leads.
 - [x] "Needs you" marker: callback asked for (calls) or `needs_reply` (chats).
 - [x] One `StatusPill` with token colours (`--stage-*`), used by calls rows, people rows and chat rows.
+  Tones: Booked amber, Callback blue, Transferred sage, Answered teal, Hung up recessed, New inquiry purple, Done olive.
 - [x] Stage-named tags hidden everywhere (`isStageTag`), Lead Tags hidden on client lists.
 - [ ] Recap email pills (Round 2, E).
 
@@ -134,7 +136,8 @@ Files: `LeadsTopbarParts.tsx`, `LeadsTableTopbar.tsx`, `LeadsPipelineTopbar.tsx`
   Channel with icons, Needs reply, Next appointments) and removable chips.
 - [x] G6: channel shows as glyph + readable label on lead cards.
 - [x] G7: campaign column, "+", gear and account id hidden for clients.
-- [x] G8: pills follow Step 3.
+- [~] G8: Chats/lead list rows and Calls/People rows use the shared pill. The editable status cell in the
+  Table view still shows the coloured dot + stage label (same labels), to be swapped in Round 2.
 
 ### Verification (Round 1)
 

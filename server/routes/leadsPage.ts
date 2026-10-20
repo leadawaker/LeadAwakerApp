@@ -57,6 +57,7 @@ function parseParams(req: Request): LeadsPageParams {
     tags: list(q.tags),
     type: list(q.type),
     chatChannel: chat === "website" || chat === "whatsapp" ? chat : undefined,
+    chatsOnly: flag(q.chatsOnly),
     channel: channel === "website" || channel === "whatsapp" || channel === "phone" ? channel : undefined,
     needsReply: flag(q.needsReply),
     upcoming: flag(q.upcoming),

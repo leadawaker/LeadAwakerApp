@@ -1,4 +1,5 @@
 // Constants extracted from LeadsCardView.tsx
+import { isStageTag } from "@/components/crm/status/statusPill";
 import {
   CircleDot,
   Send,
@@ -198,4 +199,4 @@ const NON_TAG_NAMES = new Set([
   "new", "contacted", "responded", "multiple responses", "qualified", "booked", "lost", "dnd",
   "closed", "lead lost", "conversation closed", "negative sentiment", "positive sentiment",
 ]);
-export const isRealTag = (name: string) => !NON_TAG_NAMES.has(name.trim().toLowerCase());
+export const isRealTag = (name: string) => !NON_TAG_NAMES.has(name.trim().toLowerCase()) && !isStageTag(name);

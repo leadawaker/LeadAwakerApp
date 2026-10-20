@@ -13,6 +13,8 @@ import { displayStage, stageHex, stageColorKey, stageLabel, lastContactChannel, 
 import { ChannelGlyph } from "./ChannelGlyph";
 import { formatRelativeTime } from "./formatUtils";
 import { isDemoLead } from "@/features/leads/demoLead";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { NeedsYouMarker, personStageFromKey, StatusPill } from "@/components/crm/status/StatusPill";
 
 // ── Lead list card ─────────────────────────────────────────────────────────────
 const TRAY_WIDTH = 220;
@@ -65,6 +67,10 @@ export function LeadListCard({
   const status      = getStatus(lead);
   // Receptionist leads show their simpler stage (New inquiry / Answered / Booked / Done).
   const stage       = displayStage(lead);
+  // One stage pill per person (receptionist vocabulary) and "Needs you" while a chat waits on a reply.
+  const personStage = personStageFromKey(lead.stage_key);
+  const needsYou    = !!lead.needs_reply;
+  const { isAgencyUser } = useWorkspace();
   const phone       = getPhone(lead);
   const email       = lead.email || lead.Email || "";
   const statusHex   = stageHex(stage);
@@ -425,10 +431,22 @@ export function LeadListCard({
 
           {/* Stage + campaign — single line, matches the design leads page */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-            <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusHex, flexShrink: 0 }} />
+            {personStage ? (
+              <>
+                <StatusPill status={personStage} small />
+                {needsYou && <NeedsYouMarker small />}
+              </>
+            ) : (
+              <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusHex, flexShrink: 0 }} />
+            )}
+            {/* Campaign and source are agency detail; clients only see their stage. */}
+            {(!personStage || (isAgencyUser && (campaignName || sourceLabel))) && (
             <span className="text-[9px] max-md:text-[13px]" style={{ color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {stageLabel(t, stage)}{campaignName ? ` · ${campaignName}` : ''}{sourceLabel ? ` · ${sourceLabel}` : ''}
+              {personStage ? '' : stageLabel(t, stage)}
+              {isAgencyUser && campaignName ? `${personStage ? '' : ' · '}${campaignName}` : ''}
+              {isAgencyUser && sourceLabel ? ` · ${sourceLabel}` : ''}
             </span>
+            )}
             {resumeDate && (
               <span
                 className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] max-md:text-[11px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0"

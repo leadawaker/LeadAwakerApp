@@ -1,7 +1,8 @@
 // Small pieces shared by the Leads page topbars (Table + Pipeline).
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { X } from "lucide-react";
+import { Search, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 
 /** Raised icon button that asks "Label? Yes / No" inline before acting. */
 export function ConfirmToolbarButton({
@@ -45,23 +46,41 @@ export function ConfirmToolbarButton({
   );
 }
 
-/** Inset search field used in the topbars. */
+/**
+ * Inset search field used in the topbars. On phones it is an icon button that
+ * expands on tap and collapses again when it is empty and loses focus.
+ */
 export function TopbarSearch({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
+  const { t } = useTranslation("leads");
+  const isPhone = useIsMobile(768);
+  const [open, setOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
+  if (isPhone && !open && !value) {
+    return (
+      <button type="button" className="la-btn la-btn--soft la-btn--icon la-hit" aria-label={placeholder} title={placeholder}
+        onClick={() => setOpen(true)} data-testid="leads-topbar-search-open">
+        <Search className="h-4 w-4" />
+      </button>
+    );
+  }
   return (
-    <div className="relative" style={{ width: 180 }}>
+    <div className="relative max-md:flex-1 max-md:min-w-0" style={{ width: isPhone ? undefined : 180 }}>
       <input
+        ref={inputRef}
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onBlur={() => { if (!value) setOpen(false); }}
         placeholder={placeholder}
-        className="la-input"
+        className="la-input la-m-crisp"
         data-testid="leads-topbar-search"
-        style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 24, height: 32, fontSize: 11 }}
+        style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 24, height: isPhone ? 36 : 32, fontSize: isPhone ? 14 : 11, width: "100%" }}
       />
       <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
-        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
+        <Search className="h-3 w-3" />
       </span>
       {value && (
-        <button type="button" onClick={() => onChange("")} className="absolute right-[7px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] hover:text-foreground">
+        <button type="button" onClick={() => { onChange(""); if (isPhone) setOpen(false); }} aria-label={t("toolbar.clearAll")} className="absolute right-[7px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] hover:text-foreground">
           <X className="h-3 w-3" />
         </button>
       )}

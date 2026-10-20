@@ -90,6 +90,9 @@ export function LeadsCardView({
   onChannelTabChange,
   chatChannelCounts,
   listFilters,
+  pageTabs,
+  mobilePageTabs,
+  showChannelFilter = true,
 }: LeadsCardViewProps) {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
@@ -106,11 +109,13 @@ export function LeadsCardView({
   const isHidden = !isNarrow && leftPanelState === "hidden";
 
   // ── Mobile kanban toggle (Feature #39): persisted preference ─────────────────
-  const [mobileListMode, setMobileListMode] = usePersistedState<"list" | "kanban">(
+  const [storedMobileListMode, setMobileListMode] = usePersistedState<"list" | "kanban">(
     "mobile-leads-list-mode",
     "list",
     (v) => v === "list" || v === "kanban",
   );
+  // Chats is always the list (its header has Stats · Chats, no Pipeline switch).
+  const mobileListMode = isConversationsMode ? "list" : storedMobileListMode;
 
   // ── Open this lead's chat inline on the Leads page (Chats page retired) ──────
   const handleOpenConversation = useCallback((leadId: number | string) => {
@@ -350,7 +355,8 @@ export function LeadsCardView({
           showTypeControls={isConversationsMode}
           filterType={filterType}
           onToggleFilterType={toggleFilterType}
-          channelTabs={isConversationsMode ? (
+          pageTabs={pageTabs}
+          channelTabs={isConversationsMode && showChannelFilter ? (
             <ChatChannelTabs variant="topbar" active={activeChannelTab} onChange={onChannelTabChange} counts={channelCounts} />
           ) : undefined}
         />
@@ -379,7 +385,8 @@ export function LeadsCardView({
           filterAccount={filterAccount}
           filterCampaign={filterCampaign}
           isConversationsMode={isConversationsMode}
-          channelTabs={isConversationsMode && isNarrow ? (
+          mobilePageTabs={mobilePageTabs}
+          channelTabs={isConversationsMode && isNarrow && showChannelFilter ? (
             <ChatChannelTabs active={activeChannelTab} onChange={onChannelTabChange} counts={channelCounts} />
           ) : undefined}
           filterType={filterType}

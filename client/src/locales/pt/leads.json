@@ -1,4 +1,9 @@
 {
+  "chatsTabs": {
+    "stats": "Estatísticas",
+    "chats": "Chats",
+    "aria": "Visualização"
+  },
   "chatChannel": {
     "all": "Todos os chats",
     "website": "Site",
@@ -132,6 +137,9 @@
     "noSource": "Sem origem"
   },
   "filters": {
+    "stage": "Etapa",
+    "channel": "Canal",
+    "show": "Mostrar",
     "title": "Filtros de Leads",
     "pipelineStage": "Etapa do Pipeline",
     "allStages": "Todas as etapas",
@@ -589,6 +597,16 @@
     "assignment": "Atribuição"
   },
   "chat": {
+    "takeoverTitle": "Responder você mesmo?",
+    "takeoverBody": "O assistente pausa nesta conversa enquanto você responde. Você pode deixá-lo continuar depois.",
+    "takeoverYes": "Sim, enviar",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "send": "Enviar mensagem",
+    "record": "Gravar mensagem de voz",
+    "aiResumeBody": "O assistente retoma esta conversa. Você pode assumir de novo a qualquer momento.",
+    "sendFailed": "Não foi possível enviar a mensagem. Tente de novo.",
+    "unreachable": "Uma resposta daqui não chega a esta pessoa: ela não escreveu pelo chat do seu site e sua conta ainda não tem um número de WhatsApp próprio. Peça ao Gabriel para conectar um.",
     "title": "Chat",
     "noMessages": "Nenhuma mensagem ainda",
     "noMessagesHint": "Mensagens aparecerão aqui quando o contato começar",

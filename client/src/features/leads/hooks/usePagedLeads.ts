@@ -28,6 +28,8 @@ export interface PagedLeadsQuery {
   tags?: string[];
   type?: string[];
   chatChannel?: string;
+  /** Chats page: only leads that have a website or WhatsApp chat. */
+  chatsOnly?: boolean;
   channel?: string;
   needsReply?: boolean;
   upcoming?: boolean;

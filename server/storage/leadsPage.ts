@@ -44,6 +44,8 @@ export interface LeadsPageParams {
   tags: string[];
   type: string[];
   chatChannel?: "website" | "whatsapp";
+  /** Chats page: only leads with a chat (a caller who later chatted stays; a call-only lead does not). */
+  chatsOnly?: boolean;
   channel?: "website" | "whatsapp" | "phone";
   needsReply: boolean;
   upcoming: boolean;
@@ -234,6 +236,8 @@ export async function getLeadsPage(params: LeadsPageParams): Promise<LeadsPageRe
     base.push(`EXISTS (SELECT 1 FROM ${S}."Leads_Tags" lt JOIN ${S}."Tags" t ON t.id = lt."Tags_id"
       WHERE lt."Leads_id" = d.id AND lt.removed_at IS NULL AND t.name = ANY(${p.add(params.tags)}::text[]))`);
   }
+  // In the base filter, so the list and every count (tabs, totals) agree.
+  if (params.chatsOnly) base.push(`d.chat_channel_eff IS NOT NULL`);
   if (params.hasPhone) base.push(`COALESCE(d.phone, '') <> ''`);
   if (params.hasEmail) base.push(`COALESCE(d.email, '') <> ''`);
 

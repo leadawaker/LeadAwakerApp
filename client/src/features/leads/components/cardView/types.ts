@@ -1,5 +1,6 @@
 // Types extracted from LeadsCardView.tsx
 
+import type { ReactNode } from "react";
 import type { Interaction } from "@/types/models";
 
 // ── View mode ─────────────────────────────────────────────────────────────────
@@ -127,6 +128,11 @@ export interface LeadsCardViewProps {
   channelTab: import("../chatChannel").ChatChannelTab;
   onChannelTabChange: (tab: import("../chatChannel").ChatChannelTab) => void;
   chatChannelCounts: Record<string, number>;
+  /** Chats page: Stats · Chats tabs for the topbar (desktop) and the mobile header. */
+  pageTabs?: ReactNode;
+  mobilePageTabs?: ReactNode;
+  /** Chats page: the All / Website / WhatsApp filter, only when the account has both channels. */
+  showChannelFilter?: boolean;
   /** Account / campaign / type filters, owned by the page so they reach the server query. */
   listFilters: import("../useLeadsFilters").ListFilterState;
 }

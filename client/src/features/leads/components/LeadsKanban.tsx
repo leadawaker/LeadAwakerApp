@@ -39,7 +39,7 @@ import { getFullName as getFullNameUtil } from "./cardView/leadUtils";
 import { ChannelGlyph } from "./cardView/ChannelGlyph";
 import { KanbanSkeleton } from "./LeadsSkeletons";
 import {
-  displayStage, stageHex, stageColorKey, lastContactAt, lastContactChannel, lastContactText, ALL_STAGE_KEYS,
+  displayStage, stageHex, stageColorKey, lastContactAt, lastContactChannel, lastContactText, ALL_STAGE_KEYS, RX_STAGES,
 } from "../lib/leadDisplay";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import {
@@ -174,6 +174,14 @@ const getInitials = getInitialsUtil;
 /** Column/stage key: receptionist leads use their simpler display stage. */
 function getStatus(lead: any): string {
   return displayStage(lead);
+}
+
+/** A DBR stage on a receptionist-only board lands in the nearest receptionist column. */
+function toReceptionistStage(stage: string): string {
+  if (RX_STAGES.includes(stage)) return stage;
+  if (stage === "New") return "rx_new";
+  if (["Lost", "DND", "Closed", "Cancelled"].includes(stage)) return "rx_done";
+  return "rx_answered";
 }
 
 function getPhone(lead: any): string {
@@ -436,11 +444,12 @@ function KanbanCardContent({
           </div>
           {(lastActivity || contactChannel) && (
             <div
-              className="flex items-center gap-1 min-w-0"
-              style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", letterSpacing: "0.06em", marginTop: 2 }}
+              className="flex items-center gap-1.5 min-w-0"
+              style={{ fontSize: 11.5, color: "var(--mute)", marginTop: 3 }}
               data-testid="kanban-card-last-activity"
             >
-              {contactChannel && <ChannelGlyph channel={contactChannel} size={10} />}
+              {/* Glyph + a readable label ("WhatsApp · 2h ago"), not 8.5px mono. */}
+              {contactChannel && <ChannelGlyph channel={contactChannel} size={13} />}
               <span className="truncate">{lastContactText(lead, t)}</span>
             </div>
           )}
@@ -863,6 +872,8 @@ interface LeadsKanbanProps {
   showTagsAlways?: boolean;
   /** Compact mode: narrow cards showing only name + last activity, hover reveals phone/email */
   compactMode?: boolean;
+  /** Receptionist-only accounts: exactly New inquiry, Answered, Booked, Done. */
+  receptionistOnly?: boolean;
 }
 
 /** Threshold: columns wider than this render full cards instead of compact */
@@ -881,6 +892,7 @@ export function LeadsKanban({
   onCollapsedChange,
   showTagsAlways,
   compactMode,
+  receptionistOnly = false,
 }: LeadsKanbanProps) {
   const { t } = useTranslation("leads");
   const [localLeads, setLocalLeads]   = useState<any[]>(leads);
@@ -951,7 +963,7 @@ export function LeadsKanban({
       // Fold all stages that have 0 leads
       setCollapsedStages((_prev) => {
         const emptyStages = new Set<string>();
-        for (const stage of PIPELINE_STAGES) {
+        for (const stage of ALL_STAGE_KEYS) {
           const n = stageCounts?.[stage] ?? localLeads.filter((l) => getStatus(l) === stage).length;
           if (n === 0) emptyStages.add(stage);
         }
@@ -990,24 +1002,24 @@ export function LeadsKanban({
 
   // DBR pipeline columns, plus the receptionist columns (New inquiry, Answered,
   // Done) only when leads sit in them.
-  const stages = useMemo(() => ALL_STAGE_KEYS.filter((s) =>
+  const stages = useMemo(() => receptionistOnly ? RX_STAGES : ALL_STAGE_KEYS.filter((s) =>
     (PIPELINE_STAGES as readonly string[]).includes(s)
     || (stageCounts?.[s] ?? 0) > 0
-    || localLeads.some((l) => getStatus(l) === s)), [stageCounts, localLeads]);
+    || localLeads.some((l) => getStatus(l) === s)), [stageCounts, localLeads, receptionistOnly]);
 
   const groupedLeads = useMemo(() => {
     const groups: Record<string, any[]> = {};
     for (const stage of stages) groups[stage] = [];
     for (const lead of localLeads) {
-      const status = getStatus(lead);
+      const status = receptionistOnly ? toReceptionistStage(getStatus(lead)) : getStatus(lead);
       if (groups[status]) {
         groups[status].push(lead);
       } else {
-        groups["New"].push(lead);
+        groups[stages[0]].push(lead);
       }
     }
     return groups;
-  }, [localLeads, stages]);
+  }, [localLeads, stages, receptionistOnly]);
 
   // ── Derive card density from actual column width ────────────────────
   // compactMode controls layout (flex-fill vs fixed scroll)

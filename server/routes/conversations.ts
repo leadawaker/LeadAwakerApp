@@ -13,6 +13,7 @@ import { pool } from "../db";
 import { createAndDispatchNotification } from "../notification-dispatcher";
 import { broadcast, addClient, removeClient } from "../sse";
 import { handleZodError, wrapAsync, getPagination } from "./_helpers";
+import { leadWriteLevelForRequest } from "./leadWriteAccess";
 import { and, eq, sql, type SQL } from "drizzle-orm";
 import type { Request, Response } from "express";
 import { sendToChannel, sendVoiceToChannel, sendPhotoToChannel } from "../channel-sender";
@@ -119,6 +120,22 @@ export function registerConversationsRoutes(app: Express): void {
   app.post("/api/interactions", requireAuth, wrapAsync(async (req, res) => {
     const parsed = insertInteractionsSchema.safeParse(fromDbKeys(req.body, interactions));
     if (!parsed.success) return handleZodError(res, parsed.error);
+
+    // Who may write here: the agency anywhere; a Manager only to a lead of their
+    // own account (effective role, so "view as" gets the same answer); a Viewer never.
+    const targetLeadId = Number((parsed.data as any).leadsId) || null;
+    const targetLead = targetLeadId ? await storage.getLeadById(targetLeadId) : undefined;
+    const level = leadWriteLevelForRequest(req as any, targetLead?.accountsId ?? null);
+    if (level !== "agency") {
+      if (!targetLead) return res.status(404).json({ message: "Lead not found" });
+      if (level === "none") return res.status(404).json({ message: "Lead not found" });
+      if (level === "readonly") return res.status(403).json({ message: "Read-only access" });
+      // A client only sends human replies, filed under the lead's own account.
+      if (String((parsed.data as any).direction || "").toLowerCase() !== "outbound" || (parsed.data as any).aiGenerated) {
+        return res.status(403).json({ message: "Clients can only send replies" });
+      }
+      (parsed.data as any).accountsId = targetLead.accountsId;
+    }
 
     // Stamp the colleague who is actually typing. Taken from the session, never
     // from the body: it is the only record of WHO answered, and the website
