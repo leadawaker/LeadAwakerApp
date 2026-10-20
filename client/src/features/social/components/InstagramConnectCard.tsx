@@ -13,7 +13,8 @@ import { ConnectedPill } from "@/features/accounts/components/workspace/atoms";
 import { IconTile, SectionHead } from "@/features/accounts/components/workspace/integrationsAtoms";
 import { disconnectInstagram, fetchSocialStatus, setSocialEnabled, socialStatusKey, startInstagramConnect } from "../api/socialApi";
 import { canActOnSocial, connectCardMode } from "../lib/socialState";
-import { SOCIAL_PAGE_PATH } from "../lib/socialPage";
+import { socialPageLink } from "@shared/socialStudio";
+import { setPersistedSelection } from "@/hooks/usePersistedSelection";
 
 const cardStyle: React.CSSProperties = { borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" };
 const lineStyle: React.CSSProperties = { fontSize: 12.5, color: "var(--mute)", lineHeight: 1.5, margin: 0 };
@@ -78,7 +79,11 @@ export function InstagramConnectCard({ accountId, showSocialsLink = true }: { ac
     <button
       type="button"
       className="la-btn la-btn--wine"
-      onClick={() => startInstagramConnect(accountId)}
+      onClick={() => {
+        // The OAuth flow returns to the Accounts page: open it on this account, wherever Connect was pressed.
+        setPersistedSelection("selected-account-id", accountId);
+        startInstagramConnect(accountId);
+      }}
       data-testid="instagram-connect"
     >
       <Instagram size={14} />
@@ -115,8 +120,8 @@ export function InstagramConnectCard({ accountId, showSocialsLink = true }: { ac
           </div>
           {!confirming && (canAct || showSocialsLink) && (
             <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-              {showSocialsLink && (status?.enabled || isAgencyUser) && (
-                <Link href={SOCIAL_PAGE_PATH} className="la-btn la-btn--wine" data-testid="instagram-go-to-socials">
+              {showSocialsLink && status?.enabled && (
+                <Link href={socialPageLink(accountId)} className="la-btn la-btn--wine" data-testid="instagram-go-to-socials">
                   {t("social.connect.goToSocials")}
                   <ArrowRight size={14} />
                 </Link>

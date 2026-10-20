@@ -1,8 +1,8 @@
 // The Socials page (nav bar > Socials). Agency picks an account with Social switched on; a client
 // user (Manager, Viewer) always sees their own account, and only once the agency switched Social on.
 // Connect / disconnect and the on/off switch stay in Accounts > Integrations (account setup).
-import { useMemo, useState } from "react";
-import { Redirect } from "wouter";
+import { useEffect, useMemo, useState } from "react";
+import { Redirect, useLocation, useSearch } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
@@ -13,7 +13,8 @@ import { useSocialStatus } from "../components/InstagramConnectCard";
 import { SocialAccountPicker } from "../components/SocialAccountPicker";
 import { SocialTab } from "../components/SocialTab";
 import { showSocialTab } from "../lib/posts";
-import { pickSocialAccount, socialAccountOptions, socialSections, type SocialSection } from "../lib/socialPage";
+import { SocialApiError } from "../api/socialApi";
+import { parseSocialDeepLink, pickSocialAccount, socialAccountOptions, socialSections, SOCIAL_PAGE_PATH, type SocialSection } from "../lib/socialPage";
 
 export function SocialPage() {
   const { t } = useTranslation("social");
@@ -22,15 +23,30 @@ export function SocialPage() {
   const options = useMemo(() => (isAgencyUser ? socialAccountOptions(accounts) : []), [isAgencyUser, accounts]);
   const account = pickSocialAccount({ isAgency: isAgencyUser, currentAccountId, options, ownAccount: currentAccount });
   const accountId = account?.id ?? 0;
-  const { data: status, isLoading: statusLoading } = useSocialStatus(accountId);
+  const { data: status, isLoading: statusLoading, error: statusError } = useSocialStatus(accountId);
   const sections = socialSections({ isAgency: isAgencyUser, userRole });
   const [picked, setPicked] = useState<SocialSection>(sections[0]);
   const section = sections.includes(picked) ? picked : sections[0];
 
-  // A client whose account does not have Social on has no Socials page.
-  if (status && !showSocialTab({ isAgency: isAgencyUser, enabled: status.enabled })) return <Redirect to="/platform/home" />;
+  // ?account=<id>&section=<name> (notifications, Integrations): agency switches to that account; then the URL is cleaned.
+  const search = useSearch();
+  const [, setLocation] = useLocation();
+  useEffect(() => {
+    const link = parseSocialDeepLink(search);
+    if (link.accountId === null && link.section === null) return;
+    if (isAgencyUser && link.accountId) setCurrentAccountId(link.accountId);
+    if (link.section) setPicked(link.section as SocialSection);
+    setLocation(SOCIAL_PAGE_PATH, { replace: true });
+  }, [search]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const loading = (isAgencyUser && isLoadingAccounts) || (accountId > 0 && statusLoading);
+  // A client whose account does not have Social on has no Socials page (the server says 403 not_enabled).
+  const refused = statusError instanceof SocialApiError && statusError.status === 403;
+  if ((status && !showSocialTab({ isAgency: isAgencyUser, enabled: status.enabled })) || (!isAgencyUser && refused)) {
+    return <Redirect to="/platform/home" replace />;
+  }
+
+  // A client's own account id can be 0 for a moment after login: wait instead of showing the agency message.
+  const loading = (isAgencyUser && isLoadingAccounts) || (accountId > 0 && statusLoading) || (!isAgencyUser && !account);
 
   return (
     <CrmShell>
@@ -47,8 +63,8 @@ export function SocialPage() {
           )}
         </div>
 
-        <div className="min-h-0 overflow-y-auto" style={{ flex: 1 }}>
-          <div style={{ maxWidth: 1386, padding: isMobile ? "14px 16px 32px" : "20px 24px 40px", display: "flex", flexDirection: "column", gap: 18 }}>
+        <div className="min-h-0 overflow-y-auto w-full max-w-[1386px] mr-auto" style={{ flex: 1 }}>
+          <div style={{ padding: isMobile ? "14px 16px 32px" : "20px 24px 40px", display: "flex", flexDirection: "column", gap: 18 }}>
             {sections.length > 1 && (
               <div className="la-seg la-seg--pill" role="tablist" aria-label={t("page.sections")} style={{ overflowX: "auto", scrollbarWidth: "none", alignSelf: "flex-start", maxWidth: "100%" }}>
                 {sections.map((s) => (

@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { pickSocialAccount, socialAccountOptions } from "./socialPage";
+import { parseSocialDeepLink, pickSocialAccount, socialAccountOptions } from "./socialPage";
 
 const rows = [
   { id: 1, name: "Lead Awaker", social_enabled: false },
@@ -31,4 +31,11 @@ test("client: always their own account, never another", () => {
   assert.equal(picked?.timeZone, "America/Sao_Paulo");
   assert.equal(pickSocialAccount({ isAgency: false, currentAccountId: 56, options: socialAccountOptions(rows), ownAccount: { id: 12 } })?.id, 56);
   assert.equal(pickSocialAccount({ isAgency: false, currentAccountId: 0, options: [] }), null);
+});
+
+test("deep links: account and section, junk ignored", () => {
+  assert.deepEqual(parseSocialDeepLink("?account=56&section=studio"), { accountId: 56, section: "studio" });
+  assert.deepEqual(parseSocialDeepLink("account=12"), { accountId: 12, section: null });
+  assert.deepEqual(parseSocialDeepLink("?account=-3&section=<script>"), { accountId: null, section: null });
+  assert.deepEqual(parseSocialDeepLink(""), { accountId: null, section: null });
 });

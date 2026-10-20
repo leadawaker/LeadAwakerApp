@@ -53,3 +53,14 @@ export function socialSections(_who: { isAgency: boolean; userRole: string }): S
 
 /** Old notification links pointed at the account workspace tab; they now open the Socials page. */
 export const SOCIAL_PAGE_PATH = "/platform/social";
+
+/** `?account=<id>&section=<name>` from a notification or an in-app link (shared/socialStudio.ts socialPageLink). */
+export function parseSocialDeepLink(search: string): { accountId: number | null; section: string | null } {
+  const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
+  const id = Number(params.get("account"));
+  const section = params.get("section");
+  return {
+    accountId: Number.isInteger(id) && id > 0 ? id : null,
+    section: section && /^[a-z_]{1,32}$/.test(section) ? section : null,
+  };
+}

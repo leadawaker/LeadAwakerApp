@@ -19,9 +19,11 @@ import { unlink } from "node:fs/promises";
 import { resolve, sep } from "node:path";
 import type { Express, Request, RequestHandler, Response } from "express";
 import type { InsertSocialPost, SocialConnection, SocialPost } from "@shared/schema";
-import { DEFAULT_TIMEZONE, type ApprovalStatus, type SocialPostStatus } from "@shared/socialPosts";
-import { accountIdFor, wrapAsync } from "../routes/_helpers";
+import type { ApprovalStatus, SocialPostStatus } from "@shared/socialPosts";
+import { socialPageLink } from "@shared/socialStudio";
+import { wrapAsync } from "../routes/_helpers";
 import { canManageSocial, isAgency } from "./access";
+import { makeAccountGate, type AccountCtx } from "./gate";
 import type { SocialNotifType } from "./notify";
 import {
   APPROVE_FROM,
@@ -45,7 +47,6 @@ import {
 import type { UploadOutcome, VideoCheck } from "./upload";
 
 const REJECT_NOTE_MAX = 1000;
-const POST_LINK = "/platform/social";
 const MEDIA_CONTENT_TYPE: Record<VideoExt, string> = { mp4: "video/mp4", mov: "video/quicktime" };
 
 export interface PostRouteDeps {
@@ -82,7 +83,6 @@ export interface PostRouteDeps {
   notifyAccountManagers(accountId: number, n: { type: SocialNotifType; key: "needs_approval" | "published"; vars: Record<string, string>; link: string }): Promise<void>;
 }
 
-type AccountCtx = { accountId: number; timeZone: string; language: string | null };
 
 export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): void {
   const { store } = deps;
@@ -112,20 +112,7 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
   }
 
   /** accountIdFor, then the account must exist and (for client users) have Social switched on. Sends the error itself. */
-  async function accountGate(req: Request, res: Response): Promise<AccountCtx | null> {
-    const accountId = accountIdFor(req, res);
-    if (accountId === null) return null;
-    const account = await store.getAccount(accountId);
-    if (!account) {
-      res.status(404).json({ message: "Account not found" });
-      return null;
-    }
-    if (req.user && !isAgency(req.user) && !account.socialEnabled) {
-      res.status(403).json({ message: "Social is not enabled for this account", reason: "not_enabled" });
-      return null;
-    }
-    return { accountId, timeZone: account.timezone || DEFAULT_TIMEZONE, language: account.language };
-  }
+  const accountGate = makeAccountGate((id) => store.getAccount(id));
 
   function postIdOf(req: Request, res: Response): number | null {
     const id = Number(req.params.postId);
@@ -146,7 +133,7 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
       type: "social_post_needs_approval",
       key: "needs_approval",
       vars: { caption: p.caption, when: formatWhen(p.scheduledAt, ctx.timeZone, ctx.language) },
-      link: POST_LINK,
+      link: socialPageLink(ctx.accountId),
     }).catch(() => {});
   }
 
@@ -314,7 +301,7 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
       title: "Client rejected a post",
       body: note ? `Post ${postId} was rejected: "${note}"` : `Post ${postId} was rejected without a note.`,
       accountId: ctx.accountId,
-      link: POST_LINK,
+      link: socialPageLink(ctx.accountId),
     }).catch(() => {});
     res.json(await viewOf(updated));
   }));
