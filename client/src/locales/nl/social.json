@@ -1,0 +1,13 @@
+{
+  "page": {
+    "title": "Socials",
+    "subtitle": "Instagram-posts, studio en inzichten",
+    "pickAccount": "Kies een account",
+    "sections": "Onderdelen van Socials",
+    "loading": "Socials laden",
+    "noAccounts": "Nog geen account heeft Socials aan. Zet het aan via Accounts, Integraties, Social.",
+    "tabs": {
+      "posts": "Posts"
+    }
+  }
+}

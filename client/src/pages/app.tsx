@@ -50,6 +50,7 @@ const AgentChatPage = lazy(() => import("@/features/ai-agents/pages/AgentChatPag
 const SpeedToLeadPage = lazy(() => import("@/features/speed-to-lead/pages/SpeedToLeadPage").then(m => ({ default: m.SpeedToLeadPage })));
 const ReputationPage = lazy(() => import("@/features/reputation/ReputationPage").then(m => ({ default: m.ReputationPage })));
 const VoicePage = lazy(() => import("@/features/voice/VoicePage").then(m => ({ default: m.VoicePage })));
+const SocialPage = lazy(() => import("@/features/social/pages/SocialPage").then(m => ({ default: m.SocialPage })));
 // OpportunitiesPage merged into Leads as "Pipeline" tab — route redirects below
 
 function isAuthed() {
@@ -282,6 +283,8 @@ export default function AppArea() {
             <ServicePageGuard service="missedcall"><VoicePage /></ServicePageGuard>
           </Route>
           <Route path="/platform/calendar" component={CalendarPage} />
+          {/* Agency always; client users once the agency switched Social on (the page redirects otherwise). */}
+          <Route path="/platform/social" component={SocialPage} />
           <Route path="/platform/settings" component={SettingsPage} />
 
           <Route path="/platform/ai-agents/:agentId">

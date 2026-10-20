@@ -1,4 +1,4 @@
-// The account workspace's Social tab: the account's scheduled Reels in sections (needs approval,
+// The Posts section of the Socials page: the account's scheduled Reels in sections (needs approval,
 // upcoming, held, failed, published), a New post panel for agency, and the Instagram connect card
 // when nothing is connected yet. Client users of the account see the same list; Managers also
 // approve and reject. Times are shown in the account's zone.
@@ -59,7 +59,7 @@ export function SocialTab({ accountId, timeZone }: { accountId: number; timeZone
         )}
       </header>
 
-      {!connected && <InstagramConnectCard accountId={accountId} />}
+      {!connected && <InstagramConnectCard accountId={accountId} showSocialsLink={false} />}
 
       {sheet && (
         <PostSheet

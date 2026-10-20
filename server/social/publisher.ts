@@ -21,7 +21,7 @@ const FIRST_RUN_MS = 30_000;
 const PROCESSING_TIMEOUT_MS = 15 * 60_000;
 /** A due post that keeps hitting network errors (not Graph errors) is retried for this long. */
 const START_RETRY_WINDOW_MS = 15 * 60_000;
-const POST_LINK = "/platform/accounts?tab=social";
+const POST_LINK = "/platform/social";
 const ERROR_MAX = 500;
 
 type ContainerCode = "IN_PROGRESS" | "FINISHED" | "ERROR" | "EXPIRED" | "PUBLISHED";

@@ -12,7 +12,12 @@
   "requestChange": {
     "note": "Lead Awaker beheert deze instellingen voor je.",
     "button": "Wijziging aanvragen",
-    "areas": { "chat": "de websitechat", "alerts": "meldingen", "phone": "de telefoonlijn", "integrations": "koppelingen" },
+    "areas": {
+      "chat": "de websitechat",
+      "alerts": "meldingen",
+      "phone": "de telefoonlijn",
+      "integrations": "koppelingen"
+    },
     "draft": "Hoi Gabriel, ik wil graag iets wijzigen bij {{area}}: "
   },
   "sidebar": {
@@ -65,7 +70,8 @@
     "documentation": "Documentatie",
     "socialMedia": "Sociale media",
     "founderInbox": "Support-inbox",
-    "logout": "Uitloggen"
+    "logout": "Uitloggen",
+    "social": "Socials"
   },
   "sidebarSections": {
     "engage": "Betrekken",

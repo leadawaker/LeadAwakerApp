@@ -491,8 +491,7 @@
       "voice": "Phone",
       "chat": "Chat",
       "alerts": "Alerts",
-      "automations": "Automations",
-      "social": "Social"
+      "automations": "Automations"
     },
     "createAccount": "Create account",
     "compactPanel": "Compact panel",
@@ -914,7 +913,9 @@
         "failed": "Something went wrong while connecting. Try again."
       },
       "attentionHelpNamed": "@{{username}}: the connection needs a fresh login before posts can go out.",
-      "loading": "Loading Instagram status"
+      "loading": "Loading Instagram status",
+      "goToSocials": "Go to Socials",
+      "toastOpenSocials": "Open Socials"
     },
     "posts": {
       "title": "Scheduled Reels",

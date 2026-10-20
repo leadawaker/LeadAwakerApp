@@ -491,8 +491,7 @@
       "voice": "Telefoon",
       "chat": "Chat",
       "alerts": "Meldingen",
-      "automations": "Automatiseringen",
-      "social": "Social"
+      "automations": "Automatiseringen"
     },
     "createAccount": "Account aanmaken",
     "compactPanel": "Paneel verkleinen",
@@ -914,7 +913,9 @@
         "failed": "Er ging iets mis bij het koppelen. Probeer het opnieuw."
       },
       "attentionHelpNamed": "@{{username}}: de koppeling heeft een nieuwe login nodig voordat er posts uit kunnen.",
-      "loading": "Instagram-status laden"
+      "loading": "Instagram-status laden",
+      "goToSocials": "Naar Socials",
+      "toastOpenSocials": "Open Socials"
     },
     "posts": {
       "title": "Geplande Reels",

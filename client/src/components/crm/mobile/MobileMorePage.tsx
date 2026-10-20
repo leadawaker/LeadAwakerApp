@@ -155,6 +155,7 @@ export function MobileMorePage({
   const engageItems = visible([
     ...(calendarInBar ? [] : [{ label: t("sidebar.calendar"), href: `${prefix}/calendar`, icon: NAV_ICON.calendar }]),
     { label: t("sidebar.leads"), href: `${prefix}/contacts`, icon: BookUser, agencyOnly: true },
+    { label: t("sidebar.social"), href: `${prefix}/social`, icon: NAV_ICON.social, agencyOnly: true },
   ]);
   const adminItems = visible([
     { label: t("sidebar.accounts"), href: `${prefix}/accounts`, icon: Building2, agencyOnly: true, agencyViewOnly: true },

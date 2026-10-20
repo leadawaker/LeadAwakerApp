@@ -1,0 +1,13 @@
+{
+  "page": {
+    "title": "Socials",
+    "subtitle": "Instagram posts, studio and insights",
+    "pickAccount": "Pick an account",
+    "sections": "Socials sections",
+    "loading": "Loading Socials",
+    "noAccounts": "No account has Socials switched on yet. Switch it on in Accounts, Integrations, Social.",
+    "tabs": {
+      "posts": "Posts"
+    }
+  }
+}

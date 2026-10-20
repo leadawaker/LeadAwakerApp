@@ -39,6 +39,7 @@ import enVoiceTab from "./locales/en/voiceTab.json";
 import enChatTab from "./locales/en/chatTab.json";
 import enWhatsappCloud from "./locales/en/whatsappCloud.json";
 import enClientAlerts from "./locales/en/clientAlerts.json";
+import enSocial from "./locales/en/social.json";
 
 import ptDocs from "./locales/pt/docs.json";
 import ptCommon from "./locales/pt/common.json";
@@ -74,6 +75,7 @@ import ptVoiceTab from "./locales/pt/voiceTab.json";
 import ptChatTab from "./locales/pt/chatTab.json";
 import ptWhatsappCloud from "./locales/pt/whatsappCloud.json";
 import ptClientAlerts from "./locales/pt/clientAlerts.json";
+import ptSocial from "./locales/pt/social.json";
 
 import nlDocs from "./locales/nl/docs.json";
 import nlCommon from "./locales/nl/common.json";
@@ -109,6 +111,7 @@ import nlVoiceTab from "./locales/nl/voiceTab.json";
 import nlChatTab from "./locales/nl/chatTab.json";
 import nlWhatsappCloud from "./locales/nl/whatsappCloud.json";
 import nlClientAlerts from "./locales/nl/clientAlerts.json";
+import nlSocial from "./locales/nl/social.json";
 
 const resources = {
   en: {
@@ -146,6 +149,7 @@ const resources = {
     chatTab: enChatTab,
     whatsappCloud: enWhatsappCloud,
     clientAlerts: enClientAlerts,
+    social: enSocial,
   },
   pt: {
     common: ptCommon,
@@ -182,6 +186,7 @@ const resources = {
     chatTab: ptChatTab,
     whatsappCloud: ptWhatsappCloud,
     clientAlerts: ptClientAlerts,
+    social: ptSocial,
   },
   nl: {
     common: nlCommon,
@@ -218,6 +223,7 @@ const resources = {
     chatTab: nlChatTab,
     whatsappCloud: nlWhatsappCloud,
     clientAlerts: nlClientAlerts,
+    social: nlSocial,
   },
 };
 
@@ -265,6 +271,7 @@ i18n
       "chatTab",
       "whatsappCloud",
       "clientAlerts",
+      "social",
     ],
 
     interpolation: {

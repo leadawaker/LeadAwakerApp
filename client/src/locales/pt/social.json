@@ -1,0 +1,13 @@
+{
+  "page": {
+    "title": "Redes sociais",
+    "subtitle": "Posts do Instagram, estúdio e resultados",
+    "pickAccount": "Escolha uma conta",
+    "sections": "Seções das redes sociais",
+    "loading": "Carregando redes sociais",
+    "noAccounts": "Nenhuma conta tem as redes sociais ativadas. Ative em Contas, Integrações, Social.",
+    "tabs": {
+      "posts": "Posts"
+    }
+  }
+}

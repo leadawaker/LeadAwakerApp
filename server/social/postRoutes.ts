@@ -45,7 +45,7 @@ import {
 import type { UploadOutcome, VideoCheck } from "./upload";
 
 const REJECT_NOTE_MAX = 1000;
-const POST_LINK = "/platform/accounts?tab=social";
+const POST_LINK = "/platform/social";
 const MEDIA_CONTENT_TYPE: Record<VideoExt, string> = { mp4: "video/mp4", mov: "video/quicktime" };
 
 export interface PostRouteDeps {

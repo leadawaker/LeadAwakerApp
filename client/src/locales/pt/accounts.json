@@ -484,8 +484,7 @@
       "voice": "Telefone",
       "chat": "Chat",
       "alerts": "Alertas",
-      "automations": "Automações",
-      "social": "Social"
+      "automations": "Automações"
     },
     "createAccount": "Criar conta",
     "compactPanel": "Compactar painel",
@@ -865,7 +864,9 @@
         "failed": "Algo deu errado ao conectar. Tente de novo."
       },
       "attentionHelpNamed": "@{{username}}: a conexão precisa de um novo login antes que os posts possam ser publicados.",
-      "loading": "Carregando o status do Instagram"
+      "loading": "Carregando o status do Instagram",
+      "goToSocials": "Ir para redes sociais",
+      "toastOpenSocials": "Abrir redes sociais"
     },
     "posts": {
       "title": "Reels agendados",

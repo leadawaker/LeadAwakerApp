@@ -4,8 +4,10 @@ import {
   agencyBottomBar, clientBottomBar, clientMoreItems, clientNavItems, isSameRoute, myAccountLabelKey, type ClientNavFacts,
 } from "./navGates";
 
-const none: ClientNavFacts = { voiceLive: false, hasInvoices: false, hasReactivation: false, hasReceptionist: true, hasChats: false };
-const all: ClientNavFacts = { voiceLive: true, hasInvoices: true, hasReactivation: true, hasReceptionist: true, hasChats: true };
+const none: ClientNavFacts = { voiceLive: false, hasInvoices: false, hasReactivation: false, hasReceptionist: true, hasChats: false, hasSocial: false };
+const all: ClientNavFacts = { voiceLive: true, hasInvoices: true, hasReactivation: true, hasReceptionist: true, hasChats: true, hasSocial: false };
+// Account 56 (Augusto): Social switched on, no voice line, no chats.
+const augusto: ClientNavFacts = { ...none, hasSocial: true };
 // Account 53: phone + website chat, no reactivation, no invoices yet.
 const thijs: ClientNavFacts = { ...none, voiceLive: true, hasChats: true };
 
@@ -41,6 +43,30 @@ test("agency bar: Home, Calls, Chats, Tasks; Calendar stands in without voice", 
 test("the account label falls back to My account without a receptionist", () => {
   assert.equal(myAccountLabelKey(none), "sidebar.myReceptionist");
   assert.equal(myAccountLabelKey({ ...none, hasReceptionist: false }), "sidebar.myAccount");
+});
+
+test("Socials sits after Calendar on the desktop nav, only when Social is on", () => {
+  assert.deepEqual(clientNavItems(augusto), ["home", "leads", "calendar", "social", "myReceptionist"]);
+  assert.deepEqual(clientNavItems({ ...all, hasSocial: true }), ["home", "calls", "chats", "leads", "calendar", "social", "myReceptionist", "billing", "campaigns"]);
+  assert.ok(!clientNavItems(all).includes("social"));
+});
+
+test("Socials takes the free fourth bar slot, else it goes on More", () => {
+  assert.deepEqual(clientBottomBar(augusto), ["home", "calendar", "leads", "social"]);
+  assert.deepEqual(clientMoreItems(augusto), ["myReceptionist"]);
+  const withVoice = { ...augusto, voiceLive: true };
+  assert.deepEqual(clientBottomBar(withVoice), ["home", "calls", "calendar", "leads"]);
+  assert.deepEqual(clientMoreItems(withVoice), ["social", "myReceptionist"]);
+});
+
+test("Social off changes nothing in the bar or on More", () => {
+  assert.deepEqual(clientBottomBar(none), ["home", "calendar", "leads"]);
+  assert.deepEqual(clientMoreItems(none), ["myReceptionist"]);
+});
+
+test("the agency bar never holds Socials (it is on More)", () => {
+  assert.ok(!agencyBottomBar(true).includes("social"));
+  assert.ok(!agencyBottomBar(false).includes("social"));
 });
 
 test("a link to the open page counts as the same route", () => {

@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { parseInstagramReturn, stripInstagramParams } from "@/features/social/lib/socialState";
-import { showSocialTab } from "@/features/social/lib/posts";
-import { useSocialStatus } from "@/features/social/components/InstagramConnectCard";
+import { SOCIAL_PAGE_PATH } from "@/features/social/lib/socialPage";
+import { useLocation } from "wouter";
 import type { ConnectionGroup } from "./ConnectionsOverview";
 import { useMarkVisited } from "@/features/home/onboarding/useOnboarding";
 import { useTranslation } from "react-i18next";
@@ -32,7 +33,8 @@ import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
 // Onboarding ("communication") has no tab: it opens from a button on Overview.
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "voice", "chat", "social", "alerts", "automations"];
+// Socials has its own page in the nav bar (/platform/social); an old ?tab=social link is sent there.
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "voice", "chat", "alerts", "automations"];
 
 interface Props {
   accounts: AccountRow[];
@@ -125,13 +127,12 @@ export function AccountsWorkspace(p: Props) {
 
   const detailData = useAccountDetailData(accountId);
 
-  // Social shows for agency always, for client users once the agency switched it on.
-  const { data: socialStatus, isFetched: socialFetched } = useSocialStatus(accountId);
-  const socialVisible = showSocialTab({ isAgency: isAgencyUser, enabled: socialStatus?.enabled === true });
-  const tabs = useMemo(() => (socialVisible ? visibleTabs : visibleTabs.filter((k) => k !== "social")), [visibleTabs, socialVisible]);
+  const tabs = visibleTabs;
+  // Notifications sent before Socials moved to the nav bar link to ?tab=social.
+  const [, setLocation] = useLocation();
   useEffect(() => {
-    if (tab === "social" && !socialVisible && socialFetched) setTab("overview");
-  }, [tab, socialVisible, socialFetched]);
+    if (new URLSearchParams(window.location.search).get("tab") === "social") setLocation(SOCIAL_PAGE_PATH, { replace: true });
+  }, [setLocation]);
   const d = useMemo(() => (account ? toAccountDetail(account, t) : null), [account, t]);
   // Header figures that point at the tabs (calls, phone line, WhatsApp, alerts).
   const metrics = useHeaderMetrics(accountId);
@@ -166,7 +167,12 @@ export function AccountsWorkspace(p: Props) {
     if (!result) return;
     setTab("integrations");
     setIntegrationsGroup("social");
-    if (result.kind === "connected") toast({ title: t("social.connect.toastConnected") });
+    if (result.kind === "connected") {
+      toast({
+        title: t("social.connect.toastConnected"),
+        action: <ToastAction altText={t("social.connect.toastOpenSocials")} onClick={() => setLocation(SOCIAL_PAGE_PATH)}>{t("social.connect.toastOpenSocials")}</ToastAction>,
+      });
+    }
     else toast({ title: t("social.connect.toastFailed"), description: t(`social.connect.errors.${result.reason}`), variant: "destructive" });
     queryClient.invalidateQueries({ queryKey: ["social-status"] }); // every account's status (socialStatusKey prefix)
     window.history.replaceState(null, "", window.location.pathname + stripInstagramParams(window.location.search));
