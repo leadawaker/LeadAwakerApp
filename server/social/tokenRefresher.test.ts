@@ -24,7 +24,12 @@ function deps(): RefresherDeps {
       tokens.set(id, token);
       Object.assign(conns.find((c) => c.id === id)!, { tokenExpiresAt: expiresAt, tokenRefreshedAt: now });
     },
-    setStatus: async (id, status, lastError) => { Object.assign(conns.find((c) => c.id === id)!, { status, lastError }); },
+    setStatus: async (id, status, lastError) => {
+      const c = conns.find((x) => x.id === id)!;
+      if (c.status === "disconnected") return false;
+      Object.assign(c, { status, lastError });
+      return true;
+    },
     markWarned: async (id, at) => { conns.find((c) => c.id === id)!.expiryWarnedAt = at; },
     notifyAgency: async (n) => { notes.push(n.body); },
   };
@@ -76,6 +81,22 @@ test("within 7 days of expiry and not refreshed: one warning a day", async () =>
   await runTokenRefreshOnce(deps());
   assert.equal(notes.filter((n) => /expires/.test(n)).length, 1);
   assert.ok(conns[0].expiryWarnedAt instanceof Date);
+});
+
+test("a disconnect while the refresh is in flight stays disconnected", async () => {
+  conns = [conn({})];
+  refreshResult = async () => { conns[0].status = "disconnected"; return { accessToken: "new", expiresAt: days(60) }; };
+  await runTokenRefreshOnce(deps());
+  assert.equal(conns[0].status, "disconnected");
+  assert.equal(notes.length, 0);
+});
+
+test("after expiry the agency is told once, not every day", async () => {
+  conns = [conn({ tokenExpiresAt: days(-1) })];
+  await runTokenRefreshOnce(deps());
+  conns[0].expiryWarnedAt = null; // a day later
+  await runTokenRefreshOnce(deps());
+  assert.equal(notes.length, 1);
 });
 
 const tmp = mkdtempSync(join(tmpdir(), "social-cleanup-"));

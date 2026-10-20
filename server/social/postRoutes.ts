@@ -65,7 +65,10 @@ export interface PostRouteDeps {
       postId: number,
       allowedStatuses: SocialPostStatus[],
       fields: Partial<InsertSocialPost>,
-      opts?: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null } },
+      opts?: {
+        approvalStatuses?: ApprovalStatus[];
+        content?: { caption: string; videoPublicId: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
+      },
     ): Promise<SocialPost | null>;
     getSocialUserNames(ids: number[]): Promise<Map<number, string>>;
   };

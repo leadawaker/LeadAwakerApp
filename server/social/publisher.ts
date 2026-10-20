@@ -12,7 +12,7 @@
 // Each post has its own try/catch; one failure never stops the tick.
 import type { InsertSocialPost, SocialPost } from "@shared/schema";
 import { classifyScheduledPost, type ApprovalStatus, type SocialPostStatus } from "@shared/socialPosts";
-import { IgApiError } from "./instagramApi";
+import { isTransientIgError } from "./instagramApi";
 import type { SocialNotifType } from "./notify";
 import { formatWhen } from "./postService";
 
@@ -39,7 +39,10 @@ export interface PublisherDeps {
     postId: number,
     allowedStatuses: SocialPostStatus[],
     fields: Partial<InsertSocialPost>,
-    opts?: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null } },
+    opts?: {
+      approvalStatuses?: ApprovalStatus[];
+      content?: { caption: string; videoPublicId: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
+    },
   ): Promise<SocialPost | null>;
   ig: {
     createReelContainer(igUserId: string, token: string, input: { videoUrl: string; caption: string; shareToFeed: boolean; isAiGenerated: boolean }): Promise<string>;
@@ -75,9 +78,12 @@ async function fail(d: PublisherDeps, p: SocialPost, from: SocialPostStatus, rea
   });
 }
 
-/** The write that claims a due post must find it exactly as the decision saw it. */
+/** The write that claims (or holds) a due post must find it exactly as the decision saw it: approval, content, time and toggles. */
 function sameAsSeen(p: SocialPost) {
-  return { approvalStatuses: [p.approvalStatus as ApprovalStatus], content: { caption: p.caption, videoPublicId: p.videoPublicId } };
+  return {
+    approvalStatuses: [p.approvalStatus as ApprovalStatus],
+    content: { caption: p.caption, videoPublicId: p.videoPublicId, scheduledAt: p.scheduledAt, shareToFeed: p.shareToFeed, isAiGenerated: p.isAiGenerated },
+  };
 }
 
 async function handleDue(d: PublisherDeps, p: SocialPost, now: Date): Promise<void> {
@@ -90,7 +96,7 @@ async function handleDue(d: PublisherDeps, p: SocialPost, now: Date): Promise<vo
   if (action === "wait") return;
 
   if (action === "hold") {
-    const held = await d.updateIf(p.id, ["scheduled"], { status: "held" }, { approvalStatuses: [p.approvalStatus as ApprovalStatus] });
+    const held = await d.updateIf(p.id, ["scheduled"], { status: "held" }, sameAsSeen(p));
     if (!held) return;
     await d.notifyAgency({
       type: "social_post_held",
@@ -108,7 +114,10 @@ async function handleDue(d: PublisherDeps, p: SocialPost, now: Date): Promise<vo
 
   try {
     const left = await d.ig.getPublishingQuotaLeft(conn.externalUserId, conn.token).catch(() => null);
-    if (left !== null && left <= 0) return; // try again next tick
+    if (left !== null && left <= 0) {
+      console.warn(`[social-publisher] post ${p.id}: no Instagram publishing quota left for account ${p.accountsId}; trying again next tick`);
+      return;
+    }
     const containerId = await d.ig.createReelContainer(conn.externalUserId, conn.token, {
       videoUrl: d.mediaUrl(p.videoPublicId, p.videoExt),
       caption: p.caption,
@@ -118,7 +127,7 @@ async function handleDue(d: PublisherDeps, p: SocialPost, now: Date): Promise<vo
     // An unclaimed container is harmless: Meta expires it after 24 h and nothing is published.
     await d.updateIf(p.id, ["scheduled"], { status: "publishing", igContainerId: containerId, publishingStartedAt: now }, sameAsSeen(p));
   } catch (err) {
-    if (err instanceof IgApiError) return fail(d, p, "scheduled", errorText(err));
+    if (!isTransientIgError(err)) return fail(d, p, "scheduled", errorText(err));
     if (now.getTime() - p.scheduledAt.getTime() > START_RETRY_WINDOW_MS) return fail(d, p, "scheduled", errorText(err));
     console.warn(`[social-publisher] post ${p.id}: ${errorText(err)}; retrying next tick`);
   }
@@ -168,13 +177,16 @@ async function handlePublishing(d: PublisherDeps, p: SocialPost, now: Date): Pro
     if (timedOut) await fail(d, p, "publishing", "Instagram did not finish processing the video within 15 minutes");
     return;
   }
-  // FINISHED: publish. If the call errors, the container's status on the next tick says whether it went through.
+  // FINISHED. A publish error is never a failure straight away: the response may have been lost
+  // while the Reel went live, and a failed post can be retried (a second Reel). The error is kept in
+  // lastError; only a later tick that still sees FINISHED (so it did not go out) may fail the post.
+  if (timedOut && p.lastError) return fail(d, p, "publishing", p.lastError);
   let mediaId: string;
   try {
     mediaId = await d.ig.publishContainer(conn.externalUserId, token, p.igContainerId);
   } catch (err) {
-    if (timedOut) await fail(d, p, "publishing", errorText(err));
-    else console.warn(`[social-publisher] post ${p.id}: media_publish failed (${errorText(err)}); checking again next tick`);
+    console.warn(`[social-publisher] post ${p.id}: media_publish failed (${errorText(err)}); checking again next tick`);
+    await d.updateIf(p.id, ["publishing"], { lastError: errorText(err) });
     return;
   }
   await markPublished(d, p, token, mediaId, now);

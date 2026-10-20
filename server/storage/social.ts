@@ -95,10 +95,13 @@ export const socialStorage = {
     return row;
   },
 
-  async setSocialConnectionStatus(id: number, status: SocialConnectionStatus, lastError: string | null): Promise<void> {
-    await db.update(socialConnections)
+  /** false when nothing changed: a disconnected connection stays disconnected (a disconnect wins over a refresh in flight). */
+  async setSocialConnectionStatus(id: number, status: SocialConnectionStatus, lastError: string | null): Promise<boolean> {
+    const rows = await db.update(socialConnections)
       .set({ status, lastError, updatedAt: new Date() })
-      .where(eq(socialConnections.id, id));
+      .where(and(eq(socialConnections.id, id), ne(socialConnections.status, "disconnected")))
+      .returning({ id: socialConnections.id });
+    return rows.length > 0;
   },
 
   /** Wipes the token and marks the connection disconnected. Scheduled posts fail at their own publish time. */
@@ -183,7 +186,10 @@ export const socialStorage = {
     postId: number,
     allowedStatuses: SocialPostStatus[],
     fields: Partial<InsertSocialPost>,
-    opts: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null } } = {},
+    opts: {
+      approvalStatuses?: ApprovalStatus[];
+      content?: { caption: string; videoPublicId: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
+    } = {},
   ): Promise<SocialPost | null> {
     if (allowedStatuses.length === 0) return null;
     const conds: SQL[] = [eq(socialPosts.id, postId), inArray(socialPosts.status, allowedStatuses)];
@@ -191,6 +197,9 @@ export const socialStorage = {
     if (opts.content) {
       conds.push(eq(socialPosts.caption, opts.content.caption));
       conds.push(opts.content.videoPublicId === null ? isNull(socialPosts.videoPublicId) : eq(socialPosts.videoPublicId, opts.content.videoPublicId));
+      if (opts.content.scheduledAt) conds.push(eq(socialPosts.scheduledAt, opts.content.scheduledAt));
+      if (opts.content.shareToFeed !== undefined) conds.push(eq(socialPosts.shareToFeed, opts.content.shareToFeed));
+      if (opts.content.isAiGenerated !== undefined) conds.push(eq(socialPosts.isAiGenerated, opts.content.isAiGenerated));
     }
     const [row] = await db.update(socialPosts)
       .set({ ...fields, updatedAt: new Date() })

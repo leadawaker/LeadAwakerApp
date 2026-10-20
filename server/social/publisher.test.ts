@@ -51,13 +51,17 @@ function deps(): PublisherDeps {
       p.scheduledAt > now && p.scheduledAt.getTime() - now.getTime() <= 86_400_000).map((p) => ({ ...p })),
     getConnection: async () => (connStatus === null ? null : { status: connStatus, externalUserId: "1784", token }),
     getAccount: async () => ({ timeZone: "America/Sao_Paulo", language: "Portuguese" }),
-    updateIf: async (postId, allowed: SocialPostStatus[], fields, opts: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null } } = {}) => {
+    updateIf: async (postId, allowed: SocialPostStatus[], fields, opts: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean } } = {}) => {
       const p = posts.find((x) => x.id === postId);
       if (!p) return null;
       beforeUpdate?.(p);
       if (!allowed.includes(p.status as SocialPostStatus)) return null;
       if (opts.approvalStatuses?.length && !opts.approvalStatuses.includes(p.approvalStatus as ApprovalStatus)) return null;
-      if (opts.content && (opts.content.caption !== p.caption || opts.content.videoPublicId !== p.videoPublicId)) return null;
+      const c = opts.content;
+      if (c && (c.caption !== p.caption || c.videoPublicId !== p.videoPublicId)) return null;
+      if (c?.scheduledAt && c.scheduledAt.getTime() !== p.scheduledAt.getTime()) return null;
+      if (c?.shareToFeed !== undefined && c.shareToFeed !== p.shareToFeed) return null;
+      if (c?.isAiGenerated !== undefined && c.isAiGenerated !== p.isAiGenerated) return null;
       Object.assign(p, fields);
       return p;
     },
@@ -199,9 +203,28 @@ test("one failing post does not stop the others", async () => {
   assert.equal(posts[1].status, "publishing");
 });
 
+test("a network error as the Graph client reports it is retried, not failed", async () => {
+  posts = [makePost({})];
+  ig.createError = () => new IgApiError("Instagram request failed: timeout", undefined, "network");
+  await runPublishOnce(deps());
+  assert.equal(posts[0].status, "scheduled");
+});
+
+test("a reschedule or a toggle while the container is created wins: the post is not claimed", async () => {
+  posts = [makePost({})];
+  beforeUpdate = (p) => { p.scheduledAt = min(1440); };
+  await runPublishOnce(deps());
+  assert.equal(posts[0].status, "scheduled");
+  assert.equal(posts[0].igContainerId, null);
+  posts = [makePost({ id: 2 })];
+  beforeUpdate = (p) => { p.isAiGenerated = false; };
+  await runPublishOnce(deps());
+  assert.equal(posts[0].status, "scheduled");
+});
+
 test("a network error that keeps failing for 15 minutes fails the post", async () => {
   posts = [makePost({ scheduledAt: min(-16) })];
-  ig.createError = () => new Error("socket hang up");
+  ig.createError = () => new IgApiError("Instagram request failed: network error", undefined, "network");
   await runPublishOnce(deps());
   assert.equal(posts[0].status, "failed");
 });
@@ -259,6 +282,26 @@ test("a publish call that errors is not failed at once: the next tick checks the
   await runPublishOnce(deps());
   assert.equal(posts[0].status, "published");
   assert.equal(ig.publishCalls, 0);
+});
+
+test("a publish error after 15 minutes is not a failure until the container confirms it did not go out", async () => {
+  posts = [makePost({ status: "publishing", igContainerId: "c1", publishingStartedAt: min(-20) })];
+  ig.status = { code: "FINISHED", message: null };
+  ig.publishError = new Error("timeout");
+  await runPublishOnce(deps());
+  assert.equal(posts[0].status, "publishing", "the response was lost, the Reel may be live");
+  ig.status = { code: "PUBLISHED", message: null };
+  await runPublishOnce(deps());
+  assert.equal(posts[0].status, "published", "so a Retry can never post it twice");
+});
+
+test("a publish that keeps erroring past 15 minutes fails once the container still says FINISHED", async () => {
+  posts = [makePost({ status: "publishing", igContainerId: "c1", publishingStartedAt: min(-20) })];
+  ig.status = { code: "FINISHED", message: null };
+  ig.publishError = new Error("timeout");
+  await runPublishOnce(deps());
+  await runPublishOnce(deps());
+  assert.equal(posts[0].status, "failed");
 });
 
 test("container ERROR fails the post with Meta's message", async () => {

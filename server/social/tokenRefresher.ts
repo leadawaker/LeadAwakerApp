@@ -33,7 +33,8 @@ export interface RefresherDeps {
   getToken(c: RefreshableConnection): string | null;
   refresh(token: string): Promise<{ accessToken: string; expiresAt: Date }>;
   updateToken(id: number, token: string, expiresAt: Date): Promise<void>;
-  setStatus(id: number, status: "connected" | "needs_attention", lastError: string | null): Promise<void>;
+  /** false when the connection was disconnected meanwhile (nothing written). */
+  setStatus(id: number, status: "connected" | "needs_attention", lastError: string | null): Promise<boolean>;
   markWarned(id: number, at: Date): Promise<void>;
   notifyAgency(n: { type: SocialNotifType; title: string; body: string; accountId: number; link: string }): Promise<void>;
 }
@@ -44,7 +45,10 @@ function who(c: RefreshableConnection): string {
 
 /** Marks the connection needs_attention; the agency hears about it only when it was fine before. */
 async function problem(d: RefresherDeps, c: RefreshableConnection, reason: string): Promise<void> {
-  await d.setStatus(c.id, "needs_attention", reason);
+  if (!(await d.setStatus(c.id, "needs_attention", reason))) {
+    c.status = "disconnected";
+    return;
+  }
   if (c.status === "needs_attention") return;
   c.status = "needs_attention";
   await d.notifyAgency({
@@ -68,8 +72,7 @@ async function refreshOne(d: RefresherDeps, c: RefreshableConnection, now: Date)
       try {
         const next = await d.refresh(token);
         await d.updateToken(c.id, next.accessToken, next.expiresAt);
-        await d.setStatus(c.id, "connected", null);
-        c.status = "connected";
+        c.status = (await d.setStatus(c.id, "connected", null)) ? "connected" : "disconnected";
         c.tokenExpiresAt = next.expiresAt;
         c.expiryWarnedAt = null;
         console.log(`[social-tokens] refreshed ${who(c)}`);
@@ -79,14 +82,14 @@ async function refreshOne(d: RefresherDeps, c: RefreshableConnection, now: Date)
     }
   }
 
-  if (shouldWarnExpiry(c, now)) {
-    const daysLeft = c.tokenExpiresAt ? Math.ceil((c.tokenExpiresAt.getTime() - now.getTime()) / 86_400_000) : 0;
+  // Once expired, the needs_attention notice above already said so: no daily repeat.
+  const expired = !!c.tokenExpiresAt && c.tokenExpiresAt.getTime() <= now.getTime();
+  if (!expired && shouldWarnExpiry(c, now)) {
+    const daysLeft = Math.ceil((c.tokenExpiresAt!.getTime() - now.getTime()) / 86_400_000);
     await d.notifyAgency({
       type: "social_token_problem",
       title: "Instagram token about to expire",
-      body: daysLeft > 0
-        ? `${who(c)}: the token expires in ${daysLeft} day(s) and has not been renewed. Reconnect to keep posting.`
-        : `${who(c)}: the token has expired. The client must reconnect Instagram.`,
+      body: `${who(c)}: the token expires in ${daysLeft} day(s) and has not been renewed. Reconnect to keep posting.`,
       accountId: c.accountsId,
       link: POST_LINK,
     });
