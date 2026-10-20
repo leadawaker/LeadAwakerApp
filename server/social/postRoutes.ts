@@ -30,6 +30,7 @@ import {
   UPLOAD_ID,
   canApprove,
   canReject,
+  contentVersion,
   formatWhen,
   parseMediaFile,
   parseNewPostBody,
@@ -64,7 +65,7 @@ export interface PostRouteDeps {
       postId: number,
       allowedStatuses: SocialPostStatus[],
       fields: Partial<InsertSocialPost>,
-      opts?: { approvalStatuses?: ApprovalStatus[] },
+      opts?: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null } },
     ): Promise<SocialPost | null>;
     getSocialUserNames(ids: number[]): Promise<Map<number, string>>;
   };
@@ -201,7 +202,14 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
       timeZone: ctx.timeZone, now: deps.now(), userId: req.user!.id, accountId: ctx.accountId, connectionId: connection.id, video,
     });
     if (!plan.ok) return refused(res, plan.status, plan.reason);
-    const created = await store.insertSocialPost(plan.row);
+    let created: SocialPost;
+    try {
+      created = await store.insertSocialPost(plan.row);
+    } catch (err: any) {
+      // Two creates with the same upload at once: the unique index on video_public_id decides.
+      if (err?.code === "23505") return refused(res, 409, "upload_used");
+      throw err;
+    }
     if (plan.notifyManagers) notifyNeedsApproval(ctx, created);
     res.status(201).json(await viewOf(created));
   }));
@@ -254,13 +262,15 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     const post = await store.getSocialPost(ctx.accountId, postId);
     if (!post) return res.status(404).json({ message: "Post not found" });
     if (!canApprove(post)) return refused(res, 409, "not_allowed");
+    // The Manager approves the version they saw: a caption or video edited since is not approved unseen.
+    if (req.body?.version !== contentVersion(post)) return refused(res, 409, "changed");
     const updated = await store.updateSocialPostIf(
       postId,
       APPROVE_FROM.statuses,
       { approvalStatus: "approved", approvedByUserId: req.user!.id, approvedAt: deps.now(), approvalNote: null },
-      { approvalStatuses: APPROVE_FROM.approval },
+      { approvalStatuses: APPROVE_FROM.approval, content: { caption: post.caption, videoPublicId: post.videoPublicId } },
     );
-    if (!updated) return refused(res, 409, "not_allowed");
+    if (!updated) return refused(res, 409, "changed");
     res.json(await viewOf(updated));
   }));
 
@@ -275,6 +285,7 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     const post = await store.getSocialPost(ctx.accountId, postId);
     if (!post) return res.status(404).json({ message: "Post not found" });
     if (!canReject(post)) return refused(res, 409, "not_allowed");
+    if (req.body?.version !== undefined && req.body.version !== contentVersion(post)) return refused(res, 409, "changed");
     const updated = await store.updateSocialPostIf(
       postId,
       REJECT_FROM.statuses,
@@ -339,7 +350,7 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
       acceptRanges: true,
       headers: { "Content-Type": MEDIA_CONTENT_TYPE[parsed.ext], "Cache-Control": "public, max-age=3600" },
     }, (err) => {
-      if (err && !res.headersSent) notFound();
+      if (err && !res.headersSent) res.status((err as { status?: number }).status ?? 404).end();
     });
   }));
 }

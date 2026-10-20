@@ -4,6 +4,7 @@ import type { SocialPost } from "@shared/schema";
 import {
   canApprove,
   canReject,
+  contentVersion,
   formatWhen,
   parseMediaFile,
   parseNewPostBody,
@@ -195,11 +196,19 @@ test("reject: scheduled only, pending or approved", () => {
 
 // ─── View ───────────────────────────────────────────────────────────────────
 
+test("content version changes with the caption or the video, not with the time", () => {
+  const v = contentVersion(post);
+  assert.notEqual(contentVersion({ ...post, caption: "other" }), v);
+  assert.notEqual(contentVersion({ ...post, videoPublicId: NEW_ID }), v);
+  assert.equal(contentVersion({ ...post, scheduledAt: new Date() } as typeof post), v);
+});
+
 test("view carries the public path and display names, never the file path", () => {
   const names = new Map([[9, "Augusto Silva"], [5, "Gabriel"]]);
   const v = toPostView(post, names);
   assert.deepEqual(v, {
     id: 11,
+    version: contentVersion(post),
     section: "upcoming",
     status: "scheduled",
     approvalStatus: "approved",

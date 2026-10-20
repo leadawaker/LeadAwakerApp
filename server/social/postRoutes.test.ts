@@ -11,6 +11,7 @@ import express from "express";
 import type { InsertSocialPost, SocialConnection, SocialPost } from "@shared/schema";
 import type { ApprovalStatus, SocialPostStatus } from "@shared/socialPosts";
 import { receiveVideo } from "./upload";
+import { contentVersion } from "./postService";
 import { registerSocialPostRoutes, type PostRouteDeps } from "./postRoutes";
 
 const tmp = mkdtempSync(join(tmpdir(), "social-routes-"));
@@ -94,12 +95,13 @@ const deps: PostRouteDeps = {
       posts.push(p);
       return p;
     },
-    async updateSocialPostIf(postId, allowed: SocialPostStatus[], fields, opts: { approvalStatuses?: ApprovalStatus[] } = {}) {
+    async updateSocialPostIf(postId, allowed: SocialPostStatus[], fields, opts: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null } } = {}) {
       const p = posts.find((x) => x.id === postId);
       if (!p) return null;
       beforeUpdate?.(p);
       if (!allowed.includes(p.status as SocialPostStatus)) return null;
       if (opts.approvalStatuses?.length && !opts.approvalStatuses.includes(p.approvalStatus as ApprovalStatus)) return null;
+      if (opts.content && (opts.content.caption !== p.caption || opts.content.videoPublicId !== p.videoPublicId)) return null;
       Object.assign(p, fields);
       return p;
     },
@@ -342,7 +344,7 @@ test("approve and reject follow the rules and record who and why", async () => {
   assert.equal(posts[0].approvalStatus, "rejected");
   assert.equal(posts[0].approvalNote, "Outra legenda");
   assert.deepEqual(agencyNotes.map((n) => n.type), ["social_post_rejected"]);
-  const app = await call("POST", `/api/social/accounts/${A}/posts/1/approve`, MANAGER_A);
+  const app = await call("POST", `/api/social/accounts/${A}/posts/1/approve`, MANAGER_A, { version: contentVersion(posts[0]) });
   assert.equal(app.status, 200);
   assert.equal(posts[0].approvalStatus, "approved");
   assert.equal(posts[0].approvedByUserId, 21);
@@ -360,7 +362,26 @@ test("a post that started publishing cannot be approved, rejected or cancelled",
 
 test("a post without approval required cannot be approved", async () => {
   posts = [makePost({ id: 1, requiresApproval: false, approvalStatus: "not_required" })];
-  assert.equal((await call("POST", `/api/social/accounts/${A}/posts/1/approve`, MANAGER_A)).status, 409);
+  assert.equal((await call("POST", `/api/social/accounts/${A}/posts/1/approve`, MANAGER_A, { version: contentVersion(posts[0]) })).status, 409);
+});
+
+test("a Manager cannot approve a caption the agency changed after they loaded it", async () => {
+  posts = [makePost({ id: 1, caption: "seen" })];
+  const seen = (await call("GET", `/api/social/accounts/${A}/posts`, MANAGER_A)).json[0].version;
+  posts[0].caption = "edited later";
+  const r = await call("POST", `/api/social/accounts/${A}/posts/1/approve`, MANAGER_A, { version: seen });
+  assert.equal(r.status, 409);
+  assert.equal(r.json.reason, "changed");
+  assert.equal(posts[0].approvalStatus, "pending");
+  assert.equal((await call("POST", `/api/social/accounts/${A}/posts/1/approve`, MANAGER_A)).status, 409, "no version, no approval");
+});
+
+test("an edit landing between the approve check and its write leaves the post unapproved", async () => {
+  posts = [makePost({ id: 1 })];
+  const version = contentVersion(posts[0]);
+  beforeUpdate = (p) => { p.caption = "swapped"; };
+  assert.equal((await call("POST", `/api/social/accounts/${A}/posts/1/approve`, MANAGER_A, { version })).status, 409);
+  assert.equal(posts[0].approvalStatus, "pending");
 });
 
 // ─── Retry and cancel ────────────────────────────────────────────────────────

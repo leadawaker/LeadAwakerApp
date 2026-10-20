@@ -7,7 +7,7 @@
  * Posts: every post route writes through updateSocialPostIf, a conditional
  * UPDATE that loses (returns null) when the post moved on meanwhile.
  */
-import { and, desc, eq, inArray, ne, or, type SQL } from "drizzle-orm";
+import { and, desc, eq, inArray, isNull, ne, or, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import {
   accounts,
@@ -176,18 +176,22 @@ export const socialStorage = {
   },
 
   /**
-   * UPDATE ... WHERE id = $1 AND status IN (...) [AND approval_status IN (...)] RETURNING *.
+   * UPDATE ... WHERE id = $1 AND status IN (...) [AND approval_status IN (...)] [AND caption / video unchanged] RETURNING *.
    * null when nothing matched: the publisher or another user changed the post first, and this write loses.
    */
   async updateSocialPostIf(
     postId: number,
     allowedStatuses: SocialPostStatus[],
     fields: Partial<InsertSocialPost>,
-    opts: { approvalStatuses?: ApprovalStatus[] } = {},
+    opts: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null } } = {},
   ): Promise<SocialPost | null> {
     if (allowedStatuses.length === 0) return null;
     const conds: SQL[] = [eq(socialPosts.id, postId), inArray(socialPosts.status, allowedStatuses)];
     if (opts.approvalStatuses?.length) conds.push(inArray(socialPosts.approvalStatus, opts.approvalStatuses));
+    if (opts.content) {
+      conds.push(eq(socialPosts.caption, opts.content.caption));
+      conds.push(opts.content.videoPublicId === null ? isNull(socialPosts.videoPublicId) : eq(socialPosts.videoPublicId, opts.content.videoPublicId));
+    }
     const [row] = await db.update(socialPosts)
       .set({ ...fields, updatedAt: new Date() })
       .where(and(...conds))
