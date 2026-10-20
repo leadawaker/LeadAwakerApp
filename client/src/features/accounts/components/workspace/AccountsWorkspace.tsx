@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { parseInstagramReturn, stripInstagramParams } from "@/features/social/lib/socialState";
@@ -161,10 +161,18 @@ export function AccountsWorkspace(p: Props) {
     queryClient.invalidateQueries({ queryKey: ["social-status"] }); // every account's status (socialStatusKey prefix)
     window.history.replaceState(null, "", window.location.pathname + stripInstagramParams(window.location.search));
   }, []);
+  // The Social group opens first once, for the account the flow returned to; switching accounts drops it.
+  const returnAccountRef = useRef<number | null>(null);
+  useEffect(() => {
+    if (!integrationsGroup) { returnAccountRef.current = null; return; }
+    if (!accountId) return; // the account list is still loading
+    if (returnAccountRef.current === null) returnAccountRef.current = accountId;
+    else if (returnAccountRef.current !== accountId) setIntegrationsGroup(undefined);
+  }, [integrationsGroup, accountId]);
 
   // Deep link: /platform/accounts?tab=voice opens that tab (used by the Demos
   // page's "managed in Account > Voice" link). Stripped once applied.
-  const pickTab = (k: WorkspaceTab) => { lastDeepTab = null; setTab(k); };
+  const pickTab = (k: WorkspaceTab) => { lastDeepTab = null; setIntegrationsGroup(undefined); setTab(k); };
 
   // The tab itself is read from the URL when the state is created. The param is
   // stripped only once an account has loaded, so a remount before that re-reads it.

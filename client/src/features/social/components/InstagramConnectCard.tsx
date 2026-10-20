@@ -38,7 +38,7 @@ function SocialSwitchRow({ accountId, enabled }: { accountId: number; enabled: b
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink-soft)" }}>{t("social.connect.enableTitle")}</div>
         <p style={{ ...lineStyle, fontSize: 11.5 }}>{t("social.connect.enableHelp")}</p>
-        {toggle.isError && <p style={{ ...lineStyle, fontSize: 11.5, color: "var(--wine)" }}>{t("social.connect.enableFailed")}</p>}
+        {toggle.isError && <p style={{ ...lineStyle, fontSize: 11.5, color: "hsl(var(--destructive))" }}>{t("social.connect.enableFailed")}</p>}
       </div>
       <Switch
         checked={enabled}
@@ -88,7 +88,9 @@ export function InstagramConnectCard({ accountId }: { accountId: number }) {
       </SectionHead>
 
       {isLoading ? (
-        <Loader2 size={16} className="animate-spin" style={{ color: "var(--mute-2)" }} />
+        <span role="status" aria-label={t("social.connect.loading")}>
+          <Loader2 size={16} className="animate-spin" style={{ color: "var(--mute-2)" }} />
+        </span>
       ) : mode === "connected" && conn ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <div className="row" style={{ gap: 12 }}>
@@ -123,16 +125,16 @@ export function InstagramConnectCard({ accountId }: { accountId: number }) {
                   {t("social.connect.cancel")}
                 </button>
               </div>
-              {disconnect.isError && <p style={{ ...lineStyle, color: "var(--wine)" }}>{t("social.connect.disconnectFailed")}</p>}
+              {disconnect.isError && <p style={{ ...lineStyle, color: "hsl(var(--destructive))" }}>{t("social.connect.disconnectFailed")}</p>}
             </div>
           )}
         </div>
       ) : mode === "needs_attention" && conn ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <p style={{ ...lineStyle, color: "var(--ink-soft)" }}>
-            {conn.username ? `@${conn.username}: ` : ""}{t("social.connect.attentionHelp")}
+            {conn.username ? t("social.connect.attentionHelpNamed", { username: conn.username }) : t("social.connect.attentionHelp")}
           </p>
-          {conn.lastError && <p style={{ ...lineStyle, fontFamily: "var(--mono)", fontSize: 11 }}>{conn.lastError}</p>}
+          {isAgencyUser && conn.lastError && <p style={{ ...lineStyle, fontFamily: "var(--mono)", fontSize: 11 }}>{conn.lastError}</p>}
           {canAct && <div>{connectBtn("reconnectButton")}</div>}
         </div>
       ) : (

@@ -839,7 +839,7 @@
       "connected": "Conectado",
       "notConnected": "Não conectado",
       "needsAttention": "Precisa de atenção",
-      "requirement": "É preciso uma conta comercial ou de criador no Instagram. Você mesmo faz login no Instagram, a Lead Awaker nunca vê a senha.",
+      "requirement": "É preciso uma conta comercial ou de criador no Instagram. O login é feito direto no Instagram, a Lead Awaker nunca vê a senha.",
       "connectButton": "Conectar Instagram",
       "reconnectButton": "Conectar de novo",
       "renews": "Conectado · renova automaticamente",
@@ -848,7 +848,7 @@
       "disconnectYes": "Sim, desconectar",
       "cancel": "Cancelar",
       "disconnectFailed": "Não foi possível desconectar. Tente de novo.",
-      "attentionHelp": "a conexão precisa de um novo login antes que os posts possam ser publicados.",
+      "attentionHelp": "A conexão precisa de um novo login antes que os posts possam ser publicados.",
       "askManager": "Um gerente desta conta pode conectar o Instagram.",
       "enableTitle": "Redes sociais para esta conta",
       "enableHelp": "Mostra o grupo e a aba Social para os próprios usuários do cliente.",
@@ -862,7 +862,9 @@
         "not_professional": "Esta é uma conta pessoal do Instagram. Mude para conta comercial ou de criador no app do Instagram e conecte de novo.",
         "already_connected": "Esta conta do Instagram já está conectada a outra conta.",
         "failed": "Algo deu errado ao conectar. Tente de novo."
-      }
+      },
+      "attentionHelpNamed": "@{{username}}: a conexão precisa de um novo login antes que os posts possam ser publicados.",
+      "loading": "Carregando o status do Instagram"
     }
   }
 }

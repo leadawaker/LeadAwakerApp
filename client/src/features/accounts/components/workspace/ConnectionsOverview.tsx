@@ -86,8 +86,10 @@ export function ConnectionsOverview({ accountId, active, onSelect, layout = "row
       aria-orientation={layout === "rail" ? "vertical" : "horizontal"}
       data-testid="integrations-overview"
     >
-      {tiles.map((tile) => {
+      {tiles.map((tile, i) => {
         const on = tile.group === active;
+        // An odd last tile in the 2-column phone grid spans the row instead of leaving a gap.
+        const spanRow = layout === "grid" && tiles.length % 2 === 1 && i === tiles.length - 1;
         return (
         <button
           key={tile.group}
@@ -100,6 +102,7 @@ export function ConnectionsOverview({ accountId, active, onSelect, layout = "row
           style={{
             display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start", textAlign: "left", cursor: "pointer",
             padding: layout === "grid" ? "14px 14px" : "16px 18px", border: 0, minWidth: 0,
+            gridColumn: spanRow ? "1 / -1" : undefined,
             // The open tile is the brightest one, like a page lifted out of the stack.
             background: on ? "var(--card)" : "var(--bone)",
             boxShadow: on ? "inset 3px 0 0 var(--wine)" : undefined,

@@ -897,7 +897,7 @@
       "disconnectYes": "Yes, disconnect",
       "cancel": "Cancel",
       "disconnectFailed": "Could not disconnect. Try again.",
-      "attentionHelp": "the connection needs a fresh login before posts can go out.",
+      "attentionHelp": "The connection needs a fresh login before posts can go out.",
       "askManager": "A manager of this account can connect Instagram.",
       "enableTitle": "Social media for this account",
       "enableHelp": "Shows the Social group and tab to the client's own users.",
@@ -911,7 +911,9 @@
         "not_professional": "This is a personal Instagram account. Switch it to Business or Creator in the Instagram app, then connect again.",
         "already_connected": "This Instagram account is already connected to another account.",
         "failed": "Something went wrong while connecting. Try again."
-      }
+      },
+      "attentionHelpNamed": "@{{username}}: the connection needs a fresh login before posts can go out.",
+      "loading": "Loading Instagram status"
     }
   }
 }

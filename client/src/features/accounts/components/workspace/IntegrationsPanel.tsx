@@ -34,8 +34,8 @@ function Group({ index, group, children }: { index: number; group: ConnectionGro
 }
 
 // ── Main panel ─────────────────────────────────────────────────────────────────
-// What is connected, in four families: the phone number, WhatsApp, the chat on
-// the client's website, and where appointments land. A menu of the four (with
+// What is connected, in five families: the phone number, WhatsApp, the chat on
+// the client's website, where appointments land, and Instagram. A menu of the four (with
 // each one's state) opens one family at a time: a column on the left on
 // desktop, a 2-column grid on top on a phone. How the assistant behaves on a call is
 // the Phone line tab. A client login (readOnly) sees bookings, plus Social once the

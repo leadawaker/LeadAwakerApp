@@ -897,7 +897,7 @@
       "disconnectYes": "Ja, ontkoppelen",
       "cancel": "Annuleren",
       "disconnectFailed": "Ontkoppelen is niet gelukt. Probeer het opnieuw.",
-      "attentionHelp": "de koppeling heeft een nieuwe login nodig voordat er posts uit kunnen.",
+      "attentionHelp": "De koppeling heeft een nieuwe login nodig voordat er posts uit kunnen.",
       "askManager": "Een manager van dit account kan Instagram koppelen.",
       "enableTitle": "Social media voor dit account",
       "enableHelp": "Toont de groep en het tabblad Social aan de eigen gebruikers van de klant.",
@@ -911,7 +911,9 @@
         "not_professional": "Dit is een persoonlijk Instagram-account. Zet het in de Instagram-app om naar zakelijk of creator en koppel opnieuw.",
         "already_connected": "Dit Instagram-account is al aan een ander account gekoppeld.",
         "failed": "Er ging iets mis bij het koppelen. Probeer het opnieuw."
-      }
+      },
+      "attentionHelpNamed": "@{{username}}: de koppeling heeft een nieuwe login nodig voordat er posts uit kunnen.",
+      "loading": "Instagram-status laden"
     }
   }
 }
