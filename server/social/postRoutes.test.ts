@@ -430,3 +430,12 @@ test("public media refuses a stored path outside the upload dir", async () => {
   posts = [makePost({ id: 1, videoPath: outside })];
   assert.equal((await call("GET", `/media/social/${ID1}.mp4`, null)).status, 404);
 });
+
+test("a session user without an id cannot write a post or an approval", async () => {
+  writeUpload(A, ID1);
+  posts = [makePost({ id: 1 })];
+  const noId = { id: null, role: "Owner", accountsId: 1 };
+  assert.equal((await call("POST", `/api/social/accounts/${A}/posts`, noId, newPostBody(ID2))).status, 403);
+  assert.equal((await call("POST", `/api/social/accounts/${A}/posts/1/approve`, { ...noId }, { version: contentVersion(posts[0]) })).status, 403);
+  assert.equal(posts[0].approvalStatus, "pending");
+});

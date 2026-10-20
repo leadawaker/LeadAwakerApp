@@ -151,6 +151,13 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
   }
 
   const forbidden = (res: Response) => res.status(403).json({ message: "Forbidden" });
+  /** Users.id is nullable in the schema: a write that records who did it needs a real id. */
+  const actorId = (req: Request, res: Response): number | null => {
+    const id = req.user?.id;
+    if (typeof id === "number") return id;
+    forbidden(res);
+    return null;
+  };
   const refused = (res: Response, status: number, reason: string) => res.status(status).json({ message: reason, reason });
 
   // ─── Upload: agency only. Streamed to disk, never through express.json ────
@@ -201,8 +208,10 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     if (!video) return refused(res, 422, "upload_missing");
     if ("ok" in video) return refused(res, 422, video.reason);
 
+    const userId = actorId(req, res);
+    if (userId === null) return;
     const plan = planNewPost(input, {
-      timeZone: ctx.timeZone, now: deps.now(), userId: req.user!.id, accountId: ctx.accountId, connectionId: connection.id, video,
+      timeZone: ctx.timeZone, now: deps.now(), userId, accountId: ctx.accountId, connectionId: connection.id, video,
     });
     if (!plan.ok) return refused(res, plan.status, plan.reason);
     let created: SocialPost;
@@ -239,7 +248,9 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
       newVideo = found;
     }
 
-    const plan = planPostEdit(post, input, { timeZone: ctx.timeZone, now: deps.now(), userId: req.user!.id, newVideo });
+    const userId = actorId(req, res);
+    if (userId === null) return;
+    const plan = planPostEdit(post, input, { timeZone: ctx.timeZone, now: deps.now(), userId, newVideo });
     if (!plan.ok) return refused(res, plan.status, plan.reason);
     // Only applies when the post is still in the state the plan was made from.
     const updated = await store.updateSocialPostIf(postId, [post.status as SocialPostStatus], plan.fields, {
@@ -267,10 +278,12 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     if (!canApprove(post)) return refused(res, 409, "not_allowed");
     // The Manager approves the version they saw: a caption or video edited since is not approved unseen.
     if (req.body?.version !== contentVersion(post)) return refused(res, 409, "changed");
+    const userId = actorId(req, res);
+    if (userId === null) return;
     const updated = await store.updateSocialPostIf(
       postId,
       APPROVE_FROM.statuses,
-      { approvalStatus: "approved", approvedByUserId: req.user!.id, approvedAt: deps.now(), approvalNote: null },
+      { approvalStatus: "approved", approvedByUserId: userId, approvedAt: deps.now(), approvalNote: null },
       { approvalStatuses: APPROVE_FROM.approval, content: { caption: post.caption, videoPublicId: post.videoPublicId } },
     );
     if (!updated) return refused(res, 409, "changed");
