@@ -118,7 +118,11 @@ export function useCallerCalls(caller: Pick<VoiceCaller, "leadsId" | "key"> | nu
       if (accountId != null) qs.set("accountId", String(accountId));
       const res = await apiFetch(`/api/voice-calls?${qs}`);
       if (!res.ok) throw new Error("Failed to load the caller's calls");
-      return (await res.json()).calls ?? [];
+      const calls: VoiceCallListItem[] = (await res.json()).calls ?? [];
+      // An API that predates the person filter returns everyone's calls: keep only this person's.
+      return calls.filter((c) => person?.leadId != null
+        ? String(c.leadsId) === person.leadId
+        : c.leadsId == null && c.callerNumber === person?.number);
     },
     staleTime: 30 * 1000,
     refetchInterval: 60 * 1000,
