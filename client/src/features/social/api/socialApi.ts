@@ -1,6 +1,7 @@
 // Instagram connection and scheduled posts (server/routes/social.ts, server/social/postRoutes.ts).
 import type { ApprovalStatus, PostListSection, SocialPostStatus } from "@shared/socialPosts";
 import { apiFetch, API_BASE } from "@/lib/apiUtils";
+import { uploadContentType } from "../lib/posts";
 
 export interface SocialConnectionView {
   status: "connected" | "needs_attention" | "disconnected";
@@ -97,19 +98,29 @@ export async function fetchSocialPosts(accountId: number): Promise<SocialPostVie
   return res.json();
 }
 
-/** XMLHttpRequest (not fetch) so upload progress is reported. Rejects with the server's reason. */
-export function uploadSocialVideo(accountId: number, file: File, onProgress: (pct: number) => void): Promise<UploadedVideo> {
+/**
+ * XMLHttpRequest (not fetch) so upload progress is reported. Rejects with the server's reason.
+ * Pass a signal to abort it (the panel closed).
+ */
+export function uploadSocialVideo(accountId: number, file: File, onProgress: (pct: number) => void, signal?: AbortSignal): Promise<UploadedVideo> {
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
     xhr.open("POST", `${API_BASE}/api/social/accounts/${accountId}/uploads`);
     xhr.withCredentials = true;
-    xhr.setRequestHeader("Content-Type", file.type);
+    xhr.setRequestHeader("Content-Type", uploadContentType(file) ?? file.type);
+    signal?.addEventListener("abort", () => xhr.abort());
+    xhr.onabort = () => reject(new SocialApiError("aborted", 0));
     xhr.upload.onprogress = (e) => {
       if (e.lengthComputable) onProgress(Math.round((e.loaded / e.total) * 100));
     };
     xhr.onload = () => {
       let body: any = null;
       try { body = JSON.parse(xhr.responseText); } catch { /* not JSON */ }
+      if (xhr.status === 401) {
+        // Same as apiFetch: the session expired.
+        localStorage.removeItem("leadawaker_auth");
+        window.location.href = "/login";
+      }
       if (xhr.status >= 200 && xhr.status < 300 && body) resolve(body as UploadedVideo);
       else reject(new SocialApiError(typeof body?.reason === "string" ? body.reason : xhr.status === 413 ? "size" : "failed", xhr.status));
     };

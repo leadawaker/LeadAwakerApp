@@ -898,7 +898,6 @@
       "rejectedNote": "Recusado: \"{{note}}\"",
       "rejectedNoNote": "Recusado, sem comentário.",
       "heldHelp": "O horário passou sem aprovação, então o post não foi publicado. Escolha um novo horário para agendar de novo.",
-      "failedReason": "O Instagram respondeu: {{reason}}",
       "viewOnInstagram": "Ver no Instagram",
       "actions": {
         "approve": "Aprovar",
@@ -962,7 +961,8 @@
         "width": "O vídeo pode ter no máximo 1920 pixels de largura.",
         "size": "O vídeo tem mais de 100 MB.",
         "failed": "Algo deu errado. Tente de novo."
-      }
+      },
+      "failedHelp": "O Instagram não publicou este post."
     }
   }
 }

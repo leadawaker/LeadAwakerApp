@@ -947,7 +947,6 @@
       "rejectedNote": "Rejected: \"{{note}}\"",
       "rejectedNoNote": "Rejected, no note left.",
       "heldHelp": "Its time passed without approval, so it was not posted. Pick a new time to schedule it again.",
-      "failedReason": "Instagram said: {{reason}}",
       "viewOnInstagram": "View on Instagram",
       "actions": {
         "approve": "Approve",
@@ -1011,7 +1010,8 @@
         "width": "The video can be at most 1920 pixels wide.",
         "size": "The video is larger than 100 MB.",
         "failed": "Something went wrong. Try again."
-      }
+      },
+      "failedHelp": "Instagram did not publish this post."
     }
   }
 }

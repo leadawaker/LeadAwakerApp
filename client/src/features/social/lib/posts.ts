@@ -56,8 +56,16 @@ export function postActions(p: SocialPostView, who: { isAgency: boolean; userRol
   return out;
 }
 
-export function uploadPrecheck(file: { type: string; size: number }): "format" | "size" | null {
-  if (!(UPLOAD_TYPES as readonly string[]).includes(file.type)) return "format";
+/** The Content-Type to upload with. Some browsers leave file.type empty for .mov: fall back on the extension. */
+export function uploadContentType(file: { type: string; name?: string }): (typeof UPLOAD_TYPES)[number] | null {
+  if ((UPLOAD_TYPES as readonly string[]).includes(file.type)) return file.type as (typeof UPLOAD_TYPES)[number];
+  if (file.type) return null;
+  const ext = file.name?.split(".").pop()?.toLowerCase();
+  return ext === "mp4" ? "video/mp4" : ext === "mov" ? "video/quicktime" : null;
+}
+
+export function uploadPrecheck(file: { type: string; size: number; name?: string }): "format" | "size" | null {
+  if (!uploadContentType(file)) return "format";
   if (file.size > MAX_UPLOAD_BYTES) return "size";
   return null;
 }

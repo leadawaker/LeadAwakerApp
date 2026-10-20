@@ -947,7 +947,6 @@
       "rejectedNote": "Afgekeurd: \"{{note}}\"",
       "rejectedNoNote": "Afgekeurd, zonder opmerking.",
       "heldHelp": "Het tijdstip is verstreken zonder goedkeuring, dus de post is niet geplaatst. Kies een nieuw tijdstip om hem opnieuw in te plannen.",
-      "failedReason": "Instagram meldt: {{reason}}",
       "viewOnInstagram": "Bekijken op Instagram",
       "actions": {
         "approve": "Goedkeuren",
@@ -1011,7 +1010,8 @@
         "width": "De video mag maximaal 1920 pixels breed zijn.",
         "size": "De video is groter dan 100 MB.",
         "failed": "Er ging iets mis. Probeer het opnieuw."
-      }
+      },
+      "failedHelp": "Instagram heeft deze post niet geplaatst."
     }
   }
 }

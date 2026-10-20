@@ -70,6 +70,7 @@ export function SocialTab({ accountId, timeZone }: { accountId: number; timeZone
           focus={sheet.kind === "edit" ? sheet.focus : "all"}
           onClose={() => setSheet(null)}
           onSaved={() => { setSheet(null); refresh(); }}
+          onConflict={refresh}
         />
       )}
 

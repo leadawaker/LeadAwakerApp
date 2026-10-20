@@ -115,8 +115,12 @@ export function PostCard({ post, accountId, timeZone, who, onChanged, onEdit }: 
           </p>
         )}
         {post.section === "held" && <p style={lineStyle}>{t("social.posts.heldHelp")}</p>}
-        {post.status === "failed" && post.lastError && (
-          <p style={{ ...lineStyle, color: "hsl(var(--destructive))" }}>{t("social.posts.failedReason", { reason: post.lastError })}</p>
+        {post.status === "failed" && (
+          <>
+            <p style={{ ...lineStyle, color: "hsl(var(--destructive))" }}>{t("social.posts.failedHelp")}</p>
+            {/* Meta's own message (English): for the agency, to fix and retry. */}
+            {who.isAgency && post.lastError && <p style={{ ...lineStyle, fontFamily: "var(--mono)", fontSize: 11 }}>{post.lastError}</p>}
+          </>
         )}
         {post.permalink && (
           <a href={post.permalink} target="_blank" rel="noreferrer" style={{ fontSize: 12.5, color: "var(--wine)", display: "inline-flex", alignItems: "center", gap: 6 }}>

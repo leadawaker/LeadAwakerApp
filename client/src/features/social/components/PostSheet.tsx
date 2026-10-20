@@ -32,7 +32,7 @@ function formFor(post: SocialPostView, timeZone: string): PostForm {
   };
 }
 
-export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, onSaved }: {
+export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, onSaved, onConflict }: {
   accountId: number;
   timeZone: string;
   /** Absent for a new post. */
@@ -41,6 +41,8 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, o
   focus?: "all" | "time";
   onClose: () => void;
   onSaved: () => void;
+  /** A 409: someone (or the publisher) got there first. The list refreshes, the panel stays with the message. */
+  onConflict: () => void;
 }) {
   const { t } = useTranslation("accounts");
   const original = useMemo(() => (post ? formFor(post, timeZone) : blankForm()), [post, timeZone]);
@@ -50,7 +52,15 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, o
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const objectUrl = useRef<string | null>(null);
-  useEffect(() => () => { if (objectUrl.current) URL.revokeObjectURL(objectUrl.current); }, []);
+  const uploadAbort = useRef<AbortController | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  useEffect(() => () => {
+    if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
+    uploadAbort.current?.abort();
+  }, []);
+  // Opened from a card lower down (Edit, Pick a new time): bring the panel into view, on a phone above all.
+  useEffect(() => { sectionRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }); }, []);
+  const today = toLocalDateTime(new Date().toISOString(), timeZone).date;
   const set = <K extends keyof PostForm>(k: K, v: PostForm[K]) => setForm((f) => ({ ...f, [k]: v }));
 
   const caption = validateCaption(form.caption);
@@ -65,7 +75,8 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, o
     if (bad) { setUploadError(bad); return; }
     setProgress(0);
     try {
-      const up = await uploadSocialVideo(accountId, file, setProgress);
+      uploadAbort.current = new AbortController();
+      const up = await uploadSocialVideo(accountId, file, setProgress, uploadAbort.current.signal);
       set("uploadId", up.uploadId);
       if (objectUrl.current) URL.revokeObjectURL(objectUrl.current);
       objectUrl.current = URL.createObjectURL(file);
@@ -87,15 +98,15 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, o
     },
     onSuccess: onSaved,
     onError: (err) => {
-      // Someone (or the publisher) got there first: show the fresh list.
-      if (err instanceof SocialApiError && err.status === 409) onSaved();
+      if (err instanceof SocialApiError && err.status === 409) onConflict();
     },
   });
   const saveError = save.error instanceof SocialApiError ? save.error.reason : save.error ? "failed" : null;
-  const canSave = !uploading && !save.isPending && caption.ok && !!form.uploadId && !!form.date && !!form.time;
+  const changed = !post || Object.keys(editBody(original, form)).length > 0;
+  const canSave = changed && !uploading && !save.isPending && caption.ok && !!form.uploadId && !!form.date && !!form.time;
 
   return (
-    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16 }} data-testid="social-post-sheet">
+    <section ref={sectionRef} className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16, scrollMarginTop: 96 }} data-testid="social-post-sheet">
       <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>
         {t(post ? (timeOnly ? "social.posts.sheet.rescheduleTitle" : "social.posts.sheet.editTitle") : "social.posts.sheet.newTitle")}
       </h3>
@@ -152,7 +163,7 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, o
       <div>
         <span style={labelStyle}>{t("social.posts.sheet.when", { zone: timeZone })}</span>
         <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
-          <input type="date" className="neu-input" aria-label={t("social.posts.sheet.date")} value={form.date} onChange={(e) => set("date", e.target.value)} style={{ ...inputStyle, width: 170 }} data-testid="social-date" />
+          <input type="date" className="neu-input" aria-label={t("social.posts.sheet.date")} value={form.date} min={today} onChange={(e) => set("date", e.target.value)} style={{ ...inputStyle, width: 170 }} data-testid="social-date" />
           <input type="time" className="neu-input" aria-label={t("social.posts.sheet.time")} value={form.time} onChange={(e) => set("time", e.target.value)} style={{ ...inputStyle, width: 120 }} data-testid="social-time" />
         </div>
       </div>

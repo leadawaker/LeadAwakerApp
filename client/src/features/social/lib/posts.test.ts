@@ -10,6 +10,7 @@ import {
   postActions,
   showSocialTab,
   toLocalDateTime,
+  uploadContentType,
   uploadPrecheck,
 } from "./posts";
 
@@ -73,6 +74,14 @@ test("oversized or wrong-type files are refused before upload", () => {
   assert.equal(uploadPrecheck({ type: "video/quicktime", size: 1000 }), null);
   assert.equal(uploadPrecheck({ type: "video/mp4", size: MAX_UPLOAD_BYTES + 1 }), "size");
   assert.equal(uploadPrecheck({ type: "video/webm", size: 1000 }), "format");
+});
+
+test("a .mov with no browser type is still accepted, by its extension", () => {
+  assert.equal(uploadContentType({ type: "", name: "clip.MOV" }), "video/quicktime");
+  assert.equal(uploadContentType({ type: "", name: "clip.mp4" }), "video/mp4");
+  assert.equal(uploadContentType({ type: "video/mp4", name: "x" }), "video/mp4");
+  assert.equal(uploadContentType({ type: "", name: "clip.webm" }), null);
+  assert.equal(uploadPrecheck({ type: "", name: "clip.mov", size: 10 }), null);
 });
 
 test("a post's time in the account's zone, as the date and time the form sends", () => {
