@@ -20,7 +20,7 @@ export function ScopeSwitch({ scope, onScope, compact }: { scope: VoiceScope; on
   return (
     <div
       role="tablist"
-      aria-label={t("tabs.aria")}
+      aria-label={t("scope.aria")}
       data-testid="voice-scope-switch"
       style={{ display: "inline-flex", alignItems: "center", gap: 3, padding: 3, borderRadius: "var(--r-pill)", background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)", flexShrink: 0 }}
     >
@@ -46,7 +46,7 @@ export function ScopeSwitch({ scope, onScope, compact }: { scope: VoiceScope; on
             }}
           >
             <Icon size={14} style={{ flexShrink: 0 }} />
-            {t(`tabs.${s}`)}
+            {t(`scope.${s}`)}
             {s === "live" && on && (
               <span aria-hidden="true" className="animate-pulse" style={{ width: 6, height: 6, borderRadius: "50%", background: color, flexShrink: 0 }} />
             )}

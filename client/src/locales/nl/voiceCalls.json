@@ -124,7 +124,7 @@
   },
   "unknownLanguage": "Onbekend",
   "playbackFailed": "Deze opname kon niet worden afgespeeld. Probeer hem te downloaden.",
-  "tabs": {
+  "scope": {
     "live": "Live",
     "demo": "Demo",
     "aria": "Gesprekbron"

@@ -124,7 +124,7 @@
   },
   "unknownLanguage": "Unknown",
   "playbackFailed": "This recording could not be played. Try downloading it instead.",
-  "tabs": {
+  "scope": {
     "live": "Live",
     "demo": "Demo",
     "aria": "Call source"

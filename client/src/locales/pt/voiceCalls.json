@@ -124,7 +124,7 @@
   },
   "unknownLanguage": "Desconhecido",
   "playbackFailed": "Não foi possível reproduzir esta gravação. Tente baixá-la.",
-  "tabs": {
+  "scope": {
     "live": "Ao vivo",
     "demo": "Demo",
     "aria": "Origem das chamadas"
