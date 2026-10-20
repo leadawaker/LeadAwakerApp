@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
 
 interface ImpersonationBannerProps {
   role: string;
@@ -17,6 +18,10 @@ export function ImpersonationBanner({ role, onStop }: ImpersonationBannerProps) 
       <span className="font-medium">
         {t("topbar.impersonationBannerViewing", { role })}
       </span>
+      {/* The client nav has no Automation logs; only the real Owner can view as someone, so the way in sits here (J1). */}
+      <Link href="/platform/automation-logs" className="underline font-semibold hover:opacity-80 transition-opacity" data-testid="link-impersonation-automations">
+        {t("topbar.impersonationBannerLogs")}
+      </Link>
       <button
         onClick={onStop}
         className="underline font-semibold hover:opacity-80 transition-opacity"

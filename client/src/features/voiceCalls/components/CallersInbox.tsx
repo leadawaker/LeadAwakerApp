@@ -3,8 +3,9 @@ import { useTranslation } from "react-i18next";
 import { AudioLines, Users } from "lucide-react";
 import { MonoLabel } from "@/features/voice/components/atoms";
 import { CallListSkeleton } from "./VoiceCallsSkeleton";
-import type { VoiceCaller, VoiceCallListItem, VoiceScope } from "../api/voiceCallsApi";
-import { filterCallers } from "../callers";
+import { VOICE_OUTCOMES, type VoiceCaller, type VoiceCallListItem, type VoiceScope } from "../api/voiceCallsApi";
+import { filterCallers, type PeopleOptions } from "../callers";
+import { normalizeOutcome, OUTCOME_LABEL_KEY } from "../status";
 import { dateSections } from "../listOptions";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { CallerDetail } from "./CallerDetail";
@@ -25,6 +26,7 @@ interface Props {
   isLoading: boolean;
   error: unknown;
   query: string;
+  options: PeopleOptions;
   scope: VoiceScope;
   masked: boolean;
   isOwner: boolean;
@@ -46,7 +48,7 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
 }
 
 /** Same split as VoiceCallsInbox: 348px list of people, the chosen person on the right. */
-export function CallersInbox({ callers, calls, isLoading, error, query, scope, masked, isOwner, selection, setSelection, accountId, linkedCall }: Props) {
+export function CallersInbox({ callers, calls, isLoading, error, query, options, scope, masked, isOwner, selection, setSelection, accountId, linkedCall }: Props) {
   const { t, i18n } = useTranslation("voiceCalls");
   const { currentAccount } = useWorkspace();
   const timeZone = (currentAccount?.timezone as string | undefined) || undefined;
@@ -58,12 +60,17 @@ export function CallersInbox({ callers, calls, isLoading, error, query, scope, m
   }, []);
   const narrow = vw < 920;
 
-  const items = useMemo(() => filterCallers(callers, query), [callers, query]);
-  // Grouped by each person's latest call, in the account timezone.
-  const sections = useMemo(
-    () => dateSections(items, (c) => c.lastCallAt, t, { timeZone, locale: i18n.language }),
-    [items, t, timeZone, i18n.language],
-  );
+  const items = useMemo(() => filterCallers(callers, query, options), [callers, query, options]);
+  // Date groups use each person's latest call, in the account timezone.
+  const sections = useMemo(() => {
+    if (options.group === "none") return [{ key: "all", label: "", items }];
+    if (options.group === "outcome") {
+      return VOICE_OUTCOMES
+        .map((o) => ({ key: o, label: t(`outcomes.${OUTCOME_LABEL_KEY[o]}`), items: items.filter((c) => normalizeOutcome(c.bestOutcome) === o) }))
+        .filter((g) => g.items.length > 0);
+    }
+    return dateSections(items, (c) => c.lastCallAt, t, { timeZone, locale: i18n.language });
+  }, [items, options.group, t, timeZone, i18n.language]);
   const selected = callers.find((c) => c.key === selection) ?? null;
 
   // Open onto the first caller, desktop only.
@@ -91,7 +98,7 @@ export function CallersInbox({ callers, calls, isLoading, error, query, scope, m
   ) : (
     sections.map((sec) => (
       <div key={sec.key}>
-        <GroupHeader label={sec.label} count={sec.items.length} />
+        {sec.label && <GroupHeader label={sec.label} count={sec.items.length} />}
         <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           {sec.items.map((c) => (
             <CallerListCard key={c.key} caller={c} masked={masked} showAccount={scope === "live"} active={selection === c.key} onClick={() => setSelection(c.key)} />

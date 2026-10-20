@@ -1,7 +1,8 @@
 // Menu bodies for the desktop topbar's Filter / Sort / Group controls. Shared by
 // the three standalone topbar buttons.
 import { useTranslation } from "react-i18next";
-import { Check } from "lucide-react";
+import { useState } from "react";
+import { Check, ChevronDown, ChevronRight } from "lucide-react";
 import {
   DropdownMenuItem,
   DropdownMenuLabel,
@@ -9,7 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ALL_STAGE_KEYS, stageHex, stageLabel } from "../../lib/leadDisplay";
-import { CONVERSATION_TYPES, type ConversationType } from "../conversationType";
+import { CONVERSATION_TYPE_ICON, CONVERSATION_TYPES, type ConversationType } from "../conversationType";
 
 type NamedOption = { id: string; name: string };
 type TagOption = { name: string; color: string };
@@ -56,16 +57,22 @@ export function FilterMenuItems({
   availableCampaigns, filterCampaign, setFilterCampaign, allTags,
 }: FilterMenuProps) {
   const { t } = useTranslation("leads");
+  // Tags start folded (C11); a selected tag keeps the list open.
+  const [tagsOpen, setTagsOpen] = useState(filterTags.length > 0);
   return (
     <>
       {showTypeControls && (
         <Section label={t("conversationType.label")} count={filterType.length} subClass="w-48">
-            {CONVERSATION_TYPES.map((v) => (
+            {CONVERSATION_TYPES.map((v) => {
+              const Icon = CONVERSATION_TYPE_ICON[v];
+              return (
               <DropdownMenuItem key={v} onClick={(e) => { e.preventDefault(); onToggleFilterType(v); }} className="flex items-center gap-2 text-[12px]">
+                <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
                 <span className="flex-1">{t(`conversationType.${v}`)}</span>
                 {filterType.includes(v) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
               </DropdownMenuItem>
-            ))}
+              );
+            })}
           </Section>
       )}
       <Section label={t("group.status")} count={filterStatus.length} subClass="w-48">
@@ -108,15 +115,20 @@ export function FilterMenuItems({
           </Section>
       )}
       {allTags.length > 0 && (
-        <Section label={t("detail.sections.tags")} count={filterTags.length} subClass="w-48 max-h-64 overflow-y-auto">
-            {allTags.map((tag) => (
+        <>
+          <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTagsOpen((o) => !o); }} className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground" aria-expanded={tagsOpen} data-testid="filter-tags-toggle">
+            {tagsOpen ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
+            <span className="flex-1">{t("detail.sections.tags")}</span>
+            {filterTags.length > 0 && <span className="text-brand-indigo font-semibold">{filterTags.length}</span>}
+          </DropdownMenuItem>
+            {tagsOpen && allTags.map((tag) => (
               <DropdownMenuItem key={tag.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(tag.name); }} className="flex items-center gap-2 text-[12px]">
                 <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
                 <span className="flex-1 truncate">{tag.name}</span>
                 {filterTags.includes(tag.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
               </DropdownMenuItem>
             ))}
-          </Section>
+        </>
       )}
       {isFilterActive && (
         <>

@@ -6,7 +6,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { readLastTab, writeLastTab } from "@/lib/lastTab";
 import { OPEN_VOICE_CALL_EVENT } from "@/features/home/lib/openCall";
 import { useVoiceCall, useVoiceCallers, useVoiceCalls, useVoiceCapabilities, type VoiceCapabilities, type VoiceCaller, type VoiceCallListItem, type VoiceScope } from "../api/voiceCallsApi";
-import { AGENCY_TABS, CLIENT_TABS, LAST_TAB_PAGE, type CallsTab } from "../callers";
+import { AGENCY_TABS, CLIENT_TABS, DEFAULT_PEOPLE_OPTIONS, LAST_TAB_PAGE, type CallsTab, type PeopleOptions } from "../callers";
 import type { AccountOption } from "../components/AccountFilter";
 import { CallersInbox } from "../components/CallersInbox";
 import { VoiceCallsInbox } from "../components/VoiceCallsInbox";
@@ -68,6 +68,8 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
   const [callerSelection, setCallerSelection] = useState<string | null>(null);
   const [options, setOptionsState] = useState<ListOptions>({ query: "", outcomes: [], statuses: [], languages: [], sort: "recent", group: "date" });
   const setOptions = (patch: Partial<ListOptions>) => setOptionsState((o) => ({ ...o, ...patch }));
+  const [peopleOptions, setPeopleOptionsState] = useState<PeopleOptions>(DEFAULT_PEOPLE_OPTIONS);
+  const setPeopleOptions = (patch: Partial<PeopleOptions>) => setPeopleOptionsState((o) => ({ ...o, ...patch }));
   const languages = useMemo(() => Array.from(new Set(calls.map((c) => c.language ?? ""))).sort(), [calls]);
 
   // A deep-linked call that is not in the loaded list is fetched by id, so its person can be found.
@@ -144,6 +146,8 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
         onView={changeView}
         options={options}
         setOptions={setOptions}
+        peopleOptions={peopleOptions}
+        setPeopleOptions={setPeopleOptions}
         languages={languages}
         accounts={accounts}
         accountId={accountId}
@@ -164,6 +168,7 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
             isLoading={callersQuery.isLoading}
             error={callersQuery.error}
             query={options.query}
+            options={peopleOptions}
             scope={scope}
             masked={masked}
             isOwner={isOwner}

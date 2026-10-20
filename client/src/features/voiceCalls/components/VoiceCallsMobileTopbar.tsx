@@ -2,7 +2,7 @@ import { useTranslation } from "react-i18next";
 import { MobileDrawerOption, MobileDrawerSubheading, MobileListHeader, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
 import type { VoiceScope } from "../api/voiceCallsApi";
 import { VOICE_OUTCOMES } from "../api/voiceCallsApi";
-import type { CallsTab } from "../callers";
+import { PEOPLE_GROUPS, PEOPLE_RANGES, PEOPLE_SORTS, peopleFiltered, type CallsTab, type PeopleOptions } from "../callers";
 import { CALLS_TAB_ICON } from "./callsTabs";
 import { GROUPS, SORTS, type ListOptions } from "../listOptions";
 import { OUTCOME_LABEL_KEY, VOICE_CALL_STATUSES } from "../status";
@@ -19,6 +19,8 @@ interface Props {
   onView: (v: CallsTab) => void;
   options: ListOptions;
   setOptions: (patch: Partial<ListOptions>) => void;
+  peopleOptions: PeopleOptions;
+  setPeopleOptions: (patch: Partial<PeopleOptions>) => void;
   languages: string[];
   accounts: AccountOption[];
   accountId: number | undefined;
@@ -34,7 +36,7 @@ interface Props {
  * Presenting toggle (icon only), so names can be unmasked on a phone.
  * The week numbers live in the Stats tab now, not in the header.
  */
-export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, tabs, view, onView, options, setOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
+export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, tabs, view, onView, options, setOptions, peopleOptions, setPeopleOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
   const { t } = useTranslation("voiceCalls");
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
   const filtered = options.outcomes.length > 0 || options.statuses.length > 0 || options.languages.length > 0;
@@ -72,6 +74,30 @@ export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, tabs, view, on
     <MobileDrawerOption key={g} label={t(`group.${g}`)} selected={options.group === g} onClick={() => setOptions({ group: g })} />
   ));
 
+  const people = peopleOptions;
+  const peopleFilterPanel = (
+    <>
+      <MobileDrawerSubheading>{t("menus.outcome")}</MobileDrawerSubheading>
+      {VOICE_OUTCOMES.map((o) => (
+        <MobileDrawerOption key={o} label={t(`outcomes.${OUTCOME_LABEL_KEY[o]}`)} selected={people.outcomes.includes(o)} onClick={() => setPeopleOptions({ outcomes: toggle(people.outcomes, o) })} />
+      ))}
+      <MobileDrawerSubheading>{t("menus.dateRange")}</MobileDrawerSubheading>
+      {PEOPLE_RANGES.map((r) => (
+        <MobileDrawerOption key={r} label={t(`range.${r}`)} selected={people.range === r} onClick={() => setPeopleOptions({ range: r })} />
+      ))}
+      {peopleFiltered(people) && (
+        <MobileDrawerOption label={t("menus.clearFilters")} danger onClick={() => setPeopleOptions({ outcomes: [], range: "all" })} />
+      )}
+    </>
+  );
+  const peopleSortPanel = PEOPLE_SORTS.map((s) => (
+    <MobileDrawerOption key={s} label={t(`peopleSort.${s}`)} selected={people.sort === s} onClick={() => setPeopleOptions({ sort: s })} />
+  ));
+  const peopleGroupPanel = PEOPLE_GROUPS.map((g) => (
+    <MobileDrawerOption key={g} label={t(`group.${g}`)} selected={people.group === g} onClick={() => setPeopleOptions({ group: g })} />
+  ));
+  const isPeople = view === "people";
+
   const subRow = (
     <>
       <MobileTabSeg tabs={tabs.map((v) => ({ id: v, label: t(`tabs.${v}`), icon: CALLS_TAB_ICON[v] }))} activeId={view} onChange={onView} />
@@ -92,14 +118,14 @@ export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, tabs, view, on
       searchValue={hasList ? options.query : undefined}
       onSearchChange={hasList ? (q) => setOptions({ query: q }) : undefined}
       searchPlaceholder={searchLabel}
-      filterPanel={isCalls ? filterPanel : undefined}
-      filterActive={filtered}
+      filterPanel={isCalls ? filterPanel : isPeople ? peopleFilterPanel : undefined}
+      filterActive={isPeople ? peopleFiltered(people) : filtered}
       filterLabel={t("menus.filter")}
-      sortPanel={isCalls ? sortPanel : undefined}
-      sortActive={options.sort !== "recent"}
+      sortPanel={isCalls ? sortPanel : isPeople ? peopleSortPanel : undefined}
+      sortActive={isPeople ? people.sort !== "latest" : options.sort !== "recent"}
       sortLabel={t("menus.sort")}
-      groupPanel={isCalls ? groupPanel : undefined}
-      groupActive={options.group !== "date"}
+      groupPanel={isCalls ? groupPanel : isPeople ? peopleGroupPanel : undefined}
+      groupActive={isPeople ? people.group !== "date" : options.group !== "date"}
       groupLabel={t("menus.group")}
       subRow={subRow}
     />

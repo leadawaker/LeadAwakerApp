@@ -27,9 +27,12 @@ const LABEL_KEYS: Record<ServicePageKey, string> = {
 export function ServicePagesCard({
   profile,
   onProfileUpdated,
+  flat = false,
 }: {
   profile: UserProfile;
   onProfileUpdated: (p: UserProfile) => void;
+  /** Phone My profile: no tile border (OwnerToolsCard passes it through). */
+  flat?: boolean;
 }) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
@@ -61,7 +64,7 @@ export function ServicePagesCard({
   };
 
   return (
-    <div className="rounded-lg border border-border bg-card p-4 space-y-3" data-testid="card-service-pages">
+    <div className={flat ? "space-y-3" : "rounded-lg border border-border bg-card p-4 space-y-3"} data-testid="card-service-pages">
       <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
         <LayoutGrid className="h-4 w-4 text-muted-foreground" />
         {t("profile.servicePages")}

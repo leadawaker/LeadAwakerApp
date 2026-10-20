@@ -1,4 +1,14 @@
 {
+  "peopleSort": {
+    "latest": "Latest call",
+    "most": "Most calls"
+  },
+  "range": {
+    "all": "Any time",
+    "7d": "Last 7 days",
+    "30d": "Last 30 days",
+    "90d": "Last 90 days"
+  },
   "tabs": {
     "stats": "Stats",
     "people": "People",
@@ -89,6 +99,7 @@
     "dnc": "Do not contact"
   },
   "menus": {
+    "dateRange": "Date range",
     "filter": "Filter",
     "sort": "Sort",
     "group": "Group",
@@ -105,6 +116,7 @@
     "name": "Name A–Z"
   },
   "group": {
+    "outcome": "Outcome",
     "date": "Date",
     "status": "Status",
     "language": "Language",

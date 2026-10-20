@@ -352,7 +352,7 @@ export function LeadsCardView({
           showLeadActions={isAgencyUser && !!selectedLead}
           title={isConversationsMode ? t("page.chatsTitle") : undefined}
           searchPlaceholder={isConversationsMode ? t("toolbar.searchConversationsPlaceholder") : undefined}
-          showTypeControls={isConversationsMode}
+          showTypeControls={isConversationsMode && isAgencyUser}
           filterType={filterType}
           onToggleFilterType={toggleFilterType}
           pageTabs={pageTabs}
@@ -369,6 +369,7 @@ export function LeadsCardView({
       <MobileRecede open={isNarrow && mobileView === "detail" && !!selectedLead} fill={isNarrow}>
         <LeadsListPanel
           isHidden={isHidden}
+          showChannelBadge={!!isConversationsMode && showChannelFilter}
           isCompact={isCompact}
           isNarrow={isNarrow}
           scrollContainerRef={scrollContainerRef}

@@ -147,12 +147,28 @@ Files: `LeadsTopbarParts.tsx`, `LeadsTableTopbar.tsx`, `LeadsPipelineTopbar.tsx`
 - Gabriel's visual check on app.leadawaker.com (Owner, then "view as" Manager 53, 390px, NL, light + dark):
   see `action-required.md`.
 
-## Round 2 (not on this branch)
+## Round 2 (CRM side done; engine parts in action-required.md)
 
-C2 call lines in threads, C6 Stats polish, C8-C11 rows/filters/summary, D4-D7, F (My profile), H (guide
-illustrations), E (recap email agenda + Open links; touches the Python engine).
+- [x] C2: call turns (`voice_call` interactions) leave the chat bubbles; each call is one line "Call · 2:05 · time · Open"
+  that opens it on the Calls page (`threadCalls.ts` + test, `ThreadCallLine.tsx`).
+- [~] C6 / D8: Home's tabs are on the Stats tabs since Round 1; no extra restyle.
+- [x] C8: website / WhatsApp badge on the avatar, only when both channels are on.
+- [x] C9: "Website" / "Website visitor" placeholders read as "Visitor"; stage pill + Needs you from Round 1.
+- [~] C10: the AI summary sits folded above the phone chat (`CollapsedSummary`); desktop keeps the recap sidebar.
+  Generation for receptionist chats is an engine check.
+- [x] C11: "Type" is "Channel" with icons (agency only); Tags folded; clients lose Account, Campaign, Type options.
+- [x] D4: People menus: outcome + date range filters, sort latest / most calls, group date / outcome / none.
+- [x] D5: number search across formats (`phoneMatch.ts` + test), calls and people.
+- [x] D6 / E2 / E3 (CRM): `/go/<code>?call=<id>` and `?to=calls` (`shared/goLinkParams.ts` + test), GoLink, login
+  whitelist, server account check, "Open →" per call row in the recap email once the engine sends `call_id`.
+- [x] D7: row meta 10.5px; pills never shrink.
+- [x] F: My profile is a full-screen phone page with Profile / Notifications / Preferences (`MobileProfilePage.tsx`,
+  `flat` variants of the settings cards; desktop unchanged).
+- [x] G8: the Table status cell shows the shared pill for receptionist stages.
+- [x] H: client guide illustrations as code (`features/docs/illustrations/`) and the new names.
+- [ ] E1 (agenda card), E2 engine `call_id`: Python engine.
 
-## Round 3 (not on this branch)
+## Round 3
 
-I (alerts, WhatsApp to Gabriel, Notifications tab), J (Automation logs while viewing as), K (Message Gabriel
-end to end). These touch the Python engine and the Pi.
+- [x] J1: an "Automation logs" link in the view-as banner (only the real Owner can view as).
+- [ ] I (alerts), K (Message Gabriel end to end): engine, WhatsApp template and live testing.

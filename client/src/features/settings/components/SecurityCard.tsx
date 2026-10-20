@@ -7,8 +7,11 @@ import { cn } from "@/lib/utils";
 import { SectionCard } from "@/components/crm/primitives";
 import { PasswordField } from "./SettingsFields";
 
-/** Collapsible change-password block with a "send reset email" fallback. */
-export function SecurityCard({ email }: { email: string }) {
+/**
+ * Collapsible change-password block with a "send reset email" fallback.
+ * `flat` (phone My profile) drops the card and heads it with an eyebrow instead.
+ */
+export function SecurityCard({ email, flat = false }: { email: string; flat?: boolean }) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
 
@@ -80,17 +83,23 @@ export function SecurityCard({ email }: { email: string }) {
     }
   };
 
-  return (
-    <SectionCard padded={false} className="overflow-hidden" data-testid="section-security">
+  const body = (
+    <>
       <button
         type="button"
         onClick={() => setShowPasswordSection((p) => !p)}
-        className="w-full flex items-center gap-3 px-5 py-4 hover:bg-muted/60 transition-colors duration-150"
+        className={cn(
+          "w-full flex items-center gap-3 transition-colors duration-150",
+          flat ? "py-1 min-h-11" : "px-5 py-4 hover:bg-muted/60",
+        )}
+        aria-expanded={showPasswordSection}
         data-testid="toggle-password-section"
       >
-        <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
-          <Shield className="h-4 w-4 text-muted-foreground" />
-        </div>
+        {!flat && (
+          <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center shrink-0">
+            <Shield className="h-4 w-4 text-muted-foreground" />
+          </div>
+        )}
         <div className="flex-1 text-left">
           <div className="text-sm font-semibold text-foreground">{t("security.changePassword")}</div>
           <div className="text-xs text-muted-foreground">{t("security.changePasswordDescription")}</div>
@@ -106,7 +115,7 @@ export function SecurityCard({ email }: { email: string }) {
         style={{ gridTemplateRows: showPasswordSection ? "1fr" : "0fr" }}
       >
         <div className="overflow-hidden">
-          <div className="px-5 pb-5 pt-1 space-y-4">
+          <div className={cn("pt-1 space-y-4", flat ? "px-0.5 pb-1" : "px-5 pb-5")}>
             {passwordError && (
               <div className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg px-3 py-2" data-testid="text-password-error">
                 {passwordError}
@@ -170,6 +179,21 @@ export function SecurityCard({ email }: { email: string }) {
           </div>
         </div>
       </div>
+    </>
+  );
+
+  if (flat) {
+    return (
+      <section className="space-y-2" data-testid="section-security">
+        <div className="eyebrow eyebrow-sm">{t("security.title")}</div>
+        {body}
+      </section>
+    );
+  }
+
+  return (
+    <SectionCard padded={false} className="overflow-hidden" data-testid="section-security">
+      {body}
     </SectionCard>
   );
 }

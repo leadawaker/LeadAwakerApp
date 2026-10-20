@@ -13,14 +13,17 @@ import { SecurityCard } from "./SecurityCard";
 
 /**
  * Settings > Profile: who you are. Identity header (avatar), personal info with
- * Save, and the change-password block.
+ * Save, and the change-password block. `flat` (phone My profile) renders it as
+ * sections on one surface instead of a stack of cards.
  */
 export function ProfileTab({
   profile,
   onProfileUpdated,
+  flat = false,
 }: {
   profile: UserProfile;
   onProfileUpdated: (p: UserProfile) => void;
+  flat?: boolean;
 }) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
@@ -78,30 +81,38 @@ export function ProfileTab({
     return (parts[0]?.[0] || "U").toUpperCase();
   })();
 
+  const identity = (
+    <>
+      <AvatarEditor avatarUrl={avatarUrl} initials={userInitials} onChange={setAvatarUrl} />
+      <div className="flex-1 min-w-0">
+        <div className={cn("font-bold font-heading text-foreground truncate", flat ? "text-2xl" : "text-3xl")}>{name || t("profile.noName")}</div>
+        <span className={cn(
+          "inline-block mt-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full",
+          profile.role === "Admin" ? "bg-brand-indigo/10 text-brand-indigo" :
+          profile.role === "Manager" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
+          profile.role === "Editor" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
+          "bg-muted text-muted-foreground",
+        )}>
+          {profile.role || t("profile.userFallback")}
+        </span>
+        {profile.lastLoginAt && (
+          <div className="text-[11px] text-muted-foreground/60 mt-1.5 flex items-center gap-1">
+            <Clock className="h-3 w-3" />
+            {t("profile.lastLogin")}: {new Date(profile.lastLoginAt).toLocaleDateString(undefined, { dateStyle: "medium" })}{", "}{new Date(profile.lastLoginAt).toLocaleTimeString(undefined, { timeStyle: "short" })}
+          </div>
+        )}
+      </div>
+    </>
+  );
+
   return (
-    <div className="space-y-4" data-testid="tab-profile-content">
+    <div className={flat ? "space-y-7" : "space-y-4"} data-testid="tab-profile-content">
       {/* Avatar + identity */}
-      <SectionCard className="p-5 flex items-center gap-5" data-testid="section-identity">
-        <AvatarEditor avatarUrl={avatarUrl} initials={userInitials} onChange={setAvatarUrl} />
-        <div className="flex-1 min-w-0">
-          <div className="text-3xl font-bold font-heading text-foreground truncate">{name || t("profile.noName")}</div>
-          <span className={cn(
-            "inline-block mt-1 text-[11px] font-semibold px-2.5 py-0.5 rounded-full",
-            profile.role === "Admin" ? "bg-brand-indigo/10 text-brand-indigo" :
-            profile.role === "Manager" ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" :
-            profile.role === "Editor" ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
-            "bg-muted text-muted-foreground",
-          )}>
-            {profile.role || t("profile.userFallback")}
-          </span>
-          {profile.lastLoginAt && (
-            <div className="text-[11px] text-muted-foreground/60 mt-1.5 flex items-center gap-1">
-              <Clock className="h-3 w-3" />
-              {t("profile.lastLogin")}: {new Date(profile.lastLoginAt).toLocaleDateString(undefined, { dateStyle: "medium" })}{", "}{new Date(profile.lastLoginAt).toLocaleTimeString(undefined, { timeStyle: "short" })}
-            </div>
-          )}
-        </div>
-      </SectionCard>
+      {flat ? (
+        <div className="flex items-center gap-4" data-testid="section-identity">{identity}</div>
+      ) : (
+        <SectionCard className="p-5 flex items-center gap-5" data-testid="section-identity">{identity}</SectionCard>
+      )}
 
       <PersonalInfoCard
         name={name}
@@ -112,9 +123,10 @@ export function ProfileTab({
         onPhoneChange={setPhone}
         onSave={handleSaveProfile}
         isSaving={isSaving}
+        flat={flat}
       />
 
-      <SecurityCard email={email} />
+      <SecurityCard email={email} flat={flat} />
     </div>
   );
 }

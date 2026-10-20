@@ -9,10 +9,11 @@
       "title": "Welcome to your CRM",
       "intro": "This is where you keep an eye on {{company}}. {{Name}} answers your calls and chats, and everything that happens ends up here, so you never have to guess. Here is what you will find where:",
       "home": "<b>Home</b>: the quick picture. What came in, what was booked, and anything that needs you.",
-      "calls": "<b>Calls</b>: every call {{name}} took. Open one to read what was said and what came of it.",
-      "leads": "<b>Leads</b>: the people who got in touch, with their conversations in one place.",
+      "calls": "<b>Calls</b>: every call {{name}} took. <b>Stats</b> shows the figures, <b>People</b> shows who called. Open a call to read what was said and what came of it.",
       "calendar": "<b>Calendar</b>: your bookings and visits. You can add busy blocks here too.",
-      "receptionist": "<b>My receptionist</b>: how {{name}} is set up, your opening hours and who gets your recap and alerts.",
+      "chats": "<b>Chats</b>: your website chats. Read along, and reply yourself whenever you want.",
+      "more": "<b>More</b>: your <b>Leads</b> (the people who got in touch), your <b>Account</b>, this guide and Message Gabriel.",
+      "desktop": "On a computer you find the same pages in the menu on the left, with Leads and Account listed there directly.",
       "tip": "Stuck anywhere? Use the chat button to message Gabriel directly. No question is too small."
     },
     "phone": {
@@ -22,20 +23,23 @@
       "transfers": "<strong>Transfers:</strong> if a caller wants to speak to you or a colleague, {{name}} can pass the call on. You will see in the call whether the transfer worked.",
       "callbacks": "<strong>Callbacks:</strong> if nobody can pick up, {{name}} takes the caller's name, number and question. These callbacks show up on your Home page so you can ring them back.",
       "bookings": "<strong>Bookings and visits:</strong> {{name}} can book a visit or appointment straight into your calendar, at a time that is actually free. The booking appears in your Calendar right away.",
+      "page": "Under <strong>Calls</strong> you find two tabs. <strong>Stats</strong> shows how many calls came in and how they ended. <strong>People</strong> lists everyone who called, each with one status, and a <strong>Needs you</strong> mark while a callback is waiting. Open a person to see all their calls, with the summary and what was said.",
       "tip": "Want a different greeting or other opening hours? Opening hours you can change yourself. For anything else, press Request a change."
     },
     "chat": {
       "title": "Your website chat",
       "p1": "The chat bubble on your website works just like the phone: {{name}} welcomes visitors, answers their questions and can book a visit.",
-      "p2": "Every conversation shows up under Leads, so you can read along and see who is interested."
+      "p2": "Every conversation shows up under <strong>Chats</strong>, so you can read along and see who is interested.",
+      "reply": "Want to answer someone yourself? Open the chat under <strong>Chats</strong> and type your reply. As soon as you reply, {{name}} pauses for that person, so the two of you do not talk over each other.",
+      "alert": "When a chat needs you, for example because {{name}} hands it over to a person, you get an alert and the chat is marked <strong>Needs you</strong>."
     },
     "recap": {
       "title": "Your daily recap and alerts",
       "intro": "You do not have to check the CRM all day. It comes to you.",
       "recap": "<strong>Daily recap:</strong> a summary email at the time you set under Alerts, covering calls, chats and bookings.",
-      "alerts": "<strong>Instant alerts:</strong> a message as soon as something needs you, such as a new booking or a callback request.",
+      "alerts": "<strong>Instant alerts:</strong> a message as soon as something needs you, such as a new booking, a callback request or a chat that needs you.",
       "addTitle": "Adding yourself or a colleague",
-      "add1": "Open <strong>My receptionist</strong> and go to the <strong>Alerts</strong> tab.",
+      "add1": "Open <strong>Account</strong> (on your phone under <strong>More</strong>) and go to the <strong>Alerts</strong> tab.",
       "add2": "Add your email address (or your colleague's) to the recipients of the recap or the alerts.",
       "add3": "Save. From the next recap or alert on, that person gets it too."
     },
@@ -46,12 +50,16 @@
       "p3": "Not available on a certain day or time? Add a <strong>busy block</strong>. {{Name}} will not offer those times to anyone.",
       "tip": "Add busy blocks early, for example for holidays or a day out. It is the easiest way to keep your calendar yours."
     },
+    "account": {
+      "title": "Your Account page",
+      "intro": "Under <strong>Account</strong> (on your phone under <strong>More</strong>) you see how {{name}} is set up for {{company}}, your opening hours and who gets your recap and alerts. This is what is where:"
+    },
     "change": {
       "title": "What you can change, and what to ask",
       "intro": "A lot you can do yourself, straight away:",
       "hours": "Your opening hours.",
       "alerts": "Who gets your daily recap and alerts.",
-      "replies": "Replying to leads yourself.",
+      "replies": "Replying to chats yourself, under Chats.",
       "bookings": "Rescheduling or cancelling a booking.",
       "busy": "Adding busy blocks in your Calendar.",
       "request": "Everything else, such as what {{name}} says, the greeting, prices or what {{name}} knows about your business, is easy to change as well: press <strong>Request a change</strong> and it opens a chat with Gabriel. Tell him what you would like and he takes care of it."
@@ -89,12 +97,107 @@
         },
         "5": {
           "q": "Can I read my website chats?",
-          "a": "Yes. You can read every website chat under Leads."
+          "a": "Yes. You can read every website chat under Chats, and reply there yourself."
         },
         "6": {
           "q": "Who do I contact if something is wrong?",
           "a": "Use the chat button to message Gabriel. He gets your message straight away."
         }
+      }
+    },
+    "illus": {
+      "bar": {
+        "caption": "The bar at the bottom of your phone. Leads and Account are under More.",
+        "home": "Home",
+        "calls": "Calls",
+        "calendar": "Calendar",
+        "chats": "Chats",
+        "more": "More",
+        "account": "Account",
+        "leads": "Leads",
+        "docs": "Documentation",
+        "help": "Message Gabriel"
+      },
+      "flow": {
+        "caption": "What happens when someone calls",
+        "incoming": "A call comes in",
+        "incomingSub": "Someone rings your number",
+        "answers": "{{Name}} answers",
+        "answersSub": "Listens and helps, in the caller's language",
+        "booked": "Booked",
+        "bookedSub": "Lands in your Calendar",
+        "callback": "Callback",
+        "callbackSub": "Name, number and question noted",
+        "transferred": "Transferred",
+        "transferredSub": "Passed on to you or a colleague",
+        "alert": "You get an alert",
+        "alertSub": "When something needs you",
+        "recap": "Daily recap",
+        "recapSub": "An email at the time you set"
+      },
+      "tabs": {
+        "caption": "The Calls page: Stats and People",
+        "stats": "Stats",
+        "people": "People",
+        "calls": "Calls",
+        "booked": "Booked",
+        "callbacks": "Callbacks",
+        "week": "This week, per day",
+        "callback": "Callback",
+        "transferred": "Transferred",
+        "needsYou": "Needs you",
+        "person1": "Anna Peters",
+        "person1Meta": "2 calls · today",
+        "person2": "Mark Wilson",
+        "person2Meta": "1 call · yesterday",
+        "person3": "Sophie Clark",
+        "person3Meta": "1 call · Monday"
+      },
+      "email": {
+        "caption": "A sample daily recap email",
+        "subject": "Your day at {{company}}",
+        "from": "{{Name}} · daily recap",
+        "greeting": "Hi! This is what happened today.",
+        "calls": "Calls",
+        "booked": "Booked",
+        "callbacks": "Callbacks",
+        "callsTitle": "Today's calls",
+        "call1": "Anna Peters",
+        "call2": "Mark Wilson",
+        "call3": "Sophie Clark",
+        "callback": "Callback",
+        "transferred": "Transferred",
+        "open": "Open",
+        "agendaTitle": "Agenda this week",
+        "agenda1": "Thu 10:00 · Visit, Anna Peters"
+      },
+      "account": {
+        "caption": "A map of your Account page",
+        "title": "{{company}}",
+        "request": "Request a change",
+        "requestSub": "For anything you cannot change yourself. It opens a chat with Gabriel.",
+        "overview": "Overview",
+        "overviewSub": "Your business details, team, contracts and invoices",
+        "phone": "Phone",
+        "phoneSub": "How {{name}} answers the phone, and your opening hours",
+        "chat": "Chat",
+        "chatSub": "Your website chat",
+        "alerts": "Alerts",
+        "alertsSub": "When your recap arrives, and who gets the recap and alerts",
+        "integrations": "Integrations",
+        "integrationsSub": "The services linked to your account",
+        "note": "Some tabs only show when you use that service."
+      },
+      "install": {
+        "iosCaption": "iPhone: Safari, Share, Add to Home Screen",
+        "androidCaption": "Android: Chrome, menu, Install app",
+        "iosCopy": "Copy",
+        "iosAdd": "Add to Home Screen",
+        "iosOther": "Add Bookmark",
+        "androidShare": "Share",
+        "androidInstall": "Install app",
+        "androidOther": "New tab",
+        "done": "Done: Lead Awaker is on your home screen, like an app."
       }
     }
   },

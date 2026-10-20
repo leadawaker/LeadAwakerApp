@@ -16,7 +16,8 @@ interface Props {
   onClick: () => void;
 }
 
-const META: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)", letterSpacing: "0.06em", minWidth: 0 };
+// 10.5px so the number stays readable at 390px (D7); the pill beside it never shrinks.
+const META: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute)", letterSpacing: "0.03em", minWidth: 0 };
 
 /** One row per person, same look as a call row. */
 export function CallerListCard({ caller: rawCaller, active, masked, showAccount, onClick }: Props) {

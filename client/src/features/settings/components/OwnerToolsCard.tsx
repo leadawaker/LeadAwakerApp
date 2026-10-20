@@ -11,7 +11,8 @@ import { parsePrefs, patchPreferences } from "./prefsSave";
 import { ServicePagesCard } from "./ServicePagesCard";
 import { SettingsCard } from "./SettingsCard";
 
-const TILE = "rounded-lg border border-border bg-card p-4 space-y-3";
+// Flat (phone): the tiles lose their border and sit apart by spacing only.
+const tileClass = (flat: boolean) => (flat ? "space-y-3" : "rounded-lg border border-border bg-card p-4 space-y-3");
 
 /**
  * Owner-only block on the Preferences tab: Outreach pages toggle, Service pages,
@@ -20,9 +21,12 @@ const TILE = "rounded-lg border border-border bg-card p-4 space-y-3";
 export function OwnerToolsCard({
   profile,
   onProfileUpdated,
+  flat = false,
 }: {
   profile: UserProfile;
   onProfileUpdated: (p: UserProfile) => void;
+  /** Phone My profile: no card, see SettingsCard. */
+  flat?: boolean;
 }) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
@@ -91,10 +95,11 @@ export function OwnerToolsCard({
       title={t("preferences.ownerTools")}
       description={t("preferences.ownerToolsDescription")}
       data-testid="section-owner-tools"
+      flat={flat}
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className={flat ? "grid grid-cols-1 gap-6" : "grid grid-cols-1 md:grid-cols-2 gap-4"}>
         {/* Outreach pages nav toggle */}
-        <div className={TILE}>
+        <div className={tileClass(flat)}>
           <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
             <Compass className="h-4 w-4 text-muted-foreground" />
             {t("profile.outreachPages")}
@@ -112,10 +117,10 @@ export function OwnerToolsCard({
         </div>
 
         {/* Service pages nav toggles (Speed to Lead / Reputation / Missed Calls) */}
-        <ServicePagesCard profile={profile} onProfileUpdated={onProfileUpdated} />
+        <ServicePagesCard profile={profile} onProfileUpdated={onProfileUpdated} flat={flat} />
 
         {/* View As */}
-        <div className={TILE}>
+        <div className={tileClass(flat)}>
           <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
             <Eye className="h-4 w-4 text-muted-foreground" />
             {t("profile.impersonation")}
@@ -138,7 +143,7 @@ export function OwnerToolsCard({
         </div>
 
         {/* Gmail Integration */}
-        <div className={TILE}>
+        <div className={tileClass(flat)}>
           <div className="flex items-center gap-2 text-foreground font-semibold text-sm">
             <Mail className="h-4 w-4 text-brand-indigo" />
             {t("gmail.title")}

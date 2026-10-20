@@ -32,9 +32,9 @@
     }
   },
   "conversationType": {
-    "label": "Type",
-    "widget": "Widget",
-    "voice": "Spraak",
+    "label": "Kanaal",
+    "widget": "Websitechat",
+    "voice": "Telefoon",
     "dbr": "Reactivatie / Offertes",
     "instagram": "Instagram",
     "other": "Overig"
@@ -599,6 +599,9 @@
     "assignment": "Toewijzing"
   },
   "chat": {
+    "aiSummary": "AI-samenvatting",
+    "callLine": "Gesprek",
+    "openCall": "Openen",
     "takeoverTitle": "Zelf antwoorden?",
     "takeoverBody": "De assistent pauzeert voor deze chat terwijl jij antwoordt. Je kunt hem later laten verdergaan.",
     "takeoverYes": "Ja, versturen",
@@ -747,6 +750,7 @@
     "upcoming": "Komende afspraken"
   },
   "names": {
+    "visitor": "Bezoeker",
     "websiteVisitor": "Websitebezoeker"
   },
   "list": {

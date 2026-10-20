@@ -629,7 +629,7 @@
       try {
         const back = sessionStorage.getItem('leadawaker_return_to') || '';
         sessionStorage.removeItem('leadawaker_return_to');
-        if (/^\/go\/[A-Za-z0-9]{8}(\?to=settings)?$/.test(back)) next = back;
+        if (/^\/go\/[A-Za-z0-9]{8}(\?(to=(settings|calls)|call=[A-Za-z0-9_-]{1,80}))?$/.test(back)) next = back;
       } catch (_) {}
       window.location.href = next;
     } catch (_) {

@@ -32,9 +32,9 @@
     }
   },
   "conversationType": {
-    "label": "Tipo",
-    "widget": "Widget",
-    "voice": "Voz",
+    "label": "Canal",
+    "widget": "Chat do site",
+    "voice": "Telefone",
     "dbr": "Reativação / Orçamentos",
     "instagram": "Instagram",
     "other": "Outros"
@@ -597,6 +597,9 @@
     "assignment": "Atribuição"
   },
   "chat": {
+    "aiSummary": "Resumo da IA",
+    "callLine": "Ligação",
+    "openCall": "Abrir",
     "takeoverTitle": "Responder você mesmo?",
     "takeoverBody": "O assistente pausa nesta conversa enquanto você responde. Você pode deixá-lo continuar depois.",
     "takeoverYes": "Sim, enviar",
@@ -721,6 +724,7 @@
     "upcoming": "Próximos agendamentos"
   },
   "names": {
+    "visitor": "Visitante",
     "websiteVisitor": "Visitante do site"
   },
   "list": {

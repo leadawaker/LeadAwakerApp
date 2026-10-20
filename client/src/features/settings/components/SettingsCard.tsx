@@ -5,12 +5,17 @@ import { cn } from "@/lib/utils";
 /**
  * One block on the Profile / Preferences tabs: a SectionCard with an optional
  * icon + title + description header above its content.
+ *
+ * `flat` (phone My profile) drops the card: the block sits on the tab's one
+ * surface, headed by a small eyebrow title, and is split from its neighbours by
+ * spacing only.
  */
 export function SettingsCard({
   icon: Icon,
   title,
   description,
   action,
+  flat = false,
   className,
   children,
   ...rest
@@ -20,7 +25,26 @@ export function SettingsCard({
   description?: ReactNode;
   /** Right-aligned header slot (e.g. a status or a small control). */
   action?: ReactNode;
+  /** Render without the card (sections on one shared surface). */
+  flat?: boolean;
 } & HTMLAttributes<HTMLDivElement>) {
+  if (flat) {
+    return (
+      <section className={cn("space-y-3", className)} {...rest}>
+        {title && (
+          <div className="flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <div className="eyebrow eyebrow-sm">{title}</div>
+              {description && <div className="text-xs text-muted-foreground mt-1">{description}</div>}
+            </div>
+            {action}
+          </div>
+        )}
+        {children}
+      </section>
+    );
+  }
+
   return (
     <SectionCard className={cn("p-5 space-y-4", className)} {...rest}>
       {title && (

@@ -12,6 +12,12 @@
     "security": "Security",
     "notifications": "Notifications"
   },
+  "mobileProfile": {
+    "title": "My profile",
+    "close": "Close",
+    "tabs": "Profile sections",
+    "channels": "Channels"
+  },
   "team": {
     "people": "People",
     "table": "Table",

@@ -1,4 +1,14 @@
 {
+  "peopleSort": {
+    "latest": "Laatste gesprek",
+    "most": "Meeste gesprekken"
+  },
+  "range": {
+    "all": "Altijd",
+    "7d": "Laatste 7 dagen",
+    "30d": "Laatste 30 dagen",
+    "90d": "Laatste 90 dagen"
+  },
   "tabs": {
     "stats": "Statistieken",
     "people": "Personen",
@@ -89,6 +99,7 @@
     "dnc": "Niet benaderen"
   },
   "menus": {
+    "dateRange": "Periode",
     "filter": "Filteren",
     "sort": "Sorteren",
     "group": "Groeperen",
@@ -105,6 +116,7 @@
     "name": "Naam A–Z"
   },
   "group": {
+    "outcome": "Uitkomst",
     "date": "Datum",
     "status": "Status",
     "language": "Taal",

@@ -3,12 +3,12 @@ import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import type { VoiceScope } from "../api/voiceCallsApi";
-import type { CallsTab } from "../callers";
+import type { CallsTab, PeopleOptions } from "../callers";
 import { CALLS_TAB_ICON } from "./callsTabs";
 import type { ListOptions } from "../listOptions";
 import { AccountFilter, type AccountOption } from "./AccountFilter";
 import { PresentingToggle } from "./PresentingToggle";
-import { VoiceCallsMenus } from "./VoiceCallsMenus";
+import { PeopleMenus, VoiceCallsMenus } from "./VoiceCallsMenus";
 import { VoiceCallsMobileTopbar } from "./VoiceCallsMobileTopbar";
 import { ScopeSwitch } from "./ScopeSwitch";
 import { WeekSummary } from "./WeekSummary";
@@ -24,6 +24,8 @@ interface Props {
   onView: (v: CallsTab) => void;
   options: ListOptions;
   setOptions: (patch: Partial<ListOptions>) => void;
+  peopleOptions: PeopleOptions;
+  setPeopleOptions: (patch: Partial<PeopleOptions>) => void;
   languages: string[];
   accounts: AccountOption[];
   accountId: number | undefined;
@@ -32,14 +34,14 @@ interface Props {
   onTogglePresenting: () => void;
 }
 
-export function VoiceCallsTopbar({ scope, isOwner, onScope, tabs, view, onView, options, setOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
+export function VoiceCallsTopbar({ scope, isOwner, onScope, tabs, view, onView, options, setOptions, peopleOptions, setPeopleOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
   const { t } = useTranslation("voiceCalls");
   const isMobile = useIsMobile(768);
   if (isMobile) {
     return (
       <VoiceCallsMobileTopbar
         scope={scope} isOwner={isOwner} onScope={onScope} tabs={tabs} view={view} onView={onView}
-        options={options} setOptions={setOptions} languages={languages}
+        options={options} setOptions={setOptions} peopleOptions={peopleOptions} setPeopleOptions={setPeopleOptions} languages={languages}
         accounts={accounts} accountId={accountId} onAccount={onAccount}
         masked={masked} onTogglePresenting={onTogglePresenting}
       />
@@ -93,6 +95,7 @@ export function VoiceCallsTopbar({ scope, isOwner, onScope, tabs, view, onView, 
       )}
 
       {view === "calls" && <VoiceCallsMenus options={options} setOptions={setOptions} languages={languages} />}
+      {view === "people" && <PeopleMenus options={peopleOptions} setOptions={setPeopleOptions} />}
 
       {isOwner && <PresentingToggle masked={masked} onToggle={onTogglePresenting} />}
     </div>

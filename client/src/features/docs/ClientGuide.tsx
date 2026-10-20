@@ -14,8 +14,10 @@ import {
   SlidersHorizontal,
   Smartphone,
   HelpCircle,
+  Building2,
 } from "lucide-react";
 import { DocSection, Step, Tip } from "./docParts";
+import { AccountMap, BottomBarMock, CallFlow, CallsTabsMock, InstallSteps, RecapEmailMock } from "./illustrations";
 
 export interface ClientGuideProps {
   /** The receptionist's name (campaign agent_name), or null when none is set. */
@@ -51,10 +53,12 @@ export function ClientGuide({ agentName, companyName, hasPhone, hasWebsite }: Cl
         <ul className="space-y-2 list-disc pl-5">
           <Html as="li">{k("welcome.home")}</Html>
           <Html as="li">{k("welcome.calls")}</Html>
-          <Html as="li">{k("welcome.leads")}</Html>
           <Html as="li">{k("welcome.calendar")}</Html>
-          <Html as="li">{k("welcome.receptionist")}</Html>
+          {hasWebsite && <Html as="li">{k("welcome.chats")}</Html>}
+          <Html as="li">{k("welcome.more")}</Html>
         </ul>
+        <BottomBarMock k={k} />
+        <Html>{k("welcome.desktop")}</Html>
         <Tip>{k("welcome.tip")}</Tip>
       </DocSection>
 
@@ -62,10 +66,13 @@ export function ClientGuide({ agentName, companyName, hasPhone, hasWebsite }: Cl
       {hasPhone && (
         <DocSection id="sec-phone" icon={PhoneCall} title={k("phone.title")}>
           <Html>{k("phone.intro")}</Html>
+          <CallFlow k={k} />
           <Step n={1}>{k("phone.calls")}</Step>
           <Step n={2}>{k("phone.transfers")}</Step>
           <Step n={3}>{k("phone.callbacks")}</Step>
           <Step n={4}>{k("phone.bookings")}</Step>
+          <Html>{k("phone.page")}</Html>
+          <CallsTabsMock k={k} />
           <Tip>{k("phone.tip")}</Tip>
         </DocSection>
       )}
@@ -75,6 +82,8 @@ export function ClientGuide({ agentName, companyName, hasPhone, hasWebsite }: Cl
         <DocSection id="sec-chat" icon={MessageSquare} title={k("chat.title")}>
           <Html>{k("chat.p1")}</Html>
           <Html>{k("chat.p2")}</Html>
+          <Html>{k("chat.reply")}</Html>
+          <Html>{k("chat.alert")}</Html>
         </DocSection>
       )}
 
@@ -83,6 +92,7 @@ export function ClientGuide({ agentName, companyName, hasPhone, hasWebsite }: Cl
         <Html>{k("recap.intro")}</Html>
         <Html>{k("recap.recap")}</Html>
         <Html>{k("recap.alerts")}</Html>
+        <RecapEmailMock k={k} />
         <p className="font-semibold text-foreground">{k("recap.addTitle")}</p>
         <Step n={1}>{k("recap.add1")}</Step>
         <Step n={2}>{k("recap.add2")}</Step>
@@ -97,7 +107,13 @@ export function ClientGuide({ agentName, companyName, hasPhone, hasWebsite }: Cl
         <Tip>{k("calendar.tip")}</Tip>
       </DocSection>
 
-      {/* 6 What you can change */}
+      {/* 6 Your Account page */}
+      <DocSection id="sec-account" icon={Building2} title={k("account.title")}>
+        <Html>{k("account.intro")}</Html>
+        <AccountMap k={k} />
+      </DocSection>
+
+      {/* 7 What you can change */}
       <DocSection id="sec-change" icon={SlidersHorizontal} title={k("change.title")}>
         <Html>{k("change.intro")}</Html>
         <ul className="space-y-2 list-disc pl-5">
@@ -110,20 +126,16 @@ export function ClientGuide({ agentName, companyName, hasPhone, hasWebsite }: Cl
         <Html>{k("change.request")}</Html>
       </DocSection>
 
-      {/* 7 Put the CRM on your phone */}
+      {/* 8 Put the CRM on your phone */}
       <DocSection id="sec-install" icon={Smartphone} title={k("install.title")}>
         <Html>{k("install.intro")}</Html>
         <p className="font-semibold text-foreground">{k("install.iosTitle")}</p>
-        <Step n={1}>{k("install.ios1")}</Step>
-        <Step n={2}>{k("install.ios2")}</Step>
-        <Step n={3}>{k("install.ios3")}</Step>
+        <InstallSteps k={k} platform="ios" />
         <p className="font-semibold text-foreground">{k("install.androidTitle")}</p>
-        <Step n={1}>{k("install.android1")}</Step>
-        <Step n={2}>{k("install.android2")}</Step>
-        <Step n={3}>{k("install.android3")}</Step>
+        <InstallSteps k={k} platform="android" />
       </DocSection>
 
-      {/* 8 FAQ */}
+      {/* 9 FAQ */}
       <DocSection id="sec-faq" icon={HelpCircle} title={k("faq.title")}>
         <div className="space-y-3">
           {FAQ_KEYS.map((n) => (

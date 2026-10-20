@@ -7,6 +7,7 @@ import { accountIdFor, getEngineUrl, handleZodError, wrapAsync } from "./_helper
 import { sendRawEmail, type EmailAttachment } from "../email";
 import { renderClientAlertEmail } from "../clientAlerts/renderEmail";
 import { AlertSettingsError } from "../storage/clientAlerts";
+import { parseGoLinkParams } from "@shared/goLinkParams";
 import { ALERT_CHANNELS, ALERT_LANGUAGES, ALERT_TYPES, MAX_EMAIL_RECIPIENTS, MAX_WHATSAPP_RECIPIENTS } from "@shared/clientAlerts";
 
 // Client recaps and instant alerts (specs/client-recaps):
@@ -196,9 +197,19 @@ export function registerClientAlertsRoutes(app: Express): void {
     if (!target || (user && user.accountsId !== 1 && user.accountsId !== target.accountsId)) {
       return res.status(404).json({ message: "Not found" });
     }
-    if (req.query.to === "settings") {
+    const params = parseGoLinkParams(new URLSearchParams(req.query as Record<string, string>).toString());
+    if (params.to === "settings") {
       // The email footer's "choose which emails you get" link.
       return res.json({ path: "/platform/accounts?tab=alerts", selectAccountId: target.accountsId, accountId: target.accountsId });
+    }
+    if (params.to === "calls") {
+      // The recap's "See all N calls".
+      return res.json({ path: "/platform/voice-calls", accountId: target.accountsId });
+    }
+    if (params.call) {
+      // One call row in the recap: only a live call of the code's own account opens; anything else falls back to the Calls page.
+      const call = await storage.getVoiceCall(params.call, { accountId: target.accountsId, allowDemo: false }).catch(() => undefined);
+      return res.json({ path: "/platform/voice-calls", ...(call ? { selectVoiceCallId: params.call } : {}), accountId: target.accountsId });
     }
     const t = target.eventType;
     // Appointment alerts open where the booking happened: the phone call, the

@@ -1,4 +1,14 @@
 {
+  "peopleSort": {
+    "latest": "Última ligação",
+    "most": "Mais ligações"
+  },
+  "range": {
+    "all": "Qualquer data",
+    "7d": "Últimos 7 dias",
+    "30d": "Últimos 30 dias",
+    "90d": "Últimos 90 dias"
+  },
   "tabs": {
     "stats": "Estatísticas",
     "people": "Pessoas",
@@ -89,6 +99,7 @@
     "dnc": "Não contatar"
   },
   "menus": {
+    "dateRange": "Período",
     "filter": "Filtrar",
     "sort": "Ordenar",
     "group": "Agrupar",
@@ -105,6 +116,7 @@
     "name": "Nome A–Z"
   },
   "group": {
+    "outcome": "Resultado",
     "date": "Data",
     "status": "Status",
     "language": "Idioma",

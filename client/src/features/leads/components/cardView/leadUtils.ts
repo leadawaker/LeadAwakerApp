@@ -11,13 +11,16 @@ export function getLeadId(lead: Record<string, any>): number {
 }
 
 // Never show "Unknown": a lead without a name falls back to its phone number,
-// then to "Website visitor" (widget chats often arrive without either).
+// then to "Visitor" (widget chats often arrive without either).
+const WEBSITE_PLACEHOLDER = /^(website( visitor)?|websitebezoeker|visitante do site)$/i;
+
 export function getFullName(lead: Record<string, any>): string {
   const name = String(lead.full_name || [lead.first_name, lead.last_name].filter(Boolean).join(" ") || "").trim();
-  if (name && !/^unknown\b/i.test(name)) return name;
+  // "Website" / "Website visitor" are placeholders the widget writes, not names: the person is a Visitor.
+  if (name && !/^unknown\b/i.test(name) && !WEBSITE_PLACEHOLDER.test(name)) return name;
   const phone = String(lead.phone || lead.Phone || "").trim();
   if ((phone.match(/\d/g) || []).length >= 6) return phone;
-  return i18n.t("leads:names.websiteVisitor", { defaultValue: "Website visitor" });
+  return i18n.t("leads:names.visitor", { defaultValue: "Visitor" });
 }
 
 export function getInitials(name: string): string {

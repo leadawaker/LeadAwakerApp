@@ -1,6 +1,7 @@
-import type { VoiceCaller, VoiceCallListItem } from "./api/voiceCallsApi";
+import type { VoiceCaller, VoiceCallListItem, VoiceOutcome } from "./api/voiceCallsApi";
 import { maskName, maskNumber } from "./maskIdentity";
-import { callStatus, type VoiceCallStatus } from "./status";
+import { phoneMatches } from "./phoneMatch";
+import { callStatus, normalizeOutcome, type VoiceCallStatus } from "./status";
 
 /** Calls page tabs: Stats and People for everyone, All calls for the agency only. */
 export type CallsTab = "stats" | "people" | "calls";
@@ -24,17 +25,47 @@ export function callerStatus(caller: VoiceCaller): VoiceCallStatus {
   });
 }
 
-/** Search by name, number (digits) and persona; newest caller first. */
-export function filterCallers(callers: VoiceCaller[], query: string): VoiceCaller[] {
+export type PeopleSort = "latest" | "most";
+export type PeopleGroup = "date" | "outcome" | "none";
+export type PeopleRange = "all" | "7d" | "30d" | "90d";
+export const PEOPLE_SORTS: PeopleSort[] = ["latest", "most"];
+export const PEOPLE_GROUPS: PeopleGroup[] = ["date", "outcome", "none"];
+export const PEOPLE_RANGES: PeopleRange[] = ["all", "7d", "30d", "90d"];
+
+/** The People tab's menus: same idea as the calls list, judged on each person's calls. */
+export interface PeopleOptions {
+  /** Empty means every outcome. Matched against what the person's calls amounted to (best outcome). */
+  outcomes: VoiceOutcome[];
+  /** Latest call within this many days. */
+  range: PeopleRange;
+  sort: PeopleSort;
+  group: PeopleGroup;
+}
+
+export const DEFAULT_PEOPLE_OPTIONS: PeopleOptions = { outcomes: [], range: "all", sort: "latest", group: "date" };
+
+export function peopleFiltered(o: PeopleOptions): boolean {
+  return o.outcomes.length > 0 || o.range !== "all";
+}
+
+const RANGE_DAYS: Record<Exclude<PeopleRange, "all">, number> = { "7d": 7, "30d": 30, "90d": 90 };
+
+/** Search by name, number (any format) and persona, then the People filters and sort. */
+export function filterCallers(callers: VoiceCaller[], query: string, opts: PeopleOptions = DEFAULT_PEOPLE_OPTIONS, now = Date.now()): VoiceCaller[] {
   const q = query.trim().toLowerCase();
-  const list = !q ? callers : callers.filter((c) => {
-    const qDigits = q.replace(/\D/g, "");
-    return (c.name ?? "").toLowerCase().includes(q) ||
-      (c.personaCompany ?? "").toLowerCase().includes(q) ||
-      (c.accountName ?? "").toLowerCase().includes(q) ||
-      (!!qDigits && (c.phone ?? "").replace(/\D/g, "").includes(qDigits));
-  });
-  return [...list].sort((a, b) => new Date(b.lastCallAt).getTime() - new Date(a.lastCallAt).getTime());
+  let list = !q ? callers : callers.filter((c) =>
+    (c.name ?? "").toLowerCase().includes(q) ||
+    (c.personaCompany ?? "").toLowerCase().includes(q) ||
+    (c.accountName ?? "").toLowerCase().includes(q) ||
+    phoneMatches(c.phone, q) ||
+    (c.key.startsWith("num:") && phoneMatches(c.key.slice(4), q)));
+  if (opts.outcomes.length) list = list.filter((c) => opts.outcomes.includes(normalizeOutcome(c.bestOutcome)));
+  if (opts.range !== "all") {
+    const since = now - RANGE_DAYS[opts.range] * 86_400_000;
+    list = list.filter((c) => new Date(c.lastCallAt).getTime() >= since);
+  }
+  const latest = (c: VoiceCaller) => new Date(c.lastCallAt).getTime();
+  return [...list].sort((a, b) => (opts.sort === "most" ? b.callCount - a.callCount : 0) || latest(b) - latest(a));
 }
 
 /** This person's calls from the already-loaded calls list, newest first. */

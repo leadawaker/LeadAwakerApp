@@ -9,10 +9,11 @@
       "title": "Welkom in je CRM",
       "intro": "Hier houd je {{company}} in de gaten. {{Name}} neemt je telefoon en chats aan en alles wat er gebeurt komt hier terecht, dus je hoeft nooit te gokken. Dit vind je waar:",
       "home": "<b>Home</b>: het snelle overzicht. Wat er binnenkwam, wat er geboekt is en wat jouw aandacht nodig heeft.",
-      "calls": "<b>Gesprekken</b>: elk gesprek dat {{name}} voerde. Open er een om te lezen wat er gezegd is en wat eruit kwam.",
-      "leads": "<b>Leads</b>: de mensen die contact opnamen, met hun gesprekken bij elkaar.",
+      "calls": "<b>Gesprekken</b>: elk gesprek dat {{name}} voerde. <b>Statistieken</b> toont de cijfers, <b>Personen</b> wie er belde. Open een gesprek om te lezen wat er gezegd is en wat eruit kwam.",
       "calendar": "<b>Kalender</b>: je afspraken en bezoeken. Hier voeg je ook bezet-blokken toe.",
-      "receptionist": "<b>Receptionist</b>: hoe {{name}} is ingesteld, je openingstijden en wie je overzicht en meldingen krijgt.",
+      "chats": "<b>Chats</b>: je websitechats. Lees mee en antwoord zelf wanneer je wilt.",
+      "more": "<b>Meer</b>: je <b>Leads</b> (de mensen die contact opnamen), je <b>Account</b>, deze gids en Bericht aan Gabriel.",
+      "desktop": "Op een computer vind je dezelfde pagina's in het menu links, met Leads en Account daar direct in de lijst.",
       "tip": "Kom je er ergens niet uit? Met de chatknop stuur je Gabriel direct een bericht. Geen vraag is te klein."
     },
     "phone": {
@@ -22,20 +23,23 @@
       "transfers": "<strong>Doorverbinden:</strong> wil een beller jou of een collega spreken, dan kan {{name}} het gesprek doorzetten. In het gesprek zie je of dat gelukt is.",
       "callbacks": "<strong>Terugbellen:</strong> kan niemand opnemen, dan noteert {{name}} naam, nummer en vraag van de beller. Die terugbelverzoeken staan op je Home-pagina, zodat je ze kunt terugbellen.",
       "bookings": "<strong>Afspraken en bezoeken:</strong> {{name}} kan een bezoek of afspraak direct in je agenda zetten, op een moment dat echt vrij is. De afspraak staat meteen in je Kalender.",
+      "page": "Onder <strong>Gesprekken</strong> vind je twee tabbladen. <strong>Statistieken</strong> toont hoeveel gesprekken er binnenkwamen en hoe ze afliepen. <strong>Personen</strong> toont iedereen die belde, elk met één status, en een <strong>Wacht op jou</strong>-markering zolang er een terugbelverzoek openstaat. Open een persoon om al diens gesprekken te zien, met de samenvatting en wat er gezegd is.",
       "tip": "Wil je een andere begroeting of andere openingstijden? Je openingstijden pas je zelf aan. Voor al het andere druk je op Wijziging aanvragen."
     },
     "chat": {
       "title": "Je websitechat",
       "p1": "De chatbubbel op je website werkt net als de telefoon: {{name}} verwelkomt bezoekers, beantwoordt hun vragen en kan een bezoek inplannen.",
-      "p2": "Elk gesprek staat onder Leads, zodat je kunt meelezen en ziet wie interesse heeft."
+      "p2": "Elk gesprek staat onder <strong>Chats</strong>, zodat je kunt meelezen en ziet wie interesse heeft.",
+      "reply": "Wil je iemand zelf antwoorden? Open de chat onder <strong>Chats</strong> en typ je antwoord. Zodra je antwoordt, pauzeert {{name}} voor die persoon, zodat jullie niet door elkaar heen praten.",
+      "alert": "Heeft een chat jou nodig, bijvoorbeeld omdat {{name}} hem aan een mens overdraagt, dan krijg je een melding en staat de chat op <strong>Wacht op jou</strong>."
     },
     "recap": {
       "title": "Je dagelijkse overzicht en meldingen",
       "intro": "Je hoeft niet de hele dag in het CRM te kijken. Het komt naar jou toe.",
       "recap": "<strong>Dagelijks overzicht:</strong> een samenvatting per e-mail, op het tijdstip dat je onder Meldingen instelt, met gesprekken, chats en afspraken.",
-      "alerts": "<strong>Directe meldingen:</strong> een bericht zodra er iets jouw aandacht nodig heeft, zoals een nieuwe afspraak of een terugbelverzoek.",
+      "alerts": "<strong>Directe meldingen:</strong> een bericht zodra er iets jouw aandacht nodig heeft, zoals een nieuwe afspraak, een terugbelverzoek of een chat die op jou wacht.",
       "addTitle": "Jezelf of een collega toevoegen",
-      "add1": "Open <strong>Receptionist</strong> en ga naar het tabblad <strong>Meldingen</strong>.",
+      "add1": "Open <strong>Account</strong> (op je telefoon onder <strong>Meer</strong>) en ga naar het tabblad <strong>Meldingen</strong>.",
       "add2": "Voeg je e-mailadres (of dat van je collega) toe bij de ontvangers van het overzicht of de meldingen.",
       "add3": "Sla op. Vanaf het volgende overzicht of de volgende melding krijgt die persoon het ook."
     },
@@ -46,12 +50,16 @@
       "p3": "Ben je op een bepaalde dag of tijd niet beschikbaar? Voeg een <strong>bezet-blok</strong> toe. {{Name}} biedt die tijden aan niemand aan.",
       "tip": "Zet bezet-blokken op tijd in, bijvoorbeeld voor vakanties of een vrije dag. Zo blijft je agenda van jou."
     },
+    "account": {
+      "title": "Je Account-pagina",
+      "intro": "Onder <strong>Account</strong> (op je telefoon onder <strong>Meer</strong>) zie je hoe {{name}} is ingesteld voor {{company}}, je openingstijden en wie je overzicht en meldingen krijgt. Dit vind je waar:"
+    },
     "change": {
       "title": "Wat je zelf kunt aanpassen, en wat je kunt vragen",
       "intro": "Veel dingen doe je zelf, meteen:",
       "hours": "Je openingstijden.",
       "alerts": "Wie je dagelijkse overzicht en meldingen krijgt.",
-      "replies": "Zelf antwoorden aan leads.",
+      "replies": "Zelf antwoorden op chats, onder Chats.",
       "bookings": "Een afspraak verzetten of annuleren.",
       "busy": "Bezet-blokken toevoegen in je Kalender.",
       "request": "Al het andere, zoals wat {{name}} zegt, de begroeting, prijzen of wat {{name}} van je bedrijf weet, is ook makkelijk te veranderen: druk op <strong>Wijziging aanvragen</strong> en er opent een chat met Gabriel. Vertel hem wat je wilt en hij regelt het."
@@ -89,12 +97,107 @@
         },
         "5": {
           "q": "Kan ik mijn websitechats teruglezen?",
-          "a": "Ja. Je leest elke websitechat onder Leads."
+          "a": "Ja. Je leest elke websitechat onder Chats, en je kunt daar ook zelf antwoorden."
         },
         "6": {
           "q": "Bij wie meld ik me als er iets mis is?",
           "a": "Stuur Gabriel een bericht met de chatknop. Hij krijgt je bericht meteen."
         }
+      }
+    },
+    "illus": {
+      "bar": {
+        "caption": "De balk onderaan je telefoon. Leads en Account staan onder Meer.",
+        "home": "Home",
+        "calls": "Gesprekken",
+        "calendar": "Kalender",
+        "chats": "Chats",
+        "more": "Meer",
+        "account": "Account",
+        "leads": "Leads",
+        "docs": "Documentatie",
+        "help": "Bericht aan Gabriel"
+      },
+      "flow": {
+        "caption": "Wat er gebeurt als iemand belt",
+        "incoming": "Er komt een gesprek binnen",
+        "incomingSub": "Iemand belt je nummer",
+        "answers": "{{Name}} neemt op",
+        "answersSub": "Luistert en helpt, in de taal van de beller",
+        "booked": "Geboekt",
+        "bookedSub": "Staat in je Kalender",
+        "callback": "Terugbellen",
+        "callbackSub": "Naam, nummer en vraag genoteerd",
+        "transferred": "Doorverbonden",
+        "transferredSub": "Naar jou of een collega",
+        "alert": "Je krijgt een melding",
+        "alertSub": "Als iets jou nodig heeft",
+        "recap": "Dagelijks overzicht",
+        "recapSub": "Een e-mail op jouw tijdstip"
+      },
+      "tabs": {
+        "caption": "De pagina Gesprekken: Statistieken en Personen",
+        "stats": "Statistieken",
+        "people": "Personen",
+        "calls": "Gesprekken",
+        "booked": "Geboekt",
+        "callbacks": "Terugbellen",
+        "week": "Deze week, per dag",
+        "callback": "Terugbellen",
+        "transferred": "Doorverbonden",
+        "needsYou": "Wacht op jou",
+        "person1": "Anna de Vries",
+        "person1Meta": "2 gesprekken \u00b7 vandaag",
+        "person2": "Mark Jansen",
+        "person2Meta": "1 gesprek \u00b7 gisteren",
+        "person3": "Sophie Bakker",
+        "person3Meta": "1 gesprek \u00b7 maandag"
+      },
+      "email": {
+        "caption": "Een voorbeeld van het dagelijkse overzicht",
+        "subject": "Je dag bij {{company}}",
+        "from": "{{Name}} \u00b7 dagelijks overzicht",
+        "greeting": "Hoi! Dit gebeurde er vandaag.",
+        "calls": "Gesprekken",
+        "booked": "Geboekt",
+        "callbacks": "Terugbellen",
+        "callsTitle": "Gesprekken van vandaag",
+        "call1": "Anna de Vries",
+        "call2": "Mark Jansen",
+        "call3": "Sophie Bakker",
+        "callback": "Terugbellen",
+        "transferred": "Doorverbonden",
+        "open": "Open",
+        "agendaTitle": "Agenda deze week",
+        "agenda1": "Do 10:00 \u00b7 Bezoek, Anna de Vries"
+      },
+      "account": {
+        "caption": "Een kaart van je Account-pagina",
+        "title": "{{company}}",
+        "request": "Wijziging aanvragen",
+        "requestSub": "Voor alles wat je niet zelf kunt aanpassen. Er opent een chat met Gabriel.",
+        "overview": "Overzicht",
+        "overviewSub": "Je bedrijfsgegevens, team, contracten en facturen",
+        "phone": "Telefoon",
+        "phoneSub": "Hoe {{name}} de telefoon aanneemt, en je openingstijden",
+        "chat": "Chat",
+        "chatSub": "Je websitechat",
+        "alerts": "Meldingen",
+        "alertsSub": "Wanneer je overzicht komt, en wie het overzicht en de meldingen krijgt",
+        "integrations": "Integraties",
+        "integrationsSub": "De diensten die aan je account gekoppeld zijn",
+        "note": "Sommige tabbladen zie je alleen als je die dienst gebruikt."
+      },
+      "install": {
+        "iosCaption": "iPhone: Safari, Deel, Zet op beginscherm",
+        "androidCaption": "Android: Chrome, menu, App installeren",
+        "iosCopy": "Kopieer",
+        "iosAdd": "Zet op beginscherm",
+        "iosOther": "Voeg bladwijzer toe",
+        "androidShare": "Delen",
+        "androidInstall": "App installeren",
+        "androidOther": "Nieuw tabblad",
+        "done": "Klaar: Lead Awaker staat op je beginscherm, net als een app."
       }
     }
   },

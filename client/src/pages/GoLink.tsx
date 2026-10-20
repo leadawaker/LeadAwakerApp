@@ -2,22 +2,23 @@
 // Resolves the opaque code on the server (which checks the user may see that
 // account), preselects the lead or call, then opens the CRM page. With
 // ?to=settings (the email footer's link) it opens the account's Recaps &
-// alerts tab instead. Logged-out visitors go to the login page and come back
+// alerts tab instead, ?to=calls the Calls page and ?call=<id> that one call. Logged-out visitors go to the login page and come back
 // here afterwards.
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
+import { goLinkQuery, parseGoLinkParams } from "@shared/goLinkParams";
 
 const RETURN_KEY = "leadawaker_return_to";
 // The account switcher's two keys (hooks/useWorkspace.ts).
 const ACCOUNT_KEY = "leadawaker_current_account_id";
 const ACCOUNT_PICKED_KEY = "leadawaker_account_explicitly_selected";
 
-/** The only `to` the server knows; anything else is dropped. */
+/** The only queries the server knows (shared/goLinkParams); anything else is dropped. */
 function linkTarget(): string {
-  try { return new URLSearchParams(window.location.search).get("to") === "settings" ? "?to=settings" : ""; } catch { return ""; }
+  try { return goLinkQuery(parseGoLinkParams(window.location.search)); } catch { return ""; }
 }
 
 function toLogin(code: string, expired = false) {

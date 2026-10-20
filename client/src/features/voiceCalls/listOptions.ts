@@ -1,6 +1,7 @@
 import type { TFunction } from "i18next";
 import type { VoiceCallListItem, VoiceOutcome } from "./api/voiceCallsApi";
 import { groupByDate } from "./dateGroups";
+import { phoneMatches } from "./phoneMatch";
 import { callStatus, normalizeOutcome, VOICE_CALL_STATUSES, type VoiceCallStatus } from "./status";
 
 export type VoiceCallSort = "recent" | "oldest" | "longest" | "shortest" | "name";
@@ -26,14 +27,13 @@ export function filterCalls(calls: VoiceCallListItem[], opts: Pick<ListOptions, 
   if (opts.languages.length) list = list.filter((c) => opts.languages.includes(c.language ?? ""));
   const q = opts.query.trim().toLowerCase();
   if (q) {
-    const qDigits = q.replace(/\D/g, "");
     list = list.filter((c) =>
       (c.callerName ?? "").toLowerCase().includes(q) ||
       (c.conclusion ?? "").toLowerCase().includes(q) ||
       (c.personaCompany ?? "").toLowerCase().includes(q) ||
       (c.personaNiche ?? "").toLowerCase().includes(q) ||
       (c.accountName ?? "").toLowerCase().includes(q) ||
-      (!!qDigits && (c.callerNumber ?? "").replace(/\D/g, "").includes(qDigits)));
+      phoneMatches(c.callerNumber, q));
   }
   return list;
 }

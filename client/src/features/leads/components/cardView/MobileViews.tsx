@@ -24,6 +24,7 @@ import { getLeadId, getFullName, getStatus } from "./leadUtils";
 import { ContactWidget } from "./ContactWidget";
 import { ConversationWidget } from "./ConversationWidget";
 import { LeadSummaryCard } from "./LeadSummaryCard";
+import { CollapsedSummary } from "./CollapsedSummary";
 
 // Re-export extracted components so existing imports from "./MobileViews" continue to work
 export { LeadFilterBottomSheet } from "./FilterSheet";
@@ -404,6 +405,7 @@ export function MobileLeadDetailPanel({
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {tab === "chat" && (
           <div data-testid="mobile-lead-chat" className="flex flex-col h-full" style={{ flex: 1, minHeight: 0 }}>
+            {hasSummary && <CollapsedSummary lead={lead} status={status} />}
             <ConversationWidget lead={lead} showHeader={false} />
           </div>
         )}

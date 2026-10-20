@@ -13,6 +13,7 @@ export function PersonalInfoCard({
   onPhoneChange,
   onSave,
   isSaving,
+  flat = false,
 }: {
   name: string;
   email: string;
@@ -22,6 +23,8 @@ export function PersonalInfoCard({
   onPhoneChange: (v: string) => void;
   onSave: () => void;
   isSaving: boolean;
+  /** Phone My profile: no card, see SettingsCard. */
+  flat?: boolean;
 }) {
   const { t } = useTranslation("settings");
 
@@ -31,6 +34,7 @@ export function PersonalInfoCard({
       title={t("profile.personalInfo")}
       description={t("profile.personalInfoDescription")}
       data-testid="section-personal-info"
+      flat={flat}
     >
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-onboarding="profile-name">
         <Field
@@ -61,7 +65,7 @@ export function PersonalInfoCard({
         />
       </div>
 
-      <div className="flex justify-end pt-1">
+      <div className={flat ? "flex pt-1 [&>button]:w-full" : "flex justify-end pt-1"}>
         <button
           type="button"
           className="la-btn la-btn--wine la-btn--lg la-btn--pill disabled:opacity-50 disabled:cursor-not-allowed"

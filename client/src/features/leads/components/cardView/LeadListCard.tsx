@@ -37,6 +37,7 @@ export function LeadListCard({
   leadTags,
   campaignsById,
   showPeek = false,
+  showChannelBadge = false,
   onOpenConversation,
   onQuickChangeStatus,
   onQuickAddNote,
@@ -51,6 +52,8 @@ export function LeadListCard({
   campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
   /** When true, render the lead's last message as a chat-peek bubble under the card (Feature A) */
   showPeek?: boolean;
+  /** Chats with both channels on: website / WhatsApp badge on the avatar. */
+  showChannelBadge?: boolean;
   /** Swipe right navigates here — navigates to Chats tab with this lead selected */
   onOpenConversation?: () => void;
   /** Swipe left quick actions (Feature #41) */
@@ -387,6 +390,16 @@ export function LeadListCard({
           >
             {selected ? <Check className="h-[18px] w-[18px]" /> : getInitials(name)}
           </div>
+          {showChannelBadge && !selected && (lead.chat_channel === "website" || lead.chat_channel === "whatsapp") && (
+            <span
+              className="absolute flex items-center justify-center"
+              data-testid="lead-channel-badge"
+              title={t(`leadChannel.${lead.chat_channel}`)}
+              style={{ bottom: -3, right: -3, width: 16, height: 16, borderRadius: 9999, background: 'var(--card)', boxShadow: '0 0 0 1.5px var(--bg)' }}
+            >
+              <ChannelGlyph channel={lead.chat_channel} size={10} />
+            </span>
+          )}
           {unreadCount > 0 && (
             <span
               className="absolute flex items-center justify-center"

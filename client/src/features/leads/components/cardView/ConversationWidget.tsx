@@ -30,6 +30,9 @@ import { TagEventChip, StatusEventChip, canonicalStatus } from "@/features/conve
 import type { MiniSenderKey, MiniMsgMeta, MiniThreadGroup } from "./types";
 import { getDateKey, formatDateLabel } from "./formatUtils";
 import { getLeadId } from "./leadUtils";
+import { splitThreadCalls, type ThreadCall } from "./threadCalls";
+import { ThreadCallLine } from "./ThreadCallLine";
+import { openCall } from "@/features/home/lib/openCall";
 import {
   MiniDateSeparator,
   MiniThreadDivider,
@@ -170,8 +173,9 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
     setRecordingSeconds(0);
   }, []);
 
-  const sorted = useMemo(
-    () => [...interactions].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || "")),
+  // Call turns leave the bubbles: each call is one compact line in the thread (C2).
+  const { chat: sorted, calls: threadCalls } = useMemo(
+    () => splitThreadCalls([...interactions].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""))),
     [interactions]
   );
 
@@ -256,7 +260,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
 
   // Build structured render list: date separators + thread dividers + sender-run wrappers
   const chatItems = useMemo(() => {
-    if (sorted.length === 0) return null;
+    if (sorted.length === 0 && threadCalls.length === 0) return null;
 
     const threadGroups = groupMiniMessagesByThread(sorted);
     const globalMetas = computeMiniMsgMeta(sorted);
@@ -266,7 +270,8 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
       | { kind: "date"; label: string; key: string }
       | { kind: "thread"; group: MiniThreadGroup; total: number; key: string }
       | { kind: "tag-event"; tagName: string; tagColor: string; time: string; key: string; eventType?: "added" | "removed" }
-      | { kind: "status-event"; statusName: string; time: string; key: string };
+      | { kind: "status-event"; statusName: string; time: string; key: string }
+      | { kind: "call"; call: ThreadCall; key: string };
 
     const fmtTime = (ts?: string | null) =>
       ts ? new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "";
@@ -358,6 +363,24 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
       mergedTokens = merged;
     }
 
+    // Calls slot in by time, before the first message after them.
+    if (threadCalls.length > 0) {
+      const merged: Token[] = [];
+      let ci = 0;
+      for (const tok of mergedTokens) {
+        if (tok.kind === "msg") {
+          const m = sorted[tok.msgIdx];
+          const ts = m.created_at ?? m.createdAt ?? "";
+          while (ci < threadCalls.length && threadCalls[ci].startedAt <= ts) {
+            merged.push({ kind: "call", call: threadCalls[ci], key: `call-${threadCalls[ci].callId}` }); ci++;
+          }
+        }
+        merged.push(tok);
+      }
+      while (ci < threadCalls.length) { merged.push({ kind: "call", call: threadCalls[ci], key: `call-${threadCalls[ci].callId}` }); ci++; }
+      mergedTokens = merged;
+    }
+
     // Deduplicate status-event chips — a /start restart re-adds Booked/Qualified
     // events, so keep only the first occurrence of each unique status value.
     const seenStatuses = new Set<string>();
@@ -396,6 +419,11 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
         ti++;
         continue;
       }
+      if (tok.kind === "call") {
+        items.push(<ThreadCallLine key={tok.key} call={tok.call} onOpen={() => openCall(tok.call.callId, setLocation)} />);
+        ti++;
+        continue;
+      }
       const firstMsg = sorted[tok.msgIdx];
       const senderType: MiniSenderKey = String(firstMsg.direction || "").toLowerCase() !== "outbound"
         ? "inbound"
@@ -418,7 +446,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
           lookahead++;
           continue;
         }
-        if (lt.kind === "tag-event" || lt.kind === "status-event") break; // event chips break runs
+        if (lt.kind === "tag-event" || lt.kind === "status-event" || lt.kind === "call") break; // event chips and calls break runs
         const m = sorted[lt.msgIdx];
         const sk: MiniSenderKey = String(m.direction || "").toLowerCase() !== "outbound"
           ? "inbound"
@@ -473,7 +501,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
     }
 
     return items;
-  }, [sorted, leadName, leadAvatarColors, currentUser, isAgencyView, tagEvents, t]);
+  }, [sorted, threadCalls, leadName, leadAvatarColors, currentUser, isAgencyView, tagEvents, t, setLocation]);
 
   // Let AI continue — only when human has taken over. Shared between the
   // showHeader layout and the top-right overlay used inside the tab-switcher box.
@@ -549,7 +577,7 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
               </div>
             ))}
           </div>
-        ) : sorted.length === 0 ? (
+        ) : sorted.length === 0 && threadCalls.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-2 h-full text-center">
             <MessageSquare className="h-8 w-8 text-muted-foreground/30" />
             <p className="text-xs text-muted-foreground">{t("chat.noMessages")}</p>

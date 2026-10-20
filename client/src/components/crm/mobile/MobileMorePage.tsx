@@ -18,7 +18,6 @@ import {
   Monitor,
   MessageSquare,
   Inbox,
-  X,
   BookUser,
   Settings,
   Send,
@@ -32,8 +31,7 @@ import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
 import { useMobileChrome } from "@/contexts/MobileChromeContext";
-import { ProfileSection } from "@/features/settings/components/ProfileSection";
-import { NotificationsSection } from "@/features/settings/components/NotificationsSection";
+import { MobileProfilePage } from "@/features/settings/components/MobileProfilePage";
 import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
 import { APP_LANGUAGES } from "@/lib/languages";
 import { agencyBottomBar, clientMoreItems, clientNavLabelKey, isSameRoute, CLIENT_NAV_HREF } from "@/components/crm/navGates";
@@ -450,7 +448,6 @@ export function MobileMorePage({
         </MobileSheet>
       )}
 
-      {/* ── Profile / notifications editing sheet ── */}
       {/* ── Inbox sheet (owner only) ── */}
       {isOwner && (
         <MobileSheet open={inboxSheetOpen} onClose={() => setInboxSheetOpen(false)} data-testid="mobile-inbox-sheet">
@@ -458,23 +455,8 @@ export function MobileMorePage({
         </MobileSheet>
       )}
 
-      <MobileSheet open={profileSheetOpen} onClose={() => setProfileSheetOpen(false)} data-testid="mobile-profile-sheet">
-        <div style={{ flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "4px 18px 12px", borderBottom: "1px solid var(--line)" }}>
-          <span className="serif" style={{ fontSize: 24, color: "var(--ink)", letterSpacing: "-0.02em" }}>{t("sidebar.settings")}</span>
-          <button
-            onClick={() => setProfileSheetOpen(false)}
-            aria-label={t("common.close", "Close")}
-            style={{ width: 36, height: 36, borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", background: "var(--surface)", boxShadow: "var(--sh-raised-crisp)", color: "var(--mute)", display: "flex", alignItems: "center", justifyContent: "center" }}
-            data-testid="mobile-profile-sheet-close"
-          >
-            <X size={16} />
-          </button>
-        </div>
-        <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "16px 16px calc(24px + var(--safe-bottom))", display: "flex", flexDirection: "column", gap: 16 }}>
-          <ProfileSection />
-          <NotificationsSection />
-        </div>
-      </MobileSheet>
+      {/* ── My profile: full-screen tabbed page (Profile · Notifications · Preferences) ── */}
+      <MobileProfilePage open={profileSheetOpen} onClose={() => setProfileSheetOpen(false)} />
     </div>
   );
 }

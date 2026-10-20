@@ -23,9 +23,12 @@ import { SettingsCard } from "./SettingsCard";
 export function LandingPageCard({
   profile,
   onProfileUpdated,
+  flat = false,
 }: {
   profile: UserProfile;
   onProfileUpdated: (p: UserProfile) => void;
+  /** Phone My profile: no card, see SettingsCard. */
+  flat?: boolean;
 }) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
@@ -58,6 +61,7 @@ export function LandingPageCard({
       title={t("profile.landingPage")}
       description={t("profile.landingPageDescription")}
       data-testid="section-landing-page"
+      flat={flat}
     >
       <label htmlFor="profile-landing-page-select" className="sr-only">
         {t("profile.landingPage")}

@@ -15,6 +15,8 @@ import {
   MessageSquare,
   Trash2,
   FileText,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ViewTabBar } from "@/components/ui/view-tab-bar";
@@ -22,7 +24,8 @@ import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { resolveColor } from "@/features/tags/types";
 import { CompactLeadCard } from "./CompactLeadCard";
-import { CONVERSATION_TYPES, type ConversationType } from "../conversationType";
+import { CONVERSATION_TYPE_ICON, CONVERSATION_TYPES, type ConversationType } from "../conversationType";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { GroupHeader, ListSkeleton } from "./atoms";
 import { LeadListCard } from "./LeadListCard";
 import { MobileSimpleKanban } from "./MobileViews";
@@ -92,6 +95,7 @@ export function LeadsListPanel({
   isConversationsMode,
   channelTabs,
   mobilePageTabs,
+  showChannelBadge = false,
   filterType,
   onToggleFilterType,
   allTags,
@@ -157,6 +161,8 @@ export function LeadsListPanel({
   channelTabs?: ReactNode;
   /** Chats page: Stats · Chats in the mobile header, in place of the (dead) List switch. */
   mobilePageTabs?: ReactNode;
+  /** Both chat channels are on: a small website / WhatsApp badge on each avatar (C8). */
+  showChannelBadge?: boolean;
   filterType: ConversationType[];
   onToggleFilterType: (v: ConversationType) => void;
   allTags: { name: string; color: string }[];
@@ -202,12 +208,16 @@ export function LeadsListPanel({
     { value: "created_desc",   label: t("sort.createdNewest") },
     { value: "created_asc",    label: t("sort.createdOldest") },
   ];
+  // Clients get the short menus (C11): no campaign or channel-type grouping, filtering.
+  const { isAgencyUser } = useWorkspace();
+  const showTypes = !!isConversationsMode && isAgencyUser;
   const groupOptions: { value: GroupByOption; label: string }[] = [
     { value: "date",     label: t("sort.mostRecent") },
     { value: "status",   label: t("group.status") },
-    { value: "campaign", label: t("group.campaign") },
-    ...(isConversationsMode ? [{ value: "type" as GroupByOption, label: t("conversationType.label") }] : []),
+    ...(isAgencyUser ? [{ value: "campaign" as GroupByOption, label: t("group.campaign") }] : []),
+    ...(showTypes ? [{ value: "type" as GroupByOption, label: t("conversationType.label") }] : []),
   ];
+  const [tagsOpen, setTagsOpen] = useState(filterTags.length > 0);
 
   // Tags table has leftover conversion-status/sentiment entries that were never
   // real tags — never show them as filter options (Gabriel, 2026-06-21).
@@ -215,12 +225,20 @@ export function LeadsListPanel({
 
   const leadsFilterPanel = (
     <>
-      {isConversationsMode && (
+      {showTypes && (
         <>
           <MobileDrawerSubheading>{t("conversationType.label")}</MobileDrawerSubheading>
-          {CONVERSATION_TYPES.map((v) => (
-            <MobileDrawerOption key={v} label={t(`conversationType.${v}`)} selected={filterType.includes(v)} onClick={() => onToggleFilterType(v)} />
-          ))}
+          {CONVERSATION_TYPES.map((v) => {
+            const Icon = CONVERSATION_TYPE_ICON[v];
+            return (
+              <MobileDrawerOption
+                key={v}
+                label={<span className="row" style={{ alignItems: "center", gap: 7 }}><Icon size={14} style={{ color: "var(--mute)", flexShrink: 0 }} />{t(`conversationType.${v}`)}</span>}
+                selected={filterType.includes(v)}
+                onClick={() => onToggleFilterType(v)}
+              />
+            );
+          })}
         </>
       )}
       <MobileDrawerSubheading>{t("group.status", "Status")}</MobileDrawerSubheading>
@@ -239,8 +257,11 @@ export function LeadsListPanel({
       ))}
       {realTags.length > 0 && (
         <>
-          <MobileDrawerSubheading>{t("detail.sections.tags", "Tags")}</MobileDrawerSubheading>
-          {realTags.map((tag) => (
+          <MobileDrawerOption
+            label={<span className="row" style={{ alignItems: "center", gap: 6 }}>{tagsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}{t("detail.sections.tags", "Tags")}{filterTags.length > 0 ? ` · ${filterTags.length}` : ""}</span>}
+            onClick={() => setTagsOpen((o) => !o)}
+          />
+          {tagsOpen && realTags.map((tag) => (
             <MobileDrawerOption
               key={tag.name}
               label={
@@ -579,6 +600,7 @@ export function LeadsListPanel({
                         leadTags={item.tags}
                         campaignsById={campaignsById}
                         showPeek={peekOn}
+                        showChannelBadge={showChannelBadge}
                         onOpenConversation={() => handleOpenConversation(getLeadId(item.lead))}
                         onQuickChangeStatus={() => openQuickAction(item.lead, "status")}
                         onQuickAddNote={() => openQuickAction(item.lead, "note")}

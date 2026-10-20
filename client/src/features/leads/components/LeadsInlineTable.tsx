@@ -15,6 +15,7 @@ import { getLeadId } from "./LeadsCardView";
 import { getInitials, getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { useTheme } from "@/hooks/useTheme";
 import { getLastMessage, getLastMessageSender, getFullName } from "./cardView/leadUtils";
+import { personStageFromKey, StatusPill } from "@/components/crm/status/StatusPill";
 import { displayStage, stageHex, stageLabel, lastContactChannel, lastContactAt } from "../lib/leadDisplay";
 import { formatBookedDate } from "./cardView/formatUtils";
 import { ChannelGlyph } from "./cardView/ChannelGlyph";
@@ -846,6 +847,13 @@ export function LeadsInlineTable({
                           return (
                             <td key="status" className={cn("px-1", tdClass)} style={isEdit ? { overflow: "visible" } : tdStickyStyle}>
                               <div className="flex items-center gap-1.5 min-w-0">
+                                {!isEdit && personStageFromKey(shownStage) ? (
+                                  // Receptionist stages read as the shared pill (G8); a click still opens the select.
+                                  <button type="button" className="min-w-0" style={{ border: "none", background: "none", padding: 0, cursor: "pointer" }}
+                                    onClick={(e) => { e.stopPropagation(); startEdit(leadId, "status", cellVal); }} aria-label={stageLabel(t, shownStage)}>
+                                    <StatusPill status={personStageFromKey(shownStage)!} small />
+                                  </button>
+                                ) : (<>
                                 {!isEdit && (
                                   <span
                                     className="shrink-0"
@@ -866,6 +874,7 @@ export function LeadsInlineTable({
                                   onCancel={cancelEdit}
                                   displayStyle={{ fontSize: 12.5, color: "var(--ink-soft)", fontWeight: 500 }}
                                 />
+                                </>)}
                               </div>
                             </td>
                           );

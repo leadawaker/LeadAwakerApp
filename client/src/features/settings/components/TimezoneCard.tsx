@@ -16,9 +16,12 @@ const SELECT_CHEVRON =
 export function TimezoneCard({
   profile,
   onProfileUpdated,
+  flat = false,
 }: {
   profile: UserProfile;
   onProfileUpdated: (p: UserProfile) => void;
+  /** Phone My profile: no card, see SettingsCard. */
+  flat?: boolean;
 }) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
@@ -57,6 +60,7 @@ export function TimezoneCard({
       description={t("preferences.timezoneDescription")}
       data-testid="input-profile-timezone-wrap"
       data-onboarding="profile-timezone"
+      flat={flat}
     >
       <label htmlFor="profile-timezone-select" className="sr-only" data-testid="input-profile-timezone-label">
         {t("profile.timezone")}

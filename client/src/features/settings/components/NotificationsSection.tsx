@@ -15,7 +15,12 @@ import {
   urlBase64ToUint8Array,
 } from "../types";
 
-export function NotificationsSection() {
+/**
+ * Notification channels (Telegram for agency, Email, Browser Push) and the
+ * agency-only per-type matrix. `flat` (phone My profile) drops the tinted boxes:
+ * rows sit on the tab's one surface under eyebrow headings.
+ */
+export function NotificationsSection({ flat = false }: { flat?: boolean } = {}) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
   const session = useSession();
@@ -206,6 +211,10 @@ export function NotificationsSection() {
   }, [telegramChatIdInput, updateNotifPrefs, toast]);
 
   const gridCols = "grid-cols-[1fr_auto_auto_auto]";
+  // Flat: no box, no inner gutter, no rule above expanded rows.
+  const box = flat ? "" : "rounded-xl border border-border/20 bg-muted/40 overflow-hidden";
+  const px = flat ? "px-0" : "px-4";
+  const rule = flat ? "" : "border-t border-border/15";
 
   const channelLabel = (ch: Channel) => {
     if (ch === "telegram") return t("notifications.overrides.telegram");
@@ -236,7 +245,7 @@ export function NotificationsSection() {
   };
 
   return (
-    <div className="space-y-3" data-testid="section-notifications">
+    <div className={flat ? "space-y-4" : "space-y-3"} data-testid="section-notifications">
       <p className="text-sm text-muted-foreground leading-relaxed">
         {t("notifications.description")}
       </p>
@@ -248,10 +257,12 @@ export function NotificationsSection() {
         </div>
       )}
 
+      {flat && <div className="eyebrow eyebrow-sm pt-2">{t("mobileProfile.channels")}</div>}
+
       {/* ── Section A: Telegram — agency only ─────────────────────── */}
       {isAgency && (
-        <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-telegram">
-          <div className="flex items-center justify-between gap-4 px-4 py-3.5">
+        <div className={box} data-testid="section-telegram">
+          <div className={cn("flex items-center justify-between gap-4 py-3.5", px)}>
             <div className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-lg bg-[#229ED9]/10 flex items-center justify-center shrink-0">
                 <MessageSquare className="h-4 w-4 text-[#229ED9]" />
@@ -274,7 +285,7 @@ export function NotificationsSection() {
           </div>
 
           {notifPrefs.telegram_enabled && (
-            <div className="px-4 pb-4 pt-1 border-t border-border/15 space-y-2.5">
+            <div className={cn(px, rule, "pb-4 pt-1 space-y-2.5")}>
               <label className="text-xs font-medium text-muted-foreground">{t("notifications.telegram.chatIdLabel")}</label>
               <div className="flex items-center gap-2">
                 <input
@@ -312,8 +323,8 @@ export function NotificationsSection() {
       )}
 
       {/* ── Section B: Email ─────────────────────────────────────────── */}
-      <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-email">
-        <div className="flex items-center justify-between gap-4 px-4 py-3.5">
+      <div className={box} data-testid="section-email">
+        <div className={cn("flex items-center justify-between gap-4 py-3.5", px)}>
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
               <Mail className="h-4 w-4 text-primary" />
@@ -335,8 +346,8 @@ export function NotificationsSection() {
       </div>
 
       {/* ── Section C: Browser Push (master toggle IS the subscribe action) ────── */}
-      <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-push">
-        <div className="flex items-center justify-between gap-4 px-4 py-3.5">
+      <div className={box} data-testid="section-push">
+        <div className={cn("flex items-center justify-between gap-4 py-3.5", px)}>
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-brand-indigo/8 flex items-center justify-center shrink-0">
               <AlertTriangle className="h-4 w-4 text-brand-indigo" />
@@ -362,14 +373,14 @@ export function NotificationsSection() {
         </div>
 
         {!("serviceWorker" in navigator) && (
-          <div className="mx-4 mb-3 flex items-center gap-2 rounded-lg bg-amber-500/8 border border-amber-500/15 px-3 py-2">
+          <div className={cn(flat ? "mx-0" : "mx-4", "mb-3 flex items-center gap-2 rounded-lg bg-amber-500/8 border border-amber-500/15 px-3 py-2")}>
             <AlertTriangle className="h-3.5 w-3.5 text-amber-500 shrink-0" />
             <p className="text-[11px] text-amber-600 dark:text-amber-400">{t("notifications.push.notSupported")}</p>
           </div>
         )}
 
         {pushDevices.length > 0 && (
-          <div className="px-4 pb-4 pt-1 border-t border-border/15 space-y-2">
+          <div className={cn(px, rule, "pb-4 pt-1 space-y-2")}>
             <div className="text-[10px] font-bold text-muted-foreground/50 uppercase tracking-widest pt-1">
               {t("notifications.push.activeDevices")}
             </div>
@@ -411,18 +422,25 @@ export function NotificationsSection() {
 
       {/* ── Section D: Per-Type Overrides — agency only ─────────────── */}
       {isAgency && (
-        <div className="rounded-xl border border-border/20 bg-muted/40 overflow-hidden" data-testid="section-type-overrides">
-          <div className="flex items-center gap-3 px-4 py-3.5">
-            <div className="h-8 w-8 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
-              <Mail className="h-4 w-4 text-muted-foreground" />
+        <div className={box} data-testid="section-type-overrides">
+          {flat ? (
+            <div className="pt-3 pb-1">
+              <div className="eyebrow eyebrow-sm">{t("notifications.overrides.title")}</div>
+              <div className="text-xs text-muted-foreground mt-1">{t("notifications.overrides.subtitle", "Fine-tune per notification type")}</div>
             </div>
-            <div className="text-left">
-              <span className="text-sm font-semibold block">{t("notifications.overrides.title")}</span>
-              <span className="text-[11px] text-muted-foreground/60">{t("notifications.overrides.subtitle", "Fine-tune per notification type")}</span>
+          ) : (
+            <div className="flex items-center gap-3 px-4 py-3.5">
+              <div className="h-8 w-8 rounded-lg bg-muted/60 flex items-center justify-center shrink-0">
+                <Mail className="h-4 w-4 text-muted-foreground" />
+              </div>
+              <div className="text-left">
+                <span className="text-sm font-semibold block">{t("notifications.overrides.title")}</span>
+                <span className="text-[11px] text-muted-foreground/60">{t("notifications.overrides.subtitle", "Fine-tune per notification type")}</span>
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className="px-4 pb-4 pt-2 border-t border-border/15">
+          <div className={cn(flat ? "px-0 pb-2 pt-1" : "px-4 pb-4 pt-2", rule)}>
             {/* Column headers */}
             <div className={`grid ${gridCols} gap-x-4 gap-y-1 mb-1 px-2`}>
               <div />

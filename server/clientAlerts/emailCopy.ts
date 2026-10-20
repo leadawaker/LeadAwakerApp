@@ -47,6 +47,7 @@ interface Copy {
     waitingKind: Record<"callback" | "reply", string>;
     callsToday: (n: number) => string;
     allCalls: (n: number) => string;
+    openCall: string;
     unknownCaller: string;
     subheading: string; sectionToday: string; quiet: string;
     /** Agenda: the rest of this week, or all of next week on a Sunday. */
@@ -120,6 +121,7 @@ const EN: Copy = {
     waitingKind: { callback: "call back", reply: "reply in chat" },
     callsToday: (n) => `${n} today`,
     allCalls: (n) => `See all ${n} calls`,
+    openCall: "Open",
     unknownCaller: "unknown caller",
     subheading: "Today's most important updates, at a glance.",
     sectionToday: "Today in brief",
@@ -198,6 +200,7 @@ const NL: Copy = {
     waitingKind: { callback: "terugbellen", reply: "reageren in de chat" },
     callsToday: (n) => `${n} vandaag`,
     allCalls: (n) => `Bekijk alle ${n} telefoontjes`,
+    openCall: "Openen",
     unknownCaller: "onbekende beller",
     subheading: "De belangrijkste updates van vandaag, in één oogopslag.",
     sectionToday: "Vandaag in het kort",
@@ -276,6 +279,7 @@ const PT: Copy = {
     waitingKind: { callback: "retornar ligação", reply: "responder no chat" },
     callsToday: (n) => `${n} hoje`,
     allCalls: (n) => `Ver todas as ${n} ligações`,
+    openCall: "Abrir",
     unknownCaller: "número desconhecido",
     subheading: "As novidades mais importantes de hoje, de relance.",
     sectionToday: "Hoje em resumo",

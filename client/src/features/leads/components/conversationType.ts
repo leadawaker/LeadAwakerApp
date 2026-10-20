@@ -4,9 +4,16 @@
 //   widget   = website chat widget   voice = AI voice receptionist
 //   dbr      = DBR reactivation + speed-to-lead quotes (one bucket on purpose)
 //   instagram = Instagram comment-to-DM demo
+import { Globe, Instagram, MoreHorizontal, Phone, RefreshCw, type LucideIcon } from "lucide-react";
+
 export type ConversationType = "widget" | "voice" | "dbr" | "instagram" | "other";
 
 export const CONVERSATION_TYPES: ConversationType[] = ["widget", "voice", "dbr", "instagram", "other"];
+
+/** Shown beside each option of the Channel filter. */
+export const CONVERSATION_TYPE_ICON: Record<ConversationType, LucideIcon> = {
+  widget: Globe, voice: Phone, dbr: RefreshCw, instagram: Instagram, other: MoreHorizontal,
+};
 
 type CampaignInfo = { campaignType?: string | null };
 

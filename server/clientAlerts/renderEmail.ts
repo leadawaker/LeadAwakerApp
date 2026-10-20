@@ -232,9 +232,11 @@ function renderRecap(input: AlertEmailInput): RenderedEmail {
       time: splitWhen(str(k.atText))[1],
       who: dot(str(k.name) || R.unknownCaller, displayPhone(k.phone)),
       line: str(k.line) || undefined,
+      // The engine sends call_id from E2 on; older payloads simply get no link.
+      ...(k.call_id ? { url: `${input.link}?call=${encodeURIComponent(str(k.call_id))}`, openLabel: R.openCall } : {}),
     }));
     const more = total > CALLS_SHOWN
-      ? { label: R.allCalls(total), url: `${new URL(input.link).origin}/platform/voice-calls` }
+      ? { label: R.allCalls(total), url: `${input.link}?to=calls` }
       : undefined;
     html.push(emailSection({
       title: R.sectionCalls, icon: "head-calls.png", aside: R.callsToday(total),

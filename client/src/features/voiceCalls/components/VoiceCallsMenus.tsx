@@ -6,6 +6,7 @@ import {
   DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { VOICE_OUTCOMES } from "../api/voiceCallsApi";
+import { PEOPLE_GROUPS, PEOPLE_RANGES, PEOPLE_SORTS, peopleFiltered, type PeopleOptions } from "../callers";
 import { GROUPS, SORTS, type ListOptions } from "../listOptions";
 import { OUTCOME_LABEL_KEY, outcomeColors, statusColors, VOICE_CALL_STATUSES, type VoiceCallStatus } from "../status";
 
@@ -109,6 +110,75 @@ export function VoiceCallsMenus({ options, setOptions, languages }: {
 
       <MenuButton icon={<Layers className="h-4 w-4 shrink-0" />} label={t("menus.group")} dot={options.group !== "date"} width="w-44">
         {GROUPS.map((g) => (
+          <DropdownMenuItem key={g} className={ITEM} onClick={() => setOptions({ group: g })} style={{ fontWeight: options.group === g ? 600 : 400 }}>
+            {t(`group.${g}`)}<Tick on={options.group === g} />
+          </DropdownMenuItem>
+        ))}
+      </MenuButton>
+    </div>
+  );
+}
+
+/** The People tab: outcome and date range filters, sort by latest or most calls, group by date, outcome or none. */
+export function PeopleMenus({ options, setOptions }: {
+  options: PeopleOptions;
+  setOptions: (patch: Partial<PeopleOptions>) => void;
+}) {
+  const { t } = useTranslation("voiceCalls");
+  const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
+  const filtered = peopleFiltered(options);
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
+      <MenuButton icon={<Filter className="h-4 w-4 shrink-0" />} label={t("menus.filter")} dot={filtered} width="w-52">
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className={ITEM}>
+            <span className="flex-1">{t("menus.outcome")}</span>
+            {options.outcomes.length > 0 && <span className="text-[10px] tabular-nums font-semibold" style={{ color: "var(--wine)" }}>{options.outcomes.length}</span>}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className={`w-48 ${MENU}`}>
+            {VOICE_OUTCOMES.map((o) => (
+              <DropdownMenuItem key={o} className={ITEM} onClick={(e) => { e.preventDefault(); setOptions({ outcomes: toggle(options.outcomes, o) }); }}>
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: outcomeColors(o).bg, boxShadow: `inset 0 0 0 1px ${outcomeColors(o).text}` }} />
+                <span className="flex-1">{t(`outcomes.${OUTCOME_LABEL_KEY[o]}`)}</span>
+                <Tick on={options.outcomes.includes(o)} />
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        <DropdownMenuSub>
+          <DropdownMenuSubTrigger className={ITEM}>
+            <span className="flex-1">{t("menus.dateRange")}</span>
+            {options.range !== "all" && <span className="w-1.5 h-1.5 rounded-full" style={{ background: "var(--wine)" }} />}
+          </DropdownMenuSubTrigger>
+          <DropdownMenuSubContent className={`w-44 ${MENU}`}>
+            {PEOPLE_RANGES.map((r) => (
+              <DropdownMenuItem key={r} className={ITEM} onClick={() => setOptions({ range: r })} style={{ fontWeight: options.range === r ? 600 : 400 }}>
+                {t(`range.${r}`)}<Tick on={options.range === r} />
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuSubContent>
+        </DropdownMenuSub>
+        {filtered && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-[12px] text-muted-foreground" onClick={() => setOptions({ outcomes: [], range: "all" })}>
+              {t("menus.clearFilters")}
+            </DropdownMenuItem>
+          </>
+        )}
+      </MenuButton>
+
+      <MenuButton icon={<ArrowUpDown className="h-4 w-4 shrink-0" />} label={t("menus.sort")} dot={options.sort !== "latest"} width="w-44">
+        {PEOPLE_SORTS.map((s) => (
+          <DropdownMenuItem key={s} className={ITEM} onClick={() => setOptions({ sort: s })} style={{ fontWeight: options.sort === s ? 600 : 400 }}>
+            {t(`peopleSort.${s}`)}<Tick on={options.sort === s} />
+          </DropdownMenuItem>
+        ))}
+      </MenuButton>
+
+      <MenuButton icon={<Layers className="h-4 w-4 shrink-0" />} label={t("menus.group")} dot={options.group !== "date"} width="w-44">
+        {PEOPLE_GROUPS.map((g) => (
           <DropdownMenuItem key={g} className={ITEM} onClick={() => setOptions({ group: g })} style={{ fontWeight: options.group === g ? 600 : 400 }}>
             {t(`group.${g}`)}<Tick on={options.group === g} />
           </DropdownMenuItem>

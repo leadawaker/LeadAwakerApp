@@ -12,6 +12,12 @@
     "security": "Beveiliging",
     "notifications": "Meldingen"
   },
+  "mobileProfile": {
+    "title": "Mijn profiel",
+    "close": "Sluiten",
+    "tabs": "Profielonderdelen",
+    "channels": "Kanalen"
+  },
   "team": {
     "people": "Personen",
     "table": "Tabel",

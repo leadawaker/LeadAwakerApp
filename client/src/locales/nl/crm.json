@@ -83,6 +83,7 @@
     "assistance": "Assistentie"
   },
   "topbar": {
+    "impersonationBannerLogs": "Automatiseringslogs",
     "search": "Zoeken",
     "searchPlaceholder": "Zoek leads op naam, telefoon, e-mail…",
     "startTyping": "Begin te typen om te zoeken…",

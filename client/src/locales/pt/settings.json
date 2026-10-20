@@ -12,6 +12,12 @@
     "security": "Seguranca",
     "notifications": "Notificacoes"
   },
+  "mobileProfile": {
+    "title": "Meu perfil",
+    "close": "Fechar",
+    "tabs": "Seções do perfil",
+    "channels": "Canais"
+  },
   "team": {
     "people": "Pessoas",
     "table": "Tabela",

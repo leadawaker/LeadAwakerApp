@@ -98,7 +98,8 @@ export function emailQuietLine(text: string): string {
 </tr></table>`;
 }
 
-export interface CallRow { time: string; who: string; line?: string }
+/** `url` + `openLabel` add an "Open →" link to that one call. */
+export interface CallRow { time: string; who: string; line?: string; url?: string; openLabel?: string }
 
 /** List of calls: time, caller, one-line summary, with an optional link to
  *  the rest. */
@@ -110,6 +111,7 @@ export function emailCallList(rows: CallRow[], more?: { label: string; url: stri
   <td valign="top" style="padding:12px 0 12px 10px;border-top:1px solid ${T.line};">
     <p style="margin:0;font-family:${T.sans};font-size:13px;font-weight:700;line-height:1.45;color:${T.ink};">${e(r.who)}</p>
     ${r.line ? `<p style="margin:2px 0 0;font-family:${T.sans};font-size:12px;line-height:1.5;color:${T.mute};">${e(r.line)}</p>` : ""}
+    ${r.url ? `<p style="margin:3px 0 0;"><a href="${e(r.url)}" target="_blank" style="font-family:${T.sans};font-size:12px;font-weight:600;line-height:1.5;color:${blue};text-decoration:none;">${e(r.openLabel ?? "Open")}&nbsp;&rarr;</a></p>` : ""}
   </td>
 </tr>`).join("");
   const link = more

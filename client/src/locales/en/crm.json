@@ -83,6 +83,7 @@
     "assistance": "Assistance"
   },
   "topbar": {
+    "impersonationBannerLogs": "Automation logs",
     "search": "Search",
     "searchPlaceholder": "Search leads by name, phone, email…",
     "startTyping": "Start typing to search…",

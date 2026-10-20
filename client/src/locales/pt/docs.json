@@ -9,10 +9,11 @@
       "title": "Bem-vindo ao seu CRM",
       "intro": "É aqui que você acompanha a {{company}}. {{Name}} atende suas ligações e chats, e tudo o que acontece aparece aqui, então você nunca precisa adivinhar. Veja o que fica onde:",
       "home": "<b>Início</b>: o retrato rápido. O que chegou, o que foi agendado e o que precisa de você.",
-      "calls": "<b>Chamadas</b>: todas as ligações que {{name}} atendeu. Abra uma para ler o que foi dito e o que resultou.",
-      "leads": "<b>Leads</b>: as pessoas que entraram em contato, com as conversas reunidas num só lugar.",
+      "calls": "<b>Chamadas</b>: todas as ligações que {{name}} atendeu. <b>Estatísticas</b> mostra os números, <b>Pessoas</b> mostra quem ligou. Abra uma chamada para ler o que foi dito e o que resultou.",
       "calendar": "<b>Calendário</b>: seus agendamentos e visitas. Aqui você também adiciona bloqueios de horário.",
-      "receptionist": "<b>Recepcionista</b>: a configuração de {{name}}, seu horário de funcionamento e quem recebe o resumo e os alertas.",
+      "chats": "<b>Chats</b>: os chats do seu site. Acompanhe e responda você mesmo quando quiser.",
+      "more": "<b>Mais</b>: seus <b>Leads</b> (as pessoas que entraram em contato), sua <b>Conta</b>, este guia e Mensagem para Gabriel.",
+      "desktop": "No computador, você encontra as mesmas páginas no menu à esquerda, com Leads e Conta direto na lista.",
       "tip": "Ficou em dúvida? Use o botão de chat para mandar uma mensagem direto ao Gabriel. Nenhuma pergunta é pequena demais."
     },
     "phone": {
@@ -22,20 +23,23 @@
       "transfers": "<strong>Transferências:</strong> se quem ligou quiser falar com você ou com um colega, {{name}} pode passar a ligação. Na chamada você vê se a transferência deu certo.",
       "callbacks": "<strong>Retornos:</strong> se ninguém puder atender, {{name}} anota o nome, o número e a dúvida de quem ligou. Esses pedidos de retorno aparecem na sua página Início, para você ligar de volta.",
       "bookings": "<strong>Agendamentos e visitas:</strong> {{name}} pode marcar uma visita ou um agendamento direto na sua agenda, num horário realmente livre. O agendamento aparece na hora no seu Calendário.",
+      "page": "Em <strong>Chamadas</strong> há duas abas. <strong>Estatísticas</strong> mostra quantas ligações chegaram e como terminaram. <strong>Pessoas</strong> lista todo mundo que ligou, cada um com um único status, e uma marca <strong>Aguarda você</strong> enquanto um retorno estiver pendente. Abra uma pessoa para ver todas as ligações dela, com o resumo e o que foi dito.",
       "tip": "Quer outra saudação ou outro horário de funcionamento? O horário você mesmo altera. Para o resto, aperte Pedir uma alteração."
     },
     "chat": {
       "title": "O chat do seu site",
       "p1": "O balãozinho de chat no seu site funciona como o telefone: {{name}} recebe os visitantes, responde às perguntas e pode marcar uma visita.",
-      "p2": "Cada conversa aparece em Leads, para você acompanhar e ver quem tem interesse."
+      "p2": "Cada conversa aparece em <strong>Chats</strong>, para você acompanhar e ver quem tem interesse.",
+      "reply": "Quer responder alguém você mesmo? Abra o chat em <strong>Chats</strong> e digite sua resposta. Assim que você responde, {{name}} faz uma pausa com essa pessoa, para vocês dois não falarem ao mesmo tempo.",
+      "alert": "Quando um chat precisa de você, por exemplo porque {{name}} o passa para uma pessoa, você recebe um alerta e o chat fica marcado como <strong>Aguarda você</strong>."
     },
     "recap": {
       "title": "Seu resumo diário e alertas",
       "intro": "Você não precisa ficar olhando o CRM o dia todo. As informações vêm até você.",
       "recap": "<strong>Resumo diário:</strong> um e-mail com o resumo, no horário que você define em Alertas, com as ligações, os chats e os agendamentos.",
-      "alerts": "<strong>Alertas na hora:</strong> uma mensagem assim que algo precisa de você, como um novo agendamento ou um pedido de retorno.",
+      "alerts": "<strong>Alertas na hora:</strong> uma mensagem assim que algo precisa de você, como um novo agendamento, um pedido de retorno ou um chat esperando por você.",
       "addTitle": "Adicionar você ou um colega",
-      "add1": "Abra <strong>Recepcionista</strong> e vá para a aba <strong>Alertas</strong>.",
+      "add1": "Abra <strong>Conta</strong> (no celular, em <strong>Mais</strong>) e vá para a aba <strong>Alertas</strong>.",
       "add2": "Adicione seu e-mail (ou o de um colega) aos destinatários do resumo ou dos alertas.",
       "add3": "Salve. A partir do próximo resumo ou alerta, essa pessoa também recebe."
     },
@@ -46,12 +50,16 @@
       "p3": "Não vai estar disponível num dia ou horário? Adicione um <strong>bloqueio de horário</strong>. {{Name}} não oferece esses horários a ninguém.",
       "tip": "Crie os bloqueios com antecedência, por exemplo para férias ou um dia de folga. É o jeito mais fácil de manter a agenda sua."
     },
+    "account": {
+      "title": "Sua página Conta",
+      "intro": "Em <strong>Conta</strong> (no celular, em <strong>Mais</strong>) você vê como {{name}} está configurada para a {{company}}, seu horário de funcionamento e quem recebe o resumo e os alertas. Veja o que fica onde:"
+    },
     "change": {
       "title": "O que você pode alterar e o que pode pedir",
       "intro": "Muita coisa você faz sozinho, na hora:",
       "hours": "Seu horário de funcionamento.",
       "alerts": "Quem recebe seu resumo diário e os alertas.",
-      "replies": "Responder aos leads você mesmo.",
+      "replies": "Responder aos chats você mesmo, em Chats.",
       "bookings": "Remarcar ou cancelar um agendamento.",
       "busy": "Adicionar bloqueios de horário no seu Calendário.",
       "request": "O resto, como o que {{name}} diz, a saudação, os preços ou o que {{name}} sabe sobre sua empresa, também é fácil de mudar: aperte <strong>Pedir uma alteração</strong> e abre um chat com o Gabriel. Conte o que você quer e ele cuida disso."
@@ -89,12 +97,107 @@
         },
         "5": {
           "q": "Posso ler os chats do meu site?",
-          "a": "Pode. Você lê todos os chats do site em Leads."
+          "a": "Pode. Você lê todos os chats do site em Chats e também pode responder por lá."
         },
         "6": {
           "q": "Com quem falo se algo der errado?",
           "a": "Mande uma mensagem ao Gabriel pelo botão de chat. Ele recebe sua mensagem na hora."
         }
+      }
+    },
+    "illus": {
+      "bar": {
+        "caption": "A barra na parte de baixo do celular. Leads e Conta ficam em Mais.",
+        "home": "Início",
+        "calls": "Chamadas",
+        "calendar": "Calendário",
+        "chats": "Chats",
+        "more": "Mais",
+        "account": "Conta",
+        "leads": "Leads",
+        "docs": "Documentação",
+        "help": "Mensagem para Gabriel"
+      },
+      "flow": {
+        "caption": "O que acontece quando alguém liga",
+        "incoming": "Chega uma ligação",
+        "incomingSub": "Alguém liga para o seu número",
+        "answers": "{{Name}} atende",
+        "answersSub": "Escuta e ajuda, no idioma de quem ligou",
+        "booked": "Agendado",
+        "bookedSub": "Vai para o seu Calendário",
+        "callback": "Retorno",
+        "callbackSub": "Nome, número e dúvida anotados",
+        "transferred": "Transferida",
+        "transferredSub": "Passada para você ou um colega",
+        "alert": "Você recebe um alerta",
+        "alertSub": "Quando algo precisa de você",
+        "recap": "Resumo diário",
+        "recapSub": "Um e-mail no horário que você escolheu"
+      },
+      "tabs": {
+        "caption": "A página Chamadas: Estatísticas e Pessoas",
+        "stats": "Estatísticas",
+        "people": "Pessoas",
+        "calls": "Chamadas",
+        "booked": "Agendados",
+        "callbacks": "Retornos",
+        "week": "Esta semana, por dia",
+        "callback": "Retorno",
+        "transferred": "Transferida",
+        "needsYou": "Aguarda você",
+        "person1": "Ana Souza",
+        "person1Meta": "2 ligações · hoje",
+        "person2": "Marcos Lima",
+        "person2Meta": "1 ligação · ontem",
+        "person3": "Júlia Rocha",
+        "person3Meta": "1 ligação · segunda"
+      },
+      "email": {
+        "caption": "Um exemplo do e-mail de resumo diário",
+        "subject": "Seu dia na {{company}}",
+        "from": "{{Name}} · resumo diário",
+        "greeting": "Oi! Veja o que aconteceu hoje.",
+        "calls": "Ligações",
+        "booked": "Agendados",
+        "callbacks": "Retornos",
+        "callsTitle": "Ligações de hoje",
+        "call1": "Ana Souza",
+        "call2": "Marcos Lima",
+        "call3": "Júlia Rocha",
+        "callback": "Retorno",
+        "transferred": "Transferida",
+        "open": "Abrir",
+        "agendaTitle": "Agenda da semana",
+        "agenda1": "Qui 10:00 · Visita, Ana Souza"
+      },
+      "account": {
+        "caption": "Um mapa da sua página Conta",
+        "title": "{{company}}",
+        "request": "Pedir uma alteração",
+        "requestSub": "Para tudo o que você não altera sozinho. Abre um chat com o Gabriel.",
+        "overview": "Visão geral",
+        "overviewSub": "Os dados da sua empresa, equipe, contratos e faturas",
+        "phone": "Telefone",
+        "phoneSub": "Como {{name}} atende o telefone, e seu horário de funcionamento",
+        "chat": "Chat",
+        "chatSub": "O chat do seu site",
+        "alerts": "Alertas",
+        "alertsSub": "Quando o resumo chega, e quem recebe o resumo e os alertas",
+        "integrations": "Integrações",
+        "integrationsSub": "Os serviços ligados à sua conta",
+        "note": "Algumas abas só aparecem se você usa aquele serviço."
+      },
+      "install": {
+        "iosCaption": "iPhone: Safari, Compartilhar, Adicionar à Tela de Início",
+        "androidCaption": "Android: Chrome, menu, Instalar aplicativo",
+        "iosCopy": "Copiar",
+        "iosAdd": "Adicionar à Tela de Início",
+        "iosOther": "Adicionar Favorito",
+        "androidShare": "Compartilhar",
+        "androidInstall": "Instalar aplicativo",
+        "androidOther": "Nova guia",
+        "done": "Pronto: o Lead Awaker fica na sua tela inicial, como um aplicativo."
       }
     }
   },
