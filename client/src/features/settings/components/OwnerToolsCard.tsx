@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Compass, Eye, Mail, Wrench } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useImpersonation } from "@/hooks/useImpersonation";
@@ -84,10 +85,11 @@ export function OwnerToolsCard({
   };
 
   // ── View as ───────────────────────────────────────────────────────
-  const selectedAccount = currentAccountId > 0 ? accounts.find((a) => a.id === currentAccountId) : null;
-  const clientLabel = selectedAccount
-    ? t("profile.viewAsClient", { name: selectedAccount.name })
-    : t("profile.viewAsClientSandbox");
+  // Any client account (not the agency itself); "sandbox" falls back to the server's sandbox client.
+  const clientAccounts = accounts.filter((a) => a.type?.toLowerCase() !== "agency" && a.type !== "sandbox").sort((a, b) => a.name.localeCompare(b.name));
+  const [viewAccount, setViewAccount] = useState<string>(() =>
+    clientAccounts.some((a) => a.id === currentAccountId) ? String(currentAccountId) : "sandbox");
+  const [viewRole, setViewRole] = useState<"Manager" | "Viewer">("Manager");
 
   return (
     <SettingsCard
@@ -131,13 +133,34 @@ export function OwnerToolsCard({
               <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold shrink-0 bg-primary text-primary-foreground">A</div>
               {t("profile.viewAsAdmin")}
             </button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <Select value={viewAccount} onValueChange={setViewAccount}>
+              <SelectTrigger className="h-9 w-auto min-w-[180px] max-w-full text-xs" data-testid="view-as-account">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sandbox">{t("profile.viewAsSandboxOption")}</SelectItem>
+                {clientAccounts.map((a) => <SelectItem key={a.id} value={String(a.id)}>{a.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Select value={viewRole} onValueChange={(v) => setViewRole(v as "Manager" | "Viewer")}>
+              <SelectTrigger className="h-9 w-auto text-xs" data-testid="view-as-role">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Manager">{t("profile.viewAsManager")}</SelectItem>
+                <SelectItem value="Viewer">{t("profile.viewAsViewer")}</SelectItem>
+              </SelectContent>
+            </Select>
             <button
               type="button"
-              onClick={() => impersonate("Manager", selectedAccount ? currentAccountId : undefined)}
+              onClick={() => impersonate(viewRole, viewAccount === "sandbox" ? undefined : Number(viewAccount))}
               className="la-btn la-btn--soft la-btn--pill"
+              data-testid="view-as-client"
             >
               <div className="h-4 w-4 rounded flex items-center justify-center text-[9px] font-bold shrink-0 bg-muted-foreground/20 text-muted-foreground">C</div>
-              {clientLabel}
+              {t("profile.viewAsGo")}
             </button>
           </div>
         </div>

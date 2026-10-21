@@ -84,7 +84,11 @@
     "personalInfo": "Informações pessoais",
     "personalInfoDescription": "Seu nome e como falar com você.",
     "viewAsClient": "Ver como cliente: {{name}}",
-    "viewAsClientSandbox": "Ver como cliente (sandbox)"
+    "viewAsClientSandbox": "Ver como cliente (sandbox)",
+    "viewAsSandboxOption": "Cliente sandbox",
+    "viewAsManager": "Gerente",
+    "viewAsViewer": "Visualizador",
+    "viewAsGo": "Ver como cliente"
   },
   "preferences": {
     "timezoneDescription": "Usado para datas, horários e agendamentos.",

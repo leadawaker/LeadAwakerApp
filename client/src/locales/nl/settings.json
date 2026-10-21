@@ -84,7 +84,11 @@
     "personalInfo": "Persoonlijke gegevens",
     "personalInfoDescription": "Je naam en hoe we je bereiken.",
     "viewAsClient": "Weergeven als klant: {{name}}",
-    "viewAsClientSandbox": "Weergeven als klant (sandbox)"
+    "viewAsClientSandbox": "Weergeven als klant (sandbox)",
+    "viewAsSandboxOption": "Sandbox-klant",
+    "viewAsManager": "Manager",
+    "viewAsViewer": "Kijker",
+    "viewAsGo": "Weergeven als klant"
   },
   "preferences": {
     "timezoneDescription": "Gebruikt voor datums, tijden en planning.",
