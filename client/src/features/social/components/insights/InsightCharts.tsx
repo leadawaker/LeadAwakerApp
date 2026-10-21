@@ -70,7 +70,7 @@ export function AvgViewsColumns({ rows, best, label, title, testId, tickEvery = 
             <CartesianGrid vertical={false} stroke="var(--line)" strokeWidth={1} />
             <XAxis dataKey="name" tick={tick} tickLine={false} axisLine={false} interval={tickEvery - 1} />
             <YAxis tick={tick} tickLine={false} axisLine={false} width={40} domain={y.domain} ticks={y.ticks} tickFormatter={(v: number) => compact(v, i18n.language)} allowDecimals={false} />
-            <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--wine-tint)" }}
+            <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--wine-tint)" }} separator=""
               formatter={(v: number, _n, item: any) => [t("insights.avgViewsTip", { views: compact(v, i18n.language), count: item?.payload?.posts ?? 0 }), ""]} />
             <Bar dataKey="avg" fill={SERIES} maxBarSize={24} radius={[4, 4, 0, 0]} isAnimationActive={false}>
               <LabelList dataKey="best" position="top" content={(p: any) => (p.value ? (

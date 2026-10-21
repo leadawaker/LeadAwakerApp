@@ -1,7 +1,7 @@
 import { test, beforeEach } from "node:test";
 import assert from "node:assert/strict";
 import type { InsertSocialInsightSnapshot } from "@shared/schema";
-import type { IgMedia, MetricResult } from "./insightsApi";
+import { fetchMetrics, type IgMedia, type MetricResult } from "./insightsApi";
 import { IgApiError } from "./instagramApi";
 import { daysToRead, mediaDue, resetRefusedMetrics, runInsightsOnce, type InsightsDeps, type PolledMedia } from "./insightsCollector";
 
@@ -10,20 +10,23 @@ let state: Map<number, { backfilledAt: Date | null; lastAccountRunAt: Date | nul
 let media: Map<string, PolledMedia>;
 let snaps: Map<string, InsertSocialInsightSnapshot>;
 let calls: { media: number; insights: string[][]; days: string[]; profile: number };
-let refuseSkipRate: boolean;
+/** Account ids whose Graph answers refuse reels_skip_rate as an unknown metric (code 100). */
+let refuseSkipRateFor: Set<number>;
+let missingSaved: boolean;
 let boom: boolean;
+let accounts: { accountId: number; igUserId: string; token: string }[];
 
 const key = (r: InsertSocialInsightSnapshot) => [r.accountsId, r.scope, r.igMediaId, r.metric, r.bucket].join("|");
 const reel = (id: string, postedAt: Date): IgMedia => ({ id, mediaType: "VIDEO", productType: "REELS", permalink: null, caption: "", postedAt, likeCount: 1, commentsCount: 0 });
 
 const deps: InsightsDeps = {
   now: () => now,
-  async listAccounts() { return [{ accountId: 56, igUserId: "17841", token: "SECRET-TOKEN" }]; },
+  async listAccounts() { return accounts; },
   async getState(id) { return state.get(id) ?? null; },
   async setState(id, f) { state.set(id, { backfilledAt: null, lastAccountRunAt: null, ...state.get(id), ...f }); },
-  async upsertMedia(_id, list) { for (const m of list) if (!media.has(m.id)) media.set(m.id, { igMediaId: m.id, productType: m.productType, postedAt: m.postedAt, lastPolledAt: null }); },
-  async listMediaToPoll() { return [...media.values()]; },
-  async markPolled(_id, mid, at) { media.get(mid)!.lastPolledAt = at; },
+  async upsertMedia(id, list) { for (const m of list) if (!media.has(`${id}|${m.id}`)) media.set(`${id}|${m.id}`, { igMediaId: m.id, productType: m.productType, postedAt: m.postedAt, lastPolledAt: null }); },
+  async listMediaToPoll(id) { return [...media.entries()].filter(([k]) => k.startsWith(`${id}|`)).map(([, m]) => m); },
+  async markPolled(id, mid, at) { media.get(`${id}|${mid}`)!.lastPolledAt = at; },
   async upsertSnapshots(rows) { for (const r of rows) snaps.set(key(r), r); },
   ig: {
     async profile() { calls.profile++; return { followers: 4171, mediaCount: 3 }; },
@@ -32,17 +35,15 @@ const deps: InsightsDeps = {
       if (boom) throw new IgApiError("Error validating access token", 190, "http");
       return [reel("old", new Date(now.getTime() - 10 * 86_400_000)), reel("new", new Date(now.getTime() - 3_600_000))];
     },
-    async mediaInsights(_a, _m, metrics): Promise<MetricResult> {
+    // A fake Graph answer behind the real fetchMetrics, so the refusal logic runs end to end.
+    async mediaInsights(a, _m, metrics): Promise<MetricResult> {
       calls.insights.push([...metrics]);
-      const values: Record<string, number> = {};
-      const skipped: Record<string, string> = {};
-      for (const x of metrics) {
-        if (x === "reels_skip_rate" && refuseSkipRate) skipped[x] = "(#100) not supported";
-        else values[x] = 10;
-      }
-      return { values, skipped };
+      return fetchMetrics(async (asked) => {
+        if (asked.includes("reels_skip_rate") && refuseSkipRateFor.has(a.accountId)) throw new IgApiError("(#100) metric[0] must be one of the following values", 100, "http");
+        return { data: asked.filter((x) => !(x === "saved" && missingSaved)).map((name) => ({ name, values: [{ value: 10 }] })) };
+      }, metrics);
     },
-    async dayTotals(_a, metrics, day) { calls.days.push(day); return { values: Object.fromEntries(metrics.map((m) => [m, 7])), skipped: {} }; },
+    async dayTotals(_a, metrics, day) { calls.days.push(day); return { values: Object.fromEntries(metrics.map((m) => [m, 7])), skipped: {}, unsupported: [] }; },
   },
 };
 
@@ -52,8 +53,10 @@ beforeEach(() => {
   media = new Map();
   snaps = new Map();
   calls = { media: 0, insights: [], days: [], profile: 0 };
-  refuseSkipRate = true;
+  refuseSkipRateFor = new Set([56]);
+  missingSaved = false;
   boom = false;
+  accounts = [{ accountId: 56, igUserId: "17841", token: "SECRET-TOKEN" }];
   resetRefusedMetrics();
 });
 
@@ -72,9 +75,39 @@ test("an unsupported metric is a recorded skip, never a crash, and is not asked 
   const skip = [...snaps.values()].filter((r) => r.metric === "reels_skip_rate");
   assert.equal(skip.length, 1, "asked once: the second media item no longer asks for it");
   assert.equal(skip[0].value, null);
-  assert.match(skip[0].skippedReason!, /not supported/);
+  assert.match(skip[0].skippedReason!, /#100/);
   assert.ok(!calls.insights[1].includes("reels_skip_rate"));
   assert.ok(calls.insights[0].includes("views"));
+});
+
+test("a refusal on one account does not stop another account from asking for that metric", async () => {
+  accounts = [{ accountId: 56, igUserId: "17841", token: "A" }, { accountId: 77, igUserId: "17842", token: "B" }];
+  await runInsightsOnce(deps);
+  const skipRate = [...snaps.values()].filter((r) => r.metric === "reels_skip_rate");
+  assert.ok(skipRate.some((r) => r.accountsId === 56 && r.value === null), "56: recorded skip");
+  assert.equal(skipRate.filter((r) => r.accountsId === 77 && r.value === 10).length, 2, "77: asked and stored for both media");
+});
+
+test("a metric that was only missing from one answer is asked again next time", async () => {
+  missingSaved = true;
+  await runInsightsOnce(deps);
+  assert.equal([...snaps.values()].find((r) => r.metric === "saved")?.skippedReason, "not returned");
+  assert.ok(calls.insights[1].includes("saved"), "the second media item still asks for it");
+});
+
+test("a token error while reading a media item stops the account and is never stored as skips", async () => {
+  await runInsightsOnce(deps);
+  const before = snaps.size;
+  for (const m of media.values()) m.lastPolledAt = null;
+  const real = deps.ig.mediaInsights;
+  deps.ig.mediaInsights = (a, m, metrics) => fetchMetrics(async () => { throw new IgApiError("Error validating access token", 190, "http"); }, metrics);
+  try {
+    await runInsightsOnce(deps);
+  } finally {
+    deps.ig.mediaInsights = real;
+  }
+  assert.equal(snaps.size, before, "no skip rows written");
+  assert.match(state.get(56)?.lastError ?? "", /access token/);
 });
 
 test("snapshots are idempotent: the same hour twice replaces, it never duplicates", async () => {

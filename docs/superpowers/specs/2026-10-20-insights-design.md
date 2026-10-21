@@ -26,9 +26,12 @@ from the build sandbox):
 
 **An unsupported metric is a recorded skip, never a crash** (`fetchMetrics` in `insightsApi.ts`): the
 metrics are asked in one request; when Meta refuses it (an unknown metric fails the whole request) each
-one is asked alone, the good ones are kept and each refused one is stored with Meta's reason. A refused
-metric is not asked again for that product type until a restart. Network and server errors are thrown
-and the next run tries again. The UI lists metrics that were not available.
+one is asked alone, the good ones are kept and each refused one is stored with Meta's reason. Only a
+metric Meta refuses as unknown (code 100) is not asked again, for that account and product type, until
+a restart; other skips (missing from the answer, too few viewers on that post) are asked again next
+time. Network and server errors, and errors about the token, the app or the rate limit (codes 1, 2, 4,
+17, 32, 190, 341, 368, 613), are thrown: the account's run stops, its last error is recorded, and the
+next run tries again. They are never stored as skipped metrics. The UI lists metrics that were not available.
 
 ## Storage (`script/create-social-studio-tables.mjs`, additive and idempotent)
 
@@ -55,7 +58,8 @@ the token) is never kept or printed.
 ## UI (Socials page, section Insights; agency, Managers and Viewers)
 
 - 7 or 30 days. Headline numbers as stat tiles (views, accounts reached, interactions, profile visits,
-  followers with the change over the period).
+  followers with the change since the snapshot nearest the period start, labelled with that day: while
+  less history exists than the period, the label says so instead of claiming 7 or 30 days).
 - Followers: a single-series area line (2px, 10% wash, crosshair tooltip, round axis ticks).
 - Best time to post: average views by weekday and by hour in the account's zone, computed from the
   posts' views (`insightsView.ts`), the best one labelled; under 8 posts with views it says "not enough

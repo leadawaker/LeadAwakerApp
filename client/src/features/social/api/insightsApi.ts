@@ -15,7 +15,7 @@ export interface PostInsight {
 
 export interface InsightsView {
   days: 7 | 30;
-  headline: { views: number | null; reach: number | null; interactions: number | null; accountsEngaged: number | null; profileViews: number | null; followers: number | null; followersDelta: number | null };
+  headline: { views: number | null; reach: number | null; interactions: number | null; accountsEngaged: number | null; profileViews: number | null; followers: number | null; followersDelta: number | null; followersDeltaSince: string | null };
   followerTrend: { date: string; value: number }[];
   posts: PostInsight[];
   bestTimes: {

@@ -274,7 +274,7 @@
       "profileViews": "Profile visits",
       "followers": "Followers"
     },
-    "vsStart": "{{delta}} in {{days}} days",
+    "sinceDate": "{{delta}} since {{date}}",
     "followersTitle": "Followers",
     "followers": "Followers",
     "followersNotEnough": "The trend appears after a second day of data.",

@@ -274,7 +274,7 @@
       "profileViews": "Profielbezoeken",
       "followers": "Volgers"
     },
-    "vsStart": "{{delta}} in {{days}} dagen",
+    "sinceDate": "{{delta}} sinds {{date}}",
     "followersTitle": "Volgers",
     "followers": "Volgers",
     "followersNotEnough": "De trend verschijnt na een tweede dag met gegevens.",

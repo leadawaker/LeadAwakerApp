@@ -19,6 +19,7 @@ test("headline sums the day totals of the period (today left out); followers and
   assert.equal(v.headline.interactions, null, "no data is null, not 0");
   assert.equal(v.headline.followers, 4171);
   assert.equal(v.headline.followersDelta, 4171 - 4120);
+  assert.equal(v.headline.followersDeltaSince, "2026-10-13", "from the snapshot at the period start");
   assert.deepEqual(v.followerTrend.map((f) => f.value), [4100, 4120, 4171]);
   assert.deepEqual(v.skipped, ["reels_skip_rate"]);
 });
@@ -26,6 +27,17 @@ test("headline sums the day totals of the period (today left out); followers and
 test("no follower history yet: no change shown", () => {
   const v = buildInsightsView({ days: 30, now: NOW, timeZone: "UTC", media: [], latest: [], account: [{ metric: "followers_count", bucket: "2026-10-20", value: 10 }], skipped: [] });
   assert.equal(v.headline.followersDelta, null);
+  assert.equal(v.headline.followersDeltaSince, null);
+});
+
+test("history shorter than the period: the change is labelled with its real start day", () => {
+  const account = [
+    { metric: "followers_count", bucket: "2026-10-17", value: 4150 },
+    { metric: "followers_count", bucket: "2026-10-20", value: 4171 },
+  ];
+  const v = buildInsightsView({ days: 30, now: NOW, timeZone: "UTC", media: [], latest: [], account, skipped: [] });
+  assert.equal(v.headline.followersDelta, 21);
+  assert.equal(v.headline.followersDeltaSince, "2026-10-17", "not 30 days ago");
 });
 
 test("posts carry their newest values and a one-line caption", () => {

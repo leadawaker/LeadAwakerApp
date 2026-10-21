@@ -274,7 +274,7 @@
       "profileViews": "Visitas ao perfil",
       "followers": "Seguidores"
     },
-    "vsStart": "{{delta}} em {{days}} dias",
+    "sinceDate": "{{delta}} desde {{date}}",
     "followersTitle": "Seguidores",
     "followers": "Seguidores",
     "followersNotEnough": "A tendência aparece depois de um segundo dia de dados.",

@@ -33,7 +33,7 @@ export interface BestTimes {
 
 export interface InsightsView {
   days: 7 | 30;
-  headline: { views: number | null; reach: number | null; interactions: number | null; accountsEngaged: number | null; profileViews: number | null; followers: number | null; followersDelta: number | null };
+  headline: { views: number | null; reach: number | null; interactions: number | null; accountsEngaged: number | null; profileViews: number | null; followers: number | null; followersDelta: number | null; followersDeltaSince: string | null };
   followerTrend: { date: string; value: number }[];
   posts: PostInsight[];
   bestTimes: BestTimes;
@@ -107,7 +107,11 @@ export function buildInsightsView(p: {
   const followers = p.account.filter((r) => r.metric === "followers_count").sort((a, b) => a.bucket.localeCompare(b.bucket));
   const latestFollowers = followers.at(-1)?.value ?? null;
   const before = [...followers].reverse().find((r) => r.bucket <= start) ?? followers.find((r) => r.bucket >= start);
-  const followersDelta = latestFollowers !== null && before && before !== followers.at(-1) ? latestFollowers - before.value : null;
+  const hasDelta = latestFollowers !== null && !!before && before !== followers.at(-1);
+  // The change runs from the snapshot nearest the period start, which is later than the start while
+  // fewer days have been collected: the UI names that day instead of claiming the whole period.
+  const followersDelta = hasDelta ? latestFollowers - before.value : null;
+  const followersDeltaSince = hasDelta ? before.bucket : null;
 
   const byMedia = new Map<string, Record<string, number>>();
   for (const v of p.latest) byMedia.set(v.igMediaId, { ...byMedia.get(v.igMediaId), [v.metric]: v.value });
@@ -131,6 +135,7 @@ export function buildInsightsView(p: {
       profileViews: sum("profile_views"),
       followers: latestFollowers,
       followersDelta,
+      followersDeltaSince,
     },
     followerTrend: followers.filter((r) => r.bucket >= dayOf(new Date(p.now.getTime() - 30 * 86_400_000))).map((r) => ({ date: r.bucket, value: r.value })),
     posts,

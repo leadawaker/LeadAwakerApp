@@ -17,7 +17,17 @@ export interface IgMedia {
   commentsCount: number | null;
 }
 
-export interface MetricResult { values: Record<string, number>; skipped: Record<string, string> }
+/** skipped: every metric without a value, with the reason. unsupported: the subset Meta refused as an unknown metric (code 100), safe to stop asking for. */
+export interface MetricResult { values: Record<string, number>; skipped: Record<string, string>; unsupported: string[] }
+
+/**
+ * Errors about the token, the app or the rate limit (and Meta's temporary codes) say nothing about a
+ * metric: they are thrown so the run stops for this account and the next run tries again, instead of
+ * every metric being recorded as skipped.
+ */
+const NOT_ABOUT_THE_METRIC = new Set([1, 2, 4, 17, 32, 190, 341, 368, 613]);
+const metricLevel = (err: unknown): err is IgApiError =>
+  err instanceof IgApiError && err.kind !== "network" && !NOT_ABOUT_THE_METRIC.has(err.code ?? -1);
 
 async function get(deps: Pick<IgDeps, "fetch">, path: string, params: Record<string, string>, token: string): Promise<any> {
   const q = new URLSearchParams(params).toString();
@@ -79,14 +89,19 @@ export function parseInsights(body: unknown): Record<string, number> {
 /**
  * Asks for all metrics at once; when Meta refuses the batch with a request error, asks each one alone
  * so the good ones still come back and each refused one is skipped with its reason. A network or
- * server problem is thrown (the next run tries again), never turned into skips.
+ * server problem, or an error about the token or the rate limit, is thrown (the next run tries
+ * again), never turned into skips.
  */
 export async function fetchMetrics(
   call: (metrics: string[]) => Promise<unknown>,
   metrics: readonly string[],
 ): Promise<MetricResult> {
-  const result: MetricResult = { values: {}, skipped: {} };
+  const result: MetricResult = { values: {}, skipped: {}, unsupported: [] };
   if (metrics.length === 0) return result;
+  const refuse = (m: string, err: IgApiError) => {
+    result.skipped[m] = err.message;
+    if (err.code === 100) result.unsupported.push(m);
+  };
   try {
     const values = parseInsights(await call([...metrics]));
     for (const m of metrics) {
@@ -95,9 +110,9 @@ export async function fetchMetrics(
     }
     return result;
   } catch (err) {
-    if (!(err instanceof IgApiError) || err.kind === "network") throw err;
+    if (!metricLevel(err)) throw err;
     if (metrics.length === 1) {
-      result.skipped[metrics[0]] = err.message;
+      refuse(metrics[0], err);
       return result;
     }
   }
@@ -107,8 +122,8 @@ export async function fetchMetrics(
       if (m in v) result.values[m] = v[m];
       else result.skipped[m] = "not returned";
     } catch (err) {
-      if (!(err instanceof IgApiError) || err.kind === "network") throw err;
-      result.skipped[m] = err.message;
+      if (!metricLevel(err)) throw err;
+      refuse(m, err);
     }
   }
   return result;

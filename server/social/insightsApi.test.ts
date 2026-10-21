@@ -29,13 +29,26 @@ test("a refused batch is asked one by one: good metrics come back, refused ones 
   const r = await fetchMetrics(call, ["views", "reach", "reels_skip_rate"]);
   assert.deepEqual(r.values, { views: 5, reach: 5 });
   assert.match(r.skipped.reels_skip_rate, /#100/);
+  assert.deepEqual(r.unsupported, ["reels_skip_rate"]);
   assert.deepEqual(asked, [["views", "reach", "reels_skip_rate"], ["views"], ["reach"], ["reels_skip_rate"]]);
 });
 
+test("token, rate-limit and temporary errors are thrown, never recorded as skipped metrics", async () => {
+  for (const code of [190, 4, 17, 32, 613, 1, 2]) {
+    await assert.rejects(fetchMetrics(async () => { throw new IgApiError("nope", code, "http"); }, ["views", "reach"]), IgApiError, `code ${code}`);
+  }
+});
+
+test("a per-media refusal (too few viewers, code 10) is a skip but not marked unsupported", async () => {
+  const r = await fetchMetrics(async () => { throw new IgApiError("(#10) Not enough viewers for the media to show insights", 10, "http"); }, ["views"]);
+  assert.match(r.skipped.views, /Not enough viewers/);
+  assert.deepEqual(r.unsupported, []);
+});
+
 test("a metric missing from the answer is a skip; a network problem is thrown (the next run tries again)", async () => {
-  assert.deepEqual(await fetchMetrics(async () => ({ data: [{ name: "views", values: [{ value: 1 }] }] }), ["views", "saved"]), { values: { views: 1 }, skipped: { saved: "not returned" } });
+  assert.deepEqual(await fetchMetrics(async () => ({ data: [{ name: "views", values: [{ value: 1 }] }] }), ["views", "saved"]), { values: { views: 1 }, skipped: { saved: "not returned" }, unsupported: [] });
   await assert.rejects(fetchMetrics(async () => { throw new IgApiError("timeout", undefined, "network"); }, ["views"]), IgApiError);
-  assert.deepEqual(await fetchMetrics(async () => ({}), []), { values: {}, skipped: {} });
+  assert.deepEqual(await fetchMetrics(async () => ({}), []), { values: {}, skipped: {}, unsupported: [] });
 });
 
 test("requests: GET, token in the header never the URL, the right paths and params", async () => {

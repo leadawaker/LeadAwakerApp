@@ -15,12 +15,15 @@ const h3: React.CSSProperties = { margin: 0, fontSize: 15, fontWeight: 700, colo
 
 function Tiles({ v }: { v: InsightsView }) {
   const { t, i18n } = useTranslation("social");
+  const since = v.headline.followersDeltaSince
+    ? new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${v.headline.followersDeltaSince}T12:00:00Z`))
+    : null;
   const tiles: { key: string; value: number | null; delta?: string | null }[] = [
     { key: "views", value: v.headline.views },
     { key: "reach", value: v.headline.reach },
     { key: "interactions", value: v.headline.interactions },
     { key: "profileViews", value: v.headline.profileViews },
-    { key: "followers", value: v.headline.followers, delta: signed(v.headline.followersDelta, i18n.language) },
+    { key: "followers", value: v.headline.followers, delta: since ? signed(v.headline.followersDelta, i18n.language) : null },
   ];
   return (
     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }} data-testid="insights-tiles">
@@ -28,7 +31,7 @@ function Tiles({ v }: { v: InsightsView }) {
         <div key={x.key} className="neu-raised" style={{ ...card, padding: "12px 14px", gap: 4 }}>
           <span style={{ fontSize: 12, color: "var(--mute)" }}>{t(`insights.tiles.${x.key}`)}</span>
           <span style={{ fontSize: 22, fontWeight: 650, color: "var(--ink)" }}>{compact(x.value, i18n.language)}</span>
-          {x.delta && <span style={{ fontSize: 11.5, color: "var(--mute)" }}>{t("insights.vsStart", { delta: x.delta, days: v.days })}</span>}
+          {x.delta && <span style={{ fontSize: 11.5, color: "var(--mute)" }}>{t("insights.sinceDate", { delta: x.delta, date: since })}</span>}
         </div>
       ))}
     </div>

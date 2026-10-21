@@ -64,7 +64,11 @@ export function snapshotRows(accountId: number, scope: "account" | "media", igMe
   ];
 }
 
-/** Metrics Meta refused for a product type in this process: asked once, recorded, not asked again until a restart. */
+/**
+ * Metrics Meta refused as unsupported (code 100), per account and product type, in this process: asked
+ * once, recorded, not asked again until a restart. Per account because support can differ between
+ * accounts. Other skips ("not returned", too few viewers) are asked again next time.
+ */
 const refused = new Map<string, Set<string>>();
 
 async function collectAccount(d: InsightsDeps, a: InsightsAccount, now: Date): Promise<string[]> {
@@ -87,11 +91,11 @@ async function collectAccount(d: InsightsDeps, a: InsightsAccount, now: Date): P
   let polled = 0;
   for (const m of await d.listMediaToPoll(a.accountId, POLL.recentMedia)) {
     if (!mediaDue(m, now)) continue;
-    const key = m.productType ?? "?";
+    const key = `${a.accountId}:${m.productType ?? "?"}`;
     const skip = refused.get(key) ?? new Set<string>();
     const metrics = metricsFor(m.productType).filter((x) => !skip.has(x));
     const r = await d.ig.mediaInsights(a, m.igMediaId, metrics);
-    for (const x of Object.keys(r.skipped)) skip.add(x);
+    for (const x of r.unsupported) skip.add(x);
     refused.set(key, skip);
     await d.upsertSnapshots(snapshotRows(a.accountId, "media", m.igMediaId, hourBucket(now), r));
     await d.markPolled(a.accountId, m.igMediaId, now);

@@ -1,7 +1,10 @@
 # Social studio build: Action Required (manual steps)
 
-Branch: `feat/social-studio`, pushed to origin, **not merged**. Cut from `chore/studio-prompt` (= `main` plus the
-build prompt and the copied source material). Built in a cloud session: no Pi, no pm2, no live database, no network
+Branch: **`chore/studio-prompt`**, pushed to origin, **not merged**. The build ran on `feat/social-studio` (cut from
+`chore/studio-prompt` = `main` plus the build prompt and the copied source material); a second session finished the
+Phase D review fixes and the checks on top of it and pushed the result to `chore/studio-prompt`, which now holds
+everything on `feat/social-studio` plus those fixes. Merge `chore/studio-prompt`; `feat/social-studio` is one commit
+behind it and can be deleted. Built in a cloud session: no Pi, no pm2, no live database, no network
 to Meta, HeyGen, Claude or Groq. Everything Instagram-, HeyGen-, AI- and DB-facing is tested against in-memory fakes;
 the new storage SQL was also run against a throwaway local Postgres (details in section 4).
 
@@ -18,7 +21,7 @@ changed file. No "run a type check" morning item.
 ## 0. Pi steps, in this order
 
 1. [ ] Read the four specs and the "My calls" list (section 5). Merge when happy:
-       `cd /home/gabriel/LeadAwakerApp && git fetch origin && git merge origin/feat/social-studio` into `main`.
+       `cd /home/gabriel/LeadAwakerApp && git fetch origin && git merge origin/chore/studio-prompt` into `main`.
 2. [ ] **Tables first, before the restart** (the new code reads them; until they exist the new pages error and the
        insights job logs one warning per run): `node --env-file=.env script/create-social-studio-tables.mjs`.
        Additive and idempotent (`CREATE ... IF NOT EXISTS` only, no existing table or row touched). Prints the
@@ -79,9 +82,11 @@ changed file. No "run a type check" morning item.
 ### Phase D: insights
 - Hourly job: media list, followers and account day totals every 6 h (30-day backfill on the first run), each media
   item hourly in its first 3 days, every 6 h after. Snapshots never duplicate. A metric Meta refuses is stored as a
-  skip with Meta's reason.
-- Socials page section Insights (agency, Managers, Viewers): 7/30-day tiles, follower trend, best weekday and hour
-  (not enough data under 8 posts), every post in a table sortable by views.
+  skip with Meta's reason; only a metric refused as unknown (code 100) stops being asked, per account. A token,
+  rate-limit or temporary error stops that account's run and is recorded as its last error, never as skipped metrics.
+- Socials page section Insights (agency, Managers, Viewers): 7/30-day tiles (the follower change names the day it
+  counts from, so a short history is not passed off as 7 or 30 days), follower trend, best weekday and hour (not
+  enough data under 8 posts), every post in a table sortable by views.
 
 ## 2. Meta dashboard (Gabriel; nothing here was possible from the sandbox)
 
@@ -137,9 +142,15 @@ Not seen against the real server and data. Please check:
 
 ## 4. Tests and what was run
 
-- **Node suites: 359 pass, 0 fail, 0 skipped** (`node --import tsx --test shared/*.test.ts server/social/*.test.ts
+- **Node suites: 365 pass, 0 fail, 0 skipped** (`node --import tsx --test shared/*.test.ts server/social/*.test.ts
   client/src/features/social/lib/*.test.ts client/src/components/crm/navGates.test.ts
   client/src/features/leads/components/conversationType.test.ts`). Baseline before this build: 219.
+- **Every `*.test.ts` in the repo (68 files): 536 pass, 0 fail.** Three files outside this build
+  (`server/clientLogo.test.ts`, `server/demoSocial/clientStore.test.ts`, `server/demoSocial/snapshot.test.ts`) import
+  the DB module and need `DATABASE_URL`; they fail without one, on `main` too, and their 12 tests pass against the
+  scratch Postgres.
+- Insights review fixes are covered by tests, and the collector test runs its fake Graph answers through the real
+  `fetchMetrics`. A mutation check (cache key back to global) makes the cross-account test fail.
 - **Scratch Postgres** (local, in the sandbox, thrown away): both scripts run twice (idempotent: the second run adds
   nothing; a field edited between runs survived the re-seed). The new storage modules were exercised against it:
   settings upsert, topics and scripts scoped by account, the HeyGen pull unique index, webhook event dedupe, one
@@ -154,7 +165,8 @@ Not seen against the real server and data. Please check:
 - **Never run:** the server itself (no database in the sandbox), real Meta calls of any kind, HeyGen (the optional
   read-only manual check was skipped: no key in the cloud), the Claude CLI (caption and script prompts are tested with
   a fake model only), Groq transcription, microphone recording in a browser, the OAuth flow.
-- Reviews: one reviewer subagent per phase; every finding was fixed (see the `fix(social)` commits).
+- Reviews: one reviewer subagent per phase; every finding was fixed (see the `fix(social)` commits, the last one is the
+  insights review).
 
 ## 5. My calls (decide or accept)
 
