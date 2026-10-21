@@ -33,6 +33,17 @@ export const TEXT_LIMITS = {
 
 export const CAPTION_OPTION_COUNT = 3;
 
+/** Tag colors: keys stored in Social_Tags.color; the client maps each to a CSS token. */
+export const TAG_COLORS = ["wine", "good", "warn", "blue", "teal", "plum", "brick", "sand"] as const;
+export type TagColor = (typeof TAG_COLORS)[number];
+export const TAG_NAME_MAX = 40;
+/** An idea or a script carries at most this many tags. */
+export const TAG_IDS_MAX = 12;
+
+export function isTagColor(v: unknown): v is TagColor {
+  return typeof v === "string" && (TAG_COLORS as readonly string[]).includes(v);
+}
+
 /**
  * The status a script shows: a linked post decides once it exists (published, or scheduled while it
  * is on its way), else the stored status. A cancelled or failed post leaves the script where it was.

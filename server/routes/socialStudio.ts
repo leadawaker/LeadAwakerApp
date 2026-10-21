@@ -1,5 +1,5 @@
 /**
- * Wires the Socials studio routes (server/social/studioRoutes.ts, scriptRoutes.ts) to the real
+ * Wires the Socials studio routes (server/social/studioRoutes.ts, scriptRoutes.ts, tagRoutes.ts) to the real
  * storage, auth, Claude CLI, Groq Whisper, HeyGen (read-only) and the Reel upload checks.
  */
 import type { Express } from "express";
@@ -13,8 +13,10 @@ import { notifyAccountManagers, notifyAgency } from "../social/notify";
 import { heygenFromEnv } from "../social/heygen";
 import { aiLimiter, registerStudioRoutes } from "../social/studioRoutes";
 import { registerScriptRoutes } from "../social/scriptRoutes";
+import { registerTagRoutes } from "../social/tagRoutes";
 import { dmLiveSwitchOn } from "../social/dmSafety";
 import type { StudioDeps } from "../social/studioDeps";
+import { registerSocialUpgradeRoutes } from "./socialUpgrade";
 
 export function registerSocialStudioRoutes(app: Express): void {
   const deps: StudioDeps = {
@@ -39,6 +41,12 @@ export function registerSocialStudioRoutes(app: Express): void {
       listHeygenPulls: (id) => storage.listHeygenPulls(id),
       insertHeygenPull: (row) => storage.insertHeygenPull(row),
       deleteHeygenPull: (accountId, videoId) => storage.deleteHeygenPull(accountId, videoId),
+      listSocialTags: (id) => storage.listSocialTags(id),
+      insertSocialTag: (row) => storage.insertSocialTag(row),
+      updateSocialTag: (accountId, tagId, fields) => storage.updateSocialTag(accountId, tagId, fields),
+      deleteSocialTag: (accountId, tagId) => storage.deleteSocialTag(accountId, tagId),
+      setSocialTopicTags: (accountId, topicId, tagIds) => storage.setSocialTopicTags(accountId, topicId, tagIds),
+      setSocialScriptTags: (accountId, scriptId, tagIds) => storage.setSocialScriptTags(accountId, scriptId, tagIds),
       listSocialPosts: (id) => storage.listSocialPosts(id),
       getSocialPost: (accountId, postId) => storage.getSocialPost(accountId, postId),
       getSocialPostByPublicId: (publicId) => storage.getSocialPostByPublicId(publicId),
@@ -55,4 +63,6 @@ export function registerSocialStudioRoutes(app: Express): void {
   const limiter = aiLimiter();
   registerStudioRoutes(app, deps, limiter);
   registerScriptRoutes(app, deps, limiter);
+  registerTagRoutes(app, deps);
+  registerSocialUpgradeRoutes(app, limiter);
 }

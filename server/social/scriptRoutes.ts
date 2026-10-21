@@ -19,6 +19,7 @@ import { actorIdOf, forbidden, makeAccountGate, positiveIntParam, refused } from
 import { pullHeygenVideo } from "./heygenPull";
 import { UPLOAD_ID } from "./postService";
 import type { RateLimiter } from "./rateLimit";
+import { buildImprovePrompt, parseImproveAnswer, parseImproveBody } from "./scriptImprove";
 import {
   buildScriptPrompt,
   parseNewScriptBody,
@@ -159,11 +160,11 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
     const parsed = parseNewScriptBody(req.body);
     if (!parsed.ok) return res.status(400).json({ message: parsed.message });
     const { title, body, topicId } = parsed.input;
-    if (topicId !== null && !(await store.listSocialTopics(ctx.accountId)).some((t) => t.id === topicId)) {
-      return res.status(404).json({ message: "Topic not found" });
-    }
+    const topic = topicId !== null ? (await store.listSocialTopics(ctx.accountId)).find((t) => t.id === topicId) : null;
+    if (topicId !== null && !topic) return res.status(404).json({ message: "Topic not found" });
+    // A script made from an idea starts with the idea's tags.
     const script = await store.insertSocialScript({
-      accountsId: ctx.accountId, title, body, status: body ? "draft" : "idea", topicId, createdByUserId: userId,
+      accountsId: ctx.accountId, title, body, status: body ? "draft" : "idea", topicId, tagIds: topic?.tagIds ?? [], createdByUserId: userId,
     });
     if (topicId !== null) await store.updateSocialTopic(ctx.accountId, topicId, { status: "used", scriptId: script.id });
     res.status(201).json(toScriptView(script, null));
@@ -221,6 +222,46 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
       if (!fresh) return res.status(404).json({ message: "Script not found" });
       await store.updateSocialScript(ctx.accountId, scriptId, planScriptEdit(fresh, { body: draft.body }));
       res.json(await scriptView(ctx.accountId, scriptId));
+    } finally {
+      drafting.delete(userId);
+    }
+  }));
+
+  // ─── Improve with AI: the editor's text + notes in, { title, body } out. Saves nothing ───
+  app.post("/api/social/accounts/:id/scripts/:scriptId/improve", deps.requireAuth, wrapAsync(async (req, res) => {
+    const ctx = await accountGate(req, res);
+    if (!ctx) return;
+    if (!isAgency(req.user)) return forbidden(res);
+    const userId = actorIdOf(req, res);
+    if (userId === null) return;
+    const scriptId = positiveIntParam(req, res, "scriptId");
+    if (scriptId === null) return;
+    const parsed = parseImproveBody(req.body);
+    if (!parsed.ok) return res.status(400).json({ message: parsed.message });
+    const script = await store.getSocialScript(ctx.accountId, scriptId);
+    if (!script) return res.status(404).json({ message: "Script not found" });
+    if (drafting.has(userId)) return refused(res, 429, "busy");
+    if (!limiter.take(`ai:${userId}`, deps.now().getTime())) return refused(res, 429, "rate_limited");
+    drafting.add(userId);
+    try {
+      const [settings, all] = await Promise.all([store.getSocialSettings(ctx.accountId), store.listSocialScripts(ctx.accountId)]);
+      const prompt = buildImprovePrompt({
+        voiceGuide: settings?.voiceGuide ?? "",
+        aboutMe: settings?.aboutMe ?? "",
+        language: ctx.language,
+        title: parsed.input.title ?? script.title,
+        notes: parsed.input.notes,
+        body: parsed.input.body,
+        closesUsed: recentCloses(all, script.id),
+      });
+      const answer = await deps.ai({ ...prompt, model: "opus", timeoutMs: SCRIPT_TIMEOUT_MS, jsonSchema: SCRIPT_SCHEMA });
+      if ("error" in answer) {
+        console.warn(`[social-scripts] improve for script ${scriptId} failed: ${answer.error.slice(0, 200)}`);
+        return refused(res, 502, "ai_failed");
+      }
+      const improved = parseImproveAnswer(answer.text);
+      if (!improved) return refused(res, 502, "no_options");
+      res.json(improved);
     } finally {
       drafting.delete(userId);
     }

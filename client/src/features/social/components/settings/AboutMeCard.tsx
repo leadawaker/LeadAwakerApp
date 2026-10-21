@@ -7,13 +7,13 @@ import { saveAboutMe, type SocialSettingsView } from "../../api/studioApi";
 import { SettingsTextCard } from "./SettingsTextCard";
 import { useSettingsField } from "./useSettingsField";
 
-export function AboutMeCard({ accountId, data, canEdit }: { accountId: number; data: SocialSettingsView; canEdit: boolean }) {
+export function AboutMeCard({ accountId, data, canEdit, minHeight }: { accountId: number; data: SocialSettingsView; canEdit: boolean; minHeight?: number }) {
   const { t } = useTranslation("social");
   const f = useSettingsField(accountId, data.aboutMe, (text) => saveAboutMe(accountId, text));
   return (
     <SettingsTextCard id="about-me" title={t("about.title")} help={t(canEdit ? "about.help" : "about.helpReadOnly")} text={f.text} onChange={f.setText}
       max={TEXT_LIMITS.aboutMe} dirty={f.dirty} save={f.save} saveLabel={t("about.save")} savedLabel={t("about.saved")} placeholder={t("about.placeholder")}
-      readOnly={!canEdit} emptyLabel={t("about.empty")}
+      readOnly={!canEdit} emptyLabel={t("about.empty")} minHeight={minHeight}
       testIds={{ card: "about-section", text: "about-text", save: "about-save" }} />
   );
 }

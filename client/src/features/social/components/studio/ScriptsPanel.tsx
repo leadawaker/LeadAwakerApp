@@ -43,7 +43,7 @@ export function ScriptsPanel({ accountId, selectedId, onSelect }: { accountId: n
       {groupScripts(scripts.data ?? []).map((g) => (
         <div key={g.status} style={{ display: "flex", flexDirection: "column", gap: 8 }}>
           <GroupHeader label={t(`scripts.statuses.${g.status}`)} count={g.scripts.length} sticky={false} />
-          {g.scripts.map((s) => <ScriptCard key={s.id} script={s} selected={s.id === selectedId} onSelect={() => onSelect(s.id)} />)}
+          {g.scripts.map((s) => <ScriptCard key={s.id} accountId={accountId} script={s} selected={s.id === selectedId} onSelect={() => onSelect(s.id)} />)}
         </div>
       ))}
     </section>

@@ -1,6 +1,7 @@
 // One of the three AI-context texts in Settings (caption style, voice guide, about me): title, help,
 // a textarea that fills the card, a character counter, and its own Save button. Read-only mode
 // (a Viewer) shows the saved text instead of the editor.
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { SocialApiError } from "../../api/socialApi";
@@ -26,6 +27,12 @@ export interface SettingsTextCardProps {
   readOnly?: boolean;
   emptyLabel?: string;
   testIds?: { card?: string; text?: string; save?: string };
+  /** The editor's minimum height (SocialSettingsSection picks it from the layout). */
+  minHeight?: number;
+  /** A button next to the title (e.g. "Upgrade with AI"). */
+  headerAction?: ReactNode;
+  /** Shown between the help text and the editor (e.g. the upgrade panel and its versions). */
+  beforeEditor?: ReactNode;
 }
 
 export function SettingsTextCard(p: SettingsTextCardProps) {
@@ -34,14 +41,18 @@ export function SettingsTextCard(p: SettingsTextCardProps) {
   const near = p.text.length >= p.max * 0.95;
   return (
     <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }} data-testid={p.testIds?.card ?? `${fieldId}-card`}>
-      <label htmlFor={fieldId} style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>{p.title}</label>
+      <div className="row" style={{ gap: 10, alignItems: "center", flexWrap: "wrap" }}>
+        <label htmlFor={fieldId} style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>{p.title}</label>
+        {p.headerAction && !p.readOnly && <div style={{ marginLeft: "auto" }}>{p.headerAction}</div>}
+      </div>
       <p style={{ margin: 0, fontSize: 12, color: "var(--mute)", lineHeight: 1.5 }}>{p.help}</p>
+      {!p.readOnly && p.beforeEditor}
       {p.readOnly ? (
         <p style={{ margin: 0, fontSize: 13.5, color: "var(--ink-soft)", whiteSpace: "pre-wrap", lineHeight: 1.55 }}>{p.text || p.emptyLabel}</p>
       ) : (
         <>
           <textarea id={fieldId} className="neu-input" maxLength={p.max} value={p.text} placeholder={p.placeholder} onChange={(e) => p.onChange(e.target.value)}
-            style={{ flex: 1, minHeight: 260, fontSize: p.mono ? 12.5 : 13.5, lineHeight: 1.55, padding: "10px 12px", width: "100%", resize: "vertical", fontFamily: p.mono ? "var(--mono)" : undefined }}
+            style={{ flex: 1, minHeight: p.minHeight ?? 520,fontSize: p.mono ? 12.5 : 13.5, lineHeight: 1.55, padding: "10px 12px", width: "100%", resize: "vertical", fontFamily: p.mono ? "var(--mono)" : undefined }}
             data-testid={p.testIds?.text ?? `${fieldId}-text`} />
           <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
             <button type="button" className="la-btn la-btn--wine" disabled={!p.dirty || p.save.isPending} onClick={() => p.save.mutate()} data-testid={p.testIds?.save ?? `${fieldId}-save`}>

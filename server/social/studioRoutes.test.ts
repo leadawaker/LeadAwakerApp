@@ -385,6 +385,27 @@ test("scripts: an edit while the Manager has it open takes it back; his stale ok
   assert.equal(scripts[0].status, "draft");
 });
 
+test("scripts: improve with AI returns title and paragraphs and saves nothing", async () => {
+  settings.push({ id: 1, accountsId: A, captionStyle: "", voiceGuide: "VOICE GUIDE", aboutMe: "Médico", dmMode: "off", dmHourlyCap: 20, updatedByUserId: null, createdAt: NOW, updatedAt: NOW });
+  scripts.push({ id: 1, accountsId: A, title: "Sono", body: "saved text", status: "draft", reviewStatus: "waiting", reviewNote: null, postId: null, updatedAt: NOW } as SocialScript);
+  aiAnswer = { text: JSON.stringify({ title: "Sono melhor", body: "Um.\nDois." }) };
+  const r = await call("POST", P(A, "/scripts/1/improve"), freshAgency(), { body: "unsaved text", notes: "mais curto" });
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.json, { title: "Sono melhor", body: "Um.\n\nDois." });
+  assert.match(aiCalls[0].system, /^VOICE GUIDE/);
+  assert.match(aiCalls[0].system, /Médico/);
+  assert.match(aiCalls[0].user, /unsaved text/, "the editor's text, not the saved one");
+  assert.match(aiCalls[0].user, /mais curto/);
+  assert.equal(aiCalls[0].model, "opus");
+  assert.equal(scripts[0].body, "saved text");
+  assert.equal(scripts[0].reviewStatus, "waiting", "nothing was written");
+  assert.equal((await call("POST", P(A, "/scripts/1/improve"), MANAGER_A, { body: "x" })).status, 403);
+  assert.equal((await call("POST", P(A, "/scripts/1/improve"), freshAgency(), { notes: "x".repeat(4001) })).status, 400);
+  assert.equal((await call("POST", P(A, "/scripts/99/improve"), freshAgency(), {})).status, 404);
+  aiAnswer = { error: "x" };
+  assert.equal((await call("POST", P(A, "/scripts/1/improve"), freshAgency(), {})).json.reason, "ai_failed");
+});
+
 test("scripts: an AI draft finishing after the Manager's ok does not ride on his approval", async () => {
   scripts.push({ id: 1, accountsId: A, title: "Fome", body: "v1", status: "draft", reviewStatus: "waiting", reviewNote: null, postId: null, updatedAt: NOW } as SocialScript);
   const realAi = deps.ai;

@@ -39,7 +39,7 @@ export const suggestCaptions = (accountId: number, input: { scriptId: number } |
 
 // ─── Topics ──────────────────────────────────────────────────────────────────
 
-export interface TopicView { id: number; text: string; source: TopicSource; status: TopicStatus; scriptId: number | null; createdAt: string }
+export interface TopicView { id: number; text: string; source: TopicSource; status: TopicStatus; scriptId: number | null; tagIds: number[]; createdAt: string }
 
 export const socialTopicsKey = (accountId: number) => ["social-topics", accountId] as const;
 export const fetchTopics = (accountId: number) => getJson<TopicView[]>(`${base(accountId)}/topics`);
@@ -65,6 +65,8 @@ export interface ScriptView {
   heygenVideoId: string | null;
   reviewStatus: ReviewStatus;
   reviewNote: string | null;
+  /** Ids from the account's tags (tagsApi.ts). */
+  tagIds: number[];
   updatedAt: string;
 }
 
@@ -74,6 +76,9 @@ export const createScript = (accountId: number, body: { title: string; body?: st
 export const updateScript = (accountId: number, scriptId: number, body: { title?: string; body?: string; status?: ScriptStatus }) =>
   sendJson<ScriptView>(`${base(accountId)}/scripts/${scriptId}`, "PATCH", body);
 export const draftScript = (accountId: number, scriptId: number, notes: string) => sendJson<ScriptView>(`${base(accountId)}/scripts/${scriptId}/draft`, "POST", { notes });
+/** Improve with AI: the editor's text (saved or not) and notes in, a new title and body out. Saves nothing. */
+export const improveScript = (accountId: number, scriptId: number, input: { title: string; body: string; notes: string }) =>
+  sendJson<{ title: string; body: string }>(`${base(accountId)}/scripts/${scriptId}/improve`, "POST", input);
 export const sendScriptForReview = (accountId: number, scriptId: number) => sendJson<ScriptView>(`${base(accountId)}/scripts/${scriptId}/send-for-review`, "POST");
 export const reviewScript = (accountId: number, script: Pick<ScriptView, "id" | "version">, decision: "ok" | "changes", note: string) =>
   sendJson<ScriptView>(`${base(accountId)}/scripts/${script.id}/review`, "POST", { decision, note, version: script.version });

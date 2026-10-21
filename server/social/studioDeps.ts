@@ -8,6 +8,7 @@ import type {
   SocialPost,
   SocialScript,
   SocialSettings,
+  SocialTag,
   SocialTopic,
 } from "@shared/schema";
 import type { AiComplete } from "./captions";
@@ -36,6 +37,14 @@ export interface StudioDeps {
     listHeygenPulls(accountId: number): Promise<SocialHeygenPull[]>;
     insertHeygenPull(row: { accountsId: number; heygenVideoId: string; scriptId: number | null; uploadId: string; pulledByUserId: number | null }): Promise<SocialHeygenPull>;
     deleteHeygenPull(accountId: number, heygenVideoId: string): Promise<void>;
+    listSocialTags(accountId: number): Promise<SocialTag[]>;
+    /** Throws 23505 when the account already has that name (ignoring case). */
+    insertSocialTag(row: { accountsId: number; name: string; color: string }): Promise<SocialTag>;
+    updateSocialTag(accountId: number, tagId: number, fields: { name?: string; color?: string }): Promise<SocialTag | null>;
+    /** Also takes the id off the account's ideas and scripts. */
+    deleteSocialTag(accountId: number, tagId: number): Promise<boolean>;
+    setSocialTopicTags(accountId: number, topicId: number, tagIds: number[]): Promise<SocialTopic | null>;
+    setSocialScriptTags(accountId: number, scriptId: number, tagIds: number[]): Promise<SocialScript | null>;
     listSocialPosts(accountId: number): Promise<SocialPost[]>;
     getSocialPost(accountId: number, postId: number): Promise<SocialPost | null>;
     getSocialPostByPublicId(publicId: string): Promise<SocialPost | null>;

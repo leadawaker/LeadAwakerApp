@@ -1,19 +1,21 @@
-// One script, agency side: edit the title and text, let Claude draft it with the account's voice guide,
+// One script, agency side: edit the title and text, improve it with Claude in the account's voice (versions, see ImproveWithAi),
 // send it to the Manager, see his answer, give it a video (HeyGen or an mp4) and schedule the post with
 // the caption writer reading the script. Right panel on desktop, full width on a phone (no dialog).
 import { useEffect, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ExternalLink, Loader2, Send, Sparkles, Upload } from "lucide-react";
+import { ArrowLeft, ExternalLink, Loader2, Send, Upload } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { SocialApiError, socialPostsKey, uploadSocialVideo } from "../../api/socialApi";
 import {
-  attachScriptVideo, draftScript, linkScriptPost, sendScriptForReview, socialScriptsKey, updateScript, type ScriptView,
+  attachScriptVideo, linkScriptPost, sendScriptForReview, socialScriptsKey, updateScript, type ScriptView,
 } from "../../api/studioApi";
 import { uploadPrecheck } from "../../lib/posts";
 import { scriptActions, spokenSeconds, studioErrorKey } from "../../lib/studio";
+import { useScriptVersions } from "../../lib/useScriptVersions";
 import { PostSheet } from "../PostSheet";
 import { HeygenPicker } from "./HeygenPicker";
+import { ImproveWithAi } from "./ImproveWithAi";
 
 const labelStyle: React.CSSProperties = { fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5, display: "block" };
 const errStyle: React.CSSProperties = { margin: 0, fontSize: 12, color: "hsl(var(--destructive))" };
@@ -27,7 +29,7 @@ export function ScriptPanel({ accountId, timeZone, script, onClose }: { accountI
   const qc = useQueryClient();
   const [title, setTitle] = useState(script.title);
   const [body, setBody] = useState(script.body);
-  const [notes, setNotes] = useState("");
+  const versions = useScriptVersions(accountId, script.id, script.body);
   const [videoPicker, setVideoPicker] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [uploadPct, setUploadPct] = useState<number | null>(null);
@@ -42,15 +44,15 @@ export function ScriptPanel({ accountId, timeZone, script, onClose }: { accountI
     qc.invalidateQueries({ queryKey: socialScriptsKey(accountId) });
     qc.invalidateQueries({ queryKey: socialPostsKey(accountId) });
   };
-  const save = useMutation({ mutationFn: () => updateScript(accountId, script.id, { title: title.trim(), body }), onSuccess: refresh });
-  const draft = useMutation({ mutationFn: () => draftScript(accountId, script.id, notes), onSuccess: () => { setNotes(""); refresh(); } });
+  // Save writes the text shown (any version); what was saved becomes the new Original.
+  const save = useMutation({ mutationFn: () => updateScript(accountId, script.id, { title: title.trim(), body }), onSuccess: (saved) => { versions.reset(saved.body); refresh(); } });
   const send = useMutation({ mutationFn: () => sendScriptForReview(accountId, script.id), onSuccess: refresh });
   const approve = useMutation({ mutationFn: () => updateScript(accountId, script.id, { status: "approved" }), onSuccess: refresh });
   const link = useMutation({ mutationFn: (postId: number) => linkScriptPost(accountId, script.id, postId), onSettled: () => { setScheduling(false); refresh(); } });
 
   const dirty = title.trim() !== script.title || body !== script.body;
   const actions = scriptActions(script);
-  const busy = save.isPending || draft.isPending || send.isPending;
+  const busy = save.isPending || send.isPending;
   const when = (iso: string) => new Intl.DateTimeFormat(i18n.language, { dateStyle: "medium", timeStyle: "short", timeZone }).format(new Date(iso));
 
   const pickFile = async (file: File | undefined) => {
@@ -125,19 +127,7 @@ export function ScriptPanel({ accountId, timeZone, script, onClose }: { accountI
       {[save.error, send.error, approve.error].map(reasonOf).filter(Boolean).slice(0, 1).map((r) => <p key="e" role="alert" style={errStyle}>{t(studioErrorKey(r))}</p>)}
 
       {actions.includes("draft") && (
-        <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
-          <label style={labelStyle} htmlFor="script-notes">{t("scripts.draftNotes")}</label>
-          <textarea id="script-notes" className="neu-input" rows={2} value={notes} maxLength={2000} onChange={(e) => setNotes(e.target.value)} placeholder={t("scripts.draftNotesPlaceholder")}
-            style={{ fontSize: 12.5, padding: "8px 11px", width: "100%", resize: "vertical" }} />
-          <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
-            <button type="button" className="la-btn la-btn--soft" disabled={busy || dirty} onClick={() => draft.mutate()} data-testid="script-draft">
-              {draft.isPending ? <Loader2 size={12} className="animate-spin" /> : <Sparkles size={12} />}{t(script.body.trim() ? "scripts.redraft" : "scripts.actions.draft")}
-            </button>
-            {draft.isPending && <span role="status" style={{ fontSize: 11.5, color: "var(--mute)" }}>{t("scripts.drafting")}</span>}
-            {dirty && <span style={{ fontSize: 11.5, color: "var(--mute)" }}>{t("scripts.saveFirst")}</span>}
-          </div>
-          {draft.error && <p role="alert" style={errStyle}>{t(studioErrorKey(reasonOf(draft.error)))}</p>}
-        </div>
+        <ImproveWithAi accountId={accountId} script={script} title={title} body={body} setTitle={setTitle} setBody={setBody} versions={versions} disabled={busy} />
       )}
 
       {(actions.includes("pickVideo") || actions.includes("uploadVideo")) && (

@@ -2368,6 +2368,7 @@ export const socialTopics = nocodb.table("Social_Topics", {
   source: text("source").notNull().default("typed"),           // typed | voice | seed
   status: text("status").notNull().default("new"),             // new | used | dismissed
   scriptId: integer("script_id"),
+  tagIds: integer("tag_ids").array().notNull().default(sql`'{}'`), // Social_Tags ids of the same account
   createdByUserId: integer("created_by_user_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -2392,6 +2393,7 @@ export const socialScripts = nocodb.table("Social_Scripts", {
   reviewedByUserId: integer("reviewed_by_user_id"),
   reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
   seedKey: text("seed_key"),                                   // set by the seed script, so a re-run adds nothing twice
+  tagIds: integer("tag_ids").array().notNull().default(sql`'{}'`), // Social_Tags ids of the same account
   createdByUserId: integer("created_by_user_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -2401,6 +2403,18 @@ export const socialScripts = nocodb.table("Social_Scripts", {
 ]);
 export type SocialScript = typeof socialScripts.$inferSelect;
 export type InsertSocialScript = typeof socialScripts.$inferInsert;
+
+/** Tags the account's team makes for ideas and scripts. color is a key of shared/socialStudio.ts TAG_COLORS. */
+export const socialTags = nocodb.table("Social_Tags", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  name: text("name").notNull(),                                // 1 to 40 characters, unique per account ignoring case
+  color: text("color").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_tags_account_name").on(t.accountsId, sql`lower(${t.name})`),
+]);
+export type SocialTag = typeof socialTags.$inferSelect;
 
 /** HeyGen videos already downloaded for an account, so the list can mark them "already used". */
 export const socialHeygenPulls = nocodb.table("Social_Heygen_Pulls", {

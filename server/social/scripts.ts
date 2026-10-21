@@ -39,10 +39,10 @@ function cleanText(v: unknown, max: number): string | null {
 
 // ─── Topics ────────────────────────────────────────────────────────────────
 
-export interface TopicView { id: number; text: string; source: TopicSource; status: TopicStatus; scriptId: number | null; createdAt: string }
+export interface TopicView { id: number; text: string; source: TopicSource; status: TopicStatus; scriptId: number | null; tagIds: number[]; createdAt: string }
 
 export function toTopicView(t: SocialTopic): TopicView {
-  return { id: t.id, text: t.text, source: t.source as TopicSource, status: t.status as TopicStatus, scriptId: t.scriptId, createdAt: t.createdAt.toISOString() };
+  return { id: t.id, text: t.text, source: t.source as TopicSource, status: t.status as TopicStatus, scriptId: t.scriptId, tagIds: t.tagIds ?? [], createdAt: t.createdAt.toISOString() };
 }
 
 /** One idea per line: the text becomes one or more topics (see topicLines.ts). */
@@ -80,6 +80,8 @@ export interface ScriptView {
   heygenVideoId: string | null;
   reviewStatus: ReviewStatus;
   reviewNote: string | null;
+  /** Social_Tags ids of the account. */
+  tagIds: number[];
   updatedAt: string;
 }
 
@@ -98,6 +100,7 @@ export function toScriptView(s: SocialScript, post: SocialPost | null | undefine
     heygenVideoId: s.heygenVideoId,
     reviewStatus: s.reviewStatus as ReviewStatus,
     reviewNote: s.reviewNote,
+    tagIds: s.tagIds ?? [],
     updatedAt: s.updatedAt.toISOString(),
   };
 }
