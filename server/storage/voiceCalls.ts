@@ -14,6 +14,7 @@ import {
   leadStatusOf,
   testAccountIdSql,
 } from "./voiceCallsSql";
+import { listVoiceCallEvents, type VoiceCallEventItem } from "./voiceCallEvents";
 
 export type { VoiceOutcome };
 export type VoiceScope = "live" | "demo";
@@ -66,12 +67,30 @@ export interface VoiceCallTurn {
   who: string | null;
   direction: string | null;
   content: string | null;
+  /** When the row was written: after the speaker's LAST words. */
   createdAt: string | null;
+  /** When the turn's first words were heard (metadata.spoken_at); null on older calls. */
+  spokenAt: string | null;
+  /** metadata.kind: "receipt" for a booking/cancel line that was written, never spoken. */
+  kind: string | null;
 }
+
+export type { VoiceCallEventItem };
 
 export interface VoiceCallDetail extends VoiceCallListItem {
   summary: VoiceCallSummary | null;
   turns: VoiceCallTurn[];
+  /** Grok calls: when the recording began. Null means it began at startedAt. */
+  recordingStartedAt: string | null;
+  /** Tool calls and backend delegations, oldest first. */
+  events: VoiceCallEventItem[];
+}
+
+function metaOf(raw: unknown): Record<string, unknown> {
+  if (typeof raw === "string") {
+    try { const v = JSON.parse(raw); return v && typeof v === "object" ? v : {}; } catch { return {}; }
+  }
+  return raw && typeof raw === "object" && !Array.isArray(raw) ? (raw as Record<string, unknown>) : {};
 }
 
 /**
@@ -216,7 +235,7 @@ export const voiceCallsStorage = {
    */
   async getVoiceCall(
     callId: string,
-    opts: { accountId: number | null; allowDemo: boolean; includeAccountName?: boolean; hideTest?: boolean },
+    opts: { accountId: number | null; allowDemo: boolean; includeAccountName?: boolean; hideTest?: boolean; includeEvents?: boolean },
   ): Promise<VoiceCallDetail | undefined> {
     const [row] = await db
       .select(itemColumns(opts.includeAccountName ?? false))
@@ -236,6 +255,7 @@ export const voiceCallsStorage = {
         direction: interactions.direction,
         content: interactions.content,
         createdAt: interactions.createdAt,
+        metadata: interactions.metadata,
       })
       .from(interactions)
       .where(and(
@@ -243,16 +263,25 @@ export const voiceCallsStorage = {
         eq(interactions.type, "voice_call"),
       ))
       .orderBy(asc(interactions.createdAt), asc(interactions.id));
+    // Tool calls and backend lookups are our plumbing: agency staff only.
+    const events = opts.includeEvents ? await listVoiceCallEvents(callId) : [];
     return {
       ...toItem(row.call, row),
       summary: normalizeSummary(row.call.summary),
-      turns: turns.map((t) => ({
-        id: t.id as number,
-        who: t.who,
-        direction: t.direction,
-        content: t.content,
-        createdAt: t.createdAt ? t.createdAt.toISOString() : null,
-      })),
+      recordingStartedAt: row.call.recordingStartedAt ? row.call.recordingStartedAt.toISOString() : null,
+      events,
+      turns: turns.map((t) => {
+        const meta = metaOf(t.metadata);
+        return {
+          id: t.id as number,
+          who: t.who,
+          direction: t.direction,
+          content: t.content,
+          createdAt: t.createdAt ? t.createdAt.toISOString() : null,
+          spokenAt: typeof meta.spoken_at === "string" ? meta.spoken_at : null,
+          kind: typeof meta.kind === "string" ? meta.kind : null,
+        };
+      }),
     };
   },
 

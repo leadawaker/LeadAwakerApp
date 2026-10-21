@@ -33,6 +33,7 @@ async function loadAllowedCall(req: Request) {
     allowDemo: access.isOwner,
     includeAccountName: access.isAgency,
     hideTest: hidesTestData(access),
+    includeEvents: access.isAgency,
   });
 }
 

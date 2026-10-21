@@ -2,8 +2,8 @@
 """
 Generate the voice preview clips for the account Voice tab play buttons.
 
-The receptionist voices (marin, gleam, willow, bossa, quartz, delta, coral,
-sage, shimmer, vesper, stone, meridian, ripple, tempo, beacon, cinder) only exist on OpenAI's
+The receptionist voices (FEMALE and MALE below, mirroring the engine's
+FEMININE_VOICES and MASCULINE_VOICES) only exist on OpenAI's
 `gpt-live-1`, which accepts nothing but a WebRTC transport (no /v1/audio/speech, no Realtime websocket). So this
 script opens one short WebRTC session per clip with aiortc, sends a silent mic,
 asks her to say one fixed line, records her audio track, and encodes it to mp3.
@@ -15,7 +15,7 @@ and OPENAI_API_KEY (read from the env, else /home/gabriel/automations/.env).
 Never set OPENAI_PROJECT_ID: the key lives outside that project and it 401s.
 
 Usage:
-  python3 script/gen-voice-samples.py                 # all 48 clips
+  python3 script/gen-voice-samples.py                 # all 75 clips
   python3 script/gen-voice-samples.py gleam-nl tempo  # only matching clips
   python3 script/gen-voice-samples.py --force         # overwrite existing
 Each live session is billable, so existing files are skipped unless --force.
@@ -39,8 +39,8 @@ OUT = ROOT / "client" / "public" / "voice-samples"
 LIVE_URL = "https://api.openai.com/v1/live/sessions"
 MODEL = "gpt-live-1"
 
-FEMALE = ["marin", "gleam", "willow", "bossa", "quartz", "delta", "coral", "sage", "shimmer"]
-MALE = ["vesper", "stone", "meridian", "ripple", "tempo", "beacon", "cinder"]
+FEMALE = ["marin", "gleam", "willow", "bossa", "nuri", "juni", "brise", "nira", "harema", "noeul", "quartz", "delta", "coral", "sage", "shimmer"]
+MALE = ["vesper", "stone", "meridian", "ripple", "tempo", "flitz", "sillage", "shida", "beacon", "cinder"]
 MALE_NAMES = {"en": "Harry", "nl": "Daan", "pt": "Pedro"}
 
 LINES = {

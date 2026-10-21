@@ -1,7 +1,15 @@
-import { forwardRef, memo, type ReactNode } from "react";
+import { forwardRef, memo, useMemo, type KeyboardEvent, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import type { VoiceCallTurn } from "../api/voiceCallsApi";
-import { formatClock, formatDuration } from "../format";
+import type { VoiceCallEvent, VoiceCallTurn } from "../api/voiceCallsApi";
+import { formatDuration } from "../format";
+import { CallEventChip, mergeTimeline } from "./CallEventChip";
+
+/** Seconds into the recording from the turn's own clock, for when the audio is not loaded. */
+function offsetOf(turn: VoiceCallTurn, t0Iso: string): number | null {
+  const iso = turn.spokenAt ?? turn.createdAt;
+  if (!iso) return null;
+  return Math.max(0, (new Date(iso).getTime() - new Date(t0Iso).getTime()) / 1000);
+}
 
 /** Wraps each case-insensitive match of `query` in a highlight. */
 function highlight(text: string, query: string): ReactNode {
@@ -30,19 +38,26 @@ function highlight(text: string, query: string): ReactNode {
  * Read-only call transcript in the Chats bubble style: caller on the left
  * (white), AI on the right (ink). Each side is named once, the first time it
  * speaks. When the recording is available each bubble shows where it starts
- * in the call and clicking that jumps the player there.
+ * in the call and clicking the bubble jumps the player there. The call's tool
+ * calls and backend delegations sit between the bubbles as small chips.
  */
 export const CallTranscript = memo(forwardRef<HTMLDivElement, {
   turns: VoiceCallTurn[];
+  events: VoiceCallEvent[];
+  /** When the recording started: offsets are measured from here. */
+  t0: string;
   times: (number | null)[] | null;
   active: number;
   query: string;
   onSeek: (seconds: number) => void;
-}>(function CallTranscript({ turns, times, active, query, onSeek }, ref) {
-  const { t, i18n } = useTranslation("voiceCalls");
+}>(function CallTranscript({ turns, events, t0, times, active, query, onSeek }, ref) {
+  const { t } = useTranslation("voiceCalls");
+  const timeline = useMemo(() => mergeTimeline(turns, events), [turns, events]);
   return (
     <div ref={ref} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      {turns.map((turn, i) => {
+      {timeline.map((item) => {
+        if (item.type === "event") return <CallEventChip key={`e${item.event.id}`} event={item.event} />;
+        const { turn, index: i } = item;
         const ai = turn.direction !== "inbound";
         const prevAi = i > 0 ? turns[i - 1].direction !== "inbound" : null;
         const nextAi = i < turns.length - 1 ? turns[i + 1].direction !== "inbound" : null;
@@ -52,6 +67,18 @@ export const CallTranscript = memo(forwardRef<HTMLDivElement, {
         const firstOfSide = turns.findIndex((x) => (x.direction !== "inbound") === ai) === i;
         const at = times?.[i] ?? null;
         const isActive = i === active;
+        const offset = turn.kind === "receipt" ? null : offsetOf(turn, t0);
+        // Clicking anywhere on a timed bubble plays from there, unless the
+        // click was the end of selecting text to copy.
+        const seekHere = () => {
+          if (at == null) return;
+          if ((window.getSelection()?.toString() ?? "").length > 0) return;
+          onSeek(at);
+        };
+        const onKey = (e: KeyboardEvent<HTMLDivElement>) => {
+          if (at == null || e.target !== e.currentTarget) return;
+          if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSeek(at); }
+        };
         const stampColor = ai ? "color-mix(in srgb, var(--paper) 65%, transparent)" : "var(--mute-2)";
         return (
           <div
@@ -65,7 +92,13 @@ export const CallTranscript = memo(forwardRef<HTMLDivElement, {
               </span>
             )}
             <div
+              onClick={at != null ? seekHere : undefined}
+              onKeyDown={at != null ? onKey : undefined}
+              role={at != null ? "button" : undefined}
+              tabIndex={at != null ? 0 : undefined}
+              title={at != null ? t("playFromHere") : undefined}
               style={{
+                cursor: at != null ? "pointer" : undefined,
                 maxWidth: "78%",
                 whiteSpace: "pre-wrap",
                 padding: "8px 12px 6px",
@@ -87,15 +120,16 @@ export const CallTranscript = memo(forwardRef<HTMLDivElement, {
               <div style={{ fontSize: 10, textAlign: "right", marginTop: 2, color: stampColor }}>
                 {at != null ? (
                   <button
-                    onClick={() => onSeek(at)}
+                    onClick={(e) => { e.stopPropagation(); onSeek(at); }}
+                    tabIndex={-1}
                     title={t("playFromHere")}
                     style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer", color: "inherit", fontSize: 10, fontFamily: "var(--mono)", textDecoration: "underline", textDecorationStyle: "dotted", textUnderlineOffset: 2 }}
                   >
                     {formatDuration(at)}
                   </button>
-                ) : (
-                  formatClock(turn.createdAt, i18n.language)
-                )}
+                ) : offset != null ? (
+                  <span style={{ fontFamily: "var(--mono)" }}>{formatDuration(offset)}</span>
+                ) : null}
               </div>
             </div>
           </div>

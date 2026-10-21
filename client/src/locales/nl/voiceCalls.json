@@ -90,6 +90,28 @@
   "followAudio": "Volg audio",
   "followAudioHint": "Houd het transcript bij wat er gezegd wordt",
   "playFromHere": "Speel vanaf hier",
+  "events": {
+    "askedBackend": "Backend gevraagd",
+    "tool": "Tool",
+    "toggle": "Toon wat erin en eruit ging",
+    "question": "Vraag",
+    "answer": "Antwoord",
+    "notCaptured": "Niet vastgelegd",
+    "noAnswer": "Geen tekstantwoord",
+    "answeredWithTool": "Beantwoord met {{tool}}",
+    "args": "Argumenten",
+    "result": "Resultaat",
+    "error": "Fout",
+    "status": {
+      "ok": "ok",
+      "error": "fout",
+      "refused": "geweigerd",
+      "booked": "geboekt",
+      "moved": "verzet",
+      "cancelled": "geannuleerd",
+      "not_ended": "niet beëindigd"
+    }
+  },
   "status": {
     "booked": "Geboekt",
     "quote": "Wilde een offerte",

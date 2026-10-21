@@ -90,6 +90,28 @@
   "followAudio": "Follow audio",
   "followAudioHint": "Keep the transcript on what is being said",
   "playFromHere": "Play from here",
+  "events": {
+    "askedBackend": "Asked backend",
+    "tool": "Tool",
+    "toggle": "Show what went in and out",
+    "question": "Question",
+    "answer": "Answer",
+    "notCaptured": "Not captured",
+    "noAnswer": "No text answer",
+    "answeredWithTool": "Answered by calling {{tool}}",
+    "args": "Arguments",
+    "result": "Result",
+    "error": "Error",
+    "status": {
+      "ok": "ok",
+      "error": "error",
+      "refused": "refused",
+      "booked": "booked",
+      "moved": "moved",
+      "cancelled": "cancelled",
+      "not_ended": "not ended"
+    }
+  },
   "status": {
     "booked": "Booked",
     "quote": "Wanted a quote",

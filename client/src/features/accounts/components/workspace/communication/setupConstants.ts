@@ -19,10 +19,15 @@ export const WA_APP_TYPE = ["business", "personal", "unknown"] as const;
 // (synthesised) ones; a generated voice sounded synthetic on a Dutch call, so
 // the natural ones come first and the picker labels each. The generated
 // masculine voices (beacon, cinder) joined on 2026-10-15, last in their group.
+// The nine natural voices OpenAI added on 2026-10-16 (German, French, Hindi,
+// Japanese, Korean) joined on 2026-10-20, after the natural ones of each group.
 export const FEMININE_VOICE_OPTIONS = [
-  "marin", "gleam", "willow", "bossa", "quartz", "delta", "coral", "sage", "shimmer",
+  "marin", "gleam", "willow", "bossa", "nuri", "juni", "brise", "nira", "harema", "noeul",
+  "quartz", "delta", "coral", "sage", "shimmer",
 ] as const;
-export const MASCULINE_VOICE_OPTIONS = ["vesper", "stone", "meridian", "ripple", "tempo", "beacon", "cinder"] as const;
+export const MASCULINE_VOICE_OPTIONS = [
+  "vesper", "stone", "meridian", "ripple", "tempo", "flitz", "sillage", "shida", "beacon", "cinder",
+] as const;
 export const VOICE_OPTIONS = [...FEMININE_VOICE_OPTIONS, ...MASCULINE_VOICE_OPTIONS] as const;
 /** The generated (synthesised) voices; every other option is natural. */
 export const GENERATED_VOICES: readonly string[] = ["quartz", "delta", "coral", "sage", "shimmer", "beacon", "cinder"];

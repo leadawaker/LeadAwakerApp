@@ -19,6 +19,8 @@ function recordingMissingKey(startedAt: string): string {
   return age > RECORDING_KEPT_MS ? "recordingExpired" : "recordingUnavailable";
 }
 
+const NO_EVENTS: VoiceCallDetail["events"] = [];
+
 export function CallConversation({ call }: { call: VoiceCallDetail }) {
   const { t } = useTranslation("voiceCalls");
   const audio = useCallAudio(call.callId, call.sessionId);
@@ -31,9 +33,11 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
   const [playFailed, setPlayFailed] = useState(false);
 
   const duration = audio.duration || state.duration || call.durationSeconds || 0;
+  // A Grok recording starts once the caller is in, after the call opened.
+  const t0 = call.recordingStartedAt ?? call.startedAt;
   const times = useMemo(
-    () => (audio.status === "ready" ? turnTimes(call.turns, call.startedAt, audio.caller, audio.ai, duration) : null),
-    [audio, call.turns, call.startedAt, duration],
+    () => (audio.status === "ready" ? turnTimes(call.turns, t0, audio.caller, audio.ai, duration) : null),
+    [audio, call.turns, t0, duration],
   );
   const active = times && (state.playing || state.current > 0) ? activeTurn(times, state.current) : -1;
   const matches = useMemo(() => {
@@ -83,6 +87,9 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
     const a = audioRef.current;
     if (!a) return;
     a.currentTime = s;
+    // Move the highlight now, even while paused or before timeupdate fires.
+    setState((p) => ({ ...p, current: s }));
+    setFollow(true);
     void a.play().catch(() => setPlayFailed(true));
   }, []);
 
@@ -156,7 +163,7 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
         </div>
       </div>
       <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "18px 18px 22px" }}>
-        <CallTranscript ref={listRef} turns={call.turns} times={times} active={active} query={query} onSeek={seekAndPlay} />
+        <CallTranscript ref={listRef} turns={call.turns} events={call.events ?? NO_EVENTS} t0={t0} times={times} active={active} query={query} onSeek={seekAndPlay} />
       </div>
     </div>
   );

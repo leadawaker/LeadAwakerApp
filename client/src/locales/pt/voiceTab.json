@@ -114,6 +114,8 @@
     "generated": "Gerada",
     "naturalHelp": "Gravada a partir de uma pessoa de verdade.",
     "generatedHelp": "Sintetizada pela OpenAI. Pode soar menos humana, principalmente em holandês.",
+    "naturalVoice": "Voz natural",
+    "generatedVoice": "Voz gerada",
     "spokenAs": "Nas ligações ela se apresenta como {{name}}.",
     "greetingSwapped": "A saudação agora também diz {{name}}.",
     "pronunciationAdd": "Adicionar palavra",

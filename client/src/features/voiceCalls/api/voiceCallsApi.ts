@@ -58,12 +58,34 @@ export interface VoiceCallTurn {
   who: string | null;
   direction: string | null;
   content: string | null;
+  /** When the row was written: after the speaker's LAST words. */
   createdAt: string | null;
+  /** When the turn's first words were heard; null on calls before 2026-10-20. */
+  spokenAt: string | null;
+  /** "receipt" for a booking/cancel line that was written, never spoken. */
+  kind: string | null;
+}
+
+/** A tool call or backend delegation in the call (Voice_Call_Events). */
+export interface VoiceCallEvent {
+  id: number;
+  kind: "delegation" | "tool" | "refused" | string;
+  toolName: string | null;
+  status: string | null;
+  error: string | null;
+  args: unknown;
+  result: unknown;
+  startedAt: string;
+  endedAt: string | null;
+  latencyMs: number | null;
 }
 
 export interface VoiceCallDetail extends VoiceCallListItem {
   summary: { name: string | null; outcome?: string | null; items: VoiceCallSummaryItem[] } | null;
   turns: VoiceCallTurn[];
+  /** Grok calls: when the recording began. Null means it began at startedAt. */
+  recordingStartedAt: string | null;
+  events: VoiceCallEvent[];
 }
 
 const LIST_KEY = ["/api/voice-calls"];

@@ -114,6 +114,8 @@
     "generated": "Generated",
     "naturalHelp": "Recorded from a real person.",
     "generatedHelp": "Synthesised by OpenAI. Can sound less human, especially in Dutch.",
+    "naturalVoice": "Natural voice",
+    "generatedVoice": "Generated voice",
     "spokenAs": "On calls she answers as {{name}}.",
     "greetingSwapped": "The greeting now says {{name}} too.",
     "pronunciationAdd": "Add a word",

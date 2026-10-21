@@ -1,13 +1,12 @@
 // The receptionist voice picker: a popover listing the voices by gender, each
-// tagged Natural (recorded from a person) or Generated (synthesised), with a
-// short greeting to play in English, Dutch and Portuguese, so a voice can be
-// heard before it is picked. The clips are fixed files in
+// marked with an icon, Natural (green, recorded from a person) or Generated
+// (blue, synthesised), with a short greeting to play in English, Dutch and
+// Portuguese, so a voice can be heard before it is picked. The clips are fixed files in
 // /public/voice-samples (script/gen-voice-samples.py makes them).
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, ChevronDown, Pause, Play } from "lucide-react";
+import { Check, ChevronDown, Mic, Pause, Play, Sparkles } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Pill } from "@/components/crm/primitives/Pill";
 import { FEMININE_VOICE_OPTIONS, MASCULINE_VOICE_OPTIONS, VOICE_OPTIONS, isGeneratedVoice } from "../communication/setupConstants";
 import { helpStyle, inputStyle } from "./voiceAtoms";
 
@@ -22,19 +21,24 @@ const GROUPS = [
 export const voiceSampleUrl = (voice: string, lang: SampleLang) => `/voice-samples/${voice}-${lang}.mp3`;
 const titleCase = (v: string) => v.charAt(0).toUpperCase() + v.slice(1);
 
-/** Natural or Generated, as OpenAI's voice table splits them. */
+/** Natural or Generated, as OpenAI's voice table splits them: a green mic for
+ *  a voice recorded from a person, a blue sparkle for a synthesised one. */
 function KindTag({ voice }: { voice: string }) {
   const { t } = useTranslation("voiceTab");
   const generated = isGeneratedVoice(voice);
+  const Icon = generated ? Sparkles : Mic;
+  const label = t(generated ? "agent.generatedVoice" : "agent.naturalVoice");
+  const help = t(generated ? "agent.generatedHelp" : "agent.naturalHelp");
   return (
-    <Pill
-      color={generated ? undefined : "var(--wine)"}
-      title={t(generated ? "agent.generatedHelp" : "agent.naturalHelp")}
+    <span
+      role="img"
+      aria-label={label}
+      title={`${label}: ${help}`}
       data-testid={`voice-kind-${voice}`}
-      style={{ fontFamily: "var(--mono)", fontSize: 9.5, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}
+      style={{ display: "inline-flex", alignItems: "center", flexShrink: 0, color: generated ? "var(--voice-generated)" : "var(--voice-natural)" }}
     >
-      {t(generated ? "agent.generated" : "agent.natural")}
-    </Pill>
+      <Icon size={13} strokeWidth={2.25} aria-hidden="true" />
+    </span>
   );
 }
 
@@ -134,7 +138,7 @@ export function VoicePicker({ value, onChange }: { value: string; onChange: (voi
           <span style={{ flex: 1, minWidth: 0 }}>
             <span style={{ display: "block", fontSize: 13.5, fontWeight: 700, color: value ? "var(--ink)" : "var(--mute)" }}>
               {value ? titleCase(value) : t("voiceTab:agent.pickVoice")}
-              {known && <span style={{ marginLeft: 8, verticalAlign: "1px" }}><KindTag voice={value} /></span>}
+              {known && <span style={{ marginLeft: 6, verticalAlign: "-2px", display: "inline-flex" }}><KindTag voice={value} /></span>}
             </span>
             {known && (
               <span style={{ display: "block", fontSize: 12, color: "var(--mute)", marginTop: 2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

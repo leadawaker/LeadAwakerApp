@@ -911,6 +911,9 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
   // Grok calls only: "telnyx:<recording id>", recorded by Telnyx because xAI keeps
   // no recording (engine xai_recording.py, migrate_add_voice_call_recording_ref.py).
   recordingRef: text("recording_ref"),
+  // Grok calls only: when Telnyx started recording (engine migrate_add_voice_call_events.py).
+  // The call player times transcript bubbles from it; GPT-Live recordings start at started_at.
+  recordingStartedAt: timestamp("recording_started_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 }, (t) => [
@@ -919,6 +922,35 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
 ]);
 
 export type VoiceCall = typeof voiceCalls.$inferSelect;
+
+// ─── Voice_Call_Events ─────────────────────────────────────────────────────────
+// One row per tool call or backend delegation in a voice call, written
+// fire-and-forget by the engine (tools/db/voice_call_events.py, switch:
+// VOICE_TOOL_LOG). Read-only here: the call transcript shows them as chips.
+export const voiceCallEvents = nocodb.table("Voice_Call_Events", {
+  id: serial("id").primaryKey(),
+  callId: text("call_id").notNull(),
+  accountsId: integer("accounts_id"),
+  /** 'gpt-live' | 'xai' */
+  engine: text("engine").notNull(),
+  /** 'delegation' | 'tool' | 'refused' */
+  kind: text("kind").notNull(),
+  toolName: text("tool_name"),
+  /** OpenAI call_id of the tool call, or the backend response id. */
+  ref: text("ref"),
+  args: jsonb("args"),
+  result: jsonb("result"),
+  status: text("status"),
+  error: text("error"),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull(),
+  endedAt: timestamp("ended_at", { withTimezone: true }),
+  latencyMs: integer("latency_ms"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index("idx_voice_call_events_call_id").on(t.callId),
+]);
+
+export type VoiceCallEvent = typeof voiceCallEvents.$inferSelect;
 
 // ─── Voice_Numbers ─────────────────────────────────────────────────────────────
 // One row per phone number the voice receptionist answers. Created and owned by
@@ -1905,6 +1937,34 @@ export const insertCalendarConnectionSchema = createInsertSchema(calendarConnect
 });
 export type CalendarConnection = typeof calendarConnections.$inferSelect;
 export type InsertCalendarConnection = z.infer<typeof insertCalendarConnectionSchema>;
+
+// ─── Account Stock Cars ───────────────────────────────────────────────────────
+// Written by the Python engine's hourly stock_sync (automations/src/automations/
+// stock_sync.py): one row per car a dealer's stock feed listed. `data` is the
+// parsed car page (spec table, technical info, options, description), `rdw` the
+// RDW open-data record. The phone line's car_details tool reads it.
+// sold_suspected_at: RDW ownership change after first_seen (probably sold).
+
+export const accountStockCars = nocodb.table("Account_Stock_Cars", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  url: text("url").notNull(),
+  title: text("title"),
+  kenteken: text("kenteken"),
+  data: jsonb("data").notNull().default({}),
+  rdw: jsonb("rdw"),
+  rdwCheckedAt: timestamp("rdw_checked_at", { withTimezone: true }),
+  firstSeen: timestamp("first_seen", { withTimezone: true }).notNull().defaultNow(),
+  lastSeen: timestamp("last_seen", { withTimezone: true }).notNull().defaultNow(),
+  removedAt: timestamp("removed_at", { withTimezone: true }),
+  soldSuspectedAt: timestamp("sold_suspected_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+}, (t) => [
+  index("account_stock_cars_accounts_id_idx").on(t.accountsId),
+  uniqueIndex("account_stock_cars_account_url_idx").on(t.accountsId, t.url),
+]);
+export type AccountStockCar = typeof accountStockCars.$inferSelect;
 
 // ─── Account Reviews ──────────────────────────────────────────────────────────
 // Reputation v2 — public reviews fetched from Google Business Profile and the

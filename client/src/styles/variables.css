@@ -152,6 +152,10 @@
   --stage-lost: #A24B3F;
   --stage-dnd: #9D8E76;
 
+  /* ── Voice kind (voice picker icon): natural green, generated blue ── */
+  --voice-natural: hsl(var(--success));
+  --voice-generated: var(--stage-contacted);
+
   /* ── Neumorphic shadow + glass colors (shapes live in design-system.css) ── */
   /* Softer cast since the ground went bone (2026-10-15): 0.40 read too dark
      next to the near-white highlight. */
@@ -303,6 +307,10 @@
   --stage-closed: #8A9674;
   --stage-lost: #C26659;
   --stage-dnd: #B3A488;
+
+  /* ── Voice kind (voice picker icon): natural green, generated blue ── */
+  --voice-natural: hsl(var(--success));
+  --voice-generated: var(--stage-contacted);
 
   /* ── Neumorphic shadow + glass colors ──
      Dark shadow becomes near-black; light edge becomes a very faint warm

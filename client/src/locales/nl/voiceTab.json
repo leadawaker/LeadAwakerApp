@@ -114,6 +114,8 @@
     "generated": "Gegenereerd",
     "naturalHelp": "Opgenomen van een echt persoon.",
     "generatedHelp": "Door OpenAI samengesteld. Kan minder menselijk klinken, vooral in het Nederlands.",
+    "naturalVoice": "Natuurlijke stem",
+    "generatedVoice": "Gegenereerde stem",
     "spokenAs": "In gesprekken stelt ze zich voor als {{name}}.",
     "greetingSwapped": "De begroeting noemt nu ook {{name}}.",
     "pronunciationAdd": "Woord toevoegen",
