@@ -1,86 +1,19 @@
 // Insights for one account: headline numbers for the last 7 or 30 days (stat tiles, not charts), the
 // follower trend, the best weekday and hour to post (from the posts' views, "not enough data" under the
 // threshold), and every post's numbers in a table sortable by views. Any user of the account.
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { ArrowDown, ArrowUp, ExternalLink, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { fetchInsights, insightsKey, type InsightsView } from "../../api/insightsApi";
-import { cell, compact, POST_COLUMNS, signed, sortPosts, type PostColumn } from "../../lib/insights";
+import { fetchInsights, insightsKey } from "../../api/insightsApi";
+import { BEST_SLOT_MIN_POSTS } from "../../lib/insights";
+import { InsightPostsTable } from "./InsightPostsTable";
+import { InsightTiles } from "./InsightTiles";
 import { AvgViewsColumns, FollowerTrend } from "./InsightCharts";
 
 const card: React.CSSProperties = { borderRadius: "var(--r-card)", background: "var(--bone)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12, minWidth: 0 };
 const h3: React.CSSProperties = { margin: 0, fontSize: 15, fontWeight: 700, color: "var(--ink)" };
-
-function Tiles({ v }: { v: InsightsView }) {
-  const { t, i18n } = useTranslation("social");
-  const since = v.headline.followersDeltaSince
-    ? new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${v.headline.followersDeltaSince}T12:00:00Z`))
-    : null;
-  const tiles: { key: string; value: number | null; delta?: string | null }[] = [
-    { key: "views", value: v.headline.views },
-    { key: "reach", value: v.headline.reach },
-    { key: "interactions", value: v.headline.interactions },
-    { key: "profileViews", value: v.headline.profileViews },
-    { key: "followers", value: v.headline.followers, delta: since ? signed(v.headline.followersDelta, i18n.language) : null },
-  ];
-  return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))", gap: 10 }} data-testid="insights-tiles">
-      {tiles.map((x) => (
-        <div key={x.key} className="neu-raised" style={{ ...card, padding: "12px 14px", gap: 4 }}>
-          <span style={{ fontSize: 12, color: "var(--mute)" }}>{t(`insights.tiles.${x.key}`)}</span>
-          <span style={{ fontSize: 22, fontWeight: 650, color: "var(--ink)" }}>{compact(x.value, i18n.language)}</span>
-          {x.delta && <span style={{ fontSize: 11.5, color: "var(--mute)" }}>{t("insights.sinceDate", { delta: x.delta, date: since })}</span>}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function PostsTable({ v }: { v: InsightsView }) {
-  const { t, i18n } = useTranslation("social");
-  const [by, setBy] = useState<PostColumn | "postedAt">("views");
-  const [dir, setDir] = useState<"desc" | "asc">("desc");
-  const rows = useMemo(() => sortPosts(v.posts, by, dir), [v.posts, by, dir]);
-  const sortOn = (c: PostColumn | "postedAt") => { if (c === by) setDir(dir === "desc" ? "asc" : "desc"); else { setBy(c); setDir("desc"); } };
-  const date = (iso: string | null) => (iso ? new Intl.DateTimeFormat(i18n.language, { dateStyle: "medium", timeZone: v.timeZone }).format(new Date(iso)) : "–");
-  const th = (c: PostColumn | "postedAt", label: string) => (
-    <th key={c} aria-sort={by === c ? (dir === "desc" ? "descending" : "ascending") : "none"} style={{ padding: "6px 8px", textAlign: c === "postedAt" ? "left" : "right", whiteSpace: "nowrap" }}>
-      <button type="button" onClick={() => sortOn(c)} style={{ all: "unset", cursor: "pointer", fontSize: 11, fontWeight: 600, color: by === c ? "var(--ink)" : "var(--mute)" }} data-testid={`insights-sort-${c}`}>
-        {label}{by === c && (dir === "desc" ? <ArrowDown size={10} style={{ display: "inline", marginLeft: 2 }} /> : <ArrowUp size={10} style={{ display: "inline", marginLeft: 2 }} />)}
-      </button>
-    </th>
-  );
-  if (v.posts.length === 0) return <p style={{ margin: 0, fontSize: 12.5, color: "var(--mute)" }}>{t("insights.noPosts")}</p>;
-  return (
-    <div style={{ overflowX: "auto", maxWidth: "100%" }}>
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12.5, minWidth: 720 }} data-testid="insights-posts">
-        <thead style={{ borderBottom: "1px solid var(--line)" }}>
-          <tr>
-            <th style={{ padding: "6px 8px", textAlign: "left", fontSize: 11, fontWeight: 600, color: "var(--mute)" }}>{t("insights.post")}</th>
-            {th("postedAt", t("insights.date"))}
-            {POST_COLUMNS.map((c) => th(c, t(`insights.columns.${c}`)))}
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((p) => (
-            <tr key={p.igMediaId} style={{ borderBottom: "1px solid var(--line)", height: 52 }}>
-              <td style={{ padding: "6px 8px", maxWidth: 260 }}>
-                <span style={{ display: "flex", alignItems: "center", gap: 6, minWidth: 0 }}>
-                  <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--ink-soft)" }}>{p.caption || t("insights.noCaption")}</span>
-                  {p.permalink && <a href={p.permalink} target="_blank" rel="noreferrer" aria-label={t("insights.open")} style={{ color: "var(--wine)", flexShrink: 0 }}><ExternalLink size={12} /></a>}
-                </span>
-              </td>
-              <td style={{ padding: "6px 8px", whiteSpace: "nowrap", color: "var(--mute)" }}>{date(p.postedAt)}</td>
-              {POST_COLUMNS.map((c) => <td key={c} style={{ padding: "6px 8px", textAlign: "right", fontVariantNumeric: "tabular-nums", color: "var(--ink-soft)" }}>{cell(c, p.metrics[c], i18n.language)}</td>)}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
 
 export function InsightsSection({ accountId }: { accountId: number }) {
   const { t, i18n } = useTranslation("social");
@@ -112,7 +45,7 @@ export function InsightsSection({ accountId }: { accountId: number }) {
         </div>
       ) : (
         <>
-          <Tiles v={q.data} />
+          <InsightTiles v={q.data} />
           <section className="neu-raised" style={card}>
             <h3 style={h3}>{t("insights.followersTitle")}</h3>
             <FollowerTrend points={q.data.followerTrend} />
@@ -132,6 +65,13 @@ export function InsightsSection({ accountId }: { accountId: number }) {
                   <AvgViewsColumns testId="insights-hour" title={t("insights.byHour")} best={q.data.bestTimes.bestHour} label={hour} tickEvery={3}
                     rows={q.data.bestTimes.byHour.map((r) => ({ key: r.hour, posts: r.posts, avgViews: r.avgViews }))} />
                 </div>
+                <p style={{ margin: 0, fontSize: 11.5, color: "var(--mute)", display: "flex", alignItems: "center", gap: 6 }} data-testid="insights-best-legend">
+                  <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden style={{ flexShrink: 0 }}>
+                    <rect x="0.5" y="0.5" width="13" height="13" rx="3" fill="none" stroke="hsl(var(--chart-wine))" strokeOpacity="0.55" />
+                    <path d="M-2 14 L14 -2 M2 18 L18 2 M-6 10 L10 -6" stroke="hsl(var(--chart-wine))" strokeOpacity="0.55" strokeWidth="1" />
+                  </svg>
+                  <span>{t("insights.bestLegend", { min: BEST_SLOT_MIN_POSTS })}</span>
+                </p>
                 <p style={{ margin: 0, fontSize: 11.5, color: "var(--mute)" }}>{t("insights.bestHelp", { zone: q.data.timeZone })}</p>
               </>
             ) : (
@@ -140,7 +80,7 @@ export function InsightsSection({ accountId }: { accountId: number }) {
           </section>
           <section className="neu-raised" style={card}>
             <h3 style={h3}>{t("insights.postsTitle")}</h3>
-            <PostsTable v={q.data} />
+            <InsightPostsTable v={q.data} />
             {q.data.skipped.length > 0 && <p style={{ margin: 0, fontSize: 11.5, color: "var(--mute)" }}>{t("insights.skipped", { metrics: q.data.skipped.join(", ") })}</p>}
           </section>
         </>

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { IgApiError } from "./instagramApi";
-import { fetchMetrics, getAccountDayTotals, getMediaInsights, listRecentMedia, parseInsights, parseMediaList } from "./insightsApi";
+import { fetchMetrics, getAccountDayTotals, getFollowerDailyChanges, getMediaInsights, listRecentMedia, parseInsights, parseMediaList } from "./insightsApi";
 
 test("parses values and total_value shapes", () => {
   assert.deepEqual(parseInsights({ data: [{ name: "views", values: [{ value: 120 }] }, { name: "reach", total_value: { value: "90" } }, { name: "bad", values: [] }, { nope: 1 }] }), { views: 120, reach: 90 });
@@ -67,4 +67,28 @@ test("requests: GET, token in the header never the URL, the right paths and para
   assert.match(urls[2], /metric_type=total_value/);
   assert.match(urls[2], new RegExp(`since=${Date.parse("2026-10-19T00:00:00Z") / 1000}&until=${Date.parse("2026-10-20T00:00:00Z") / 1000}`));
   assert.ok(urls.every((u) => !u.includes("TOKEN")));
+});
+
+test("daily follower changes: time_series on the day period, never total_value, days from end_time", async () => {
+  const urls: string[] = [];
+  const fetch = (async (url: any) => {
+    urls.push(String(url));
+    return new Response(JSON.stringify({ data: [{ name: "follower_count", period: "day", values: [
+      { value: 3, end_time: "2026-10-19T07:00:00+0000" }, { value: -1, end_time: "2026-10-20T07:00:00+0000" },
+    ] }] }), { status: 200 });
+  }) as typeof globalThis.fetch;
+  const now = new Date("2026-10-21T10:00:00Z");
+  assert.deepEqual(await getFollowerDailyChanges({ fetch }, "17841", "TOKEN", now), { "2026-10-18": 3, "2026-10-19": -1 });
+  assert.match(urls[0], /metric=follower_count/);
+  assert.match(urls[0], /period=day/);
+  assert.match(urls[0], /metric_type=time_series/);
+  assert.ok(!urls[0].includes("total_value") && !urls[0].includes("TOKEN"));
+  assert.match(urls[0], new RegExp(`since=${Date.parse("2026-09-22T00:00:00Z") / 1000}&until=${Date.parse("2026-10-21T10:00:00Z") / 1000}`));
+});
+
+test("daily follower changes: a refusal and a missing metric both throw (the collector records the skip)", async () => {
+  const refuse = (async () => new Response(JSON.stringify({ error: { message: "(#100) Not enough followers", code: 100 } }), { status: 400 })) as typeof globalThis.fetch;
+  await assert.rejects(getFollowerDailyChanges({ fetch: refuse }, "1", "T", new Date()), /Not enough followers/);
+  const empty = (async () => new Response(JSON.stringify({ data: [] }), { status: 200 })) as typeof globalThis.fetch;
+  await assert.rejects(getFollowerDailyChanges({ fetch: empty }, "1", "T", new Date()), /not returned/);
 });

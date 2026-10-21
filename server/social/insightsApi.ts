@@ -4,6 +4,7 @@
 // metric becomes a recorded skip with Meta's reason. Tokens never go into errors or logs, and the
 // paging URLs Meta returns (they carry the token) are never kept or printed.
 import { IG_GRAPH, IgApiError, type IgDeps } from "./instagramApi";
+import { parseFollowerChanges } from "./insightsFollowers";
 import { MEDIA_FIELDS, PROFILE_FIELDS } from "./insightsMetrics";
 
 export interface IgMedia {
@@ -141,4 +142,21 @@ export function getAccountDayTotals(deps: Pick<IgDeps, "fetch">, igUserId: strin
     (m) => get(deps, `/${igUserId}/insights`, { metric: m.join(","), period: "day", metric_type: "total_value", since: String(since), until: String(until) }, token),
     metrics,
   );
+}
+
+/**
+ * Net follower change per UTC day for roughly the last 30 days (Meta's daily follower_count insight:
+ * period=day, metric_type=time_series, which needs an account with at least 100 followers and is only
+ * kept for 30 days). Used once, at the first backfill, to rebuild the follower history. Unlike the
+ * other calls here it throws on every failure (a refusal, the under-100 error, a missing metric) and
+ * the collector turns that into a recorded skip.
+ */
+export async function getFollowerDailyChanges(deps: Pick<IgDeps, "fetch">, igUserId: string, token: string, now: Date): Promise<Record<string, number>> {
+  const startOfToday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const since = Math.floor((startOfToday - 29 * 86_400_000) / 1000);
+  const until = Math.floor(now.getTime() / 1000);
+  const body = await get(deps, `/${igUserId}/insights`, { metric: "follower_count", period: "day", metric_type: "time_series", since: String(since), until: String(until) }, token);
+  const changes = parseFollowerChanges(body);
+  if (!changes) throw new Error("follower_count not returned");
+  return changes;
 }

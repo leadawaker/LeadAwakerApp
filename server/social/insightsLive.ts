@@ -2,7 +2,7 @@
 // its tests never load the database.
 import { storage } from "../storage";
 import { defaultIgDeps } from "./instagramApi";
-import { getAccountDayTotals, getMediaInsights, getProfileCounts, listRecentMedia } from "./insightsApi";
+import { getAccountDayTotals, getFollowerDailyChanges, getMediaInsights, getProfileCounts, listRecentMedia } from "./insightsApi";
 import type { InsightsDeps } from "./insightsCollector";
 
 export function liveInsightsDeps(): InsightsDeps {
@@ -24,11 +24,15 @@ export function liveInsightsDeps(): InsightsDeps {
     },
     markPolled: (id, mediaId, at) => storage.markInsightMediaPolled(id, mediaId, at),
     upsertSnapshots: (rows) => storage.upsertInsightSnapshots(rows),
+    async followerBuckets(id, sinceDay) {
+      return new Set((await storage.accountSnapshots(id, sinceDay)).filter((r) => r.metric === "followers_count").map((r) => r.bucket));
+    },
     ig: {
       profile: (a) => getProfileCounts(ig, a.igUserId, a.token),
       recentMedia: (a, limit) => listRecentMedia(ig, a.igUserId, a.token, limit),
       mediaInsights: (a, mediaId, metrics) => getMediaInsights(ig, mediaId, a.token, metrics),
       dayTotals: (a, metrics, day) => getAccountDayTotals(ig, a.igUserId, a.token, metrics, day),
+      followerChanges: (a, now) => getFollowerDailyChanges(ig, a.igUserId, a.token, now),
     },
   };
 }

@@ -5,13 +5,15 @@
  *
  * Per connected account:
  * - every 6 h: the recent media list (the first run backfills the newest 50, posts made in the Instagram
- *   app included), today's follower count, and the account's day totals (the first run backfills 30 days,
+ *   app included), today's follower count (the first run also rebuilds the last ~30 days from Meta's
+ *   daily net follower changes), and the account's day totals (the first run backfills 30 days,
  *   later runs re-read the last 2 days because Meta fills them in late);
  * - every media item: its lifetime metrics, every hour in its first 3 days, every 6 hours after.
  * Snapshots are keyed by bucket, so a re-run in the same hour (or day) replaces instead of duplicating.
  */
 import type { InsertSocialInsightSnapshot } from "@shared/schema";
 import type { IgMedia, MetricResult } from "./insightsApi";
+import { deriveFollowerHistory } from "./insightsFollowers";
 import { ACCOUNT_DAY_METRICS, FEED_METRICS, POLL, REEL_METRICS } from "./insightsMetrics";
 
 export interface InsightsAccount { accountId: number; igUserId: string; token: string }
@@ -31,7 +33,11 @@ export interface InsightsDeps {
     recentMedia(a: InsightsAccount, limit: number): Promise<IgMedia[]>;
     mediaInsights(a: InsightsAccount, igMediaId: string, metrics: readonly string[]): Promise<MetricResult>;
     dayTotals(a: InsightsAccount, metrics: readonly string[], day: string): Promise<MetricResult>;
+    /** Net follower change per UTC day for about the last 30 days; throws when Meta refuses. */
+    followerChanges(a: InsightsAccount, now: Date): Promise<Record<string, number>>;
   };
+  /** Days from `sinceDay` on that already hold a real follower count, so a rebuild never overwrites one. */
+  followerBuckets(accountId: number, sinceDay: string): Promise<Set<string>>;
 }
 
 export const dayBucket = (d: Date) => d.toISOString().slice(0, 10);
@@ -65,6 +71,28 @@ export function snapshotRows(accountId: number, scope: "account" | "media", igMe
 }
 
 /**
+ * First backfill only: rebuild the follower counts of the days before today from today's count and
+ * Meta's daily net changes, without overwriting a day that already has a real snapshot. Never throws:
+ * any failure (Meta refusing the metric, an account under 100 followers, odd numbers) is stored as a
+ * skip for "follower_count" and the run carries on.
+ */
+async function backfillFollowers(d: InsightsDeps, a: InsightsAccount, now: Date, current: number): Promise<string | null> {
+  const today = dayBucket(now);
+  try {
+    const history = deriveFollowerHistory(current, today, await d.ig.followerChanges(a, now));
+    if (history === null) throw new Error("follower changes do not add up");
+    const have = await d.followerBuckets(a.accountId, history.at(-1)?.day ?? today);
+    const rows = history.filter((h) => !have.has(h.day)).map((h) => ({ accountsId: a.accountId, scope: "account" as const, igMediaId: "", metric: "followers_count", value: h.value, skippedReason: null, bucket: h.day }));
+    await d.upsertSnapshots(rows);
+    return rows.length ? `${rows.length} follower days` : null;
+  } catch (err: any) {
+    const reason = String(err?.message ?? err).slice(0, 300);
+    await d.upsertSnapshots([{ accountsId: a.accountId, scope: "account", igMediaId: "", metric: "follower_count", value: null, skippedReason: reason, bucket: today }]).catch(() => {});
+    return null;
+  }
+}
+
+/**
  * Metrics Meta refused as unsupported (code 100), per account and product type, in this process: asked
  * once, recorded, not asked again until a restart. Per account because support can differ between
  * accounts. Other skips ("not returned", too few viewers) are asked again next time.
@@ -80,6 +108,10 @@ async function collectAccount(d: InsightsDeps, a: InsightsAccount, now: Date): P
     const profile = await d.ig.profile(a);
     if (profile.followers !== null) {
       await d.upsertSnapshots([{ accountsId: a.accountId, scope: "account", igMediaId: "", metric: "followers_count", value: profile.followers, skippedReason: null, bucket: dayBucket(now) }]);
+      if (!state?.backfilledAt) {
+        const note = await backfillFollowers(d, a, now, profile.followers);
+        if (note) notes.push(note);
+      }
     }
     const days = daysToRead(now, !!state?.backfilledAt);
     for (const day of days) {

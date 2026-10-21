@@ -2,9 +2,10 @@
 // with the dataviz validator in light and dark): the follower count over time (2px line, a 10% wash,
 // crosshair tooltip) and average views by weekday or hour (columns <= 24px, 4px rounded tops, the best
 // one labelled). Each has a table view for screen readers and anyone who prefers numbers.
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, LabelList, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { useTranslation } from "react-i18next";
-import { compact, niceDomain } from "../../lib/insights";
+import { TrendingUp } from "lucide-react";
+import { BEST_SLOT_MIN_POSTS, compact, niceDomain } from "../../lib/insights";
 
 const SERIES = "hsl(var(--chart-wine))";
 const tick = { fontSize: 10, fill: "var(--mute-2)" };
@@ -27,7 +28,12 @@ function TableView({ caption, head, rows }: { caption: string; head: [string, st
 export function FollowerTrend({ points }: { points: { date: string; value: number }[] }) {
   const { t, i18n } = useTranslation("social");
   const day = (d: string) => new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "short", timeZone: "UTC" }).format(new Date(`${d}T12:00:00Z`));
-  if (points.length < 2) return <p style={{ margin: 0, fontSize: 12.5, color: "var(--mute)" }} data-testid="followers-not-enough">{t("insights.followersNotEnough")}</p>;
+  if (points.length < 2) return (
+    <p style={{ margin: 0, fontSize: 12.5, color: "var(--mute)", display: "flex", alignItems: "center", gap: 8 }} data-testid="followers-not-enough">
+      <TrendingUp size={16} strokeWidth={1.75} aria-hidden style={{ flexShrink: 0, color: "var(--mute-2)" }} />
+      {t("insights.followersNotEnough")}
+    </p>
+  );
   const values = points.map((p) => p.value);
   const y = niceDomain(Math.min(...values), Math.max(...values));
   return (
@@ -59,23 +65,41 @@ export function AvgViewsColumns({ rows, best, label, title, testId, tickEvery = 
   tickEvery?: number;
 }) {
   const { t, i18n } = useTranslation("social");
-  const data = rows.map((r) => ({ name: label(r.key), key: r.key, avg: r.avgViews ?? 0, posts: r.posts, best: r.key === best }));
+  // A slot with fewer than BEST_SLOT_MIN_POSTS posts can never be "Best", so it is drawn hatched and faded.
+  const data = rows.map((r) => ({ name: label(r.key), key: r.key, avg: r.avgViews ?? 0, posts: r.posts, best: r.key === best, thin: r.posts > 0 && r.posts < BEST_SLOT_MIN_POSTS }));
+  const hatch = `hatch-${testId}`;
   const y = niceDomain(0, Math.max(1, ...data.map((d) => d.avg)), 4);
   return (
     <div>
       <h4 style={{ margin: "0 0 4px", fontSize: 12.5, fontWeight: 600, color: "var(--ink-soft)" }}>{title}</h4>
       <div role="img" aria-label={title} style={{ width: "100%", height: 160 }} data-testid={testId}>
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 18, right: 4, bottom: 0, left: 0 }} barCategoryGap={2}>
+          <BarChart data={data} margin={{ top: 30, right: 4, bottom: 0, left: 0 }} barCategoryGap={2}>
+            <defs>
+              <pattern id={hatch} width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+                <line x1="0" y1="0" x2="0" y2="5" stroke={SERIES} strokeOpacity={0.5} strokeWidth={1.5} />
+              </pattern>
+            </defs>
             <CartesianGrid vertical={false} stroke="var(--line)" strokeWidth={1} />
             <XAxis dataKey="name" tick={tick} tickLine={false} axisLine={false} interval={tickEvery - 1} />
             <YAxis tick={tick} tickLine={false} axisLine={false} width={40} domain={y.domain} ticks={y.ticks} tickFormatter={(v: number) => compact(v, i18n.language)} allowDecimals={false} />
             <Tooltip contentStyle={tooltipStyle} cursor={{ fill: "var(--wine-tint)" }} separator=""
-              formatter={(v: number, _n, item: any) => [t("insights.avgViewsTip", { views: compact(v, i18n.language), count: item?.payload?.posts ?? 0 }), ""]} />
+              formatter={(v: number, _n, item: any) => [`${t("insights.avgViewsTip", { views: compact(v, i18n.language), count: item?.payload?.posts ?? 0 })}${item?.payload?.thin ? `. ${t("insights.fewPostsTip")}` : ""}`, ""]} />
             <Bar dataKey="avg" fill={SERIES} maxBarSize={24} radius={[4, 4, 0, 0]} isAnimationActive={false}>
-              <LabelList dataKey="best" position="top" content={(p: any) => (p.value ? (
-                <text x={p.x + p.width / 2} y={p.y - 5} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--ink)">{t("insights.best")}</text>
-              ) : null)} />
+              {data.map((d) => d.thin
+                ? <Cell key={d.key} fill={`url(#${hatch})`} stroke={SERIES} strokeOpacity={0.5} strokeWidth={1} />
+                : <Cell key={d.key} fill={SERIES} />)}
+              <LabelList dataKey="posts" position="top" content={(p: any) => {
+                const d = data[p.index];
+                if (!d || d.posts === 0) return null;
+                const cx = p.x + p.width / 2;
+                return (
+                  <g>
+                    <text x={cx} y={p.y - 4} textAnchor="middle" fontSize={9} fill="var(--mute-2)" style={{ fontVariantNumeric: "tabular-nums" }}>{d.posts}</text>
+                    {d.best && <text x={cx} y={p.y - 15} textAnchor="middle" fontSize={10} fontWeight={700} fill="var(--ink)">{t("insights.best")}</text>}
+                  </g>
+                );
+              }} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>

@@ -51,3 +51,6 @@ export function niceDomain(min: number, max: number, ticks = 3): { domain: [numb
   for (let v = lo; v <= hi + step / 1000; v += step) out.push(Math.round(v * 1000) / 1000);
   return { domain: [lo, hi], ticks: out };
 }
+
+/** A weekday or an hour needs this many posts to count for "Best" (mirrors BEST_SLOT_MIN_POSTS on the server); fewer are drawn faded. */
+export const BEST_SLOT_MIN_POSTS = 2;
