@@ -7,3 +7,4 @@ export { SectionCard, type SectionCardProps } from "./SectionCard";
 export { Pill, type PillProps } from "./Pill";
 export { ToolbarButton, type ToolbarButtonProps } from "./ToolbarButton";
 export * from "./toolbarButtonClasses";
+export { PillSwitch, type PillSwitchItem } from "./PillSwitch";

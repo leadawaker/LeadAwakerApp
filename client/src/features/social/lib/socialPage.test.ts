@@ -35,17 +35,20 @@ test("client: always their own account, never another", () => {
 
 test("deep links: account and section, junk ignored", () => {
   assert.deepEqual(parseSocialDeepLink("?account=56&section=studio"), { accountId: 56, section: "studio" });
+  assert.deepEqual(parseSocialDeepLink("?account=56&section=calendar"), { accountId: 56, section: "posts" });
+  assert.deepEqual(parseSocialDeepLink("?tab=calendar"), { accountId: null, section: "posts" });
   assert.deepEqual(parseSocialDeepLink("account=12"), { accountId: 12, section: null });
   assert.deepEqual(parseSocialDeepLink("?account=-3&section=<script>"), { accountId: null, section: null });
   assert.deepEqual(parseSocialDeepLink(""), { accountId: null, section: null });
 });
 
 test("sections: agency opens on posts with the studio and settings; clients open on their home, no studio or settings", () => {
-  assert.deepEqual(socialSections({ isAgency: true, userRole: "Owner" }), ["posts", "studio", "calendar", "comments", "insights", "about", "settings"]);
+  assert.deepEqual(socialSections({ isAgency: true, userRole: "Owner" }), ["posts", "studio", "comments", "insights", "about", "settings"]);
   for (const role of ["Manager", "Viewer"]) {
     const s = socialSections({ isAgency: false, userRole: role });
     assert.equal(s[0], "home");
     assert.ok(s.includes("insights"), "clients see their own insights");
+    assert.ok(!(s as string[]).includes("calendar"), "the calendar is part of Posts");
     assert.ok(!s.includes("studio") && !s.includes("settings") && !s.includes("comments"));
   }
 });

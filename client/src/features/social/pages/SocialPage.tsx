@@ -14,7 +14,6 @@ import { SocialAccountPicker } from "../components/SocialAccountPicker";
 import { SocialTab } from "../components/SocialTab";
 import { AboutSection } from "../components/AboutSection";
 import { ManagerHome } from "../components/ManagerHome";
-import { SocialCalendar } from "../components/SocialCalendar";
 import { SocialSettingsSection } from "../components/SocialSettingsSection";
 import { StudioSection } from "../components/studio/StudioSection";
 import { CommentsSection } from "../components/comments/CommentsSection";
@@ -58,13 +57,21 @@ export function SocialPage() {
   return (
     <CrmShell>
       <div className="la-page" style={{ background: "var(--bg)" }} data-testid="page-social">
-        <div className="la-page-header" style={{ gap: 12 }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)" }}>{t("page.title")}</span>
-          <span style={{ fontSize: 12.5, color: "var(--mute)" }} className="max-md:hidden">
-            {status?.connection?.username && status.connection.status !== "disconnected" ? `@${status.connection.username}` : t("page.subtitle")}
-          </span>
+        <div className="la-page-header" style={{ gap: 12, padding: isMobile ? "0 12px" : "0 17px" }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)", flexShrink: 0 }}>{t("page.title")}</span>
+          {sections.length > 1 && (
+            // The tab group scrolls sideways (the agency has 6 tabs) and hides its scrollbar.
+            <div className="la-seg la-seg--pill" role="tablist" aria-label={t("page.sections")} style={{ overflowX: "auto", scrollbarWidth: "none", minWidth: 0, flexShrink: 1 }}>
+              {sections.map((s) => (
+                <button key={s} type="button" role="tab" aria-selected={section === s} className={cn("la-seg-btn", section === s && "on")}
+                  onClick={() => setPicked(s)} style={{ whiteSpace: "nowrap", flexShrink: 0 }} data-testid={`social-section-tab-${s}`}>
+                  {t(`page.tabs.${s}`)}
+                </button>
+              ))}
+            </div>
+          )}
           {isAgencyUser && options.length > 0 && (
-            <div style={{ marginLeft: "auto" }}>
+            <div style={{ marginLeft: "auto", flexShrink: 0 }}>
               <SocialAccountPicker options={options} selectedId={account?.id ?? null} onSelect={setCurrentAccountId} />
             </div>
           )}
@@ -72,23 +79,12 @@ export function SocialPage() {
 
         <div className="min-h-0 overflow-y-auto w-full max-w-[1386px] mr-auto" style={{ flex: 1 }}>
           <div style={{ padding: isMobile ? "14px 16px 32px" : "20px 24px 40px", display: "flex", flexDirection: "column", gap: 18 }}>
-            {sections.length > 1 && (
-              <div className="la-seg la-seg--pill" role="tablist" aria-label={t("page.sections")} style={{ overflowX: "auto", scrollbarWidth: "none", alignSelf: "flex-start", maxWidth: "100%" }}>
-                {sections.map((s) => (
-                  <button key={s} type="button" role="tab" aria-selected={section === s} className={cn("la-seg-btn", section === s && "on")}
-                    onClick={() => setPicked(s)} style={{ whiteSpace: "nowrap" }} data-testid={`social-section-tab-${s}`}>
-                    {t(`page.tabs.${s}`)}
-                  </button>
-                ))}
-              </div>
-            )}
-
             {loading ? (
               <div role="status" aria-label={t("page.loading")} style={{ padding: 24, color: "var(--mute-2)" }}>
                 <Loader2 size={16} className="animate-spin" />
               </div>
             ) : !account ? (
-              <div className="neu-inset" style={{ borderRadius: "var(--r-card)", padding: "28px 20px", textAlign: "center" }} data-testid="social-no-accounts">
+              <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-card)", padding: "28px 20px", textAlign: "center" }} data-testid="social-no-accounts">
                 <p style={{ margin: 0, fontSize: 13, color: "var(--mute)" }}>{t("page.noAccounts")}</p>
               </div>
             ) : (
@@ -96,7 +92,6 @@ export function SocialPage() {
                 {section === "home" && <ManagerHome accountId={account.id} timeZone={account.timeZone} onOpen={setPicked} />}
                 {section === "posts" && <SocialTab accountId={account.id} timeZone={account.timeZone} />}
                 {section === "studio" && <StudioSection accountId={account.id} timeZone={account.timeZone} />}
-                {section === "calendar" && <SocialCalendar accountId={account.id} timeZone={account.timeZone} />}
                 {section === "comments" && <CommentsSection accountId={account.id} />}
                 {section === "insights" && <InsightsSection accountId={account.id} />}
                 {section === "about" && <AboutSection accountId={account.id} />}

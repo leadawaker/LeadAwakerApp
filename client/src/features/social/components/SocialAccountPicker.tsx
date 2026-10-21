@@ -16,7 +16,7 @@ export function SocialAccountPicker({ options, selectedId, onSelect }: {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <button type="button" className="la-switcher" style={{ width: "auto", minWidth: 150, maxWidth: 240, gap: 10 }} aria-label={t("page.pickAccount")} data-testid="social-account-picker">
+        <button type="button" className="la-switcher" style={{ width: "auto", minWidth: 120, maxWidth: 240, gap: 10 }} aria-label={t("page.pickAccount")} data-testid="social-account-picker">
           <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{selected?.name ?? t("page.pickAccount")}</span>
           <ChevronDown size={12} style={{ flexShrink: 0 }} />
         </button>

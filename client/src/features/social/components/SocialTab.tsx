@@ -1,4 +1,4 @@
-// The Posts section of the Socials page: the account's scheduled Reels in sections (needs approval,
+// The Posts section of the Socials page: the calendar, then the account's scheduled Reels in sections (needs approval,
 // upcoming, held, failed, published), a New post panel for agency, and the Instagram connect card
 // when nothing is connected yet. Client users of the account see the same list; Managers also
 // approve and reject. Times are shown in the account's zone.
@@ -14,6 +14,7 @@ import { connectCardMode } from "../lib/socialState";
 import { InstagramConnectCard, useSocialStatus } from "./InstagramConnectCard";
 import { PostCard } from "./PostCard";
 import { PostSheet } from "./PostSheet";
+import { SocialCalendar } from "./SocialCalendar";
 
 type Sheet = { kind: "new" } | { kind: "edit"; post: SocialPostView; focus: "all" | "time" } | null;
 
@@ -71,6 +72,9 @@ export function SocialTab({ accountId, timeZone }: { accountId: number; timeZone
         )}
       </header>
 
+      {/* Same react-query key as the list below, so the calendar costs no extra fetch. */}
+      <SocialCalendar accountId={accountId} timeZone={timeZone} />
+
       {!connected && <InstagramConnectCard accountId={accountId} showSocialsLink={false} />}
 
       {sheet && (
@@ -90,7 +94,7 @@ export function SocialTab({ accountId, timeZone }: { accountId: number; timeZone
       {isError && <p role="alert" style={{ margin: 0, fontSize: 12.5, color: "hsl(var(--destructive))" }}>{t("social.posts.loadFailed")}</p>}
 
       {!isError && sections.length === 0 && connected && (
-        <div className="neu-inset" style={{ borderRadius: "var(--r-card)", padding: "28px 20px", textAlign: "center" }}>
+        <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-card)", padding: "28px 20px", textAlign: "center" }}>
           <p style={{ margin: 0, fontSize: 13, color: "var(--mute)" }}>{t(isAgencyUser ? "social.posts.emptyAgency" : "social.posts.emptyClient")}</p>
         </div>
       )}
