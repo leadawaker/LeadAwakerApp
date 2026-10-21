@@ -219,5 +219,161 @@
     "hidePassword": "Hide password",
     "showPassword": "Show password",
     "error": "Error"
+  },
+  "twoFactor": {
+    "title": "Two-factor authentication",
+    "description": "Add a second step at sign-in so a stolen password is not enough.",
+    "on": "On",
+    "off": "Off",
+    "remove": "Remove",
+    "removed": "Removed",
+    "set": "Set up",
+    "cancel": "Cancel",
+    "continue": "Continue",
+    "passwordRequired": "Enter your password.",
+    "confirmPassword": "Confirm your password",
+    "wrongPassword": "That password is not right.",
+    "invalidCode": "That code is not right.",
+    "genericError": "Something went wrong. Try again.",
+    "enterCode": "Enter the 6-digit code",
+    "noticeTitle": "Two-factor authentication is required",
+    "requiredNow": "Two-factor authentication is now required. Set up a method below to keep using the app.",
+    "requiredSoon": "Two-factor authentication is required for your account. Set it up within {{count}} days.",
+    "totp": {
+      "title": "Authenticator app",
+      "description": "A 6-digit code from an app like Google Authenticator, 1Password or Authy.",
+      "setupTitle": "Set up the authenticator app",
+      "scanTitle": "Scan this QR code",
+      "scanHelp": "Open your authenticator app, add an account and scan the code. Then enter the 6-digit code it shows.",
+      "qrAlt": "QR code for your authenticator app",
+      "manualKey": "Can't scan? Enter this key by hand:",
+      "enable": "Turn on",
+      "enabled": "Authenticator app is on"
+    },
+    "email": {
+      "title": "Email code",
+      "description": "We email you a 6-digit code at sign-in. Also your way back in if you lose your phone.",
+      "setupTitle": "Set up email codes",
+      "setupHelp": "We send a code to your account email now. This also proves your inbox works, which matters because email is the recovery route.",
+      "sendCode": "Email me a code",
+      "sentTo": "We sent a code to {{email}}.",
+      "enable": "Turn on",
+      "enabled": "Email code is on"
+    },
+    "passkey": {
+      "title": "Passkeys",
+      "description": "Sign in with your fingerprint, face or device PIN. No code to type.",
+      "addShort": "Add passkey",
+      "addTitle": "Add a passkey",
+      "addHelp": "Your browser will ask you to confirm with this device.",
+      "add": "Continue",
+      "nameLabel": "Name (optional)",
+      "namePlaceholder": "For example: MacBook",
+      "cancelled": "Cancelled. Nothing was added.",
+      "failed": "The passkey could not be added.",
+      "enabled": "Passkey added",
+      "unsupported": "Not supported in this browser",
+      "unnamed": "Passkey",
+      "added": "Added {{date}}"
+    },
+    "backup": {
+      "title": "Backup codes",
+      "none": "No codes yet. Keep them somewhere safe in case you lose your phone.",
+      "low": "Only {{count}} left. Make new ones soon.",
+      "remaining": "{{count}} unused codes.",
+      "generate": "Create codes",
+      "regenerate": "Make new codes",
+      "generateTitle": "Create backup codes",
+      "generateHelp": "You get 10 one-time codes. Making new codes cancels the old ones.",
+      "yourCodes": "Your backup codes",
+      "showOnce": "Save these now. They are shown only once, and each works one time.",
+      "copy": "Copy",
+      "copied": "Codes copied",
+      "download": "Download",
+      "saved": "I saved them"
+    },
+    "devices": {
+      "title": "Trusted devices",
+      "description": "Browsers that skip the second step for 30 days.",
+      "unknown": "Browser",
+      "thisBrowser": "This browser",
+      "expires": "Trusted until {{date}}",
+      "lastUsed": "last used {{date}}",
+      "revoke": "Revoke",
+      "revokeAll": "Revoke all"
+    },
+    "stepUp": {
+      "title": "Confirm it's you",
+      "help": "To remove a method, enter your password and a code.",
+      "confirm": "Confirm",
+      "enterBackup": "Enter a backup code",
+      "method": {
+        "totp": "App",
+        "email": "Email",
+        "backup": "Backup code"
+      }
+    }
+  },
+  "twoFactorPolicy": {
+    "title": "Require two-factor authentication",
+    "description": "Owner only. Force users to set up a second step, with time to do it.",
+    "global": "Everyone by default",
+    "modes": {
+      "off": "Off",
+      "admins": "Admins",
+      "everyone": "Everyone"
+    },
+    "modeHelp": {
+      "off": "Nobody is forced. Users can still turn it on themselves.",
+      "admins": "Owners and Admins must set it up.",
+      "everyone": "Every user must set it up."
+    },
+    "graceDays": "Days to set it up",
+    "save": "Save",
+    "saved": "Policy saved",
+    "perAccount": "Per client account",
+    "perAccountHelp": "Override the default for one account. After the grace period, users without a method can only reach Settings.",
+    "inherit": "Use default"
+  },
+  "twoFactorReset": {
+    "title": "Two-factor authentication",
+    "reset": "Reset 2FA",
+    "confirm": "This removes every 2FA method for {{name}} and signs them out. Check it is really them first, for example on a call.",
+    "done": "2FA reset for {{name}}"
+  },
+  "securityLog": {
+    "title": "Security log",
+    "description": "Sign-ins, second-factor checks and changes to protection. Kept for 180 days.",
+    "allEvents": "All events",
+    "userId": "User ID",
+    "from": "From",
+    "to": "To",
+    "empty": "No events found.",
+    "unknownUser": "Unknown user",
+    "by": "by {{name}}",
+    "loadMore": "Load more",
+    "events": {
+      "login_success": "Signed in",
+      "login_failed": "Sign-in failed",
+      "login_rate_limited": "Sign-in rate limited",
+      "challenge_started": "Second step started",
+      "challenge_success": "Second step passed",
+      "challenge_failed": "Wrong code",
+      "challenge_locked": "Locked after wrong codes",
+      "method_enabled": "Method turned on",
+      "method_disabled": "Method turned off",
+      "email_code_sent": "Email code sent",
+      "backup_codes_generated": "Backup codes created",
+      "backup_code_used": "Backup code used",
+      "trusted_device_added": "Device trusted",
+      "trusted_device_used": "Trusted device used",
+      "trusted_device_revoked": "Device trust revoked",
+      "passkey_added": "Passkey added",
+      "passkey_removed": "Passkey removed",
+      "password_changed": "Password changed",
+      "admin_reset": "2FA reset by Owner",
+      "policy_changed": "Policy changed",
+      "enrollment_forced": "Setup required"
+    }
   }
 }

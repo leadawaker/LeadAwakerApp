@@ -9,6 +9,10 @@ import { type Server } from "http";
 
 import { registerAuthAndAdminRoutes } from "./auth";
 import { registerAccountsRoutes } from "./accounts";
+import { registerTwoFactorRoutes } from "./twoFactor";
+import { registerTwoFactorAdminRoutes } from "./twoFactorAdmin";
+import { enforceTwoFactorEnrollment } from "../twoFactor/policy";
+import { startSecurityEventPruner } from "../twoFactor/audit";
 import { registerCampaignsRoutes } from "./campaigns";
 import { registerLeadsRoutes, startBookingReminders } from "./leads";
 import { registerConversationsRoutes } from "./conversations";
@@ -84,6 +88,11 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
 
   // ── Core routes ───────────────────────────────────────────────────────
   registerAuthAndAdminRoutes(app);
+  registerTwoFactorRoutes(app);
+  // After the grace period, a user under the require-2FA policy with no method can only reach /api/auth/*.
+  app.use("/api", enforceTwoFactorEnrollment);
+  registerTwoFactorAdminRoutes(app);
+  startSecurityEventPruner();
   registerAccountsRoutes(app);
   registerCampaignsRoutes(app);
   registerLeadsRoutes(app);

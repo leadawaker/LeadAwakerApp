@@ -219,5 +219,161 @@
     "hidePassword": "Wachtwoord verbergen",
     "showPassword": "Wachtwoord tonen",
     "error": "Fout"
+  },
+  "twoFactor": {
+    "title": "Tweestapsverificatie",
+    "description": "Voeg een tweede stap toe bij het inloggen, zodat een gestolen wachtwoord niet genoeg is.",
+    "on": "Aan",
+    "off": "Uit",
+    "remove": "Verwijderen",
+    "removed": "Verwijderd",
+    "set": "Instellen",
+    "cancel": "Annuleren",
+    "continue": "Doorgaan",
+    "passwordRequired": "Vul je wachtwoord in.",
+    "confirmPassword": "Bevestig je wachtwoord",
+    "wrongPassword": "Dat wachtwoord klopt niet.",
+    "invalidCode": "Die code klopt niet.",
+    "genericError": "Er ging iets mis. Probeer het opnieuw.",
+    "enterCode": "Vul de code van 6 cijfers in",
+    "noticeTitle": "Tweestapsverificatie is verplicht",
+    "requiredNow": "Tweestapsverificatie is nu verplicht. Stel hieronder een methode in om de app te blijven gebruiken.",
+    "requiredSoon": "Tweestapsverificatie is verplicht voor je account. Stel het binnen {{count}} dagen in.",
+    "totp": {
+      "title": "Authenticator-app",
+      "description": "Een code van 6 cijfers uit een app zoals Google Authenticator, 1Password of Authy.",
+      "setupTitle": "Authenticator-app instellen",
+      "scanTitle": "Scan deze QR-code",
+      "scanHelp": "Open je authenticator-app, voeg een account toe en scan de code. Vul dan de code van 6 cijfers in die de app toont.",
+      "qrAlt": "QR-code voor je authenticator-app",
+      "manualKey": "Scannen lukt niet? Voer deze sleutel handmatig in:",
+      "enable": "Inschakelen",
+      "enabled": "Authenticator-app staat aan"
+    },
+    "email": {
+      "title": "E-mailcode",
+      "description": "We mailen je bij het inloggen een code van 6 cijfers. Ook je weg terug als je je telefoon kwijt bent.",
+      "setupTitle": "E-mailcodes instellen",
+      "setupHelp": "We sturen nu een code naar het e-mailadres van je account. Zo weten we ook dat je inbox werkt, wat telt omdat e-mail de herstelroute is.",
+      "sendCode": "Mail me een code",
+      "sentTo": "We hebben een code gestuurd naar {{email}}.",
+      "enable": "Inschakelen",
+      "enabled": "E-mailcode staat aan"
+    },
+    "passkey": {
+      "title": "Passkeys",
+      "description": "Log in met je vingerafdruk, gezicht of pincode van het apparaat. Geen code om in te typen.",
+      "addShort": "Passkey toevoegen",
+      "addTitle": "Een passkey toevoegen",
+      "addHelp": "Je browser vraagt je om te bevestigen met dit apparaat.",
+      "add": "Doorgaan",
+      "nameLabel": "Naam (optioneel)",
+      "namePlaceholder": "Bijvoorbeeld: MacBook",
+      "cancelled": "Geannuleerd. Er is niets toegevoegd.",
+      "failed": "De passkey kon niet worden toegevoegd.",
+      "enabled": "Passkey toegevoegd",
+      "unsupported": "Niet ondersteund in deze browser",
+      "unnamed": "Passkey",
+      "added": "Toegevoegd op {{date}}"
+    },
+    "backup": {
+      "title": "Back-upcodes",
+      "none": "Nog geen codes. Bewaar ze op een veilige plek voor als je je telefoon kwijtraakt.",
+      "low": "Nog maar {{count}} over. Maak binnenkort nieuwe.",
+      "remaining": "{{count}} ongebruikte codes.",
+      "generate": "Codes maken",
+      "regenerate": "Nieuwe codes maken",
+      "generateTitle": "Back-upcodes maken",
+      "generateHelp": "Je krijgt 10 codes voor eenmalig gebruik. Nieuwe codes maken zet de oude buiten werking.",
+      "yourCodes": "Je back-upcodes",
+      "showOnce": "Bewaar deze nu. Je ziet ze maar één keer en elke code werkt één keer.",
+      "copy": "Kopiëren",
+      "copied": "Codes gekopieerd",
+      "download": "Downloaden",
+      "saved": "Ik heb ze bewaard"
+    },
+    "devices": {
+      "title": "Vertrouwde apparaten",
+      "description": "Browsers die de tweede stap 30 dagen overslaan.",
+      "unknown": "Browser",
+      "thisBrowser": "Deze browser",
+      "expires": "Vertrouwd tot {{date}}",
+      "lastUsed": "laatst gebruikt {{date}}",
+      "revoke": "Intrekken",
+      "revokeAll": "Alles intrekken"
+    },
+    "stepUp": {
+      "title": "Bevestig dat jij het bent",
+      "help": "Vul je wachtwoord en een code in om een methode te verwijderen.",
+      "confirm": "Bevestigen",
+      "enterBackup": "Vul een back-upcode in",
+      "method": {
+        "totp": "App",
+        "email": "E-mail",
+        "backup": "Back-upcode"
+      }
+    }
+  },
+  "twoFactorPolicy": {
+    "title": "Tweestapsverificatie verplichten",
+    "description": "Alleen voor de Owner. Dwing gebruikers een tweede stap in te stellen, met tijd om dat te doen.",
+    "global": "Standaard voor iedereen",
+    "modes": {
+      "off": "Uit",
+      "admins": "Beheerders",
+      "everyone": "Iedereen"
+    },
+    "modeHelp": {
+      "off": "Niemand wordt gedwongen. Gebruikers kunnen het zelf nog steeds aanzetten.",
+      "admins": "Owners en Admins moeten het instellen.",
+      "everyone": "Elke gebruiker moet het instellen."
+    },
+    "graceDays": "Dagen om het in te stellen",
+    "save": "Opslaan",
+    "saved": "Beleid opgeslagen",
+    "perAccount": "Per klantaccount",
+    "perAccountHelp": "Wijk voor één account af van de standaard. Na de uitsteltermijn kunnen gebruikers zonder methode alleen nog bij Instellingen.",
+    "inherit": "Standaard gebruiken"
+  },
+  "twoFactorReset": {
+    "title": "Tweestapsverificatie",
+    "reset": "2FA resetten",
+    "confirm": "Dit verwijdert alle 2FA-methoden van {{name}} en logt de gebruiker uit. Controleer eerst dat het echt diegene is, bijvoorbeeld in een gesprek.",
+    "done": "2FA gereset voor {{name}}"
+  },
+  "securityLog": {
+    "title": "Beveiligingslog",
+    "description": "Inlogpogingen, controles van de tweede stap en wijzigingen in de beveiliging. 180 dagen bewaard.",
+    "allEvents": "Alle gebeurtenissen",
+    "userId": "Gebruikers-ID",
+    "from": "Van",
+    "to": "Tot",
+    "empty": "Geen gebeurtenissen gevonden.",
+    "unknownUser": "Onbekende gebruiker",
+    "by": "door {{name}}",
+    "loadMore": "Meer laden",
+    "events": {
+      "login_success": "Ingelogd",
+      "login_failed": "Inloggen mislukt",
+      "login_rate_limited": "Inloggen geblokkeerd (te vaak)",
+      "challenge_started": "Tweede stap gestart",
+      "challenge_success": "Tweede stap geslaagd",
+      "challenge_failed": "Verkeerde code",
+      "challenge_locked": "Geblokkeerd na foute codes",
+      "method_enabled": "Methode ingeschakeld",
+      "method_disabled": "Methode uitgeschakeld",
+      "email_code_sent": "E-mailcode verstuurd",
+      "backup_codes_generated": "Back-upcodes gemaakt",
+      "backup_code_used": "Back-upcode gebruikt",
+      "trusted_device_added": "Apparaat vertrouwd",
+      "trusted_device_used": "Vertrouwd apparaat gebruikt",
+      "trusted_device_revoked": "Vertrouwen ingetrokken",
+      "passkey_added": "Passkey toegevoegd",
+      "passkey_removed": "Passkey verwijderd",
+      "password_changed": "Wachtwoord gewijzigd",
+      "admin_reset": "2FA gereset door Owner",
+      "policy_changed": "Beleid gewijzigd",
+      "enrollment_forced": "Instellen verplicht"
+    }
   }
 }

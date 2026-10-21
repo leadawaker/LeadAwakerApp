@@ -10,6 +10,7 @@ import { fromDbKeys } from "../dbKeys";
 import { handleZodError, wrapAsync, frontendBaseUrl } from "./_helpers";
 import { sendInviteEmail } from "../email";
 import crypto from "crypto";
+import { stripSecrets } from "../twoFactor/pending";
 
 /** Send an invite email and report whether it actually went out, so the route
  *  can tell the UI instead of claiming success. The invite link still works
@@ -43,7 +44,9 @@ export function registerUsersRoutes(app: Express): void {
     if (!isOwner(sessionUser)) {
       data = data.filter((u: any) => u.role !== "Owner");
     }
-    res.json(data);
+    // Never expose credentials; `twoFactorEnabled` lets the Owner reset UI show its button.
+    const withTwoFactor = await storage.userIdsWithTwoFactor();
+    res.json(data.map((u: any) => ({ ...stripSecrets(u), twoFactorEnabled: withTwoFactor.has(u.id) })));
   }));
 
   app.get("/api/users/:id", requireAuth, wrapAsync(async (req, res) => {
@@ -55,7 +58,7 @@ export function registerUsersRoutes(app: Express): void {
       return res.status(404).json({ message: "User not found" });
     }
     // Never expose password hash
-    const { passwordHash: _, ...safeUser } = user;
+    const safeUser = stripSecrets(user);
     res.json(safeUser);
   }));
 
@@ -108,7 +111,7 @@ export function registerUsersRoutes(app: Express): void {
       }
       invalidateUserCache(targetId);
       if (!updated) return res.status(404).json({ message: "User not found" });
-      const { passwordHash: _, ...safeUser } = updated;
+      const safeUser = stripSecrets(updated);
       res.json(safeUser);
     } catch (err: any) {
       console.error("Error updating user:", err);
@@ -151,7 +154,7 @@ export function registerUsersRoutes(app: Express): void {
         if (!updated) return res.status(500).json({ message: "Failed to re-invite user" });
         invalidateUserCache(existing.id!);
 
-        const { passwordHash: _, ...safeUser } = updated;
+        const safeUser = stripSecrets(updated);
 
         const baseUrl = frontendBaseUrl(req);
         const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}&lang=${encodeURIComponent(String(lang))}`;
@@ -193,7 +196,7 @@ export function registerUsersRoutes(app: Express): void {
         createdAt: new Date(), // stamp Member Since at invite time (Date object, never ISO string)
       } as any);
 
-      const { passwordHash: _, ...safeUser } = newUser;
+      const safeUser = stripSecrets(newUser);
 
       const baseUrl = frontendBaseUrl(req);
       const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(email)}&lang=${encodeURIComponent(String(lang))}`;
@@ -256,7 +259,7 @@ export function registerUsersRoutes(app: Express): void {
       invalidateUserCache(targetId);
       if (!updated) return res.status(404).json({ message: "Failed to update user" });
 
-      const { passwordHash: _, ...safeUser } = updated;
+      const safeUser = stripSecrets(updated);
 
       const baseUrl = frontendBaseUrl(req);
       const inviteLink = `${baseUrl}/accept-invite?token=${inviteToken}&email=${encodeURIComponent(user.email || "")}&lang=${encodeURIComponent(String(lang))}`;
@@ -313,7 +316,7 @@ export function registerUsersRoutes(app: Express): void {
       if (!updated) return res.status(404).json({ message: "Failed to update user" });
       invalidateUserCache(targetId);
 
-      const { passwordHash: _, ...safeUser } = updated;
+      const safeUser = stripSecrets(updated);
 
       res.json({
         user: safeUser,

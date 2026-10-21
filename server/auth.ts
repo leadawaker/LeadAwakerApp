@@ -8,6 +8,10 @@ import { pool } from "./db";
 import { storage } from "./storage";
 import type { Express, Request, Response, NextFunction } from "express";
 import type { Users } from "@shared/schema";
+import { getMethodInfo, startPending, finishLogin, toSafeUser } from "./twoFactor/pending";
+import { findTrustedDevice, markTrustedDeviceUsed } from "./twoFactor/trustedDevice";
+import { logSecurityEvent } from "./twoFactor/audit";
+import { sha256Hex } from "./twoFactor/crypto";
 
 // ─── Session type augmentation ───────────────────────────────────────────────
 
@@ -35,7 +39,7 @@ declare global {
   }
 }
 
-async function verifyPassword(password: string, hash: string): Promise<boolean> {
+export async function verifyPassword(password: string, hash: string): Promise<boolean> {
   const parts = hash.split(":");
   if (parts.length !== 3 || parts[0] !== "scrypt") return false;
   const [, salt, stored] = parts;
@@ -279,29 +283,43 @@ async function getOrCreateSandboxAccount(): Promise<number> {
 // ─── Auth Route Handlers (mounted by registerRoutes) ────────────────────────
 
 export function registerAuthRoutes(app: Express) {
-  /** POST /api/auth/login — email + password */
+  /**
+   * POST /api/auth/login — email + password.
+   * A user with a second factor gets `{ twoFactorRequired: true, methods }` and NO session
+   * until /api/auth/2fa/verify passes (or a valid trusted-device cookie skips the challenge).
+   */
   app.post("/api/auth/login", (req, res, next) => {
     const clientIp = req.ip || req.socket.remoteAddress || 'unknown';
     if (!checkLoginRateLimit(clientIp)) {
+      logSecurityEvent(req, "login_rate_limited", { userId: null, actorId: null });
       return res.status(429).json({ message: "Too many login attempts. Try again in 1 minute." });
     }
     passport.authenticate(
       "local",
-      (err: Error | null, user: Users | false, info: { message: string } | undefined) => {
+      async (err: Error | null, user: Users | false, info: { message: string } | undefined) => {
         if (err) return next(err);
         if (!user) {
+          // Hash, never the typed address: the log must not become a list of typed credentials.
+          const typed = String(req.body?.email ?? "").toLowerCase().trim();
+          logSecurityEvent(req, "login_failed", { userId: null, actorId: null, meta: { email_hash: typed ? sha256Hex(typed) : null } });
           return res.status(401).json({ message: info?.message || "Invalid credentials" });
         }
-        req.logIn(user, (loginErr) => {
-          if (loginErr) return next(loginErr);
-          // Record last login timestamp (server-side Date object — never an ISO string).
-          // Fire-and-forget: don't block the login response on this write.
-          storage.updateAppUser(user.id!, { lastLoginAt: new Date() } as any)
-            .catch((e) => console.error("[auth] failed to record last login:", e?.message));
-          // Return safe user object (exclude passwordHash)
-          const { passwordHash: _, ...safeUser } = user;
-          res.json({ user: safeUser });
-        });
+        try {
+          const { methods, backup } = await getMethodInfo(user);
+          if (methods.length === 0) {
+            return res.json({ user: await finishLogin(req, user, "password") });
+          }
+          const deviceId = await findTrustedDevice(req, user.id!);
+          if (deviceId) {
+            await markTrustedDeviceUsed(req, user.id!, deviceId);
+            return res.json({ user: await finishLogin(req, user, "trusted_device") });
+          }
+          startPending(req, user);
+          logSecurityEvent(req, "challenge_started", { userId: user.id, actorId: user.id, accountId: user.accountsId });
+          res.json({ twoFactorRequired: true, methods, backup, emailFallback: !!user.email });
+        } catch (e) {
+          next(e);
+        }
       },
     )(req, res, next);
   });
@@ -318,9 +336,12 @@ export function registerAuthRoutes(app: Express) {
   });
 
   /** GET /api/auth/me — returns session user or 401, plus active impersonation state */
-  app.get("/api/auth/me", requireAuth, (req, res) => {
-    const { passwordHash: _, ...safeUser } = req.user!;
-    res.json({ user: safeUser, impersonation: req.session.impersonation ?? null });
+  app.get("/api/auth/me", requireAuth, async (req, res, next) => {
+    try {
+      res.json({ user: await toSafeUser(req.user!, true), impersonation: req.session.impersonation ?? null });
+    } catch (err) {
+      next(err);
+    }
   });
 
   /** POST /api/auth/impersonate — Owner starts impersonating a role/account */
@@ -399,6 +420,10 @@ export function registerAuthRoutes(app: Express) {
       if (!updated) {
         return res.status(500).json({ message: "Failed to update password." });
       }
+      invalidateUserCache(userId);
+      // A new password ends every "trusted device" skip of the second factor.
+      await storage.revokeAllTrustedDevices(userId);
+      logSecurityEvent(req, "password_changed", { userId, actorId: userId });
 
       res.json({ message: "Password changed successfully." });
     } catch (err: any) {

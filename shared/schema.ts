@@ -67,6 +67,8 @@ export const accounts = nocodb.table("Accounts", {
   slug: text("slug"),
   defaultAiName: text("default_ai_name"),
   defaultAiRole: text("default_ai_role"),
+  // Two-factor policy override for this account: off | admins | everyone, NULL = inherit the global policy.
+  require2fa: text("require_2fa"),
   defaultAiStyle: text("default_ai_style"),
   defaultTypoFrequency: text("default_typo_frequency"),
   dataCollectionDisclosure: text("data_collection_disclosure"),
@@ -1263,6 +1265,12 @@ export const users = nocodb.table("Users", {
   passwordHash: text("password_hash"),
   preferences: varchar("preferences"),
   encryptedClaudeApiKey: text("encrypted_claude_api_key"),
+  // Two-factor authentication (specs/two-factor-auth). The secret is AES-GCM encrypted; never return it.
+  totpSecretEnc: text("totp_secret_enc"),
+  totpEnabledAt: timestamp("totp_enabled_at", { withTimezone: true }),
+  totpLastStep: integer("totp_last_step"),
+  email2faEnabledAt: timestamp("email_2fa_enabled_at", { withTimezone: true }),
+  twoFactorRequiredSince: timestamp("two_factor_required_since", { withTimezone: true }),
 }, (t) => [
   index("users_email_idx").on(t.email),
 ]);

@@ -21,5 +21,11 @@ export async function apiFetch(url: string, options?: RequestInit): Promise<Resp
     window.location.href = "/login";
   }
 
+  // The require-2FA policy locks the rest of the API until the user enrolls: send them to Settings.
+  if (res.status === 403 && !url.includes("/api/auth/") && !window.location.pathname.startsWith("/platform/settings")) {
+    const body = await res.clone().json().catch(() => null);
+    if (body?.code === "2FA_ENROLL_REQUIRED") window.location.href = "/platform/settings?tab=profile";
+  }
+
   return res;
 }

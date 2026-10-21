@@ -408,6 +408,24 @@ Who finds the public site (www.leadawaker.com). Owner only, nav bar under Backen
 
 ---
 
+## Two-Factor Authentication (`specs/two-factor-auth/`)
+Login stops after the password when the user has a method; the session is issued only after `/api/auth/2fa/verify`.
+
+| File | Purpose |
+|------|---------|
+| `server/twoFactor/pending.ts` | Pending-2FA session state, `finishLogin`, `toSafeUser`, `stripSecrets`, step-up |
+| `server/twoFactor/{totp,backupCodes,emails,factors,crypto,rateLimit}.ts` | TOTP (RFC 6238, no dependency), backup codes, 2FA emails, factor checks |
+| `server/twoFactor/{trustedDevice,policy,audit,webauthn}.ts` | 30-day trusted-device cookie `la_td`, require-2FA policy + enrollment middleware, audit log writer, WebAuthn config |
+| `server/storage/twoFactor.ts` | Raw-SQL storage for all 2FA tables (Users TOTP columns, passkeys, backup codes, devices, policy, events) |
+| `server/routes/twoFactor.ts` / `twoFactorPasskeys.ts` | `/api/auth/2fa/*`: verify, status, step-up, TOTP, email, backup codes, devices, passkeys |
+| `server/routes/twoFactorAdmin.ts` | Owner only: `/api/admin/security-policy`, per-account override, user 2FA reset, security events |
+| `scripts/migrate-two-factor.mjs` | Idempotent migration for every 2FA table and column |
+| `client/public/login.html` | Static login page, includes the second-step panel (plain JS, en/nl/pt) |
+| `client/src/features/settings/components/TwoFactorCard.tsx` | Settings > Profile card (methods, backup codes, trusted devices) |
+| `client/src/features/settings/components/{TwoFactorPolicyCard,SecurityLogCard}.tsx` | Owner cards in Settings > Preferences |
+| `client/src/features/settings/twoFactor/` | Panels (TOTP, email, passkey, backup, step-up), `useTwoFactor`, `TwoFactorNotice` (grace toast / forced redirect) |
+| `client/src/features/users/components/TwoFactorResetButton.tsx` | Owner "Reset 2FA" in the team user detail panel |
+
 ## Prospects Feature (`features/prospects/`)
 
 | Component | File | Notes |

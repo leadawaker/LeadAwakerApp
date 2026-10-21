@@ -50,3 +50,7 @@ export function decryptApiKey(encryptedData: string): string {
 
   return decrypted;
 }
+
+/** Generic names for the same AES-256-GCM helpers (the 2FA TOTP secret uses these). */
+export const encryptSecret = encryptApiKey;
+export const decryptSecret = decryptApiKey;

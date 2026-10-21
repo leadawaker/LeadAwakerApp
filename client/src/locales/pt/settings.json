@@ -219,5 +219,161 @@
     "hidePassword": "Ocultar senha",
     "showPassword": "Mostrar senha",
     "error": "Erro"
+  },
+  "twoFactor": {
+    "title": "Verificação em duas etapas",
+    "description": "Adicione uma segunda etapa no login para que uma senha roubada não seja suficiente.",
+    "on": "Ativa",
+    "off": "Desativada",
+    "remove": "Remover",
+    "removed": "Removido",
+    "set": "Configurar",
+    "cancel": "Cancelar",
+    "continue": "Continuar",
+    "passwordRequired": "Digite sua senha.",
+    "confirmPassword": "Confirme sua senha",
+    "wrongPassword": "Essa senha não está correta.",
+    "invalidCode": "Esse código não está correto.",
+    "genericError": "Algo deu errado. Tente de novo.",
+    "enterCode": "Digite o código de 6 dígitos",
+    "noticeTitle": "A verificação em duas etapas é obrigatória",
+    "requiredNow": "A verificação em duas etapas agora é obrigatória. Configure um método abaixo para continuar usando o app.",
+    "requiredSoon": "A verificação em duas etapas é obrigatória na sua conta. Configure em até {{count}} dias.",
+    "totp": {
+      "title": "App autenticador",
+      "description": "Um código de 6 dígitos de um app como Google Authenticator, 1Password ou Authy.",
+      "setupTitle": "Configurar o app autenticador",
+      "scanTitle": "Escaneie este QR code",
+      "scanHelp": "Abra seu app autenticador, adicione uma conta e escaneie o código. Depois digite o código de 6 dígitos que ele mostra.",
+      "qrAlt": "QR code para o seu app autenticador",
+      "manualKey": "Não consegue escanear? Digite esta chave à mão:",
+      "enable": "Ativar",
+      "enabled": "App autenticador ativado"
+    },
+    "email": {
+      "title": "Código por e-mail",
+      "description": "Enviamos um código de 6 dígitos por e-mail no login. Também é o seu caminho de volta se perder o celular.",
+      "setupTitle": "Configurar códigos por e-mail",
+      "setupHelp": "Enviamos agora um código para o e-mail da sua conta. Isso também confirma que sua caixa de entrada funciona, o que importa porque o e-mail é a rota de recuperação.",
+      "sendCode": "Enviar código por e-mail",
+      "sentTo": "Enviamos um código para {{email}}.",
+      "enable": "Ativar",
+      "enabled": "Código por e-mail ativado"
+    },
+    "passkey": {
+      "title": "Passkeys",
+      "description": "Entre com sua digital, rosto ou PIN do aparelho. Sem código para digitar.",
+      "addShort": "Adicionar passkey",
+      "addTitle": "Adicionar uma passkey",
+      "addHelp": "Seu navegador vai pedir para você confirmar neste aparelho.",
+      "add": "Continuar",
+      "nameLabel": "Nome (opcional)",
+      "namePlaceholder": "Por exemplo: MacBook",
+      "cancelled": "Cancelado. Nada foi adicionado.",
+      "failed": "Não foi possível adicionar a passkey.",
+      "enabled": "Passkey adicionada",
+      "unsupported": "Não compatível com este navegador",
+      "unnamed": "Passkey",
+      "added": "Adicionada em {{date}}"
+    },
+    "backup": {
+      "title": "Códigos de backup",
+      "none": "Ainda sem códigos. Guarde-os em um lugar seguro, caso perca o celular.",
+      "low": "Restam só {{count}}. Gere novos em breve.",
+      "remaining": "{{count}} códigos não usados.",
+      "generate": "Criar códigos",
+      "regenerate": "Gerar novos códigos",
+      "generateTitle": "Criar códigos de backup",
+      "generateHelp": "Você recebe 10 códigos de uso único. Gerar novos cancela os antigos.",
+      "yourCodes": "Seus códigos de backup",
+      "showOnce": "Guarde estes agora. Eles aparecem só uma vez, e cada um vale uma vez.",
+      "copy": "Copiar",
+      "copied": "Códigos copiados",
+      "download": "Baixar",
+      "saved": "Já guardei"
+    },
+    "devices": {
+      "title": "Dispositivos confiáveis",
+      "description": "Navegadores que pulam a segunda etapa por 30 dias.",
+      "unknown": "Navegador",
+      "thisBrowser": "Este navegador",
+      "expires": "Confiável até {{date}}",
+      "lastUsed": "último uso {{date}}",
+      "revoke": "Revogar",
+      "revokeAll": "Revogar todos"
+    },
+    "stepUp": {
+      "title": "Confirme que é você",
+      "help": "Para remover um método, digite sua senha e um código.",
+      "confirm": "Confirmar",
+      "enterBackup": "Digite um código de backup",
+      "method": {
+        "totp": "App",
+        "email": "E-mail",
+        "backup": "Código de backup"
+      }
+    }
+  },
+  "twoFactorPolicy": {
+    "title": "Exigir verificação em duas etapas",
+    "description": "Só para o Owner. Obrigue os usuários a configurar uma segunda etapa, com prazo para isso.",
+    "global": "Padrão para todos",
+    "modes": {
+      "off": "Desligado",
+      "admins": "Administradores",
+      "everyone": "Todos"
+    },
+    "modeHelp": {
+      "off": "Ninguém é obrigado. Os usuários ainda podem ativar por conta própria.",
+      "admins": "Owners e Admins precisam configurar.",
+      "everyone": "Todos os usuários precisam configurar."
+    },
+    "graceDays": "Dias para configurar",
+    "save": "Salvar",
+    "saved": "Política salva",
+    "perAccount": "Por conta de cliente",
+    "perAccountHelp": "Substitua o padrão em uma conta. Depois do prazo, usuários sem método só acessam as Configurações.",
+    "inherit": "Usar o padrão"
+  },
+  "twoFactorReset": {
+    "title": "Verificação em duas etapas",
+    "reset": "Redefinir 2FA",
+    "confirm": "Isso remove todos os métodos de 2FA de {{name}} e encerra as sessões. Confirme antes que é mesmo a pessoa, por exemplo numa ligação.",
+    "done": "2FA redefinida para {{name}}"
+  },
+  "securityLog": {
+    "title": "Registro de segurança",
+    "description": "Logins, verificações da segunda etapa e mudanças na proteção. Guardado por 180 dias.",
+    "allEvents": "Todos os eventos",
+    "userId": "ID do usuário",
+    "from": "De",
+    "to": "Até",
+    "empty": "Nenhum evento encontrado.",
+    "unknownUser": "Usuário desconhecido",
+    "by": "por {{name}}",
+    "loadMore": "Carregar mais",
+    "events": {
+      "login_success": "Login feito",
+      "login_failed": "Falha no login",
+      "login_rate_limited": "Login bloqueado (tentativas demais)",
+      "challenge_started": "Segunda etapa iniciada",
+      "challenge_success": "Segunda etapa aprovada",
+      "challenge_failed": "Código errado",
+      "challenge_locked": "Bloqueado após códigos errados",
+      "method_enabled": "Método ativado",
+      "method_disabled": "Método desativado",
+      "email_code_sent": "Código enviado por e-mail",
+      "backup_codes_generated": "Códigos de backup criados",
+      "backup_code_used": "Código de backup usado",
+      "trusted_device_added": "Dispositivo confiável",
+      "trusted_device_used": "Dispositivo confiável usado",
+      "trusted_device_revoked": "Confiança revogada",
+      "passkey_added": "Passkey adicionada",
+      "passkey_removed": "Passkey removida",
+      "password_changed": "Senha alterada",
+      "admin_reset": "2FA redefinida pelo Owner",
+      "policy_changed": "Política alterada",
+      "enrollment_forced": "Configuração obrigatória"
+    }
   }
 }

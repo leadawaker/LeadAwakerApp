@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { useLocation } from "wouter";
 import { UsersCardGrid } from "./UsersCardGrid";
+import { TwoFactorResetButton } from "./TwoFactorResetButton";
 import type { UserTableItem } from "./UsersInlineTable";
 import type { AppUser, AccountMap } from "../types";
 import { apiFetch } from "@/lib/apiUtils";
@@ -895,6 +896,14 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
                     </span>
                   )}
                 </div>
+
+                {isOwner && viewingUser.twoFactorEnabled && (
+                  <TwoFactorResetButton
+                    userId={viewingUser.id}
+                    userName={getUserName(viewingUser)}
+                    onDone={() => setViewingUser({ ...viewingUser, twoFactorEnabled: false })}
+                  />
+                )}
 
                 {/* Campaigns — bigger, with avatars */}
                 <div className="mt-4 pt-4 border-t" style={{ borderColor: "var(--line)" }}>

@@ -21,6 +21,7 @@ import {
 import { hydrateUserLanguage } from "@/lib/userLanguage";
 import { hydrateLandingPage, isLandingHydrated, resolveLandingPath } from "@/lib/landingPage";
 import { getQueryFn } from "@/lib/queryClient";
+import { TwoFactorNotice } from "@/features/settings/twoFactor/TwoFactorNotice";
 import { parsePrefs } from "@/lib/userPrefs";
 
 // Route-level code splitting: each page is its own lazy chunk so the initial
@@ -249,6 +250,7 @@ export default function AppArea() {
       <PageEntityProvider>
       <AgentWidgetProvider>
       <BreadcrumbProvider>
+      <TwoFactorNotice />
       <Suspense fallback={<PageLoader />}>
         <Switch>
           {/* Unified CRM routes — agency vs client behaviour is derived from the

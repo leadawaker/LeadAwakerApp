@@ -39,6 +39,7 @@ import { homeReactivationStorage } from "./storage/homeReactivation";
 import { homeReputationStorage } from "./storage/homeReputation";
 import { homeSocialStorage } from "./storage/homeSocial";
 import { socialStorage } from "./storage/social";
+import { twoFactorStorage } from "./storage/twoFactor";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -119,4 +120,5 @@ export const storage = {
   ...homeReputationStorage,
   ...homeSocialStorage,
   ...socialStorage,
+  ...twoFactorStorage,
 };

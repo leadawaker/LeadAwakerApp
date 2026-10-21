@@ -10,6 +10,7 @@ import type { UserProfile } from "../types";
 import { AvatarEditor } from "./AvatarEditor";
 import { PersonalInfoCard } from "./PersonalInfoCard";
 import { SecurityCard } from "./SecurityCard";
+import { TwoFactorCard } from "./TwoFactorCard";
 
 /**
  * Settings > Profile: who you are. Identity header (avatar), personal info with
@@ -127,6 +128,7 @@ export function ProfileTab({
       />
 
       <SecurityCard email={email} flat={flat} />
+      <TwoFactorCard flat={flat} />
     </div>
   );
 }

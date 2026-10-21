@@ -320,6 +320,17 @@
   .forgot { color: var(--wine); }
   .forgot:hover { text-decoration: underline; }
 
+  /* Second step (two-factor) */
+  [hidden] { display: none !important; }
+  #twofa[hidden] { display: none; }
+  .twofa-help { margin: 0 0 18px; font-size: 14px; line-height: 1.5; color: var(--mute); }
+  .twofa-code { padding-left: 16px; text-align: center; letter-spacing: 0.22em; font-weight: 600; }
+  .twofa-links { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; font-size: 14px; }
+  .link-btn { background: none; border: none; padding: 0; font: inherit; color: var(--wine); cursor: pointer; text-align: left; }
+  .link-btn:hover { text-decoration: underline; }
+  .link-btn:disabled { opacity: 0.5; cursor: default; text-decoration: none; }
+  #twofa-back { display: inline-block; margin-top: 18px; font-size: 14px; }
+
   .btn {
     width: 100%;
     display: inline-flex;
@@ -473,7 +484,34 @@
         </button>
       </form>
 
-      <p class="divider">
+      <div id="twofa" hidden>
+        <p class="twofa-help" id="twofa-help"></p>
+        <form id="twofa-form" autocomplete="off" novalidate>
+          <div id="twofa-code-wrap">
+            <label class="label" for="twofa-code" id="twofa-label"></label>
+            <div class="field">
+              <input id="twofa-code" name="code" type="text" class="input twofa-code" autocomplete="one-time-code" maxlength="11" />
+            </div>
+          </div>
+          <div class="row-between">
+            <label class="check-label">
+              <input id="twofa-trust" type="checkbox" class="check" />
+              <span id="twofa-trust-label"></span>
+            </label>
+          </div>
+          <button type="submit" id="twofa-submit" class="btn">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label" id="twofa-submit-label"></span>
+            <svg class="arrow" viewBox="0 0 14 10" fill="none" aria-hidden="true">
+              <path d="M1 5h12M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </form>
+        <div class="twofa-links" id="twofa-links"></div>
+        <a href="#" class="forgot" id="twofa-back"></a>
+      </div>
+
+      <p class="divider" id="login-divider">
         Don't have an account?
         <a href="/book-call">Schedule a demo</a>
       </p>
@@ -488,10 +526,47 @@
     en: {
       'nav.home': 'Home', 'nav.try': 'Try', 'nav.about': 'About',
       'nav.login': 'Login', 'nav.open_app': 'Open app',
+      'tf.eyebrow': '— Almost there', 'tf.title': 'Second step',
+      'tf.help.totp': 'Enter the 6-digit code from your authenticator app.',
+      'tf.help.email': 'We emailed a code to {email}. Enter it below.',
+      'tf.help.backup': 'Enter one of your backup codes. Each works once.',
+      'tf.help.passkey': 'Use your fingerprint, face or device PIN to confirm.',
+      'tf.label.totp': 'Authenticator code', 'tf.label.email': 'Email code', 'tf.label.backup': 'Backup code',
+      'tf.trust': 'Trust this device for 30 days', 'tf.verify': 'Verify', 'tf.verifying': 'Verifying…', 'tf.usePasskey': 'Use passkey',
+      'tf.link.totp': 'Use my authenticator app', 'tf.link.email': 'Email me a code', 'tf.link.backup': 'Use a backup code', 'tf.link.passkey': 'Use a passkey',
+      'tf.resend': 'Send a new code', 'tf.resendIn': 'Send a new code in {s}s', 'tf.back': 'Back to sign in',
+      'tf.sending': 'Sending…', 'tf.invalid': 'That code is not right.', 'tf.expired': 'Your sign-in expired. Please sign in again.',
+      'tf.emailFailed': 'We could not send the email. Try again in a minute.', 'tf.passkeyFailed': 'The passkey was not accepted.', 'tf.network': 'Network error, please try again',
     },
     nl: {
       'nav.home': 'Start', 'nav.try': 'Probeer', 'nav.about': 'Over',
       'nav.login': 'Inloggen', 'nav.open_app': 'Open app',
+      'tf.eyebrow': '— Bijna klaar', 'tf.title': 'Tweede stap',
+      'tf.help.totp': 'Vul de code van 6 cijfers uit je authenticator-app in.',
+      'tf.help.email': 'We hebben een code gemaild naar {email}. Vul hem hieronder in.',
+      'tf.help.backup': 'Vul een van je back-upcodes in. Elke code werkt één keer.',
+      'tf.help.passkey': 'Bevestig met je vingerafdruk, gezicht of pincode van het apparaat.',
+      'tf.label.totp': 'Authenticatorcode', 'tf.label.email': 'E-mailcode', 'tf.label.backup': 'Back-upcode',
+      'tf.trust': 'Vertrouw dit apparaat 30 dagen', 'tf.verify': 'Verifiëren', 'tf.verifying': 'Bezig…', 'tf.usePasskey': 'Passkey gebruiken',
+      'tf.link.totp': 'Mijn authenticator-app gebruiken', 'tf.link.email': 'Mail me een code', 'tf.link.backup': 'Een back-upcode gebruiken', 'tf.link.passkey': 'Een passkey gebruiken',
+      'tf.resend': 'Stuur een nieuwe code', 'tf.resendIn': 'Nieuwe code over {s}s', 'tf.back': 'Terug naar inloggen',
+      'tf.sending': 'Versturen…', 'tf.invalid': 'Die code klopt niet.', 'tf.expired': 'Je inlogsessie is verlopen. Log opnieuw in.',
+      'tf.emailFailed': 'We konden de e-mail niet versturen. Probeer het over een minuut opnieuw.', 'tf.passkeyFailed': 'De passkey is niet geaccepteerd.', 'tf.network': 'Netwerkfout, probeer het opnieuw',
+    },
+    pt: {
+      'nav.home': 'Início', 'nav.try': 'Experimentar', 'nav.about': 'Sobre',
+      'nav.login': 'Entrar', 'nav.open_app': 'Abrir app',
+      'tf.eyebrow': '— Quase lá', 'tf.title': 'Segunda etapa',
+      'tf.help.totp': 'Digite o código de 6 dígitos do seu app autenticador.',
+      'tf.help.email': 'Enviamos um código para {email}. Digite-o abaixo.',
+      'tf.help.backup': 'Digite um dos seus códigos de backup. Cada um vale uma vez.',
+      'tf.help.passkey': 'Use sua digital, rosto ou PIN do aparelho para confirmar.',
+      'tf.label.totp': 'Código do autenticador', 'tf.label.email': 'Código por e-mail', 'tf.label.backup': 'Código de backup',
+      'tf.trust': 'Confiar neste aparelho por 30 dias', 'tf.verify': 'Verificar', 'tf.verifying': 'Verificando…', 'tf.usePasskey': 'Usar passkey',
+      'tf.link.totp': 'Usar meu app autenticador', 'tf.link.email': 'Enviar um código por e-mail', 'tf.link.backup': 'Usar um código de backup', 'tf.link.passkey': 'Usar uma passkey',
+      'tf.resend': 'Enviar um novo código', 'tf.resendIn': 'Novo código em {s}s', 'tf.back': 'Voltar ao login',
+      'tf.sending': 'Enviando…', 'tf.invalid': 'Esse código não está correto.', 'tf.expired': 'Seu login expirou. Entre de novo.',
+      'tf.emailFailed': 'Não conseguimos enviar o e-mail. Tente de novo em um minuto.', 'tf.passkeyFailed': 'A passkey não foi aceita.', 'tf.network': 'Erro de rede, tente de novo',
     }
   };
   function applyLang(lang) {
@@ -505,7 +580,8 @@
       b.classList.toggle('active', b.dataset.lang === lang);
     });
   }
-  const initial = (navigator.language || '').startsWith('nl') ? 'nl' : 'en';
+  const navLang = (navigator.language || '').slice(0, 2);
+  const initial = navLang === 'nl' ? 'nl' : navLang === 'pt' ? 'pt' : 'en';
   applyLang(initial);
   document.querySelectorAll('.nav-lang button').forEach((b) => {
     b.addEventListener('click', () => applyLang(b.dataset.lang));
@@ -591,6 +667,30 @@
     btnLabel.textContent = on ? 'Signing in…' : 'Sign in';
   }
 
+  // Everything that happens once the server has issued a session (password only, or after the second step).
+  function finishLogin(user) {
+    const email = emailEl.value.trim();
+    localStorage.setItem('leadawaker_auth', 'session');
+    // Drop the previous user's landing page and service toggles: the app re-reads them from the session.
+    ['leadawaker_landing_page','leadawaker_show_speed_page','leadawaker_show_missed_calls_page','leadawaker_show_reputation_page'].forEach((k) => localStorage.removeItem(k));
+    localStorage.setItem('leadawaker_user_email', user.email || email);
+    localStorage.setItem('leadawaker_user_role', user.role || 'Viewer');
+    localStorage.setItem('leadawaker_user_name', user.fullName1 || user.email || email);
+    if (user.avatarUrl) localStorage.setItem('leadawaker_user_avatar', user.avatarUrl);
+    localStorage.setItem('leadawaker_current_account_id', String(user.accountsId || 1));
+    if (rememberEl.checked) localStorage.setItem('leadawaker_remember_me', 'true');
+    else localStorage.removeItem('leadawaker_remember_me');
+
+    // Back to the alert link that sent the user here (/go/:code), if any.
+    let next = '/platform';
+    try {
+      const back = sessionStorage.getItem('leadawaker_return_to') || '';
+      sessionStorage.removeItem('leadawaker_return_to');
+      if (/^\/go\/[A-Za-z0-9]{8}(\?(to=(settings|calls)|call=[A-Za-z0-9_-]{1,80}))?$/.test(back)) next = back;
+    } catch (_) {}
+    window.location.href = next;
+  }
+
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
     clearError();
@@ -612,32 +712,246 @@
         return;
       }
       const data = await res.json();
-      const user = data.user || {};
-      localStorage.setItem('leadawaker_auth', 'session');
-      // Drop the previous user's landing page and service toggles: the app re-reads them from the session.
-      ['leadawaker_landing_page','leadawaker_show_speed_page','leadawaker_show_missed_calls_page','leadawaker_show_reputation_page'].forEach((k) => localStorage.removeItem(k));
-      localStorage.setItem('leadawaker_user_email', user.email || email);
-      localStorage.setItem('leadawaker_user_role', user.role || 'Viewer');
-      localStorage.setItem('leadawaker_user_name', user.fullName1 || user.email || email);
-      if (user.avatarUrl) localStorage.setItem('leadawaker_user_avatar', user.avatarUrl);
-      localStorage.setItem('leadawaker_current_account_id', String(user.accountsId || 1));
-      if (rememberEl.checked) localStorage.setItem('leadawaker_remember_me', 'true');
-      else localStorage.removeItem('leadawaker_remember_me');
-
-      // Back to the alert link that sent the user here (/go/:code), if any.
-      let next = '/platform';
-      try {
-        const back = sessionStorage.getItem('leadawaker_return_to') || '';
-        sessionStorage.removeItem('leadawaker_return_to');
-        if (/^\/go\/[A-Za-z0-9]{8}(\?(to=(settings|calls)|call=[A-Za-z0-9_-]{1,80}))?$/.test(back)) next = back;
-      } catch (_) {}
-      window.location.href = next;
+      if (data.twoFactorRequired) { show2fa(data); return; }
+      finishLogin(data.user || {});
     } catch (_) {
       showError('Network error — please try again');
     } finally {
       setLoading(false);
     }
   });
+
+  // ----- Second step (two-factor) -----
+  const tfPanel = document.getElementById('twofa');
+  const tfForm = document.getElementById('twofa-form');
+  const tfHelp = document.getElementById('twofa-help');
+  const tfLabel = document.getElementById('twofa-label');
+  const tfCode = document.getElementById('twofa-code');
+  const tfCodeWrap = document.getElementById('twofa-code-wrap');
+  const tfTrust = document.getElementById('twofa-trust');
+  const tfTrustLabel = document.getElementById('twofa-trust-label');
+  const tfSubmit = document.getElementById('twofa-submit');
+  const tfSubmitLabel = document.getElementById('twofa-submit-label');
+  const tfLinks = document.getElementById('twofa-links');
+  const tfBack = document.getElementById('twofa-back');
+  const eyebrowEl = document.querySelector('.card .eyebrow');
+  const titleEl = document.querySelector('.card h1.title');
+  const dividerEl = document.getElementById('login-divider');
+  const original = { eyebrow: eyebrowEl.textContent, titleHtml: titleEl.innerHTML };
+  let tf = null; // { methods, backup, emailFallback, mode, sentTo, resendAt }
+  let resendTimer = null;
+
+  function T(key, vars) {
+    const lang = document.documentElement.lang;
+    let v = (I18N[lang] || {})[key] || I18N.en[key] || key;
+    if (vars) Object.keys(vars).forEach((k) => { v = v.replace('{' + k + '}', vars[k]); });
+    return v;
+  }
+  const passkeySupported = () => !!(window.PublicKeyCredential && navigator.credentials && navigator.credentials.get);
+
+  function b64uToBuf(str) {
+    const pad = '='.repeat((4 - (str.length % 4)) % 4);
+    const bin = atob((str + pad).replace(/-/g, '+').replace(/_/g, '/'));
+    const buf = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) buf[i] = bin.charCodeAt(i);
+    return buf.buffer;
+  }
+  function bufToB64u(buf) {
+    const bytes = new Uint8Array(buf);
+    let bin = '';
+    for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  function leaveTwoFactor(message) {
+    tf = null;
+    clearInterval(resendTimer);
+    tfPanel.hidden = true;
+    form.hidden = false;
+    dividerEl.hidden = false;
+    eyebrowEl.textContent = original.eyebrow;
+    titleEl.innerHTML = original.titleHtml;
+    tfCode.value = '';
+    pwEl.value = '';
+    clearError();
+    if (message) showError(message);
+  }
+
+  function show2fa(data) {
+    tf = { methods: data.methods || [], backup: !!data.backup, emailFallback: !!data.emailFallback, mode: null, sentTo: null, resendAt: 0 };
+    form.hidden = true;
+    dividerEl.hidden = true;
+    tfPanel.hidden = false;
+    eyebrowEl.textContent = T('tf.eyebrow');
+    titleEl.textContent = T('tf.title');
+    tfTrustLabel.textContent = T('tf.trust');
+    tfBack.textContent = T('tf.back');
+    const first = tf.methods.includes('totp') ? 'totp'
+      : (tf.methods.includes('passkey') && passkeySupported()) ? 'passkey'
+      : tf.emailFallback ? 'email' : 'backup';
+    setMode(first);
+  }
+
+  function availableModes() {
+    const m = [];
+    if (tf.methods.includes('totp')) m.push('totp');
+    if (tf.methods.includes('passkey') && passkeySupported()) m.push('passkey');
+    if (tf.emailFallback) m.push('email');
+    if (tf.backup) m.push('backup');
+    return m;
+  }
+
+  function setMode(mode) {
+    tf.mode = mode;
+    clearError();
+    clearInterval(resendTimer);
+    tfCode.value = '';
+    const isPasskey = mode === 'passkey';
+    tfCodeWrap.hidden = isPasskey;
+    tfLabel.textContent = T('tf.label.' + mode);
+    tfCode.placeholder = mode === 'backup' ? 'XXXXX-XXXXX' : '123456';
+    tfCode.maxLength = mode === 'backup' ? 11 : 7;
+    tfHelp.textContent = T('tf.help.' + mode, { email: tf.sentTo || '' });
+    tfSubmitLabel.textContent = isPasskey ? T('tf.usePasskey') : T('tf.verify');
+    renderLinks();
+    if (mode === 'email' && !tf.sentTo) sendEmailCode();
+    else if (!isPasskey) tfCode.focus();
+  }
+
+  function renderLinks() {
+    tfLinks.innerHTML = '';
+    availableModes().filter((m) => m !== tf.mode).forEach((m) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'link-btn';
+      b.textContent = T('tf.link.' + m);
+      b.addEventListener('click', () => setMode(m));
+      tfLinks.appendChild(b);
+    });
+    if (tf.mode === 'email' && tf.sentTo) {
+      const r = document.createElement('button');
+      r.type = 'button';
+      r.className = 'link-btn';
+      r.id = 'twofa-resend';
+      tfLinks.appendChild(r);
+      const tick = () => {
+        const left = Math.max(0, Math.ceil((tf.resendAt - Date.now()) / 1000));
+        r.disabled = left > 0;
+        r.textContent = left > 0 ? T('tf.resendIn', { s: left }) : T('tf.resend');
+        if (left === 0) clearInterval(resendTimer);
+      };
+      r.addEventListener('click', sendEmailCode);
+      tick();
+      resendTimer = setInterval(tick, 1000);
+    }
+  }
+
+  async function post(path, body) {
+    const res = await fetch(path, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body || {})
+    });
+    let data = {};
+    try { data = await res.json(); } catch (_) {}
+    return { ok: res.ok, status: res.status, data };
+  }
+
+  async function sendEmailCode() {
+    clearError();
+    tfHelp.textContent = T('tf.sending');
+    try {
+      const r = await post('/api/auth/2fa/email/send');
+      if (r.ok) {
+        tf.sentTo = r.data.sentTo;
+        tf.resendAt = Date.now() + 60000;
+        tfHelp.textContent = T('tf.help.email', { email: tf.sentTo });
+        renderLinks();
+        tfCode.focus();
+      } else if (r.data && r.data.restart) {
+        leaveTwoFactor(T('tf.expired'));
+      } else {
+        tfHelp.textContent = T('tf.help.email', { email: tf.sentTo || '' });
+        showError(r.status === 429 && r.data.message ? r.data.message : T('tf.emailFailed'));
+      }
+    } catch (_) {
+      showError(T('tf.network'));
+    }
+  }
+
+  function setTfLoading(on) {
+    tfSubmit.disabled = on;
+    tfSubmit.dataset.loading = on ? '1' : '0';
+    tfSubmitLabel.textContent = on ? T('tf.verifying') : (tf && tf.mode === 'passkey' ? T('tf.usePasskey') : T('tf.verify'));
+  }
+
+  async function verifyWith(payload) {
+    setTfLoading(true);
+    try {
+      const r = await post('/api/auth/2fa/verify', Object.assign({ trustDevice: tfTrust.checked }, payload));
+      if (r.ok) { finishLogin(r.data.user || {}); return; }
+      if (r.data && r.data.restart) { leaveTwoFactor(r.status === 401 && r.data.message ? r.data.message : T('tf.expired')); return; }
+      showError(r.status === 429 && r.data.message ? r.data.message : (payload.method === 'passkey' ? T('tf.passkeyFailed') : T('tf.invalid')));
+    } catch (_) {
+      showError(T('tf.network'));
+    } finally {
+      if (tf) setTfLoading(false);
+    }
+  }
+
+  async function runPasskey() {
+    clearError();
+    setTfLoading(true);
+    try {
+      const opt = await post('/api/auth/2fa/passkey/auth/options');
+      if (!opt.ok) {
+        if (opt.data && opt.data.restart) leaveTwoFactor(T('tf.expired')); else showError(T('tf.passkeyFailed'));
+        return;
+      }
+      const o = opt.data;
+      const cred = await navigator.credentials.get({ publicKey: {
+        challenge: b64uToBuf(o.challenge),
+        rpId: o.rpId,
+        timeout: o.timeout,
+        userVerification: o.userVerification || 'required',
+        allowCredentials: (o.allowCredentials || []).map((c) => ({ type: 'public-key', id: b64uToBuf(c.id), transports: c.transports }))
+      } });
+      if (!cred) { showError(T('tf.passkeyFailed')); return; }
+      const rsp = cred.response;
+      await verifyWith({
+        method: 'passkey',
+        response: {
+          id: cred.id,
+          rawId: bufToB64u(cred.rawId),
+          type: cred.type,
+          authenticatorAttachment: cred.authenticatorAttachment || undefined,
+          clientExtensionResults: cred.getClientExtensionResults ? cred.getClientExtensionResults() : {},
+          response: {
+            clientDataJSON: bufToB64u(rsp.clientDataJSON),
+            authenticatorData: bufToB64u(rsp.authenticatorData),
+            signature: bufToB64u(rsp.signature),
+            userHandle: rsp.userHandle ? bufToB64u(rsp.userHandle) : undefined
+          }
+        }
+      });
+    } catch (err) {
+      // The user dismissing the browser prompt is not an error worth shouting about.
+      if (!(err && err.name === 'NotAllowedError')) showError(T('tf.passkeyFailed'));
+    } finally {
+      if (tf) setTfLoading(false);
+    }
+  }
+
+  tfForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    clearError();
+    if (!tf) return;
+    if (tf.mode === 'passkey') { runPasskey(); return; }
+    const code = tfCode.value.trim();
+    if (!code) return;
+    verifyWith({ method: tf.mode, code: code });
+  });
+  tfBack.addEventListener('click', function(e) { e.preventDefault(); leaveTwoFactor(); });
 })();
 </script>
 </body>

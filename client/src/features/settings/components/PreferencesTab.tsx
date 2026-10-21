@@ -6,6 +6,8 @@ import { AppearanceCard } from "./AppearanceCard";
 import { LandingPageCard } from "./LandingPageCard";
 import { NotificationsSection } from "./NotificationsSection";
 import { OwnerToolsCard } from "./OwnerToolsCard";
+import { SecurityLogCard } from "./SecurityLogCard";
+import { TwoFactorPolicyCard } from "./TwoFactorPolicyCard";
 import { SettingsCard } from "./SettingsCard";
 import { TimezoneCard } from "./TimezoneCard";
 
@@ -45,6 +47,8 @@ export function PreferencesTab({
         </SettingsCard>
       )}
       {isOwner && <OwnerToolsCard profile={profile} onProfileUpdated={onProfileUpdated} flat={flat} />}
+      {isOwner && <TwoFactorPolicyCard flat={flat} />}
+      {isOwner && <SecurityLogCard flat={flat} />}
     </div>
   );
 }
