@@ -40,6 +40,9 @@ import { homeReputationStorage } from "./storage/homeReputation";
 import { homeSocialStorage } from "./storage/homeSocial";
 import { socialStorage } from "./storage/social";
 import { twoFactorStorage } from "./storage/twoFactor";
+import { socialStudioStorage } from "./storage/socialStudio";
+import { socialDmStorage } from "./storage/socialDm";
+import { socialInsightsStorage } from "./storage/socialInsights";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -121,4 +124,7 @@ export const storage = {
   ...homeSocialStorage,
   ...socialStorage,
   ...twoFactorStorage,
+  ...socialStudioStorage,
+  ...socialDmStorage,
+  ...socialInsightsStorage,
 };

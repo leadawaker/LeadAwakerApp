@@ -10,6 +10,7 @@
 // Every write is conditional (updateIf) on the status, approval and content the decision was made
 // from: if a Manager rejects or the agency edits mid-tick, their change wins and nothing goes out.
 // Each post has its own try/catch; one failure never stops the tick.
+import { socialPageLink } from "@shared/socialStudio";
 import type { InsertSocialPost, SocialPost } from "@shared/schema";
 import { DEFAULT_TIMEZONE, classifyScheduledPost, type ApprovalStatus, type SocialPostStatus } from "@shared/socialPosts";
 import { isTransientIgError } from "./instagramApi";
@@ -21,7 +22,6 @@ const FIRST_RUN_MS = 30_000;
 const PROCESSING_TIMEOUT_MS = 15 * 60_000;
 /** A due post that keeps hitting network errors (not Graph errors) is retried for this long. */
 const START_RETRY_WINDOW_MS = 15 * 60_000;
-const POST_LINK = "/platform/accounts?tab=social";
 const ERROR_MAX = 500;
 
 type ContainerCode = "IN_PROGRESS" | "FINISHED" | "ERROR" | "EXPIRED" | "PUBLISHED";
@@ -74,7 +74,7 @@ async function fail(d: PublisherDeps, p: SocialPost, from: SocialPostStatus, rea
     title: "Instagram post failed",
     body: `${label(p)} (account ${p.accountsId}) failed: ${reason.slice(0, 200)}`,
     accountId: p.accountsId,
-    link: POST_LINK,
+    link: socialPageLink(p.accountsId),
   });
 }
 
@@ -103,7 +103,7 @@ async function handleDue(d: PublisherDeps, p: SocialPost, now: Date): Promise<vo
       title: "Instagram post held",
       body: `${label(p)} (account ${p.accountsId}) reached its time without approval. Pick a new time to schedule it again.`,
       accountId: p.accountsId,
-      link: POST_LINK,
+      link: socialPageLink(p.accountsId),
     });
     return;
   }
@@ -147,9 +147,9 @@ async function markPublished(d: PublisherDeps, p: SocialPost, token: string, med
     title: "Instagram post published",
     body: `${label(p)} (account ${p.accountsId}) is live${permalink ? `: ${permalink}` : "."}`,
     accountId: p.accountsId,
-    link: POST_LINK,
+    link: socialPageLink(p.accountsId),
   });
-  await d.notifyAccountManagers(p.accountsId, { type: "social_post_published", key: "published", vars: { caption: p.caption }, link: POST_LINK });
+  await d.notifyAccountManagers(p.accountsId, { type: "social_post_published", key: "published", vars: { caption: p.caption }, link: socialPageLink(p.accountsId) });
 }
 
 async function handlePublishing(d: PublisherDeps, p: SocialPost, now: Date): Promise<void> {
@@ -201,7 +201,7 @@ async function handleReminder(d: PublisherDeps, p: SocialPost, now: Date): Promi
     type: "social_post_needs_approval",
     key: "needs_approval",
     vars: { caption: p.caption, when: formatWhen(p.scheduledAt, account?.timeZone || DEFAULT_TIMEZONE, account?.language) },
-    link: POST_LINK,
+    link: socialPageLink(p.accountsId),
   });
 }
 

@@ -184,9 +184,11 @@ app.use((req, res, next) => {
   console.log("[notifications] VAPID configured:", !!(process.env.VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY));
   console.log("[notifications] Telegram configured:", !!(process.env.TELEGRAM_BOT_TOKEN || process.env.TELEGRAM_WEBHOOK_URL));
 
-  // Start Gmail sync polling (every 5 min)
-  const { startGmailSync } = await import("./gmail-sync");
-  startGmailSync();
+  // Start Gmail sync polling (every 5 min). DISABLE_BACKGROUND_JOBS=1 (see routes/index.ts) skips it.
+  if (process.env.DISABLE_BACKGROUND_JOBS !== "1") {
+    const { startGmailSync } = await import("./gmail-sync");
+    startGmailSync();
+  }
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

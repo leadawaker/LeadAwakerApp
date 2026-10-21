@@ -198,6 +198,23 @@ export function registerConversationsRoutes(app: Express): void {
             return;
           }
 
+          // Instagram comment-to-DM leads (ig:<id>): only through the guarded Instagram sender, which
+          // needs dm_mode "live" AND INSTAGRAM_DM_LIVE=1 and respects the 24 h window and opt-outs.
+          // Never the Telegram default below.
+          if (rawChannelId.startsWith("ig:")) {
+            const { deliverInstagramReply } = await import("./socialDm");
+            const text = String((interaction as any).content ?? "");
+            // Text only: a voice memo (data: URL) or a photo is not sent as an Instagram DM.
+            const unsupported = text.startsWith("data:") || (parsed.data as any).type === "audio" || !!(req.body as any).attachment;
+            const r = unsupported ? { status: "failed" as const, reason: "unsupported" } : await deliverInstagramReply(lead as any, text);
+            const status = r.status === "delivered" ? "delivered" : r.status === "dry_run" ? "dry_run" : "failed";
+            const stamp = status === "delivered" ? { deliveredAt: new Date() } : status === "failed" ? { failedAt: new Date() } : {};
+            await storage.updateInteraction(interaction.id!, { status, ...stamp } as any);
+            if (r.status === "failed") console.warn(`[channel-sender] Instagram reply to lead ${leadId} not sent: ${r.reason}`);
+            if (interaction.accountsId) broadcast(interaction.accountsId, "interaction_updated", { id: interaction.id, status });
+            return;
+          }
+
           // WhatsApp delivery is keyed by the lead's phone, not the channel_identifier
           // (demo leads store an opaque "wa-demo:<hash>" identifier, never a phone).
           const isWhatsApp =

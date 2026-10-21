@@ -28,6 +28,14 @@ export function registerSocialPostRoutes(app: Express): void {
       insertSocialPost: (row) => storage.insertSocialPost(row),
       updateSocialPostIf: (postId, allowed, fields, opts) => storage.updateSocialPostIf(postId, allowed, fields, opts),
       getSocialUserNames: (ids) => storage.getSocialUserNames(ids),
+      async isUploadHeldByScript(publicId) {
+        try {
+          return await storage.isUploadHeldByScript(publicId);
+        } catch (err: any) {
+          if (err?.code === "42P01") return false; // studio tables not created yet: no script holds anything
+          throw err;
+        }
+      },
     },
     video: { receive: receiveVideo, inspect: inspectVideo },
     notifyAgency,

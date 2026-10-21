@@ -1,5 +1,5 @@
 import {
-  AudioLines, BookUser, Building2, CalendarDays, ClipboardList, Home, Megaphone, MessageSquare, Receipt, type LucideIcon,
+  AudioLines, BookUser, Building2, CalendarDays, Clapperboard, ClipboardList, Home, Megaphone, MessageSquare, Receipt, type LucideIcon,
 } from "lucide-react";
 import type { AgencyBarKey, ClientNavKey } from "./navGates";
 
@@ -10,6 +10,7 @@ export const NAV_ICON: Record<ClientNavKey | AgencyBarKey, LucideIcon> = {
   chats: MessageSquare,
   leads: BookUser,
   calendar: CalendarDays,
+  social: Clapperboard,
   myReceptionist: Building2,
   billing: Receipt,
   campaigns: Megaphone,

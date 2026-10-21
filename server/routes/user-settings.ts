@@ -4,6 +4,7 @@ import { users } from "@shared/schema";
 import { eq } from "drizzle-orm";
 import { encryptApiKey, decryptApiKey } from "../encryption";
 import { requireAuth } from "../auth";
+import { decodeAudioPayload, transcribeWithGroq } from "../lib/groqTranscribe";
 
 export function registerUserSettingsRoutes(app: Express): void {
   // Set Claude API key
@@ -97,45 +98,16 @@ export function registerUserSettingsRoutes(app: Express): void {
     if (!req.user) return res.status(401).json({ message: "Not authenticated" });
     if (req.user.role !== "Owner") return res.status(403).json({ message: "Forbidden" });
 
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) return res.status(200).json({ error: "NO_GROQ_API_KEY" });
+    if (!process.env.GROQ_API_KEY) return res.status(200).json({ error: "NO_GROQ_API_KEY" });
 
     const { audio_data, mime_type } = req.body;
-    if (!audio_data) return res.status(400).json({ message: "No audio data provided" });
+    if (!audio_data || typeof audio_data !== "string") return res.status(400).json({ message: "No audio data provided" });
 
-    try {
-      const base64Clean = (audio_data as string).replace(/^data:[^,]+,/, "");
-      const audioBuffer = Buffer.from(base64Clean, "base64");
-
-      const rawMime = (mime_type || "audio/webm") as string;
-      const mimeBase = rawMime.split(";")[0].trim();
-      const ext = mimeBase.includes("webm") ? "webm" : mimeBase.includes("ogg") ? "ogg" : mimeBase.includes("mp4") ? "mp4" : mimeBase.includes("wav") ? "wav" : "webm";
-
-      const file = new File([audioBuffer], `recording.${ext}`, { type: mimeBase });
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("model", "whisper-large-v3-turbo");
-      formData.append("response_format", "json");
-      formData.append("temperature", "0");
-
-      const response = await fetch("https://api.groq.com/openai/v1/audio/transcriptions", {
-        method: "POST",
-        headers: { "Authorization": `Bearer ${apiKey}` },
-        body: formData,
-      });
-
-      if (!response.ok) {
-        const errBody = await response.text();
-        console.error("[voice-note/transcribe] Groq error:", errBody);
-        return res.status(500).json({ error: "Transcription failed", detail: errBody });
-      }
-
-      const json = await response.json() as any;
-      const text = json.text?.trim() ?? "";
-      return res.json({ transcription: text });
-    } catch (err) {
-      console.error("[voice-note/transcribe] Error:", err);
-      return res.status(500).json({ error: "Internal error" });
+    const result = await transcribeWithGroq(decodeAudioPayload(audio_data as string), (mime_type || "audio/webm") as string);
+    if ("error" in result) {
+      console.error("[voice-note/transcribe] Groq error:", result.detail ?? result.error);
+      return res.status(500).json({ error: "Transcription failed", detail: result.detail });
     }
+    return res.json({ transcription: result.text });
   });
 }

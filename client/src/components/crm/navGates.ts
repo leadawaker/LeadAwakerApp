@@ -10,42 +10,55 @@ export interface ClientNavFacts {
   hasReceptionist: boolean;
   /** Website chat or WhatsApp is on for the account: the Chats page has something to show. */
   hasChats: boolean;
+  /** The agency switched Social on for the account (Accounts.social_enabled). */
+  hasSocial: boolean;
 }
 
-export type ClientNavKey = "home" | "calls" | "chats" | "leads" | "calendar" | "myReceptionist" | "billing" | "campaigns";
+export type ClientNavKey = "home" | "calls" | "chats" | "leads" | "calendar" | "social" | "myReceptionist" | "billing" | "campaigns";
 
 /** Desktop nav bar for a client: one flat list, no section headings. */
 export function clientNavItems(f: ClientNavFacts): ClientNavKey[] {
   const out: ClientNavKey[] = ["home"];
   if (f.voiceLive) out.push("calls");
   if (f.hasChats) out.push("chats");
-  out.push("leads", "calendar", "myReceptionist");
+  out.push("leads", "calendar");
+  if (f.hasSocial) out.push("social");
+  out.push("myReceptionist");
   if (f.hasInvoices) out.push("billing");
   if (f.hasReactivation) out.push("campaigns");
   return out;
 }
 
-/** Mobile bottom bar (More is added by the bar itself). Leads takes the Chats slot when there are no chats. */
+/** Room for four tabs; More is the fifth. */
+const CLIENT_BAR_SLOTS = 4;
+
+/**
+ * Mobile bottom bar (More is added by the bar itself). Leads takes the Chats slot when there are no chats.
+ * Socials takes the free fourth slot when there is one (no voice line), else it sits on More.
+ */
 export function clientBottomBar(f: ClientNavFacts): ClientNavKey[] {
   const out: ClientNavKey[] = ["home"];
   if (f.voiceLive) out.push("calls");
   out.push("calendar", f.hasChats ? "chats" : "leads");
+  if (f.hasSocial && out.length < CLIENT_BAR_SLOTS) out.push("social");
   return out;
 }
 
-/** The client More page, top to bottom: Account, Leads (when not in the bar), Billing, Campaigns. */
+/** The client More page, top to bottom: Socials (when not in the bar), Account, Leads (when not in the bar), Billing, Campaigns. */
 export function clientMoreItems(f: ClientNavFacts): ClientNavKey[] {
   const bar = clientBottomBar(f);
-  const out: ClientNavKey[] = ["myReceptionist"];
+  const out: ClientNavKey[] = [];
+  if (f.hasSocial && !bar.includes("social")) out.push("social");
+  out.push("myReceptionist");
   if (!bar.includes("leads")) out.push("leads");
   if (f.hasInvoices) out.push("billing");
   if (f.hasReactivation) out.push("campaigns");
   return out;
 }
 
-export type AgencyBarKey = "home" | "calls" | "chats" | "calendar" | "tasks";
+export type AgencyBarKey = "home" | "calls" | "chats" | "calendar" | "tasks" | "social";
 
-/** Agency bottom bar: Calendar fills the Calls slot for someone without voice access. */
+/** Agency bottom bar: Calendar fills the Calls slot for someone without voice access. Socials is on the More page. */
 export function agencyBottomBar(hasVoiceCalls: boolean): AgencyBarKey[] {
   return hasVoiceCalls ? ["home", "calls", "chats", "tasks"] : ["home", "chats", "calendar", "tasks"];
 }
@@ -60,6 +73,7 @@ export const CLIENT_NAV_HREF: Record<ClientNavKey, string> = {
   chats: "/platform/chat",
   leads: "/platform/contacts",
   calendar: "/platform/calendar",
+  social: "/platform/social",
   myReceptionist: "/platform/accounts",
   billing: "/platform/billing",
   campaigns: "/platform/campaigns",
@@ -73,6 +87,7 @@ export function clientNavLabelKey(k: ClientNavKey, f: ClientNavFacts): string {
     case "chats": return "sidebar.chats";
     case "leads": return "sidebar.leads";
     case "calendar": return "sidebar.calendar";
+    case "social": return "sidebar.social";
     case "myReceptionist": return myAccountLabelKey(f);
     case "billing": return "sidebar.billing";
     case "campaigns": return "sidebar.reactivation";

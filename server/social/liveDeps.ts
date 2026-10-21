@@ -68,6 +68,18 @@ export function liveRefresherDeps(): RefresherDeps {
   };
 }
 
+/** An upload is kept while a post or a studio script uses it. */
+async function uploadInUse(publicId: string): Promise<boolean> {
+  if ((await storage.getSocialPostByPublicId(publicId)) !== null) return true;
+  try {
+    return await storage.isUploadHeldByScript(publicId);
+  } catch (err: any) {
+    // Social_Scripts not created yet (script/create-social-studio-tables.mjs): keep the file, delete nothing by mistake.
+    if (err?.code === "42P01") return true;
+    throw err;
+  }
+}
+
 export function liveCleanup(): Promise<number> {
-  return cleanupOrphanUploads(SOCIAL_UPLOAD_DIR, async (publicId) => (await storage.getSocialPostByPublicId(publicId)) !== null, new Date());
+  return cleanupOrphanUploads(SOCIAL_UPLOAD_DIR, uploadInUse, new Date());
 }

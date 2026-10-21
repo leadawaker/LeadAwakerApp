@@ -130,8 +130,8 @@ export function uploadSocialVideo(accountId: number, file: File, onProgress: (pc
   });
 }
 
-export async function createSocialPost(accountId: number, body: PostBody): Promise<void> {
-  await throwUnlessOk(await apiFetch(postsUrl(accountId), jsonInit("POST", body)));
+export async function createSocialPost(accountId: number, body: PostBody): Promise<SocialPostView> {
+  return (await throwUnlessOk(await apiFetch(postsUrl(accountId), jsonInit("POST", body)))).json();
 }
 
 export async function updateSocialPost(accountId: number, postId: number, body: Partial<PostBody>): Promise<void> {

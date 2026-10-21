@@ -1,7 +1,7 @@
 // New post / edit post, shown inline at the top of the Social tab (UI_STANDARDS 9.2.11: no
 // dialog for forms). Video upload with progress and preview, caption with a live counter and
 // Meta's limits, date and time in the account's zone (sent as strings, the server converts),
-// three toggles. Agency only; the server checks again.
+// three toggles, and the caption writer (CaptionWriter). Agency only; the server checks again.
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -11,6 +11,7 @@ import { API_BASE } from "@/lib/apiUtils";
 import { IG_CAPTION_MAX, validateCaption } from "@shared/socialPosts";
 import { SocialApiError, createSocialPost, updateSocialPost, uploadSocialVideo, type SocialPostView } from "../api/socialApi";
 import { editBody, errorKey, toLocalDateTime, uploadPrecheck, type PostForm } from "../lib/posts";
+import { CaptionWriter } from "./CaptionWriter";
 
 const labelStyle: React.CSSProperties = { fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5, display: "block" };
 const inputStyle: React.CSSProperties = { fontSize: 12.5, padding: "8px 11px", width: "100%" };
@@ -32,20 +33,25 @@ function formFor(post: SocialPostView, timeZone: string): PostForm {
   };
 }
 
-export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, onSaved, onConflict }: {
+export function PostSheet({ accountId, timeZone, post, focus = "all", script, initialUploadId, onClose, onSaved, onConflict }: {
   accountId: number;
   timeZone: string;
   /** Absent for a new post. */
   post?: SocialPostView;
   /** "time": a held post being rescheduled; only the time fields are shown. */
   focus?: "all" | "time";
+  /** The studio script this post is (or will be) made from: the caption writer reads it. */
+  script?: { id: number; title: string };
+  /** A new post from a script whose video is already uploaded or pulled from HeyGen. */
+  initialUploadId?: string;
   onClose: () => void;
-  onSaved: () => void;
+  /** The saved post (the server's answer) for a new post; nothing for an edit. */
+  onSaved: (created?: SocialPostView) => void;
   /** A 409: someone (or the publisher) got there first. The list refreshes, the panel stays with the message. */
   onConflict: () => void;
 }) {
   const { t } = useTranslation("accounts");
-  const original = useMemo(() => (post ? formFor(post, timeZone) : blankForm()), [post, timeZone]);
+  const original = useMemo(() => (post ? formFor(post, timeZone) : { ...blankForm(), uploadId: initialUploadId ?? "" }), [post, timeZone, initialUploadId]);
   const [form, setForm] = useState<PostForm>(original);
   const [previewUrl, setPreviewUrl] = useState<string>(post?.videoUrl ? `${API_BASE}${post.videoUrl}` : "");
   const [progress, setProgress] = useState<number | null>(null);
@@ -90,13 +96,13 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, o
   };
 
   const save = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<SocialPostView | undefined> => {
       if (!post) return createSocialPost(accountId, form);
       const body = editBody(original, form);
-      if (Object.keys(body).length === 0) return;
-      return updateSocialPost(accountId, post.id, body);
+      if (Object.keys(body).length > 0) await updateSocialPost(accountId, post.id, body);
+      return undefined;
     },
-    onSuccess: onSaved,
+    onSuccess: (created) => onSaved(created),
     onError: (err) => {
       if (err instanceof SocialApiError && err.status === 409) onConflict();
     },
@@ -132,6 +138,9 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, o
                 </button>
               </div>
               <p style={{ margin: 0, fontSize: 11.5, color: "var(--mute)", lineHeight: 1.5 }}>{t("social.posts.sheet.videoHelp")}</p>
+              {form.uploadId && !previewUrl && (
+                <p style={{ margin: 0, fontSize: 12, color: "var(--ink-soft)", fontWeight: 600 }} data-testid="social-studio-video">{t("social.posts.sheet.studioVideo")}</p>
+              )}
               {uploading && (
                 <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress ?? 0} aria-label={t("social.posts.sheet.uploading")}
                   className="neu-inset" style={{ height: 8, borderRadius: "var(--r-pill)", overflow: "hidden" }}>
@@ -156,6 +165,9 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", onClose, o
             <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: captionLength > IG_CAPTION_MAX ? "hsl(var(--destructive))" : "var(--mute)" }}>
               {captionLength} / {IG_CAPTION_MAX}
             </span>
+          </div>
+          <div style={{ marginTop: 8 }}>
+            <CaptionWriter accountId={accountId} scriptId={script?.id} scriptTitle={script?.title} onPick={(c) => set("caption", c)} />
           </div>
         </div>
       )}

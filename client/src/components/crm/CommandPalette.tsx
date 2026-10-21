@@ -46,6 +46,7 @@ import {
   Send,
   Star,
   PhoneMissed,
+  Clapperboard,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -94,6 +95,8 @@ export function CommandPalette() {
     { href: `${prefix}/chat`, labelKey: "sidebar.conversations", icon: MessageSquare, keywords: "conversations chats interactions whatsapp website threads leads messages inbox", agencyOnly: true },
     { href: `${prefix}/calendar`, labelKey: "sidebar.calendar", icon: Calendar, keywords: "events schedule appointments bookings" },
     { href: `${prefix}/contacts`, labelKey: "sidebar.leads", icon: BookUser, keywords: "leads contacts people directory table pipeline" },
+    // Clients reach it through the client list below (only when Social is on for their account).
+    { href: `${prefix}/social`, labelKey: "sidebar.social", icon: Clapperboard, keywords: "socials social instagram reels posts videos studio scripts captions insights" },
     { href: `${prefix}/tasks`, labelKey: "sidebar.tasks", icon: ClipboardList, keywords: "tasks todo kanban gantt", agencyOnly: true },
     { href: `${prefix}/accounts`, labelKey: "sidebar.accounts", icon: Building2, keywords: "clients organizations" },
     { href: `${prefix}/billing`, labelKey: "sidebar.billing", icon: Receipt, keywords: "billing invoices payments subscription plan" },

@@ -12,7 +12,12 @@
   "requestChange": {
     "note": "Lead Awaker looks after these settings for you.",
     "button": "Request a change",
-    "areas": { "chat": "the website chat", "alerts": "alerts", "phone": "the phone line", "integrations": "integrations" },
+    "areas": {
+      "chat": "the website chat",
+      "alerts": "alerts",
+      "phone": "the phone line",
+      "integrations": "integrations"
+    },
     "draft": "Hi Gabriel, I'd like to change something under {{area}}: "
   },
   "sidebar": {
@@ -65,7 +70,8 @@
     "documentation": "Documentation",
     "socialMedia": "Social Media",
     "founderInbox": "Support inbox",
-    "logout": "Log out"
+    "logout": "Log out",
+    "social": "Socials"
   },
   "sidebarSections": {
     "engage": "Engage",

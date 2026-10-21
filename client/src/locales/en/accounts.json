@@ -491,8 +491,7 @@
       "voice": "Phone",
       "chat": "Chat",
       "alerts": "Alerts",
-      "automations": "Automations",
-      "social": "Social"
+      "automations": "Automations"
     },
     "createAccount": "Create account",
     "compactPanel": "Compact panel",
@@ -914,7 +913,9 @@
         "failed": "Something went wrong while connecting. Try again."
       },
       "attentionHelpNamed": "@{{username}}: the connection needs a fresh login before posts can go out.",
-      "loading": "Loading Instagram status"
+      "loading": "Loading Instagram status",
+      "goToSocials": "Go to Socials",
+      "toastOpenSocials": "Open Socials"
     },
     "posts": {
       "title": "Scheduled Reels",
@@ -983,7 +984,8 @@
         "requiresApprovalHelp": "Not posted until a manager of the account approves it.",
         "save": "Save changes",
         "schedule": "Schedule",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "studioVideo": "The video from the studio is attached. You can replace it."
       },
       "errors": {
         "not_editable": "This post is already being published, so it can no longer be changed.",

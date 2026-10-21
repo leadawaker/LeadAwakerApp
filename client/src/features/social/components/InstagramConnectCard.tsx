@@ -5,13 +5,16 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Instagram, Loader2 } from "lucide-react";
+import { Link } from "wouter";
+import { ArrowRight, Instagram, Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ConnectedPill } from "@/features/accounts/components/workspace/atoms";
 import { IconTile, SectionHead } from "@/features/accounts/components/workspace/integrationsAtoms";
 import { disconnectInstagram, fetchSocialStatus, setSocialEnabled, socialStatusKey, startInstagramConnect } from "../api/socialApi";
 import { canActOnSocial, connectCardMode } from "../lib/socialState";
+import { socialPageLink } from "@shared/socialStudio";
+import { setPersistedSelection } from "@/hooks/usePersistedSelection";
 
 const cardStyle: React.CSSProperties = { borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" };
 const lineStyle: React.CSSProperties = { fontSize: 12.5, color: "var(--mute)", lineHeight: 1.5, margin: 0 };
@@ -31,7 +34,11 @@ function SocialSwitchRow({ accountId, enabled }: { accountId: number; enabled: b
   const qc = useQueryClient();
   const toggle = useMutation({
     mutationFn: (next: boolean) => setSocialEnabled(accountId, next),
-    onSettled: () => qc.invalidateQueries({ queryKey: socialStatusKey(accountId) }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: socialStatusKey(accountId) });
+      // The Socials page's account picker lists the accounts with Social on.
+      qc.invalidateQueries({ queryKey: ["/api/accounts"] });
+    },
   });
   return (
     <div className="row" style={{ gap: 12, padding: "14px 0 0", marginTop: 16, borderTop: "1.5px solid var(--line)" }}>
@@ -51,7 +58,8 @@ function SocialSwitchRow({ accountId, enabled }: { accountId: number; enabled: b
   );
 }
 
-export function InstagramConnectCard({ accountId }: { accountId: number }) {
+/** "Go to Socials": shown on the connected card in Integrations, not on the Socials page itself. */
+export function InstagramConnectCard({ accountId, showSocialsLink = true }: { accountId: number; showSocialsLink?: boolean }) {
   const { t } = useTranslation("accounts");
   const { isAgencyUser, userRole } = useWorkspace();
   const qc = useQueryClient();
@@ -71,7 +79,11 @@ export function InstagramConnectCard({ accountId }: { accountId: number }) {
     <button
       type="button"
       className="la-btn la-btn--wine"
-      onClick={() => startInstagramConnect(accountId)}
+      onClick={() => {
+        // The OAuth flow returns to the Accounts page: open it on this account, wherever Connect was pressed.
+        setPersistedSelection("selected-account-id", accountId);
+        startInstagramConnect(accountId);
+      }}
       data-testid="instagram-connect"
     >
       <Instagram size={14} />
@@ -106,11 +118,19 @@ export function InstagramConnectCard({ accountId }: { accountId: number }) {
               <p style={{ ...lineStyle, fontSize: 11.5 }}>{t("social.connect.renews")}</p>
             </div>
           </div>
-          {canAct && !confirming && (
-            <div>
-              <button type="button" className="la-btn la-btn--soft" onClick={() => setConfirming(true)} data-testid="instagram-disconnect">
-                {t("social.connect.disconnect")}
-              </button>
+          {!confirming && (canAct || showSocialsLink) && (
+            <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+              {showSocialsLink && status?.enabled && (
+                <Link href={socialPageLink(accountId)} className="la-btn la-btn--wine" data-testid="instagram-go-to-socials">
+                  {t("social.connect.goToSocials")}
+                  <ArrowRight size={14} />
+                </Link>
+              )}
+              {canAct && (
+                <button type="button" className="la-btn la-btn--soft" onClick={() => setConfirming(true)} data-testid="instagram-disconnect">
+                  {t("social.connect.disconnect")}
+                </button>
+              )}
             </div>
           )}
           {canAct && confirming && (

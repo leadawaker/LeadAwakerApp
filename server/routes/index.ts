@@ -57,9 +57,13 @@ import { registerClientAlertsRoutes } from "./clientAlerts";
 import { registerHomeRoutes } from "./home";
 import { registerSocialRoutes } from "./social";
 import { registerSocialPostRoutes } from "./socialPosts";
+import { registerSocialStudioRoutes } from "./socialStudio";
+import { registerSocialDmRoutes } from "./socialDm";
+import { registerSocialInsightRoutes } from "./socialInsights";
 import { startPublicDemoPoller } from "../publicDemo/poller";
 import { startSocialPublisher } from "../social/publisher";
 import { startSocialTokenRefresher } from "../social/tokenRefresher";
+import { startSocialInsights } from "../social/insightsCollector";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
@@ -130,6 +134,9 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerHomeRoutes(app);
   registerSocialRoutes(app);
   registerSocialPostRoutes(app);
+  registerSocialStudioRoutes(app);
+  registerSocialDmRoutes(app);
+  registerSocialInsightRoutes(app);
 
   // ── One-time startup tasks ────────────────────────────────────────────
   // Seed default AI agents (idempotent)
@@ -139,6 +146,12 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   await seedSupportBotPrompt();
 
   // ── Background notifiers ──────────────────────────────────────────────
+  // DISABLE_BACKGROUND_JOBS=1 skips every timer below: for a second server (a test copy on other
+  // ports) that must never publish, notify or poll on its own.
+  if (process.env.DISABLE_BACKGROUND_JOBS === "1") {
+    console.log("[jobs] DISABLE_BACKGROUND_JOBS=1: background jobs not started");
+    return httpServer;
+  }
   startSupportCleanup();            // daily support session cleanup
   startTaskNotifiers();             // task due-soon (30min) + task overdue (30min)
   startBookingReminders();          // booking reminder 1h before call (10min check)
@@ -148,6 +161,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   startPublicDemoPoller();          // landing-page website demos: call task, budget, retention (60s)
   startSocialPublisher();           // Instagram: publish due Reels (60s)
   startSocialTokenRefresher();      // Instagram: token refresh + upload cleanup (6h)
+  startSocialInsights();            // Instagram: insights snapshots (1h tick; fresh posts hourly, the rest 6h)
 
   return httpServer;
 }

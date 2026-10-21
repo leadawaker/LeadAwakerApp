@@ -10,9 +10,14 @@
     "needsYou": "Aguarda você"
   },
   "requestChange": {
-    "note": "A Lead Awaker cuida dessas configura\u00e7\u00f5es para voc\u00ea.",
-    "button": "Pedir uma altera\u00e7\u00e3o",
-    "areas": { "chat": "o chat do site", "alerts": "alertas", "phone": "a linha telef\u00f4nica", "integrations": "integra\u00e7\u00f5es" },
+    "note": "A Lead Awaker cuida dessas configurações para você.",
+    "button": "Pedir uma alteração",
+    "areas": {
+      "chat": "o chat do site",
+      "alerts": "alertas",
+      "phone": "a linha telefônica",
+      "integrations": "integrações"
+    },
     "draft": "Oi Gabriel, gostaria de mudar algo em {{area}}: "
   },
   "sidebar": {
@@ -65,7 +70,8 @@
     "documentation": "Documentação",
     "socialMedia": "Redes sociais",
     "founderInbox": "Caixa de suporte",
-    "logout": "Sair"
+    "logout": "Sair",
+    "social": "Redes sociais"
   },
   "sidebarSections": {
     "engage": "Engajar",

@@ -14,6 +14,7 @@ import {
   json,
   jsonb,
   real,
+  doublePrecision,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -2340,6 +2341,203 @@ export const socialPosts = nocodb.table("Social_Posts", {
 ]);
 export type SocialPost = typeof socialPosts.$inferSelect;
 export type InsertSocialPost = typeof socialPosts.$inferInsert;
+
+// Socials studio (docs/superpowers/specs/2026-10-20-caption-writer-and-studio-design.md).
+// Created by script/create-social-studio-tables.mjs. One settings row per account: the caption style
+// and voice guide (agency), "Sobre mim" (agency or the account's Managers), comment-to-DM mode.
+export const socialSettings = nocodb.table("Social_Settings", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  captionStyle: text("caption_style").notNull().default(""),
+  voiceGuide: text("voice_guide").notNull().default(""),
+  aboutMe: text("about_me").notNull().default(""),
+  dmMode: text("dm_mode").notNull().default("off"),            // off | dry_run | live (live also needs INSTAGRAM_DM_LIVE=1)
+  dmHourlyCap: integer("dm_hourly_cap").notNull().default(20),
+  updatedByUserId: integer("updated_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_settings_accounts_id").on(t.accountsId),
+]);
+export type SocialSettings = typeof socialSettings.$inferSelect;
+
+export const socialTopics = nocodb.table("Social_Topics", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  text: text("text").notNull(),
+  source: text("source").notNull().default("typed"),           // typed | voice | seed
+  status: text("status").notNull().default("new"),             // new | used | dismissed
+  scriptId: integer("script_id"),
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_topics_accounts_id_idx").on(t.accountsId),
+]);
+export type SocialTopic = typeof socialTopics.$inferSelect;
+export type InsertSocialTopic = typeof socialTopics.$inferInsert;
+
+export const socialScripts = nocodb.table("Social_Scripts", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  title: text("title").notNull(),
+  body: text("body").notNull().default(""),
+  status: text("status").notNull().default("idea"),            // shared/socialStudio.ts SCRIPT_STATUSES
+  topicId: integer("topic_id"),
+  postId: integer("post_id"),
+  videoUploadId: text("video_upload_id"),                      // an upload (server/social/media.ts layout) waiting to be scheduled
+  heygenVideoId: text("heygen_video_id"),
+  reviewStatus: text("review_status").notNull().default("none"), // none | waiting | ok | changes
+  reviewNote: text("review_note"),
+  reviewedByUserId: integer("reviewed_by_user_id"),
+  reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+  seedKey: text("seed_key"),                                   // set by the seed script, so a re-run adds nothing twice
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_scripts_accounts_id_idx").on(t.accountsId),
+  uniqueIndex("social_scripts_account_seed_key").on(t.accountsId, t.seedKey).where(sql`${t.seedKey} IS NOT NULL`),
+]);
+export type SocialScript = typeof socialScripts.$inferSelect;
+export type InsertSocialScript = typeof socialScripts.$inferInsert;
+
+/** HeyGen videos already downloaded for an account, so the list can mark them "already used". */
+export const socialHeygenPulls = nocodb.table("Social_Heygen_Pulls", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  heygenVideoId: text("heygen_video_id").notNull(),
+  scriptId: integer("script_id"),
+  uploadId: text("upload_id").notNull(),
+  pulledByUserId: integer("pulled_by_user_id"),
+  pulledAt: timestamp("pulled_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_heygen_pulls_account_video").on(t.accountsId, t.heygenVideoId),
+]);
+export type SocialHeygenPull = typeof socialHeygenPulls.$inferSelect;
+
+// Comment-to-DM (docs/superpowers/specs/2026-10-20-comment-to-dm-design.md). Off by default; a real
+// send needs Social_Settings.dm_mode = 'live' AND env INSTAGRAM_DM_LIVE=1 (server/social/igMessaging.ts).
+export const socialDmRules = nocodb.table("Social_Dm_Rules", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  postId: integer("post_id"),                                  // a CRM post; null with ig_media_id null = every post
+  igMediaId: text("ig_media_id"),
+  keyword: text("keyword").notNull(),
+  keywordNorm: text("keyword_norm").notNull(),                 // server/social/dmMatch.ts keywordNorm
+  firstMessage: text("first_message").notNull(),
+  aiFollowUp: boolean("ai_follow_up").notNull().default(false),
+  active: boolean("active").notNull().default(true),
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_dm_rules_accounts_id_idx").on(t.accountsId),
+]);
+export type SocialDmRule = typeof socialDmRules.$inferSelect;
+export type InsertSocialDmRule = typeof socialDmRules.$inferInsert;
+
+/** One row per webhook comment or message: the unique key is the dedupe (Meta delivers at least once). */
+export const socialWebhookEvents = nocodb.table("Social_Webhook_Events", {
+  id: serial("id").primaryKey(),
+  eventKey: text("event_key").notNull(),                       // comment:<id> | message:<mid>
+  field: text("field").notNull(),                              // comments | messages
+  accountsId: integer("accounts_id"),
+  igUserId: text("ig_user_id"),                                // the commenter / sender (IG-scoped id)
+  outcome: text("outcome"),
+  receivedAt: timestamp("received_at", { withTimezone: true }).defaultNow().notNull(),
+  processedAt: timestamp("processed_at", { withTimezone: true }),
+}, (t) => [
+  uniqueIndex("social_webhook_events_key").on(t.eventKey),
+]);
+export type SocialWebhookEvent = typeof socialWebhookEvents.$inferSelect;
+
+/** Everything comment-to-DM did or would have done (dry run), shown in the Socials page. */
+export const socialDmLog = nocodb.table("Social_Dm_Log", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  ruleId: integer("rule_id"),
+  commentId: text("comment_id"),
+  igUserId: text("ig_user_id"),
+  username: text("username"),
+  kind: text("kind").notNull(),                                // private_reply | reply | inbound | opt_out | ai_follow_up
+  mode: text("mode").notNull(),                                // dry_run | live
+  status: text("status").notNull(),                            // would_send | sent | failed | skipped | received
+  reason: text("reason"),
+  text: text("text"),
+  leadId: integer("lead_id"),
+  interactionId: integer("interaction_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_dm_log_account_created_idx").on(t.accountsId, t.createdAt),
+  // One private reply per comment, ever (Meta allows one; this also stops a double send on a redelivery).
+  uniqueIndex("social_dm_log_one_private_reply").on(t.accountsId, t.commentId).where(sql`${t.kind} = 'private_reply'`),
+]);
+export type SocialDmLogRow = typeof socialDmLog.$inferSelect;
+export type InsertSocialDmLog = typeof socialDmLog.$inferInsert;
+
+// Insights (docs/superpowers/specs/2026-10-20-insights-design.md). The account's media as Instagram
+// lists them (CRM posts and posts made in the app), and metric snapshots over time.
+export const socialInsightMedia = nocodb.table("Social_Insight_Media", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  igMediaId: text("ig_media_id").notNull(),
+  mediaType: text("media_type"),
+  productType: text("product_type"),                         // REELS | FEED | ...
+  permalink: text("permalink"),
+  caption: text("caption").notNull().default(""),
+  postedAt: timestamp("posted_at", { withTimezone: true }),
+  postId: integer("post_id"),                                // the CRM post, when it was published from here
+  firstSeenAt: timestamp("first_seen_at", { withTimezone: true }).defaultNow().notNull(),
+  lastPolledAt: timestamp("last_polled_at", { withTimezone: true }),
+}, (t) => [
+  uniqueIndex("social_insight_media_account_media").on(t.accountsId, t.igMediaId),
+]);
+export type SocialInsightMedia = typeof socialInsightMedia.$inferSelect;
+
+/**
+ * One value per account, scope, media, metric and bucket ("YYYY-MM-DDTHH" for a media item's lifetime
+ * value at that hour, "YYYY-MM-DD" for a day's account total or the day's follower count). Writing the
+ * same bucket again replaces it, so a re-run never duplicates. A metric Meta refused has no value and
+ * its reason in skipped_reason.
+ */
+export const socialInsightSnapshots = nocodb.table("Social_Insight_Snapshots", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  scope: text("scope").notNull(),                            // account | media
+  igMediaId: text("ig_media_id").notNull().default(""),      // "" for account rows
+  metric: text("metric").notNull(),
+  value: doublePrecision("value"),
+  skippedReason: text("skipped_reason"),
+  bucket: text("bucket").notNull(),
+  capturedAt: timestamp("captured_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_insight_snapshots_key").on(t.accountsId, t.scope, t.igMediaId, t.metric, t.bucket),
+  index("social_insight_snapshots_account_metric_idx").on(t.accountsId, t.metric),
+]);
+export type SocialInsightSnapshot = typeof socialInsightSnapshots.$inferSelect;
+export type InsertSocialInsightSnapshot = typeof socialInsightSnapshots.$inferInsert;
+
+export const socialInsightState = nocodb.table("Social_Insight_State", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  backfilledAt: timestamp("backfilled_at", { withTimezone: true }),
+  lastAccountRunAt: timestamp("last_account_run_at", { withTimezone: true }),
+  lastError: text("last_error"),
+}, (t) => [
+  uniqueIndex("social_insight_state_account").on(t.accountsId),
+]);
+export type SocialInsightState = typeof socialInsightState.$inferSelect;
+
+/** People who wrote a stop word: no automated message reaches them again. */
+export const socialDmOptOuts = nocodb.table("Social_Dm_Opt_Outs", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  igUserId: text("ig_user_id").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("social_dm_opt_outs_account_user").on(t.accountsId, t.igUserId),
+]);
 
 // Daily estimated spend ledger for public demos (Europe/Amsterdam day).
 export const publicDemoSpend = nocodb.table("Public_Demo_Spend", {

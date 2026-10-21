@@ -1,4 +1,4 @@
-// The account workspace's Social tab: the account's scheduled Reels in sections (needs approval,
+// The Posts section of the Socials page: the account's scheduled Reels in sections (needs approval,
 // upcoming, held, failed, published), a New post panel for agency, and the Instagram connect card
 // when nothing is connected yet. Client users of the account see the same list; Managers also
 // approve and reject. Times are shown in the account's zone.
@@ -8,6 +8,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2, Plus } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { fetchSocialPosts, socialPostsKey, type SocialPostView } from "../api/socialApi";
+import { fetchScripts, socialScriptsKey } from "../api/studioApi";
 import { groupBySection } from "../lib/posts";
 import { connectCardMode } from "../lib/socialState";
 import { InstagramConnectCard, useSocialStatus } from "./InstagramConnectCard";
@@ -30,7 +31,18 @@ export function SocialTab({ accountId, timeZone }: { accountId: number; timeZone
     // Publishing moves on by itself: keep the list fresh while the tab is open.
     refetchInterval: 60_000,
   });
-  const refresh = () => qc.invalidateQueries({ queryKey: socialPostsKey(accountId) });
+  // Agency: a post made from a studio script hands the script to the caption writer.
+  const { data: scripts } = useQuery({
+    queryKey: socialScriptsKey(accountId),
+    queryFn: () => fetchScripts(accountId),
+    enabled: accountId > 0 && isAgencyUser,
+    staleTime: 30_000,
+  });
+  const scriptFor = (postId: number) => scripts?.find((x) => x.postId === postId);
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: socialPostsKey(accountId) });
+    qc.invalidateQueries({ queryKey: socialScriptsKey(accountId) });
+  };
   const who = { isAgency: isAgencyUser, userRole };
   const connected = connectCardMode(status) !== "not_connected";
   const sections = groupBySection(posts ?? []);
@@ -59,7 +71,7 @@ export function SocialTab({ accountId, timeZone }: { accountId: number; timeZone
         )}
       </header>
 
-      {!connected && <InstagramConnectCard accountId={accountId} />}
+      {!connected && <InstagramConnectCard accountId={accountId} showSocialsLink={false} />}
 
       {sheet && (
         <PostSheet
@@ -68,6 +80,7 @@ export function SocialTab({ accountId, timeZone }: { accountId: number; timeZone
           timeZone={timeZone}
           post={sheet.kind === "edit" ? sheet.post : undefined}
           focus={sheet.kind === "edit" ? sheet.focus : "all"}
+          script={sheet.kind === "edit" ? scriptFor(sheet.post.id) : undefined}
           onClose={() => setSheet(null)}
           onSaved={() => { setSheet(null); refresh(); }}
           onConflict={refresh}

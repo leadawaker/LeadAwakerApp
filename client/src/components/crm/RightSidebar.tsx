@@ -264,6 +264,8 @@ export function RightSidebar({
     { href: `${prefix}/chat`, label: t("sidebar.conversations"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations", agencyOnly: true },
     { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/contacts`, label: t("sidebar.leads"), labelKey: "Leads", icon: BookUser, testId: "nav-contacts" },
+    // Clients get Socials from clientNavItems (only when the agency switched Social on for them).
+    { href: `${prefix}/social`, label: t("sidebar.social"), labelKey: "Socials", icon: NAV_ICON.social, testId: "nav-social", agencyOnly: true },
     {
       href: `${prefix}/tasks`,
       label: t("sidebar.tasks"),
@@ -322,6 +324,7 @@ export function RightSidebar({
     chats: { href: `${prefix}/chat`, labelKey: "sidebar.conversations" },
     calendar: { href: `${prefix}/calendar`, labelKey: "sidebar.calendar" },
     tasks: { href: `${prefix}/tasks`, labelKey: "sidebar.tasks" },
+    social: { href: `${prefix}/social`, labelKey: "sidebar.social" },
   };
   const barTabs = isAgencyUser
     ? agencyBottomBar(navCtx.hasVoiceCalls).map((k) => ({
@@ -610,7 +613,7 @@ export function RightSidebar({
           {/* Nav section groups */}
           {(() => {
             const sections = [
-              { section: "engage", items: visibleNavItems.filter(it => ["Voice calls", "Conversations", "Calendar", "Leads"].includes(it.labelKey)) },
+              { section: "engage", items: visibleNavItems.filter(it => ["Voice calls", "Conversations", "Calendar", "Leads", "Socials"].includes(it.labelKey)) },
               { section: "admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
               { section: "backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automation logs", "Traffic"].includes(it.labelKey)) },
               { section: "outreach", items: visibleNavItems.filter(it => ["Prospect inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
