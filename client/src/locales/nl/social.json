@@ -10,7 +10,6 @@
       "home": "Start",
       "posts": "Posts",
       "studio": "Studio",
-      "about": "Over mij",
       "settings": "Instellingen",
       "comments": "Reactie naar DM",
       "insights": "Inzichten"
@@ -45,17 +44,17 @@
     "empty": "Nog niets geschreven."
   },
   "topics": {
-    "title": "Onderwerpideeën",
-    "help": "Ideeën van de klant en van jou. Maak er een script van als het goed is.",
-    "addLabel": "Nieuw onderwerpidee",
-    "placeholder": "Waar moet de volgende video over gaan?",
-    "record": "Spreek het onderwerp in",
+    "title": "Ideeën",
+    "help": "Snelle gedachten. Eén idee per regel. Maak van de goede een script.",
+    "placeholder": "Typ of spreek een idee in. Eén per regel.",
+    "record": "Spreek je ideeën in",
     "stop": "Opname stoppen",
     "recording": "Opname {{seconds}} s. Tik op stop als je klaar bent.",
     "transcribing": "Je stem wordt tekst",
-    "send": "Onderwerp sturen",
-    "sent": "Onderwerp verstuurd. Dank je!",
-    "empty": "Nog geen onderwerpideeën.",
+    "send": "Ideeën toevoegen",
+    "sent": "Idee toegevoegd. Dank je!",
+    "sentMany": "{{n}} ideeën toegevoegd. Dank je!",
+    "empty": "Nog geen ideeën.",
     "makeScript": "Maak een script",
     "openScript": "Script openen",
     "dismiss": "Afwijzen",
@@ -72,7 +71,8 @@
     "title": "Scripts",
     "new": "Nieuw script",
     "newTitlePlaceholder": "Thema van het nieuwe script",
-    "empty": "Nog geen scripts.",
+    "help": "Werkversies: de woorden voor een video. Begin vanuit een idee of vanaf nul.",
+    "empty": "Een script is de volledige tekst die je in beeld gaat zeggen, een idee is maar een snelle gedachte: maak dus van een idee een script of begin hier een nieuw script.",
     "pickOne": "Kies een script om het te lezen of te bewerken.",
     "back": "Terug naar de lijst",
     "statuses": {
@@ -129,7 +129,7 @@
     "newer": "Nieuwere video's"
   },
   "home": {
-    "topicHelp": "Typ of spreek een idee in voor een volgende video. Gabriel maakt van de goede ideeën scripts.",
+    "topicHelp": "Typ of spreek een idee in voor een volgende video. Eén idee per regel. Gabriel maakt van de goede ideeën scripts.",
     "videosWaiting": "Video's die op jou wachten",
     "videosWaitingEmpty": "Nu geen video's om goed te keuren.",
     "scriptsWaiting": "Scripts om te bekijken",

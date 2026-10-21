@@ -12,7 +12,6 @@ import { cn } from "@/lib/utils";
 import { useSocialStatus } from "../components/InstagramConnectCard";
 import { SocialAccountPicker } from "../components/SocialAccountPicker";
 import { SocialTab } from "../components/SocialTab";
-import { AboutSection } from "../components/AboutSection";
 import { ManagerHome } from "../components/ManagerHome";
 import { SocialSettingsSection } from "../components/SocialSettingsSection";
 import { StudioSection } from "../components/studio/StudioSection";
@@ -94,7 +93,6 @@ export function SocialPage() {
                 {section === "studio" && <StudioSection accountId={account.id} timeZone={account.timeZone} />}
                 {section === "comments" && <CommentsSection accountId={account.id} />}
                 {section === "insights" && <InsightsSection accountId={account.id} />}
-                {section === "about" && <AboutSection accountId={account.id} />}
                 {section === "settings" && <SocialSettingsSection accountId={account.id} />}
               </div>
             )}

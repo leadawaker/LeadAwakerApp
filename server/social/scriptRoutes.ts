@@ -81,18 +81,26 @@ export function registerScriptRoutes(app: Express, deps: StudioDeps, limiter: Ra
     if (userId === null) return;
     const parsed = parseNewTopicBody(req.body);
     if (!parsed.ok) return res.status(400).json({ message: parsed.message });
-    const topic = await store.insertSocialTopic({ accountsId: ctx.accountId, text: parsed.input.text, source: parsed.input.source, status: "new", createdByUserId: userId });
+    const created = [];
+    for (const text of parsed.input.texts) {
+      created.push(await store.insertSocialTopic({ accountsId: ctx.accountId, text, source: parsed.input.source, status: "new", createdByUserId: userId }));
+    }
     if (!isAgency(req.user)) {
-      const preview = topic.text.length > 120 ? `${topic.text.slice(0, 119)}…` : topic.text;
+      // One notification for the whole batch, with the count.
+      const first = created[0].text;
+      const preview = first.length > 120 ? `${first.slice(0, 119)}…` : first;
+      const many = created.length > 1;
       void deps.notifyAgency({
         type: "social_topic_new",
-        title: "New video topic",
-        body: `Account ${ctx.accountId} sent a topic idea: "${preview}"`,
+        title: many ? `${created.length} new video topics` : "New video topic",
+        body: many
+          ? `Account ${ctx.accountId} sent ${created.length} topic ideas, starting with: "${preview}"`
+          : `Account ${ctx.accountId} sent a topic idea: "${preview}"`,
         accountId: ctx.accountId,
         link: socialPageLink(ctx.accountId, "studio"),
       }).catch(() => {});
     }
-    res.status(201).json(toTopicView(topic));
+    res.status(201).json(created.map(toTopicView));
   }));
 
   // ─── Topic status (used / dismissed / new): agency only ───────────────────

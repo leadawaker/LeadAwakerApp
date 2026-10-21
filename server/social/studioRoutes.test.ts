@@ -265,7 +265,8 @@ test("captions: rate limited per user", async () => {
 test("topics: a Manager adds one and agency is told; agency's own topic tells nobody", async () => {
   const r = await call("POST", P(A, "/topics"), MANAGER_A, { text: "Sono e fome", source: "voice" });
   assert.equal(r.status, 201);
-  assert.equal(r.json.source, "voice");
+  assert.equal(r.json.length, 1);
+  assert.equal(r.json[0].source, "voice");
   assert.equal(agencyNotes.length, 1);
   assert.equal(agencyNotes[0].type, "social_topic_new");
   assert.equal(agencyNotes[0].link, "/platform/social?account=7&section=studio");
@@ -276,6 +277,18 @@ test("topics: a Manager adds one and agency is told; agency's own topic tells no
   assert.equal((await call("POST", P(A, "/topics"), MANAGER_A, { text: "  " })).status, 400);
   assert.equal((await call("PATCH", P(A, "/topics/1"), MANAGER_A, { status: "dismissed" })).status, 403);
   assert.equal((await call("PATCH", P(A, "/topics/1"), AGENCY, { status: "dismissed" })).json.status, "dismissed");
+});
+
+test("topics: several lines make one topic each, and agency gets ONE notification for the batch", async () => {
+  const r = await call("POST", P(A, "/topics"), MANAGER_A, { text: "- Sono\r\n\r\n2) Fome\n* Menopausa", source: "typed" });
+  assert.equal(r.status, 201);
+  assert.deepEqual(r.json.map((t: any) => t.text), ["Sono", "Fome", "Menopausa"]);
+  assert.equal(topics.length, 3);
+  assert.equal(agencyNotes.length, 1);
+  const own = await call("POST", P(A, "/topics"), AGENCY, { text: "a\nb" });
+  assert.equal(own.json.length, 2);
+  assert.equal(agencyNotes.length, 1, "agency's own batch tells nobody");
+  assert.equal((await call("POST", P(A, "/topics"), VIEWER_A, { text: "a\nb" })).status, 403);
 });
 
 test("topics: spoken topic is transcribed in the account's language, saves nothing", async () => {

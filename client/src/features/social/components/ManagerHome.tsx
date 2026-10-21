@@ -62,7 +62,7 @@ function ScriptToReview({ script, accountId, canAnswer }: { script: ScriptView; 
   );
 }
 
-export function ManagerHome({ accountId, timeZone, onOpen }: { accountId: number; timeZone: string; onOpen: (section: "about" | "posts") => void }) {
+export function ManagerHome({ accountId, timeZone, onOpen }: { accountId: number; timeZone: string; onOpen: (section: "settings" | "posts") => void }) {
   const { t } = useTranslation("social");
   const { isAgencyUser, userRole } = useWorkspace();
   const qc = useQueryClient();
@@ -106,9 +106,9 @@ export function ManagerHome({ accountId, timeZone, onOpen }: { accountId: number
           <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>{t("page.tabs.posts")}</span>
           <span style={{ fontSize: 12, color: "var(--mute)" }}>{t("home.upcomingCount", { count: home.upcoming.length })}</span>
         </button>
-        <button type="button" className="neu-raised" onClick={() => onOpen("about")} style={{ ...card, border: "none", cursor: "pointer", alignItems: "flex-start", textAlign: "left" }} data-testid="home-open-about">
+        <button type="button" className="neu-raised" onClick={() => onOpen("settings")} style={{ ...card, border: "none", cursor: "pointer", alignItems: "flex-start", textAlign: "left" }} data-testid="home-open-about">
           <UserRound size={18} style={{ color: "var(--wine)" }} />
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>{t("page.tabs.about")}</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>{t("about.title")}</span>
           <span style={{ fontSize: 12, color: "var(--mute)" }}>{t("home.aboutHelp")}</span>
         </button>
       </div>

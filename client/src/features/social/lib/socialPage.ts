@@ -44,27 +44,29 @@ export function pickSocialAccount(
   return p.options.find((o) => o.id === p.currentAccountId) ?? p.options[0] ?? null;
 }
 
-export type SocialSection = "home" | "posts" | "studio" | "comments" | "insights" | "about" | "settings";
+export type SocialSection = "home" | "posts" | "studio" | "comments" | "insights" | "settings";
 
 /**
  * Sections in display order; the first one opens by default. Agency gets the full studio layout; a
- * client user (Manager, Viewer) opens on the phone-first home. The server checks every action again.
+ * client user (Manager, Viewer) opens on the phone-first home. Settings holds the three AI texts;
+ * clients see only "Sobre mim" there (a Manager edits, a Viewer reads). The server checks every action again.
  */
 export function socialSections(who: { isAgency: boolean; userRole: string }): SocialSection[] {
-  if (who.isAgency) return ["posts", "studio", "comments", "insights", "about", "settings"];
-  return ["home", "posts", "insights", "about"];
+  if (who.isAgency) return ["posts", "studio", "comments", "insights", "settings"];
+  return ["home", "posts", "insights", "settings"];
 }
 
 /** Old notification links pointed at the account workspace tab; they now open the Socials page. */
 export const SOCIAL_PAGE_PATH = "/platform/social";
 
-/** `?account=<id>&section=<name>` (or `tab=`; `calendar` maps to `posts`) from a notification or an in-app link (shared/socialStudio.ts socialPageLink). */
+/** `?account=<id>&section=<name>` (or `tab=`; `calendar` maps to `posts`, `about` to `settings`) from a notification or an in-app link (shared/socialStudio.ts socialPageLink). */
 export function parseSocialDeepLink(search: string): { accountId: number | null; section: string | null } {
   const params = new URLSearchParams(search.startsWith("?") ? search.slice(1) : search);
   const id = Number(params.get("account"));
   const raw = params.get("section") ?? params.get("tab");
   // The calendar now sits above the posts: old links to it open the Posts section.
-  const section = raw === "calendar" ? "posts" : raw;
+  // "About me" now lives in Settings.
+  const section = raw === "calendar" ? "posts" : raw === "about" ? "settings" : raw;
   return {
     accountId: Number.isInteger(id) && id > 0 ? id : null,
     section: section && /^[a-z_]{1,32}$/.test(section) ? section : null,

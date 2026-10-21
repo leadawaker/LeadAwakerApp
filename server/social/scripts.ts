@@ -14,6 +14,7 @@ import {
 } from "@shared/socialStudio";
 import { extractJsonObject } from "../aiTextHelper";
 import { languageName } from "./captions";
+import { splitTopicLines, TOPIC_BATCH_RAW_MAX } from "./topicLines";
 
 export const SCRIPT_TIMEOUT_MS = 150_000;
 
@@ -44,13 +45,16 @@ export function toTopicView(t: SocialTopic): TopicView {
   return { id: t.id, text: t.text, source: t.source as TopicSource, status: t.status as TopicStatus, scriptId: t.scriptId, createdAt: t.createdAt.toISOString() };
 }
 
-export function parseNewTopicBody(body: unknown): Parsed<{ text: string; source: "typed" | "voice" }> {
+/** One idea per line: the text becomes one or more topics (see topicLines.ts). */
+export function parseNewTopicBody(body: unknown): Parsed<{ texts: string[]; source: "typed" | "voice" }> {
   const b = obj(body);
   if (!b) return { ok: false, message: "Body must be an object" };
-  const text = cleanText(b.text, TEXT_LIMITS.topic);
-  if (!text) return { ok: false, message: "text is required (at most 2000 characters)" };
+  const raw = typeof b.text === "string" ? b.text.replace(/\r\n?/g, "\n") : "";
+  const texts = raw.length > TOPIC_BATCH_RAW_MAX ? [] : splitTopicLines(raw);
+  if (texts.length === 0) return { ok: false, message: "text is required (one idea per line)" };
+  if (texts.length === 1 && texts[0].length > TEXT_LIMITS.topic) return { ok: false, message: "An idea is at most 2000 characters" };
   const source = b.source === "voice" ? "voice" : "typed";
-  return { ok: true, input: { text, source } };
+  return { ok: true, input: { texts, source } };
 }
 
 // ─── Scripts ───────────────────────────────────────────────────────────────

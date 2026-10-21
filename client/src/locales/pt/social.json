@@ -10,7 +10,6 @@
       "home": "Início",
       "posts": "Posts",
       "studio": "Estúdio",
-      "about": "Sobre mim",
       "settings": "Configurações",
       "comments": "Comentário para DM",
       "insights": "Resultados"
@@ -45,17 +44,17 @@
     "empty": "Nada escrito ainda."
   },
   "topics": {
-    "title": "Ideias de tema",
-    "help": "Ideias do cliente e suas. Transforme uma em roteiro quando estiver boa.",
-    "addLabel": "Nova ideia de tema",
-    "placeholder": "Sobre o que deve ser o próximo vídeo?",
-    "record": "Falar o tema",
+    "title": "Ideias",
+    "help": "Pensamentos rápidos. Uma ideia por linha. Transforme as boas em roteiros.",
+    "placeholder": "Escreva ou fale uma ideia. Uma por linha.",
+    "record": "Falar suas ideias",
     "stop": "Parar a gravação",
     "recording": "Gravando {{seconds}} s. Toque em parar quando terminar.",
     "transcribing": "Transformando sua voz em texto",
-    "send": "Enviar tema",
-    "sent": "Tema enviado. Obrigado!",
-    "empty": "Nenhuma ideia de tema ainda.",
+    "send": "Adicionar ideias",
+    "sent": "Ideia adicionada. Obrigado!",
+    "sentMany": "{{n}} ideias adicionadas. Obrigado!",
+    "empty": "Nenhuma ideia ainda.",
     "makeScript": "Fazer roteiro",
     "openScript": "Abrir roteiro",
     "dismiss": "Descartar",
@@ -72,7 +71,8 @@
     "title": "Roteiros",
     "new": "Novo roteiro",
     "newTitlePlaceholder": "Tema do novo roteiro",
-    "empty": "Nenhum roteiro ainda.",
+    "help": "Rascunhos de trabalho: as palavras de um vídeo. Comece de uma ideia ou do zero.",
+    "empty": "Um roteiro é o texto completo que você vai falar na câmera, já uma ideia é só um pensamento rápido: transforme uma ideia em roteiro ou comece um aqui.",
     "pickOne": "Escolha um roteiro para ler ou editar.",
     "back": "Voltar para a lista",
     "statuses": {
@@ -129,7 +129,7 @@
     "newer": "Vídeos mais novos"
   },
   "home": {
-    "topicHelp": "Escreva ou fale uma ideia para um próximo vídeo. O Gabriel transforma as boas em roteiros.",
+    "topicHelp": "Escreva ou fale uma ideia para um próximo vídeo. Uma ideia por linha. O Gabriel transforma as boas em roteiros.",
     "videosWaiting": "Vídeos esperando por você",
     "videosWaitingEmpty": "Nenhum vídeo para aprovar agora.",
     "scriptsWaiting": "Roteiros para você ver",

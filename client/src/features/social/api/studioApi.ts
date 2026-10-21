@@ -43,7 +43,8 @@ export interface TopicView { id: number; text: string; source: TopicSource; stat
 
 export const socialTopicsKey = (accountId: number) => ["social-topics", accountId] as const;
 export const fetchTopics = (accountId: number) => getJson<TopicView[]>(`${base(accountId)}/topics`);
-export const addTopic = (accountId: number, text: string, source: "typed" | "voice") => sendJson<TopicView>(`${base(accountId)}/topics`, "POST", { text, source });
+/** One idea per line: the server makes one topic per line and returns them all. */
+export const addTopic = (accountId: number, text: string, source: "typed" | "voice") => sendJson<TopicView[]>(`${base(accountId)}/topics`, "POST", { text, source });
 export const setTopicStatus = (accountId: number, topicId: number, status: TopicStatus) => sendJson<TopicView>(`${base(accountId)}/topics/${topicId}`, "PATCH", { status });
 export const transcribeTopic = (accountId: number, audioData: string, mimeType: string) =>
   sendJson<{ text: string }>(`${base(accountId)}/topics/transcribe`, "POST", { audio_data: audioData, mime_type: mimeType });

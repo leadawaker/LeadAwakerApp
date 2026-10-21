@@ -10,7 +10,6 @@
       "home": "Home",
       "posts": "Posts",
       "studio": "Studio",
-      "about": "About me",
       "settings": "Settings",
       "comments": "Comments to DM",
       "insights": "Insights"
@@ -45,17 +44,17 @@
     "empty": "Nothing written yet."
   },
   "topics": {
-    "title": "Topic ideas",
-    "help": "Ideas from the client and from you. Turn one into a script when it is good.",
-    "addLabel": "New topic idea",
-    "placeholder": "What should the next video be about?",
-    "record": "Speak the topic",
+    "title": "Ideas",
+    "help": "Quick thoughts. One idea per line. Turn the good ones into scripts.",
+    "placeholder": "Type or speak an idea. One per line.",
+    "record": "Speak your ideas",
     "stop": "Stop recording",
     "recording": "Recording {{seconds}} s. Tap stop when you are done.",
     "transcribing": "Turning your voice into text",
-    "send": "Send topic",
-    "sent": "Topic sent. Thank you!",
-    "empty": "No topic ideas yet.",
+    "send": "Add ideas",
+    "sent": "Idea added. Thank you!",
+    "sentMany": "{{n}} ideas added. Thank you!",
+    "empty": "No ideas yet.",
     "makeScript": "Make a script",
     "openScript": "Open script",
     "dismiss": "Dismiss",
@@ -72,7 +71,8 @@
     "title": "Scripts",
     "new": "New script",
     "newTitlePlaceholder": "Theme of the new script",
-    "empty": "No scripts yet.",
+    "help": "Working drafts: the words for a video. Start one from an idea or from scratch.",
+    "empty": "A script is the full text you will say on camera, while an idea is only a quick thought, so turn an idea into a script or start one here.",
     "pickOne": "Pick a script to read or edit it.",
     "back": "Back to the list",
     "statuses": {
@@ -129,7 +129,7 @@
     "newer": "Newer videos"
   },
   "home": {
-    "topicHelp": "Type or speak an idea for a next video. Gabriel turns the good ones into scripts.",
+    "topicHelp": "Type or speak an idea for a next video. One idea per line. Gabriel turns the good ones into scripts.",
     "videosWaiting": "Videos waiting for you",
     "videosWaitingEmpty": "No videos to approve right now.",
     "scriptsWaiting": "Scripts to look at",
