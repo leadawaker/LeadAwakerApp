@@ -48,7 +48,7 @@ export function DmModeCard({ accountId, status }: { accountId: number; status: D
       <p style={{ margin: 0, fontSize: 12.5, color: "var(--mute)", lineHeight: 1.5 }}>{t(`comments.modeHelp.${status.mode}`)}</p>
 
       {confirmLive && (
-        <div className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }} data-testid="dm-live-confirm">
+        <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }} data-testid="dm-live-confirm">
           <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.5 }}>
             <AlertTriangle size={13} style={{ display: "inline", marginRight: 6, color: "var(--warn)" }} />{t("comments.liveConfirm")}
           </p>

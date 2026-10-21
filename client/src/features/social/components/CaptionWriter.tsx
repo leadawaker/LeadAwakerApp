@@ -30,7 +30,7 @@ export function CaptionWriter({ accountId, scriptId, scriptTitle, onPick }: {
   const canWrite = !write.isPending && (!!scriptId || about.trim().length > 0);
 
   return (
-    <div className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }} data-testid="caption-writer">
+    <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }} data-testid="caption-writer">
       {scriptId ? (
         <p style={{ margin: 0, fontSize: 12, color: "var(--mute)" }}>{t("captions.fromScript", { title: scriptTitle ?? "" })}</p>
       ) : (

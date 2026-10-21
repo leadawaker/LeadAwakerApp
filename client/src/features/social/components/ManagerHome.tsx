@@ -1,6 +1,6 @@
 // The client's phone home on the Socials page (Manager, Viewer): add a topic idea (typed or spoken),
 // answer the scripts Gabriel sent, approve the videos waiting (the existing approve / reject flow),
-// and jump to the calendar or Sobre mim. Viewers see the same lists without buttons.
+// and jump to the calendar (above the posts) or Sobre mim. Viewers see the same lists without buttons.
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -31,7 +31,7 @@ function ScriptToReview({ script, accountId, canAnswer }: { script: ScriptView; 
     onError: (err) => { if (err instanceof SocialApiError && err.status === 409) qc.invalidateQueries({ queryKey: socialScriptsKey(accountId) }); },
   });
   return (
-    <li className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }} data-testid={`review-script-${script.id}`}>
+    <li className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }} data-testid={`review-script-${script.id}`}>
       <button type="button" onClick={() => setOpen((v) => !v)} aria-expanded={open}
         style={{ all: "unset", cursor: "pointer", display: "flex", alignItems: "center", gap: 8, fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>
         <span style={{ flex: 1 }}>{script.title}</span>
@@ -62,7 +62,7 @@ function ScriptToReview({ script, accountId, canAnswer }: { script: ScriptView; 
   );
 }
 
-export function ManagerHome({ accountId, timeZone, onOpen }: { accountId: number; timeZone: string; onOpen: (section: "calendar" | "about" | "posts") => void }) {
+export function ManagerHome({ accountId, timeZone, onOpen }: { accountId: number; timeZone: string; onOpen: (section: "about" | "posts") => void }) {
   const { t } = useTranslation("social");
   const { isAgencyUser, userRole } = useWorkspace();
   const qc = useQueryClient();
@@ -101,9 +101,9 @@ export function ManagerHome({ accountId, timeZone, onOpen }: { accountId: number
       </section>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        <button type="button" className="neu-raised" onClick={() => onOpen("calendar")} style={{ ...card, border: "none", cursor: "pointer", alignItems: "flex-start", textAlign: "left" }} data-testid="home-open-calendar">
+        <button type="button" className="neu-raised" onClick={() => onOpen("posts")} style={{ ...card, border: "none", cursor: "pointer", alignItems: "flex-start", textAlign: "left" }} data-testid="home-open-calendar">
           <CalendarDays size={18} style={{ color: "var(--wine)" }} />
-          <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>{t("page.tabs.calendar")}</span>
+          <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)" }}>{t("page.tabs.posts")}</span>
           <span style={{ fontSize: 12, color: "var(--mute)" }}>{t("home.upcomingCount", { count: home.upcoming.length })}</span>
         </button>
         <button type="button" className="neu-raised" onClick={() => onOpen("about")} style={{ ...card, border: "none", cursor: "pointer", alignItems: "flex-start", textAlign: "left" }} data-testid="home-open-about">

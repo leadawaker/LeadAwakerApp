@@ -12,6 +12,7 @@ import { IG_CAPTION_MAX, validateCaption } from "@shared/socialPosts";
 import { SocialApiError, createSocialPost, updateSocialPost, uploadSocialVideo, type SocialPostView } from "../api/socialApi";
 import { editBody, errorKey, toLocalDateTime, uploadPrecheck, type PostForm } from "../lib/posts";
 import { CaptionWriter } from "./CaptionWriter";
+import { VideoPreview } from "./VideoLightbox";
 
 const labelStyle: React.CSSProperties = { fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5, display: "block" };
 const inputStyle: React.CSSProperties = { fontSize: 12.5, padding: "8px 11px", width: "100%" };
@@ -122,10 +123,9 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", script, in
           <span style={labelStyle}>{t("social.posts.sheet.video")}</span>
           <div className="row" style={{ gap: 14, alignItems: "flex-start" }}>
             {previewUrl ? (
-              <video src={previewUrl} preload="metadata" controls playsInline aria-label={t("social.posts.previewLabel")}
-                style={{ width: 96, aspectRatio: "9 / 16", objectFit: "cover", borderRadius: "var(--r-surface)", background: "var(--bg)", flexShrink: 0 }} />
+              <VideoPreview src={previewUrl} title={form.caption.trim().slice(0, 60) || t("social.posts.sheet.video")} testId="social-sheet-enlarge" />
             ) : (
-              <div className="neu-inset" style={{ width: 96, aspectRatio: "9 / 16", borderRadius: "var(--r-surface)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "var(--mute-2)" }}>
+              <div className="neu-inset-crisp" style={{ width: 96, aspectRatio: "9 / 16", borderRadius: "var(--r-surface)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, color: "var(--mute-2)" }}>
                 <Film size={16} />
               </div>
             )}
@@ -143,7 +143,7 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", script, in
               )}
               {uploading && (
                 <div role="progressbar" aria-valuemin={0} aria-valuemax={100} aria-valuenow={progress ?? 0} aria-label={t("social.posts.sheet.uploading")}
-                  className="neu-inset" style={{ height: 8, borderRadius: "var(--r-pill)", overflow: "hidden" }}>
+                  className="neu-inset-crisp" style={{ height: 8, boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)", overflow: "hidden" }}>
                   <div style={{ height: "100%", width: `${progress}%`, background: "var(--wine)", transition: "width 150ms ease" }} />
                 </div>
               )}

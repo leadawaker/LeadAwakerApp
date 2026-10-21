@@ -134,7 +134,7 @@ export function InstagramConnectCard({ accountId, showSocialsLink = true }: { ac
             </div>
           )}
           {canAct && confirming && (
-            <div className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+            <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
               <p style={{ ...lineStyle, color: "var(--ink-soft)" }}>{t("social.connect.disconnectConfirm")}</p>
               <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
                 <button type="button" className="la-btn la-btn--wine" disabled={disconnect.isPending} onClick={() => disconnect.mutate()} data-testid="instagram-disconnect-confirm">

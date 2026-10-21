@@ -36,7 +36,7 @@ export function HeygenPicker({ accountId, scriptId, onPulled }: { accountId: num
     <div style={{ display: "flex", flexDirection: "column", gap: 8 }} data-testid="heygen-picker">
       {list.data.videos.length === 0 && <p style={{ margin: 0, fontSize: 12, color: "var(--mute)" }}>{t("heygen.empty")}</p>}
       {list.data.videos.map((v) => (
-        <div key={v.id} className="row neu-inset" style={{ gap: 10, borderRadius: "var(--r-surface)", padding: 8 }} data-testid={`heygen-video-${v.id}`}>
+        <div key={v.id} className="row neu-inset-crisp" style={{ gap: 10, borderRadius: "var(--r-surface)", padding: 8 }} data-testid={`heygen-video-${v.id}`}>
           <span style={{ width: 40, height: 64, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mute-2)", flexShrink: 0 }}><Film size={14} /></span>
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.title || v.id}</div>

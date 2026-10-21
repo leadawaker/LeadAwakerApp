@@ -28,7 +28,7 @@ function TopicRow({ topic, accountId, onScript }: { topic: TopicView; accountId:
   const make = useMutation({ mutationFn: () => createScript(accountId, { title: topic.text.slice(0, 200), topicId: topic.id }), onSuccess: (s) => { refresh(); onScript(s.id); } });
   const status = useMutation({ mutationFn: (next: TopicView["status"]) => setTopicStatus(accountId, topic.id, next), onSuccess: refresh });
   return (
-    <li className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6, opacity: topic.status === "dismissed" ? 0.6 : 1 }} data-testid={`topic-${topic.id}`}>
+    <li className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 6, opacity: topic.status === "dismissed" ? 0.6 : 1 }} data-testid={`topic-${topic.id}`}>
       <p style={{ margin: 0, fontSize: 13, color: "var(--ink-soft)", whiteSpace: "pre-wrap" }}>{topic.text}</p>
       <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
         <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute-2)", flex: 1 }}>
@@ -129,7 +129,7 @@ export function StudioSection({ accountId, timeZone }: { accountId: number; time
           {selected ? (
             <ScriptPanel key={selected.id} accountId={accountId} timeZone={timeZone} script={selected} onClose={() => setSelectedId(null)} />
           ) : (
-            <div className="neu-inset" style={{ borderRadius: "var(--r-card)", padding: "28px 20px", textAlign: "center" }}>
+            <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-card)", padding: "28px 20px", textAlign: "center" }}>
               <p style={{ margin: 0, fontSize: 13, color: "var(--mute)" }}>{t("scripts.pickOne")}</p>
             </div>
           )}

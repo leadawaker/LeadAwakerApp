@@ -25,7 +25,7 @@ function DayPosts({ posts, timeZone }: { posts: SocialPostView[]; timeZone: stri
   return (
     <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }}>
       {posts.map((p) => (
-        <li key={p.id} className="neu-inset row" style={{ gap: 10, borderRadius: "var(--r-surface)", padding: "8px 12px" }} data-testid={`calendar-post-${p.id}`}>
+        <li key={p.id} className="neu-inset-crisp row" style={{ gap: 10, borderRadius: "var(--r-surface)", padding: "8px 12px" }} data-testid={`calendar-post-${p.id}`}>
           <span style={{ width: 8, height: 8, borderRadius: "var(--r-pill)", background: DOT[p.section], flexShrink: 0 }} aria-hidden />
           <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute-2)", flexShrink: 0 }}>{toLocalDateTime(p.scheduledAt, timeZone).time}</span>
           <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: "var(--ink-soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>

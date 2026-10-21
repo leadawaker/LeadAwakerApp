@@ -81,7 +81,7 @@ export function ScriptPanel({ accountId, timeZone, script, onClose }: { accountI
       </div>
 
       {script.reviewStatus === "changes" && script.reviewNote && (
-        <p className="neu-inset" style={{ margin: 0, borderRadius: "var(--r-surface)", padding: "10px 12px", fontSize: 12.5, color: "var(--ink-soft)" }} data-testid="script-review-note">
+        <p className="neu-inset-crisp" style={{ margin: 0, borderRadius: "var(--r-surface)", padding: "10px 12px", fontSize: 12.5, color: "var(--ink-soft)" }} data-testid="script-review-note">
           {t("scripts.reviewNote", { note: script.reviewNote })}
         </p>
       )}
@@ -125,7 +125,7 @@ export function ScriptPanel({ accountId, timeZone, script, onClose }: { accountI
       {[save.error, send.error, approve.error].map(reasonOf).filter(Boolean).slice(0, 1).map((r) => <p key="e" role="alert" style={errStyle}>{t(studioErrorKey(r))}</p>)}
 
       {actions.includes("draft") && (
-        <div className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 8 }}>
           <label style={labelStyle} htmlFor="script-notes">{t("scripts.draftNotes")}</label>
           <textarea id="script-notes" className="neu-input" rows={2} value={notes} maxLength={2000} onChange={(e) => setNotes(e.target.value)} placeholder={t("scripts.draftNotesPlaceholder")}
             style={{ fontSize: 12.5, padding: "8px 11px", width: "100%", resize: "vertical" }} />

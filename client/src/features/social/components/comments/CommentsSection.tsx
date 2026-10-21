@@ -25,7 +25,7 @@ function RuleRow({ accountId, rule, postLabel, onEdit }: { accountId: number; ru
   const toggle = useMutation({ mutationFn: (active: boolean) => updateDmRule(accountId, rule.id, { active }), onSettled: refresh });
   const remove = useMutation({ mutationFn: () => deleteDmRule(accountId, rule.id), onSettled: refresh });
   return (
-    <li className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8, opacity: rule.active ? 1 : 0.65 }} data-testid={`dm-rule-${rule.id}`}>
+    <li className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8, opacity: rule.active ? 1 : 0.65 }} data-testid={`dm-rule-${rule.id}`}>
       <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
         <Pill color="var(--wine)" tone="solid" style={{ fontFamily: "var(--mono)", letterSpacing: "0.06em" }}>{rule.keyword.toUpperCase()}</Pill>
         <span style={{ flex: 1, minWidth: 0, fontSize: 12, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{postLabel}</span>
@@ -89,7 +89,7 @@ export function CommentsSection({ accountId }: { accountId: number }) {
         {log.data?.length === 0 && <p style={{ margin: 0, fontSize: 12.5, color: "var(--mute)" }}>{t("comments.logEmpty")}</p>}
         <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>
           {(log.data ?? []).map((l) => (
-            <li key={l.id} className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "8px 12px", display: "flex", flexDirection: "column", gap: 4 }} data-testid={`dm-log-${l.id}`}>
+            <li key={l.id} className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "8px 12px", display: "flex", flexDirection: "column", gap: 4 }} data-testid={`dm-log-${l.id}`}>
               <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
                 <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute-2)" }}>{when(l.createdAt)}</span>
                 <span style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-soft)" }}>{t(`comments.kinds.${l.kind}`)}</span>

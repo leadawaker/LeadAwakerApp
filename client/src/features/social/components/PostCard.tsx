@@ -15,6 +15,7 @@ import {
   retrySocialPost,
   type SocialPostView,
 } from "../api/socialApi";
+import { VideoPreview } from "./VideoLightbox";
 import { errorKey, postActions, type PostAction } from "../lib/posts";
 
 const STATUS_COLOR: Record<SocialPostView["section"], string> = {
@@ -83,13 +84,35 @@ export function PostCard({ post, accountId, timeZone, who, onChanged, onEdit }: 
   return (
     <article className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: 14, display: "flex", gap: 14 }} data-testid={`post-${post.id}`}>
       {post.videoUrl ? (
-        <video
+        <VideoPreview
           src={`${API_BASE}${post.videoUrl}`}
-          preload="metadata"
-          controls
-          playsInline
-          aria-label={t("social.posts.previewLabel")}
-          style={{ width: 96, aspectRatio: "9 / 16", objectFit: "cover", borderRadius: "var(--r-surface)", background: "var(--bg)", flexShrink: 0 }}
+          title={post.caption.trim().slice(0, 60) || formatPostTime(post.scheduledAt, timeZone, i18n.language)}
+          showEnlarge
+          testId={`post-${post.id}-enlarge`}
+          footer={(close) => {
+            const decide = actions.filter((a) => a === "approve" || a === "reject");
+            if (decide.length === 0) return null;
+            return (
+              <div className="row" style={{ gap: 8, flexWrap: "wrap", justifyContent: "center" }}>
+                {decide.map((a) => (
+                  <button
+                    key={a}
+                    type="button"
+                    className={`la-btn ${a === "approve" ? "la-btn--wine" : "la-btn--soft"}`}
+                    disabled={act.isPending}
+                    data-testid={`post-${post.id}-lightbox-${a}`}
+                    onClick={() => {
+                      if (a === "reject") { setConfirm("reject"); close(); }
+                      else act.mutate(a, { onSuccess: close });
+                    }}
+                  >
+                    {act.isPending && act.variables === a && <Loader2 size={12} className="animate-spin" />}
+                    {label(a)}
+                  </button>
+                ))}
+              </div>
+            );
+          }}
         />
       ) : (
         <div style={{ width: 96, aspectRatio: "9 / 16", borderRadius: "var(--r-surface)", background: "var(--bg)", flexShrink: 0 }} />
@@ -135,7 +158,7 @@ export function PostCard({ post, accountId, timeZone, who, onChanged, onEdit }: 
         )}
 
         {confirm && (
-          <div className="neu-inset" style={{ borderRadius: "var(--r-surface)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
+          <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }}>
             {confirm === "reject" ? (
               <>
                 <label style={{ ...lineStyle, color: "var(--ink-soft)" }} htmlFor={`reject-note-${post.id}`}>{t("social.posts.rejectNoteLabel")}</label>
