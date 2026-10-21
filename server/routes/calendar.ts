@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { storage } from "../storage";
-import { requireAuth, requireAgency } from "../auth";
+import type { Request, Response, NextFunction } from "express";
+import { requireAuth, requireAgency, isValidInternalKey } from "../auth";
 import { wrapAsync } from "./_helpers";
 import { decryptSecret } from "../calendar/crypto";
 import {
@@ -45,6 +46,22 @@ function normalizeBookingDomain(raw: string): string | null {
   return host;
 }
 
+/** The agency, or a client user working on their own account. Connecting a
+ *  calendar is part of a client's own onboarding, so it cannot be agency-only
+ *  (a client got "Agency access required", 2026-10-21). Viewers may only look. */
+function requireAccountAccess(write: boolean) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    if (isValidInternalKey(req.headers["x-internal-key"] as string | undefined)) return next();
+    if (!req.isAuthenticated()) return res.status(401).json({ message: "Unauthorized" });
+    const user = req.user!;
+    if (user.accountsId === 1 || user.role === "Owner" || user.role === "Admin") return next();
+    const accountId = Number(req.query.accountId ?? req.body?.accountId);
+    if (!accountId || accountId !== user.accountsId) return res.status(403).json({ message: "Not your account" });
+    if (write && user.role === "Viewer") return res.status(403).json({ message: "Read-only access" });
+    next();
+  };
+}
+
 export function registerCalendarRoutes(app: Express): void {
   // ─── Provider capabilities (for the connect UI) ───────────────────────────
   app.get("/api/calendar/providers", requireAuth, wrapAsync(async (_req, res) => {
@@ -52,7 +69,7 @@ export function registerCalendarRoutes(app: Express): void {
   }));
 
   // ─── List connections for an account ──────────────────────────────────────
-  app.get("/api/calendar/connections", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+  app.get("/api/calendar/connections", requireAuth, requireAccountAccess(false), wrapAsync(async (req, res) => {
     const accountId = Number(req.query.accountId);
     if (!accountId) return res.status(400).json({ message: "accountId required" });
     const conns = await storage.listCalendarConnections(accountId);
@@ -60,7 +77,7 @@ export function registerCalendarRoutes(app: Express): void {
   }));
 
   // ─── OAuth: start (google | outlook) ──────────────────────────────────────
-  app.get("/api/calendar/oauth/:provider/authorize", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+  app.get("/api/calendar/oauth/:provider/authorize", requireAuth, requireAccountAccess(true), wrapAsync(async (req, res) => {
     const { provider } = req.params;
     const accountId = Number(req.query.accountId);
     if (!OAUTH_PROVIDERS.has(provider)) return res.status(400).json({ message: "Provider is not OAuth-based" });
@@ -106,7 +123,7 @@ export function registerCalendarRoutes(app: Express): void {
   }));
 
   // ─── API-key / URL connect (calcom | calendly | ical) ─────────────────────
-  app.post("/api/calendar/connect/:provider", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+  app.post("/api/calendar/connect/:provider", requireAuth, requireAccountAccess(true), wrapAsync(async (req, res) => {
     const { provider } = req.params;
     const { accountId, apiKey, icalUrl } = req.body || {};
     if (!accountId) return res.status(400).json({ message: "accountId required" });
@@ -143,7 +160,7 @@ export function registerCalendarRoutes(app: Express): void {
   }));
 
   // ─── Apple / CalDAV connect (no OAuth; username + app-specific password) ─────
-  app.post("/api/calendar/connect-caldav", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+  app.post("/api/calendar/connect-caldav", requireAuth, requireAccountAccess(true), wrapAsync(async (req, res) => {
     const { accountId, kind, username, password, url } = req.body || {};
     if (!accountId) return res.status(400).json({ message: "accountId required" });
     if (!username) return res.status(400).json({ message: "username required" });
@@ -160,7 +177,7 @@ export function registerCalendarRoutes(app: Express): void {
   }));
 
   // ─── Disconnect ───────────────────────────────────────────────────────────
-  app.post("/api/calendar/disconnect", requireAuth, requireAgency, wrapAsync(async (req, res) => {
+  app.post("/api/calendar/disconnect", requireAuth, requireAccountAccess(true), wrapAsync(async (req, res) => {
     const { accountId, provider } = req.body || {};
     if (!accountId || !provider) return res.status(400).json({ message: "accountId and provider required" });
     const ok = await storage.deleteCalendarConnection(Number(accountId), provider);
