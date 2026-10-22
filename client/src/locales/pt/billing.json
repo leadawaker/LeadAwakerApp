@@ -168,7 +168,8 @@
       "edit": "Editar",
       "duplicate": "Duplicar",
       "delete": "Excluir",
-      "confirm": "Confirmar?"
+      "confirm": "Confirmar?",
+      "pdfLanguage": "Idioma do PDF"
     },
     "form": {
       "createInvoice": "Criar Fatura",
@@ -270,7 +271,33 @@
       "newInvoicesCount": "{{count}} novas faturas recebidas"
     },
     "deleteConfirm": "Excluir {{count}} fatura? Esta ação não pode ser desfeita.",
-    "deleteConfirmPlural": "Excluir {{count}} faturas? Esta ação não pode ser desfeita."
+    "deleteConfirmPlural": "Excluir {{count}} faturas? Esta ação não pode ser desfeita.",
+    "document": {
+      "title": "Fatura",
+      "invoiceNumber": "Número da fatura",
+      "invoiceDate": "Data da fatura",
+      "dueDate": "Vencimento",
+      "project": "Projeto",
+      "description": "Descrição",
+      "qty": "Qtd.",
+      "price": "Preço",
+      "amount": "Valor",
+      "subtotal": "Total sem IVA",
+      "discount": "Desconto",
+      "vat": "IVA {{percent}}%",
+      "total": "Total com IVA",
+      "vatId": "Número de IVA",
+      "paymentRequest": "Por favor, efetue o pagamento até {{date}} na conta {{iban}} em nome de {{holder}}, indicando o número da fatura {{number}}.",
+      "paymentRequestNoDate": "Por favor, efetue o pagamento na conta {{iban}} em nome de {{holder}}, indicando o número da fatura {{number}}.",
+      "paymentRequestCustom": "Por favor, efetue o pagamento até {{date}}, indicando o número da fatura {{number}}.",
+      "paymentRequestCustomNoDate": "Por favor, efetue o pagamento indicando o número da fatura {{number}}.",
+      "paymentDetails": "Dados de pagamento",
+      "notes": "Observações",
+      "accountHolder": "Titular",
+      "bank": "Banco",
+      "kvk": "KvK",
+      "vatNumber": "IVA"
+    }
   },
   "contracts": {
     "title": "Contratos",

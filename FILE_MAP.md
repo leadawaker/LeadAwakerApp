@@ -193,6 +193,7 @@ The marketing site (leadawaker.com landing) is static files in `client/public/pr
 | expensesApi | `api/expensesApi.ts` | |
 | types | `types.ts` | Billing-specific TypeScript types |
 | contractTemplate | `utils/contractTemplate.ts` | Contract template utilities |
+| invoiceDocument | `utils/invoiceDocument.ts` | Printable A4 invoice (EN/NL/PT), sender details, `printInvoice()`; logo at `client/public/invoice-logo.svg` |
 
 ---
 

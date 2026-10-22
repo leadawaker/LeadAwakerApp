@@ -7,6 +7,7 @@ import { parseLineItems, formatCurrency } from "../../types";
 import { apiFetch } from "@/lib/apiUtils";
 import { StatusPill, fmtDateFull, daysFrom, DetailSection, ActBtn, DetailRow } from "./atoms";
 import { effectiveInvoiceStatus } from "./adapters";
+import { printInvoice, invoiceLanguageFor, INVOICE_LANGUAGES, type InvoiceLanguage } from "../../utils/invoiceDocument";
 
 function parsePaymentLines(text: string): Array<{ key: string | null; value: string }> {
   return text.split("\n").filter((l) => l.trim()).map((line) => {
@@ -33,7 +34,7 @@ interface Props {
 }
 
 export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent, onMarkPaid, onEdit, onDuplicate, onRefresh }: Props) {
-  const { t } = useTranslation("billing");
+  const { t, i18n } = useTranslation("billing");
   const status = effectiveInvoiceStatus(invoice);
   const lineItems = parseLineItems(invoice.line_items);
   const currency = invoice.currency || "EUR";
@@ -63,50 +64,14 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
     try { await onMarkPaid(invoice.id); onRefresh(); } finally { setMarkingPaid(false); }
   }, [invoice.id, onMarkPaid, onRefresh]);
 
+  const [pdfLang, setPdfLang] = useState<InvoiceLanguage>(() => invoiceLanguageFor(account?.language, i18n.language));
+  useEffect(() => {
+    setPdfLang(invoiceLanguageFor(account?.language, i18n.language));
+  }, [invoice.id, account?.language, i18n.language]);
+
   const handleDownloadPdf = useCallback(() => {
-    const subtotalNum = parseFloat(invoice.subtotal || "0");
-    const totalNum = parseFloat(invoice.total || "0");
-    const taxAmt = parseFloat(invoice.tax_amount || "0");
-    const discountAmt = parseFloat(invoice.discount_amount || "0");
-    const itemRows = lineItems.map((item) =>
-      `<tr><td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#374151;">${item.description}</td><td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#374151;text-align:center;">${item.qty}</td><td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#374151;text-align:right;">${formatCurrency(item.unitPrice, currency)}</td><td style="padding:8px 12px;border-bottom:1px solid #E5E7EB;font-size:13px;color:#374151;text-align:right;font-weight:600;">${formatCurrency(item.amount, currency)}</td></tr>`
-    ).join("");
-    const totalsRows = [
-      `<tr><td style="padding:4px 12px;font-size:13px;color:#6B7280;">${t("invoices.detail.subtotal")}</td><td style="padding:4px 12px;font-size:13px;text-align:right;">${formatCurrency(subtotalNum, currency)}</td></tr>`,
-      taxAmt > 0 ? `<tr><td style="padding:4px 12px;font-size:13px;color:#6B7280;">${invoice.tax_percent ? t("invoices.detail.taxWithPercent", { percent: invoice.tax_percent }) : t("invoices.detail.tax")}</td><td style="padding:4px 12px;font-size:13px;text-align:right;">${formatCurrency(taxAmt, currency)}</td></tr>` : "",
-      discountAmt > 0 ? `<tr><td style="padding:4px 12px;font-size:13px;color:#6B7280;">${t("invoices.detail.discount")}</td><td style="padding:4px 12px;font-size:13px;text-align:right;color:#059669;">-${formatCurrency(discountAmt, currency)}</td></tr>` : "",
-      `<tr><td style="padding:6px 12px;font-size:13px;font-weight:700;border-top:1px solid #E5E7EB;color:#111827;">${t("invoices.detail.total")}</td><td style="padding:6px 12px;font-size:13px;font-weight:700;text-align:right;border-top:1px solid #E5E7EB;color:#111827;">${formatCurrency(totalNum, currency)}</td></tr>`,
-    ].join("");
-    const billToLines: string[] = [];
-    billToLines.push(`<div style="font-size:15px;font-weight:700;margin-bottom:3px;">${invoice.account_name || "—"}</div>`);
-    if (account?.address) billToLines.push(`<div style="font-size:13px;color:#374151;">${account.address.replace(/\n/g, "<br>")}</div>`);
-    if (account?.phone || account?.owner_email) billToLines.push(`<div style="font-size:13px;color:#6B7280;margin-top:2px;">${[account?.phone, account?.owner_email].filter(Boolean).join(" · ")}</div>`);
-    if (account?.tax_id) billToLines.push(`<div style="font-size:12px;color:#9CA3AF;margin-top:4px;">${t("invoices.detail.taxIdRegNo")}: ${account.tax_id}</div>`);
-    const logoUrl = `${window.location.origin}/2.Full-LOGO.svg`;
-    const bodyHtml = `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:40px;color:#111827;background:#fff;"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:32px;"><img src="${logoUrl}" alt="Lead Awaker" style="height:100px;width:auto;" /><div><div style="font-size:28px;font-weight:700;text-align:right;">${t("invoices.detail.invoice").toUpperCase()}</div><div style="text-align:right;font-size:13px;color:#6B7280;margin-top:4px;">${invoice.invoice_number ? `#${invoice.invoice_number}<br>` : ""}${t("invoices.detail.issued")}: ${fmtDateFull(invoice.issued_date)}<br>${t("invoices.detail.dueDate")}: ${fmtDateFull(invoice.due_date)}</div></div></div><div style="margin-bottom:28px;"><div style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;margin-bottom:6px;">${t("invoices.detail.billTo")}</div>${billToLines.join("")}</div>${invoice.title ? `<p style="font-size:16px;font-weight:600;margin:0 0 16px;">${toDisplayTitle(invoice.title, t("invoices.card.untitledInvoice"))}</p>` : ""}<table style="width:100%;border-collapse:collapse;"><thead><tr><th style="padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;border-bottom:2px solid #E5E7EB;text-align:left;">${t("invoices.detail.description")}</th><th style="padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;border-bottom:2px solid #E5E7EB;text-align:center;">${t("invoices.detail.qty")}</th><th style="padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;border-bottom:2px solid #E5E7EB;text-align:right;">${t("invoices.detail.unitPrice")}</th><th style="padding:10px 12px;font-size:11px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;border-bottom:2px solid #E5E7EB;text-align:right;">${t("invoices.detail.amount")}</th></tr></thead><tbody>${itemRows}</tbody></table><div style="margin-top:16px;display:flex;justify-content:flex-end;"><table style="width:280px;border-collapse:collapse;">${totalsRows}</table></div>${invoice.payment_info ? `<div style="margin-top:32px;padding-top:16px;border-top:1px solid #E5E7EB;"><div style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;margin-bottom:8px;">${t("invoices.detail.paymentInfo")}</div><p style="margin:0;font-size:13px;color:#374151;white-space:pre-wrap;">${invoice.payment_info}</p></div>` : ""}${invoice.notes ? `<div style="margin-top:32px;padding-top:16px;border-top:1px solid #E5E7EB;"><div style="font-size:12px;text-transform:uppercase;letter-spacing:0.05em;color:#9CA3AF;margin-bottom:8px;">${t("invoices.detail.notesAndDetails")}</div><p style="margin:0;font-size:13px;color:#374151;white-space:pre-wrap;">${invoice.notes}</p></div>` : ""}</div>`;
-    const FRAME_ID = "__inv_print_frame__";
-    document.getElementById(FRAME_ID)?.remove();
-    const iframe = document.createElement("iframe");
-    iframe.id = FRAME_ID;
-    iframe.style.cssText = "position:fixed;width:0;height:0;border:none;left:-9999px;top:-9999px;";
-    document.body.appendChild(iframe);
-    const doc = iframe.contentDocument || iframe.contentWindow?.document;
-    if (!doc) return;
-    doc.open();
-    doc.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Invoice ${invoice.invoice_number || ""}</title><style>body{margin:0;padding:0;} @media print { body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } }</style></head><body>${bodyHtml}</body></html>`);
-    doc.close();
-    const printWhenReady = () => {
-      const images = Array.from(doc.querySelectorAll("img"));
-      const pending = images.filter((img) => !img.complete);
-      const fire = () => { setTimeout(() => { iframe.contentWindow?.print(); setTimeout(() => document.getElementById(FRAME_ID)?.remove(), 500); }, 50); };
-      if (pending.length === 0) { fire(); return; }
-      let loaded = 0;
-      const onDone = () => { loaded++; if (loaded >= pending.length) fire(); };
-      pending.forEach((img) => { img.addEventListener("load", onDone, { once: true }); img.addEventListener("error", onDone, { once: true }); });
-    };
-    iframe.onload = printWhenReady;
-    if (doc.readyState === "complete") printWhenReady();
-  }, [invoice, lineItems, currency, account, t]);
+    printInvoice(invoice, account, pdfLang);
+  }, [invoice, account, pdfLang]);
 
   const subtotalNum = parseFloat(invoice.subtotal || "0");
   const totalNum = parseFloat(invoice.total || "0");
@@ -137,6 +102,24 @@ export function InvoiceDetailPanel({ invoice, account, isAgencyUser, onMarkSent,
           </div>
           {isAgencyUser && (
             <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+              <div className="row" role="radiogroup" aria-label={t("invoices.actions.pdfLanguage")} title={t("invoices.actions.pdfLanguage")} style={{ gap: 2, padding: 2, borderRadius: 999, border: "1px solid var(--line)" }}>
+                {INVOICE_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang}
+                    role="radio"
+                    aria-checked={pdfLang === lang}
+                    onClick={() => setPdfLang(lang)}
+                    style={{
+                      fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase",
+                      padding: "4px 8px", borderRadius: 999, border: "none", cursor: "pointer",
+                      background: pdfLang === lang ? "var(--ink)" : "transparent",
+                      color: pdfLang === lang ? "var(--card)" : "var(--mute)",
+                    }}
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
               <ActBtn icon={<Download size={14} />} label={t("invoices.actions.pdf")} onClick={handleDownloadPdf} />
               <ActBtn icon={copied ? <Check size={14} /> : <Link2 size={14} />} label={copied ? t("invoices.actions.copied") : t("invoices.actions.copyLink")} onClick={handleCopyLink} active={copied} />
               {invoice.status === "Draft" && <ActBtn icon={<SendHorizontal size={14} />} label={markingSent ? t("invoices.actions.sending") : t("invoices.actions.markSent")} onClick={handleMarkSent} disabled={markingSent} />}
