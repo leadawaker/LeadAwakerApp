@@ -50,7 +50,7 @@ The marketing site (leadawaker.com landing) is static files in `client/public/pr
 | Book Call | `pages/book-call.tsx` | |
 | Intake Demo | `pages/intake-demo.tsx` | `/intake/:token` |
 | Legacy Home | `legacy/LegacyRoute.tsx` | `/legacy` |
-| Privacy Policy | `pages/privacy-policy.tsx` | |
+| Privacy Policy | `client/public/premium/privacy.html` | Static page (NL, EN, PT) served at /privacy-policy; the old in-app URLs redirect to it |
 | Terms of Service | `pages/terms-of-service.tsx` | |
 | Canvas | `pages/canvas.tsx` | |
 | Not Found | `pages/not-found.tsx` | |

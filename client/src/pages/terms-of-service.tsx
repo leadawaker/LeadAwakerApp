@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next';
 import { LegalPageShell, type LegalSection } from '@/components/legal/LegalPageShell';
 
 export default function TermsOfService() {
-  const { t } = useTranslation(['termsOfService', 'privacyPolicy']);
+  const { t } = useTranslation('termsOfService');
 
   const sections: LegalSection[] = [
     { title: t('section1.title'), body: [t('section1.content')] },
@@ -40,7 +40,7 @@ export default function TermsOfService() {
       title={t('title')}
       lastUpdated={t('lastUpdated')}
       sections={sections}
-      sibling={{ href: '/privacy-policy', label: t('privacyPolicy:title') }}
+      sibling={{ href: '/privacy-policy', label: t('privacyPolicyLink') }}
     />
   );
 }

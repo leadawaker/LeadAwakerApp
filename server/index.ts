@@ -140,6 +140,14 @@ app.use((req, res, next) => {
   // location.pathname), so this serves the file rather than redirecting.
   // Mirrors the /demo/:token rewrite in vercel.json.
   app.get("/demo/:token", sendFile(premiumDir, "demo.html"));
+  // The privacy policy is one static page (NL, EN, PT). Mirrors the
+  // /privacy-policy rewrite in vercel.json; the URLs of the retired in-app
+  // policy redirect to it, as in vercel.json's "redirects".
+  app.get("/privacy-policy", sendFile(premiumDir, "privacy.html"));
+  app.get(
+    ["/:prefix(en|nl|pt|legacy|dbr)/privacy-policy", "/:lang(en|nl|pt)/:base(legacy|dbr)/privacy-policy"],
+    (_req: Request, res: Response) => res.redirect(301, "/privacy-policy"),
+  );
   app.get("/login", sendFile(publicDir, "login.html"));
   app.use("/premium", express.static(premiumDir));
 

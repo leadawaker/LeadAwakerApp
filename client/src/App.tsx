@@ -22,12 +22,10 @@ const VoiceDemo = lazy(() => import("@/pages/voice-demo"));
 const ReviewDemo = lazy(() => import("@/pages/review-demo"));
 const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
 const LegacyHome = lazy(() => import("@/legacy/LegacyRoute"));
-const LegacyPrivacyPolicy = lazy(() => import("@/legacy/PrivacyPolicyRoute"));
 const LegacyTermsOfService = lazy(() => import("@/legacy/TermsOfServiceRoute"));
 
 const AppArea = lazy(() => import("@/pages/app"));
 const Canvas = lazy(() => import("@/pages/canvas"));
-const PrivacyPolicy = lazy(() => import("@/pages/privacy-policy"));
 const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
 const Accounts = lazy(() => import("@/pages/Accounts"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -119,10 +117,8 @@ function AppRoutes() {
     <Switch>
       <Route path="/" component={() => <Redirect to="/platform" />} />
       <Route path="/legacy" component={LegacyHome} />
-      <Route path="/legacy/privacy-policy" component={LegacyPrivacyPolicy} />
       <Route path="/legacy/terms-of-service" component={LegacyTermsOfService} />
       <Route path="/dbr" component={LegacyHome} />
-      <Route path="/dbr/privacy-policy" component={LegacyPrivacyPolicy} />
       <Route path="/dbr/terms-of-service" component={LegacyTermsOfService} />
       <Route path="/faq" component={FAQ} />
       <Route path="/about" component={() => <Redirect to="/faq" />} />
@@ -145,7 +141,6 @@ function AppRoutes() {
       <Route path="/app/agency" component={() => <Redirect to="/platform" />} />
       <Route path="/app/subaccount" component={() => <Redirect to="/platform" />} />
       <Route path="/canvas" component={Canvas} />
-      <Route path="/privacy-policy" component={PrivacyPolicy} />
       <Route path="/terms-of-service" component={TermsOfService} />
       <Route path="/test-table" component={Accounts} />
       <Route component={NotFound} />
@@ -171,13 +166,10 @@ function LanguageRouter({ lang }: { lang: Lang }) {
       <Route path={`/${lang}/cases`} component={Cases} />
       <Route path={`/${lang}/accept-invite`} component={AcceptInvite} />
       <Route path={`/${lang}/canvas`} component={Canvas} />
-      <Route path={`/${lang}/privacy-policy`} component={PrivacyPolicy} />
       <Route path={`/${lang}/terms-of-service`} component={TermsOfService} />
       <Route path={`/${lang}/legacy`} component={LegacyHome} />
-      <Route path={`/${lang}/legacy/privacy-policy`} component={LegacyPrivacyPolicy} />
       <Route path={`/${lang}/legacy/terms-of-service`} component={LegacyTermsOfService} />
       <Route path={`/${lang}/dbr`} component={LegacyHome} />
-      <Route path={`/${lang}/dbr/privacy-policy`} component={LegacyPrivacyPolicy} />
       <Route path={`/${lang}/dbr/terms-of-service`} component={LegacyTermsOfService} />
 
       {/* Home MUST be last */}
@@ -252,9 +244,7 @@ function Router() {
   /* Legal pages render standalone (premium-styled, self-contained) —
      no legacy marketing Navbar/Footer. */
   const pathNoLang = lang ? location.slice(lang.length + 1) : location;
-  const isLegal =
-    pathNoLang.startsWith("/privacy-policy") ||
-    pathNoLang.startsWith("/terms-of-service");
+  const isLegal = pathNoLang.startsWith("/terms-of-service");
 
   /* Public pages follow system preference; CRM follows the manual toggle */
   useEffect(() => {

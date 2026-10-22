@@ -149,12 +149,10 @@ export function Footer() {
         <div className="border-t border-slate-200 dark:border-border pt-8 flex flex-col md:flex-row justify-between items-center gap-1 text-sm text-muted-foreground relative z-10">
           <p>{t("footer.copyright", { year: new Date().getFullYear() })}</p>
           <div className="flex gap-6">
-            <Link
-              href={withLang(legacyBase ? `${legacyBase}/privacy-policy` : "/privacy-policy")}
-              className="hover:text-primary transition-colors"
-            >
+            {/* A static page outside the SPA, so a full page load rather than a <Link>. */}
+            <a href="/privacy-policy" className="hover:text-primary transition-colors">
               {t("footer.privacy")}
-            </Link>
+            </a>
             <Link
               href={withLang(legacyBase ? `${legacyBase}/terms-of-service` : "/terms-of-service")}
               className="hover:text-primary transition-colors"

@@ -9,7 +9,6 @@ import enAbout from "./locales/en/about.json";
 import enBookDemo from "./locales/en/bookDemo.json";
 import enIntakeDemo from "./locales/en/intakeDemo.json";
 import enTermsOfService from "./locales/en/termsOfService.json";
-import enPrivacyPolicy from "./locales/en/privacyPolicy.json";
 import enDocs from "./locales/en/docs.json";
 
 // Import translation files — CRM pages
@@ -48,7 +47,6 @@ import ptAbout from "./locales/pt/about.json";
 import ptBookDemo from "./locales/pt/bookDemo.json";
 import ptIntakeDemo from "./locales/pt/intakeDemo.json";
 import ptTermsOfService from "./locales/pt/termsOfService.json";
-import ptPrivacyPolicy from "./locales/pt/privacyPolicy.json";
 import ptHome from "./locales/pt/home.json";
 import ptCrm from "./locales/pt/crm.json";
 import ptSettings from "./locales/pt/settings.json";
@@ -84,7 +82,6 @@ import nlAbout from "./locales/nl/about.json";
 import nlBookDemo from "./locales/nl/bookDemo.json";
 import nlIntakeDemo from "./locales/nl/intakeDemo.json";
 import nlTermsOfService from "./locales/nl/termsOfService.json";
-import nlPrivacyPolicy from "./locales/nl/privacyPolicy.json";
 import nlHome from "./locales/nl/home.json";
 import nlCrm from "./locales/nl/crm.json";
 import nlSettings from "./locales/nl/settings.json";
@@ -122,7 +119,6 @@ const resources = {
     bookDemo: enBookDemo,
     intakeDemo: enIntakeDemo,
     termsOfService: enTermsOfService,
-    privacyPolicy: enPrivacyPolicy,
     home: enHome,
     crm: enCrm,
     settings: enSettings,
@@ -159,7 +155,6 @@ const resources = {
     bookDemo: ptBookDemo,
     intakeDemo: ptIntakeDemo,
     termsOfService: ptTermsOfService,
-    privacyPolicy: ptPrivacyPolicy,
     home: ptHome,
     crm: ptCrm,
     settings: ptSettings,
@@ -196,7 +191,6 @@ const resources = {
     bookDemo: nlBookDemo,
     intakeDemo: nlIntakeDemo,
     termsOfService: nlTermsOfService,
-    privacyPolicy: nlPrivacyPolicy,
     home: nlHome,
     crm: nlCrm,
     settings: nlSettings,
@@ -245,7 +239,6 @@ i18n
       "intakeDemo",
       "login",
       "termsOfService",
-      "privacyPolicy",
       "home",
       "crm",
       "settings",

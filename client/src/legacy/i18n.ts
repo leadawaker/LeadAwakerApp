@@ -44,7 +44,6 @@ i18n
       "workflow",
       "about",
       "login",
-      "privacyPolicy",
       "termsOfService",
     ],
     interpolation: { escapeValue: false },

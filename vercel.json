@@ -7,6 +7,16 @@
       "source": "/(home|solar|uk|us)",
       "destination": "/",
       "permanent": true
+    },
+    {
+      "source": "/:prefix(en|nl|pt|legacy|dbr)/privacy-policy",
+      "destination": "/privacy-policy",
+      "permanent": true
+    },
+    {
+      "source": "/:lang(en|nl|pt)/:base(legacy|dbr)/privacy-policy",
+      "destination": "/privacy-policy",
+      "permanent": true
     }
   ],
   "rewrites": [
