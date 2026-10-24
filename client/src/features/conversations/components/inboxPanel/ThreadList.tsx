@@ -1,4 +1,5 @@
 import { RefObject } from "react";
+import { useTranslation } from "react-i18next";
 import type { Virtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
 import { ListCard } from "@/components/crm/primitives";
@@ -46,6 +47,7 @@ export function ThreadList({
   selectedLeadId,
   onSelectLead,
 }: ThreadListProps) {
+  const { t } = useTranslation("conversations");
   return (
     <div className={cn("flex-1 min-h-0 relative", tab === "prospects" && "hidden")}>
       {/* Sticky group header overlay — absolute so it doesn't push content down */}
@@ -73,21 +75,21 @@ export function ThreadList({
             searchQuery ? (
               <DataEmptyState
                 variant="search"
-                title="No conversations found"
-                description={`No conversations match "${searchQuery}".`}
+                title={t("inbox.emptySearch.title")}
+                description={t("inbox.emptySearch.description", { query: searchQuery })}
                 compact
                 data-testid="empty-state-search"
               />
             ) : hasNonDefaultControls || tab === "unread" ? (
               <DataEmptyState
                 variant="search"
-                title={tab === "unread" ? "All caught up!" : "No matches"}
+                title={tab === "unread" ? t("inbox.emptyUnread.title") : t("inbox.emptyFiltered.title")}
                 description={
                   tab === "unread"
-                    ? "You have no unread conversations right now."
-                    : "No conversations match the selected filters."
+                    ? t("inbox.emptyUnread.description")
+                    : t("inbox.emptyFiltered.description")
                 }
-                actionLabel={hasNonDefaultControls ? "Clear filters" : undefined}
+                actionLabel={hasNonDefaultControls ? t("inbox.emptyFiltered.clearFilters") : undefined}
                 onAction={hasNonDefaultControls && onClearAll ? onClearAll : undefined}
                 compact
                 data-testid="empty-state-filtered"
@@ -185,7 +187,7 @@ export function ThreadList({
                               <span
                                 className={cn(
                                   "absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] rounded-full bg-[#FCB803] text-[#131B49] text-[8px] font-bold flex items-center justify-center px-0.5",
-                                  active ? "shadow-[0_0_0_2px_var(--color-highlight-selected)]" : "shadow-[0_0_0_2px_var(--color-card)]"
+                                  active ? "shadow-[0_0_0_2px_var(--color-card)]" : "shadow-[0_0_0_2px_var(--color-panel-list-bg)]"
                                 )}
                               >
                                 {unreadCount > 99 ? "99+" : unreadCount}
@@ -198,14 +200,14 @@ export function ThreadList({
                               <p className="text-[16px] font-semibold font-heading leading-tight truncate text-foreground">
                                 {lead.full_name ||
                                   `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() ||
-                                  "Unknown"}
+                                  t("inbox.unknownName")}
                               </p>
                               {lead.manual_takeover && (
                                 <Hand className="w-3 h-3 text-amber-500 shrink-0" />
                               )}
                               {lastTs && (
                                 <span className="text-[10px] text-muted-foreground/70 shrink-0 tabular-nums">
-                                  {formatRelativeTime(lastTs)}
+                                  {formatRelativeTime(lastTs, t)}
                                 </span>
                               )}
                             </div>
@@ -230,8 +232,8 @@ export function ThreadList({
                                     key={t}
                                     className="inline-flex items-center px-1.5 py-px rounded-full text-[10px] font-medium"
                                     style={{
-                                      backgroundColor: active ? "rgba(255,255,255,0.75)" : "rgba(0,0,0,0.09)",
-                                      color: "rgba(0,0,0,0.45)",
+                                      backgroundColor: "hsl(var(--foreground) / 0.09)",
+                                      color: "hsl(var(--foreground) / 0.45)",
                                     }}
                                   >
                                     {t}

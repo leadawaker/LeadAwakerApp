@@ -1,45 +1,4 @@
 /* Home dashboard (specs/home-dashboard). */
-.home-banner {
-  position: relative;
-  display: flex;
-  align-items: flex-end;
-  min-height: 208px;
-  padding: 28px 32px;
-  border-radius: var(--r-card);
-  overflow: hidden;
-  color: var(--home-banner-text);
-  background: linear-gradient(100deg, var(--home-banner-night) 0%, var(--home-banner-oxblood) 58%, var(--home-banner-wine) 100%);
-}
-.home-banner__art {
-  position: absolute;
-  inset: 0 0 0 auto;
-  width: 62%;
-  height: 100%;
-  object-fit: cover;
-  object-position: right center;
-  /* Fade the picture into the dark on the left so the number stays readable. */
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 55%);
-  mask-image: linear-gradient(to right, transparent 0%, #000 55%);
-}
-.home-banner__text { position: relative; max-width: 56%; }
-.home-banner__eyebrow {
-  font-family: var(--mono);
-  font-size: 11px;
-  letter-spacing: 0.22em;
-  text-transform: uppercase;
-  color: var(--home-banner-accent);
-}
-.home-banner__value {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 76px;
-  line-height: 1;
-  letter-spacing: -0.02em;
-  margin-top: 10px;
-}
-.home-banner__sentence { font-family: var(--serif); font-size: 19px; margin-top: 6px; }
-.home-banner__trend { display: flex; align-items: center; gap: 4px; font-size: 13px; margin-top: 12px; color: var(--home-banner-accent); }
-
 .home-bar { height: 6px; border-radius: 999px; background: var(--wine-tint); overflow: hidden; }
 .home-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--wine); transition: width 400ms ease; }
 
@@ -47,11 +6,3 @@
 .home-row:last-child { border-bottom: 0; }
 button.home-row { width: 100%; text-align: left; background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
 button.home-row:hover { background: var(--wine-tint); }
-
-@media (max-width: 767px) {
-  .home-banner { min-height: 150px; padding: 20px; }
-  .home-banner__art { width: 100%; opacity: 0.45; }
-  .home-banner__text { max-width: 100%; }
-  .home-banner__value { font-size: 54px; }
-  .home-banner__sentence { font-size: 16px; }
-}

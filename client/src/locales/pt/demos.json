@@ -138,6 +138,28 @@
       "callNumber": "Número em \"Ou ligue para ela\""
     },
     "empty": "Ainda não há configurações para este serviço.",
+    "rail": {
+      "label": "Serviços",
+      "voice": "Vozes, senha, limite da ligação",
+      "none": "Ainda sem configurações",
+      "shared": "Roda na campanha de {{service}}"
+    },
+    "campaign": {
+      "help": "A campanha em que esta demo roda. As alterações são salvas sozinhas.",
+      "loadFailed": "Não foi possível carregar a campanha {{id}}.",
+      "meta": "#{{id}} · {{status}}",
+      "saving": "Salvando...",
+      "pending": "Salvando em instantes",
+      "saved": "Todas as alterações salvas",
+      "sharedHelp": "{{service}} roda na mesma campanha que {{owner}} ({{campaign}}), então as configurações ficam em {{owner}}.",
+      "openShared": "Abrir {{service}}"
+    },
+    "campaigns": {
+      "label": "Campanhas de demo",
+      "help": "Campanhas de demo em que nenhum dos serviços acima roda.",
+      "none": "Nenhuma outra campanha de demo",
+      "pick": "Campanha"
+    },
     "widget": {
       "avatarTitle": "Foto da atendente",
       "avatarHint": "Aparece no balão de boas-vindas, no cabeçalho do chat e em cada resposta, em todas as demos do widget.",
@@ -163,42 +185,28 @@
       "limitHint": "Quanto tempo uma ligação de demonstração pode durar antes de encerrar sozinha.",
       "save": "Salvar",
       "cancel": "Cancelar",
-      "phone": {
-        "title": "Som de escritório na linha telefônica",
-        "hint": "Toca um escritório tranquilo por baixo da voz dela em {{number}}. Ligado: as chamadas passam por uma conferência da Telnyx (cerca de US$ 0,007 a mais por minuto). Desligado: as chamadas vão direto para a OpenAI, como antes.",
-        "onState": "Ligado: quem liga ouve o escritório. Vale a partir da próxima chamada.",
-        "offState": "Desligado: as chamadas vão direto para a OpenAI, sem som ambiente.",
-        "levelTitle": "Volume do escritório",
-        "levelHint": "O volume do escritório por baixo da voz dela. Vale a partir da próxima chamada.",
-        "level": {
-          "low": "Baixo",
-          "medium": "Médio",
-          "high": "Alto"
-        }
-      },
-      "jitter": {
-        "title": "Áudio suave (jitter buffer)",
-        "hint": "Segura de {{min}} a {{max}} ms do áudio dela na Telnyx, para que pacotes irregulares da OpenAI toquem sem pequenas falhas. Adiciona até {{max}} ms de atraso. Vale para todas as ligações da linha.",
-        "onState": "Ligado: áudio mais suave, até {{max}} ms depois. Vale a partir da próxima ligação.",
-        "offState": "Desligado: menor atraso, pequenas falhas são possíveis.",
-        "anchor": "Áudio roteado por {{site}}."
-      },
       "engines": {
         "title": "Testes de motor",
         "hint": "Ligações destes números para a linha de demonstração são atendidas pelo motor, voz e prompt escolhidos aqui. Qualquer outra pessoa continua com a configuração da linha. Vale em até 30 segundos.",
+        "retired": "O Grok foi desativado: as ligações deste número são atendidas pelo GPT-Live. Escolha um motor para mudar isso.",
         "xaiReady": "O Grok está configurado para {{numbers}}.",
         "xaiMissing": "O Grok ainda não está configurado (falta: {{missing}}): essas ligações ficam no GPT-Live até lá.",
+        "elevenReady": "O ElevenLabs está configurado para {{numbers}}.",
+        "elevenMissing": "O ElevenLabs ainda não está configurado (falta: {{missing}}): essas ligações ficam no GPT-Live até lá.",
         "number": "Telefone",
         "numberPlaceholder": "+31 6 12345678",
         "label": "Nome",
         "labelPlaceholder": "Nome (opcional)",
         "enabled": "Teste ativo",
+        "freshCaller": "Memória desligada (soa como quem liga pela primeira vez)",
+        "freshCallerHint": "As ligações anteriores, o nome, o idioma e os agendamentos deste número ficam ocultos para a IA. Os agendamentos continuam indo para a agenda.",
         "remove": "Remover",
         "add": "Adicionar testador",
         "lineVoice": "A voz da própria linha",
         "engine": {
           "gpt-live": "GPT-Live",
-          "xai": "Grok"
+          "xai": "Grok",
+          "elevenlabs": "ElevenLabs"
         },
         "gender": {
           "female": "Feminina",

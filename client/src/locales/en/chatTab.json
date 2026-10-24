@@ -44,6 +44,10 @@
     "hours": {
       "label": "Active hours",
       "help": "When the follow-up may be sent."
+    },
+    "advanced": {
+      "label": "Advanced",
+      "help": "Engine settings for this assistant. Only the Owner sees them."
     }
   },
   "overview": {
@@ -135,7 +139,7 @@
     "whenHelp": "Only inside the active hours, only on WhatsApp (website visitors have left). This window is fixed.",
     "what": "What it sends",
     "whatValue": "One line about what they were asking, or nothing when the chat ended naturally. The customer's status is never changed.",
-    "notReceptionist": "This campaign uses the reactivation follow-ups. They are set on the Campaigns page.",
+    "notReceptionist": "This campaign uses the reactivation follow-ups. They are set in Accounts > Reactivation.",
     "openPrompt": "Edit the follow-up instructions (prompt {{id}})"
   },
   "hours": {
@@ -147,5 +151,48 @@
     "to": "to",
     "active_hours_start": "From",
     "active_hours_end": "Until"
+  },
+  "advanced": {
+    "modelTitle": "Model",
+    "model": "AI model",
+    "modelHelp": "The model that writes the replies and the follow-ups.",
+    "modelDefault": "Engine default",
+    "role": "Role",
+    "roleHelp": "What the assistant is at the business, as the prompt says it. Saved for the language you are using the app in.",
+    "rolePlaceholder": "e.g. receptionist",
+    "conversationTitle": "Conversation",
+    "conversationMode": "Conversation mode",
+    "conversationModeHelp": "Scoping builds a brief for leads with no quote yet. Decision finds out where a lead with a quote stands. Auto picks from the lead's stage.",
+    "conversationModes": {
+      "auto": "Auto",
+      "scoping": "Scoping",
+      "decision": "Decision"
+    },
+    "bookingMode": "Booking mode",
+    "bookingModeHelp": "Call agent: a buying signal (\"call me\", \"sign me up\") alerts the closer at once. Qualifying: the assistant qualifies and skips the booking step.",
+    "bookingModes": {
+      "unset": "Not set",
+      "callAgent": "Call agent",
+      "qualifying": "Qualifying"
+    },
+    "typos": "Typos per message",
+    "typosHelp": "How many small typos the assistant may make, so it reads like a person typing. The engine treats 0 as 1.",
+    "timingTitle": "Reply timing",
+    "textDelay": "Wait after a text",
+    "textDelayHelp": "Seconds it waits after a text before replying, so quick messages get one answer. 0 replies at once. Empty: 10 seconds.",
+    "voiceDelay": "Wait after a voice note",
+    "voiceDelayHelp": "Seconds it waits after a voice note. Empty: the same as after a text, or 60 seconds when that is empty too.",
+    "seconds": "{{n}} s",
+    "disclosureTitle": "AI disclosure",
+    "optOut": "Opt-out line in the first message",
+    "optOutHelp": "Adds how to stop the messages under the first message of an outbound campaign. The assistant only answers, so this rarely applies.",
+    "bumpsTitle": "Reactivation follow-ups",
+    "bumpsHelp": "These two only count when the campaign uses the reactivation follow-ups instead of the assistant's one follow-up message (see Follow-up).",
+    "aiBumps": "Let the AI write the follow-ups",
+    "aiBumpsHelp": "Off: the fixed follow-up texts are sent.",
+    "stopOnResponse": "Stop the follow-ups when the customer replies",
+    "stopOnResponseHelp": "Clears the next planned follow-up as soon as a reply comes in.",
+    "objectionsTitle": "Objection playbook",
+    "objectionsHelp": "Up to five objections, each with the answer the business approves. The assistant uses these answers instead of making one up."
   }
 }

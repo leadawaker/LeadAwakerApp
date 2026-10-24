@@ -23,13 +23,13 @@ import { hydrateLandingPage, isLandingHydrated, resolveLandingPath } from "@/lib
 import { getQueryFn } from "@/lib/queryClient";
 import { TwoFactorNotice } from "@/features/settings/twoFactor/TwoFactorNotice";
 import { parsePrefs } from "@/lib/userPrefs";
+import { LEAD_HOME_PATH, leadPath, readLeadParam } from "@/lib/leadLink";
 
 // Route-level code splitting: each page is its own lazy chunk so the initial
 // CRM bundle stays small. Named exports are unwrapped to { default }.
 const HomePage = lazy(() => import("@/features/home/pages/HomePage"));
 const AppLeads = lazy(() => import("@/features/leads/pages/LeadsPage").then(m => ({ default: m.LeadsPage })));
 const OutreachInbox = lazy(() => import("@/pages/OutreachInbox"));
-const LeadDetailPage = lazy(() => import("@/pages/LeadDetail"));
 const ProspectDetailPage = lazy(() => import("@/pages/ProspectDetail"));
 const AppCampaigns = lazy(() => import("@/pages/AppCampaigns"));
 const AppAccounts = lazy(() => import("@/pages/AppAccounts"));
@@ -73,31 +73,32 @@ function Protected({ children }: { children: ReactElement }) {
 
 /**
  * Route guard for agency-only pages (Accounts, Users, Tags, Prompts, Automation Logs).
- * Redirects non-agency users to campaigns.
+ * Redirects non-agency users to Home.
  * Client users (Manager, Viewer) are blocked from these routes.
  */
 function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: string }) {
   if (!isAgencyUser()) {
-    return <Redirect to={`${prefix}/campaigns`} />;
+    return <Redirect to={`${prefix}/home`} />;
   }
   return children;
 }
 
 /**
  * Route guard for Owner-only pages (Automation Logs, Traffic, Demos).
- * Everyone else is sent to Campaigns.
+ * Everyone else is sent to Home.
  */
 function OwnerOnly({ children, prefix }: { children: ReactElement; prefix: string }) {
   const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
   if (role !== "Owner") {
-    return <Redirect to={`${prefix}/campaigns`} />;
+    return <Redirect to={`${prefix}/home`} />;
   }
   return children;
 }
 
 /**
  * Route guard for the Owner-only service pages that are hidden by default
- * (Speed to Lead, Reputation, Missed Calls). With the toggle off, a direct URL
+ * (today only Reputation; Speed to Lead and Missed Calls are hidden until
+ * finished and use OwnerOnly). With the toggle off, a direct URL
  * sends the user to their landing page instead.
  */
 function ServicePageGuard({ service, children }: { service: ServicePageKey; children: ReactElement }) {
@@ -174,14 +175,33 @@ function LandingRedirect() {
 }
 
 /**
+ * A lead opens in one place: Chats with that lead selected (lib/leadLink). The
+ * retired combined /leads page and the old /contacts/:id detail page land there,
+ * keeping the lead. A bare /leads (alert e-mails through /go/, engine
+ * notifications) opens the lead those flows preselected in localStorage.
+ */
+function LeadHomeRedirect({ leadId }: { leadId?: string }) {
+  let id = leadId && /^\d+$/.test(leadId) ? leadId : readLeadParam(window.location.search);
+  if (!id) {
+    try {
+      const stored = localStorage.getItem("selected-lead-id") ?? "";
+      if (/^\d+$/.test(stored)) id = stored;
+    } catch {
+      /* storage unavailable */
+    }
+  }
+  return <Redirect to={id ? leadPath(id) : LEAD_HOME_PATH} replace />;
+}
+
+/**
  * Route guard for Voice calls. The server decides who may see what (Owner: Live
  * and Demo, a client with a voice line: Live, everyone else: nothing), so this
- * only follows /api/voice-calls/capabilities. Nobody with neither goes to Campaigns.
+ * only follows /api/voice-calls/capabilities. Anyone with neither goes Home.
  */
 function VoiceCallsGuard({ prefix }: { prefix: string }) {
   const { data, isLoading } = useVoiceCapabilities();
   if (isLoading) return <PageLoader />;
-  if (!data || (!data.live && !data.demo)) return <Redirect to={`${prefix}/campaigns`} />;
+  if (!data || (!data.live && !data.demo)) return <Redirect to={`${prefix}/home`} />;
   return <VoiceCallsPage />;
 }
 
@@ -267,22 +287,28 @@ export default function AppArea() {
             <Suspense fallback={<PageLoader><LeadsRouteSkeleton mode="conversations" /></PageLoader>}><AppLeads mode="conversations" /></Suspense>
           </Route>
           <Route path="/platform/contacts"><Suspense fallback={<PageLoader><LeadsRouteSkeleton mode="contacts" /></PageLoader>}><AppLeads mode="contacts" /></Suspense></Route>
-          <Route path="/platform/leads"><AppLeads /></Route>
+          {/* Retired lead destinations: kept as redirects so bookmarks and e-mail links still work. */}
+          <Route path="/platform/leads"><LeadHomeRedirect /></Route>
           <Route path="/platform/outreach-inbox">
             <AgencyOnly prefix="/platform"><OutreachInbox /></AgencyOnly>
           </Route>
-          <Route path="/platform/contacts/:id" component={LeadDetailPage} />
-          <Route path="/platform/campaigns" component={AppCampaigns} />
+          <Route path="/platform/contacts/:id">{(params) => <LeadHomeRedirect leadId={params.id} />}</Route>
+          {/* The old Campaigns page: retired from the nav (see the list above navItems in
+              RightSidebar), kept for the agency by URL. Clients go Home. */}
+          <Route path="/platform/campaigns">
+            <AgencyOnly prefix="/platform"><AppCampaigns /></AgencyOnly>
+          </Route>
+          {/* Hidden until finished (list in components/crm/RightSidebar.tsx): Speed to Lead,
+              Missed calls, AI agents and Cadence have no way in, but open by URL. Speed to
+              Lead and Missed calls lost their Settings switch, so the Owner opens them directly. */}
           <Route path="/platform/speed-to-lead">
-            <ServicePageGuard service="speed">
-              <AgencyOnly prefix="/platform"><SpeedToLeadPage /></AgencyOnly>
-            </ServicePageGuard>
+            <OwnerOnly prefix="/platform"><SpeedToLeadPage /></OwnerOnly>
           </Route>
           <Route path="/platform/reputation">
             <ServicePageGuard service="reputation"><ReputationPage /></ServicePageGuard>
           </Route>
           <Route path="/platform/missed-calls">
-            <ServicePageGuard service="missedcall"><VoicePage /></ServicePageGuard>
+            <OwnerOnly prefix="/platform"><VoicePage /></OwnerOnly>
           </Route>
           <Route path="/platform/calendar" component={CalendarPage} />
           {/* Agency always; client users once the agency switched Social on (the page redirects otherwise). */}
@@ -308,10 +334,10 @@ export default function AppArea() {
             <AgencyOnly prefix="/platform"><AppCadence /></AgencyOnly>
           </Route>
           <Route path="/platform/users">
-            <Redirect to="/platform/settings?tab=team" />
+            <Redirect to="/platform/settings?tab=users" />
           </Route>
           <Route path="/platform/tags">
-            <Redirect to="/platform/campaigns" />
+            <Redirect to="/platform/home" />
           </Route>
           <Route path="/platform/tasks">
             <AgencyOnly prefix="/platform"><TasksPage /></AgencyOnly>
@@ -339,8 +365,9 @@ export default function AppArea() {
           <Route path="/platform/expenses"><Redirect to="/platform/billing" /></Route>
           <Route path="/platform/contracts"><Redirect to="/platform/billing" /></Route>
           <Route path="/platform/docs" component={DocsPage} />
+          {/* The pipeline lives on the Leads page now. */}
           <Route path="/platform/opportunities">
-            <Redirect to="/platform/leads" />
+            <Redirect to="/platform/contacts" />
           </Route>
 
           <Route component={() => (

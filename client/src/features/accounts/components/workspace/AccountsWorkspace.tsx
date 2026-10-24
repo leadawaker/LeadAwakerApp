@@ -32,10 +32,18 @@ import { AccountCreatePanel } from "../AccountCreatePanel";
 import type { NewAccountForm } from "../AccountCreateDialog";
 import type { AccountRow, WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
+import { receptionistSettingsHref } from "./receptionist/settingsLink";
+import { useHomeServices } from "@/features/home/api/homeApi";
+import { readLastTab, writeLastTab } from "@/lib/lastTab";
 
 // Onboarding ("communication") has no tab: it opens from a button on Overview.
 // Socials has its own page in the nav bar (/platform/social); an old ?tab=social link is sent there.
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "integrations", "voice", "chat", "alerts", "automations"];
+// The receptionist is tuned where its work is: Phone is Calls > Settings, Chat is Chats > Settings
+// (an old ?tab=voice / ?tab=chat link is sent there). This page is about the business itself.
+// Reactivation (agency only) is the service the agency runs for the client: shown when the account
+// has a reactivation campaign, and always reachable by ?tab=reactivation or the Services row to start one.
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "reactivation", "integrations", "alerts", "automations"];
+const LAST_TAB_PAGE = "accounts";
 
 interface Props {
   accounts: AccountRow[];
@@ -81,24 +89,27 @@ export function AccountsWorkspace(p: Props) {
   const { t: tc } = useTranslation("crm");
   const navFacts = useClientNavFacts();
   const isNarrow = useIsMobile(1024);
-  const { isAgencyUser, isAdmin, isOwner } = useWorkspace();
+  const { isAgencyUser, isAdmin, isOwner, currentAccountId } = useWorkspace();
   useMarkVisited("receptionist"); // Getting-started checklist (clients only)
 
-  // The Automations tab is owner only: hidden for everyone else, including via ?tab=automations.
-  const visibleTabs = useMemo(
-    () => (isOwner ? ACCOUNT_TABS : ACCOUNT_TABS.filter((k) => k !== "automations")),
-    [isOwner],
-  );
-
+  // A ?tab= link wins; otherwise the tab used last (per user) reopens.
+  const restoredTab = useRef(false);
   const [tab, setTab] = useState<WorkspaceTab>(() => {
     const wanted = deepLinkTab();
-    return wanted === "automations" && !isOwner ? "overview" : wanted ?? "overview";
+    restoredTab.current = !wanted;
+    const pick = wanted ?? readLastTab(LAST_TAB_PAGE, ACCOUNT_TABS, "overview");
+    if (pick === "automations" && !isOwner) return "overview";
+    if (pick === "reactivation" && !isAgencyUser) return "overview";
+    return pick;
   });
-
-  // Owner-only tab: fall back to Overview if the role changes (e.g. impersonation) while it is open.
   useEffect(() => {
-    if (tab === "automations" && !isOwner) setTab("overview");
-  }, [tab, isOwner]);
+    if (ACCOUNT_TABS.includes(tab)) writeLastTab(LAST_TAB_PAGE, tab);
+  }, [tab]);
+
+  // Owner-only and agency-only tabs: fall back to Overview if the role changes (e.g. impersonation) while open.
+  useEffect(() => {
+    if ((tab === "automations" && !isOwner) || (tab === "reactivation" && !isAgencyUser)) setTab("overview");
+  }, [tab, isOwner, isAgencyUser]);
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
 
   const { state: listPanelState, cycle } = useListPanelState();
@@ -128,13 +139,47 @@ export function AccountsWorkspace(p: Props) {
 
   const detailData = useAccountDetailData(accountId);
 
-  const tabs = visibleTabs;
+  // The Automations tab is owner only: hidden for everyone else, including via ?tab=automations.
+  // Reactivation is agency only, shown when the account has a reactivation campaign (the same
+  // fact as the Services row and Home) or while it is open, so an empty one can start a campaign.
+  const { data: homeServices } = useHomeServices(accountId);
+  const hasReactivation = accountId > 0 && !!homeServices?.reactivation;
+  // A remembered Reactivation tab only reopens on an account that has a reactivation campaign.
+  useEffect(() => {
+    if (!restoredTab.current || accountId <= 0 || !homeServices) return;
+    restoredTab.current = false;
+    if (tab === "reactivation" && !homeServices.reactivation) setTab("overview");
+  }, [homeServices, accountId, tab]);
+  const tabs = useMemo(
+    () => ACCOUNT_TABS.filter((k) => {
+      if (k === "automations") return isOwner;
+      if (k === "reactivation") return isAgencyUser && (hasReactivation || tab === "reactivation");
+      return true;
+    }),
+    [isOwner, isAgencyUser, hasReactivation, tab],
+  );
   // Notifications sent before Socials moved to the nav bar link to ?tab=social.
   const [, setLocation] = useLocation();
   const search = useSearch();
   useEffect(() => {
     if (new URLSearchParams(search).get("tab") === "social") setLocation(SOCIAL_PAGE_PATH, { replace: true });
   }, [search, setLocation]);
+  // Links to the old Phone and Chat tabs (?tab=voice|chat, with ?section= / ?focus=) open Calls >
+  // Settings or Chats > Settings on the same account: the one shown here, else the stored pick.
+  useEffect(() => {
+    const params = new URLSearchParams(search);
+    const wanted = params.get("tab");
+    if (wanted !== "voice" && wanted !== "chat") return;
+    let stored = 0;
+    try { stored = Number(localStorage.getItem("selected-account-id")) || 0; } catch { /* storage blocked */ }
+    const target = accountId || stored || currentAccountId;
+    lastDeepTab = null;
+    setLocation(receptionistSettingsHref(wanted, {
+      accountId: isAgencyUser && target > 0 ? target : undefined,
+      section: params.get("section") ?? undefined,
+      focus: params.get("focus") ?? undefined,
+    }), { replace: true });
+  }, [search, setLocation, isAgencyUser, accountId, currentAccountId]);
   const d = useMemo(() => (account ? toAccountDetail(account, t) : null), [account, t]);
   // Header figures that point at the tabs (calls, phone line, WhatsApp, alerts).
   const metrics = useHeaderMetrics(accountId);
@@ -191,16 +236,23 @@ export function AccountsWorkspace(p: Props) {
     else if (returnAccountRef.current !== accountId) setIntegrationsGroup(undefined);
   }, [integrationsGroup, accountId]);
 
-  // Deep link: /platform/accounts?tab=voice opens that tab (used by the Demos
-  // page's "managed in Account > Voice" link). Stripped once applied.
-  const pickTab = (k: WorkspaceTab) => { lastDeepTab = null; setIntegrationsGroup(undefined); setTab(k); };
+  // Deep link: /platform/accounts?tab=alerts opens that tab. Stripped once applied.
+  // "voice" and "chat" (Overview's services rows, Automations' Change links) leave for Calls / Chats > Settings.
+  const pickTab = (k: WorkspaceTab) => {
+    if (k === "voice" || k === "chat") {
+      setLocation(receptionistSettingsHref(k, { accountId: isAgencyUser && accountId ? accountId : undefined }));
+      return;
+    }
+    lastDeepTab = null; restoredTab.current = false; setIntegrationsGroup(undefined); setTab(k);
+  };
 
   // The tab itself is read from the URL when the state is created. The param is
   // stripped only once an account has loaded, so a remount before that re-reads it.
   useEffect(() => {
     if (!accountId) return;
     const params = new URLSearchParams(window.location.search);
-    if (!params.has("tab")) return;
+    const wanted = params.get("tab");
+    if (!wanted || wanted === "voice" || wanted === "chat") return; // redirected above
     params.delete("tab");
     lastDeepTab = null;
     const qs = params.toString();
@@ -263,10 +315,8 @@ export function AccountsWorkspace(p: Props) {
         integrationsGroup={integrationsGroup}
         data={{
           account, d, accountId, onSave: p.onSave,
-          campaigns: detailData.campaigns,
           contracts: detailData.contracts,
           team: detailData.team,
-          loadingCampaigns: detailData.loadingCampaigns,
           loadingContracts: detailData.loadingContracts,
           loadingTeam: detailData.loadingTeam,
           onRefresh: detailData.refresh,
@@ -484,10 +534,8 @@ export function AccountsWorkspace(p: Props) {
                   onOpenTab={pickTab}
                   data={{
                     account, d, accountId, onSave: p.onSave,
-                    campaigns: detailData.campaigns,
                     contracts: detailData.contracts,
                     team: detailData.team,
-                    loadingCampaigns: detailData.loadingCampaigns,
                     loadingContracts: detailData.loadingContracts,
                     loadingTeam: detailData.loadingTeam,
                     onRefresh: detailData.refresh,

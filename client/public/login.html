@@ -384,6 +384,18 @@
     margin-bottom: 16px;
   }
   .error.hidden { display: none; }
+  .notice {
+    background: rgba(60, 90, 60, 0.09);
+    border: 1px solid rgba(60, 90, 60, 0.28);
+    color: var(--ink);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+  .notice.hidden { display: none; }
+  #reset-back { display: inline-block; margin-top: 18px; font-size: 14px; }
 
   .spinner {
     width: 16px; height: 16px;
@@ -449,6 +461,7 @@
       <p class="eyebrow">— Sign in</p>
       <h1 class="title">Welcome <span class="italic">back</span>.</h1>
 
+      <div id="reset-done" class="notice hidden" role="status"></div>
       <div id="err" class="error hidden"></div>
 
       <form id="login-form" autocomplete="on" novalidate>
@@ -472,7 +485,7 @@
             <input id="remember" type="checkbox" class="check" />
             <span>Remember me</span>
           </label>
-          <a href="#" class="forgot">Forgot password?</a>
+          <a href="#" class="forgot" id="forgot-link">Forgot password?</a>
         </div>
 
         <button type="submit" id="submit" class="btn">
@@ -509,6 +522,26 @@
         </form>
         <div class="twofa-links" id="twofa-links"></div>
         <a href="#" class="forgot" id="twofa-back"></a>
+      </div>
+
+      <div id="reset" hidden>
+        <p class="twofa-help" id="reset-help"></p>
+        <div id="reset-msg" class="notice hidden" role="status"></div>
+        <form id="reset-form" autocomplete="on" novalidate>
+          <label class="label" for="reset-email" id="reset-label"></label>
+          <div class="field">
+            <svg class="field-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+            <input id="reset-email" name="email" type="email" class="input" placeholder="you@firm.com" required />
+          </div>
+          <button type="submit" id="reset-submit" class="btn">
+            <span class="spinner" aria-hidden="true"></span>
+            <span class="btn-label" id="reset-submit-label"></span>
+            <svg class="arrow" viewBox="0 0 14 10" fill="none" aria-hidden="true">
+              <path d="M1 5h12M9 1l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+          </button>
+        </form>
+        <a href="#" class="forgot" id="reset-back"></a>
       </div>
 
       <p class="divider" id="login-divider">
@@ -686,7 +719,7 @@
     try {
       const back = sessionStorage.getItem('leadawaker_return_to') || '';
       sessionStorage.removeItem('leadawaker_return_to');
-      if (/^\/go\/[A-Za-z0-9]{8}(\?(to=(settings|calls)|call=[A-Za-z0-9_-]{1,80}))?$/.test(back)) next = back;
+      if (/^\/go\/[A-Za-z0-9]{8}(\?(to=(settings|calls)|call=[A-Za-z0-9_-]{1,80}|lead=[1-9][0-9]{0,9}))?$/.test(back)) next = back;
     } catch (_) {}
     window.location.href = next;
   }
@@ -954,5 +987,6 @@
   tfBack.addEventListener('click', function(e) { e.preventDefault(); leaveTwoFactor(); });
 })();
 </script>
+<script src="/login-reset.js"></script>
 </body>
 </html>

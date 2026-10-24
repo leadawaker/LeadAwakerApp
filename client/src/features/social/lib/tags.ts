@@ -11,7 +11,7 @@ export const TAG_COLOR_VAR: Record<TagColor, string> = {
   teal: "var(--stage-responded)",
   plum: "var(--stage-new)",
   brick: "var(--stage-lost)",
-  sand: "var(--stage-qualified)",
+  sand: "var(--sand)",
 };
 
 /** The tags behind these ids, in the order of the account's list; unknown ids are skipped. */

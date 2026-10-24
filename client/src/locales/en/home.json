@@ -1,14 +1,49 @@
 {
   "stats": {
-    "channel": "Channel",
-    "noChats": "Website chat and WhatsApp are not switched on for this account."
+    "recentChannel": "Recent activity channel",
+    "recentTabs": {
+      "phone": "Calls",
+      "whatsapp": "WhatsApp",
+      "website": "Website"
+    },
+    "waiting_one": "{{count}} waiting",
+    "waiting_other": "{{count}} waiting"
   },
-  "title": "Home",
-  "greeting": { "morning": "Good morning", "afternoon": "Good afternoon", "evening": "Good evening" },
-  "tabs": { "overview": "Overview", "phone": "Phone", "whatsapp": "WhatsApp", "website": "Website", "reactivation": "Reactivation", "reputation": "Reputation", "social": "Social" },
-  "period": { "label": "Period", "month": "This month", "7d": "Last 7 days", "30d": "Last 30 days", "last_month": "Last month" },
-  "vs": { "month": "vs last month", "7d": "vs the 7 days before", "30d": "vs the 30 days before", "last_month": "vs the month before" },
-  "channel": { "phone": "Phone", "whatsapp": "WhatsApp", "sms": "SMS", "website": "Website", "booking_page": "Booking page", "unknown": "Unknown" },
+  "title": "Stats",
+  "greeting": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening"
+  },
+  "tabs": {
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "website": "Website",
+    "reactivation": "Reactivation",
+    "reputation": "Reputation",
+    "social": "Social"
+  },
+  "period": {
+    "label": "Period",
+    "month": "This month",
+    "7d": "Last 7 days",
+    "30d": "Last 30 days",
+    "last_month": "Last month"
+  },
+  "vs": {
+    "month": "vs last month",
+    "7d": "vs the 7 days before",
+    "30d": "vs the 30 days before",
+    "last_month": "vs the month before"
+  },
+  "channel": {
+    "phone": "Phone",
+    "whatsapp": "WhatsApp",
+    "sms": "SMS",
+    "website": "Website",
+    "booking_page": "Booking page",
+    "unknown": "Unknown"
+  },
   "allAccounts": "All accounts",
   "loading": "Loading",
   "unknownContact": "Unknown contact",
@@ -21,8 +56,6 @@
     "noData": "Nothing in this period yet."
   },
   "overview": {
-    "banner": "conversations handled",
-    "tiles": { "bookings": "Bookings", "callbacks": "Callbacks requested", "newContacts": "New contacts", "waiting": "Waiting on you", "waitingSub": "Needs your attention", "waitingNone": "All caught up" },
     "byChannel": "By channel",
     "conversations": "Conversations",
     "bookings": "Bookings",
@@ -30,128 +63,59 @@
     "perDay": "Conversations per day",
     "attention": "Needs attention",
     "attentionEmpty": "Nobody is waiting on you.",
-    "attentionKind": { "callback": "Asked for a callback", "transfer_failed": "Transfer to the office failed", "handoff": "Waiting for a reply from a person" },
+    "attentionKind": {
+      "callback": "Asked for a callback",
+      "transfer_failed": "Transfer to the office failed",
+      "handoff": "Waiting for a reply from a person"
+    },
     "activity": "Recent activity",
     "activityEmpty": "No activity in this period yet.",
-    "activityKind": { "booked": "Appointment booked", "call": "Call answered", "transferred": "Call transferred to the office", "chat_started": "New chat started", "followup_sent": "Follow-up message sent after a call" },
     "unknownCaller": "Unknown caller",
     "visitor": "Website visitor"
   },
   "phone": {
-    "banner": "calls answered",
-    "tiles": { "calls": "Calls", "booked": "Booked", "transferred": "Transferred", "transfersFailed_one": "{{count}} failed", "transfersFailed_other": "{{count}} failed", "avgLength": "Average length" },
-    "perDay": "Calls per day",
-    "outcomes": "Outcomes",
-    "outcome": { "booked": "Booked", "callback": "Callback", "transferred": "Transferred", "hung_up": "Hung up", "answered": "Questions answered" },
-    "outOfHoursLabel": "Calls outside office hours",
-    "screened_one": "sales call or robocall screened out",
-    "screened_other": "sales calls and robocalls screened out",
-    "latency": "typical reply speed, from the caller's last word to the reply",
-    "costPerMinute": "cost per minute (only you see this)",
-    "cost": "spent on calls (only you see this)",
-    "recent": "Recent calls",
+    "tiles": {
+      "booked": "Booked",
+      "transferred": "Transferred"
+    },
+    "outcome": {
+      "booked": "Booked",
+      "callback": "Callback",
+      "transferred": "Transferred",
+      "hung_up": "Hung up",
+      "answered": "Questions answered"
+    },
     "recentEmpty": "No calls in this period yet."
   },
   "whatsapp": {
-    "banner": "WhatsApp conversations",
     "tiles": {
-      "conversations": "Conversations",
-      "messages": "Messages",
-      "messagesSub": "{{in}} in, {{out}} out",
       "bookings": "Bookings",
       "handedOff": "Handed to a person"
     },
-    "perDay": "Conversations per day",
-    "followUps_one": "follow-up sent after a call",
-    "followUps_other": "follow-ups sent after calls",
-    "sms": {
-      "title": "SMS fallback",
-      "note": "Sent by SMS when a number is not on WhatsApp. One-way.",
-      "sent": "Sent",
-      "delivered": "Delivered",
-      "failed": "Failed",
-      "share": "{{pct}}% of follow-ups after calls went by SMS"
-    },
-    "sender": {
-      "title": "Your WhatsApp number",
-      "connected": "Connected",
-      "notConnected": "Not connected",
-      "quality": "Quality: {{rating}}"
-    },
-    "recent": "Recent conversations",
     "recentEmpty": "No WhatsApp conversations in this period yet."
   },
   "website": {
-    "banner": "chats started on your website",
     "tiles": {
-      "chats": "Chats started",
       "contacts": "Contacts captured",
-      "rate": "Capture rate",
-      "rateNone": "No chats yet",
       "bookings": "Bookings"
     },
-    "perDay": "Chats per day",
-    "recent": "Recent chats",
     "recentEmpty": "No website chats in this period yet."
   },
   "reactivation": {
-    "banner": "bookings from old leads",
     "tiles": {
-      "contacted": "Leads contacted",
-      "replyRate": "Reply rate",
-      "replyRateNone": "No sends yet",
-      "bookings": "Bookings",
-      "costPerBooking": "Cost per booking",
-      "costNone": "Not available"
-    },
-    "allCampaigns": "All campaigns",
-    "campaign": "Campaign",
-    "perDay": "Replies and bookings per day",
-    "replies": "Replies",
-    "pipeline": "Pipeline",
-    "pipelineEmpty": "No leads in these campaigns yet.",
-    "openCampaign": "Open campaign",
-    "newCampaign": "New campaign",
-    "importLeads": "Import leads",
-    "status": {"New": "New", "Contacted": "Contacted", "Responded": "Responded", "MultipleResponses": "Multiple Responses", "Qualified": "Qualified", "Booked": "Booked", "Closed": "Closed", "Lost": "Lost", "DND": "DND", "Unknown": "Unknown"},
-    "live": {"upcoming": "Up next", "upcomingEmpty": "No booked calls coming up.", "todayCount_one": "{{count}} today", "todayCount_other": "{{count}} today", "handoff": "Handoff", "activity": "Just happened", "activityEmpty": "No messages in the last 30 days.", "live": "Live", "replied": "Replied", "sent": "Sent", "bumps": "Bumps today", "sentToday": "Sent today", "dueToday": "Still due today", "nextUp": "Next scheduled", "nextEmpty": "No bumps scheduled.", "firstMessage": "First message", "bump": "Bump {{n}}", "due": "Due now"}
+      "replyRate": "Reply rate"
+    }
   },
   "reputation": {
-    "banner": "new Google reviews",
     "tiles": {
-      "avgRating": "Average rating",
-      "avgNone": "No reviews yet",
-      "replied": "Replies posted",
-      "awaiting": "Waiting for your reply",
-      "awaitingSub": "Open the review inbox",
-      "awaitingNone": "All answered", "awaitingClient": "Not answered yet",
-      "requests": "Review requests sent"
-    },
-    "ratings": "Ratings",
-    "stars_one": "{{count}} star",
-    "stars_other": "{{count}} stars",
-    "perDay": "Reviews per day",
-    "recent": "Recent reviews",
-    "recentEmpty": "No reviews in this period yet.",
-    "replied": "Replied",
-    "notReplied": "No reply yet",
-    "anonymous": "Anonymous",
-    "notConnected": "Google reviews are not connected yet. Connect your Google Business Profile to see reviews here."
+      "avgRating": "Average rating"
+    }
   },
   "social": {
-    "banner": "conversations from Instagram",
     "tiles": {
-      "conversations": "Conversations",
-      "messages": "Messages",
-      "messagesSub": "{{in}} in, {{out}} out",
       "bookings": "Bookings",
-      "bookingRate": "Booking rate",
-      "rateNone": "No conversations yet"
-    },
-    "perDay": "Conversations per day",
-    "recent": "Recent conversations",
-    "recentEmpty": "No Instagram conversations in this period yet.",
-    "notConnected": "No Instagram account is connected yet."
+      "bookingRate": "Booking rate"
+    }
   },
   "onboarding": {
     "yourReceptionist": "Your receptionist",
@@ -159,12 +123,41 @@
     "close": "Close",
     "welcome": "Welcome, {{firstName}}. {{agentName}} answers for {{company}}.",
     "welcomeNoName": "Welcome. {{agentName}} answers for {{company}}.",
-    "where1": "Calls, chats and bookings show up under {{calls}}, {{chats}} and {{calendar}}. The figures sit on the Stats tab of Calls and Chats, the summary on this page.",
+    "where1": "Calls, chats and bookings show up under {{calls}}, {{chats}} and {{calendar}}. The figures and the summary sit on this Stats page.",
     "where2": "You get a daily recap and instant alerts once you add yourself to them.",
     "guide": "Read the guide",
     "done": "Done",
     "installIos": "Share › Add to Home Screen.",
     "installAndroid": "⋮ menu › Install app / Add to Home screen.",
-    "items": { "details": "Check your business details under {{account}}", "alerts": "Add yourself to the recap and alerts", "call": "Open your first call or chat", "install": "Put the CRM on your phone" }
+    "items": {
+      "details": "Check your business details under {{account}}",
+      "alerts": "Add yourself to the recap and alerts",
+      "call": "Open your first call or chat",
+      "install": "Put the CRM on your phone"
+    }
+  },
+  "cards": {
+    "open": "Open",
+    "noTrend": "No earlier data yet",
+    "phone": {
+      "main": "Calls answered"
+    },
+    "whatsapp": {
+      "main": "Conversations"
+    },
+    "website": {
+      "main": "Chats started"
+    },
+    "reactivation": {
+      "main": "Bookings",
+      "campaigns": "Campaigns"
+    },
+    "reputation": {
+      "reviews": "New reviews",
+      "awaiting": "Awaiting reply"
+    },
+    "social": {
+      "main": "Conversations"
+    }
   }
 }

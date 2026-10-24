@@ -1,14 +1,18 @@
-// Account workspace "Chat" tab (specs/account-service-settings): the website
-// chat and WhatsApp receptionist, set up from the account instead of the
-// Campaigns page. It edits the account's receptionist campaign through the
-// campaign settings' own draft + 1.5s autosave (useCampaignDetail), so the two
-// pages share one copy and one save path. Same rail as Phone and Alerts; the
-// client sees it read-only.
-import { useState } from "react";
+// The chat receptionist's settings (specs/account-service-settings), shown as
+// Chats > Settings (receptionist/ReceptionistSettings.tsx): the website chat
+// and WhatsApp receptionist, set up per account instead of on the Campaigns
+// page. It edits the account's receptionist campaign through the campaign
+// settings' own draft + 1.5s autosave (useCampaignDetail), so the two pages
+// share one copy and one save path. Same rail as Calls > Settings; the client
+// sees it read-only. The Owner also gets Advanced: the engine fields the other
+// sections leave out (ChatAdvanced).
+import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
-import { BookOpen, Bot, Clock, Hand, LayoutDashboard, Loader2, MessageSquareText, ArrowRight, Check } from "lucide-react";
+import { BookOpen, Bot, Clock, Hand, LayoutDashboard, Loader2, MessageSquareText, ArrowRight, Check, SlidersHorizontal } from "lucide-react";
 import { useCampaignDetail } from "@/features/campaigns/components/useCampaignDetail";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { useLastTab } from "@/hooks/useLastTab";
 import type { Campaign } from "@/types/models";
 import { SectionHeader, SectionLayout, SectionRail, type SectionRailItem } from "../SectionRail";
 import { ReadOnlyNote, hhmm, useLocalized, type ChatEdit } from "./chatAtoms";
@@ -17,15 +21,22 @@ import { ChatOverview, widgetLive } from "./ChatOverview";
 import { ChatGreeting } from "./ChatGreeting";
 import { ChatBehaviour, ChatKnowledge } from "./ChatBehaviour";
 import { ChatFollowUp, ChatHours, followUpOn, isReceptionistBump } from "./ChatFollowUp";
+import { ChatAdvanced } from "./ChatAdvanced";
 
-type ChatSection = "overview" | "greeting" | "behaviour" | "knowledge" | "followup" | "hours";
+/** Every section a link may name. "advanced" opens only for the Owner; anyone else lands on Overview. */
+export const CHAT_SECTIONS = ["overview", "greeting", "behaviour", "knowledge", "followup", "hours", "advanced"] as const;
+export type ChatSection = (typeof CHAT_SECTIONS)[number];
 
 function Centered({ children }: { children: React.ReactNode }) {
   return <div className="flex items-center justify-center" style={{ padding: 48, color: "var(--mute)" }}>{children}</div>;
 }
 
-export function ChatTab({ accountId, inboundCampaignId, readOnly = false, stacked = false, onOpenIntegrations }: {
+export function ChatTab({ accountId, inboundCampaignId, readOnly = false, stacked = false, onOpenIntegrations, initialSection, knowledgeNote }: {
   accountId: number; inboundCampaignId: unknown; readOnly?: boolean; stacked?: boolean; onOpenIntegrations?: () => void;
+  /** The section a link opens on (?section=). */
+  initialSection?: ChatSection;
+  /** One line at the top of Knowledge (the hours and Company Intel are shared with Calls). */
+  knowledgeNote?: ReactNode;
 }) {
   const { t } = useTranslation("chatTab");
   const { widget, loading: widgetLoading, save: saveWidget } = useChatWidget(accountId);
@@ -48,6 +59,7 @@ export function ChatTab({ accountId, inboundCampaignId, readOnly = false, stacke
       key={campaign.id}
       accountId={accountId} campaign={campaign} onSave={onSave} canEdit={!readOnly} stacked={stacked}
       widget={widget} saveWidget={saveWidget} onOpenIntegrations={readOnly ? undefined : onOpenIntegrations}
+      initialSection={initialSection} knowledgeNote={knowledgeNote}
     />
   );
 }
@@ -68,13 +80,18 @@ function ChatEmpty({ readOnly }: { readOnly: boolean }) {
   );
 }
 
-function ChatSections({ accountId, campaign, onSave, canEdit, stacked, widget, saveWidget, onOpenIntegrations }: {
+function ChatSections({ accountId, campaign, onSave, canEdit, stacked, widget, saveWidget, onOpenIntegrations, initialSection, knowledgeNote }: {
   accountId: number; campaign: ChatCampaign; onSave: (id: number, patch: Record<string, unknown>) => Promise<void>;
   canEdit: boolean; stacked: boolean; widget: ReturnType<typeof useChatWidget>["widget"];
   saveWidget: ReturnType<typeof useChatWidget>["save"]; onOpenIntegrations?: () => void;
+  initialSection?: ChatSection; knowledgeNote?: ReactNode;
 }) {
   const { t } = useTranslation("chatTab");
-  const [section, setSection] = useState<ChatSection>("overview");
+  const { isOwner } = useWorkspace();
+  // A ?section= link wins; otherwise the section used last reopens.
+  const [picked, setSection] = useLastTab<ChatSection>("chats.settings", CHAT_SECTIONS, "overview", initialSection);
+  // Advanced is the Owner's alone, also when a link names it.
+  const section: ChatSection = picked === "advanced" && !isOwner ? "overview" : picked;
   const { draft, setDraft, saving, hasChanges } = useCampaignDetail(campaign as unknown as Campaign, onSave);
   const edit: ChatEdit = { campaign, draft, setDraft, canEdit };
   const loc = useLocalized(edit);
@@ -114,6 +131,11 @@ function ChatSections({ accountId, campaign, onSave, canEdit, stacked, widget, s
       state: start && end ? "on" : "off",
       detail: start && end ? t("hours.range", { start, end }) : t("hours.unset"),
     },
+    // An Owner tool, not a setting with a state: no dot.
+    ...(isOwner ? [{
+      key: "advanced" as const, icon: <SlidersHorizontal size={16} />, label: t("rail.advanced.label"),
+      detail: String(draft.ai_model || "") || t("advanced.modelDefault"),
+    }] : []),
   ];
   const index = items.findIndex((i) => i.key === section) + 1;
 
@@ -131,9 +153,10 @@ function ChatSections({ accountId, campaign, onSave, canEdit, stacked, widget, s
         {section === "overview" && <ChatOverview accountId={accountId} campaign={campaign} widget={widget} onOpenIntegrations={onOpenIntegrations} />}
         {section === "greeting" && <ChatGreeting widget={widget} canEdit={canEdit} onSaveWidget={saveWidget} />}
         {section === "behaviour" && <ChatBehaviour {...edit} />}
-        {section === "knowledge" && <ChatKnowledge {...edit} />}
+        {section === "knowledge" && <>{knowledgeNote}<ChatKnowledge {...edit} /></>}
         {section === "followup" && <ChatFollowUp {...edit} />}
         {section === "hours" && <ChatHours {...edit} />}
+        {section === "advanced" && <ChatAdvanced {...edit} />}
       </section>
     </SectionLayout>
   );

@@ -13,6 +13,10 @@
       "settings": "Instellingen",
       "comments": "Reactie naar DM",
       "insights": "Inzichten"
+    },
+    "modes": {
+      "aria": "Inzichten of socials",
+      "work": "Socials"
     }
   },
   "captions": {

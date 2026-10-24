@@ -909,6 +909,10 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
   costUsd: numeric("cost_usd", { precision: 10, scale: 4 }),
   latencyMs: integer("latency_ms"),
   latencyP90Ms: integer("latency_p90_ms"),
+  // Staff tests only (script/add-field.ts): per-turn reply delays, tool latencies and cost for the
+  // review screen. {turns:[{i,role,at_s,delay_ms,interrupted}], tools:[{name,at_s,latency_ms}],
+  // cost:{total,minutes,ai,recap,telephony,estimate}}. Written by the engine's staff_test.py.
+  turnMetrics: jsonb("turn_metrics"),
   // Grok calls only: "telnyx:<recording id>", recorded by Telnyx because xAI keeps
   // no recording (engine xai_recording.py, migrate_add_voice_call_recording_ref.py).
   recordingRef: text("recording_ref"),
@@ -981,6 +985,19 @@ export const voiceNumbers = nocodb.table("Voice_Numbers", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   // Niche_Vocabulary.id of the live persona (migrate_voice_tab.py).
   personaId: integer("persona_id"),
+  // Accounts.id whose Cal.diy diary this line books in; NULL = the line's own
+  // (migrate_add_voice_number_purpose.py in the automations repo).
+  diaryAccountsId: integer("diary_accounts_id"),
+  // Line purpose (client | demo | test) and, on demo/test lines only, the ElevenLabs pick;
+  // engine NULL = GPT Live (migrate_add_voice_number_purpose.py in the automations repo).
+  purpose: text("purpose").notNull().default("client"),
+  engine: text("engine"),
+  engineVoice: text("engine_voice"),
+  engineModel: text("engine_model"),
+  // The reasoning model behind each engine's voice: "sol" | "terra" | "luna", NULL = Sol (llm_choice.py
+  // in the automations repo). Engine-owned table, so added to Postgres by hand, not by add-field.ts.
+  liveLlm: text("live_llm"),
+  elevenLlm: text("eleven_llm"),
 });
 
 export type VoiceNumber = typeof voiceNumbers.$inferSelect;
@@ -1197,6 +1214,10 @@ export const promptLibrary = nocodb.table("Prompt_Library", {
   notes: text("notes"),
   abVariant: text("ab_variant"),
   firstMessage: text("first_message"),
+  // Prompt Library tab: chat | voice | crm | social | test | reputation.
+  category: text("category"),
+  // Serves a demo (demo campaigns, demo voice lines); the library can hide these.
+  isDemo: boolean("is_demo"),
 }, (t) => [
   index("prompt_library_accounts_id_idx").on(t.accountsId),
 ]);

@@ -59,12 +59,6 @@
     "typeLabel": "Or type a number (international format)",
     "attach": "Attach number",
     "invalid": "Use international format, for example +31851234567.",
-    "officeSound": {
-      "label": "Office sound",
-      "on": "Soft office sound under the receptionist's voice",
-      "off": "Off",
-      "help": "Callers hear a quiet office in the background. Only the caller hears it, and it stops when you take a transferred call."
-    },
     "summaryNone": "No number attached yet",
     "summaryNoneClient": "Your phone number is being set up",
     "summaryHelp": "The number, the client's documents and Go live are on the Integrations tab.",
@@ -123,7 +117,72 @@
     "pronunciationCount_other": "{{count}} words",
     "pronunciationSaveNote": "Changes here are kept with the card: press Save on the card when you are done.",
     "spokenAs_male": "On calls he answers as {{name}}.",
-    "pronunciationAutosave": "Saved when you close this."
+    "pronunciationAutosave": "Saved when you close this.",
+    "gender": "Gender",
+    "genderOption": {
+      "auto": "Automatic",
+      "female": "Female",
+      "male": "Male"
+    },
+    "alsoUsedBy": "Also used by {{number}}",
+    "playElevenSample": "Play {{voice}}",
+    "elevenSamplesHelp": "Play a preview of an ElevenLabs voice, then click it to pick it."
+  },
+  "lineEngine": {
+    "title": "Line type and engine",
+    "help": "Which kind of line this is, which engine answers real calls and with which language model. On ElevenLabs you also pick which of the two agents answers, named by what it runs.",
+    "type": "Line type",
+    "purpose": {
+      "client": "Client",
+      "demo": "Demo",
+      "test": "Test"
+    },
+    "purposeHelp": {
+      "client": "A real client line. Client lines answer on GPT Live for now.",
+      "demo": "A line used to show the receptionist to prospects. It can run on ElevenLabs.",
+      "test": "Every call on this line is a test call: hidden from the client's calls, figures and alerts."
+    },
+    "realCalls": "Real calls",
+    "llm": {
+      "label": "Language model",
+      "realLabel": "Real calls: language model",
+      "confirm": "Real callers on this line will use {{model}}. Switch?",
+      "confirmYes": "Confirm",
+      "confirmNo": "Cancel",
+      "help": "The model behind the receptionist on real GPT-Live calls. Sol is the default.",
+      "sol": "Sol",
+      "terra": "Terra",
+      "luna": "Luna"
+    },
+    "clientElevenOff": "ElevenLabs is not available on client lines yet.",
+    "voice": "ElevenLabs voice",
+    "defaultVoice": "Default voice for {{name}}",
+    "voiceHint": "Voices that match {{name}}. The voice above decides which.",
+    "voicesFailed": "The voice list could not be loaded, so the saved voice is shown as is.",
+    "notSetUp": "This number is not set up at ElevenLabs: calls stay on GPT-Live.",
+    "mismatch": "This voice does not match {{name}}: calls use a matching default voice.",
+    "chip": {
+      "test": "Test line",
+      "demo": "Demo line",
+      "eleven": "ElevenLabs"
+    }
+  },
+  "elevenPrompt": {
+    "title": "ElevenLabs prompt",
+    "help": "What the next call on this line gets, built from this line's settings. Read only.",
+    "who": "On a test line this is what a tester or owner hears (other callers get GPT-Live); on a demo line, every caller.",
+    "refresh": "Refresh",
+    "name": "Name",
+    "voice": "Voice",
+    "model": "Model",
+    "tools": "Tools",
+    "noTools": "None",
+    "firstMessage": "First message",
+    "prompt": "Prompt",
+    "chars": "{{chars}} characters",
+    "asOf": "As of {{time}}",
+    "notReady": "Calls on this line stay on GPT-Live: {{reason}}",
+    "failed": "The ElevenLabs prompt could not be loaded."
   },
   "transfer": {
     "title": "Transfer",
@@ -191,7 +250,7 @@
       "direct": "Straight through",
       "off": "No transfers",
       "screenedHelp": "Your phone rings with a short brief about the caller. Press 1 to take the call, or 2 and the receptionist books a callback. If you don't answer, the caller goes back to the receptionist.",
-      "directHelp": "The caller is put straight through when you answer, with no brief. Without the office sound the receptionist leaves the call at once, so if you don't answer they reach your voicemail.",
+      "directHelp": "The caller is put straight through when you answer, with no brief. Unless the line runs through Telnyx, the receptionist leaves the call at once, so if you don't answer they reach your voicemail.",
       "offHelp": "Nobody is put through. When a caller asks for a person, the AI receptionist takes a message and books a callback."
     },
     "wiringFailed": "Saved, but the phone line could not be rewired: {{error}}"
@@ -215,6 +274,12 @@
     "call": "Test in browser",
     "filedNote": "Opens in a new tab. Test calls show below, not in this client's stats or CRM.",
     "needsPersona": "Create the live persona first.",
+    "prompt": {
+      "label": "Test prompt",
+      "standard": "Standard",
+      "lean": "Lean (A/B test)",
+      "help": "Only for the browser test above. Real phone calls and demos always use the standard prompt."
+    },
     "promptTitle": "What she is told",
     "promptFailed": "Could not load the prompt.",
     "kind": {
@@ -233,13 +298,147 @@
       "backend_male": "The backend that answers for him: business facts, knowledge, hours, after-hours and booking rules."
     },
     "recentTitle": "Recent test calls",
-    "recentEmpty": "No test calls yet. Press Test in browser to make one.",
+    "recentEmpty": "No test calls yet. Press Start test call to make one.",
+    "recentMore": "Show more",
+    "recentOpen": "Open the review of the test call from {{when}}",
     "callFailed": "This call could not be loaded.",
     "title_male": "Try him out",
     "help_male": "Talk to him in your browser, exactly as a caller on this line would hear him: this client's persona, voice, greeting, hours and setup. No phone needed.",
     "promptTitle_male": "What he is told",
     "promptHelp": "The exact prompt she gets on a call, in three parts. Admins only.",
-    "promptHelp_male": "The exact prompt he gets on a call, in three parts. Admins only."
+    "promptHelp_male": "The exact prompt he gets on a call, in three parts. Admins only.",
+    "elevenNote": "The button above tests GPT-Live. Test ElevenLabs below, or call {{number}}.",
+    "eleven": {
+      "start": "Test ElevenLabs in the browser",
+      "again": "Test ElevenLabs again",
+      "callerLabel": "Call as",
+      "callerHelp": "The number this test call comes from: caller memory and bookings use it.",
+      "callerInvalid": "Enter the number with its country code, like +31612345678.",
+      "hangUp": "Hang up",
+      "you": "You",
+      "agent": "Agent",
+      "note": "Transfers do not ring anyone in a browser test; bookings land in the demo diary, never a real calendar.",
+      "status": {
+        "idle": "Ready",
+        "connecting": "Connecting",
+        "listening": "Listening",
+        "speaking": "Speaking",
+        "ended": "Call ended. It shows in the test calls below shortly.",
+        "error": "Not connected"
+      },
+      "error": {
+        "busy": "A browser test is already running. Try again when it ends.",
+        "notEleven": "This line does not belong to this account, so it cannot be tested here.",
+        "notSetUp": "This line is not set up yet: link a client and create the persona first.",
+        "badCaller": "That caller number is not a valid phone number.",
+        "eleven": "ElevenLabs could not start the call. Try again in a moment.",
+        "mic": "Microphone access was blocked. Allow the microphone for this site and try again.",
+        "dropped": "The connection dropped.",
+        "generic": "The browser test could not be started."
+      }
+    },
+    "panel": {
+      "title": "Test call",
+      "engine": "Engine",
+      "engines": {
+        "gpt-live": "GPT Live",
+        "elevenlabs": "ElevenLabs"
+      },
+      "testOnly": "Test only. Real callers keep this line's own settings.",
+      "start": "Start test call",
+      "connecting": "Connecting",
+      "ending": "Ending the call",
+      "hangUp": "Hang up",
+      "liveNote": "Edits you make now apply to the next test.",
+      "elevenNoNumber": "ElevenLabs tests need a phone number on this line.",
+      "filedNote": "Test calls show in the list below, not in this client's stats or CRM.",
+      "besideNote": "The test panel is on the right, beside every section. Test calls show below.",
+      "error": {
+        "gptLive": "The GPT Live test could not be started."
+      },
+      "phase": {
+        "connecting": "Connecting",
+        "live": "On the call",
+        "ending": "Ending",
+        "review": "Call ended"
+      },
+      "inProgress": "Test call in progress",
+      "openPanel": "Show test",
+      "newTest": "New test",
+      "reviewSoon": "The call's review shows here.",
+      "liveEmpty": "Say hello: what is said shows here.",
+      "live": {
+        "time": "Time",
+        "cost": "Cost so far",
+        "costHint": "An estimate from the minute rate. The final cost shows after the call.",
+        "tools": "Tools",
+        "toolsEmpty": "No tools used yet.",
+        "toolFailed": "Failed",
+        "delaysHint": "Approximate: measured from the transcript, not the audio.",
+        "transcript": "Transcript",
+        "ms": "{{ms}} ms"
+      },
+      "review": {
+        "loading": "Loading the review",
+        "waiting": "Getting the call ready. This takes a few seconds.",
+        "failed": "The review could not be loaded.",
+        "retry": "Try again",
+        "duration": "Duration",
+        "cost": "Cost",
+        "costPart": {
+          "ai": "AI",
+          "telephony": "Phone line",
+          "recap": "Summary"
+        },
+        "minutes": "{{n}} min",
+        "costEstimate": "An estimate from the plan's price, not an invoice.",
+        "median": "Median delay",
+        "slowest": "Slowest delay",
+        "delaysHint": "Approximate: worked out from the transcript times.",
+        "tools": "Tools",
+        "unknown": "Unknown",
+        "noTools": "No tools ran",
+        "recording": "Recording",
+        "recordingLoading": "Loading the recording",
+        "noRecording": "No recording for this call: the markers show when the tools ran.",
+        "recordingFailed": "The recording could not be played: the markers show when the tools ran.",
+        "play": "Play",
+        "pause": "Pause",
+        "back": "Back 10 seconds",
+        "forward": "Forward 10 seconds",
+        "speed": "Playback speed",
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "download": "Download the recording",
+        "transcript": "Transcript",
+        "transcriptEmpty": "Nothing was said on this call.",
+        "transcriptProcessing": "Still processing the call...",
+        "seekTo": "Play from {{time}}"
+      },
+      "understood": {
+        "title": "What she understood",
+        "title_male": "What he understood",
+        "empty": "Fills in when she takes her notes, usually near the end of the call.",
+        "empty_male": "Fills in when he takes his notes, usually near the end of the call.",
+        "emptyReview": "She did not write a recap for this call.",
+        "emptyReview_male": "He did not write a recap for this call.",
+        "wants": "Wants",
+        "notes": "Notes",
+        "outcome": "Outcome"
+      }
+    },
+    "tools": {
+      "search_stock": "Search stock",
+      "car_details": "Car details",
+      "check_availability": "Check diary",
+      "book_appointment": "Book appointment",
+      "cancel_appointment": "Cancel appointment",
+      "request_callback": "Request callback",
+      "update_call_summary": "Call notes",
+      "end_call": "End call",
+      "other": "Tool",
+      "running": "Running"
+    }
   },
   "live": {
     "goLive": "Go live",
@@ -428,7 +627,7 @@
     "on": "Callers hear this line before the receptionist answers",
     "off": "Off",
     "help": "Calls are recorded, and callers have to be told before the call starts. A short recorded line in a different voice does that.",
-    "routeOnly": "Plays on lines with a screened transfer or the office sound switched on.",
+    "routeOnly": "Plays on lines that run through Telnyx: every ElevenLabs line, and lines with a screened transfer.",
     "edit": "Edit line",
     "title": "Recording notice",
     "standardTag": "Standard line",
@@ -459,7 +658,8 @@
     },
     "makers": {
       "openai": "OpenAI voices",
-      "google": "Google voices"
+      "google": "Google voices",
+      "eleven": "ElevenLabs voices"
     },
     "unsaved": "Not saved yet. Press Generate clip, listen to it, then Use this clip to save it."
   },
@@ -511,7 +711,7 @@
   "line": {
     "title": "On the line",
     "help": "What a caller hears around her voice. Each switch saves straight away.",
-    "needsNumber": "Attach a number on Integrations > Phone first: the recording notice, office sound and region apply to that number.",
+    "needsNumber": "Attach a number on Integrations > Phone first: the recording notice and region apply to that number.",
     "help_male": "What a caller hears around his voice. Each switch saves straight away."
   },
   "conversation": {
@@ -554,6 +754,34 @@
       "failed": "Could not fill in the prompt for this line.",
       "valueLegend": "Filled in for this business",
       "addedLegend": "Added by the system on the call"
+    },
+    "elevenNotice": "Not used on this line: it runs on ElevenLabs. GPT-Live lines in {{language}} still use this prompt.",
+    "versions": {
+      "save": "Save version",
+      "history": "History",
+      "notePlaceholder": "Note (optional), e.g. Shorter greeting",
+      "saveConfirm": "Save",
+      "saved": "Version saved",
+      "saveFailed": "Could not save the version",
+      "loadFailed": "Could not load the history",
+      "none": "No versions yet",
+      "restore": "Restore",
+      "restoreConfirm": "Restore this one",
+      "cancel": "Cancel",
+      "restored": "Restored v{{v}}. The text it replaced is in the history.",
+      "beforeRestore": "Before restoring v{{v}}",
+      "noText": "No text to restore"
+    },
+    "counts": {
+      "exact": "{{chars}} characters, {{tokens}} tokens (filled in)",
+      "approx": "{{chars}} characters, approx. {{tokens}} tokens (filled in)",
+      "failed": "Count not available"
+    },
+    "eleven": {
+      "title": "ElevenLabs voice prompt",
+      "help": "The prompt ElevenLabs gets on every call on this line.",
+      "syntax": "{name} is filled in from the settings; a line starting with {?flag} is only kept when that setting is on; the named blocks ({person}, {callback_policy}, ...) are filled from the settings.",
+      "shared": "Shared by every ElevenLabs line in this language. A change here reaches their next call."
     }
   }
 }

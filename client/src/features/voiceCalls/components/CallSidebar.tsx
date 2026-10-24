@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
-import { Building2, CalendarCheck, ChevronDown, ChevronUp, UserRound } from "lucide-react";
+import { Building2, ChevronDown, ChevronUp, UserRound } from "lucide-react";
 import { Card, CardLabel } from "@/features/leads/components/cardView/designPrimitives";
-import { setPersistedSelection } from "@/hooks/usePersistedSelection";
+import { openLead } from "@/lib/leadLink";
 import type { VoiceCaller, VoiceCallDetail, VoiceCallListItem } from "../api/voiceCallsApi";
 import { formatDateTime, formatDurationUnits } from "../format";
 import { CallBooking, CallSummaryCard } from "./CallRecap";
 import { SOFT_RAISED } from "./bits";
-import { OutcomePill, slotLabel } from "./OutcomePill";
+import { OutcomePill } from "./OutcomePill";
 import { SIDEBAR_WIDTH } from "./VoiceCallsSkeleton";
 
 /** Callers view only: the person behind the selected call and their other calls. */
@@ -33,7 +33,7 @@ const CHIP: React.CSSProperties = {
 
 const HISTORY_SHOWN = 3;
 
-/** One call of this person as its own tile: "Call 3 · Booked", length, date. */
+/** One call of this person: "Call 3 · Booked", length, date. Flat until opened, like the list cards. */
 function CallTile({ call, number, active, onClick }: { call: VoiceCallListItem; number: number; active: boolean; onClick: () => void }) {
   const { t, i18n } = useTranslation("voiceCalls");
   return (
@@ -42,13 +42,10 @@ function CallTile({ call, number, active, onClick }: { call: VoiceCallListItem; 
       onClick={onClick}
       data-testid="voice-caller-call"
       aria-pressed={active}
+      className={active ? "la-camp-card active" : "la-camp-card"}
       style={{
-        ...SOFT_RAISED,
-        display: "flex", flexDirection: "column", alignItems: "stretch", gap: 6, width: "100%", textAlign: "left", border: "none", cursor: "pointer",
-        padding: "10px 12px", borderRadius: "var(--r-surface)", fontFamily: "var(--sans)", color: "var(--ink)",
-        background: active ? "var(--wine-tint)" : "var(--card)",
-        boxShadow: active ? "inset 0 0 0 1.5px color-mix(in srgb, var(--wine) 40%, transparent)" : "var(--sh-raised-crisp)",
-        transition: "background 130ms, box-shadow 130ms",
+        flexDirection: "column", alignItems: "stretch", gap: 6, width: "100%", textAlign: "left", border: "none",
+        padding: "10px 12px", fontFamily: "var(--sans)", color: "var(--ink)",
       }}
     >
       <span style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
@@ -82,7 +79,7 @@ export function CallerHistory({ ctx, divider = true }: { ctx: CallerContext; div
       headLeft={<CardLabel>{t("callers.calls")}</CardLabel>}
       headRight={<span style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 700, color: "var(--mute)" }}>{total}</span>}
       style={{ borderTop: divider ? "1px solid var(--line)" : undefined }}
-      bodyStyle={{ padding: "12px 14px 14px", gap: 8 }}
+      bodyStyle={{ padding: "12px 14px 14px", gap: 3 }}
     >
       {shown.map((c, i) => (
         <CallTile key={c.callId} call={c} number={total - i} active={c.callId === ctx.selectedId} onClick={() => ctx.onSelectCall(c.callId)} />
@@ -104,27 +101,22 @@ export function CallerHistory({ ctx, divider = true }: { ctx: CallerContext; div
 }
 
 /**
- * Opens the Leads page on this lead, the way the Calendar and the
- * notifications do: preselect it, then go to the list. (A /platform/contacts/:id
- * link never reaches the CRM router: App.tsx only forwards one segment after /platform.)
+ * Opens this lead in its one home (Chats with the lead selected, lib/leadLink),
+ * with a way back to Calls on the phone.
  */
 function useOpenLead() {
   const [, setLocation] = useLocation();
   return (leadId: number) => {
-    try {
-      setPersistedSelection("selected-lead-id", leadId);
-      localStorage.setItem("leadawaker-returnto", "/platform/voice-calls");
-    } catch { /* private mode: the page still opens */ }
-    setLocation("/platform/contacts");
+    try { localStorage.setItem("leadawaker-returnto", "/platform/voice-calls"); } catch { /* private mode: the page still opens */ }
+    openLead(setLocation, leadId);
   };
 }
 
 function Details({ call, ctx, divider }: { call: VoiceCallDetail; ctx?: CallerContext; divider: boolean }) {
-  const { t, i18n } = useTranslation("voiceCalls");
+  const { t } = useTranslation("voiceCalls");
   const openLead = useOpenLead();
   const caller = ctx?.caller;
   const leadId = caller ? caller.leadsId : call.leadsId;
-  const slot = caller && (caller.bookedSlot || caller.bookedIso) ? slotLabel(caller.bookedIso, caller.bookedSlot, i18n.language) : null;
   const demo = call.scope === "demo";
   const company = caller ? caller.personaCompany : demo ? call.personaCompany || t("persona.universal") : null;
   const niche = !caller && demo ? call.personaNiche : null;
@@ -146,13 +138,6 @@ function Details({ call, ctx, divider }: { call: VoiceCallDetail; ctx?: CallerCo
             {t("callers.lead")}
           </button>
         )}
-        {slot && (
-          <span style={CHIP} data-testid="voice-caller-booking-chip">
-            <CalendarCheck className="h-[13px] w-[13px]" style={{ color: "var(--good)" }} />
-            {t("callers.booked")}
-            <span style={{ fontWeight: 400, color: "var(--mute)" }}>{`· ${slot}`}</span>
-          </span>
-        )}
         {company && (
           <span style={CHIP}>
             <Building2 className="h-[13px] w-[13px] shrink-0" style={{ color: "var(--wine)" }} />
@@ -167,8 +152,8 @@ function Details({ call, ctx, divider }: { call: VoiceCallDetail; ctx?: CallerCo
 }
 
 /**
- * Left column, like the Chats recap sidebar: the booking, the summary under
- * it, then (Callers view) this person's calls, then the details.
+ * Left column, like the Chats recap sidebar: (Callers view) this person's calls
+ * first, then the booking, the summary under it, then the details.
  */
 export function CallSidebar({ call, narrow, caller }: { call: VoiceCallDetail; narrow: boolean; caller?: CallerContext }) {
   const booked = !!call.bookedSlot;
@@ -184,9 +169,9 @@ export function CallSidebar({ call, narrow, caller }: { call: VoiceCallDetail; n
         overflowX: "hidden", overflowY: narrow ? "hidden" : "auto",
       }}
     >
-      <CallBooking call={call} />
-      <CallSummaryCard call={call} divider={booked} />
-      {caller && history && <CallerHistory ctx={caller} />}
+      {caller && history && <CallerHistory ctx={caller} divider={false} />}
+      <CallBooking call={call} divider={history} />
+      <CallSummaryCard call={call} divider={booked || history} />
       <Details call={call} ctx={caller} divider />
     </div>
   );

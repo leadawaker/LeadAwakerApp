@@ -10,7 +10,7 @@ import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { db, pool } from "../db";
 import { createAndDispatchNotification } from "../notification-dispatcher";
 import { pushBookingEvent } from "../calendar";
-import { handleZodError, wrapAsync, getPagination, getEngineUrl, coerceDates } from "./_helpers";
+import { handleZodError, wrapAsync, getPagination, getEngineUrl, coerceDates, ownsAccount, canWriteLead } from "./_helpers";
 import { disallowedClientLeadFields, leadWriteLevelForRequest } from "./leadWriteAccess";
 import { eq, and, gte, lte, ne, getTableColumns, type SQL } from "drizzle-orm";
 import { registerLeadsBulkTagsRoutes } from "./leadsBulkTags";
@@ -175,11 +175,18 @@ export function registerLeadsRoutes(app: Express): void {
     const parsed = insertLeadsSchema.safeParse(fromDbKeys(req.body, leads));
     if (!parsed.success) return handleZodError(res, parsed.error);
     const data = parsed.data;
-    // Auto-inherit account from campaign if accountsId not provided
-    if (data.campaignsId && !data.accountsId) {
+    if (data.campaignsId) {
       const campaign = await storage.getCampaignById(data.campaignsId);
-      if (campaign?.accountsId) data.accountsId = campaign.accountsId;
+      if (campaign && !ownsAccount(req, campaign.accountsId)) return res.status(403).json({ message: "Forbidden" });
+      // Auto-inherit account from campaign if accountsId not provided
+      if (!data.accountsId && campaign?.accountsId) data.accountsId = campaign.accountsId;
     }
+    // A client (or view-as) adds to its own account; without this the lead had no account and the creator lost it.
+    const viewAsAccountId = req.session?.impersonation?.accountId;
+    if (!data.accountsId && req.user && (viewAsAccountId || req.user.accountsId !== 1)) {
+      data.accountsId = viewAsAccountId ?? req.user.accountsId;
+    }
+    if (!canWriteLead(req, res, data.accountsId)) return;
     const lead = await storage.createLead(data);
     res.status(201).json(toDbKeys(lead as any, leads));
   }));
@@ -409,6 +416,7 @@ export function registerLeadsRoutes(app: Express): void {
     const leadId = Number(req.params.id);
     const lead = await storage.getLeadById(leadId);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (!canWriteLead(req, res, lead.accountsId)) return;
     const accountId = lead.accountsId;
     try {
       const resp = await fetch(`${getEngineUrl()}/api/trigger-bump`, {

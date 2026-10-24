@@ -93,7 +93,9 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       // Status line only: logging response bodies wrote ~2MB/min of lead data to disk.
-      log(`${req.method} ${path} ${res.statusCode} in ${duration}ms`);
+      // Behind the Cloudflare tunnel req.ip is the local cloudflared hop, so prefer the real client IP header.
+      const ip = req.get("cf-connecting-ip") || req.ip;
+      log(`${req.method} ${path} ${res.statusCode} in ${duration}ms ip=${ip}`);
     }
   });
 

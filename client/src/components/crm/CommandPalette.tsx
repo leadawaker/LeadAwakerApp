@@ -20,11 +20,11 @@ import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { apiFetch } from "@/lib/apiUtils";
 import { setPersistedSelection } from "@/hooks/usePersistedSelection";
+import { leadPath } from "@/lib/leadLink";
 import { isNavItemVisible, useNavGateContext, type NavGate } from "@/components/crm/navVisibility";
 import { clientNavItems, CLIENT_NAV_HREF, myAccountLabelKey } from "@/components/crm/navGates";
 import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 import {
-  Megaphone,
   BookUser,
   MessageSquare,
   Calendar,
@@ -35,17 +35,14 @@ import {
   Building2,
   User,
   ArrowRight,
-  Home,
+  ChartColumn,
   AudioLines,
   ClipboardList,
   Settings,
   Receipt,
   MonitorPlay,
   UserSearch,
-  PhoneCall,
-  Send,
   Star,
-  PhoneMissed,
   Clapperboard,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
@@ -61,7 +58,7 @@ type NavItem = NavGate & {
 
 type SearchResult = {
   id: number;
-  type: "lead" | "campaign" | "account";
+  type: "lead" | "account";
   title: string;
   subtitle: string;
   href: string;
@@ -84,12 +81,9 @@ export function CommandPalette() {
 
   // Navigation items
   const allNavItems: NavItem[] = useMemo(() => [
-    { href: `${prefix}/home`, labelKey: "sidebar.home", icon: Home, keywords: "home dashboard receptionist overview" },
-    { href: `${prefix}/campaigns`, labelKey: "sidebar.reactivation", icon: Megaphone, keywords: "campaigns messages outreach drip reactivation" },
-    // Speed to Lead links only for agency users (clients see it as "Soon" in the nav).
-    { href: `${prefix}/speed-to-lead`, labelKey: "sidebar.speedToLead", icon: Send, keywords: "speed to lead fast response new leads", serviceKey: "speed", agencyOnly: true },
+    { href: `${prefix}/home`, labelKey: "sidebar.home", icon: ChartColumn, keywords: "stats statistics statistieken estatísticas métricas home dashboard receptionist overview" },
+    // Speed to Lead, Missed calls and Cadence are hidden until finished (list in RightSidebar.tsx).
     { href: `${prefix}/reputation`, labelKey: "sidebar.reputation", icon: Star, keywords: "reputation reviews google ratings", serviceKey: "reputation" },
-    { href: `${prefix}/missed-calls`, labelKey: "sidebar.missedCalls", icon: PhoneMissed, keywords: "missed calls text back phone", serviceKey: "missedcall" },
     { href: `${prefix}/voice-calls`, labelKey: "sidebar.voiceCalls", icon: AudioLines, keywords: "voice calls phone receptionist recordings transcripts callers", voiceCallsOnly: true },
     // Clients reach it through the client list below (only when the account has chats).
     { href: `${prefix}/chat`, labelKey: "sidebar.conversations", icon: MessageSquare, keywords: "conversations chats interactions whatsapp website threads leads messages inbox", agencyOnly: true },
@@ -103,12 +97,11 @@ export function CommandPalette() {
     { href: `${prefix}/prompt-library`, labelKey: "sidebar.promptLibrary", icon: BookOpen, keywords: "ai templates prompts", agencyOnly: true },
     { href: `${prefix}/outreach-inbox`, labelKey: "sidebar.inbox", icon: MessageSquare, keywords: "prospect inbox messages whatsapp prospects outreach chats", ownerOnly: true, outreachOnly: true },
     { href: `${prefix}/prospects`, labelKey: "sidebar.prospects", icon: UserSearch, keywords: "prospects outreach pipeline", ownerOnly: true, outreachOnly: true },
-    { href: `${prefix}/cadence`, labelKey: "sidebar.cadence", icon: PhoneCall, keywords: "cadence cold calls outreach", ownerOnly: true, outreachOnly: true },
     { href: `${prefix}/automation-logs`, labelKey: "sidebar.automations", icon: ScrollText, keywords: "automation logs n8n workflows automations health engine", ownerOnly: true },
     { href: `${prefix}/traffic`, labelKey: "sidebar.traffic", icon: ChartNoAxesColumn, keywords: "traffic visitors visits analytics seo google search console ai chatgpt website", ownerOnly: true },
     { href: `${prefix}/demos`, labelKey: "sidebar.demos", icon: MonitorPlay, keywords: "demos browser demo sessions links", ownerOnly: true },
     { href: `${prefix}/settings`, labelKey: "sidebar.settings", icon: Settings, keywords: "settings preferences profile account" },
-    { href: `${prefix}/settings?tab=team`, labelKey: "commandPalette.team", icon: Users, keywords: "users team members roles", agencyOnly: true },
+    { href: `${prefix}/settings?tab=users`, labelKey: "commandPalette.team", icon: Users, keywords: "users team members roles", agencyOnly: true },
   ], [prefix]);
 
   // Clients only get the pages in their own nav (same gates as the nav bar).
@@ -189,7 +182,7 @@ export function CommandPalette() {
     };
   }, [query, currentAccountId, isAgencyUser, prefix]);
 
-  // Perform API search for leads, campaigns, and accounts
+  // Perform API search for leads and accounts
   const performSearch = useCallback(
     async (searchTerm: string): Promise<SearchResult[]> => {
       const results: SearchResult[] = [];
@@ -226,45 +219,9 @@ export function CommandPalette() {
                     type: "lead",
                     title: name,
                     subtitle: [phone, email].filter(Boolean).join(" \u2022 "),
-                    href: `${prefix}/contacts/${l.id}`,
-                  });
-                });
-            }
-          } catch {
-            // Silently fail
-          }
-        })()
-      );
-
-      // Search campaigns
-      promises.push(
-        (async () => {
-          try {
-            // Clients without the reactivation service have no Campaigns page to land on.
-            if (!isAgencyUser && !clientFacts.hasReactivation) return;
-            // Match the Campaigns page scope so the selected campaign is in its list.
-            const campaignsUrl = isAgencyUser && currentAccountId <= 0
-              ? `/api/campaigns`
-              : `/api/campaigns?accountId=${currentAccountId}`;
-            const campaignsRes = await apiFetch(campaignsUrl);
-            if (campaignsRes.ok) {
-              const campaignsData = await campaignsRes.json();
-              const campaignsArr = Array.isArray(campaignsData) ? campaignsData : campaignsData.data || [];
-              campaignsArr
-                .filter((c: any) => {
-                  const name = (c.name || "").toLowerCase();
-                  return name.includes(lowerTerm);
-                })
-                .slice(0, 5)
-                .forEach((c: any) => {
-                  results.push({
-                    id: c.id,
-                    type: "campaign",
-                    title: c.name || t("commandPalette.fallbackCampaign", { id: c.id }),
-                    subtitle: `${c.Status || c.status || t("commandPalette.unknownStatus")} \u2022 ${c.Campaign_Type || c.type || t("commandPalette.resultTypes.campaign")}`,
-                    // No /campaigns/:id route: open the Campaigns page with this campaign selected.
-                    href: `${prefix}/campaigns`,
-                    selectionKey: "selected-campaign-id",
+                    // A lead's one home: Chats with this lead selected.
+                    href: leadPath(l.id),
+                    selectionKey: "selected-lead-id",
                   });
                 });
             }
@@ -311,7 +268,7 @@ export function CommandPalette() {
       await Promise.all(promises);
       return results;
     },
-    [currentAccountId, isAgencyUser, prefix, t, clientFacts.hasReactivation],
+    [currentAccountId, isAgencyUser, prefix, t],
   );
 
   const handleSelect = (href: string, selection?: { key: string; id: number }) => {
@@ -324,8 +281,6 @@ export function CommandPalette() {
     switch (type) {
       case "lead":
         return User;
-      case "campaign":
-        return Megaphone;
       case "account":
         return Building2;
       default:

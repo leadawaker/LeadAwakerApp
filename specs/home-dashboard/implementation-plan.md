@@ -2010,7 +2010,7 @@ In `server/routes/index.ts`: `import { registerHomeRoutes } from "./home";` and,
 ```bash
 sleep 9; pm2 logs leadawaker --lines 15 --nostream --err
 J=<scratchpad>/owner.jar
-curl -s -c $J -H 'Content-Type: application/json' -d '{"email":"leadawaker@gmail.com","password":"Admin1234"}' http://localhost:5000/api/auth/login -o /dev/null -w "%{http_code}\n"
+curl -s -c $J -H 'Content-Type: application/json' -d '{"email":"leadawaker@gmail.com","password":"$LA_OWNER_PASSWORD"}' http://localhost:5000/api/auth/login -o /dev/null -w "%{http_code}\n"
 for p in services overview phone whatsapp website reactivation reputation social; do
   curl -s -b $J "http://localhost:5000/api/home/$p?accountId=53&period=7d" | head -c 300; echo
 done

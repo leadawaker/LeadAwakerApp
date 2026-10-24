@@ -27,10 +27,12 @@
     "resetToDefault": "Standaard herstellen",
     "previous": "Vorige",
     "next": "Volgende",
-    "of": "van"
+    "of": "van",
+    "moreActions": "Meer acties"
   },
   "sort": {
     "mostRecent": "Meest Recent",
+    "name": "Naam",
     "nameAZ": "Naam A -> Z",
     "nameZA": "Naam Z -> A"
   },
@@ -243,53 +245,16 @@
     "confirm": "Bevestigen?",
     "clickToUploadLogo": "Klik om logo te uploaden",
     "removeLogo": "Logo verwijderen",
-    "voiceFile": "Stembestand",
-    "syncInstagram": "Instagram Contacten Synchroniseren",
-    "syncingContacts": "Contacten synchroniseren...",
-    "syncFailed": "Synchronisatie mislukt",
     "selectExecution": "Selecteer een account om de details te bekijken",
     "cropLogo": "Logo bijsnijden",
     "cropDescription": "Sleep om te herpositioneren · gebruik de schuifregelaar om te zoomen",
     "saveLogo": "Logo opslaan",
-    "overview": "Overzicht",
-    "campaignsAndContracts": "Campagnes & Contracten",
-    "aiAndSchedule": "AI & Planning",
-    "integrations": "Integraties",
-    "voiceClone": "Stemkloon",
-    "voiceIdForCampaigns": "Stem-ID voor campagnes",
-    "voiceIdWillBe": "Stem-ID wordt",
-    "clickOrDragAudio": "Klik of sleep audiobestand",
-    "voiceFormats": "M4A, WAV, MP3, OGG, FLAC · max 10 MB",
-    "lead": "lead",
-    "leads": "leads",
-    "contactsSynced": "{{count}} contacten gesynchroniseerd",
-    "alreadyExisted": "{{count}} bestonden al",
-    "failedCount": "{{count}} mislukt",
-    "rateLimited": "Snelheidslimiet bereikt — voer opnieuw uit voor de resterende contacten",
-    "conversationsScanned": "{{count}} gesprekken gescand"
+    "overview": "Overzicht"
   },
   "related": {
-    "campaigns": "Campagnes",
-    "users": "Gebruikers",
-    "contracts": "Contracten",
-    "searchCampaigns": "Campagnes zoeken...",
-    "searchUsers": "Gebruikers zoeken...",
-    "addCampaign": "Campagne toevoegen",
-    "addUser": "Gebruiker toevoegen",
     "unnamed": "Naamloos",
-    "unknown": "Onbekend",
-    "more": "+{{count}} meer",
-    "copy": "(Kopie)",
-    "pickCampaign": "Kies een campagne om aan dit account toe te wijzen.",
-    "noCampaignsAvailable": "Geen campagnes beschikbaar",
-    "noCampaigns": "Geen campagnes",
-    "contract": "Contract",
     "noContract": "Geen contract",
     "noInvoice": "Nog geen facturen",
-    "unlinkedContracts": "Niet-gekoppelde contracten",
-    "members": "Leden",
-    "pickUser": "Kies een gebruiker om aan dit account toe te wijzen.",
-    "noUsersAvailable": "Geen gebruikers beschikbaar",
     "noUsersAssigned": "Geen gebruikers toegewezen"
   },
   "pagination": {
@@ -449,11 +414,9 @@
   },
   "knowledge": {
     "title": "Kennisbank",
-    "entries": "items",
     "loading": "Laden...",
     "add": "Toevoegen",
     "save": "Opslaan",
-    "update": "Bijwerken",
     "saving": "Opslaan...",
     "cancel": "Annuleren",
     "titlePlaceholder": "Titel van item...",
@@ -485,6 +448,7 @@
   "workspace": {
     "tabs": {
       "overview": "Overzicht",
+      "reactivation": "Reactivatie",
       "integrations": "Integraties",
       "knowledge": "Bedrijfsintel",
       "communication": "Onboarding",
@@ -499,14 +463,6 @@
     "showPanel": "Paneel tonen"
   },
   "metrics": {
-    "campaigns": "Campagnes",
-    "avgResponse": "Gem. respons",
-    "contracts": "Contracten",
-    "team": "Team",
-    "allActive": "allemaal actief",
-    "acrossAll": "over alles",
-    "nActive": "{{count}} actief",
-    "nOwner": "{{count}} eigenaar",
     "nMembers": "{{count}} leden",
     "callsMonth": "Gesprekken deze maand",
     "nBooked_one": "{{count}} geboekt",
@@ -545,7 +501,6 @@
     "knowledgeBase": "Bedrijfsintel",
     "available": "Beschikbaar",
     "leads": "Leads",
-    "response": "Respons",
     "actions": {
       "new": "Nieuw",
       "invite": "Uitnodigen",
@@ -554,18 +509,6 @@
       "viewAllCampaigns": "Alle campagnes bekijken",
       "addIntegration": "Integratie toevoegen",
       "addCategory": "Categorie toevoegen"
-    },
-    "bulk": {
-      "selected": "{{count}} geselecteerd",
-      "setStatus": "Status instellen",
-      "delete": "Verwijderen",
-      "clear": "Wissen",
-      "status": {
-        "Active": "Actief",
-        "Paused": "Gepauzeerd",
-        "Draft": "Concept",
-        "Archived": "Gearchiveerd"
-      }
     },
     "invite": {
       "title": "Teamlid toevoegen",
@@ -804,8 +747,6 @@
   },
   "services": {
     "title": "Diensten",
-    "campaignUsage_one": "{{count}} campagne, {{active}} actief",
-    "campaignUsage_other": "{{count}} campagnes, {{active}} actief",
     "whatsappMode": {
       "app": "ook op de telefoon van de klant",
       "new": "alleen de assistent",
@@ -815,7 +756,9 @@
       "phone": "Telefoonreceptionist",
       "whatsapp": "WhatsApp",
       "website": "Websitechat",
-      "campaigns": "Tekstcampagnes"
+      "reactivation": "Reactivatie",
+      "reputation": "Reputatie",
+      "social": "Social"
     },
     "state": {
       "phone": {
@@ -833,10 +776,17 @@
         "pending": "Uitgeschakeld",
         "off": "Niet ingesteld"
       },
-      "campaigns": {
+      "reactivation": {
         "on": "Actief",
-        "pending": "Geen actief",
-        "off": "Geen"
+        "off": "Niet actief"
+      },
+      "reputation": {
+        "on": "Actief",
+        "off": "Niet actief"
+      },
+      "social": {
+        "on": "Actief",
+        "off": "Niet actief"
       }
     },
     "phoneUsage_one": "{{count}} gesprek deze maand, {{bookings}} geboekt",
@@ -1015,6 +965,47 @@
         "failed": "Er ging iets mis. Probeer het opnieuw."
       },
       "failedHelp": "Instagram heeft deze post niet geplaatst."
+    }
+  },
+  "servicePages": {
+    "tabs": {
+      "inbox": "Inbox",
+      "analytics": "Analyse",
+      "dashboard": "Dashboard",
+      "settings": "Instellingen"
+    },
+    "searchCalls": "Oproepen zoeken…",
+    "searchReviews": "Reviews zoeken…"
+  },
+  "receptionistSettings": {
+    "chooseTitle": "Kies een account",
+    "chooseHelp": "Instellingen gelden per account. Kies de klant van wie je de receptioniste wilt afstellen.",
+    "choose": "Kies account",
+    "account": "Account",
+    "noAccounts": "Nog geen accounts.",
+    "loadFailed": "Dit account kon niet worden geladen",
+    "sharedVoice": "Openingstijden en Bedrijfsintel worden gedeeld met de chatassistent.",
+    "sharedChat": "Openingstijden en Bedrijfsintel worden gedeeld met de telefonische receptioniste.",
+    "openCalls": "Bewerk ze in Gesprekken › Instellingen"
+  },
+  "reactivationTab": {
+    "campaign": "Campagne",
+    "newCampaign": "Nieuwe campagne",
+    "activate": "Activeren",
+    "pause": "Pauzeren",
+    "saving": "Opslaan…",
+    "emptyTitle": "Nog geen reactivatiecampagne",
+    "emptyBody": "Een reactivatiecampagne stuurt de oude leads van de klant een bericht en plant een afspraak in met wie reageert. Start er hier een, vul de instellingen in, importeer de leads en activeer de campagne.",
+    "listFailed": "De campagnes konden niet worden geladen.",
+    "loadFailed": "Deze campagne kon niet worden geladen.",
+    "create": {
+      "title": "Nieuwe reactivatiecampagne",
+      "subtitle": "Voor {{account}}",
+      "name": "Naam van de campagne",
+      "namePlaceholder": "bijv. Oude leads 2026",
+      "help": "Hij begint als concept, dus er gaat niets de deur uit tot je hem activeert.",
+      "submit": "Campagne aanmaken",
+      "failed": "De campagne kon niet worden aangemaakt"
     }
   }
 }

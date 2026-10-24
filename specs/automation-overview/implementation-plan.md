@@ -1861,7 +1861,7 @@ The CRM reloads on save. Check `pm2 logs leadawaker --lines 30 --nostream` for e
 
 ```bash
 cd /home/gabriel/LeadAwakerApp
-curl -s -c /tmp/claude-1000/la.cookie -H 'Content-Type: application/json' -d '{"email":"leadawaker@gmail.com","password":"Admin1234"}' http://localhost:5000/api/auth/login > /dev/null
+curl -s -c /tmp/claude-1000/la.cookie -H 'Content-Type: application/json' -d '{"email":"leadawaker@gmail.com","password":"$LA_OWNER_PASSWORD"}' http://localhost:5000/api/auth/login > /dev/null
 curl -s -b /tmp/claude-1000/la.cookie http://localhost:5000/api/automations/overview | head -c 800; echo
 curl -s -b /tmp/claude-1000/la.cookie "http://localhost:5000/api/automations/inbound_handler/diary" | head -c 600; echo
 curl -s -b /tmp/claude-1000/la.cookie http://localhost:5000/api/accounts/1/automations | head -c 800; echo
@@ -2463,7 +2463,7 @@ For each file to delete, confirm with `grep -rn "<basename without extension>" c
 
 - [ ] **Step 6: Visual check**
 
-The app reloads on save. Open `https://app.leadawaker.com/platform/automation-logs` with playwright-cli (log in with leadawaker@gmail.com / Admin1234), take a screenshot at 1440px and at 390px, click one row and screenshot the diary panel, switch to dark mode if a toggle is reachable. Check: groups in service order, internal collapsed, counts visible, no console errors. Close the browser when done (Pi resource hygiene).
+The app reloads on save. Open `https://app.leadawaker.com/platform/automation-logs` with playwright-cli (log in with leadawaker@gmail.com / <owner password>), take a screenshot at 1440px and at 390px, click one row and screenshot the diary panel, switch to dark mode if a toggle is reachable. Check: groups in service order, internal collapsed, counts visible, no console errors. Close the browser when done (Pi resource hygiene).
 
 - [ ] **Step 7: Commit**
 

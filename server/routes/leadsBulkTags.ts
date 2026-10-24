@@ -1,4 +1,4 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { storage } from "../storage";
 import { requireAuth, requireAgency, scopeToAccount } from "../auth";
 import {
@@ -10,8 +10,35 @@ import {
 } from "@shared/schema";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { db } from "../db";
-import { handleZodError, wrapAsync, coerceDates } from "./_helpers";
-import { eq, and, isNotNull } from "drizzle-orm";
+import { handleZodError, wrapAsync, coerceDates, ownsAccount, canWriteLead } from "./_helpers";
+import { disallowedClientLeadFields, leadWriteLevelForRequest } from "./leadWriteAccess";
+import { eq, and, isNotNull, inArray } from "drizzle-orm";
+
+/**
+ * The ids the caller may write, by the PATCH /api/leads/:id rule (effective
+ * role, so view-as gets the client's answer). Sends the 403 itself and
+ * returns null when none are left, or when a Viewer asks.
+ */
+async function writableLeadIds(req: Request, res: Response, ids: number[]): Promise<number[] | null> {
+  // With no lead account only the agency gets "agency", so this asks "is the caller agency?"
+  if (leadWriteLevelForRequest(req as any, null) === "agency") return ids;
+  const valid = ids.filter((id) => Number.isInteger(id));
+  const rows = valid.length ? await db.select({ id: leads.id, accountsId: leads.accountsId }).from(leads).where(inArray(leads.id, valid)) : [];
+  const writable: number[] = [];
+  for (const row of rows) {
+    const level = leadWriteLevelForRequest(req as any, row.accountsId ?? null);
+    if (level === "readonly") {
+      res.status(403).json({ message: "Read-only access" });
+      return null;
+    }
+    if (level === "client" && row.id != null) writable.push(row.id);
+  }
+  if (writable.length === 0) {
+    res.status(403).json({ message: "None of the specified leads belong to your account" });
+    return null;
+  }
+  return writable;
+}
 
 export function registerLeadsBulkTagsRoutes(app: Express): void {
   // ─── Bulk Lead Operations ──────────────────────────────────────────
@@ -19,10 +46,13 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
   // CSV Import — bulk create leads from a mapped array
   app.post("/api/leads/import-csv", requireAuth, async (req, res) => {
     try {
-      if (req.user!.accountsId !== 1) {
-        if (!req.user!.accountsId) {
+      // No session user = the internal key (agency-level).
+      const forcedAccountId = req.user && req.user.accountsId !== 1 ? req.user.accountsId : undefined;
+      if (req.user && req.user.accountsId !== 1) {
+        if (!req.user.accountsId) {
           return res.status(403).json({ message: "Account scoping required" });
         }
+        if (!canWriteLead(req, res, req.user.accountsId)) return;
       }
 
       const { leads: leadRows } = req.body;
@@ -42,7 +72,8 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
       const created: any[] = [];
       const errors: { row: number; message: string }[] = [];
 
-      const forcedAccountId = req.user!.accountsId !== 1 ? req.user!.accountsId : undefined;
+      // A row's campaign must be one the caller reaches.
+      const campaignAllowed = new Map<number, boolean>();
 
       for (let i = 0; i < leadRows.length; i++) {
         try {
@@ -61,6 +92,17 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
               message: parsed.error.errors.map((e) => `${e.path.join(".")}: ${e.message}`).join("; "),
             });
             continue;
+          }
+          const campaignId = parsed.data.campaignsId;
+          if (campaignId) {
+            if (!campaignAllowed.has(campaignId)) {
+              const campaign = await storage.getCampaignById(campaignId);
+              campaignAllowed.set(campaignId, !!campaign && ownsAccount(req, campaign.accountsId));
+            }
+            if (!campaignAllowed.get(campaignId)) {
+              errors.push({ row: i + 1, message: `Campaigns_id: campaign ${campaignId} not found` });
+              continue;
+            }
           }
           const lead = await storage.createLead(parsed.data);
           created.push(toDbKeys(lead as any, leads));
@@ -84,8 +126,8 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
   // Bulk update leads (move stage, assign campaign)
   app.post("/api/leads/bulk-update", requireAuth, async (req, res) => {
     try {
-      if (req.user!.accountsId !== 1) {
-        if (!req.user!.accountsId) {
+      if (req.user && req.user.accountsId !== 1) {
+        if (!req.user.accountsId) {
           return res.status(403).json({ message: "Account scoping required" });
         }
       }
@@ -101,19 +143,21 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
       const parsed = insertLeadsSchema.partial().safeParse(fromDbKeys(data, leads));
       if (!parsed.success) return handleZodError(res, parsed.error);
 
-      let leadIds = ids.map(Number);
-      if (req.user!.accountsId !== 1) {
-        const userAccountId = req.user!.accountsId;
-        const ownedLeads: number[] = [];
-        for (const lid of leadIds) {
-          const lead = await storage.getLeadById(lid);
-          if (lead && lead.accountsId === userAccountId) {
-            ownedLeads.push(lid);
-          }
+      const leadIds = await writableLeadIds(req, res, ids.map(Number));
+      if (!leadIds) return;
+      if (leadWriteLevelForRequest(req as any, null) !== "agency") {
+        // A client: the fields its UI sends, plus a move to a campaign of its own account.
+        const { accountsId, campaignsId, ...fields } = parsed.data;
+        const disallowed = disallowedClientLeadFields(fields);
+        if (disallowed.length) return res.status(403).json({ message: "Field not editable", fields: disallowed });
+        if (accountsId !== undefined && leadWriteLevelForRequest(req as any, accountsId ?? null) !== "client") {
+          return res.status(403).json({ message: "Forbidden" });
         }
-        leadIds = ownedLeads;
-        if (leadIds.length === 0) {
-          return res.status(403).json({ message: "None of the specified leads belong to your account" });
+        if (campaignsId) {
+          const campaign = await storage.getCampaignById(campaignsId);
+          if (!campaign || leadWriteLevelForRequest(req as any, campaign.accountsId ?? null) !== "client") {
+            return res.status(403).json({ message: "Forbidden" });
+          }
         }
       }
 
@@ -139,12 +183,14 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
       if (!Array.isArray(tagIds) || tagIds.length === 0) {
         return res.status(400).json({ message: "tagIds must be a non-empty array" });
       }
+      const allowedIds = await writableLeadIds(req, res, leadIds.map(Number));
+      if (!allowedIds) return;
 
-      const existingRows = await storage.getTagsByLeadIds(leadIds.map(Number));
+      const existingRows = await storage.getTagsByLeadIds(allowedIds);
       const existingSet = new Set(existingRows.map((r: any) => `${r.leadsId}:${r.tagsId}`));
 
       const toInsert: { leadsId: number; tagsId: number }[] = [];
-      for (const leadId of leadIds) {
+      for (const leadId of allowedIds) {
         for (const tagId of tagIds) {
           if (!existingSet.has(`${Number(leadId)}:${Number(tagId)}`)) {
             toInsert.push({ leadsId: Number(leadId), tagsId: Number(tagId) });
@@ -156,7 +202,7 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
 
       res.json({
         created: created.length,
-        message: `Applied ${tagIds.length} tag(s) to ${leadIds.length} lead(s)`,
+        message: `Applied ${tagIds.length} tag(s) to ${allowedIds.length} lead(s)`,
       });
     } catch (err: any) {
       console.error("[leads] bulk tag error:", err);
@@ -202,12 +248,19 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
   app.get("/api/leads/tags/all", requireAuth, wrapAsync(async (req, res) => {
     const idsParam = req.query.ids as string | undefined;
     if (!idsParam) return res.json([]);
-    const ids = idsParam.split(",").map(Number).filter((n) => !isNaN(n));
+    let ids = idsParam.split(",").map(Number).filter((n) => Number.isInteger(n));
+    if (req.user && req.user.accountsId !== 1 && ids.length > 0) {
+      const own = await db.select({ id: leads.id }).from(leads)
+        .where(and(inArray(leads.id, ids), eq(leads.accountsId, req.user.accountsId ?? -1)));
+      ids = own.map((l) => l.id).filter((id): id is number => id != null);
+    }
     const data = ids.length > 0 ? await storage.getTagsByLeadIds(ids) : [];
     res.json(data);
   }));
 
   app.get("/api/leads/:id/tags", requireAuth, wrapAsync(async (req, res) => {
+    const lead = await storage.getLeadById(Number(req.params.id));
+    if (lead && !ownsAccount(req, lead.accountsId)) return res.status(403).json({ message: "Forbidden" });
     const data = await storage.getTagsByLeadId(Number(req.params.id));
     res.json(data);
   }));
@@ -215,6 +268,8 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
   // GET /api/leads/:id/tag-events — tag events with timestamps for chat timeline
   app.get("/api/leads/:id/tag-events", requireAuth, wrapAsync(async (req, res) => {
     const leadId = Number(req.params.id);
+    const lead = await storage.getLeadById(leadId);
+    if (lead && !ownsAccount(req, lead.accountsId)) return res.status(403).json({ message: "Forbidden" });
     const activeRows = await storage.getTagsByLeadId(leadId);
     const removedRows = await db.select().from(leadsTags).where(
       and(eq(leadsTags.leadsId, leadId), isNotNull(leadsTags.removedAt))
@@ -267,6 +322,9 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
       const leadId = Number(req.params.id);
       const { tagId } = req.body;
       if (!tagId) return res.status(400).json({ message: "tagId is required" });
+      const lead = await storage.getLeadById(leadId);
+      if (!lead) return res.status(404).json({ message: "Lead not found" });
+      if (!canWriteLead(req, res, lead.accountsId)) return;
 
       const existingTags = await storage.getTagsByLeadId(leadId);
       const exists = existingTags.some((t: any) => t.tagsId === Number(tagId));
@@ -285,6 +343,9 @@ export function registerLeadsBulkTagsRoutes(app: Express): void {
     try {
       const leadId = Number(req.params.id);
       const tagId = Number(req.params.tagId);
+      const lead = await storage.getLeadById(leadId);
+      if (!lead) return res.status(404).json({ message: "Lead not found" });
+      if (!canWriteLead(req, res, lead.accountsId)) return;
       const deleted = await storage.deleteLeadTag(leadId, tagId);
       if (!deleted) return res.status(404).json({ message: "Tag not found on this lead" });
       res.json({ success: true });

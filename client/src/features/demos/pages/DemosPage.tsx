@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { List, Plus, RefreshCw, Settings, Users } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { useLastTab } from "@/hooks/useLastTab";
 import { cn } from "@/lib/utils";
 import { useDemoSessions } from "../api/demoSessionsApi";
 import { DemoSessionsTable, DemosLoading } from "../components/DemoSessionsTable";
@@ -12,10 +13,12 @@ import { DemoSettingsTab } from "../components/DemoSettingsTab";
 import { ClientsTab } from "@/features/campaigns/components/clients/ClientsTab";
 
 type Tab = "sessions" | "new" | "clients" | "settings";
+const TABS: readonly Tab[] = ["sessions", "new", "clients", "settings"];
 
 function DemosContent() {
   const { t } = useTranslation("demos");
-  const [tab, setTab] = useState<Tab>("sessions");
+  // Reopens on the tab used last.
+  const [tab, setTab] = useLastTab<Tab>("demos", TABS, "sessions");
   const [selectedClientNiche, setSelectedClientNiche] = useState<string | null>(null);
   const { data: sessions, isLoading, error, refetch, isFetching } = useDemoSessions();
 
@@ -81,7 +84,7 @@ function DemosContent() {
           </div>
         ) : tab === "new" ? (
           <div className="h-full min-h-0 overflow-y-auto" style={{ padding: "22px 24px" }}>
-            <div className="max-w-[1386px] mr-auto">
+            <div className="la-page-center">
               <NewDemoForm />
             </div>
           </div>
@@ -100,7 +103,7 @@ function DemosContent() {
           </div>
         ) : (
           <div className="h-full min-h-0 overflow-hidden" style={{ padding: "14px 24px 0" }}>
-            <div className="mr-auto flex h-full min-h-0 max-w-[1386px] flex-col">
+            <div className="la-page-center flex h-full min-h-0 flex-col">
               <DemoSessionsTable sessions={sessions} />
             </div>
           </div>

@@ -1,9 +1,15 @@
 import type { ChangeTarget } from "@shared/automationTypes";
 import { setPersistedSelection } from "@/hooks/usePersistedSelection";
+import { receptionistSettingsHref } from "@/features/accounts/components/workspace/receptionist/settingsLink";
 
 /** Navigate to where a setting lives. Returns false when it cannot be linked (show the hint instead). */
 export function goToChangeTarget(target: ChangeTarget, accountId: number, setLocation: (to: string) => void, currentAccountId: number): boolean {
   if (target.kind === "account_tab") {
+    // The phone receptionist is tuned in Calls > Settings now, not in an Accounts tab.
+    if (target.tab === "voice") {
+      setLocation(receptionistSettingsHref("voice", { accountId }));
+      return true;
+    }
     setPersistedSelection("selected-account-id", String(accountId));
     // Fallback only: the workspace passes onOpenTab, which switches tabs without navigating.
     setLocation(`/platform/accounts?tab=${target.tab}`);

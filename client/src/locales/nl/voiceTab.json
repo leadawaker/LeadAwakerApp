@@ -59,12 +59,6 @@
     "typeLabel": "Of typ een nummer (internationaal formaat)",
     "attach": "Nummer koppelen",
     "invalid": "Gebruik het internationale formaat, bijvoorbeeld +31851234567.",
-    "officeSound": {
-      "label": "Kantoorgeluid",
-      "on": "Zacht kantoorgeluid onder de stem van de receptionist",
-      "off": "Uit",
-      "help": "Bellers horen een rustig kantoor op de achtergrond. Alleen de beller hoort het, en het stopt zodra je een doorverbonden gesprek aanneemt."
-    },
     "summaryNone": "Nog geen nummer gekoppeld",
     "summaryNoneClient": "Je telefoonnummer wordt ingesteld",
     "summaryHelp": "Het nummer, de documenten van de klant en Live gaan staan op het tabblad Integraties.",
@@ -123,7 +117,72 @@
     "pronunciationCount_other": "{{count}} woorden",
     "pronunciationSaveNote": "Wijzigingen hier horen bij de kaart: druk op Opslaan op de kaart als je klaar bent.",
     "spokenAs_male": "In gesprekken stelt hij zich voor als {{name}}.",
-    "pronunciationAutosave": "Opgeslagen als je dit sluit."
+    "pronunciationAutosave": "Opgeslagen als je dit sluit.",
+    "gender": "Geslacht",
+    "genderOption": {
+      "auto": "Automatisch",
+      "female": "Vrouw",
+      "male": "Man"
+    },
+    "alsoUsedBy": "Ook gebruikt door {{number}}",
+    "playElevenSample": "Speel {{voice}} af",
+    "elevenSamplesHelp": "Speel een voorbeeld van een ElevenLabs-stem af en klik erop om hem te kiezen."
+  },
+  "lineEngine": {
+    "title": "Lijntype en engine",
+    "help": "Wat voor lijn dit is, welke engine echte gesprekken opneemt en met welk taalmodel. Bij ElevenLabs kies je ook welke van de twee agents opneemt, genoemd naar wat hij draait.",
+    "type": "Lijntype",
+    "purpose": {
+      "client": "Klant",
+      "demo": "Demo",
+      "test": "Test"
+    },
+    "purposeHelp": {
+      "client": "Een echte klantlijn. Klantlijnen worden voorlopig door GPT Live beantwoord.",
+      "demo": "Een lijn om de receptionist aan prospects te laten horen. Mag op ElevenLabs draaien.",
+      "test": "Elk gesprek op deze lijn is een testgesprek: verborgen in de gesprekken, cijfers en meldingen van de klant."
+    },
+    "realCalls": "Echte gesprekken",
+    "llm": {
+      "label": "Taalmodel",
+      "realLabel": "Echte gesprekken: taalmodel",
+      "confirm": "Echte bellers op deze lijn krijgen {{model}}. Overstappen?",
+      "confirmYes": "Bevestigen",
+      "confirmNo": "Annuleren",
+      "help": "Het model achter de receptionist bij echte GPT-Live-gesprekken. Sol is de standaard.",
+      "sol": "Sol",
+      "terra": "Terra",
+      "luna": "Luna"
+    },
+    "clientElevenOff": "ElevenLabs is nog niet beschikbaar op klantlijnen.",
+    "voice": "ElevenLabs-stem",
+    "defaultVoice": "Standaardstem voor {{name}}",
+    "voiceHint": "Stemmen die bij {{name}} passen. De stem hierboven bepaalt welke.",
+    "voicesFailed": "De stemlijst kon niet worden geladen, daarom wordt de opgeslagen stem ongewijzigd getoond.",
+    "notSetUp": "Dit nummer is niet ingesteld bij ElevenLabs: gesprekken blijven op GPT-Live.",
+    "mismatch": "Deze stem past niet bij {{name}}: gesprekken gebruiken een passende standaardstem.",
+    "chip": {
+      "test": "Testlijn",
+      "demo": "Demolijn",
+      "eleven": "ElevenLabs"
+    }
+  },
+  "elevenPrompt": {
+    "title": "ElevenLabs-prompt",
+    "help": "Wat het volgende gesprek op deze lijn krijgt, opgebouwd uit de instellingen van deze lijn. Alleen lezen.",
+    "who": "Op een testlijn is dit wat een tester of eigenaar hoort (andere bellers krijgen GPT-Live); op een demolijn elke beller.",
+    "refresh": "Vernieuwen",
+    "name": "Naam",
+    "voice": "Stem",
+    "model": "Model",
+    "tools": "Tools",
+    "noTools": "Geen",
+    "firstMessage": "Eerste bericht",
+    "prompt": "Prompt",
+    "chars": "{{chars}} tekens",
+    "asOf": "Per {{time}}",
+    "notReady": "Gesprekken op deze lijn blijven op GPT-Live: {{reason}}",
+    "failed": "De ElevenLabs-prompt kon niet worden geladen."
   },
   "transfer": {
     "title": "Doorverbinden",
@@ -191,7 +250,7 @@
       "direct": "Direct doorverbinden",
       "off": "Niet doorverbinden",
       "screenedHelp": "Je telefoon gaat over met een korte samenvatting over de beller. Druk 1 om het gesprek aan te nemen, of 2 en de receptionist plant een terugbelafspraak. Neem je niet op, dan gaat de beller terug naar de receptionist.",
-      "directHelp": "De beller wordt direct doorverbonden zodra je opneemt, zonder samenvatting. Zonder kantoorgeluid verlaat de receptionist het gesprek meteen, dus neem je niet op, dan komt de beller op je voicemail.",
+      "directHelp": "De beller wordt direct doorverbonden zodra je opneemt, zonder samenvatting. Tenzij de lijn via Telnyx loopt, verlaat de receptionist het gesprek meteen, dus neem je niet op, dan komt de beller op je voicemail.",
       "offHelp": "Niemand wordt doorverbonden. Vraagt een beller naar een mens, dan neemt de AI-receptionist een bericht aan en plant een terugbelafspraak."
     },
     "wiringFailed": "Opgeslagen, maar de telefoonlijn kon niet worden omgezet: {{error}}"
@@ -215,6 +274,12 @@
     "call": "Test in browser",
     "filedNote": "Opent in een nieuw tabblad. Testgesprekken staan hieronder, niet in de cijfers of het CRM van deze klant.",
     "needsPersona": "Maak eerst de live persona aan.",
+    "prompt": {
+      "label": "Testprompt",
+      "standard": "Standaard",
+      "lean": "Kort (A/B-test)",
+      "help": "Alleen voor de browsertest hierboven. Echte telefoongesprekken en demo's gebruiken altijd de standaardprompt."
+    },
     "promptTitle": "Wat ze te horen krijgt",
     "promptFailed": "De prompt kon niet worden geladen.",
     "kind": {
@@ -233,13 +298,147 @@
       "backend_male": "De backend die voor hem antwoordt: bedrijfsgegevens, kennis, openingstijden, buiten kantoortijd en afspraakregels."
     },
     "recentTitle": "Recente testgesprekken",
-    "recentEmpty": "Nog geen testgesprekken. Klik op Test in browser om er een te doen.",
+    "recentEmpty": "Nog geen testgesprekken. Klik op Testgesprek starten om er een te doen.",
+    "recentMore": "Meer tonen",
+    "recentOpen": "Open de review van het testgesprek van {{when}}",
     "callFailed": "Dit gesprek kon niet worden geladen.",
     "title_male": "Probeer hem uit",
     "help_male": "Praat met hem in je browser, precies zoals een beller op deze lijn hem hoort: de persona, stem, begroeting, openingstijden en instellingen van deze klant. Geen telefoon nodig.",
     "promptTitle_male": "Wat hij te horen krijgt",
     "promptHelp": "De exacte prompt die ze in een gesprek krijgt, in drie delen. Alleen voor beheerders.",
-    "promptHelp_male": "De exacte prompt die hij in een gesprek krijgt, in drie delen. Alleen voor beheerders."
+    "promptHelp_male": "De exacte prompt die hij in een gesprek krijgt, in drie delen. Alleen voor beheerders.",
+    "elevenNote": "De knop hierboven test GPT-Live. Test ElevenLabs hieronder, of bel {{number}}.",
+    "eleven": {
+      "start": "Test ElevenLabs in de browser",
+      "again": "Test ElevenLabs opnieuw",
+      "callerLabel": "Bellen als",
+      "callerHelp": "Het nummer waarvandaan dit testgesprek komt: het bellergeheugen en afspraken gebruiken het.",
+      "callerInvalid": "Vul het nummer in met landcode, zoals +31612345678.",
+      "hangUp": "Ophangen",
+      "you": "Jij",
+      "agent": "Agent",
+      "note": "Bij een browsertest gaat bij doorverbinden bij niemand de telefoon over; afspraken komen in de demo-agenda, nooit in een echte agenda.",
+      "status": {
+        "idle": "Klaar",
+        "connecting": "Verbinden",
+        "listening": "Luistert",
+        "speaking": "Spreekt",
+        "ended": "Gesprek beëindigd. Het verschijnt zo bij de testgesprekken hieronder.",
+        "error": "Niet verbonden"
+      },
+      "error": {
+        "busy": "Er loopt al een browsertest. Probeer het opnieuw als die klaar is.",
+        "notEleven": "Deze lijn hoort niet bij dit account en kan hier dus niet getest worden.",
+        "notSetUp": "Deze lijn is nog niet ingericht: koppel eerst een klant en maak de persona aan.",
+        "badCaller": "Dat bellernummer is geen geldig telefoonnummer.",
+        "eleven": "ElevenLabs kon het gesprek niet starten. Probeer het zo opnieuw.",
+        "mic": "Toegang tot de microfoon is geblokkeerd. Sta de microfoon toe voor deze site en probeer het opnieuw.",
+        "dropped": "De verbinding is weggevallen.",
+        "generic": "De browsertest kon niet worden gestart."
+      }
+    },
+    "panel": {
+      "title": "Testgesprek",
+      "engine": "Engine",
+      "engines": {
+        "gpt-live": "GPT Live",
+        "elevenlabs": "ElevenLabs"
+      },
+      "testOnly": "Alleen voor de test. Echte bellers houden de eigen instellingen van deze lijn.",
+      "start": "Testgesprek starten",
+      "connecting": "Verbinden",
+      "ending": "Gesprek wordt beëindigd",
+      "hangUp": "Ophangen",
+      "liveNote": "Wat je nu aanpast, geldt vanaf de volgende test.",
+      "elevenNoNumber": "Voor een ElevenLabs-test heeft deze lijn een telefoonnummer nodig.",
+      "filedNote": "Testgesprekken staan in de lijst hieronder, niet in de cijfers of het CRM van deze klant.",
+      "besideNote": "Het testpaneel staat rechts, naast elke sectie. Testgesprekken staan hieronder.",
+      "error": {
+        "gptLive": "De GPT Live-test kon niet worden gestart."
+      },
+      "phase": {
+        "connecting": "Verbinden",
+        "live": "In gesprek",
+        "ending": "Beëindigen",
+        "review": "Gesprek beëindigd"
+      },
+      "inProgress": "Testgesprek bezig",
+      "openPanel": "Toon test",
+      "newTest": "Nieuwe test",
+      "reviewSoon": "Het overzicht van het gesprek verschijnt hier.",
+      "liveEmpty": "Zeg hallo: wat er gezegd wordt, verschijnt hier.",
+      "live": {
+        "time": "Tijd",
+        "cost": "Kosten tot nu toe",
+        "costHint": "Een schatting op basis van de minuutprijs. De definitieve kosten staan na het gesprek.",
+        "tools": "Tools",
+        "toolsEmpty": "Nog geen tools gebruikt.",
+        "toolFailed": "Mislukt",
+        "delaysHint": "Bij benadering: gemeten aan het transcript, niet aan het geluid.",
+        "transcript": "Transcript",
+        "ms": "{{ms}} ms"
+      },
+      "review": {
+        "loading": "Overzicht laden",
+        "waiting": "Het gesprek wordt klaargezet. Dit duurt een paar seconden.",
+        "failed": "Het overzicht kon niet worden geladen.",
+        "retry": "Opnieuw proberen",
+        "duration": "Duur",
+        "cost": "Kosten",
+        "costPart": {
+          "ai": "AI",
+          "telephony": "Telefoonlijn",
+          "recap": "Samenvatting"
+        },
+        "minutes": "{{n}} min",
+        "costEstimate": "Een schatting op basis van de abonnementsprijs, geen factuur.",
+        "median": "Mediaan vertraging",
+        "slowest": "Traagste vertraging",
+        "delaysHint": "Bij benadering: berekend uit de tijden in het transcript.",
+        "tools": "Tools",
+        "unknown": "Onbekend",
+        "noTools": "Er zijn geen tools gebruikt",
+        "recording": "Opname",
+        "recordingLoading": "Opname laden",
+        "noRecording": "Geen opname van dit gesprek: de markeringen tonen wanneer de tools liepen.",
+        "recordingFailed": "De opname kon niet worden afgespeeld: de markeringen tonen wanneer de tools liepen.",
+        "play": "Afspelen",
+        "pause": "Pauzeren",
+        "back": "10 seconden terug",
+        "forward": "10 seconden vooruit",
+        "speed": "Afspeelsnelheid",
+        "zoomIn": "Inzoomen",
+        "zoomOut": "Uitzoomen",
+        "download": "Opname downloaden",
+        "transcript": "Transcript",
+        "transcriptEmpty": "Er is niets gezegd in dit gesprek.",
+        "transcriptProcessing": "Het gesprek wordt nog verwerkt...",
+        "seekTo": "Afspelen vanaf {{time}}"
+      },
+      "understood": {
+        "title": "Wat ze begreep",
+        "title_male": "Wat hij begreep",
+        "empty": "Wordt ingevuld als ze haar notities maakt, meestal tegen het einde van het gesprek.",
+        "empty_male": "Wordt ingevuld als hij zijn notities maakt, meestal tegen het einde van het gesprek.",
+        "emptyReview": "Ze heeft van dit gesprek geen samenvatting gemaakt.",
+        "emptyReview_male": "Hij heeft van dit gesprek geen samenvatting gemaakt.",
+        "wants": "Wil",
+        "notes": "Notities",
+        "outcome": "Uitkomst"
+      }
+    },
+    "tools": {
+      "search_stock": "Voorraad zoeken",
+      "car_details": "Autogegevens",
+      "check_availability": "Agenda checken",
+      "book_appointment": "Afspraak inplannen",
+      "cancel_appointment": "Afspraak annuleren",
+      "request_callback": "Terugbelverzoek",
+      "update_call_summary": "Gespreksnotities",
+      "end_call": "Gesprek beëindigen",
+      "other": "Tool",
+      "running": "Bezig"
+    }
   },
   "live": {
     "goLive": "Live zetten",
@@ -428,7 +627,7 @@
     "on": "Bellers horen deze zin voordat de receptionist opneemt",
     "off": "Uit",
     "help": "Gesprekken worden opgenomen, en dat moet een beller weten voordat het gesprek begint. Een korte opgenomen zin in een andere stem regelt dat.",
-    "routeOnly": "Speelt op lijnen met gescreend doorverbinden of het kantoorgeluid aan.",
+    "routeOnly": "Speelt op lijnen die via Telnyx lopen: elke ElevenLabs-lijn, en lijnen met gescreend doorverbinden.",
     "edit": "Zin aanpassen",
     "title": "Opnamemelding",
     "standardTag": "Standaardzin",
@@ -459,7 +658,8 @@
     },
     "makers": {
       "openai": "Stemmen van OpenAI",
-      "google": "Stemmen van Google"
+      "google": "Stemmen van Google",
+      "eleven": "Stemmen van ElevenLabs"
     },
     "unsaved": "Nog niet opgeslagen. Druk op Fragment maken, luister, en kies dan Dit fragment gebruiken om op te slaan."
   },
@@ -511,7 +711,7 @@
   "line": {
     "title": "Aan de lijn",
     "help": "Wat een beller rond haar stem hoort. Elke schakelaar slaat direct op.",
-    "needsNumber": "Koppel eerst een nummer bij Integraties > Telefoon: de opnamemelding, het kantoorgeluid en de regio horen bij dat nummer.",
+    "needsNumber": "Koppel eerst een nummer bij Integraties > Telefoon: de opnamemelding en de regio horen bij dat nummer.",
     "help_male": "Wat een beller rond zijn stem hoort. Elke schakelaar slaat direct op."
   },
   "conversation": {
@@ -554,6 +754,34 @@
       "failed": "De prompt kon niet worden ingevuld voor deze lijn.",
       "valueLegend": "Ingevuld voor dit bedrijf",
       "addedLegend": "Door het systeem toegevoegd tijdens het gesprek"
+    },
+    "elevenNotice": "Niet in gebruik op deze lijn: die draait op ElevenLabs. GPT-Live-lijnen in het {{language}} gebruiken deze prompt nog wel.",
+    "versions": {
+      "save": "Versie opslaan",
+      "history": "Geschiedenis",
+      "notePlaceholder": "Notitie (optioneel), bijv. Kortere begroeting",
+      "saveConfirm": "Opslaan",
+      "saved": "Versie opgeslagen",
+      "saveFailed": "Versie opslaan mislukt",
+      "loadFailed": "Geschiedenis laden mislukt",
+      "none": "Nog geen versies",
+      "restore": "Herstellen",
+      "restoreConfirm": "Deze herstellen",
+      "cancel": "Annuleren",
+      "restored": "v{{v}} hersteld. De vervangen tekst staat in de geschiedenis.",
+      "beforeRestore": "Voor het herstellen van v{{v}}",
+      "noText": "Geen tekst om te herstellen"
+    },
+    "counts": {
+      "exact": "{{chars}} tekens, {{tokens}} tokens (ingevuld)",
+      "approx": "{{chars}} tekens, ca. {{tokens}} tokens (ingevuld)",
+      "failed": "Telling niet beschikbaar"
+    },
+    "eleven": {
+      "title": "ElevenLabs stemprompt",
+      "help": "De prompt die ElevenLabs bij elk gesprek op deze lijn krijgt.",
+      "syntax": "{name} wordt ingevuld uit de instellingen; een regel die met {?flag} begint blijft alleen staan als die instelling aan staat; de benoemde blokken ({person}, {callback_policy}, ...) worden uit de instellingen gevuld.",
+      "shared": "Gedeeld door elke ElevenLabs-lijn in deze taal. Een wijziging hier geldt bij hun volgende gesprek."
     }
   }
 }

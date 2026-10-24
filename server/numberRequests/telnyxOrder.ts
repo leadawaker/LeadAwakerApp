@@ -90,6 +90,34 @@ function toE164NL(phone: string): string {
 const now = () => new Date().toISOString();
 
 /**
+ * A bought number on the direct connection still needs the OpenAI project as
+ * its translated number, with only the Request-URI rewritten: the dialed number
+ * must stay in To, because the engine reads the line from it (engine twin:
+ * voice/telnyx_api.py set_route). Returns why it could not, else null.
+ */
+async function routeToOpenAI(phoneNumber: string): Promise<string | null> {
+  const connectionId = process.env.TELNYX_DIRECT_CONNECTION_ID;
+  if (!connectionId) return null;
+  try {
+    const q = new URLSearchParams({ "filter[phone_number]": phoneNumber });
+    const rec = ((await telnyx(`phone_numbers?${q}`)) ?? [])[0];
+    if (!rec) throw new TelnyxOrderError(`${phoneNumber} is not on the Telnyx account yet`);
+    if (String(rec.connection_id) !== connectionId) return null;
+    const projectId = process.env.OPENAI_SIP_PROJECT_ID;
+    if (!projectId) throw new TelnyxOrderError("OPENAI_SIP_PROJECT_ID is not set");
+    await telnyx(`phone_numbers/${rec.id}/voice`, {
+      method: "PATCH",
+      body: { translated_number: projectId, translated_number_config: "ignore_for_to_header" },
+    });
+    return null;
+  } catch (err) {
+    const reason = `Number bought, but not pointed at the assistant: ${err instanceof Error ? err.message : String(err)}`;
+    console.error("[numberRequests]", reason);
+    return reason;
+  }
+}
+
+/**
  * Place the order. Never throws: the outcome (or the reason it failed) comes
  * back as the order record to store on the request.
  */
@@ -140,10 +168,10 @@ export async function placeOrder(row: NumberRequest, companyName: string): Promi
         customer_reference: `${business} (account ${row.accountsId})`,
       },
     });
+    const status = order.status === "success" ? "success" : order.status === "failure" ? "failure" : "pending";
     return {
-      ...base, phoneNumber, orderId: String(order.id), requirementGroupId: String(group.id),
-      status: order.status === "success" ? "success" : order.status === "failure" ? "failure" : "pending",
-      error: null,
+      ...base, phoneNumber, orderId: String(order.id), requirementGroupId: String(group.id), status,
+      error: status === "success" ? await routeToOpenAI(phoneNumber) : null,
     };
   } catch (err) {
     return { ...base, status: "failure", error: err instanceof Error ? err.message : String(err) };
@@ -156,7 +184,9 @@ export async function refreshOrder(order: NumberRequestOrder): Promise<NumberReq
   try {
     const o = await telnyx(`number_orders/${order.orderId}`);
     const status = o.status === "success" ? "success" : o.status === "failure" ? "failure" : "pending";
-    return { ...order, status, checkedAt: now(), error: status === "failure" ? "Telnyx turned the order down. Check the documents in the Telnyx portal." : null };
+    const error = status === "failure" ? "Telnyx turned the order down. Check the documents in the Telnyx portal."
+      : status === "success" && order.phoneNumber ? await routeToOpenAI(order.phoneNumber) : null;
+    return { ...order, status, checkedAt: now(), error };
   } catch {
     return order;
   }

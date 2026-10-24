@@ -1,10 +1,10 @@
 import { chromium } from "playwright-core";
 import fs from "fs";
 import path from "path";
+import { APP_DIR, INVOICES_DIR } from "./paths";
 
-const INVOICES_DIR = "/home/gabriel/Images/Invoices";
 const REVENUE_CSV = path.join(INVOICES_DIR, "revenue.csv");
-const LOGO_PATH = "file:///home/gabriel/docker/code-server/config/workspace/LeadAwakerApp/client/public/2.Full-LOGO.svg";
+const LOGO_PATH = `file://${path.join(APP_DIR, "client/public/2.Full-LOGO.svg")}`;
 
 function getQuarter(date: Date): string {
   return `Q${Math.ceil((date.getMonth() + 1) / 3)}`;

@@ -9,6 +9,7 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
+import { openLead } from "@/lib/leadLink";
 import { ArrowDownLeft, ArrowUpRight, Layers, List } from "lucide-react";
 import type { Campaign } from "@/types/models";
 import { useConversationsData } from "@/features/conversations/hooks/useConversationsData";
@@ -56,10 +57,7 @@ export function AIActivityPanel({ campaign, accountId }: { campaign: Campaign; a
 
   const openChat = (leadId: number) => {
     if (!leadId) return;
-    try {
-      localStorage.setItem("selected-lead-id", String(leadId));
-    } catch { /* ignore */ }
-    setLocation("/platform/chat");
+    openLead(setLocation, leadId);
   };
 
   return (

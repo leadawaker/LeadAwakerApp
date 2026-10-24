@@ -9,3 +9,11 @@ export const APP_LANGUAGES = [
 ] as const;
 
 export type AppLanguageCode = (typeof APP_LANGUAGES)[number]["code"];
+
+/** Flags for the phone receptionist's spoken languages (Voice tab VOICE_LOCALES), shown before the label. */
+export const VOICE_LOCALE_FLAGS: Record<string, string> = {
+  nl: "🇳🇱",
+  "en-GB": "🇬🇧",
+  "en-US": "🇺🇸",
+  "pt-BR": "🇧🇷",
+};

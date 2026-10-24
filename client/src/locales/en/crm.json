@@ -23,13 +23,13 @@
   "sidebar": {
     "skipToMain": "Skip to main content",
     "menu": "Menu",
-    "home": "Home",
+    "home": "Stats",
     "calls": "Calls",
-    "myReceptionist": "Account",
+    "myReceptionist": "My account",
     "myReceptionistShort": "Account",
     "myAccount": "My account",
     "services": "Services",
-    "reactivation": "Campaigns",
+    "reactivation": "Reactivation",
     "reputation": "Reputation",
     "speedToLead": "Speed to Lead",
     "missedCalls": "Missed Calls",
@@ -78,8 +78,7 @@
     "outreach": "Outreach",
     "admin": "Admin",
     "backend": "Backend",
-    "agency": "Agency",
-    "setup": "Setup"
+    "agency": "Agency"
   },
   "sidebarSubmenu": {
     "summary": "Summary",
@@ -323,14 +322,11 @@
     "navigate": "Navigate",
     "select": "Select",
     "close": "Close",
-    "team": "Team",
-    "unknownStatus": "Unknown",
+    "team": "Users",
     "fallbackLead": "Lead #{{id}}",
-    "fallbackCampaign": "Campaign #{{id}}",
     "fallbackAccount": "Account #{{id}}",
     "resultTypes": {
       "lead": "Lead",
-      "campaign": "Campaign",
       "account": "Account",
       "result": "Result"
     }

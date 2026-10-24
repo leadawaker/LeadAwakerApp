@@ -34,6 +34,7 @@ import {
   getStatus,
   getStatusAvatarColor,
   formatRelativeTime,
+  dateGroupText,
 } from "../utils/conversationHelpers";
 import { apiFetch } from "@/lib/apiUtils";
 import { getInitials, getProspectAvatarColor, getProspectLogoUrl } from "@/lib/avatarUtils";
@@ -60,6 +61,8 @@ import {
   PIPELINE_HEX,
 } from "../utils/conversationHelpers";
 import { UncontactedProspectPicker } from "./UncontactedProspectPicker";
+import { ListCard } from "@/components/crm/primitives";
+import { useProspectInboxFilters } from "./ProspectInboxControls";
 
 
 // ── Component ──────────────────────────────────────────────────────────────────
@@ -109,6 +112,7 @@ export function InboxPanel({
   onFilterOpenChange,
   listPanelState = "full",
   prospectOnly = false,
+  prospectFilters,
 }: InboxPanelProps) {
   const { t } = useTranslation("conversations");
 
@@ -163,13 +167,19 @@ export function InboxPanel({
     (isAgencyUser && selectedAccountId !== "all");
 
   // Prospects tab state
-  const [prospectSearch, setProspectSearch] = useState("");
+  // The page can own this state (Outreach inbox: its PageTopbar holds the controls).
+  const ownProspectFilters = useProspectInboxFilters();
+  const pf = prospectFilters ?? ownProspectFilters;
+  const externalProspectControls = !!prospectFilters;
+  const {
+    search: prospectSearch, setSearch: setProspectSearch,
+    groupBy: prospectGroupBy, setGroupBy: setProspectGroupBy,
+    sortBy: prospectSortBy, setSortBy: setProspectSortBy,
+    filterStatus: prospectFilterStatus, setFilterStatus: setProspectFilterStatus,
+    filterChannels: prospectFilterChannels, setFilterChannels: setProspectFilterChannels,
+    pickerOpen: prospectPickerOpen, setPickerOpen: setProspectPickerOpen,
+  } = pf;
   const [prospectSearchOpen, setProspectSearchOpen] = useState(false);
-  const [prospectGroupBy, setProspectGroupBy] = useState<"date" | "status" | "none">("date");
-  const [prospectSortBy, setProspectSortBy] = useState<"newest" | "oldest" | "name_asc" | "name_desc">("newest");
-  const [prospectFilterStatus, setProspectFilterStatus] = useState<string[]>([]);
-  const [prospectFilterChannels, setProspectFilterChannels] = useState<string[]>([]);
-  const [prospectPickerOpen, setProspectPickerOpen] = useState(false);
   const [, navigate] = useLocation();
 
   // Filter prospects by search query + status filter
@@ -217,9 +227,10 @@ export function InboxPanel({
     const groups: { label: string; threads: ProspectThread[] }[] = [];
     const groupMap = new Map<string, ProspectThread[]>();
 
+    // Labels stay keys here (a status, or an English date group); groupLabelText translates them.
     for (const pt of filteredProspects) {
       const label = prospectGroupBy === "status"
-        ? (pt.outreach_status || "new").replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())
+        ? (pt.outreach_status || "new")
         : getDateGroupLabel(pt.last_message_at);
       if (!groupMap.has(label)) groupMap.set(label, []);
       groupMap.get(label)!.push(pt);
@@ -239,6 +250,11 @@ export function InboxPanel({
 
     return groups;
   }, [filteredProspects, prospectGroupBy]);
+
+  const groupLabelText = (label: string) =>
+    prospectGroupBy === "none" ? t("inbox.tabs.all")
+    : prospectGroupBy === "status" ? t(`prospectInbox.statuses.${label}`, { defaultValue: label.replace(/_/g, " ") })
+    : dateGroupText(label, t);
 
   const prospectsPagePath = "/platform/prospects";
 
@@ -589,7 +605,8 @@ export function InboxPanel({
                       ? "bg-brand-indigo/10 text-brand-indigo"
                       : "text-foreground/50 hover:text-foreground hover:bg-black/[0.04]"
                   )}
-                  title="More"
+                  title={t("prospectInbox.more")}
+                  aria-label={t("prospectInbox.more")}
                 >
                   <MoreVertical className="h-4 w-4" />
                 </button>
@@ -610,7 +627,7 @@ export function InboxPanel({
                             if (tab === "prospects") setProspectSearch(e.target.value);
                             else onSearchChange(e.target.value);
                           }}
-                          placeholder="Search…"
+                          placeholder={t("prospectInbox.search")}
                           onKeyDown={(e) => {
                             if (e.key === "Escape") {
                               if (tab === "prospects") setProspectSearch("");
@@ -638,7 +655,7 @@ export function InboxPanel({
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
                       <Filter className="h-3.5 w-3.5 shrink-0" />
-                      <span className="flex-1">Filter</span>
+                      <span className="flex-1">{t("prospectInbox.filter")}</span>
                       {filterActive && (
                         <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0">
                           {filterStatus.length}
@@ -662,12 +679,12 @@ export function InboxPanel({
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
                       <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
-                      <span className={cn("flex-1", isSortNonDefault && "text-brand-indigo font-semibold")}>Sort</span>
+                      <span className={cn("flex-1", isSortNonDefault && "text-brand-indigo font-semibold")}>{t("prospectInbox.sort")}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="w-44">
                       {(Object.keys(SORT_LABELS) as ChatSortBy[]).map((s) => (
                         <DropdownMenuItem key={s} onClick={() => onSetSortBy(s)} className={cn("text-[12px]", sortBy === s && "font-semibold text-brand-indigo")}>
-                          {SORT_LABELS[s]}
+                          {t(`inbox.sortLabels.${s}`, { defaultValue: SORT_LABELS[s] })}
                           {sortBy === s && <Check className="h-3 w-3 ml-auto" />}
                         </DropdownMenuItem>
                       ))}
@@ -680,12 +697,12 @@ export function InboxPanel({
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
                       <Layers className="h-3.5 w-3.5 shrink-0" />
-                      <span className={cn("flex-1", isGroupNonDefault && "text-brand-indigo font-semibold")}>Group</span>
+                      <span className={cn("flex-1", isGroupNonDefault && "text-brand-indigo font-semibold")}>{t("prospectInbox.group")}</span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="w-44">
                       {(Object.keys(GROUP_LABELS) as ChatGroupBy[]).map((g) => (
                         <DropdownMenuItem key={g} onClick={() => onSetGroupBy(g)} className={cn("text-[12px]", groupBy === g && "font-semibold text-brand-indigo")}>
-                          {GROUP_LABELS[g]}
+                          {t(`inbox.groupLabels.${g}`, { defaultValue: GROUP_LABELS[g] })}
                           {groupBy === g && <Check className="h-3 w-3 ml-auto" />}
                         </DropdownMenuItem>
                       ))}
@@ -765,7 +782,7 @@ export function InboxPanel({
                 <div className="flex flex-col items-center gap-0">
                   {filteredProspects.map((pt) => {
                     const active = selectedProspectId === pt.prospect_id;
-                    const displayName = pt.company || pt.name || "Unknown";
+                    const displayName = pt.company || pt.name || t("inbox.unknownName");
                     const avatarColor = getProspectAvatarColor(pt.outreach_status);
                     const isDealClosed = pt.outreach_status === "deal_closed";
                     return (
@@ -818,7 +835,7 @@ export function InboxPanel({
                 const status = getStatus(lead);
                 const avatarColor = getStatusAvatarColor(status);
                 const lastContent = getLastMessageDisplay(last);
-                const displayName = lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || "Unknown";
+                const displayName = lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || t("inbox.unknownName");
                 return (
                   <div
                     onClick={() => { onSelectLead(lead.id); closeHovered(); }}
@@ -843,7 +860,7 @@ export function InboxPanel({
                 );
               })() : (() => {
                 const pt = hoveredItem.data;
-                const displayName = pt.company || pt.name || "Unknown";
+                const displayName = pt.company || pt.name || t("inbox.unknownName");
                 const avatarColor = getProspectAvatarColor(pt.outreach_status);
                 return (
                   <div
@@ -871,7 +888,8 @@ export function InboxPanel({
       )}
 
       {!isCompact && <>
-      {/* ── Header: title + Inbox/Unread tabs on same row ── */}
+      {/* ── Header: title + Inbox/Unread tabs on same row (the page topbar has the title when it owns the controls) ── */}
+      {!externalProspectControls && (
       <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 shrink-0 flex items-center" data-testid="panel-inbox-head">
         <div className="flex items-center justify-between w-full md:w-[306px] shrink-0">
           <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{prospectOnly ? t("inbox.prospectTitle", "Prospect inbox") : t("inbox.title", "Conversations")}</h2>
@@ -885,6 +903,7 @@ export function InboxPanel({
           )}
         </div>
       </div>
+      )}
 
       {/* ── List toolbar: search + sort + filter + group ── */}
       {tab !== "prospects" && onSearchChange && onSetGroupBy && onSetSortBy && onToggleFilterStatus && (
@@ -1216,13 +1235,13 @@ export function InboxPanel({
 
       {/* ── Prospects toolbar: search + sort + group + filter + customize + "+" ── */}
       {tab === "prospects" && (
-        <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0 flex-wrap">
+        <div className={cn("pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0 flex-wrap", externalProspectControls && "pt-3 md:hidden")}>
           <SearchPill
             value={prospectSearch}
             onChange={setProspectSearch}
             open={prospectSearchOpen}
             onOpenChange={setProspectSearchOpen}
-            placeholder="Search prospects…"
+            placeholder={t("prospectInbox.searchPlaceholder")}
             className="ml-[9px] max-w-[149px]"
           />
 
@@ -1231,10 +1250,10 @@ export function InboxPanel({
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(xBase, "hover:max-w-[80px]", prospectSortBy !== "newest" ? xActive : xDefault)}
-                title="Sort"
+                title={t("prospectInbox.sort")}
               >
                 <ArrowUpDown className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>Sort</span>
+                <span className={xSpan}>{t("prospectInbox.sort")}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44">
@@ -1244,7 +1263,7 @@ export function InboxPanel({
                   onClick={() => setProspectSortBy(opt)}
                   className={cn("text-[12px]", prospectSortBy === opt && "font-semibold text-brand-indigo")}
                 >
-                  {{ newest: "Most Recent", oldest: "Oldest First", name_asc: "Name A → Z", name_desc: "Name Z → A" }[opt]}
+                  {t(`inbox.sortLabels.${opt}`)}
                   {prospectSortBy === opt && <Check className="h-3 w-3 ml-auto" />}
                 </DropdownMenuItem>
               ))}
@@ -1256,10 +1275,10 @@ export function InboxPanel({
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(xBase, "hover:max-w-[90px]", prospectGroupBy !== "date" ? xActive : xDefault)}
-                title="Group"
+                title={t("prospectInbox.group")}
               >
                 <Layers className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>Group</span>
+                <span className={xSpan}>{t("prospectInbox.group")}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-44">
@@ -1269,7 +1288,7 @@ export function InboxPanel({
                   onClick={() => setProspectGroupBy(opt)}
                   className={cn("text-[12px]", prospectGroupBy === opt && "font-semibold text-brand-indigo")}
                 >
-                  {{ date: "Date", status: "Status", none: "None" }[opt]}
+                  {t(`inbox.groupLabels.${opt}`)}
                   {prospectGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
                 </DropdownMenuItem>
               ))}
@@ -1281,14 +1300,14 @@ export function InboxPanel({
             <DropdownMenuTrigger asChild>
               <button
                 className={cn(xBase, "hover:max-w-[100px]", (prospectFilterStatus.length > 0 || prospectFilterChannels.length > 0) ? xActive : xDefault)}
-                title="Filter"
+                title={t("prospectInbox.filter")}
               >
                 <Filter className="h-4 w-4 shrink-0" />
-                <span className={xSpan}>Filter{(prospectFilterStatus.length + prospectFilterChannels.length) > 0 ? ` (${prospectFilterStatus.length + prospectFilterChannels.length})` : ""}</span>
+                <span className={xSpan}>{t("prospectInbox.filter")}{(prospectFilterStatus.length + prospectFilterChannels.length) > 0 ? ` (${prospectFilterStatus.length + prospectFilterChannels.length})` : ""}</span>
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start" className="w-52">
-              <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Status</div>
+              <div className="px-2 py-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{t("prospectInbox.status")}</div>
               {PROSPECT_OUTREACH_STATUSES.map((s) => (
                 <DropdownMenuItem
                   key={s}
@@ -1300,17 +1319,17 @@ export function InboxPanel({
                   }}
                   className="flex items-center gap-2 text-[12px]"
                 >
-                  <span className="flex-1 capitalize">{s.replace(/_/g, " ")}</span>
+                  <span className="flex-1">{t(`prospectInbox.statuses.${s}`, s.replace(/_/g, " "))}</span>
                   {prospectFilterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
               ))}
-              <div className="px-2 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-t mt-1">Channel</div>
+              <div className="px-2 pt-2 pb-1 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider border-t mt-1">{t("prospectInbox.channel")}</div>
               {([
-                { key: "email", label: "Email", Icon: Mail },
-                { key: "whatsapp", label: "WhatsApp", Icon: MessageSquare },
-                { key: "linkedin", label: "LinkedIn", Icon: Linkedin },
-                { key: "call", label: "Call", Icon: Phone },
-              ] as const).map(({ key, label, Icon }) => (
+                { key: "email", Icon: Mail },
+                { key: "whatsapp", Icon: MessageSquare },
+                { key: "linkedin", Icon: Linkedin },
+                { key: "call", Icon: Phone },
+              ] as const).map(({ key, Icon }) => (
                 <DropdownMenuItem
                   key={key}
                   onClick={(e) => {
@@ -1322,13 +1341,13 @@ export function InboxPanel({
                   className="flex items-center gap-2 text-[12px]"
                 >
                   <Icon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-                  <span className="flex-1">{label}</span>
+                  <span className="flex-1">{t(`prospectInbox.channels.${key}`)}</span>
                   {prospectFilterChannels.includes(key) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
               ))}
               {(prospectFilterStatus.length > 0 || prospectFilterChannels.length > 0) && (
                 <DropdownMenuItem onClick={() => { setProspectFilterStatus([]); setProspectFilterChannels([]); }} className="text-[12px] text-muted-foreground border-t mt-1 pt-1">
-                  Clear all filters
+                  {t("prospectInbox.clearFilters")}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -1397,8 +1416,8 @@ export function InboxPanel({
             {filteredProspects.length === 0 ? (
               <DataEmptyState
                 variant="conversations"
-                title={prospectSearch ? "No matching prospects" : "No prospect conversations"}
-                description={prospectSearch ? "Try a different search term." : "Prospect conversations will appear here when you start outreach."}
+                title={prospectSearch ? t("prospectInbox.emptyNoMatch") : t("prospectInbox.emptyNone")}
+                description={prospectSearch ? t("prospectInbox.emptyNoMatchHint") : t("prospectInbox.emptyNoneHint")}
                 compact
               />
             ) : (
@@ -1409,7 +1428,7 @@ export function InboxPanel({
                     <div className="px-3 py-2">
                       <div className="flex items-center gap-[10px]">
                         <div className="flex-1 h-px bg-foreground/15" />
-                        <span className="text-[12px] font-bold text-foreground tracking-wide">{group.label}</span>
+                        <span className="text-[12px] font-bold text-foreground tracking-wide">{groupLabelText(group.label)}</span>
                         <span className="text-foreground/20">-</span>
                         <span className="text-[12px] font-medium text-muted-foreground tabular-nums">{group.threads.length}</span>
                         <div className="flex-1 h-px bg-foreground/15" />
@@ -1420,23 +1439,22 @@ export function InboxPanel({
                     <div className="flex flex-col gap-[3px]">
                     {group.threads.map((pt) => {
                       const active = selectedProspectId === pt.prospect_id;
-                      const displayName = pt.company || pt.name || "Unknown";
+                      const displayName = pt.company || pt.name || t("inbox.unknownName");
                       const avatarColor = getProspectAvatarColor(pt.outreach_status);
                       const isDealClosed = pt.outreach_status === "deal_closed";
                       const lastTs = pt.last_message_at;
-                      const timeAgo = lastTs ? formatRelativeTime(lastTs) : "";
+                      const timeAgo = lastTs ? formatRelativeTime(lastTs, t) : "";
 
                       return (
-                        <div
+                        <ListCard
                           key={pt.prospect_id}
+                          selected={active}
+                          padded={false}
                           role="button"
                           tabIndex={0}
                           onClick={() => onSelectProspect?.(pt.prospect_id)}
                           onKeyDown={(e) => e.key === "Enter" && onSelectProspect?.(pt.prospect_id)}
-                          className={cn(
-                            "group relative rounded-xl cursor-pointer transition-colors shadow-[var(--card-shadow)]",
-                            active ? "bg-highlight-selected" : "bg-card hover:bg-card-hover"
-                          )}
+                          className="group"
                           data-testid={`button-prospect-${pt.prospect_id}`}
                         >
                           <div className="px-2.5 pt-2.5 pb-2 flex flex-col gap-[3px]">
@@ -1455,7 +1473,7 @@ export function InboxPanel({
                                   <span
                                     className={cn(
                                       "absolute -top-1.5 -right-1.5 min-w-[16px] h-[16px] rounded-full bg-[#FCB803] text-[#131B49] text-[8px] font-bold flex items-center justify-center px-0.5",
-                                      active ? "shadow-[0_0_0_2px_var(--color-highlight-selected)]" : "shadow-[0_0_0_2px_var(--color-card)]"
+                                      active ? "shadow-[0_0_0_2px_var(--color-card)]" : "shadow-[0_0_0_2px_var(--color-panel-list-bg)]"
                                     )}
                                   >
                                     {pt.unread_count > 99 ? "99+" : pt.unread_count}
@@ -1480,7 +1498,8 @@ export function InboxPanel({
                                         type="button"
                                         onClick={(e) => { e.stopPropagation(); onDialProspect(pt.prospect_id); }}
                                         className="text-muted-foreground/40 hover:text-emerald-600 transition-colors"
-                                        title="Call"
+                                        title={t("prospectInbox.call")}
+                                        aria-label={t("prospectInbox.call")}
                                       >
                                         <Phone className="h-3 w-3" />
                                       </button>
@@ -1507,7 +1526,7 @@ export function InboxPanel({
                               </div>
                             </div>
                           </div>
-                        </div>
+                        </ListCard>
                       );
                     })}
                   </div>

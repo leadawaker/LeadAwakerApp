@@ -183,10 +183,7 @@ export const campaignsStorage = {
   // ─── Prompt Versions ─────────────────────────────────────────────────
 
   async getPromptVersions(promptId: number): Promise<Prompt_Version[]> {
-    const oneMonthAgo = new Date();
-    oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
-    await db.delete(promptVersions)
-      .where(and(eq(promptVersions.promptsId, promptId), lt(promptVersions.savedAt, oneMonthAgo)));
+    // Versions are kept for good: the Voice tab's prompt history depends on it.
     return db.select().from(promptVersions)
       .where(eq(promptVersions.promptsId, promptId))
       .orderBy(desc(promptVersions.savedAt));

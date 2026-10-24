@@ -160,7 +160,7 @@ const EMAIL_ALIASES: Record<string, string> = {
   // old email → canonical DB email (so old credentials still work after display-email updates)
   "leadawaker@gmail.com": "gabriel@leadawaker.com",
 };
-function resolveLoginEmail(email: string): string {
+export function resolveLoginEmail(email: string): string {
   const lower = email.toLowerCase().trim();
   return EMAIL_ALIASES[lower] ?? lower;
 }
@@ -501,8 +501,8 @@ export function registerAuthRoutes(app: Express) {
         return res.status(400).json({ message: "Invalid or expired invite link." });
       }
 
-      // 9. Expiration check: token valid for 72 hours
-      if (Date.now() - new Date(inviteSentAt).getTime() > 72 * 60 * 60 * 1000) {
+      // 9. Expiration check: token valid for 14 days (was 72 hours; first clients were slow to accept)
+      if (Date.now() - new Date(inviteSentAt).getTime() > 14 * 24 * 60 * 60 * 1000) {
         return res.status(400).json({
           message: "This invite link has expired. Please ask your administrator to resend the invite.",
         });

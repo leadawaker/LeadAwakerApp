@@ -8,8 +8,8 @@
     "welcome": {
       "title": "Welkom in je CRM",
       "intro": "Hier houd je {{company}} in de gaten. {{Name}} neemt je telefoon en chats aan en alles wat er gebeurt komt hier terecht, dus je hoeft nooit te gokken. Dit vind je waar:",
-      "home": "<b>Home</b>: het snelle overzicht. Wat er binnenkwam, wat er geboekt is en wat jouw aandacht nodig heeft.",
-      "calls": "<b>Gesprekken</b>: elk gesprek dat {{name}} voerde. <b>Statistieken</b> toont de cijfers, <b>Personen</b> wie er belde. Open een gesprek om te lezen wat er gezegd is en wat eruit kwam.",
+      "home": "<b>Stats</b>: het snelle overzicht. Wat er binnenkwam, wat er geboekt is en wat jouw aandacht nodig heeft. Alle cijfers staan op deze ene pagina.",
+      "calls": "<b>Gesprekken</b>: elk gesprek dat {{name}} voerde, per beller. Open een gesprek om te lezen wat er gezegd is en wat eruit kwam.",
       "calendar": "<b>Kalender</b>: je afspraken en bezoeken. Hier voeg je ook bezet-blokken toe.",
       "chats": "<b>Chats</b>: je websitechats. Lees mee en antwoord zelf wanneer je wilt.",
       "more": "<b>Meer</b>: je <b>Leads</b> (de mensen die contact opnamen), je <b>Account</b>, deze gids en Bericht aan Gabriel.",
@@ -21,9 +21,9 @@
       "intro": "Als iemand je zakelijke nummer belt, neemt {{name}} op, luistert en helpt zoals een goede receptionist dat doet. Dit kan er tijdens een gesprek gebeuren:",
       "calls": "<strong>Gesprekken:</strong> {{Name}} beantwoordt vragen over je bedrijf, in de taal van de beller. Elk gesprek staat onder Gesprekken met een samenvatting.",
       "transfers": "<strong>Doorverbinden:</strong> wil een beller jou of een collega spreken, dan kan {{name}} het gesprek doorzetten. In het gesprek zie je of dat gelukt is.",
-      "callbacks": "<strong>Terugbellen:</strong> kan niemand opnemen, dan noteert {{name}} naam, nummer en vraag van de beller. Die terugbelverzoeken staan op je Home-pagina, zodat je ze kunt terugbellen.",
+      "callbacks": "<strong>Terugbellen:</strong> kan niemand opnemen, dan noteert {{name}} naam, nummer en vraag van de beller. Die terugbelverzoeken staan op je Stats-pagina, zodat je ze kunt terugbellen.",
       "bookings": "<strong>Afspraken en bezoeken:</strong> {{name}} kan een bezoek of afspraak direct in je agenda zetten, op een moment dat echt vrij is. De afspraak staat meteen in je Kalender.",
-      "page": "Onder <strong>Gesprekken</strong> vind je twee tabbladen. <strong>Statistieken</strong> toont hoeveel gesprekken er binnenkwamen en hoe ze afliepen. <strong>Personen</strong> toont iedereen die belde, elk met één status, en een <strong>Wacht op jou</strong>-markering zolang er een terugbelverzoek openstaat. Open een persoon om al diens gesprekken te zien, met de samenvatting en wat er gezegd is.",
+      "page": "<strong>Stats</strong> toont hoeveel gesprekken er binnenkwamen en hoe ze afliepen. Onder <strong>Gesprekken</strong> vind je iedereen die belde, elk met één status, en een <strong>Wacht op jou</strong>-markering zolang er een terugbelverzoek openstaat. Open een persoon om al diens gesprekken te zien, met de samenvatting en wat er gezegd is.",
       "tip": "Wil je een andere begroeting of andere openingstijden? Je openingstijden pas je zelf aan. Voor al het andere druk je op Wijziging aanvragen."
     },
     "chat": {
@@ -108,7 +108,7 @@
     "illus": {
       "bar": {
         "caption": "De balk onderaan je telefoon. Leads en Account staan onder Meer.",
-        "home": "Home",
+        "home": "Stats",
         "calls": "Gesprekken",
         "calendar": "Kalender",
         "chats": "Chats",
@@ -136,9 +136,8 @@
         "recapSub": "Een e-mail op jouw tijdstip"
       },
       "tabs": {
-        "caption": "De pagina Gesprekken: Statistieken en Personen",
-        "stats": "Statistieken",
-        "people": "Personen",
+        "caption": "De pagina Stats en de pagina Gesprekken",
+        "stats": "Stats",
         "calls": "Gesprekken",
         "booked": "Geboekt",
         "callbacks": "Terugbellen",

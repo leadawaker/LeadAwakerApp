@@ -43,13 +43,16 @@ function IconTile({ Icon, color }: { Icon: LucideIcon; color: string }) {
 /**
  * What the call came to, in one block: the engine's one-sentence conclusion
  * (`summary.outcome`) first, then the recap items grouped into what they
- * wanted, what was booked, the follow-up and anything else, each with its
- * own colour and an icon per item.
+ * wanted, what was booked and the follow-up, each with its own colour and an
+ * icon per item. "Also mentioned" (not_relevant) items are left out, and the
+ * booked group too when the booking card above already shows it
+ * (`withBooking`), so the date is not repeated.
  */
-export function CallSummaryBody({ call }: { call: VoiceCallDetail }) {
+export function CallSummaryBody({ call, withBooking = false }: { call: VoiceCallDetail; withBooking?: boolean }) {
   const { t } = useTranslation("voiceCalls");
   const conclusion = (call.conclusion ?? call.summary?.outcome ?? "").trim();
-  const groups = groupSummaryItems(call.summary?.items ?? []);
+  const groups = groupSummaryItems(call.summary?.items ?? [])
+    .filter((g) => g.id !== "other" && !(withBooking && g.id === "booked"));
 
   if (!conclusion && groups.length === 0) {
     return <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "var(--mute)" }}>{t("noSummary")}</p>;

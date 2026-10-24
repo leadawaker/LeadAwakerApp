@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MonoLabel } from "@/features/voice/components/atoms";
-import { Switch } from "@/components/ui/switch";
-import { useSetCallTest, useVoiceCall, useVoiceCapabilities, type VoiceCallDetail as Detail } from "../api/voiceCallsApi";
+import { useVoiceCall, type VoiceCallDetail as Detail } from "../api/voiceCallsApi";
 import { maskSpoken } from "../maskIdentity";
 import { maskCaller } from "./bits";
 import { CallHeader } from "./CallHeader";
-import { CallConversation } from "./CallConversation";
+import { CallReviewPanel } from "./CallReviewPanel";
 import { CallerHistory, CallSidebar, type CallerContext } from "./CallSidebar";
 import { useMarkVisited } from "@/features/home/onboarding/useOnboarding";
 import { CallDetailSkeleton, DETAIL_MAX_WIDTH, SIDEBAR_WIDTH } from "./VoiceCallsSkeleton";
@@ -78,10 +77,10 @@ export function VoiceCallDetail({ callId, masked, caller }: Props) {
   // Never render a call other than the selected one.
   const rawCall = data && data.callId === callId ? data : data === null ? null : undefined;
   const call = useMemo(() => (rawCall ? maskDetail(rawCall, masked) : rawCall), [rawCall, masked]);
+  // The review's transcript comes from its own query: presenting mode masks it the same way.
+  const rawName = rawCall ? rawCall.callerName : null;
+  const maskText = useMemo(() => (masked ? (text: string) => maskSpoken(text, rawName) : null), [masked, rawName]);
   const narrow = useNarrow();
-  // The server grants `demo` only to the Owner who is not impersonating.
-  const isOwner = useVoiceCapabilities().data?.demo === true;
-  const setTest = useSetCallTest();
   useMarkVisited("call"); // Getting-started checklist (clients only)
 
   if (isError && !call) {
@@ -99,22 +98,11 @@ export function VoiceCallDetail({ callId, masked, caller }: Props) {
   return (
     <div style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: "column", overflowY: narrow ? "auto" : "hidden", overflowX: "hidden" }}>
       <div style={{ width: "100%", maxWidth: DETAIL_MAX_WIDTH, margin: "0 auto", flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14 }}>
-        {isOwner && (
-          <label className="flex items-center gap-2 self-end text-[12px] text-muted-foreground" data-testid="voice-test-toggle">
-            <span>{t("testData.label")}</span>
-            <Switch
-              checked={call.isTest}
-              disabled={setTest.isPending}
-              onCheckedChange={(isTest) => setTest.mutate({ callId: call.callId, isTest })}
-              aria-label={t("testData.label")}
-            />
-          </label>
-        )}
         <CallHeader call={call} narrow={narrow} caller={caller} />
         <div style={{ flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: narrow ? "column" : "row", gap: 14 }}>
           <CallSidebar call={call} narrow={narrow} caller={caller} />
           <div style={{ flex: narrow ? "0 0 auto" : 1, minWidth: 0, minHeight: narrow ? 760 : 0, display: "flex", flexDirection: "column", order: narrow ? 2 : 0 }}>
-            <CallConversation key={call.callId} call={call} />
+            <CallReviewPanel key={call.callId} call={call} mask={maskText} />
           </div>
         </div>
       </div>

@@ -3,7 +3,7 @@
 // the same menu as the Phone tab. The agency edits; the client sees the same
 // cards read-only.
 import { RequestChangeNote } from "@/components/crm/RequestChangeNote";
-import { useState } from "react";
+import { useLastTab } from "@/hooks/useLastTab";
 import { useTranslation } from "react-i18next";
 import { BellRing, Loader2, Newspaper, Send, Users } from "lucide-react";
 import { SectionHeader, SectionLayout, SectionRail, type SectionRailItem } from "../SectionRail";
@@ -14,12 +14,14 @@ import { RecipientsCard } from "./RecipientsCard";
 import { TestSendCard } from "./TestSendCard";
 
 type AlertSection = "recipients" | "recap" | "instant" | "test";
+const ALERT_SECTIONS: readonly AlertSection[] = ["recipients", "recap", "instant", "test"];
 
 export function AlertsTab({ accountId, readOnly = false, stacked = false }: { accountId: number; readOnly?: boolean; stacked?: boolean }) {
   const { t } = useTranslation("clientAlerts");
   const { t: tc } = useTranslation("crm");
   const { settings, loading, error, save, test } = useAlertSettings(accountId);
-  const [section, setSection] = useState<AlertSection>("recipients");
+  // Reopens on the section used last (Test is hidden when read-only: then Recipients).
+  const [section, setSection] = useLastTab<AlertSection>("accounts.alerts", ALERT_SECTIONS, "recipients");
 
   if (loading) {
     return (

@@ -68,6 +68,8 @@ export function LeadsTableTopbar(p: {
   onAdd: () => void;
   /** Agency only: the column settings gear and "+". Clients get neither. */
   isAgency: boolean;
+  /** Desktop: the quick view dropdown and channel tabs (LeadsQuickControls). */
+  quickControls?: React.ReactNode;
 }) {
   const { t } = useTranslation("leads");
   const f = p.filters;
@@ -89,6 +91,7 @@ export function LeadsTableTopbar(p: {
           </button>
         ))}
       </div>
+      {p.quickControls}
       <div className="flex-1 min-w-0 flex items-center justify-end gap-[5px] pr-1.5">
         {p.selectedCount > 0 && (
           <>

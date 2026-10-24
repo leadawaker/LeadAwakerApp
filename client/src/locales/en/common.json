@@ -40,5 +40,10 @@
     "delete": "Delete",
     "confirmArchive": "Archive this {{entity}}? It will be hidden from active views but can be restored later.",
     "confirmDelete": "Permanently delete this {{entity}}? This cannot be undone."
+  },
+  "search": {
+    "clear": "Clear search",
+    "matches_one": "{{count}} match",
+    "matches_other": "{{count}} matches"
   }
 }

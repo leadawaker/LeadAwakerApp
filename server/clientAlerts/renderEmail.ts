@@ -4,7 +4,7 @@
 // in the account timezone and language, e.g. "do 16 okt 14:30").
 import { EMAIL_THEME as T, escapeHtml, renderEmailLayout, renderEmailText } from "../email";
 import {
-  emailAgendaCard, emailCallList, emailDetails, emailEventRow, emailQuietLine, emailSection,
+  emailAgendaCard, emailCallList, emailDetails, emailEventRow, emailMessageBubble, emailQuietLine, emailSection,
   emailSplit, emailStatTiles, emailWeekCard, type AgendaRow, type EmailHue,
 } from "../emailComponents";
 import { copyFor, type AlertEmailType } from "./emailCopy";
@@ -57,18 +57,22 @@ const CARD_STYLE: Record<CardKind, { icon: string; hue: EmailHue }> = {
   cancelled: { icon: "ev-cancelled.png", hue: "muted" },
   callback: { icon: "ev-callback.png", hue: "callback" },
   reply: { icon: "ev-reply.png", hue: "waiting" },
+  message: { icon: "ev-message.png", hue: "callback" },
 };
 
 /** One row of the recap's "today" section plus its plain-text line. `at` is
- *  used by appointment kinds only. */
-function eventRow(c: Copy, kind: CardKind, f: { name: string; at?: string; sub?: string }) {
+ *  used by appointment kinds only, `to` (who a message is for) by "message";
+ *  `link` opens that one call or chat. */
+function eventRow(c: Copy, kind: CardKind, f: { name: string; at?: string; to?: string; sub?: string; link?: { label: string; url: string } }) {
   const s = CARD_STYLE[kind];
   const name = f.name || c.someone;
   const k = c.cards[kind];
-  const text = kind === "callback" || kind === "reply" ? c.cards[kind].text(name) : c.cards[kind].text(name, f.at ?? "");
+  const text = kind === "callback" || kind === "reply" ? c.cards[kind].text(name)
+    : kind === "message" ? c.cards.message.text(name, f.to ?? "")
+    : c.cards[kind].text(name, f.at ?? "");
   return {
-    html: emailEventRow({ icon: s.icon, hue: s.hue, label: k.title, textHtml: e(text), subHtml: f.sub ? e(f.sub) : undefined }),
-    text: `${k.title}: ${text}${f.sub ? ` (${f.sub})` : ""}`,
+    html: emailEventRow({ icon: s.icon, hue: s.hue, label: k.title, textHtml: e(text), subHtml: f.sub ? e(f.sub) : undefined, link: f.link }),
+    text: `${k.title}: ${text}${f.sub ? ` (${f.sub})` : ""}${f.link ? ` ${f.link.url}` : ""}`,
   };
 }
 
@@ -83,7 +87,47 @@ const ALERT_ART: Record<AlertEmailType, "booked" | "moved" | "cancelled" | "call
   callback_requested: "callback", lead_needs_reply: "reply", new_photo: "photo",
 };
 
+/** A message a caller left for the team (callback_requested, reason
+ *  "leave_message", engine client_alerts/events.py): its own heading and art,
+ *  the message itself as a chat bubble, then who it is for and who to reach. */
+function renderMessage(input: AlertEmailInput & { type: AlertEmailType }): RenderedEmail {
+  const c = copyFor(input.language);
+  const M = c.message;
+  const d = input.data;
+  const L = c.labels;
+  const to = str(d.message_for).trim();
+  const words = (str(d.message) || str(d.about)).trim().slice(0, 1200);
+  const name = str(d.customerName);
+  const phone = displayPhone(d.customer?.phone);
+  const who = dot(name, phone) || c.someone;
+  const facts: Fact[] = [[L.messageFor, to, "d-note.png"], [L.caller, name || c.unknown, "d-person.png"],
+    [L.phone, phone, "d-phone.png"], [L.whatsapp, displayPhone(d.whatsapp), "d-chat.png"],
+    [L.email, str(d.customer?.email), "d-mail.png"], [L.summary, str(d.summary).slice(0, 400), "d-summary.png"]];
+  const kept = facts.filter(([, v]) => v);
+  const note = M.note(to);
+  const bodyHtml = (words ? emailMessageBubble({ label: M.label, textHtml: e(words), byHtml: e(M.by(who)) }) : "")
+    + emailDetails(kept.map(([label, v, icon]) => ({ label, valueHtml: e(v), icon })))
+    + `<p style="margin:12px 4px 0;font-family:${T.sans};font-size:12px;line-height:1.5;color:${T.mute};">${e(note)}</p>`;
+  const intro = M.intro(input.accountName, to);
+  const heading = M.heading(to);
+  const cta = { label: M.cta, url: input.link };
+  const footerNote = c.footer(input.accountName);
+  const footerLink = settingsLink(c, input.link);
+  return {
+    subject: M.subject(name || phone || c.unknown, to),
+    html: renderEmailLayout({
+      lang: input.language, preheader: words ? `${intro} "${words.slice(0, 120)}"` : intro, eyebrow: input.accountName,
+      heading, art: "message", bodyHtml, cta, footerNote, footerLink,
+    }),
+    text: renderEmailText({
+      heading, cta, footerNote, footerLink,
+      bodyText: `${intro}\n\n${words ? `${M.label}:\n"${words}"\n${M.by(who)}\n\n` : ""}${kept.map(([label, v]) => `${label}: ${v}`).join("\n")}\n\n${note}`,
+    }),
+  };
+}
+
 function renderAlert(input: AlertEmailInput & { type: AlertEmailType }): RenderedEmail {
+  if (input.type === "callback_requested" && input.data.reason === "leave_message") return renderMessage(input);
   const c = copyFor(input.language);
   const d = input.data;
   const L = c.labels;
@@ -215,8 +259,11 @@ function renderRecap(input: AlertEmailInput): RenderedEmail {
 
   // Today in brief: what needs the team first, then today's appointment changes. Each item once.
   const rows = [
-    ...(d.waiting ?? []).map((w: any) => eventRow(c, w.type === "reply" ? "reply" : "callback", {
-      name: str(w.name), sub: dot(displayPhone(w.phone), str(w.about), splitWhen(str(w.atText))[1]),
+    ...(d.waiting ?? []).map((w: any) => eventRow(c, w.type === "reply" ? "reply" : w.type === "message" ? "message" : "callback", {
+      name: str(w.name), to: str(w.for), sub: dot(displayPhone(w.phone), str(w.about), splitWhen(str(w.atText))[1]),
+      // Straight to that call or chat (/go/<code>?call= or ?lead=; the engine sends the ids from 2026-10-21 on).
+      link: w.call_id ? { label: R.openCall, url: `${input.link}?call=${encodeURIComponent(str(w.call_id))}` }
+        : w.lead_id ? { label: R.openChat, url: `${input.link}?lead=${encodeURIComponent(str(w.lead_id))}` } : undefined,
     })),
     ...(d.appointments ?? []).map((a: any) => eventRow(c, (["booked", "rescheduled", "cancelled"].includes(a.kind) ? a.kind : "booked") as CardKind, {
       name: str(a.name), at: str(a.atText), sub: dot(displayPhone(a.phone), a.sourceText ? c.via(str(a.sourceText)) : ""),

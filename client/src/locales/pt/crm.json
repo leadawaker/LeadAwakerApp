@@ -23,13 +23,13 @@
   "sidebar": {
     "skipToMain": "Ir para o conteúdo",
     "menu": "Menu",
-    "home": "Início",
+    "home": "Métricas",
     "calls": "Chamadas",
-    "myReceptionist": "Conta",
+    "myReceptionist": "Minha conta",
     "myReceptionistShort": "Conta",
     "myAccount": "Minha conta",
     "services": "Serviços",
-    "reactivation": "Campanhas",
+    "reactivation": "Reativação",
     "reputation": "Reputação",
     "speedToLead": "Resposta Rápida",
     "missedCalls": "Chamadas Perdidas",
@@ -78,8 +78,7 @@
     "outreach": "Prospecção",
     "admin": "Admin",
     "backend": "Backend",
-    "agency": "Agência",
-    "setup": "Configuração"
+    "agency": "Agência"
   },
   "sidebarSubmenu": {
     "summary": "Resumo",
@@ -323,14 +322,11 @@
     "navigate": "Navegar",
     "select": "Selecionar",
     "close": "Fechar",
-    "team": "Equipe",
-    "unknownStatus": "Desconhecido",
+    "team": "Usuários",
     "fallbackLead": "Lead #{{id}}",
-    "fallbackCampaign": "Campanha #{{id}}",
     "fallbackAccount": "Conta #{{id}}",
     "resultTypes": {
       "lead": "Lead",
-      "campaign": "Campanha",
       "account": "Conta",
       "result": "Resultado"
     }

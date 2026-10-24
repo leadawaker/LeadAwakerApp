@@ -511,7 +511,7 @@ export function registerConversationsRoutes(app: Express): void {
   // Legacy endpoint kept for backwards compat
   app.get("/api/notifications/legacy", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
     const forcedId = (req as any).forcedAccountId as number | undefined;
-    const data = await storage.getRecentNotifications(forcedId);
+    const data = await storage.getRecentNotifications(forcedId, 20, requestHidesTestData(req));
     res.json(data);
   }));
 

@@ -10,6 +10,7 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiUtils";
 import type { Campaign } from "@/types/models";
+import { useCampaignAiSummary } from "../hooks/useCampaignAiSummary";
 
 // The only fields POST /api/campaigns/:id/generate writes (CONTEXT_FIELDS in
 // server/routes/campaigns.ts), in draft/db-key form. Its response carries a
@@ -206,50 +207,8 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
   }, [campaign.id, (campaign as any).Id]);
 
   // ── Local AI summary state (with localStorage fallback) ────────────────────
-  const summaryStorageKey = `la:campaign-summary:${campaignId}`;
-  const summaryAtStorageKey = `la:campaign-summary-at:${campaignId}`;
-
-  const [localAiSummary, setLocalAiSummary] = useState<string | null>(() => {
-    return localStorage.getItem(summaryStorageKey) ?? campaign.ai_summary ?? null;
-  });
-  const [localAiSummaryAt, setLocalAiSummaryAt] = useState<string | null>(() => {
-    return localStorage.getItem(summaryAtStorageKey) ?? campaign.ai_summary_generated_at ?? null;
-  });
-
-  useEffect(() => {
-    const summary = localStorage.getItem(`la:campaign-summary:${campaignId}`) ?? campaign.ai_summary ?? null;
-    const summaryAt = localStorage.getItem(`la:campaign-summary-at:${campaignId}`) ?? campaign.ai_summary_generated_at ?? null;
-    setLocalAiSummary(summary);
-    setLocalAiSummaryAt(summaryAt);
-  }, [campaignId]);
-
-  const handleAiSummaryRefreshed = useCallback((summary: string, generatedAt: string) => {
-    setLocalAiSummary(summary);
-    setLocalAiSummaryAt(generatedAt);
-    localStorage.setItem(`la:campaign-summary:${campaignId}`, summary);
-    localStorage.setItem(`la:campaign-summary-at:${campaignId}`, generatedAt);
-  }, [campaignId]);
-
-  const [refreshingSummary, setRefreshingSummary] = useState(false);
-  const refreshAiSummary = useCallback(async () => {
-    if (refreshingSummary) return;
-    setRefreshingSummary(true);
-    try {
-      const res = await apiFetch(`/api/campaigns/${campaignId}/generate-summary`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) {
-        throw new Error(`Failed to regenerate summary: ${res.statusText}`);
-      }
-      const data = await res.json();
-      handleAiSummaryRefreshed(data.summary, data.generated_at);
-    } catch (err: any) {
-      toast({ title: "Summary refresh failed", description: err.message, variant: "destructive" });
-    } finally {
-      setRefreshingSummary(false);
-    }
-  }, [campaignId, refreshingSummary, toast]);
+  const { localAiSummary, localAiSummaryAt, handleAiSummaryRefreshed, refreshAiSummary, refreshingSummary } =
+    useCampaignAiSummary(campaign as Campaign & { Id?: number });
 
   // ── Always-on editing state (auto-save on change) ──────────────────────────
   const [focusField, setFocusField] = useState<string | null>(null);

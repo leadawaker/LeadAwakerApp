@@ -71,6 +71,8 @@ function pastelTextDark(hex: string): string {
 }
 
 // ── Pipeline stage hex colors ─────────────────────────────────────────────────
+// The --stage-* tokens in styles/variables.css are the source of truth (light values here).
+// Use the token wherever CSS can take a variable; this map is for JS and charts that need hex.
 export const PIPELINE_HEX: Record<string, string> = {
   New:                  "#6C5A8C",
   Contacted:            "#547BB0",

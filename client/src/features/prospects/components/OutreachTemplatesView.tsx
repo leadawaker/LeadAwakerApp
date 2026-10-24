@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useCallback, Fragment, forwardRef, useImperativeHandle } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
-import { Copy, Check, ChevronDown, ChevronRight, Plus, Pencil, Trash2, X, Search, Hash, Mail, Linkedin, Phone, MessageSquare } from "lucide-react";
+import { ExpandingSearch, TopbarIconButton } from "@/components/crm/primitives";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Copy, Check, ChevronDown, ChevronRight, Plus, Pencil, Trash2, X, Search, Hash, Mail, Linkedin, Phone, MessageSquare, Filter } from "lucide-react";
 import {
   getOutreachTemplates,
   createOutreachTemplate,
@@ -329,38 +331,29 @@ export function TemplatesToolbar({
   templateTypes: string[]; count: number; total: number;
   onNew: () => void;
 }) {
+  const { t } = useTranslation("prospects");
   return (
-    <div className="flex items-center gap-1.5">
-      <div className="relative">
-        <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/40" />
-        <input
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder="Search..."
-          className="w-[140px] h-7 rounded-md border bg-transparent pl-7 pr-2 text-[11px] outline-none focus:ring-1 focus:ring-brand-indigo focus:w-[200px] transition-all placeholder:text-muted-foreground/40"
-        />
-      </div>
-      <div className="relative">
-        <select
-          value={filterType}
-          onChange={(e) => onFilterTypeChange(e.target.value)}
-          className="h-7 rounded-md border bg-transparent pl-2 pr-6 text-[11px] outline-none focus:ring-1 focus:ring-brand-indigo appearance-none"
-        >
-          <option value="all">All types</option>
-          {templateTypes.map(tt => (
-            <option key={tt} value={tt}>{tt.replace(/_/g, " ")}</option>
+    <div className="flex items-center gap-2">
+      <ExpandingSearch value={search} onChange={onSearchChange} placeholder={t("topbar.searchTemplates")} />
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <TopbarIconButton label={t("topbar.filterType")} active={filterType !== "all"}>
+            <Filter className="h-4 w-4 shrink-0" />
+          </TopbarIconButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-48">
+          {["all", ...templateTypes].map((tt) => (
+            <DropdownMenuItem key={tt} onClick={() => onFilterTypeChange(tt)} className={cn("text-[12px]", filterType === tt && "font-semibold text-[color:var(--wine)]")}>
+              {tt === "all" ? t("topbar.allTypes") : tt.replace(/_/g, " ")}
+              {filterType === tt && <Check className="h-3 w-3 ml-auto" />}
+            </DropdownMenuItem>
           ))}
-        </select>
-        <ChevronDown className="absolute right-1.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground/40 pointer-events-none" />
-      </div>
-      <span className="text-[10px] text-muted-foreground/40 tabular-nums">{count}/{total}</span>
-      <button
-        onClick={onNew}
-        className="inline-flex items-center gap-1 h-7 px-2.5 rounded-md bg-brand-indigo text-white text-[11px] font-semibold hover:opacity-90 transition-opacity shrink-0"
-      >
-        <Plus className="h-3 w-3" />
-        New
-      </button>
+        </DropdownMenuContent>
+      </DropdownMenu>
+      <span className="tabular-nums whitespace-nowrap" style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)" }}>{t("topbar.templateCount", { count, total })}</span>
+      <TopbarIconButton label={t("topbar.newTemplate")} primary onClick={onNew}>
+        <Plus className="h-4 w-4" />
+      </TopbarIconButton>
     </div>
   );
 }

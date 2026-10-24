@@ -575,7 +575,7 @@ export function registerDemoRoutes(app: Express): void {
 
   app.post(
     "/api/demo/create-link",
-    requireAuth,
+    requireAgency,
     wrapAsync(async (req, res) => {
       const parsed = adminSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
@@ -724,8 +724,8 @@ export function registerDemoRoutes(app: Express): void {
   // already has a lead, and minting a throwaway one just to harvest its
   // demo_niche would burn a rate-limit slot and leave orphan rows behind.
   //
-  // requireAuth, not the public rate limiter: this is reached with the engine's
-  // X-Internal-Key (same as /api/demo/create-link), never from a browser.
+  // requireAgency, not the public rate limiter: this is reached with the engine's
+  // X-Internal-Key, never from a browser.
   const nicheContextSchema = z.object({
     niche: z.string().trim().min(3).max(300),
     language: z.enum(["en", "nl", "pt"]),
@@ -738,7 +738,7 @@ export function registerDemoRoutes(app: Express): void {
 
   app.post(
     "/api/demo/niche-context",
-    requireAuth,
+    requireAgency,
     wrapAsync(async (req, res) => {
       const parsed = nicheContextSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);

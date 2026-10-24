@@ -491,5 +491,22 @@
   },
   "interactions": {
     "openConversations": "Open in Chats"
+  },
+  "topbar": {
+    "hasPhone": "Has phone",
+    "hasEmail": "Has email",
+    "sortDefault": "Default",
+    "compact": "Compact cards",
+    "normal": "Normal cards",
+    "resetColumnOrder": "Reset column order",
+    "resetColumnWidths": "Reset column widths",
+    "clearSelection": "Clear selection",
+    "allTypes": "All types",
+    "newTemplate": "New template",
+    "templateCount": "{{count}} of {{total}}",
+    "searchTemplates": "Search templates…",
+    "filterType": "Template type",
+    "ascending": "Ascending",
+    "descending": "Descending"
   }
 }

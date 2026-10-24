@@ -27,10 +27,12 @@
     "resetToDefault": "Restaurar padrao",
     "previous": "Anterior",
     "next": "Proximo",
-    "of": "de"
+    "of": "de",
+    "moreActions": "Mais ações"
   },
   "sort": {
     "mostRecent": "Mais Recente",
+    "name": "Nome",
     "nameAZ": "Nome A -> Z",
     "nameZA": "Nome Z -> A"
   },
@@ -234,55 +236,16 @@
     "confirm": "Confirmar?",
     "clickToUploadLogo": "Clique para enviar logo",
     "removeLogo": "Remover logo",
-    "removeVoice": "Remover voz",
-    "voiceFile": "Arquivo de voz",
-    "pleaseUploadAudio": "Envie um arquivo de audio (M4A, WAV, MP3, OGG, FLAC).",
-    "fileSizeLimit": "O arquivo deve ter menos de 10 MB.",
-    "syncInstagram": "Sincronizar Contatos Instagram",
-    "syncingContacts": "Sincronizando contatos...",
-    "syncFailed": "Falha na sincronizacao",
     "selectExecution": "Selecione uma conta para ver os detalhes",
     "cropLogo": "Recortar Logo",
     "cropDescription": "Arraste para reposicionar · use o slider para zoom",
     "saveLogo": "Salvar Logo",
-    "overview": "Visão Geral",
-    "campaignsAndContracts": "Campanhas e Contratos",
-    "aiAndSchedule": "IA e Agenda",
-    "integrations": "Integrações",
-    "voiceClone": "Clone de voz",
-    "voiceIdForCampaigns": "ID de Voz para campanhas",
-    "voiceIdWillBe": "ID de Voz será",
-    "clickOrDragAudio": "Clique ou arraste um arquivo de áudio",
-    "voiceFormats": "M4A, WAV, MP3, OGG, FLAC · máx 10 MB",
-    "lead": "lead",
-    "leads": "leads",
-    "contactsSynced": "{{count}} contatos sincronizados",
-    "alreadyExisted": "{{count}} já existiam",
-    "failedCount": "{{count}} com falha",
-    "rateLimited": "Limite de taxa atingido — execute novamente para os contatos restantes",
-    "conversationsScanned": "{{count}} conversas verificadas"
+    "overview": "Visão Geral"
   },
   "related": {
-    "campaigns": "Campanhas",
-    "users": "Usuarios",
-    "contracts": "Contratos",
-    "searchCampaigns": "Buscar campanhas...",
-    "searchUsers": "Buscar usuarios...",
-    "addCampaign": "Adicionar campanha",
-    "addUser": "Adicionar usuario",
     "unnamed": "Sem nome",
-    "unknown": "Desconhecido",
-    "more": "+{{count}} mais",
-    "copy": "(Copia)",
-    "pickCampaign": "Escolha uma campanha para atribuir a esta conta.",
-    "noCampaignsAvailable": "Nenhuma campanha disponível",
-    "noCampaigns": "Nenhuma campanha",
-    "contract": "Contrato",
     "noContract": "Sem contrato",
-    "unlinkedContracts": "Contratos sem vínculo",
-    "members": "Membros",
-    "pickUser": "Escolha um usuário para atribuir a esta conta.",
-    "noUsersAvailable": "Nenhum usuário disponível",
+    "noInvoice": "Nenhuma fatura ainda",
     "noUsersAssigned": "Nenhum usuário atribuído"
   },
   "pagination": {
@@ -442,11 +405,9 @@
   },
   "knowledge": {
     "title": "Base de Conhecimento",
-    "entries": "entradas",
     "loading": "Carregando...",
     "add": "Adicionar",
     "save": "Guardar",
-    "update": "Atualizar",
     "saving": "Guardando...",
     "cancel": "Cancelar",
     "titlePlaceholder": "Título da entrada...",
@@ -478,6 +439,7 @@
   "workspace": {
     "tabs": {
       "overview": "Visão geral",
+      "reactivation": "Reativação",
       "integrations": "Integrações",
       "knowledge": "Intel da Empresa",
       "communication": "Onboarding",
@@ -492,14 +454,6 @@
     "showPanel": "Mostrar painel"
   },
   "metrics": {
-    "campaigns": "Campanhas",
-    "avgResponse": "Resposta média",
-    "contracts": "Contratos",
-    "team": "Equipe",
-    "allActive": "todas ativas",
-    "acrossAll": "no total",
-    "nActive": "{{count}} ativos",
-    "nOwner": "{{count}} dono",
     "nMembers": "{{count}} membros",
     "callsMonth": "Ligações no mês",
     "nBooked_one": "{{count}} agendada",
@@ -536,7 +490,6 @@
     "knowledgeBase": "Inteligência da Empresa",
     "available": "Disponível",
     "leads": "Leads",
-    "response": "Resposta",
     "actions": {
       "new": "Nova",
       "invite": "Convidar",
@@ -545,18 +498,6 @@
       "viewAllCampaigns": "Ver todas as campanhas",
       "addIntegration": "Adicionar integração",
       "addCategory": "Adicionar categoria"
-    },
-    "bulk": {
-      "selected": "{{count}} selecionada(s)",
-      "setStatus": "Definir status",
-      "delete": "Excluir",
-      "clear": "Limpar",
-      "status": {
-        "Active": "Ativa",
-        "Paused": "Pausada",
-        "Draft": "Rascunho",
-        "Archived": "Arquivada"
-      }
     },
     "invite": {
       "title": "Adicionar membro à equipe",
@@ -755,8 +696,6 @@
   },
   "services": {
     "title": "Serviços",
-    "campaignUsage_one": "{{count}} campanha, {{active}} ativa",
-    "campaignUsage_other": "{{count}} campanhas, {{active}} ativas",
     "whatsappMode": {
       "app": "também no celular do cliente",
       "new": "só a assistente",
@@ -766,7 +705,9 @@
       "phone": "Recepcionista por telefone",
       "whatsapp": "WhatsApp",
       "website": "Chat do site",
-      "campaigns": "Campanhas de texto"
+      "reactivation": "Reativação",
+      "reputation": "Reputação",
+      "social": "Redes sociais"
     },
     "state": {
       "phone": {
@@ -784,10 +725,17 @@
         "pending": "Desligado",
         "off": "Não configurado"
       },
-      "campaigns": {
-        "on": "Rodando",
-        "pending": "Nenhuma ativa",
-        "off": "Nenhuma"
+      "reactivation": {
+        "on": "Ativo",
+        "off": "Não ativo"
+      },
+      "reputation": {
+        "on": "Ativo",
+        "off": "Não ativo"
+      },
+      "social": {
+        "on": "Ativo",
+        "off": "Não ativo"
       }
     },
     "phoneUsage_one": "{{count}} ligação este mês, {{bookings}} com agendamento",
@@ -966,6 +914,47 @@
         "failed": "Algo deu errado. Tente de novo."
       },
       "failedHelp": "O Instagram não publicou este post."
+    }
+  },
+  "servicePages": {
+    "tabs": {
+      "inbox": "Caixa de entrada",
+      "analytics": "Análises",
+      "dashboard": "Painel",
+      "settings": "Configurações"
+    },
+    "searchCalls": "Buscar chamadas…",
+    "searchReviews": "Buscar avaliações…"
+  },
+  "receptionistSettings": {
+    "chooseTitle": "Escolha uma conta",
+    "chooseHelp": "As configurações são por conta. Escolha o cliente cuja recepcionista você quer ajustar.",
+    "choose": "Escolher conta",
+    "account": "Conta",
+    "noAccounts": "Ainda não há contas.",
+    "loadFailed": "Não foi possível carregar esta conta",
+    "sharedVoice": "O horário de funcionamento e a Intel da Empresa são compartilhados com o assistente de chat.",
+    "sharedChat": "O horário de funcionamento e a Intel da Empresa são compartilhados com a recepcionista do telefone.",
+    "openCalls": "Edite em Chamadas › Configurações"
+  },
+  "reactivationTab": {
+    "campaign": "Campanha",
+    "newCampaign": "Nova campanha",
+    "activate": "Ativar",
+    "pause": "Pausar",
+    "saving": "Salvando…",
+    "emptyTitle": "Nenhuma campanha de reativação ainda",
+    "emptyBody": "Uma campanha de reativação manda mensagem para os leads antigos do cliente e agenda com quem responde. Crie uma aqui, preencha as configurações, importe os leads e depois ative.",
+    "listFailed": "Não foi possível carregar as campanhas.",
+    "loadFailed": "Não foi possível carregar esta campanha.",
+    "create": {
+      "title": "Nova campanha de reativação",
+      "subtitle": "Para {{account}}",
+      "name": "Nome da campanha",
+      "namePlaceholder": "ex.: Leads antigos 2026",
+      "help": "Ela começa como rascunho, então nada é enviado até você ativá-la.",
+      "submit": "Criar campanha",
+      "failed": "Não foi possível criar a campanha"
     }
   }
 }

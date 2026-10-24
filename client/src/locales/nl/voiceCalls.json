@@ -10,10 +10,14 @@
     "90d": "Laatste 90 dagen"
   },
   "tabs": {
-    "stats": "Statistieken",
     "people": "Personen",
     "calls": "Alle gesprekken",
     "aria": "Weergave"
+  },
+  "pageTabs": {
+    "aria": "Gesprekkenpagina",
+    "calls": "Gesprekken",
+    "settings": "Instellingen"
   },
   "title": "Gesprekken",
   "webCaller": "Webbeller",
@@ -80,15 +84,16 @@
   "skipBack": "15 seconden terug",
   "skipForward": "15 seconden vooruit",
   "speed": "Snelheid",
-  "hideSpeakers": "Verbergen",
+  "hideSpeakers": "Verberg wie wanneer sprak",
   "showSpeakers": "Toon wie wanneer sprak",
   "downloadShort": "Downloaden",
   "loadingRecording": "Opname laden…",
   "searchTranscript": "Zoek in het transcript",
   "matches_one": "{{count}} resultaat",
   "matches_other": "{{count}} resultaten",
-  "followAudio": "Volg audio",
-  "followAudioHint": "Houd het transcript bij wat er gezegd wordt",
+  "clearSearch": "Zoekopdracht wissen",
+  "minimizeList": "Lijst minimaliseren",
+  "expandList": "Lijst uitvouwen",
   "playFromHere": "Speel vanaf hier",
   "events": {
     "askedBackend": "Backend gevraagd",

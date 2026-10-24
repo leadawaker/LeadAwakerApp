@@ -1,8 +1,8 @@
 import { spawn, type ChildProcess } from "child_process";
 import { mkdirSync, existsSync } from "fs";
 import type { Response } from "express";
+import { AGENT_HOME, APP_DIR, CLAUDE_BIN, GOG_BIN } from "./paths";
 
-const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 const SESSIONS_DIR = "/tmp/ai-sessions";
 const STREAM_TIMEOUT_MS = 180_000; // 3 min idle timeout (non-code agents)
 const CODE_RUNNER_TIMEOUT_MS = 600_000; // 10 min idle timeout for code_runner — resets on every stdout chunk, so long skills are fine as long as they keep emitting
@@ -26,7 +26,7 @@ export interface SubAgentBlock {
 /** Get working directory for a session. Code Runner uses the real codebase; others get an isolated temp dir. */
 export function getSessionCwd(sessionId: string, agentType: string): string {
   if (agentType === "code_runner") {
-    return "/home/gabriel/LeadAwakerApp";
+    return APP_DIR;
   }
   const dir = `${SESSIONS_DIR}/${sessionId}`;
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
@@ -493,7 +493,7 @@ You're running on {USER_NAME}'s Raspberry Pi server and can modify the LeadAwake
 
 Project: LeadAwakerApp (React + Vite frontend, Express + Node.js backend, PostgreSQL with Drizzle ORM)
 Stack: TypeScript, React 19, Tailwind CSS v4, shadcn/ui, Wouter routing, TanStack Query
-Working directory: /home/gabriel/LeadAwakerApp
+Working directory: ${APP_DIR}
 
 Database: PostgreSQL "nocodb". All tables use schema "p2mxx34fvbf3ll6" with PascalCase names.
 Key tables: "Leads", "Prospects", "Campaigns", "Interactions", "Tasks", "Prompt_Library", "AI_Agents", "Accounts", "Users".
@@ -556,7 +556,6 @@ Only run /createclient if the user confirms. When they do, pass prospect_id so /
 
 // ─── GOG Command Parsing & Execution ─────────────────────────────────────────
 
-const GOG_BIN = "/home/gabriel/.local/bin/gog";
 
 /** Parse <gog_command>...</gog_command> tags from Claude's response */
 export function parseGogCommands(text: string): string[] {
@@ -584,7 +583,7 @@ export async function executeGogCommand(command: string): Promise<{ success: boo
       const args = command.trim().split(/\s+/);
       const child = spawn(GOG_BIN, args, {
         cwd: "/tmp",
-        env: { ...process.env, HOME: "/home/gabriel" },
+        env: { ...process.env, HOME: AGENT_HOME },
         timeout: 30000,
       });
 

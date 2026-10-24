@@ -26,6 +26,7 @@ import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useS
 import { SortableContext, horizontalListSortingStrategy, useSortable, arrayMove } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { useLocation } from "wouter";
+import { openLead } from "@/lib/leadLink";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
 
@@ -966,12 +967,8 @@ export function LeadsInlineTable({
                                 className="flex items-center justify-center h-7 w-7 rounded-full hover:bg-brand-indigo/10 text-muted-foreground hover:text-brand-indigo transition-colors"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  // Lead chat now opens inline on the Leads page (Chats page retired)
-                                  try {
-                                    localStorage.setItem("selected-lead-id", String(lid));
-                                  } catch {}
-                                  const basePath = "/platform";
-                                  setLocation(`${basePath}/chat`);
+                                  // The lead's one home: Chats with this lead selected.
+                                  openLead(setLocation, lid);
                                 }}
                                 title={t("conversations.title", "Conversations")}
                               >

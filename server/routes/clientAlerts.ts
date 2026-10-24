@@ -211,7 +211,18 @@ export function registerClientAlertsRoutes(app: Express): void {
       const call = await storage.getVoiceCall(params.call, { accountId: target.accountsId, allowDemo: false }).catch(() => undefined);
       return res.json({ path: "/platform/voice-calls", ...(call ? { selectVoiceCallId: params.call } : {}), accountId: target.accountsId });
     }
+    if (params.lead) {
+      // One chat row in the recap: only a lead of the code's own account is preselected; anything else opens the Leads page.
+      const lead = await storage.getLeadById(params.lead).catch(() => undefined);
+      return res.json({ path: "/platform/leads", ...(lead?.accountsId === target.accountsId ? { selectLeadId: params.lead } : {}), accountId: target.accountsId });
+    }
     const t = target.eventType;
+    // A callback request or message from a phone call opens that call (its
+    // recording and transcript hold the request); a chat callback has no call
+    // and opens the lead's chat below.
+    if (t === "callback_requested" && target.voiceCallId) {
+      return res.json({ path: "/platform/voice-calls", selectVoiceCallId: target.voiceCallId, accountId: target.accountsId });
+    }
     // Appointment alerts open where the booking happened: the phone call, the
     // chat, or (source unknown) the Calendar.
     if (target.open === "call" && target.voiceCallId) {

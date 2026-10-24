@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { AIState } from "@/components/siriOrb/aiCore";
 import { useCallLevels } from "./useCallLevels";
 import { ENGINE_BASE_URL } from "./engine";
+import { createReplyGapTracker } from "./replyGap";
 import { apiFetch } from "@/lib/apiUtils";
 import type {
   Booking,
@@ -11,6 +12,7 @@ import type {
   EndedReason,
   LiveOptions,
   LiveSetup,
+  LiveToolRun,
   Turn,
   VoiceLocale,
 } from "./types";
@@ -44,6 +46,10 @@ export const DEMO_CAMPAIGN_ID = 60;
  * anything the API tells us.
  */
 const TURN_GAP_MS = 1400;
+
+// The car tools a staff test of a dealer line gets (engine browser_stock.py): their
+// result is the engine's, passed back to the backend as is.
+const STOCK_TOOLS = new Set(["car_details", "rdw_plate_lookup", "search_stock"]);
 
 /** Hard stop, so an abandoned tab cannot bill a session indefinitely. */
 export const MAX_CALL_MS = 5 * 60 * 1000;
@@ -118,6 +124,14 @@ const GREETING_FLOOR_MS = 2500;
  */
 const GREETING_RETRY_MS = 2500;
 
+/**
+ * How many times to ask before leaving the opening to the caller. One retry
+ * was not enough: on 2026-10-21 a vesper call never acked the first append,
+ * the retry cued commentary for instructions she had never accepted, and the
+ * call sat silent. Each retry now re-sends the append too when no ack came.
+ */
+const GREETING_MAX_ATTEMPTS = 4;
+
 /** Correlates the greeting's ack (and any refusal) with the event that asked. */
 const GREETING_EVENT_ID = "greeting_1";
 
@@ -141,6 +155,15 @@ function browserTimezone(): string | null {
   }
 }
 
+/** A tool call's arguments as the object the model sent; the raw string if it is not JSON. */
+function parseToolArgs(raw: string | undefined): unknown {
+  try {
+    return JSON.parse(raw || "{}");
+  } catch {
+    return { raw: (raw ?? "").slice(0, 1000) };
+  }
+}
+
 interface LiveEvent {
   type?: string;
   delta?: string;
@@ -150,7 +173,14 @@ interface LiveEvent {
   error?: { message?: string; type?: string; code?: string; client_event_id?: string };
   /** On an ack, the `event_id` of the client event it answers. */
   client_event_id?: string;
-  event?: { type?: string; item?: ToolItem };
+  event?: { type?: string; item?: ToolItem; response?: { usage?: TokenUsage } };
+}
+
+/** A Responses-API usage block, as the backend reports it on response.completed. */
+interface TokenUsage {
+  input_tokens?: number;
+  output_tokens?: number;
+  input_tokens_details?: { cached_tokens?: number };
 }
 
 interface ToolItem {
@@ -178,6 +208,17 @@ export function useLiveCall() {
    */
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [options, setOptions] = useState<LiveOptions | null>(null);
+  /** For the Voice tab's test panel: the call's id, the tools run and her reply delays so far. */
+  const [callId, setCallId] = useState<string | null>(null);
+  const [tools, setTools] = useState<LiveToolRun[]>([]);
+  const [replyGaps, setReplyGaps] = useState<number[]>([]);
+  /**
+   * Bumped by every start, by a hang up while connecting and on unmount: a start
+   * whose run is no longer current stops at its next await and closes what it opened.
+   */
+  const runRef = useRef(0);
+  /** From `start` until its session answer is in: a hang up then cancels the start. */
+  const connectingRef = useRef(false);
   /** Drives the orb. Derived from what is happening, not from an API event. */
   const [orbState, setOrbState] = useState<AIState>("idle");
 
@@ -188,6 +229,8 @@ export function useLiveCall() {
   const localRef = useRef<MediaStream | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const callIdRef = useRef<string>("");
+  /** A staff test (setup.staff, or an old ?line= / ?account= Test link): only then is each tool relayed for the review. */
+  const staffTestRef = useRef(false);
   const sessionIdRef = useRef<string | null>(null);
   const localeRef = useRef<VoiceLocale>("en-GB");
   const languageRef = useRef<string>("en");
@@ -225,7 +268,29 @@ export function useLiveCall() {
   const spokeRef = useRef(false);
   /** Set once the commentary cue has gone out, so it goes out only once. */
   const cuedRef = useRef(false);
+  /** Set when `session.instructions.appended` acks the opening instruction. */
+  const ackedRef = useRef(false);
   const retryRef = useRef<number | null>(null);
+
+  /**
+   * What a staff test reviews afterwards (reply delays, tool latency, price). Sent
+   * with the relay posts and the wrap-up; the engine keeps them only for a staff
+   * test and ignores them on a prospect demo.
+   */
+  const startedAtRef = useRef<number>(0);
+  const liveUsageRef = useRef<{ seconds: number } | null>(null);
+  const backendUsageRef = useRef<Required<Pick<TokenUsage, "input_tokens" | "output_tokens">> & {
+    input_tokens_details: { cached_tokens: number };
+  }>({ input_tokens: 0, output_tokens: 0, input_tokens_details: { cached_tokens: 0 } });
+  /** When the caller's transcript last grew, until her next turn begins (replyGap.ts). */
+  const replyTrackerRef = useRef(createReplyGapTracker());
+  /** Caller's last transcript to her first words, held until her turn is relayed. */
+  const replyGapRef = useRef<number | null>(null);
+  /** When each side's current turn began (its first delta). */
+  const turnAtRef = useRef<{ you: number; them: number }>({ you: 0, them: 0 });
+  /** The caller spoke while she was still talking. Held until her turn is relayed. */
+  const interruptedRef = useRef(false);
+  const lastThemAtRef = useRef<number>(0);
 
   /** Text accumulating for each side, plus the timer that will close it. */
   const bufRef = useRef<{ you: string; them: string }>({ you: "", them: "" });
@@ -273,7 +338,7 @@ export function useLiveCall() {
           language: languageRef.current,
           timezone: browserTimezone(),
           session_id: sessionIdRef.current,
-          event,
+          event: { at: Date.now(), ...event },
         }),
       });
       if (!res.ok) return null;
@@ -384,10 +449,20 @@ export function useLiveCall() {
         // They spoke again, so it was not the end after all.
         farewellRef.current = false;
       }
-      void relay({
-        type: side === "you" ? "live.caller_turn" : "live.ai_turn",
-        transcript: text,
-      });
+      if (side === "you") {
+        void relay({ type: "live.caller_turn", transcript: text, at: turnAtRef.current.you });
+      } else {
+        void relay({
+          type: "live.ai_turn",
+          transcript: text,
+          at: turnAtRef.current.them,
+          // Absent on her opening line: nobody had spoken yet.
+          ...(replyGapRef.current !== null ? { reply_gap_ms: replyGapRef.current } : {}),
+          interrupted: interruptedRef.current,
+        });
+        replyGapRef.current = null;
+        interruptedRef.current = false;
+      }
     },
     [relay],
   );
@@ -405,7 +480,25 @@ export function useLiveCall() {
         }
         openMic();
       }
-      lastHeardRef.current = Date.now();
+      const now = Date.now();
+      lastHeardRef.current = now;
+      if (!bufRef.current[side]) turnAtRef.current[side] = now;
+      if (side === "you") {
+        // Spoke over her: her last words were a moment ago and her turn is still open.
+        if (bufRef.current.them && now - lastThemAtRef.current < 700) interruptedRef.current = true;
+        replyTrackerRef.current.caller(now);
+      } else {
+        // Only the first delta of her turn measures a gap (a lagging caller
+        // transcript mid-reply must not give her next delta one). A transcript-
+        // based approximation: caller's last transcript delta to her first
+        // reply delta, since the data channel exposes no audio-start event.
+        if (!bufRef.current.them) {
+          replyGapRef.current = replyTrackerRef.current.agentTurnStart(now);
+          const gap = replyGapRef.current;
+          if (gap !== null) setReplyGaps((prev) => [...prev, gap]);
+        }
+        lastThemAtRef.current = now;
+      }
       bufRef.current[side] += delta;
 
       const id = bubbleRef.current[side];
@@ -449,6 +542,9 @@ export function useLiveCall() {
           session_id: sessionIdRef.current,
           account_id: DEMO_ACCOUNT_ID,
           generate,
+          duration_s: startedAtRef.current ? (Date.now() - startedAtRef.current) / 1000 : null,
+          live_usage: liveUsageRef.current,
+          backend_usage: backendUsageRef.current,
         }),
       });
       if (!res.ok || !generate) return;
@@ -499,6 +595,16 @@ export function useLiveCall() {
 
   const hangup = useCallback(
     (reason: EndedReason = null) => {
+      if (connectingRef.current) {
+        // Not on the call yet: cancel the start and go back to the setup.
+        runRef.current++;
+        connectingRef.current = false;
+        teardown();
+        setEndedReason(reason);
+        setState("idle");
+        setOrbState("idle");
+        return;
+      }
       if (!pcRef.current) return;
       // Send the close and give the server a beat to answer with its usage
       // total: tearing the connection down immediately loses that event.
@@ -521,15 +627,30 @@ export function useLiveCall() {
       if (!item.call_id) return;
       setOrbState("thinking");
 
+      const toolAt = Date.now();
+      // Show it at once (pending) instead of when it is done: the test panel lists tools
+      // as they start. The row is filled in below.
+      const lastTurn = turnsRef.current[turnsRef.current.length - 1];
+      setTools((prev) => [
+        ...prev,
+        {
+          name: item.name ?? "", result: null, ms: null, at: toolAt, callId: item.call_id,
+          args: parseToolArgs(item.arguments), pending: true, afterTurnId: lastTurn?.id ?? null,
+        },
+      ]);
       const crm = await relay({
         type: "live.function_call",
         name: item.name,
         arguments: item.arguments ?? "{}",
         call_id: item.call_id,
       });
+      const toolMs = Date.now() - toolAt;
 
       let output: Record<string, unknown> = { ok: true };
-      if (item.name === "book_appointment") {
+      if (item.name && STOCK_TOOLS.has(item.name)) {
+        // A staff test of a dealer line: the engine looked the car up (browser_stock.py).
+        output = crm?.tool_output ?? { status: "unavailable" };
+      } else if (item.name === "book_appointment") {
         output = crm?.booked_slot
           ? { status: "booked", slot: crm.booked_slot }
           : {
@@ -539,6 +660,7 @@ export function useLiveCall() {
             };
       }
 
+      setTools((prev) => prev.map((x) => (x.callId === item.call_id ? { ...x, result: output, ms: toolMs, pending: false } : x)));
       send({
         type: "response.item.create",
         item: { type: "function_call_output", call_id: item.call_id, output: JSON.stringify(output) },
@@ -546,6 +668,15 @@ export function useLiveCall() {
       // Every pending result must be in before this. It does not itself give
       // her permission to speak; it releases the backend to continue.
       send({ type: "response.create" });
+      // The review's tool marker: a prospect demo on /voice-demo sends exactly what it did before.
+      if (staffTestRef.current) void relay({
+        type: "tool",
+        name: item.name,
+        args: parseToolArgs(item.arguments),
+        result: output,
+        ms: toolMs,
+        at: toolAt,
+      });
 
       if (item.name === "end_call") hangup("completed");
     },
@@ -561,6 +692,7 @@ export function useLiveCall() {
           sessionIdRef.current = ev.session?.id ?? sessionIdRef.current;
           setState("live");
           setStartedAt(Date.now());
+          startedAtRef.current = Date.now();
           // The clock on screen starts here, so the cut-off is timed from here
           // too: it ends at exactly the maximum the caller was shown.
           if (limitRef.current) window.clearTimeout(limitRef.current);
@@ -569,25 +701,42 @@ export function useLiveCall() {
           lastHeardRef.current = Date.now();
           // The documented moment to send application commands.
           greet();
-          // Ask again if the first append was lost to the race above. Cleared
-          // the instant she speaks, so a slow greeting is never doubled.
+          // Ask again, up to GREETING_MAX_ATTEMPTS, until she speaks. Cleared
+          // the instant she does, so a slow greeting is never doubled.
           if (retryRef.current) window.clearTimeout(retryRef.current);
-          retryRef.current = window.setTimeout(() => {
-            retryRef.current = null;
-            if (spokeRef.current || !greetingRef.current) {
+          const retry = (attempt: number) => {
+            retryRef.current = window.setTimeout(() => {
+              retryRef.current = null;
+              if (spokeRef.current || !greetingRef.current) {
+                void relay({
+                  type: "live.greeting_retry_skipped",
+                  spoke: spokeRef.current,
+                  had_greeting: !!greetingRef.current,
+                });
+                return;
+              }
+              // No ack means the instructions themselves were lost, and a cue
+              // for wording she never received makes her say nothing.
+              if (!ackedRef.current) {
+                send({
+                  type: "session.instructions.append",
+                  event_id: GREETING_EVENT_ID,
+                  delegation_id: null,
+                  content: greetingRef.current,
+                });
+              }
+              cuedRef.current = false;
+              cueGreeting();
               void relay({
-                type: "live.greeting_retry_skipped",
-                spoke: spokeRef.current,
-                had_greeting: !!greetingRef.current,
+                type: "live.greeting_sent",
+                attempt,
+                acked: ackedRef.current,
+                chars: greetingRef.current.length,
               });
-              return;
-            }
-            // Still silent: cue her again. The instructions are already in
-            // context, so this repeats the nudge, not the wording.
-            cuedRef.current = false;
-            cueGreeting();
-            void relay({ type: "live.greeting_sent", attempt: 2, chars: greetingRef.current.length });
-          }, GREETING_RETRY_MS);
+              if (attempt < GREETING_MAX_ATTEMPTS) retry(attempt + 1);
+            }, GREETING_RETRY_MS);
+          };
+          retry(2);
           silenceRef.current = window.setInterval(() => {
             const quietFor = Date.now() - lastHeardRef.current;
             const limit = farewellRef.current ? FAREWELL_SILENCE_MS : SILENCE_MS;
@@ -601,7 +750,10 @@ export function useLiveCall() {
 
         case "session.instructions.appended":
           // Accepted. Now ask her to actually say it.
-          if (!ev.client_event_id || ev.client_event_id === GREETING_EVENT_ID) cueGreeting();
+          if (!ev.client_event_id || ev.client_event_id === GREETING_EVENT_ID) {
+            ackedRef.current = true;
+            cueGreeting();
+          }
           break;
 
         case "session.input_transcript.delta":
@@ -626,10 +778,26 @@ export function useLiveCall() {
           // response.* events is how this goes wrong.
           if (ev.event?.type === "response.output_item.done" && ev.event.item?.type === "function_call") {
             void handleTool(ev.event.item);
+          } else if (
+            (ev.event?.type === "response.completed" || ev.event?.type === "response.done") &&
+            ev.event.response?.usage
+          ) {
+            // Billed apart from her minutes: the backend answers once per turn.
+            const u: TokenUsage = ev.event?.response?.usage ?? {};
+            const total = backendUsageRef.current;
+            total.input_tokens += Number(u.input_tokens) || 0;
+            total.output_tokens += Number(u.output_tokens) || 0;
+            total.input_tokens_details.cached_tokens += Number(u.input_tokens_details?.cached_tokens) || 0;
           }
           break;
 
+        case "session.usage.updated":
+          // GPT-Live's own meter, which is what OpenAI bills her minutes from.
+          if (typeof ev.usage?.seconds === "number") liveUsageRef.current = { seconds: ev.usage.seconds };
+          break;
+
         case "session.closed":
+          if (typeof ev.usage?.seconds === "number") liveUsageRef.current = { seconds: ev.usage.seconds };
           setEndedReason((prev) => prev ?? (ev.reason === "remote_hangup" ? "completed" : "dropped"));
           teardown();
           setState("ended");
@@ -668,24 +836,51 @@ export function useLiveCall() {
       setSessionId(null);
       farewellRef.current = false;
       callIdRef.current = `web-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      setCallId(callIdRef.current);
+      const link = new URLSearchParams(window.location.search);
+      staffTestRef.current = !!setup.staff || !!Number(link.get("line")) || !!Number(link.get("account"));
+      setTools([]);
+      setReplyGaps([]);
       wrappedUpRef.current = false;
+      startedAtRef.current = 0;
+      liveUsageRef.current = null;
+      backendUsageRef.current = { input_tokens: 0, output_tokens: 0, input_tokens_details: { cached_tokens: 0 } };
+      replyTrackerRef.current.reset();
+      replyGapRef.current = null;
+      interruptedRef.current = false;
       greetedRef.current = false;
       spokeRef.current = false;
       cuedRef.current = false;
+      ackedRef.current = false;
       localeRef.current = setup.locale;
       callerRef.current = setup.callerNumber;
       passwordRef.current = password;
       sessionIdRef.current = null;
 
+      const run = ++runRef.current;
+      const stale = () => runRef.current !== run;
+      connectingRef.current = true;
+      // This run's own microphone and connection, closed if it is cancelled. Not the
+      // refs: those may already belong to a newer run.
+      let ownStream: MediaStream | null = null;
+      let ownPc: RTCPeerConnection | null = null;
+      const abandon = () => {
+        ownStream?.getTracks().forEach((t) => t.stop());
+        try { ownPc?.close(); } catch { /* already closed */ }
+      };
+
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
         });
+        ownStream = stream;
+        if (stale()) { abandon(); return; }
         localRef.current = stream;
         micRef.current = stream.getAudioTracks()[0] ?? null;
         attach(stream, "you");
 
         const pc = new RTCPeerConnection();
+        ownPc = pc;
         pcRef.current = pc;
         pc.ontrack = (e) => {
           if (audioRef.current) audioRef.current.srcObject = e.streams[0];
@@ -720,6 +915,7 @@ export function useLiveCall() {
         // No trickle ICE: the offer crosses in one HTTP round trip, so it has
         // to be complete before it is sent.
         await iceComplete(pc);
+        if (stale()) { abandon(); return; }
 
         // Staff get no rate limit. Fetched per call (a pass is cheap and
         // expires), and a failure just means we are treated as anyone else.
@@ -730,6 +926,7 @@ export function useLiveCall() {
         } catch {
           /* no pass: the ordinary limit applies */
         }
+        if (stale()) { abandon(); return; }
 
         const res = await fetch(`${ENGINE_BASE_URL}/voice/live/session`, {
           method: "POST",
@@ -741,16 +938,20 @@ export function useLiveCall() {
             company_name: setup.companyName,
             caller_number: setup.callerNumber,
             voice: setup.voice || null,
-            token: new URLSearchParams(window.location.search).get("token") || null,
-            // Staff only: ?line=<Voice_Numbers id> or ?account=<Accounts id> (the
-            // Voice tab's Test button) answers as that client's phone line.
-            line: Number(new URLSearchParams(window.location.search).get("line")) || null,
-            account: Number(new URLSearchParams(window.location.search).get("account")) || null,
+            token: setup.staff ? null : new URLSearchParams(window.location.search).get("token") || null,
+            // Staff only: ?line=<Voice_Numbers id> or ?account=<Accounts id> (an old
+            // Test link), or setup.staff (the Voice tab's test panel), answers as
+            // that client's phone line.
+            line: setup.staff ? setup.staff.line ?? null : Number(new URLSearchParams(window.location.search).get("line")) || null,
+            account: setup.staff ? setup.staff.account ?? null : Number(new URLSearchParams(window.location.search).get("account")) || null,
+            // The test panel's LLM pick (test only); /voice-demo sends none.
+            llm: setup.staff?.llm ?? null,
             timezone: browserTimezone(),
             sdp: pc.localDescription?.sdp,
           }),
         });
         const data = await res.json();
+        if (stale()) { abandon(); return; }
         if (!res.ok) throw new Error(data?.detail || "Could not start the call.");
 
         sessionIdRef.current = data.session_id ?? null;
@@ -760,10 +961,14 @@ export function useLiveCall() {
         cueRef.current = data.cue ?? "";
         setCompany(data.company ?? setup.companyName);
         await pc.setRemoteDescription({ type: "answer", sdp: data.sdp });
+        if (stale()) { abandon(); return; }
+        connectingRef.current = false;
 
         // Fallback if session.started has not armed it yet.
         if (!limitRef.current) limitRef.current = window.setTimeout(() => hangup("time_limit"), limitMsRef.current);
       } catch (err) {
+        if (stale()) { abandon(); return; }
+        connectingRef.current = false;
         teardown();
         setState("idle");
         setOrbState("error");
@@ -785,9 +990,14 @@ export function useLiveCall() {
     setError(null);
     setLeadId(null);
     setStartedAt(null);
+    setCallId(null);
+    setTools([]);
+    setReplyGaps([]);
   }, [teardown]);
 
   useEffect(() => teardown, [teardown]);
+  // Leaving the page mid-connect: the start in flight closes its microphone and connection.
+  useEffect(() => () => { runRef.current++; connectingRef.current = false; }, []);
 
   return {
     state,
@@ -805,6 +1015,9 @@ export function useLiveCall() {
     options,
     audioRef,
     sessionId,
+    callId,
+    tools,
+    replyGaps,
     recordingUrl: sessionId ? `${ENGINE_BASE_URL}/voice/live/recording/${sessionId}` : null,
     start,
     hangup,

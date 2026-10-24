@@ -1,13 +1,13 @@
 /**
- * Phone mock of the client bottom bar (Home, Calls, Calendar, Chats, More),
+ * Phone mock of the client bottom bar (Stats, Calls, Calendar, Chats, More),
  * with the More page open to show that Leads and Account live there.
  */
 
-import { Home, PhoneCall, CalendarDays, MessageSquare, Menu, Building2, Users, BookOpen, LifeBuoy, ChevronRight } from "lucide-react";
+import { ChartColumn, PhoneCall, CalendarDays, MessageSquare, Menu, Building2, Users, BookOpen, LifeBuoy, ChevronRight } from "lucide-react";
 import { Figure, MockRow, PhoneFrame, type K } from "./parts";
 
 const BAR = [
-  { key: "home", icon: Home },
+  { key: "home", icon: ChartColumn },
   { key: "calls", icon: PhoneCall },
   { key: "calendar", icon: CalendarDays },
   { key: "chats", icon: MessageSquare },

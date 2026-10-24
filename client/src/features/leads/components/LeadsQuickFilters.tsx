@@ -1,12 +1,16 @@
-// Leads page quick filters, under the topbar: a view switch (All / Needs reply /
-// Next appointments) and a channel switch (All / Website / WhatsApp / Phone).
+// Leads page quick filters: a view switch (All / Needs reply / Next appointments)
+// and a channel switch (All / Website / WhatsApp / Phone). Desktop: both sit in
+// the topbar (LeadsQuickControls), the view switch as one dropdown button. Phones:
+// one row under the topbar (LeadsQuickFilters) with a Filter sheet.
 // Counts come from the server and cover every lead, not only the loaded page.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Users, MessageSquareReply, CalendarClock, Layers, Globe, MessageCircle, Phone, SlidersHorizontal, X, type LucideIcon,
+  Users, MessageSquareReply, CalendarClock, Layers, Globe, MessageCircle, Phone, SlidersHorizontal, X, Check, ChevronDown, type LucideIcon,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { ActiveDot } from "./LeadsTopbarParts";
 import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
 import { MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
 import { stageHex, stageLabel } from "../lib/leadDisplay";
@@ -16,7 +20,7 @@ const VIEW_ICONS: Record<QuickView, LucideIcon> = { all: Users, needsReply: Mess
 const CHANNEL_ICONS: Record<ChannelFilter, LucideIcon> = { all: Layers, website: Globe, whatsapp: MessageCircle, phone: Phone };
 
 function Seg<K extends string>({
-  items, active, onChange, icons, label, counts, testId,
+  items, active, onChange, icons, label, counts, testId, shortLabels,
 }: {
   items: K[];
   active: K;
@@ -25,6 +29,8 @@ function Seg<K extends string>({
   label: (k: K) => string;
   counts: Partial<Record<K, number>>;
   testId: string;
+  /** Topbar: the labels hide below 1536px (icon + count stay, the label moves to the tooltip). */
+  shortLabels?: boolean;
 }) {
   return (
     <div className="la-seg shrink-0" role="tablist" data-testid={testId}>
@@ -41,10 +47,12 @@ function Seg<K extends string>({
             className={`la-seg-btn${on ? " on" : ""}`}
             style={{ padding: "7px 12px", fontSize: 10, letterSpacing: "0.1em", gap: 6 }}
             onClick={() => onChange(k)}
+            title={shortLabels ? label(k) : undefined}
+            aria-label={shortLabels ? label(k) : undefined}
             data-testid={`${testId}-${k}`}
           >
             <Icon size={13} className="shrink-0" />
-            {label(k)}
+            {shortLabels ? <span className="max-2xl:hidden">{label(k)}</span> : label(k)}
             {n !== undefined && (
               <span className="tabular-nums" style={{ color: on ? "var(--wine)" : "var(--mute-2)", fontWeight: 400 }}>{n}</span>
             )}
@@ -132,22 +140,61 @@ export function LeadsQuickFilters({
     );
   }
 
+  // Desktop: the controls live in the topbar (LeadsQuickControls).
+  return null;
+}
+
+/**
+ * Desktop topbar controls: the view (All / Needs reply / Next appointments) as one
+ * dropdown button with the wine dot when it is not on All, then the channel tabs.
+ */
+export function LeadsQuickControls({
+  view, onViewChange, channel, onChannelChange, total, viewCounts, channelCounts,
+}: {
+  view: QuickView;
+  onViewChange: (v: QuickView) => void;
+  channel: ChannelFilter;
+  onChannelChange: (c: ChannelFilter) => void;
+  total: number;
+  viewCounts: { needsReply: number; upcoming: number };
+  channelCounts: Record<string, number>;
+}) {
+  const { t } = useTranslation("leads");
+  const isPhone = useIsMobile(768);
+  if (isPhone) return null;
+  const countOf = (v: QuickView) => (v === "all" ? (view === "all" ? total : undefined) : viewCounts[v]);
+  const ViewIcon = VIEW_ICONS[view];
+  const current = countOf(view);
+
   return (
-    <div
-      className="shrink-0 flex items-center gap-3 overflow-x-auto scrollbar-hide"
-      style={{ padding: "9px 17px", borderBottom: "1px solid var(--line)" }}
-      data-testid="leads-quick-filters"
-    >
-      <Seg<QuickView>
-        items={["all", "needsReply", "upcoming"]}
-        active={view}
-        onChange={onViewChange}
-        icons={VIEW_ICONS}
-        label={(k) => t(`quickViews.${k}`)}
-        counts={{ all: view === "all" ? total : undefined, needsReply: viewCounts.needsReply, upcoming: viewCounts.upcoming }}
-        testId="leads-quick-view"
-      />
-      <div style={{ width: 1, height: 20, background: "var(--line)", flexShrink: 0 }} />
+    <>
+      <DropdownMenu>
+        <div className="shrink-0" style={{ position: "relative" }}>
+          <DropdownMenuTrigger asChild>
+            <button type="button" className="la-btn la-btn--soft" title={t("filters.show")} data-testid="leads-quick-view" style={{ height: 32, gap: 6 }}>
+              <ViewIcon size={13} className="shrink-0" />
+              {t(`quickViews.${view}`)}
+              {current !== undefined && <span className="tabular-nums" style={{ color: "var(--mute-2)", fontWeight: 400 }}>{current}</span>}
+              <ChevronDown size={12} className="shrink-0" />
+            </button>
+          </DropdownMenuTrigger>
+          {view !== "all" && <ActiveDot />}
+        </div>
+        <DropdownMenuContent align="start" className="w-56 glass-strong border-none">
+          {(["all", "needsReply", "upcoming"] as QuickView[]).map((v) => {
+            const Icon = VIEW_ICONS[v];
+            const n = countOf(v);
+            return (
+              <DropdownMenuItem key={v} onClick={() => onViewChange(v)} className="flex items-center gap-2 text-[12px]" style={{ fontWeight: view === v ? 600 : 400 }} data-testid={`leads-quick-view-${v}`}>
+                <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: view === v ? "var(--wine)" : "var(--mute)" }} />
+                <span className="flex-1">{t(`quickViews.${v}`)}</span>
+                {n !== undefined && <span className="tabular-nums text-[11px]" style={{ color: "var(--mute-2)" }}>{n}</span>}
+                {view === v && <Check className="h-3 w-3 shrink-0" style={{ color: "var(--wine)" }} />}
+              </DropdownMenuItem>
+            );
+          })}
+        </DropdownMenuContent>
+      </DropdownMenu>
       <Seg<ChannelFilter>
         items={["all", "website", "whatsapp", "phone"]}
         active={channel}
@@ -156,7 +203,8 @@ export function LeadsQuickFilters({
         label={(k) => t(`channelFilter.${k}`)}
         counts={{ website: channelCounts.website, whatsapp: channelCounts.whatsapp, phone: channelCounts.phone }}
         testId="leads-channel-filter"
+        shortLabels
       />
-    </div>
+    </>
   );
 }

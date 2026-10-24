@@ -29,6 +29,7 @@ import { BUBBLE_WIDTH_KEY, DEFAULT_BUBBLE_WIDTH } from "./chatView/constants";
 import { ChatBubble } from "./chatView/ChatBubble";
 import { sendWhatsAppMessage, sendWhatsAppImage, sendTypingIndicator, WhatsAppWindowExpiredError } from "@/features/prospects/api/prospectsApi";
 import { TemplatePicker } from "./TemplatePicker";
+import { dateGroupText } from "../utils/conversationHelpers";
 import type { MsgMeta } from "./chatView/types";
 
 interface ProspectChatPanelProps {
@@ -142,7 +143,7 @@ export function ProspectChatPanel({
   }, [emojiOpen]);
 
   const avatarColor = getProspectAvatarColor(outreachStatus);
-  const displayName = prospectCompany || prospectName || "Unknown";
+  const displayName = prospectCompany || prospectName || t("inbox.unknownName");
 
   // Channel filter cycle
   const cycleChannel = () => {
@@ -223,20 +224,20 @@ export function ProspectChatPanel({
         );
       }
       queryClient.invalidateQueries({ queryKey: ["/api/prospects/conversations"] });
-      toast({ title: "Message sent" });
+      toast({ title: t("prospectInbox.chat.messageSent") });
     } catch (err: any) {
       if (err instanceof WhatsAppWindowExpiredError) {
         setWindowExpired(true); setShowTemplates(true);
         setDraft(text); // restore draft so they can copy it for a template
       } else {
         console.error("[WA-Send] error:", err);
-        toast({ title: "Failed to send", description: `${err.name}: ${err.message}`, variant: "destructive" });
+        toast({ title: t("prospectInbox.chat.sendFailed"), description: `${err.name}: ${err.message}`, variant: "destructive" });
         setDraft(text);
       }
     } finally {
       setSending(false);
     }
-  }, [draft, canSend, sending, prospectId, queryClient, toast]);
+  }, [draft, canSend, sending, prospectId, queryClient, toast, t]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
@@ -266,10 +267,10 @@ export function ProspectChatPanel({
       if (err instanceof WhatsAppWindowExpiredError) {
         setWindowExpired(true); setShowTemplates(true);
       } else {
-        toast({ title: "Retry failed", description: err.message, variant: "destructive" });
+        toast({ title: t("prospectInbox.chat.retryFailed"), description: err.message, variant: "destructive" });
       }
     }
-  }, [canSend, prospectId, queryClient, toast]);
+  }, [canSend, prospectId, queryClient, toast, t]);
 
   const handleImageFile = useCallback(async (file: File) => {
     if (!canSend) return;
@@ -291,18 +292,18 @@ export function ProspectChatPanel({
       if (err instanceof WhatsAppWindowExpiredError) {
         setWindowExpired(true); setShowTemplates(true);
       } else {
-        toast({ title: "Failed to send image", description: err.message, variant: "destructive" });
+        toast({ title: t("prospectInbox.chat.imageFailed"), description: err.message, variant: "destructive" });
       }
     } finally {
       setSending(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
     }
-  }, [canSend, draft, prospectId, queryClient, toast]);
+  }, [canSend, draft, prospectId, queryClient, toast, t]);
 
   if (isLoading) {
     return (
       <div className="flex-1 flex flex-col min-h-0 bg-muted rounded-lg overflow-hidden">
-        <div className="flex-1 flex items-center justify-center text-muted-foreground">Loading…</div>
+        <div className="flex-1 flex items-center justify-center text-muted-foreground">{t("prospectInbox.chat.loading")}</div>
       </div>
     );
   }
@@ -348,7 +349,7 @@ export function ProspectChatPanel({
 
                 {/* Toolbar */}
                 <div className="ml-auto flex items-center gap-1.5 shrink-0">
-                  <SearchPill value={search} onChange={setSearch} open={searchOpen} onOpenChange={setSearchOpen} placeholder="Search messages…" />
+                  <SearchPill value={search} onChange={setSearch} open={searchOpen} onOpenChange={setSearchOpen} placeholder={t("prospectInbox.chat.searchMessages")} />
 
                   {/* Sort */}
                   <DropdownMenu>
@@ -361,13 +362,13 @@ export function ProspectChatPanel({
                         )}
                       >
                         <ArrowUpDown className="h-4 w-4 shrink-0" />
-                        <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">Sort</span>
+                        <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("prospectInbox.sort")}</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-44">
                       {(["newest", "oldest"] as const).map((opt) => (
                         <DropdownMenuItem key={opt} onClick={() => setSortMode(opt)} className={cn("text-[12px]", sortMode === opt && "font-semibold text-brand-indigo")}>
-                          {opt === "newest" ? "Newest first" : "Oldest first"}
+                          {opt === "newest" ? t("prospectInbox.chat.newestFirst") : t("prospectInbox.chat.oldestFirst")}
                           {sortMode === opt && <Check className="h-3 w-3 ml-auto" />}
                         </DropdownMenuItem>
                       ))}
@@ -382,7 +383,8 @@ export function ProspectChatPanel({
                         "h-9 w-9 rounded-full border flex items-center justify-center transition-colors",
                         dialerOpen ? "border-emerald-500 text-emerald-600 bg-emerald-50 dark:bg-emerald-950/30" : "border-black/[0.125] text-foreground/60 hover:text-emerald-600",
                       )}
-                      title="Call"
+                      title={t("prospectInbox.call")}
+                      aria-label={t("prospectInbox.call")}
                     >
                       <Phone className="h-4 w-4" />
                     </button>
@@ -395,7 +397,7 @@ export function ProspectChatPanel({
                       "h-9 w-9 rounded-full border flex items-center justify-center transition-colors",
                       filterChannel !== "all" ? "border-brand-indigo text-brand-indigo" : "border-black/[0.125] text-foreground/60 hover:text-foreground",
                     )}
-                    title={filterChannel === "all" ? "All channels" : filterChannel === "email" ? "Email only" : "WhatsApp only"}
+                    title={filterChannel === "all" ? t("prospectInbox.chat.allChannels") : filterChannel === "email" ? t("prospectInbox.chat.emailOnly") : t("prospectInbox.chat.whatsappOnly")}
                   >
                     <ChannelIcon className="h-4 w-4" />
                   </button>
@@ -441,7 +443,7 @@ export function ProspectChatPanel({
                                   : "border-black/[0.125] text-foreground/60 hover:text-foreground",
                               )}
                             >
-                              {style === "crm" ? "CRM" : `#${style.replace("social", "")}`}
+                              {style === "crm" ? t("chat.background.crm") : `#${style.replace("social", "")}`}
                             </button>
                           ))}
                         </div>
@@ -458,7 +460,8 @@ export function ProspectChatPanel({
                     <button
                       onClick={onToggleRightPanel}
                       className="inline-flex items-center justify-center h-9 w-9 rounded-full text-[12px] font-medium border border-black/[0.125] bg-transparent text-foreground/60 hover:text-foreground hover:bg-muted/50 transition-colors"
-                      title="Show prospect panel"
+                      title={t("prospectInbox.chat.showPanel")}
+                      aria-label={t("prospectInbox.chat.showPanel")}
                     >
                       <ChevronLeft className="h-4 w-4" />
                     </button>
@@ -473,7 +476,7 @@ export function ProspectChatPanel({
           <div className="flex-1 overflow-y-auto px-4 pt-4 pb-2" ref={scrollRef}>
             {bubbleItems.length === 0 ? (
               <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-                {search || filterChannel !== "all" ? "No matching messages" : "No messages yet"}
+                {search || filterChannel !== "all" ? t("prospectInbox.chat.noMatchingMessages") : t("chat.noMessages.title")}
               </div>
             ) : (
               <div className="space-y-1">
@@ -482,7 +485,7 @@ export function ProspectChatPanel({
                     {/* Date separator */}
                     <div className="py-3 flex items-center gap-[10px]">
                       <div className="flex-1 h-px bg-foreground/15" />
-                      <span className="text-[11px] font-bold text-muted-foreground tracking-wide">{group.label}</span>
+                      <span className="text-[11px] font-bold text-muted-foreground tracking-wide">{dateGroupText(group.label, t)}</span>
                       <div className="flex-1 h-px bg-foreground/15" />
                     </div>
                     {/* Bubbles */}
@@ -507,9 +510,9 @@ export function ProspectChatPanel({
             <div className="mx-3 mb-2 shrink-0 flex items-start gap-2 rounded-lg border border-red-300 bg-red-50 dark:bg-red-950/30 dark:border-red-700 px-3 py-2">
               <AlertCircle className="h-4 w-4 text-red-500 dark:text-red-400 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-red-700 dark:text-red-300">Invalid phone number</p>
+                <p className="text-[12px] font-semibold text-red-700 dark:text-red-300">{t("prospectInbox.chat.invalidPhoneTitle")}</p>
                 <p className="text-[11px] text-red-600 dark:text-red-400 mt-0.5">
-                  "{contactPhone}" doesn't look like a valid number. Update it in Prospects (needs 7–15 digits, no spaces).
+                  {t("prospectInbox.chat.invalidPhoneBody", { phone: contactPhone })}
                 </p>
               </div>
             </div>
@@ -520,9 +523,9 @@ export function ProspectChatPanel({
             <div className="mx-3 mb-2 shrink-0 flex items-start gap-2 rounded-lg border border-amber-300 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700 px-3 py-2">
               <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
-                <p className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">24-hour window expired</p>
+                <p className="text-[12px] font-semibold text-amber-800 dark:text-amber-300">{t("prospectInbox.chat.windowExpiredTitle")}</p>
                 <p className="text-[11px] text-amber-700 dark:text-amber-400 mt-0.5">
-                  This contact hasn't messaged you in over 24 hours. WhatsApp only allows free-form replies within 24h of the last inbound message. Use a pre-approved template to re-engage.
+                  {t("prospectInbox.chat.windowExpiredBody")}
                 </p>
               </div>
               <button type="button" onClick={() => setWindowExpired(false)} className="text-amber-500 hover:text-amber-700 shrink-0">
@@ -589,7 +592,8 @@ export function ProspectChatPanel({
                 data-emoji-button
                 onClick={() => setEmojiOpen((o) => !o)}
                 className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground shrink-0 transition-colors"
-                title="Emoji"
+                title={t("chat.compose.emoji")}
+                aria-label={t("chat.compose.emoji")}
               >
                 <Smile className="h-6 w-6" />
               </button>
@@ -599,7 +603,7 @@ export function ProspectChatPanel({
                 ref={textareaRef}
                 className="flex-1 text-[17px] bg-transparent resize-none focus:outline-none placeholder:text-muted-foreground/50 leading-5 pl-1 pr-2"
                 style={{ maxHeight: "120px" }}
-                placeholder={windowExpired && canSend ? t("templatePicker.windowExpiredPlaceholder") : !contactPhone ? "No phone number — add one in Prospects" : !phoneValid ? "Invalid phone number — fix it in Prospects" : "Type a WhatsApp message…"}
+                placeholder={windowExpired && canSend ? t("templatePicker.windowExpiredPlaceholder") : !contactPhone ? t("prospectInbox.chat.placeholderNoPhone") : !phoneValid ? t("prospectInbox.chat.placeholderInvalidPhone") : t("prospectInbox.chat.placeholderDefault")}
                 disabled={!canSend || sending || (windowExpired && canSend)}
                 value={draft}
                 rows={1}
@@ -642,7 +646,8 @@ export function ProspectChatPanel({
                 disabled={!canSend || sending}
                 onClick={() => fileInputRef.current?.click()}
                 className="h-9 w-9 rounded-full flex items-center justify-center text-muted-foreground/50 hover:text-muted-foreground disabled:opacity-30 shrink-0 transition-colors"
-                title="Send image"
+                title={t("chat.compose.attachImage")}
+                aria-label={t("chat.compose.attachImage")}
               >
                 <Paperclip className="h-6 w-6" />
               </button>
@@ -667,7 +672,7 @@ export function ProspectChatPanel({
                   type="button"
                   className="h-9 w-9 rounded-full bg-brand-indigo text-white flex items-center justify-center hover:bg-brand-indigo/90 disabled:opacity-40 transition-colors shrink-0"
                   disabled={!canSend || sending}
-                  onClick={() => toast({ title: "Coming soon", description: "Voice memos for WhatsApp will be available soon." })}
+                  onClick={() => toast({ title: t("prospectInbox.chat.comingSoon"), description: t("prospectInbox.chat.voiceMemosSoon") })}
                   title={t("chat.compose.recordVoice")}
                 >
                   <Mic className="h-5 w-5 text-white" />

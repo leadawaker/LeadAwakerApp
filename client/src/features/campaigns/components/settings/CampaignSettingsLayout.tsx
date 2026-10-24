@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Building2, Bot, SlidersHorizontal, MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SectionHeader, SectionLayout, SectionRail, type SectionRailItem } from "@/features/accounts/components/workspace/SectionRail";
 import { BusinessSectionFields } from "./BusinessSectionFields";
 import { AISectionFields } from "./AISectionFields";
 import { BehaviorSectionFields } from "./BehaviorSectionFields";
@@ -18,9 +19,10 @@ const LAUNCH_WA_MESSAGE = "/start";
 // opener template and agent name remain operator-editable, and they live in the
 // AI tab instead. See isServiceDemoCampaign for the shared list.
 
+type SettingsSection = "business" | "ai" | "behavior";
+
 interface SectionDef {
-  id: string;
-  num: string;
+  id: SettingsSection;
   labelKey: string;
   titleKey: string;
   descKey: string;
@@ -40,7 +42,9 @@ interface CampaignSettingsLayoutProps {
   contracts?: any[];
   conversationPrompts?: any[];
   onNicheChange?: (niche: string) => void;
-  /** Mobile / narrow: stack the section nav into horizontal tabs, shrink chrome. */
+  /** Mobile / narrow: the section tiles sit in a grid above the open section, chrome shrinks.
+   * Wide: the tiles stand in a sticky column; the host scroller sets --ws-sticky-top
+   * (see SectionLayout) so the column sticks under its own header. */
   compact?: boolean;
   onGenerated?: () => void;
   /** Merge a /generate response's filled fields into draft + originalDraft
@@ -55,7 +59,7 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
   const isUniversal = isServiceDemoCampaign(
     (props.campaign?.id ?? props.campaign?.Id) as number | undefined,
   );
-  const [active, setActive] = useState<string>(props.initialSection ?? (isUniversal ? "ai" : "business"));
+  const [active, setActive] = useState<SettingsSection>(props.initialSection ?? (isUniversal ? "ai" : "business"));
   // Optional name typed live during a discovery-call screenshare. Rides along in
   // the Launch button's "/start <campaignId> <name>" message so the engine
   // switches the VIP lead to this campaign and sets first_name before replaying
@@ -78,87 +82,37 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
     .join(" ");
 
   const allSections: SectionDef[] = [
-    { id: "business", num: "01", labelKey: "config.sections.business", titleKey: "config.sections.businessTitle", descKey: "config.sections.businessDesc", icon: Building2 },
-    { id: "ai",       num: "02", labelKey: "config.sections.ai",       titleKey: "config.sections.aiTitle",       descKey: "config.sections.aiDesc",       icon: Bot },
-    { id: "behavior", num: "03", labelKey: "config.sections.behavior", titleKey: "config.sections.behaviorTitle", descKey: "config.sections.behaviorDesc", icon: SlidersHorizontal },
+    { id: "business", labelKey: "config.sections.business", titleKey: "config.sections.businessTitle", descKey: "config.sections.businessDesc", icon: Building2 },
+    { id: "ai",       labelKey: "config.sections.ai",       titleKey: "config.sections.aiTitle",       descKey: "config.sections.aiDesc",       icon: Bot },
+    { id: "behavior", labelKey: "config.sections.behavior", titleKey: "config.sections.behaviorTitle", descKey: "config.sections.behaviorDesc", icon: SlidersHorizontal },
   ];
-  const sections = (isUniversal ? allSections.filter((s) => s.id !== "business") : allSections)
-    .map((s, i) => ({ ...s, num: String(i + 1).padStart(2, "0") }));
-  const sectionTotal = String(sections.length).padStart(2, "0");
+  const sections = isUniversal ? allSections.filter((s) => s.id !== "business") : allSections;
 
   // `active` can point at the hidden Business tab when switching onto the
-  // universal campaign with a stale selection — fall back to the first tab.
+  // universal campaign with a stale selection: fall back to the first tab.
   const cur = sections.find((s) => s.id === active) ?? sections[0];
   const curIdx = sections.indexOf(cur);
 
+  const items: SectionRailItem<SettingsSection>[] = sections.map((s) => ({
+    key: s.id,
+    icon: <s.icon size={16} />,
+    label: t(s.labelKey),
+    detail: t(s.descKey),
+  }));
+
   return (
-    <div className="max-w-[1386px] mr-auto" style={compact
-      ? { display: 'flex', flexDirection: 'column', gap: 16, width: '100%' }
-      : { display: 'flex', gap: 'var(--gap, 22px)', alignItems: 'flex-start', width: '100%' }}>
+    <div className="max-w-[1386px] mr-auto" style={{ width: '100%' }}>
+      <SectionLayout
+        stacked={compact}
+        testId="campaign-settings"
+        rail={(layout) => (
+          <SectionRail items={items} active={cur.id} onSelect={setActive} layout={layout} testId="campaign-settings-rail" />
+        )}
+      >
+      <section style={{ display: 'flex', flexDirection: 'column', gap: 16, minWidth: 0 }}>
+        <SectionHeader index={curIdx + 1} title={t(cur.titleKey)} help={t(cur.descKey)} />
 
-      {/* ── Section nav ── */}
-      {compact ? (
-        // Mobile: horizontal segmented tabs mirroring the page's la-seg switcher.
-        <div className="la-seg la-seg--fill" style={{ flexShrink: 0 }}>
-          {sections.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setActive(s.id)}
-              className={`la-seg-btn${s.id === cur.id ? ' on' : ''}`}
-              style={{ padding: '9px 0', fontSize: 11, letterSpacing: '0.08em' }}
-            >
-              {t(s.labelKey)}
-            </button>
-          ))}
-        </div>
-      ) : (
-        <div style={{ width: 190, flexShrink: 0, position: 'sticky', top: 0 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {sections.map((s) => {
-              const on = s.id === cur.id;
-              return (
-                <button key={s.id} onClick={() => setActive(s.id)} style={{
-                  padding: '16px 24px', border: 'none', cursor: 'pointer', textAlign: 'left' as const, width: '100%',
-                  borderRadius: 'var(--r-surface)', transition: 'all 150ms',
-                  background: on ? 'var(--paper)' : 'transparent',
-                  boxShadow: on ? 'var(--sh-raised-crisp)' : 'none',
-                  borderLeft: `3px solid ${on ? 'var(--wine)' : 'transparent'}`,
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-                    <span style={{ fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 11, letterSpacing: '0.1em', color: on ? 'var(--wine)' : 'var(--mute-2)' }}>{s.num}</span>
-                    <span style={{ fontSize: 14, fontWeight: 600, color: on ? 'var(--ink)' : 'var(--ink-soft)' }}>{t(s.labelKey)}</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: 'var(--mute)', paddingLeft: 30, lineHeight: 1.4 }}>{t(s.descKey)}</div>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* ── Content card ── */}
-      <div style={{ flex: 1, minWidth: 0, width: compact ? '100%' : undefined }}>
         <div className={cn("neu-raised", compact && "la-config-compact")} style={{ padding: compact ? 18 : 'var(--pad, 36px)', borderRadius: 'var(--r-card)' }}>
-
-          {/* Editorial section heading */}
-          <div style={{ position: 'relative', overflow: 'hidden', marginBottom: 'calc(var(--gap-form, 24px) + 10px)', paddingBottom: 'var(--gap-form, 24px)', borderBottom: '1px solid var(--line)' }}>
-            {/* Abstract section symbol — large, faint watermark to lighten the text density */}
-            <cur.icon
-              aria-hidden
-              style={{
-                position: 'absolute', top: -13, right: -5,
-                width: compact ? 96 : 150, height: compact ? 96 : 150, strokeWidth: 1,
-                color: 'var(--wine)', opacity: 0.07, pointerEvents: 'none',
-                transform: 'rotate(-8deg)',
-              }}
-            />
-            <div className="eyebrow wine" style={{ marginBottom: 10 }}>{cur.num} / {sectionTotal}</div>
-            <div className="serif italic" style={{ fontSize: compact ? 30 : 52, color: 'var(--ink)', lineHeight: 1, letterSpacing: '-0.02em', marginBottom: 10 }}>
-              {t(cur.titleKey)}
-            </div>
-            <div style={{ fontSize: 14, color: 'var(--mute)' }}>{t(cur.descKey)}</div>
-          </div>
-
           {cur.id === "business" && <BusinessSectionFields {...props} launchName={launchName} setLaunchName={setLaunchName} />}
           {cur.id === "ai" && (
             <>
@@ -179,11 +133,11 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
           )}
           {cur.id === "behavior" && <BehaviorSectionFields {...props} onNicheChange={props.onNicheChange} />}
 
-          {/* Prev / Next nav */}
+          {/* Generate / Launch / Next */}
           <div style={{ display: 'flex', flexWrap: compact ? 'wrap' : 'nowrap', gap: compact ? 10 : undefined, justifyContent: compact ? 'center' : 'space-between', marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--line)' }}>
             <CampaignGenerateButton campaign={props.campaign} onGenerated={props.onGenerated} onFieldsGenerated={props.onFieldsGenerated} />
 
-            {/* Launch Campaign — opens WhatsApp on the Lead Awaker AI line with
+            {/* Launch Campaign: opens WhatsApp on the Lead Awaker AI line with
                 "/start <campaignId> <name>" prefilled. The name comes from the
                 "Demo lead name" field in the Business section above. */}
             <a
@@ -203,12 +157,12 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
               className={cn("la-btn", curIdx < sections.length - 1 ? "la-btn--plain" : "la-btn--soft")}
               style={{ fontFamily: 'Geist Mono, ui-monospace, monospace', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase' as const, gap: 8, opacity: curIdx === sections.length - 1 ? 0.5 : undefined }}
             >
-              {curIdx < sections.length - 1 ? t(sections[curIdx + 1].labelKey) : "All done"} →
+              {curIdx < sections.length - 1 ? t(sections[curIdx + 1].labelKey) : t("config.allDone")} →
             </button>
           </div>
         </div>
-      </div>
-
+      </section>
+      </SectionLayout>
     </div>
   );
 }

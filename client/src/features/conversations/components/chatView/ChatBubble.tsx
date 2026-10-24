@@ -178,13 +178,13 @@ export function ChatBubble({
                   ? <VoiceMemoPlayer url={audioUrl} outbound={outbound} color={voiceColor} />
                   : <div className="flex items-center gap-1.5 opacity-70">
                       <Mic className="h-3.5 w-3.5 shrink-0" />
-                      <span className="text-[11px] font-medium uppercase tracking-wide">Voice note</span>
+                      <span className="text-[11px] font-medium uppercase tracking-wide">{t("chat.voiceNote")}</span>
                     </div>
                 }
                 <div className="flex items-end gap-1.5">
                   {transcription
                     ? <span className="whitespace-pre-wrap leading-relaxed break-words text-[13px] italic opacity-80 flex-1 min-w-0">{transcription}</span>
-                    : <span className="text-[12px] opacity-50 italic flex-1 min-w-0">Transcription unavailable</span>
+                    : <span className="text-[12px] opacity-50 italic flex-1 min-w-0">{t("chat.transcriptionUnavailable")}</span>
                   }
                   {timeStamp}
                 </div>
@@ -198,7 +198,7 @@ export function ChatBubble({
               <div className="flex flex-col gap-1.5">
                 <div className="flex items-center gap-1.5">
                   <Phone className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-                  <span className="text-[13px] font-medium flex-1 min-w-0">{content || "Call"}</span>
+                  <span className="text-[13px] font-medium flex-1 min-w-0">{content || t("chat.callBadge")}</span>
                   {timeStamp}
                 </div>
                 {transcript && (
@@ -219,7 +219,7 @@ export function ChatBubble({
                   ? <AttachmentPreview url={imageUrl} outbound={outbound} />
                   : <div className="flex items-center gap-1.5 opacity-70">
                       <ImageIcon className="h-3.5 w-3.5 shrink-0" />
-                      <span className="text-[11px] font-medium uppercase tracking-wide">Image</span>
+                      <span className="text-[11px] font-medium uppercase tracking-wide">{t("inbox.attachments.image")}</span>
                     </div>
                 }
                 <div className="flex items-end gap-1.5">

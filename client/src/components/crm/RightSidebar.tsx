@@ -5,7 +5,6 @@ import {
   HelpCircle,
   Inbox,
   MessageSquare,
-  Send,
   Calendar,
   ScrollText,
   ChartNoAxesColumn,
@@ -19,8 +18,6 @@ import {
   Menu,
   Building2,
   UserSearch,
-  PhoneCall,
-  PhoneMissed,
   ClipboardList,
   MoreHorizontal,
   LogOut,
@@ -37,12 +34,8 @@ import {
   ArrowLeft,
   Globe,
   Mic,
-  Home,
   Star,
-  Megaphone,
   AudioLines,
-  UserRound,
-  SlidersHorizontal,
 } from "lucide-react";
 import { useTheme, type ThemeMode } from "@/hooks/useTheme";
 import { MobileMorePage } from "@/components/crm/mobile/MobileMorePage";
@@ -79,6 +72,24 @@ import { NotificationCenter } from "@/components/crm/NotificationCenter";
  * Uses the Web Vibration API (navigator.vibrate). Gracefully degrades on
  * devices/browsers that don't support vibration. Never fires on desktop (768px+).
  */
+/** Small wine count on a nav icon (unread chats, new calls); hidden at 0. */
+function NavCountBadge({ count }: { count?: number }) {
+  if (!count || count <= 0) return null;
+  return (
+    <span style={{
+      position: "absolute", top: -6, right: -6,
+      minWidth: 16, height: 16, padding: "0 4px",
+      borderRadius: "var(--r-pill)",
+      background: "var(--wine-grad)",
+      color: "#FFFFFF", fontSize: 10, fontWeight: 700,
+      display: "flex", alignItems: "center", justifyContent: "center",
+      border: "1px solid var(--bg-2)",
+    }}>
+      {count > 9 ? "9+" : count}
+    </span>
+  );
+}
+
 function triggerHaptic() {
   if (typeof window !== "undefined" && window.innerWidth < 768 && navigator.vibrate) {
     navigator.vibrate(10);
@@ -99,6 +110,7 @@ export function RightSidebar({
   onToggleMobileMenu,
   onLogout,
   unreadChatCount,
+  unreadCallCount,
   isDark = false,
   onToggleTheme,
 }: {
@@ -115,6 +127,8 @@ export function RightSidebar({
   onToggleMobileMenu?: () => void;
   onLogout?: () => void;
   unreadChatCount?: number;
+  /** Live calls since the Calls page was last opened. */
+  unreadCallCount?: number;
   isDark?: boolean;
   onToggleTheme?: () => void;
 }) {
@@ -251,6 +265,27 @@ export function RightSidebar({
   }, [location]);
 
   const prefix = "/platform";
+  /*
+   * Hidden until finished (Gabriel, 2026-10-22). Their routes still work by URL
+   * (pages/app.tsx); every way in was removed. To bring a page back, re-add:
+   *  - AI agents (/platform/ai-agents): had no nav entry; nothing removed.
+   *  - Cadence (/platform/cadence): navItems row { labelKey: "Cadence", icon: PhoneCall,
+   *    testId: "nav-cadence", ownerOnly, outreachOnly } plus "Cadence" in the outreach
+   *    section filter below; the CommandPalette row (keywords "cadence cold calls outreach").
+   *  - Speed to Lead (/platform/speed-to-lead, mock data): the "speed" row in the
+   *    Services group below (Icon Send); the CommandPalette and MobileMorePage rows
+   *    (serviceKey "speed", agencyOnly); LANDING_OPTIONS in lib/landingPage.ts; its
+   *    switch in features/settings/components/ServicePagesCard.tsx; its route guard
+   *    back to ServicePageGuard service="speed".
+   *  - Missed calls (/platform/missed-calls, mock data): the "missedcall" row in the
+   *    Services group (Icon PhoneMissed); the CommandPalette and MobileMorePage rows
+   *    (serviceKey "missedcall"); LANDING_OPTIONS; its ServicePagesCard switch; its
+   *    route guard back to ServicePageGuard service="missedcall".
+   *  - Reactivation (/platform/campaigns, the old Campaigns page): retired, not
+   *    unfinished. Its settings are Accounts > Reactivation, its numbers Home >
+   *    Reactivation, the receptionist's engine fields Chats > Settings > Advanced
+   *    and the demo campaigns Demos > Settings. The route stays for the agency.
+   */
   const navItems: (NavGate & {
     href: string;
     label: string;
@@ -258,9 +293,8 @@ export function RightSidebar({
     icon: any;
     testId: string;
   })[] = [
-    { href: `${prefix}/campaigns`, label: t("sidebar.reactivation"), labelKey: "Reactivation", icon: Megaphone, testId: "nav-reactivation" },
     { href: `${prefix}/voice-calls`, label: t("sidebar.voiceCalls"), labelKey: "Voice calls", icon: AudioLines, testId: "nav-voice-calls", voiceCallsOnly: true },
-    // Agency only: /chat redirects client users to /contacts, so clients get the single "Leads" entry below.
+    // Agency only here: clients get Chats from clientNavItems (only when website chat or WhatsApp is on).
     { href: `${prefix}/chat`, label: t("sidebar.conversations"), labelKey: "Conversations", icon: MessageSquare, testId: "nav-conversations", agencyOnly: true },
     { href: `${prefix}/calendar`, label: t("sidebar.calendar"), labelKey: "Calendar", icon: Calendar, testId: "nav-calendar" },
     { href: `${prefix}/contacts`, label: t("sidebar.leads"), labelKey: "Leads", icon: BookUser, testId: "nav-contacts" },
@@ -292,7 +326,6 @@ export function RightSidebar({
     { href: `${prefix}/billing`, label: t("sidebar.billing"), labelKey: "Billing", icon: Receipt, testId: "nav-billing" },
     { href: `${prefix}/outreach-inbox`, label: t("sidebar.inbox"), labelKey: "Prospect inbox", icon: MessageSquare, testId: "nav-outreach-inbox", ownerOnly: true, outreachOnly: true },
     { href: `${prefix}/prospects`, label: t("sidebar.prospects"), labelKey: "Prospects", icon: UserSearch, testId: "nav-prospects", ownerOnly: true, outreachOnly: true },
-    { href: `${prefix}/cadence`, label: t("sidebar.cadence"), labelKey: "Cadence", icon: PhoneCall, testId: "nav-cadence", ownerOnly: true, outreachOnly: true },
     {
       href: `${prefix}/automation-logs`,
       label: t("sidebar.automations"),
@@ -361,8 +394,7 @@ export function RightSidebar({
   const isActive = (href: string) => {
     if (location === href) return true;
     // For sub-routes like /platform/contacts/123, highlight the parent nav item
-    // But don't let /platform/campaigns match sub-routes (campaigns has no sub-routes)
-    if (href !== `${prefix}/campaigns` && location.startsWith(href + '/')) return true;
+    if (location.startsWith(href + '/')) return true;
     return false;
   };
 
@@ -380,8 +412,8 @@ export function RightSidebar({
       </div>
 
       {/* MOBILE BOTTOM BAR — deep sand; the selected tab is a filled wine pill.
-          Clients: Home, Calls, Calendar, Chats (or Leads), More.
-          Agency: Home, Calls, Chats, Tasks, More. */}
+          Clients: Stats, Calls, Calendar, Chats (or Leads), More.
+          Agency: Stats, Calls, Chats, Tasks, More. */}
       <div
         className="md:hidden fixed bottom-0 left-0 right-0 z-[100] grid items-stretch"
         style={{
@@ -513,24 +545,27 @@ export function RightSidebar({
                   data-testid={`link-client-${k}`}
                   data-active={isActive(href) || undefined}
                 >
-                  <span className="icon"><Icon size={16} /></span>
+                  <span className="icon" style={{ position: "relative" }}>
+                    <Icon size={16} />
+                    {k === "calls" && <NavCountBadge count={unreadCallCount} />}
+                  </span>
                   {t(clientNavLabelKey(k, clientFacts))}
                 </Link>
               );
             })
           ) : (<>
-          {/* Home: the dashboard landing page, shown to every role. */}
+          {/* Stats (/platform/home): the landing page with every figure, shown to every role. */}
           <Link
             href={`${prefix}/home`}
             className={`la-nav-item ${isActive(`${prefix}/home`) ? "active" : ""}`}
             data-testid="link-home"
             data-active={isActive(`${prefix}/home`) || undefined}
           >
-            <span className="icon"><Home size={16} /></span>
+            <span className="icon"><NAV_ICON.home size={16} /></span>
             {t("sidebar.home")}
           </Link>
 
-          {/* Demos sits right under Home: it is opened on most sales calls. */}
+          {/* Demos sits right under Stats: it is opened on most sales calls. */}
           {visibleNavItems.filter((it) => it.labelKey === "Demos").map((it) => {
             const Icon = it.icon;
             return (
@@ -545,18 +580,12 @@ export function RightSidebar({
             );
           })}
 
-          {/* Services group — each row is a service the agency runs. Reputation is
-              live (mock workspace); Speed to Lead is live for agency users and a
-              "Soon" placeholder for clients; Missed-Call is a mock workspace.
-              Campaigns (the reactivation setup tool) is at the very bottom. */}
+          {/* Services group: each row is a service the agency runs. Reputation is
+              live (mock workspace). Speed to Lead and Missed calls are hidden until
+              finished (list above navItems). */}
           <div>
             {[
-              // Speed to Lead has a live mission-control dashboard for agency users;
-              // client users still see it as an upcoming "Soon" service.
-              { key: "speed", labelKey: "sidebar.speedToLead", Icon: Send, href: isAgencyUser ? `${prefix}/speed-to-lead` : null },
               { key: "reputation", labelKey: "sidebar.reputation", Icon: Star, href: `${prefix}/reputation` as string | null },
-              // Missed-Call Text-Back (Voice service) — mock workspace for now.
-              { key: "missedcall", labelKey: "sidebar.missedCalls", Icon: PhoneMissed, href: `${prefix}/missed-calls` as string | null },
             ].filter(({ key }) => isNavItemVisible({ serviceKey: key as ServicePageKey }, navCtx)).map(({ key, labelKey, Icon, href }) =>
               href ? (
                 <Link
@@ -616,7 +645,7 @@ export function RightSidebar({
               { section: "engage", items: visibleNavItems.filter(it => ["Voice calls", "Conversations", "Calendar", "Leads", "Socials"].includes(it.labelKey)) },
               { section: "admin", items: visibleNavItems.filter(it => ["Accounts", "Billing", "Tasks"].includes(it.labelKey)) },
               { section: "backend", items: visibleNavItems.filter(it => ["Prompt Library", "Automation logs", "Traffic"].includes(it.labelKey)) },
-              { section: "outreach", items: visibleNavItems.filter(it => ["Prospect inbox", "Prospects", "Cadence"].includes(it.labelKey)) },
+              { section: "outreach", items: visibleNavItems.filter(it => ["Prospect inbox", "Prospects"].includes(it.labelKey)) },
             ];
             return sections.map((g) => {
               if (g.items.length === 0) return null;
@@ -626,7 +655,7 @@ export function RightSidebar({
                   {g.items.map((it) => {
                     const active = isActive(it.href);
                     const Icon = it.icon;
-                    const showUnreadCount = it.testId === "nav-conversations" && !!unreadChatCount && unreadChatCount > 0;
+                    const unread = it.testId === "nav-conversations" ? unreadChatCount : it.testId === "nav-voice-calls" ? unreadCallCount : 0;
                     return (
                       <Link key={it.href} href={it.href}
                         className={`la-nav-item ${active ? "active" : ""}`}
@@ -636,19 +665,7 @@ export function RightSidebar({
                       >
                         <span className="icon" style={{ position: "relative" }}>
                           <Icon size={16} />
-                          {showUnreadCount && (
-                            <span style={{
-                              position: "absolute", top: -6, right: -6,
-                              minWidth: 16, height: 16, padding: "0 4px",
-                              borderRadius: "var(--r-pill)",
-                              background: "var(--wine-grad)",
-                              color: "#FFFFFF", fontSize: 10, fontWeight: 700,
-                              display: "flex", alignItems: "center", justifyContent: "center",
-                              border: "1px solid var(--bg-2)",
-                            }}>
-                              {unreadChatCount! > 9 ? "9+" : unreadChatCount}
-                            </span>
-                          )}
+                          <NavCountBadge count={unread} />
                         </span>
                         {it.label}
                       </Link>
@@ -659,20 +676,6 @@ export function RightSidebar({
             });
           })()}
 
-          {/* Campaigns: where reactivation campaigns are set up. Its live panels
-              moved to Home > Reactivation, so it is a setup tool and sits last. */}
-          <div>
-            <div className="la-nav-section">{t("sidebarSections.setup")}</div>
-            <Link
-              href={`${prefix}/campaigns`}
-              className={`la-nav-item ${isActive(`${prefix}/campaigns`) ? "active" : ""}`}
-              data-testid="link-service-reactivation"
-              data-active={isActive(`${prefix}/campaigns`) || undefined}
-            >
-              <span className="icon"><Megaphone size={16} /></span>
-              {t("sidebar.reactivation")}
-            </Link>
-          </div>
           </>)}
         </div>
 
@@ -744,15 +747,9 @@ export function RightSidebar({
           <div style={{ position: "relative", marginTop: 8 }}>
             {profileOpen && (
               <div className="la-profile-menu">
-                <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); setLocation(`${prefix}/settings?tab=profile`); }}
-                  data-testid="nav-my-profile">
-                  <UserRound size={14} />{t("topbar.myProfile")}
-                </button>
-                <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); setLocation(`${prefix}/settings?tab=preferences`); }}
-                  data-testid="nav-preferences">
-                  <SlidersHorizontal size={14} />{t("sidebar.preferences")}
-                </button>
-                <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); setLocation(`${prefix}/settings`); }}>
+                {/* One way into Settings: Profile, Preferences and the rest are its own tabs. */}
+                <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); setLocation(`${prefix}/settings`); }}
+                  data-testid="nav-settings">
                   <Settings size={14} />{t("sidebar.settings")}
                 </button>
                 {isOwner && (

@@ -27,10 +27,12 @@
     "resetToDefault": "Reset to default",
     "previous": "Previous",
     "next": "Next",
-    "of": "of"
+    "of": "of",
+    "moreActions": "More actions"
   },
   "sort": {
     "mostRecent": "Most Recent",
+    "name": "Name",
     "nameAZ": "Name A -> Z",
     "nameZA": "Name Z -> A"
   },
@@ -243,53 +245,16 @@
     "confirm": "Confirm?",
     "clickToUploadLogo": "Click to upload logo",
     "removeLogo": "Remove logo",
-    "voiceFile": "Voice file",
-    "syncInstagram": "Sync Instagram Contacts",
-    "syncingContacts": "Syncing contacts...",
-    "syncFailed": "Sync failed",
     "selectExecution": "Select an account to see its details",
     "cropLogo": "Crop Logo",
     "cropDescription": "Drag to reposition · use slider to zoom",
     "saveLogo": "Save Logo",
-    "overview": "Overview",
-    "campaignsAndContracts": "Campaigns & Contracts",
-    "aiAndSchedule": "AI & Schedule",
-    "integrations": "Integrations",
-    "voiceClone": "Voice clone",
-    "voiceIdForCampaigns": "Voice ID for campaigns",
-    "voiceIdWillBe": "Voice ID will be",
-    "clickOrDragAudio": "Click or drag audio file",
-    "voiceFormats": "M4A, WAV, MP3, OGG, FLAC · max 10 MB",
-    "lead": "lead",
-    "leads": "leads",
-    "contactsSynced": "{{count}} contacts synced",
-    "alreadyExisted": "{{count}} already existed",
-    "failedCount": "{{count}} failed",
-    "rateLimited": "Rate limited — run again later for remaining contacts",
-    "conversationsScanned": "{{count}} conversations scanned"
+    "overview": "Overview"
   },
   "related": {
-    "campaigns": "Campaigns",
-    "users": "Users",
-    "contracts": "Contracts",
-    "searchCampaigns": "Search campaigns...",
-    "searchUsers": "Search users...",
-    "addCampaign": "Add campaign",
-    "addUser": "Add user",
     "unnamed": "Unnamed",
-    "unknown": "Unknown",
-    "more": "+{{count}} more",
-    "copy": "(Copy)",
-    "pickCampaign": "Pick a campaign to assign to this account.",
-    "noCampaignsAvailable": "No campaigns available",
-    "noCampaigns": "No campaigns",
-    "contract": "Contract",
     "noContract": "No contract",
     "noInvoice": "No invoices yet",
-    "unlinkedContracts": "Unlinked Contracts",
-    "members": "Members",
-    "pickUser": "Pick a user to assign to this account.",
-    "noUsersAvailable": "No users available",
     "noUsersAssigned": "No users assigned"
   },
   "pagination": {
@@ -449,11 +414,9 @@
   },
   "knowledge": {
     "title": "Knowledge Base",
-    "entries": "entries",
     "loading": "Loading...",
     "add": "Add Entry",
     "save": "Save",
-    "update": "Update",
     "saving": "Saving...",
     "cancel": "Cancel",
     "titlePlaceholder": "Entry title...",
@@ -485,6 +448,7 @@
   "workspace": {
     "tabs": {
       "overview": "Overview",
+      "reactivation": "Reactivation",
       "integrations": "Integrations",
       "knowledge": "Company Intel",
       "communication": "Onboarding",
@@ -499,14 +463,6 @@
     "showPanel": "Show panel"
   },
   "metrics": {
-    "campaigns": "Campaigns",
-    "avgResponse": "Avg response",
-    "contracts": "Contracts",
-    "team": "Team",
-    "allActive": "all active",
-    "acrossAll": "across all",
-    "nActive": "{{count}} active",
-    "nOwner": "{{count}} owner",
     "nMembers": "{{count}} members",
     "callsMonth": "Calls this month",
     "nBooked_one": "{{count}} booked",
@@ -545,7 +501,6 @@
     "knowledgeBase": "Company Intel",
     "available": "Available",
     "leads": "Leads",
-    "response": "Response",
     "actions": {
       "new": "New",
       "invite": "Invite",
@@ -554,18 +509,6 @@
       "viewAllCampaigns": "View all campaigns",
       "addIntegration": "Add integration",
       "addCategory": "Add category"
-    },
-    "bulk": {
-      "selected": "{{count}} selected",
-      "setStatus": "Set status",
-      "delete": "Delete",
-      "clear": "Clear",
-      "status": {
-        "Active": "Active",
-        "Paused": "Paused",
-        "Draft": "Draft",
-        "Archived": "Archived"
-      }
     },
     "invite": {
       "title": "Add team member",
@@ -804,8 +747,6 @@
   },
   "services": {
     "title": "Services",
-    "campaignUsage_one": "{{count}} campaign, {{active}} active",
-    "campaignUsage_other": "{{count}} campaigns, {{active}} active",
     "whatsappMode": {
       "app": "also on the client's phone",
       "new": "assistant only",
@@ -815,7 +756,9 @@
       "phone": "Phone receptionist",
       "whatsapp": "WhatsApp",
       "website": "Website chat",
-      "campaigns": "Text campaigns"
+      "reactivation": "Reactivation",
+      "reputation": "Reputation",
+      "social": "Social"
     },
     "state": {
       "phone": {
@@ -833,10 +776,17 @@
         "pending": "Switched off",
         "off": "Not set up"
       },
-      "campaigns": {
-        "on": "Running",
-        "pending": "None active",
-        "off": "None"
+      "reactivation": {
+        "on": "Active",
+        "off": "Not active"
+      },
+      "reputation": {
+        "on": "Active",
+        "off": "Not active"
+      },
+      "social": {
+        "on": "Active",
+        "off": "Not active"
       }
     },
     "phoneUsage_one": "{{count}} call this month, {{bookings}} booked",
@@ -1015,6 +965,47 @@
         "failed": "Something went wrong. Try again."
       },
       "failedHelp": "Instagram did not publish this post."
+    }
+  },
+  "servicePages": {
+    "tabs": {
+      "inbox": "Inbox",
+      "analytics": "Analytics",
+      "dashboard": "Dashboard",
+      "settings": "Settings"
+    },
+    "searchCalls": "Search calls…",
+    "searchReviews": "Search reviews…"
+  },
+  "receptionistSettings": {
+    "chooseTitle": "Pick an account",
+    "chooseHelp": "Settings are per account. Pick the client whose receptionist you want to tune.",
+    "choose": "Choose account",
+    "account": "Account",
+    "noAccounts": "No accounts yet.",
+    "loadFailed": "This account could not be loaded",
+    "sharedVoice": "Opening hours and Company Intel are shared with the chat assistant.",
+    "sharedChat": "Opening hours and Company Intel are shared with the phone receptionist.",
+    "openCalls": "Edit them in Calls › Settings"
+  },
+  "reactivationTab": {
+    "campaign": "Campaign",
+    "newCampaign": "New campaign",
+    "activate": "Activate",
+    "pause": "Pause",
+    "saving": "Saving…",
+    "emptyTitle": "No reactivation campaign yet",
+    "emptyBody": "A reactivation campaign messages the client's old leads and books the ones who reply. Start one here, fill in its settings, import the leads, then activate it.",
+    "listFailed": "The campaigns could not be loaded.",
+    "loadFailed": "This campaign could not be loaded.",
+    "create": {
+      "title": "New reactivation campaign",
+      "subtitle": "For {{account}}",
+      "name": "Campaign name",
+      "namePlaceholder": "e.g. Old leads 2026",
+      "help": "It starts as a draft, so nothing is sent until you activate it.",
+      "submit": "Create campaign",
+      "failed": "The campaign could not be created"
     }
   }
 }

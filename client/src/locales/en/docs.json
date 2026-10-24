@@ -8,8 +8,8 @@
     "welcome": {
       "title": "Welcome to your CRM",
       "intro": "This is where you keep an eye on {{company}}. {{Name}} answers your calls and chats, and everything that happens ends up here, so you never have to guess. Here is what you will find where:",
-      "home": "<b>Home</b>: the quick picture. What came in, what was booked, and anything that needs you.",
-      "calls": "<b>Calls</b>: every call {{name}} took. <b>Stats</b> shows the figures, <b>People</b> shows who called. Open a call to read what was said and what came of it.",
+      "home": "<b>Stats</b>: the quick picture. What came in, what was booked, and anything that needs you. All the figures sit on this one page.",
+      "calls": "<b>Calls</b>: every call {{name}} took, listed by who called. Open a call to read what was said and what came of it.",
       "calendar": "<b>Calendar</b>: your bookings and visits. You can add busy blocks here too.",
       "chats": "<b>Chats</b>: your website chats. Read along, and reply yourself whenever you want.",
       "more": "<b>More</b>: your <b>Leads</b> (the people who got in touch), your <b>Account</b>, this guide and Message Gabriel.",
@@ -21,9 +21,9 @@
       "intro": "When someone calls your business number, {{name}} picks up, listens and helps them like a good receptionist would. This is what can happen on a call:",
       "calls": "<strong>Calls:</strong> {{Name}} answers questions about your business, in the caller's language. Every call shows up under Calls with a summary.",
       "transfers": "<strong>Transfers:</strong> if a caller wants to speak to you or a colleague, {{name}} can pass the call on. You will see in the call whether the transfer worked.",
-      "callbacks": "<strong>Callbacks:</strong> if nobody can pick up, {{name}} takes the caller's name, number and question. These callbacks show up on your Home page so you can ring them back.",
+      "callbacks": "<strong>Callbacks:</strong> if nobody can pick up, {{name}} takes the caller's name, number and question. These callbacks show up on your Stats page so you can ring them back.",
       "bookings": "<strong>Bookings and visits:</strong> {{name}} can book a visit or appointment straight into your calendar, at a time that is actually free. The booking appears in your Calendar right away.",
-      "page": "Under <strong>Calls</strong> you find two tabs. <strong>Stats</strong> shows how many calls came in and how they ended. <strong>People</strong> lists everyone who called, each with one status, and a <strong>Needs you</strong> mark while a callback is waiting. Open a person to see all their calls, with the summary and what was said.",
+      "page": "<strong>Stats</strong> shows how many calls came in and how they ended. Under <strong>Calls</strong> you find everyone who called, each with one status, and a <strong>Needs you</strong> mark while a callback is waiting. Open a person to see all their calls, with the summary and what was said.",
       "tip": "Want a different greeting or other opening hours? Opening hours you can change yourself. For anything else, press Request a change."
     },
     "chat": {
@@ -108,7 +108,7 @@
     "illus": {
       "bar": {
         "caption": "The bar at the bottom of your phone. Leads and Account are under More.",
-        "home": "Home",
+        "home": "Stats",
         "calls": "Calls",
         "calendar": "Calendar",
         "chats": "Chats",
@@ -136,9 +136,8 @@
         "recapSub": "An email at the time you set"
       },
       "tabs": {
-        "caption": "The Calls page: Stats and People",
+        "caption": "The Stats page and the Calls page",
         "stats": "Stats",
-        "people": "People",
         "calls": "Calls",
         "booked": "Booked",
         "callbacks": "Callbacks",

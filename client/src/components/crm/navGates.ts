@@ -6,7 +6,6 @@
 export interface ClientNavFacts {
   voiceLive: boolean;
   hasInvoices: boolean;
-  hasReactivation: boolean;
   hasReceptionist: boolean;
   /** Website chat or WhatsApp is on for the account: the Chats page has something to show. */
   hasChats: boolean;
@@ -14,9 +13,13 @@ export interface ClientNavFacts {
   hasSocial: boolean;
 }
 
-export type ClientNavKey = "home" | "calls" | "chats" | "leads" | "calendar" | "social" | "myReceptionist" | "billing" | "campaigns";
+export type ClientNavKey = "home" | "calls" | "chats" | "leads" | "calendar" | "social" | "myReceptionist" | "billing";
 
-/** Desktop nav bar for a client: one flat list, no section headings. */
+/**
+ * Desktop nav bar for a client: one flat list, no section headings. Billing is
+ * not in it: it is a Settings section (Settings > Billing), opened from the
+ * profile menu.
+ */
 export function clientNavItems(f: ClientNavFacts): ClientNavKey[] {
   const out: ClientNavKey[] = ["home"];
   if (f.voiceLive) out.push("calls");
@@ -24,8 +27,6 @@ export function clientNavItems(f: ClientNavFacts): ClientNavKey[] {
   out.push("leads", "calendar");
   if (f.hasSocial) out.push("social");
   out.push("myReceptionist");
-  if (f.hasInvoices) out.push("billing");
-  if (f.hasReactivation) out.push("campaigns");
   return out;
 }
 
@@ -44,7 +45,7 @@ export function clientBottomBar(f: ClientNavFacts): ClientNavKey[] {
   return out;
 }
 
-/** The client More page, top to bottom: Socials (when not in the bar), Account, Leads (when not in the bar), Billing, Campaigns. */
+/** The client More page, top to bottom: Socials (when not in the bar), Account, Leads (when not in the bar), Billing. */
 export function clientMoreItems(f: ClientNavFacts): ClientNavKey[] {
   const bar = clientBottomBar(f);
   const out: ClientNavKey[] = [];
@@ -52,7 +53,6 @@ export function clientMoreItems(f: ClientNavFacts): ClientNavKey[] {
   out.push("myReceptionist");
   if (!bar.includes("leads")) out.push("leads");
   if (f.hasInvoices) out.push("billing");
-  if (f.hasReactivation) out.push("campaigns");
   return out;
 }
 
@@ -75,8 +75,8 @@ export const CLIENT_NAV_HREF: Record<ClientNavKey, string> = {
   calendar: "/platform/calendar",
   social: "/platform/social",
   myReceptionist: "/platform/accounts",
-  billing: "/platform/billing",
-  campaigns: "/platform/campaigns",
+  // Settings > Billing (the phone More page keeps a Billing row that opens it).
+  billing: "/platform/settings?tab=billing",
 };
 
 /** Full label key for a client nav entry. */
@@ -90,7 +90,6 @@ export function clientNavLabelKey(k: ClientNavKey, f: ClientNavFacts): string {
     case "social": return "sidebar.social";
     case "myReceptionist": return myAccountLabelKey(f);
     case "billing": return "sidebar.billing";
-    case "campaigns": return "sidebar.reactivation";
   }
 }
 

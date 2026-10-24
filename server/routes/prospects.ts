@@ -12,6 +12,7 @@ import { and, isNotNull, lte, not, inArray } from "drizzle-orm";
 import { provisionCaldiyForAccount } from "../calendar/caldiy";
 import { handleZodError, wrapAsync } from "./_helpers";
 import { buildOutreachPrompt } from "../outreachStyles";
+import { AUTOMATIONS_DIR, AUTOMATIONS_PYTHON, CLAUDE_BIN } from "../paths";
 
 export function registerProspectsRoutes(app: Express): void {
   // ─── Prospects ───────────────────────────────────────────────────────
@@ -293,8 +294,8 @@ export function registerProspectsRoutes(app: Express): void {
       const { spawn } = await import("child_process");
       const args = ["-m", "tools.prospect_enricher", "--prospect-id", String(prospectId), "--force"];
       if (slot === 2) args.push("--contact-slot", "2");
-      const child = spawn("/home/gabriel/automations/.venv/bin/python3", args, {
-        cwd: "/home/gabriel/automations", detached: true, stdio: "ignore",
+      const child = spawn(AUTOMATIONS_PYTHON, args, {
+        cwd: AUTOMATIONS_DIR, detached: true, stdio: "ignore",
       });
       child.unref();
       results.website = "started";
@@ -362,7 +363,6 @@ export function registerProspectsRoutes(app: Express): void {
     })), { selectedOffer: offer, selectedContact: contact, customInstructions, templateBody, styleOverride, formatOverride });
 
     const { execFile } = await import("child_process");
-    const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 
     const result = await new Promise<string>((resolve, reject) => {
       execFile(CLAUDE_BIN, ["-p", prompt, "--model", "sonnet", "--max-turns", "1"],
@@ -406,7 +406,6 @@ export function registerProspectsRoutes(app: Express): void {
     const prompt = `You are editing an outreach message based on a user instruction. Return ONLY the revised message text, no explanation, no quotes, no JSON wrapper. Do not use em dashes (—) or en dashes (–) anywhere in the output.\n\nOriginal message:\n${messageText}\n\nInstruction: ${instruction}`;
 
     const { execFile } = await import("child_process");
-    const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 
     const result = await new Promise<string>((resolve, reject) => {
       execFile(CLAUDE_BIN, ["-p", prompt, "--model", "haiku", "--max-turns", "1"],
@@ -476,7 +475,6 @@ Format: one offer per line as "Title: description". No numbering, no quotes, no 
 IMPORTANT: Always write the offers in English, regardless of the company's country or language.`;
 
     const { execFile } = await import("child_process");
-    const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 
     const result = await new Promise<string>((resolve, reject) => {
       execFile(CLAUDE_BIN, ["-p", prompt, "--model", "sonnet", "--max-turns", "1"],

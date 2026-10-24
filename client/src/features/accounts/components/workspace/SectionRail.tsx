@@ -16,14 +16,21 @@ export interface SectionRailItem<K extends string> {
   detail: string;
   /** No state: no dot (a section that is an action, not a setting). */
   state?: SectionState;
+  /** Open problems in this section (e.g. failed runs): a red count in place of the dot. */
+  alerts?: number;
+  /** Read out for the red count ("3 open failures"). */
+  alertsLabel?: string;
+  /** Id of the panel this tile opens (aria-controls). */
+  controls?: string;
 }
 
-export function SectionRail<K extends string>({ items, active, onSelect, layout, testId }: {
+export function SectionRail<K extends string>({ items, active, onSelect, layout, testId, ariaLabel }: {
   items: SectionRailItem<K>[];
   active: K;
   onSelect: (key: K) => void;
   layout: "rail" | "grid";
   testId: string;
+  ariaLabel?: string;
 }) {
   return (
     <div
@@ -34,6 +41,7 @@ export function SectionRail<K extends string>({ items, active, onSelect, layout,
         gridTemplateColumns: layout === "rail" ? "1fr" : "1fr 1fr",
       }}
       role="tablist"
+      aria-label={ariaLabel}
       aria-orientation={layout === "rail" ? "vertical" : "horizontal"}
       data-testid={testId}
     >
@@ -47,6 +55,7 @@ export function SectionRail<K extends string>({ items, active, onSelect, layout,
             type="button"
             role="tab"
             aria-selected={on}
+            aria-controls={item.controls}
             onClick={() => onSelect(item.key)}
             data-testid={`${testId}-${item.key}`}
             style={{
@@ -59,8 +68,21 @@ export function SectionRail<K extends string>({ items, active, onSelect, layout,
           >
             <span style={{ display: "flex", alignItems: "center", gap: 8, color: on ? "var(--wine)" : "var(--mute)", width: "100%" }}>
               {item.icon}
-              <span style={{ fontSize: 14, fontWeight: 700, color: on ? "var(--wine)" : "var(--ink)", flex: 1 }}>{item.label}</span>
-              {item.state && <span style={{ width: 8, height: 8, borderRadius: "50%", background: DOT[item.state], flexShrink: 0 }} />}
+              <span style={{ fontSize: 14, fontWeight: 700, color: on ? "var(--wine)" : "var(--ink)", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.label}</span>
+              {item.alerts ? (
+                <span
+                  title={item.alertsLabel}
+                  aria-label={item.alertsLabel}
+                  style={{
+                    minWidth: 20, height: 20, padding: "0 6px", borderRadius: 999, flexShrink: 0,
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 11, fontWeight: 700, lineHeight: 1,
+                    background: "hsl(var(--destructive))", color: "hsl(var(--destructive-foreground))",
+                  }}
+                >
+                  {item.alerts > 99 ? "99+" : item.alerts}
+                </span>
+              ) : item.state && <span style={{ width: 8, height: 8, borderRadius: "50%", background: DOT[item.state], flexShrink: 0 }} />}
             </span>
             <span style={{ fontSize: 12, color: "var(--mute)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
               {item.detail}

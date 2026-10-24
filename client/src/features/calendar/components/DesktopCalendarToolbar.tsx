@@ -1,6 +1,6 @@
 // DesktopCalendarToolbar.tsx — top toolbar, calendar-settings popover, status
 // filter tabs, and the center week/month header (with meetings-this-week KPI).
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   Clock, Check,
   Calendar as CalIcon, CalendarDays, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
@@ -20,7 +20,6 @@ import {
   statusKeyOf, dateKeyOf,
 } from "../lib/calendarDesign";
 import { BookAppointmentPopover } from "./BookAppointmentPopover";
-import { AddBlockForm } from "./AddBlockForm";
 import { hourLabel } from "./hourLabel";
 import {
   type DesktopCalendarProps, type ApptFilterStatus, type ApptGroupBy,
@@ -209,23 +208,17 @@ export function TopToolbar(p: DesktopCalendarProps) {
     />
   );
 
-  const [blockPopoverOpen, setBlockPopoverOpen] = useState(false);
-  const addBlockButton = p.onCreateBlock && p.accountId ? (
-    <Popover open={blockPopoverOpen} onOpenChange={setBlockPopoverOpen}>
-      <PopoverTrigger asChild>
-        <button className="la-btn la-btn--soft" title={t("blocks.addBlock")} style={{ gap: 6, paddingLeft: 10, paddingRight: 12, fontSize: 12, fontWeight: 600 }}>
-          <CalIcon className="h-3.5 w-3.5" />
-          {t("blocks.addBlock")}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-72 p-4">
-        <AddBlockForm
-          accountId={p.accountId!}
-          onClose={() => setBlockPopoverOpen(false)}
-          onSave={async (data) => { await p.onCreateBlock!(data); setBlockPopoverOpen(false); }}
-        />
-      </PopoverContent>
-    </Popover>
+  // Opens the block panel (DesktopCalendar's right slot) in create mode.
+  const addBlockButton = p.onCreateBlock && p.accountId && p.onOpenBlockPanel ? (
+    <button
+      className="la-btn la-btn--soft"
+      title={t("blocks.addBlock")}
+      onClick={() => p.onOpenBlockPanel!()}
+      style={{ gap: 6, paddingLeft: 10, paddingRight: 12, fontSize: 12, fontWeight: 600 }}
+    >
+      <CalIcon className="h-3.5 w-3.5" />
+      {t("blocks.addBlock")}
+    </button>
   ) : null;
 
   if (isMobile) {

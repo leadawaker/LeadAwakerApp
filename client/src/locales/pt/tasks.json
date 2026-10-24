@@ -250,5 +250,24 @@
     "overdue": "Atrasada",
     "today": "Hoje",
     "tomorrow": "Amanhã"
+  },
+  "topbar": {
+    "cal": "Cal",
+    "calendarFilter": "Filtro do calendário",
+    "status": "Status",
+    "showWeekends": "Mostrar fins de semana",
+    "filters": "Filtros",
+    "priority": "Prioridade",
+    "category": "Categoria",
+    "dateRange": "Período",
+    "on": "ativo",
+    "thisMonth": "Este mês",
+    "from": "De",
+    "to": "Até",
+    "sort": "Ordenar",
+    "sortBy": "Ordenar por",
+    "addTask": "Adicionar tarefa",
+    "previous": "Anterior",
+    "next": "Próximo"
   }
 }

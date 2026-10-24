@@ -20,8 +20,8 @@ import { eq } from "drizzle-orm";
 import { generateOfferIdeas } from "./offerIdeasGenerator";
 import { discoverCompanyContacts } from "./contactDiscovery";
 import { startCompanyEnrichmentOpenAI } from "./companyEnricherOpenAI";
+import { AGENT_HOME, CLAUDE_BIN } from "./paths";
 
-const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 
 /**
  * Kick off an async company enrichment agent for a prospect.
@@ -61,7 +61,7 @@ export async function startCompanyEnrichment(prospectId: number): Promise<{ star
       "--dangerously-skip-permissions",
     ],
     {
-      cwd: "/home/gabriel",
+      cwd: AGENT_HOME,
       env,
       detached: true,
       stdio: "ignore",
@@ -174,7 +174,7 @@ async function pollAndGenerateOfferIdeas(prospectId: number): Promise<void> {
 function buildPrompt(prospectId: number): string {
   return `Run company enrichment for LeadAwaker prospect ID ${prospectId}.
 
-Read the skill at /home/gabriel/.claude/skills/prospect/SKILL.md and follow the "Company Enrichment" section strictly. Key requirements:
+Read the skill at ${AGENT_HOME}/.claude/skills/prospect/SKILL.md and follow the "Company Enrichment" section strictly. Key requirements:
 
 1. Fetch the prospect's company info from the DB:
    sudo -u postgres psql -d nocodb -t -c "SELECT id, company, website, company_linkedin FROM p2mxx34fvbf3ll6.\\"Prospects\\" WHERE id = ${prospectId};"

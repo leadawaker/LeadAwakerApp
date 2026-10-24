@@ -62,7 +62,8 @@ export function AISummaryWidget({ summary, generatedAt, onRefresh, isRefreshing 
             <button
               onClick={onRefresh}
               disabled={isRefreshing}
-              title="Refresh AI summary"
+              title={t("summary.regenerate")}
+              aria-label={t("summary.regenerate")}
               style={{
                 background: "none", border: "none", cursor: isRefreshing ? "not-allowed" : "pointer",
                 display: "flex", alignItems: "center", color: "var(--mute)", opacity: isRefreshing ? 0.5 : 0.7,

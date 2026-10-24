@@ -9,13 +9,14 @@ import {
   PRIORITY_HEX,
   NICHE_COLORS,
   FALLBACK_NICHE_COLOR,
-  formatRelativeTime,
   type ProspectRow,
 } from "@/features/prospects/components/prospectTypes";
+import { formatRelativeTime } from "../utils/conversationHelpers";
 import { CompanyAuditSection } from "@/features/prospects/components/CompanyAuditSection";
 import type { ProspectThread } from "../hooks/useProspectConversations";
 import { cn } from "@/lib/utils";
 import { useLocation } from "wouter";
+import { useTranslation } from "react-i18next";
 
 interface ProspectDetailSidebarProps {
   prospectId: number;
@@ -96,6 +97,7 @@ function parseAuditInsights(raw: unknown) {
 }
 
 export function ProspectDetailSidebar({ prospectId, thread, onClose, className }: ProspectDetailSidebarProps) {
+  const { t } = useTranslation("conversations");
   const [, navigate] = useLocation();
   const [activeTab, setActiveTab] = useState<Tab>("info");
   const [localNotes, setLocalNotes] = useState("");
@@ -136,6 +138,7 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
 
   const displayName = prospect?.company || thread.company || thread.name;
   const avatarColor = getProspectAvatarColor(thread.outreach_status);
+  const statusText = thread.outreach_status ? t(`prospectInbox.statuses.${thread.outreach_status}`, { defaultValue: thread.outreach_status }) : "";
   const logoUrl = getProspectLogoUrl(prospect?.website || thread.website || null, displayName);
 
   const statusColor = PROSPECT_STATUS_HEX[thread.outreach_status] ?? "#94A3B8";
@@ -154,9 +157,9 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
   const auditInsights = parseAuditInsights((prospect as any)?.audit_insights);
 
   const tabs: { id: Tab; label: string; badge?: number }[] = [
-    { id: "info", label: "Info" },
-    { id: "messages", label: "Messages", badge: savedMessages.length || undefined },
-    { id: "audit", label: "Audit" },
+    { id: "info", label: t("prospectInbox.sidebar.tabs.info") },
+    { id: "messages", label: t("prospectInbox.sidebar.tabs.messages"), badge: savedMessages.length || undefined },
+    { id: "audit", label: t("prospectInbox.sidebar.tabs.audit") },
   ];
 
   const [enriching, setEnriching] = useState(false);
@@ -205,7 +208,7 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
                 )}
                 <div className="flex items-center gap-1">
                   <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: statusColor }} />
-                  <span className="text-[10px] text-muted-foreground">{thread.outreach_status}</span>
+                  <span className="text-[10px] text-muted-foreground">{statusText}</span>
                 </div>
                 {thread.priority && (
                   <span
@@ -221,7 +224,8 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
               type="button"
               onClick={onClose}
               className="h-7 w-7 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors shrink-0"
-              title="Hide panel"
+              title={t("prospectInbox.hidePanel")}
+              aria-label={t("prospectInbox.hidePanel")}
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -261,42 +265,42 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
           {/* ── INFO TAB ── */}
           {activeTab === "info" && (
             <>
-              <Section title="Contact">
-                <InfoRow label="Name" value={prospect?.contact_name || thread.contact_name} />
-                <InfoRow label="Role" value={prospect?.contact_role} />
-                <InfoRow label="Email" value={prospect?.contact_email || thread.contact_email} href={prospect?.contact_email ? `mailto:${prospect.contact_email}` : undefined} icon={Mail} />
-                <InfoRow label="Phone" value={prospect?.contact_phone || thread.contact_phone} href={prospect?.contact_phone ? `tel:${prospect.contact_phone}` : undefined} icon={Phone} />
-                <InfoRow label="LinkedIn" value={prospect?.contact_linkedin} href={prospect?.contact_linkedin || undefined} icon={ExternalLink} />
+              <Section title={t("prospectInbox.sidebar.contact")}>
+                <InfoRow label={t("prospectInbox.sidebar.name")} value={prospect?.contact_name || thread.contact_name} />
+                <InfoRow label={t("prospectInbox.sidebar.role")} value={prospect?.contact_role} />
+                <InfoRow label={t("prospectInbox.sidebar.email")} value={prospect?.contact_email || thread.contact_email} href={prospect?.contact_email ? `mailto:${prospect.contact_email}` : undefined} icon={Mail} />
+                <InfoRow label={t("prospectInbox.sidebar.phone")} value={prospect?.contact_phone || thread.contact_phone} href={prospect?.contact_phone ? `tel:${prospect.contact_phone}` : undefined} icon={Phone} />
+                <InfoRow label={t("prospectInbox.sidebar.linkedin")} value={prospect?.contact_linkedin} href={prospect?.contact_linkedin || undefined} icon={ExternalLink} />
                 {prospect?.contact2_name && (
                   <>
                     <div className="pt-1 border-t border-black/[0.06]">
-                      <p className="text-[10px] text-muted-foreground mb-1.5">Second contact</p>
+                      <p className="text-[10px] text-muted-foreground mb-1.5">{t("prospectInbox.sidebar.secondContact")}</p>
                     </div>
-                    <InfoRow label="Name" value={prospect.contact2_name} />
-                    <InfoRow label="Role" value={prospect.contact2_role} />
-                    <InfoRow label="Email" value={prospect.contact2_email} href={prospect.contact2_email ? `mailto:${prospect.contact2_email}` : undefined} icon={Mail} />
-                    <InfoRow label="Phone" value={prospect.contact2_phone} href={prospect.contact2_phone ? `tel:${prospect.contact2_phone}` : undefined} icon={Phone} />
+                    <InfoRow label={t("prospectInbox.sidebar.name")} value={prospect.contact2_name} />
+                    <InfoRow label={t("prospectInbox.sidebar.role")} value={prospect.contact2_role} />
+                    <InfoRow label={t("prospectInbox.sidebar.email")} value={prospect.contact2_email} href={prospect.contact2_email ? `mailto:${prospect.contact2_email}` : undefined} icon={Mail} />
+                    <InfoRow label={t("prospectInbox.sidebar.phone")} value={prospect.contact2_phone} href={prospect.contact2_phone ? `tel:${prospect.contact2_phone}` : undefined} icon={Phone} />
                   </>
                 )}
               </Section>
 
-              <Section title="Company">
-                <InfoRow label="Website" value={prospect?.website || thread.website} href={prospect?.website || thread.website || undefined} icon={Globe} />
-                <InfoRow label="LinkedIn" value={prospect?.company_linkedin} href={prospect?.company_linkedin || undefined} icon={ExternalLink} />
+              <Section title={t("prospectInbox.sidebar.company")}>
+                <InfoRow label={t("prospectInbox.sidebar.website")} value={prospect?.website || thread.website} href={prospect?.website || thread.website || undefined} icon={Globe} />
+                <InfoRow label={t("prospectInbox.sidebar.linkedin")} value={prospect?.company_linkedin} href={prospect?.company_linkedin || undefined} icon={ExternalLink} />
                 {(prospect?.city || prospect?.country) && (
-                  <InfoRow label="Location" value={[prospect.city, prospect.country].filter(Boolean).join(", ")} />
+                  <InfoRow label={t("prospectInbox.sidebar.location")} value={[prospect.city, prospect.country].filter(Boolean).join(", ")} />
                 )}
-                <InfoRow label="Source" value={prospect?.source} />
+                <InfoRow label={t("prospectInbox.sidebar.source")} value={prospect?.source} />
               </Section>
 
-              <Section title="Outreach">
+              <Section title={t("prospectInbox.sidebar.outreach")}>
                 <div className="flex items-center gap-1.5">
                   <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ background: statusColor }} />
-                  <span className="text-[12px] text-foreground">{thread.outreach_status}</span>
+                  <span className="text-[12px] text-foreground">{statusText}</span>
                 </div>
                 {thread.priority && (
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-muted-foreground">Priority</span>
+                    <span className="text-[10px] text-muted-foreground">{t("prospectInbox.sidebar.priority")}</span>
                     <span
                       className="text-[10px] font-medium px-1.5 py-0.5 rounded"
                       style={{ background: `${priorityColor}18`, color: priorityColor }}
@@ -305,13 +309,13 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
                     </span>
                   </div>
                 )}
-                <InfoRow label="Messages sent" value={thread.total_messages ? String(thread.total_messages) : null} />
-                <InfoRow label="Last message" value={formatRelativeTime(thread.last_message_at)} />
+                <InfoRow label={t("prospectInbox.sidebar.messagesSent")} value={thread.total_messages ? String(thread.total_messages) : null} />
+                <InfoRow label={t("prospectInbox.sidebar.lastMessage")} value={formatRelativeTime(thread.last_message_at, t)} />
                 {channels.length > 0 && (
                   <div className="flex flex-wrap gap-1 pt-0.5">
                     {channels.map((ch) => (
                       <span key={ch} className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full">
-                        {ch}
+                        {t(`prospectInbox.channels.${ch}`, { defaultValue: ch })}
                       </span>
                     ))}
                   </div>
@@ -319,7 +323,7 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
               </Section>
 
               {checkedOffers.length > 0 && (
-                <Section title="Selected offers">
+                <Section title={t("prospectInbox.sidebar.selectedOffers")}>
                   <div className="space-y-1.5">
                     {checkedOffers.map((offer, i) => (
                       <div key={i} className="flex items-start gap-2">
@@ -331,14 +335,14 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
                 </Section>
               )}
 
-              <Section title="Notes">
+              <Section title={t("prospectInbox.sidebar.notes")}>
                 <div className="relative">
                   <textarea
                     value={localNotes}
                     onChange={(e) => { setLocalNotes(e.target.value); setNotesDirty(true); setNotesSaved(false); }}
                     onBlur={handleNotesSave}
                     rows={4}
-                    placeholder="Add notes…"
+                    placeholder={t("prospectInbox.sidebar.notesPlaceholder")}
                     className="w-full text-[12px] bg-muted/40 border border-black/[0.08] rounded-md px-2.5 py-2 resize-none focus:outline-none focus:ring-1 focus:ring-brand-indigo/40 text-foreground placeholder:text-muted-foreground"
                   />
                   <div className="absolute bottom-2 right-2 h-4 flex items-center">
@@ -356,8 +360,8 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
               {savedMessages.length === 0 ? (
                 <div className="py-8 text-center">
                   <Heart className="h-6 w-6 text-muted-foreground/30 mx-auto mb-2" />
-                  <p className="text-[12px] text-muted-foreground/60">No saved messages yet.</p>
-                  <p className="text-[11px] text-muted-foreground/40 mt-1">Heart a message in the prospect profile to save it here.</p>
+                  <p className="text-[12px] text-muted-foreground/60">{t("prospectInbox.sidebar.noSaved")}</p>
+                  <p className="text-[11px] text-muted-foreground/40 mt-1">{t("prospectInbox.sidebar.noSavedHint")}</p>
                 </div>
               ) : (
                 savedMessages.map((msg, i) => (
@@ -383,7 +387,7 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
                 className="w-full h-8 flex items-center justify-center gap-1.5 rounded-md border border-black/[0.125] text-[12px] font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 {enriching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-                {enriching ? "Enriching…" : "Enrich company"}
+                {enriching ? t("prospectInbox.sidebar.enriching") : t("prospectInbox.sidebar.enrich")}
               </button>
               <CompanyAuditSection insights={auditInsights} />
             </div>
@@ -397,7 +401,7 @@ export function ProspectDetailSidebar({ prospectId, thread, onClose, className }
             onClick={() => navigate(`/platform/prospects?id=${prospectId}`)}
             className="w-full h-8 rounded-md border border-black/[0.125] text-[12px] font-medium text-foreground/70 hover:text-foreground hover:bg-muted/50 transition-colors"
           >
-            View full profile
+            {t("prospectInbox.sidebar.viewProfile")}
           </button>
         </div>
       </div>

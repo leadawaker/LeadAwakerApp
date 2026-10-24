@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { useSession } from "@/hooks/useSession";
 import { apiFetch } from "@/lib/apiUtils";
@@ -15,10 +16,16 @@ import {
   urlBase64ToUint8Array,
 } from "../types";
 
+// Client-alert events: the account's Alerts tab decides whether they go out at
+// all; this grid only picks how they reach this one person.
+const ALERT_CONTROLLED = new Set<string>(["booking_confirmed", "booking_rescheduled", "booking_cancelled", "callback_requested", "daily_recap"]);
+
 /**
- * Notification channels (Telegram for agency, Email, Browser Push) and the
- * agency-only per-type matrix. `flat` (phone My profile) drops the tinted boxes:
- * rows sit on the tab's one surface under eyebrow headings.
+ * How notifications reach you: Telegram and the per-type matrix (agency), Email
+ * (agency), Browser Push. Which client-alert events are sent is the account's
+ * Alerts tab, so clients get a pointer there instead of an Email switch that
+ * would not change those alerts. `flat` (phone My profile) drops the tinted
+ * boxes: rows sit on the tab's one surface under eyebrow headings.
  */
 export function NotificationsSection({ flat = false }: { flat?: boolean } = {}) {
   const { t } = useTranslation("settings");
@@ -249,6 +256,14 @@ export function NotificationsSection({ flat = false }: { flat?: boolean } = {}) 
       <p className="text-sm text-muted-foreground leading-relaxed">
         {t("notifications.description")}
       </p>
+      {!isAgency && (
+        <p className="text-sm text-muted-foreground leading-relaxed" data-testid="notifications-alerts-hint">
+          {t("notifications.alertsHint")}{" "}
+          <Link href="/platform/accounts?tab=alerts" className="font-semibold" style={{ color: "var(--wine)" }}>
+            {t("notifications.alertsLink")} &rarr;
+          </Link>
+        </p>
+      )}
 
       {isSavingNotifs && (
         <div className="flex items-center gap-2 text-xs text-brand-indigo">
@@ -322,8 +337,8 @@ export function NotificationsSection({ flat = false }: { flat?: boolean } = {}) 
         </div>
       )}
 
-      {/* ── Section B: Email ─────────────────────────────────────────── */}
-      <div className={box} data-testid="section-email">
+      {/* ── Section B: Email — agency only (client alerts send their own email, set in Alerts) ── */}
+      {isAgency && <div className={box} data-testid="section-email">
         <div className={cn("flex items-center justify-between gap-4 py-3.5", px)}>
           <div className="flex items-center gap-3">
             <div className="h-8 w-8 rounded-lg bg-primary/8 flex items-center justify-center shrink-0">
@@ -343,7 +358,7 @@ export function NotificationsSection({ flat = false }: { flat?: boolean } = {}) 
             aria-label="Toggle email notifications"
           />
         </div>
-      </div>
+      </div>}
 
       {/* ── Section C: Browser Push (master toggle IS the subscribe action) ────── */}
       <div className={box} data-testid="section-push">
@@ -464,7 +479,14 @@ export function NotificationsSection({ flat = false }: { flat?: boolean } = {}) 
                   >
                     <div className="flex items-center gap-3 min-w-0">
                       <Icon className="h-4 w-4 text-muted-foreground/60 group-hover:text-muted-foreground shrink-0 transition-colors duration-150" />
-                      <span className="text-[13px] truncate leading-snug">{t(nt.labelKey)}</span>
+                      <span className="min-w-0">
+                        <span className="text-[13px] truncate leading-snug block">{t(nt.labelKey)}</span>
+                        {ALERT_CONTROLLED.has(nt.key) && (
+                          <span className="text-[11px] text-muted-foreground leading-snug block" data-testid={`hint-alerts-${nt.key}`}>
+                            {t("notifications.alsoInAlerts")}
+                          </span>
+                        )}
+                      </span>
                     </div>
                     {activeChannels.map((ch) => {
                       const val = getChannelValue(override, ch);

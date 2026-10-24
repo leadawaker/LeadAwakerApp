@@ -1,14 +1,49 @@
 {
   "stats": {
-    "channel": "Kanaal",
-    "noChats": "Websitechat en WhatsApp staan voor dit account niet aan."
+    "recentChannel": "Kanaal voor recente activiteit",
+    "recentTabs": {
+      "phone": "Gesprekken",
+      "whatsapp": "WhatsApp",
+      "website": "Website"
+    },
+    "waiting_one": "{{count}} wacht",
+    "waiting_other": "{{count}} wachten"
   },
-  "title": "Home",
-  "greeting": { "morning": "Goedemorgen", "afternoon": "Goedemiddag", "evening": "Goedenavond" },
-  "tabs": { "overview": "Overzicht", "phone": "Telefoon", "whatsapp": "WhatsApp", "website": "Website", "reactivation": "Reactivatie", "reputation": "Reputatie", "social": "Social" },
-  "period": { "label": "Periode", "month": "Deze maand", "7d": "Laatste 7 dagen", "30d": "Laatste 30 dagen", "last_month": "Vorige maand" },
-  "vs": { "month": "t.o.v. vorige maand", "7d": "t.o.v. de 7 dagen ervoor", "30d": "t.o.v. de 30 dagen ervoor", "last_month": "t.o.v. de maand ervoor" },
-  "channel": { "phone": "Telefoon", "whatsapp": "WhatsApp", "sms": "SMS", "website": "Website", "booking_page": "Boekingspagina", "unknown": "Onbekend" },
+  "title": "Stats",
+  "greeting": {
+    "morning": "Goedemorgen",
+    "afternoon": "Goedemiddag",
+    "evening": "Goedenavond"
+  },
+  "tabs": {
+    "phone": "Telefoon",
+    "whatsapp": "WhatsApp",
+    "website": "Website",
+    "reactivation": "Reactivatie",
+    "reputation": "Reputatie",
+    "social": "Social"
+  },
+  "period": {
+    "label": "Periode",
+    "month": "Deze maand",
+    "7d": "Laatste 7 dagen",
+    "30d": "Laatste 30 dagen",
+    "last_month": "Vorige maand"
+  },
+  "vs": {
+    "month": "t.o.v. vorige maand",
+    "7d": "t.o.v. de 7 dagen ervoor",
+    "30d": "t.o.v. de 30 dagen ervoor",
+    "last_month": "t.o.v. de maand ervoor"
+  },
+  "channel": {
+    "phone": "Telefoon",
+    "whatsapp": "WhatsApp",
+    "sms": "SMS",
+    "website": "Website",
+    "booking_page": "Boekingspagina",
+    "unknown": "Onbekend"
+  },
   "allAccounts": "Alle accounts",
   "loading": "Laden",
   "unknownContact": "Onbekend contact",
@@ -21,8 +56,6 @@
     "noData": "In deze periode is er nog niets."
   },
   "overview": {
-    "banner": "gesprekken afgehandeld",
-    "tiles": { "bookings": "Boekingen", "callbacks": "Terugbelverzoeken", "newContacts": "Nieuwe contacten", "waiting": "Wacht op jou", "waitingSub": "Heeft jouw aandacht nodig", "waitingNone": "Alles bijgewerkt" },
     "byChannel": "Per kanaal",
     "conversations": "Gesprekken",
     "bookings": "Boekingen",
@@ -30,128 +63,59 @@
     "perDay": "Gesprekken per dag",
     "attention": "Aandacht nodig",
     "attentionEmpty": "Niemand wacht op jou.",
-    "attentionKind": { "callback": "Vroeg om een terugbelverzoek", "transfer_failed": "Doorverbinden naar kantoor mislukt", "handoff": "Wacht op antwoord van een medewerker" },
+    "attentionKind": {
+      "callback": "Vroeg om een terugbelverzoek",
+      "transfer_failed": "Doorverbinden naar kantoor mislukt",
+      "handoff": "Wacht op antwoord van een medewerker"
+    },
     "activity": "Recente activiteit",
     "activityEmpty": "In deze periode is er nog geen activiteit.",
-    "activityKind": { "booked": "Afspraak ingepland", "call": "Telefoontje beantwoord", "transferred": "Gesprek doorverbonden naar kantoor", "chat_started": "Nieuwe chat gestart", "followup_sent": "Opvolgbericht verstuurd na een gesprek" },
     "unknownCaller": "Onbekende beller",
     "visitor": "Websitebezoeker"
   },
   "phone": {
-    "banner": "telefoontjes beantwoord",
-    "tiles": { "calls": "Gesprekken", "booked": "Ingepland", "transferred": "Doorverbonden", "transfersFailed_one": "{{count}} mislukt", "transfersFailed_other": "{{count}} mislukt", "avgLength": "Gemiddelde duur" },
-    "perDay": "Gesprekken per dag",
-    "outcomes": "Uitkomsten",
-    "outcome": { "booked": "Ingepland", "callback": "Terugbellen", "transferred": "Doorverbonden", "hung_up": "Opgehangen", "answered": "Vragen beantwoord" },
-    "outOfHoursLabel": "Gesprekken buiten kantooruren",
-    "screened_one": "verkoopgesprek of robocall geweerd",
-    "screened_other": "verkoopgesprekken en robocalls geweerd",
-    "latency": "gemiddelde reactiesnelheid, van het laatste woord van de beller tot het antwoord",
-    "costPerMinute": "kosten per minuut (alleen jij ziet dit)",
-    "cost": "uitgegeven aan gesprekken (alleen jij ziet dit)",
-    "recent": "Recente gesprekken",
+    "tiles": {
+      "booked": "Ingepland",
+      "transferred": "Doorverbonden"
+    },
+    "outcome": {
+      "booked": "Ingepland",
+      "callback": "Terugbellen",
+      "transferred": "Doorverbonden",
+      "hung_up": "Opgehangen",
+      "answered": "Vragen beantwoord"
+    },
     "recentEmpty": "In deze periode zijn er nog geen gesprekken."
   },
   "whatsapp": {
-    "banner": "WhatsApp-gesprekken",
     "tiles": {
-      "conversations": "Gesprekken",
-      "messages": "Berichten",
-      "messagesSub": "{{in}} binnen, {{out}} uit",
       "bookings": "Afspraken",
       "handedOff": "Overgedragen aan een persoon"
     },
-    "perDay": "Gesprekken per dag",
-    "followUps_one": "opvolgbericht verstuurd na een telefoontje",
-    "followUps_other": "opvolgberichten verstuurd na telefoontjes",
-    "sms": {
-      "title": "Sms-terugval",
-      "note": "Verstuurd per sms als een nummer niet op WhatsApp zit. Eenrichting.",
-      "sent": "Verstuurd",
-      "delivered": "Afgeleverd",
-      "failed": "Mislukt",
-      "share": "{{pct}}% van de opvolgberichten na telefoontjes ging per sms"
-    },
-    "sender": {
-      "title": "Je WhatsApp-nummer",
-      "connected": "Verbonden",
-      "notConnected": "Niet verbonden",
-      "quality": "Kwaliteit: {{rating}}"
-    },
-    "recent": "Recente gesprekken",
     "recentEmpty": "Nog geen WhatsApp-gesprekken in deze periode."
   },
   "website": {
-    "banner": "chats gestart op je website",
     "tiles": {
-      "chats": "Chats gestart",
       "contacts": "Contacten vastgelegd",
-      "rate": "Vastleggingspercentage",
-      "rateNone": "Nog geen chats",
       "bookings": "Afspraken"
     },
-    "perDay": "Chats per dag",
-    "recent": "Recente chats",
     "recentEmpty": "Nog geen websitechats in deze periode."
   },
   "reactivation": {
-    "banner": "afspraken uit oude leads",
     "tiles": {
-      "contacted": "Leads benaderd",
-      "replyRate": "Reactiepercentage",
-      "replyRateNone": "Nog niets verstuurd",
-      "bookings": "Afspraken",
-      "costPerBooking": "Kosten per afspraak",
-      "costNone": "Niet beschikbaar"
-    },
-    "allCampaigns": "Alle campagnes",
-    "campaign": "Campagne",
-    "perDay": "Reacties en afspraken per dag",
-    "replies": "Reacties",
-    "pipeline": "Pipeline",
-    "pipelineEmpty": "Nog geen leads in deze campagnes.",
-    "openCampaign": "Campagne openen",
-    "newCampaign": "Nieuwe campagne",
-    "importLeads": "Leads importeren",
-    "status": {"New": "Nieuw", "Contacted": "Gecontacteerd", "Responded": "Gereageerd", "MultipleResponses": "Meerdere Reacties", "Qualified": "Gekwalificeerd", "Booked": "Gesprek Gepland", "Closed": "Gesloten", "Lost": "Verloren", "DND": "Niet Storen", "Unknown": "Onbekend"},
-    "live": {"upcoming": "Hierna", "upcomingEmpty": "Geen geplande gesprekken in het verschiet.", "todayCount_one": "{{count}} vandaag", "todayCount_other": "{{count}} vandaag", "handoff": "Overgedragen", "activity": "Net gebeurd", "activityEmpty": "Geen berichten in de afgelopen 30 dagen.", "live": "Live", "replied": "Gereageerd", "sent": "Verstuurd", "bumps": "Opvolging vandaag", "sentToday": "Vandaag verstuurd", "dueToday": "Nog te gaan vandaag", "nextUp": "Volgende gepland", "nextEmpty": "Geen opvolging gepland.", "firstMessage": "Eerste bericht", "bump": "Opvolging {{n}}", "due": "Nu aan de beurt"}
+      "replyRate": "Reactiepercentage"
+    }
   },
   "reputation": {
-    "banner": "nieuwe Google-reviews",
     "tiles": {
-      "avgRating": "Gemiddelde beoordeling",
-      "avgNone": "Nog geen reviews",
-      "replied": "Geplaatste reacties",
-      "awaiting": "Wacht op jouw reactie",
-      "awaitingSub": "Open de reviewinbox",
-      "awaitingNone": "Alles beantwoord", "awaitingClient": "Nog niet beantwoord",
-      "requests": "Reviewverzoeken verstuurd"
-    },
-    "ratings": "Beoordelingen",
-    "stars_one": "{{count}} ster",
-    "stars_other": "{{count}} sterren",
-    "perDay": "Reviews per dag",
-    "recent": "Recente reviews",
-    "recentEmpty": "Nog geen reviews in deze periode.",
-    "replied": "Beantwoord",
-    "notReplied": "Nog geen reactie",
-    "anonymous": "Anoniem",
-    "notConnected": "Google-reviews zijn nog niet gekoppeld. Koppel je Google Bedrijfsprofiel om hier reviews te zien."
+      "avgRating": "Gemiddelde beoordeling"
+    }
   },
   "social": {
-    "banner": "gesprekken via Instagram",
     "tiles": {
-      "conversations": "Gesprekken",
-      "messages": "Berichten",
-      "messagesSub": "{{in}} binnen, {{out}} uit",
       "bookings": "Afspraken",
-      "bookingRate": "Afsprakenpercentage",
-      "rateNone": "Nog geen gesprekken"
-    },
-    "perDay": "Gesprekken per dag",
-    "recent": "Recente gesprekken",
-    "recentEmpty": "Nog geen Instagram-gesprekken in deze periode.",
-    "notConnected": "Er is nog geen Instagram-account gekoppeld."
+      "bookingRate": "Afsprakenpercentage"
+    }
   },
   "onboarding": {
     "yourReceptionist": "Je receptionist",
@@ -159,12 +123,41 @@
     "close": "Sluiten",
     "welcome": "Welkom, {{firstName}}. {{agentName}} neemt de telefoon op voor {{company}}.",
     "welcomeNoName": "Welkom. {{agentName}} neemt de telefoon op voor {{company}}.",
-    "where1": "Gesprekken, chats en afspraken vind je onder {{calls}}, {{chats}} en {{calendar}}. De cijfers staan op het tabblad Statistieken van Gesprekken en Chats, het overzicht op deze pagina.",
+    "where1": "Gesprekken, chats en afspraken vind je onder {{calls}}, {{chats}} en {{calendar}}. De cijfers en het overzicht staan op deze Stats-pagina.",
     "where2": "Je krijgt een dagelijks overzicht en directe meldingen zodra je jezelf daarvoor toevoegt.",
     "guide": "Lees de handleiding",
     "done": "Klaar",
     "installIos": "Deel › Zet op beginscherm.",
     "installAndroid": "⋮ menu › App installeren / Toevoegen aan startscherm.",
-    "items": { "details": "Controleer je bedrijfsgegevens onder {{account}}", "alerts": "Voeg jezelf toe aan het overzicht en de meldingen", "call": "Open je eerste gesprek of chat", "install": "Zet het CRM op je telefoon" }
+    "items": {
+      "details": "Controleer je bedrijfsgegevens onder {{account}}",
+      "alerts": "Voeg jezelf toe aan het overzicht en de meldingen",
+      "call": "Open je eerste gesprek of chat",
+      "install": "Zet het CRM op je telefoon"
+    }
+  },
+  "cards": {
+    "open": "Openen",
+    "noTrend": "Nog niets om mee te vergelijken",
+    "phone": {
+      "main": "Opgenomen gesprekken"
+    },
+    "whatsapp": {
+      "main": "Gesprekken"
+    },
+    "website": {
+      "main": "Gestarte chats"
+    },
+    "reactivation": {
+      "main": "Afspraken",
+      "campaigns": "Campagnes"
+    },
+    "reputation": {
+      "reviews": "Nieuwe reviews",
+      "awaiting": "Wacht op antwoord"
+    },
+    "social": {
+      "main": "Gesprekken"
+    }
   }
 }

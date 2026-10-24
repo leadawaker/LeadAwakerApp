@@ -1,17 +1,20 @@
-// Demos → Settings. One sub-tab per service, from the same SERVICES list the
-// New demo form and the sessions table read, so a new service gets its
-// settings tab without anyone remembering to add it here.
+// Demos → Settings. One side tab (SectionRail) per service, from the same
+// SERVICES list the New demo form and the sessions table read, so a new
+// service gets its settings tab without anyone remembering to add it here.
 //
-// Only the widget has a setting today (the agent photo). The rest are listed
-// empty on purpose: the place to put the next knob already exists.
+// A service tile holds the full settings of the demo campaign it runs on
+// (DemoCampaignSettings); the widget adds its agent photo and the voice demo
+// has its own settings instead. A campaign two services share opens under the
+// first of them. Demo campaigns no service runs on get one more tile.
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Loader2, RotateCcw, Upload } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { ArrowRight, Layers, Loader2, RotateCcw, Upload } from "lucide-react";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { useLastTab } from "@/hooks/useLastTab";
+import { SectionHeader, SectionLayout, SectionRail, type SectionRailItem } from "@/features/accounts/components/workspace/SectionRail";
 import { SERVICES } from "../services";
-import { PhoneAmbienceSettings } from "./PhoneAmbienceSettings";
+import { DemoCampaignSettings, OtherDemoCampaigns, useDemoCampaigns } from "./DemoCampaignSettings";
 import { EngineTestSettings } from "./EngineTestSettings";
-import { PhoneJitterSettings } from "./PhoneJitterSettings";
 import { PublicDemoSettings } from "./PublicDemoSettings";
 import { CommaListInput } from "./CommaListInput";
 import {
@@ -294,42 +297,108 @@ function VoiceSettings() {
   );
 }
 
+/** The tile for demo campaigns no service runs on. */
+const OTHER_CAMPAIGNS = "campaigns";
+
+// Which tile edits which demo campaign: the first service (in pitch order) that
+// runs on it. Voice only mints its persona on a campaign; its calls run on the
+// voice settings, so it claims none.
+const CAMPAIGN_OWNER = new Map<number, string>();
+for (const s of SERVICES) {
+  if (s.campaignId != null && !s.voice && !CAMPAIGN_OWNER.has(s.campaignId)) CAMPAIGN_OWNER.set(s.campaignId, s.key);
+}
+const serviceOf = (key: string) => SERVICES.find((s) => s.key === key);
+const TILE_KEYS: readonly string[] = [...SERVICES.map((s) => s.key), OTHER_CAMPAIGNS];
+/** The campaign this tile edits, or null. */
+const ownCampaign = (key: string): number | null => {
+  const id = serviceOf(key)?.campaignId;
+  return id != null && CAMPAIGN_OWNER.get(id) === key ? id : null;
+};
+/** The tile that edits this service's campaign when another one claims it (Quote runs on DBR's). */
+const sharedWith = (key: string): string | null => {
+  const s = serviceOf(key);
+  const owner = s && !s.voice && s.campaignId != null ? CAMPAIGN_OWNER.get(s.campaignId) : undefined;
+  return owner && owner !== key ? owner : null;
+};
+
 export function DemoSettingsTab() {
   const { t } = useTranslation("demos");
-  const [service, setService] = useState(SERVICES[0]!.key);
+  const stacked = useIsMobile(768);
+  // Reopens on the tile used last.
+  const [service, setService] = useLastTab<string>("demos.settings", TILE_KEYS, SERVICES[0]!.key);
+  const [otherId, setOtherId] = useState<number>();
+  const { data: demoCampaigns = [] } = useDemoCampaigns();
+  const others = demoCampaigns.filter((c) => !SERVICES.some((s) => s.campaignId === c.id));
+  const campaignName = (id: number) => demoCampaigns.find((c) => c.id === id)?.name || `#${id}`;
+  const labelOf = (key: string) => (key === OTHER_CAMPAIGNS ? t("settings.campaigns.label") : t(serviceOf(key)?.labelKey ?? key));
+
+  // One fact per tile: the campaign it edits, what else it sets, or that it has nothing yet.
+  const detailOf = (key: string) => {
+    if (key === OTHER_CAMPAIGNS) return others.map((c) => c.name || `#${c.id}`).join(", ") || t("settings.campaigns.none");
+    if (key === "voice") return t("settings.rail.voice");
+    const own = ownCampaign(key);
+    if (own != null) return [key === "widget" ? t("settings.widget.avatarTitle") : null, campaignName(own)].filter(Boolean).join(" · ");
+    const owner = sharedWith(key);
+    if (owner) return t("settings.rail.shared", { service: labelOf(owner) });
+    return key === "widget" ? t("settings.widget.avatarTitle") : t("settings.rail.none");
+  };
+  const helpOf = (key: string) =>
+    key === OTHER_CAMPAIGNS ? t("settings.campaigns.help") : ownCampaign(key) != null ? t("settings.campaign.help") : detailOf(key);
+  const items: SectionRailItem<string>[] = [
+    ...SERVICES.map((s) => ({ key: s.key, icon: <s.icon size={16} />, label: t(s.labelKey), detail: detailOf(s.key) })),
+    { key: OTHER_CAMPAIGNS, icon: <Layers size={16} />, label: labelOf(OTHER_CAMPAIGNS), detail: detailOf(OTHER_CAMPAIGNS) },
+  ];
+  const index = items.findIndex((i) => i.key === service);
+  const own = ownCampaign(service);
+  const owner = sharedWith(service);
 
   return (
-    <div className="h-full min-h-0 overflow-y-auto" style={{ padding: "18px 24px 24px" }}>
-      <div className="max-w-[1386px] mr-auto" style={{ display: "flex", flexDirection: "column", gap: 18 }}>
-        <div className="la-seg shrink-0" role="tablist" style={{ alignSelf: "flex-start", flexWrap: "wrap" }}>
-          {SERVICES.map((s) => (
-            <button
-              key={s.key}
-              role="tab"
-              aria-selected={service === s.key}
-              className={cn("la-seg-btn", service === s.key && "on")}
-              style={{ padding: "7px 11px", fontSize: 11, letterSpacing: "0.1em" }}
-              onClick={() => setService(s.key)}
-            >
-              <span className="flex items-center"><s.icon size={13} /></span>
-              {t(s.labelKey)}
-            </button>
-          ))}
-        </div>
-
-        {service === "widget" ? (
-          <WidgetSettings />
-        ) : service === "voice" ? (
-          <>
-            <VoiceSettings />
-            <EngineTestSettings />
-            <PublicDemoSettings />
-            <PhoneAmbienceSettings />
-            <PhoneJitterSettings />
-          </>
-        ) : (
-          <span style={{ fontSize: 13, color: "var(--mute-2)" }}>{t("settings.empty")}</span>
-        )}
+    <div
+      className="h-full min-h-0 overflow-y-auto"
+      // The menu sticks 18px under the top of this scroller, level with its padding (SectionLayout adds 32px).
+      style={{ padding: "18px 24px 24px", ["--ws-sticky-top" as string]: "-14px" }}
+    >
+      <div className="la-page-center">
+        <SectionLayout
+          stacked={stacked}
+          testId="demo-settings"
+          rail={(layout) => (
+            <SectionRail items={items} active={service} onSelect={setService} layout={layout} testId="demo-settings-rail" ariaLabel={t("settings.rail.label")} />
+          )}
+        >
+          <section style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0 }}>
+            <SectionHeader index={index + 1} title={labelOf(service)} help={helpOf(service)} />
+            {service === OTHER_CAMPAIGNS ? (
+              <OtherDemoCampaigns campaigns={others} value={otherId} onChange={setOtherId} />
+            ) : service === "voice" ? (
+              <>
+                <VoiceSettings />
+                <EngineTestSettings />
+                <PublicDemoSettings />
+              </>
+            ) : (
+              <>
+                {service === "widget" && <WidgetSettings />}
+                {own != null && <DemoCampaignSettings key={own} campaignId={own} />}
+                {owner && (
+                  <div className="neu-raised" style={CARD} data-testid="demo-settings-shared">
+                    <span style={{ display: "block", fontSize: 13, color: "var(--ink)", lineHeight: 1.5 }}>
+                      {t("settings.campaign.sharedHelp", {
+                        service: labelOf(service), owner: labelOf(owner), campaign: campaignName(ownCampaign(owner) ?? 0),
+                      })}
+                    </span>
+                    <button type="button" className="la-btn la-btn--soft" style={{ marginTop: 14 }} onClick={() => setService(owner)}>
+                      {t("settings.campaign.openShared", { service: labelOf(owner) })} <ArrowRight size={13} />
+                    </button>
+                  </div>
+                )}
+                {own == null && !owner && service !== "widget" && (
+                  <span style={{ fontSize: 13, color: "var(--mute-2)" }}>{t("settings.empty")}</span>
+                )}
+              </>
+            )}
+          </section>
+        </SectionLayout>
       </div>
     </div>
   );

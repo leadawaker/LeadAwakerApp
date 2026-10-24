@@ -15,7 +15,7 @@ export function registerVoiceAccountPromptRoutes(app: Express) {
     if (accountId == null) return;
     const line = await storage.getVoiceLine(accountId);
     if (!line) return res.status(404).json({ message: "Account not found" });
-    if (!line.locale) return res.json({ locale: null, layer: null, backend: null });
+    if (!line.locale) return res.json({ locale: null, layer: null, backend: null, eleven: null });
     res.json(await storage.getAccountVoicePrompts(line.locale));
   }));
 
@@ -26,10 +26,10 @@ export function registerVoiceAccountPromptRoutes(app: Express) {
     if (!parsed.success) return handleZodError(res, parsed.error);
     const line = await storage.getVoiceLine(accountId);
     if (!line?.locale) return res.status(404).json({ message: "This line has no language yet" });
-    // Only the two rows this line runs on: never an arbitrary prompt by id.
-    const { layer, backend } = await storage.getAccountVoicePrompts(line.locale);
+    // Only the rows this line runs on: never an arbitrary prompt by id.
+    const { layer, backend, eleven } = await storage.getAccountVoicePrompts(line.locale);
     const promptId = Number(req.params.promptId);
-    if (promptId !== layer?.id && promptId !== backend?.id) {
+    if (promptId !== layer?.id && promptId !== backend?.id && promptId !== eleven?.id) {
       return res.status(400).json({ message: "Not a prompt this line uses" });
     }
     const row = await storage.saveVoicePromptText(promptId, parsed.data.promptText, req.user?.email ?? null);

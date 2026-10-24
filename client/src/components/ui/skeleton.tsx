@@ -408,53 +408,48 @@ function CampaignSummaryBodySkeleton() {
 }
 
 /**
- * Configurations-tab body skeleton — mirrors CampaignSettingsLayout:
- * 190px left section nav (3 items) + large content card with editorial heading,
- * stacked form fields, and prev/next nav.
+ * Configurations-tab body skeleton. Mirrors CampaignSettingsLayout: the
+ * 220px side tabs (SectionRail, 3 tiles) beside a numbered section heading
+ * and the content card with stacked form fields and the action row.
  */
 function CampaignConfigBodySkeleton() {
   return (
-    <div className="flex items-start pt-2" style={{ gap: "var(--gap, 22px)" }}>
-      {/* Left section nav (190px, 3 items) */}
-      <div className="hidden md:flex w-[190px] shrink-0 flex-col gap-1.5">
+    <div className="flex items-start pt-2" style={{ gap: 28 }}>
+      {/* Side tabs (220px, 3 tiles) */}
+      <div className="hidden md:flex w-[220px] shrink-0 flex-col gap-px overflow-hidden rounded-[var(--r-card,16px)] shadow-[var(--card-glow)]">
         {Array.from({ length: 3 }).map((_, i) => (
-          <div
-            key={i}
-            className={cn(
-              "rounded-[var(--r-surface,14px)] px-6 py-4 flex flex-col gap-1.5",
-              // First item mimics the active (raised paper) nav button; the rest are flat.
-              i === 0 ? "bg-card shadow-[var(--card-glow)]" : "",
-            )}
-          >
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-3 w-5 rounded bg-primary/10" />
-              <Skeleton className="h-3.5 w-24 rounded bg-primary/10" />
+          <div key={i} className={cn("px-[18px] py-[15px] flex flex-col gap-1.5", i === 0 ? "bg-card" : "bg-muted/40")}>
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-4 w-4 rounded bg-primary/10" />
+              <Skeleton className="h-3.5 w-20 rounded bg-primary/10" />
             </div>
             <Skeleton className="h-2.5 w-full rounded bg-primary/10" />
           </div>
         ))}
       </div>
-      {/* Content card */}
-      <div className="flex-1 min-w-0 rounded-[var(--r-card,16px)] bg-card shadow-[var(--card-glow)] p-9 flex flex-col gap-6">
-        {/* Editorial heading */}
-        <div className="flex flex-col gap-3 pb-6 border-b border-border">
-          <Skeleton className="h-3 w-12 rounded bg-primary/10" />
-          <Skeleton className="h-10 w-2/3 rounded bg-primary/10" />
-          <Skeleton className="h-3.5 w-3/4 rounded bg-primary/10" />
+      <div className="flex-1 min-w-0 flex flex-col gap-4">
+        {/* Section heading */}
+        <div className="flex items-baseline gap-3 pb-2.5 border-b border-border">
+          <Skeleton className="h-3 w-5 rounded bg-primary/10" />
+          <Skeleton className="h-4 w-32 rounded bg-primary/10" />
+          <Skeleton className="h-3 w-48 rounded bg-primary/10" />
         </div>
-        {/* Form fields */}
-        <div className="flex flex-col gap-5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex flex-col gap-2">
-              <Skeleton className="h-3 w-28 rounded bg-primary/10" />
-              <Skeleton className="h-9 w-full rounded-lg bg-primary/10" />
-            </div>
-          ))}
-        </div>
-        {/* Prev / Next nav */}
-        <div className="flex items-center justify-between pt-6 border-t border-border">
-          <Skeleton className="h-9 w-24 rounded-full bg-primary/10" />
-          <Skeleton className="h-9 w-28 rounded-full bg-primary/10" />
+        {/* Content card */}
+        <div className="rounded-[var(--r-card,16px)] bg-card shadow-[var(--card-glow)] p-9 flex flex-col gap-6">
+          {/* Form fields */}
+          <div className="flex flex-col gap-5">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <div key={i} className="flex flex-col gap-2">
+                <Skeleton className="h-3 w-28 rounded bg-primary/10" />
+                <Skeleton className="h-9 w-full rounded-lg bg-primary/10" />
+              </div>
+            ))}
+          </div>
+          {/* Action row */}
+          <div className="flex items-center justify-between pt-6 border-t border-border">
+            <Skeleton className="h-9 w-24 rounded-full bg-primary/10" />
+            <Skeleton className="h-9 w-28 rounded-full bg-primary/10" />
+          </div>
         </div>
       </div>
     </div>
@@ -613,7 +608,7 @@ function SkeletonLeadPanel() {
 
 /**
  * Right-panel detail skeleton for Accounts split-pane view.
- * Mirrors AccountDetailView layout: transparent toolbar + identity row above
+ * Mirrors the account detail layout: transparent toolbar + identity row above
  * a 3-column row of raised-white widget cards (basic info / campaigns / users),
  * matching the real `bg-card shadow-[var(--card-glow)]` widget surfaces.
  */

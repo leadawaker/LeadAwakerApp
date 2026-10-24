@@ -4,19 +4,19 @@ import {
   agencyBottomBar, clientBottomBar, clientMoreItems, clientNavItems, isSameRoute, myAccountLabelKey, type ClientNavFacts,
 } from "./navGates";
 
-const none: ClientNavFacts = { voiceLive: false, hasInvoices: false, hasReactivation: false, hasReceptionist: true, hasChats: false, hasSocial: false };
-const all: ClientNavFacts = { voiceLive: true, hasInvoices: true, hasReactivation: true, hasReceptionist: true, hasChats: true, hasSocial: false };
+const none: ClientNavFacts = { voiceLive: false, hasInvoices: false, hasReceptionist: true, hasChats: false, hasSocial: false };
+const all: ClientNavFacts = { voiceLive: true, hasInvoices: true, hasReceptionist: true, hasChats: true, hasSocial: false };
 // Account 56 (Augusto): Social switched on, no voice line, no chats.
 const augusto: ClientNavFacts = { ...none, hasSocial: true };
-// Account 53: phone + website chat, no reactivation, no invoices yet.
+// Account 53: phone + website chat, no invoices yet.
 const thijs: ClientNavFacts = { ...none, voiceLive: true, hasChats: true };
 
 test("with no optional facts a client sees the four basics", () => {
   assert.deepEqual(clientNavItems(none), ["home", "leads", "calendar", "myReceptionist"]);
 });
 
-test("desktop order: Home, Calls, Chats, Leads, Calendar, Account, Billing, Campaigns", () => {
-  assert.deepEqual(clientNavItems(all), ["home", "calls", "chats", "leads", "calendar", "myReceptionist", "billing", "campaigns"]);
+test("desktop order: Home, Calls, Chats, Leads, Calendar, Account", () => {
+  assert.deepEqual(clientNavItems(all), ["home", "calls", "chats", "leads", "calendar", "myReceptionist"]);
 });
 
 test("the bottom bar is Home, Calls, Calendar, Chats", () => {
@@ -29,9 +29,9 @@ test("Leads takes the Chats slot without website chat or WhatsApp", () => {
   assert.deepEqual(clientBottomBar(none), ["home", "calendar", "leads"]);
 });
 
-test("More: Account, then Leads when not in the bar, Billing, Campaigns", () => {
+test("More: Account, then Leads when not in the bar, Billing", () => {
   assert.deepEqual(clientMoreItems(thijs), ["myReceptionist", "leads"]);
-  assert.deepEqual(clientMoreItems(all), ["myReceptionist", "leads", "billing", "campaigns"]);
+  assert.deepEqual(clientMoreItems(all), ["myReceptionist", "leads", "billing"]);
   assert.deepEqual(clientMoreItems(none), ["myReceptionist"]);
 });
 
@@ -47,7 +47,7 @@ test("the account label falls back to My account without a receptionist", () => 
 
 test("Socials sits after Calendar on the desktop nav, only when Social is on", () => {
   assert.deepEqual(clientNavItems(augusto), ["home", "leads", "calendar", "social", "myReceptionist"]);
-  assert.deepEqual(clientNavItems({ ...all, hasSocial: true }), ["home", "calls", "chats", "leads", "calendar", "social", "myReceptionist", "billing", "campaigns"]);
+  assert.deepEqual(clientNavItems({ ...all, hasSocial: true }), ["home", "calls", "chats", "leads", "calendar", "social", "myReceptionist"]);
   assert.ok(!clientNavItems(all).includes("social"));
 });
 

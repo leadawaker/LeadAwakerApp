@@ -1,7 +1,7 @@
 {
   "chatsTabs": {
-    "stats": "Stats",
     "chats": "Chats",
+    "settings": "Settings",
     "aria": "View"
   },
   "chatChannel": {

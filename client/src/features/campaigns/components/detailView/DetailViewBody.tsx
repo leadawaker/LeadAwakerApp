@@ -105,6 +105,9 @@ export function DetailViewBody({
         style={{
           paddingLeft: activeTab === "configurations" ? 'var(--space-xl)' : 3,
           paddingRight: activeTab === "configurations" ? 'var(--space-xl)' : 3,
+          // The settings menu (SectionLayout, which adds 32px) sticks where it starts: 83px down,
+          // just under the header that overlaps the top 80px of this scroller.
+          ["--ws-sticky-top" as string]: "51px",
           ...(activeTab === "summary" ? {
             maskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",
             WebkitMaskImage: "linear-gradient(to bottom, transparent 0px, black 83px)",

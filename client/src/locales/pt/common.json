@@ -42,5 +42,10 @@
     "delete": "Excluir",
     "confirmArchive": "Arquivar este(a) {{entity}}? Ficará oculto das visualizações ativas, mas pode ser restaurado depois.",
     "confirmDelete": "Excluir este(a) {{entity}} permanentemente? Essa ação não pode ser desfeita."
+  },
+  "search": {
+    "clear": "Limpar busca",
+    "matches_one": "{{count}} resultado",
+    "matches_other": "{{count}} resultados"
   }
 }

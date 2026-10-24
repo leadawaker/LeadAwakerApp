@@ -1,9 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { MobileDrawerOption, MobileDrawerSubheading, MobileListHeader, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
+import { MobileDrawerOption, MobileDrawerSubheading, MobileListHeader } from "@/components/crm/mobile/MobileListHeader";
 import type { VoiceScope } from "../api/voiceCallsApi";
 import { VOICE_OUTCOMES } from "../api/voiceCallsApi";
 import { PEOPLE_GROUPS, PEOPLE_RANGES, PEOPLE_SORTS, peopleFiltered, type CallsTab, type PeopleOptions } from "../callers";
-import { CALLS_TAB_ICON } from "./callsTabs";
+import { CallsMobileTabs } from "./CallsPageTabs";
+import type { CallsPageView } from "./callsTabs";
 import { GROUPS, SORTS, type ListOptions } from "../listOptions";
 import { OUTCOME_LABEL_KEY, VOICE_CALL_STATUSES } from "../status";
 import { AccountFilter, type AccountOption } from "./AccountFilter";
@@ -15,8 +16,8 @@ interface Props {
   isOwner: boolean;
   onScope: (s: VoiceScope) => void;
   tabs: CallsTab[];
-  view: CallsTab;
-  onView: (v: CallsTab) => void;
+  view: CallsPageView;
+  onView: (v: CallsPageView) => void;
   options: ListOptions;
   setOptions: (patch: Partial<ListOptions>) => void;
   peopleOptions: PeopleOptions;
@@ -27,20 +28,24 @@ interface Props {
   onAccount: (id: number | undefined) => void;
   masked: boolean;
   onTogglePresenting: () => void;
+  /** Settings: the spot after the tabs where the receptionist's account picker is placed. */
+  onPickerSlot?: (el: HTMLElement | null) => void;
 }
 
 /**
  * Phone layout of the Calls topbar: title + search icon + one settings drawer
- * (Filter / Sort / Group). The second row: the tabs with icons (Stats, People,
- * All calls for the agency), then (Owner) the Live / Demo switch and the
+ * (Filter / Sort / Group). The second row: the tabs with icons (Calls for
+ * clients; People, All calls for the agency; a gear for Settings), then (Owner) the Live / Demo switch and the
  * Presenting toggle (icon only), so names can be unmasked on a phone.
- * The week numbers live in the Stats tab now, not in the header.
+ * The week numbers live on the Stats page (/platform/home) now, not in the header.
  */
-export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, tabs, view, onView, options, setOptions, peopleOptions, setPeopleOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
+export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, tabs, view, onView, options, setOptions, peopleOptions, setPeopleOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting, onPickerSlot }: Props) {
   const { t } = useTranslation("voiceCalls");
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
   const filtered = options.outcomes.length > 0 || options.statuses.length > 0 || options.languages.length > 0;
   const isCalls = view === "calls";
+  // Settings has no list: no search, filters or scope switch.
+  const hasList = view !== "settings";
 
   const filterPanel = (
     <>
@@ -100,9 +105,10 @@ export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, tabs, view, on
 
   const subRow = (
     <>
-      <MobileTabSeg tabs={tabs.map((v) => ({ id: v, label: t(`tabs.${v}`), icon: CALLS_TAB_ICON[v] }))} activeId={view} onChange={onView} />
-      {isOwner && view !== "stats" && <ScopeSwitch scope={scope} onScope={onScope} compact />}
-      {isOwner && view !== "stats" && scope === "live" && (accounts.length > 1 || accountId != null) && (
+      <CallsMobileTabs tabs={tabs} view={view} onView={onView} />
+      {view === "settings" && onPickerSlot && <span ref={onPickerSlot} style={{ display: "contents" }} data-testid="calls-settings-picker-slot" />}
+      {isOwner && hasList && <ScopeSwitch scope={scope} onScope={onScope} compact />}
+      {isOwner && hasList && scope === "live" && (accounts.length > 1 || accountId != null) && (
         <AccountFilter accounts={accounts} value={accountId} onChange={onAccount} />
       )}
       {isOwner && <PresentingToggle masked={masked} onToggle={onTogglePresenting} />}
@@ -110,7 +116,6 @@ export function VoiceCallsMobileTopbar({ scope, isOwner, onScope, tabs, view, on
   );
 
   const searchLabel = view === "people" ? t("callers.search") : t("search");
-  const hasList = view !== "stats";
 
   return (
     <MobileListHeader

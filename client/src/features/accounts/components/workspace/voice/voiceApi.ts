@@ -2,17 +2,33 @@
 // contract in specs/voice-tab/implementation-plan.md. camelCase on the wire.
 import { apiFetch } from "@/lib/apiUtils";
 import type { PronunciationRow } from "../communication/setupConstants";
+import type { LlmKey } from "./llmOptions";
 import type { VoiceCallListItem } from "@/features/voiceCalls/api/voiceCallsApi";
 
 export type NumberStatus = "not_set" | "pending" | "live";
 export type AfterHoursMode = "message" | "callback" | "ringHot";
 export type ReadinessKey = "number" | "persona" | "kb" | "voice" | "agent" | "transfer" | "hours";
 
+export type LinePurpose = "client" | "demo" | "test";
+export type LineEngine = "gpt-live" | "elevenlabs";
+
+export type AgentGender = "female" | "male";
+/** standard = the shared voice layer; lean = Prompt_Library voice_lean_layer_* (browser test only). */
+export type TestPrompt = "standard" | "lean";
+
 export interface VoiceNumber {
   id: number;
   phoneNumber: string;
   enabled: boolean;
   status: NumberStatus;
+  /** Agency only (absent for clients, and for an agency user viewing as an account). */
+  purpose?: LinePurpose;
+  engine?: LineEngine | null;
+  engineVoice?: string | null;
+  /** Real-call LLM on GPT Live; null = Sol. */
+  liveLlm?: LlmKey | null;
+  /** Always null while ElevenLabs manages its own LLM (see VoiceLine.elevenLlmSupported). */
+  elevenLlm?: LlmKey | null;
 }
 
 export interface VoicePersona {
@@ -47,6 +63,16 @@ export interface VoiceLine {
   agentName: string | null;
   agentNameCustom: string | null;
   voice: string | null;
+  /** Set explicitly (female | male) it decides the agent's gender for both engines; null = automatic. */
+  agentGender?: AgentGender | null;
+  /** Agency A/B test: the voice layer the Test button runs. Phone calls ignore it. */
+  testPrompt?: TestPrompt;
+  /** Agency only: the account's other lines, which share every setting here. */
+  otherLines?: { phoneNumber: string; purpose: LinePurpose }[];
+  /** Agency only: whether ElevenLabs lets a line pick its LLM; false hides that pick. */
+  elevenLlmSupported?: boolean;
+  /** Agency only: whether a client line's ElevenLabs pick reaches its real callers; false disables it. */
+  clientElevenAllowed?: boolean;
   locale: string | null;
   transferNumber: string | null;
   transferName: string | null;
@@ -54,7 +80,6 @@ export interface VoiceLine {
   /** A track id from holdMusic.ts: what the caller hears when `transferWaiting` is "hold". */
   transferHoldMusic: string;
   transferMode: TransferMode;
-  officeSound: boolean;
   region: VoiceRegion;
   /** The recorded "this call is recorded" line before she answers. `custom` null: the standard line. */
   recordingNotice: { enabled: boolean; custom: RecordingNoticeCustom | null };
@@ -82,13 +107,14 @@ export interface VoiceLinePatch {
   agentName?: string | null;
   agentNameCustom?: string | null;
   voice?: string | null;
+  agentGender?: AgentGender | null;
+  testPrompt?: TestPrompt;
   locale?: string | null;
   transferNumber?: string | null;
   transferName?: string | null;
   transferWaiting?: TransferWaiting;
   transferHoldMusic?: string;
   transferMode?: TransferMode;
-  officeSound?: boolean;
   region?: VoiceRegion;
   recordingNotice?: boolean;
   screening?: Partial<Screening>;
@@ -105,7 +131,7 @@ export interface VoiceLinePatch {
   live?: boolean;
 }
 
-export type NoticeVoice = "nova" | "sage" | "ash" | "onyx" | "kore" | "aoede" | "puck" | "charon";
+export type NoticeVoice = "nova" | "sage" | "ash" | "onyx" | "kore" | "aoede" | "puck" | "charon" | "emma" | "iris" | "jasmijn";
 /** Where Telnyx places a line's call legs (engine telnyx_bridge.py REGIONS). */
 export const VOICE_REGIONS = ["Europe", "US", "Canada", "Australia", "Middle East"] as const;
 export type VoiceRegion = (typeof VOICE_REGIONS)[number];
@@ -182,6 +208,20 @@ export async function putVoiceLine(accountId: number, patch: VoiceLinePatch): Pr
   return res.json();
 }
 
+/** Agency only: a line's type and (demo/test lines) engine pick; returns the fresh line. */
+export async function putLineEngine(
+  accountId: number, numberId: number,
+  patch: { purpose?: LinePurpose; engine?: LineEngine; engineVoice?: string | null; liveLlm?: LlmKey | null },
+): Promise<VoiceLine> {
+  const res = await apiFetch(`/api/accounts/${accountId}/voice/numbers/${numberId}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(patch),
+  });
+  if (!res.ok) throw await readError(res, "Failed to save the line type");
+  return res.json();
+}
+
 export async function fetchVoiceStats(accountId: number, month: string): Promise<VoiceStats> {
   const res = await apiFetch(`/api/accounts/${accountId}/voice-stats?month=${encodeURIComponent(month)}`);
   if (!res.ok) throw await readError(res, "Failed to load voice stats");
@@ -194,7 +234,18 @@ export async function fetchUnassignedNumbers(): Promise<UnassignedNumber[]> {
   return res.json();
 }
 
-export async function fetchTestCalls(accountId: number): Promise<VoiceCallListItem[]> {
+/** A test call row: the list item plus the figures only the test list carries (Owner-only cost). */
+export interface TestCallItem extends VoiceCallListItem {
+  /** Null for non-Owners and for calls without a cost yet. */
+  costUsd: number | null;
+  engine: "gpt-live" | "elevenlabs" | null;
+  /** False when costUsd is an old, wrong price (an ElevenLabs test priced before this panel). Absent on an older server. */
+  costCurrent?: boolean | null;
+  /** Median reply delay in ms, when known. */
+  latencyMs: number | null;
+}
+
+export async function fetchTestCalls(accountId: number): Promise<TestCallItem[]> {
   const res = await apiFetch(`/api/accounts/${accountId}/voice/test-calls`);
   if (!res.ok) throw await readError(res, "Failed to load test calls");
   return res.json();

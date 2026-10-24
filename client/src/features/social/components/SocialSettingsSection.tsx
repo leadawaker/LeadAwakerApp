@@ -35,7 +35,7 @@ export function SocialSettingsSection({ accountId }: { accountId: number }) {
   // Three across only when all three fit at 680px each, else all stacked full width (never 2 + 1).
   const layout = settingsLayout(width, isAgencyUser ? 3 : 1);
   return (
-    <div ref={ref} style={{ display: "grid", gridTemplateColumns: `repeat(${layout.columns}, minmax(0, 1fr))`, gap: EDITOR_GAP, alignItems: "stretch", maxWidth: isAgencyUser ? undefined : 1386 }} data-testid="social-settings">
+    <div ref={ref} style={{ display: "grid", gridTemplateColumns: `repeat(${layout.columns}, minmax(0, 1fr))`, gap: EDITOR_GAP, alignItems: "stretch" }} data-testid="social-settings">
       {isAgencyUser && <CaptionStyleCard accountId={accountId} data={data} minHeight={layout.editorMinHeight} />}
       {isAgencyUser && <VoiceGuideCard accountId={accountId} data={data} minHeight={layout.editorMinHeight} />}
       <AboutMeCard accountId={accountId} data={data} canEdit={canActOnSocial({ isAgency: isAgencyUser, userRole })} minHeight={layout.editorMinHeight} />

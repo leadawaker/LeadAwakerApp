@@ -7,10 +7,11 @@
   "sections": {
     "profile": "Profile",
     "preferences": "Preferences",
-    "team": "Team",
-    "account": "My Account",
+    "team": "Users",
     "security": "Security",
-    "notifications": "Notifications"
+    "notifications": "Notifications",
+    "users": "Users",
+    "billing": "Billing"
   },
   "mobileProfile": {
     "title": "My profile",
@@ -23,7 +24,7 @@
     "table": "Table",
     "back": "Back",
     "editProfile": "Edit Profile",
-    "title": "Team",
+    "title": "Users",
     "inviteEmailFailedTitle": "Invite email not sent",
     "inviteEmailFailedBody": "The invite for {{email}} was created, but the email failed to send. Use Resend under pending invites to try again.",
     "inviteSentTitle": "Invite sent",
@@ -33,11 +34,6 @@
     "resendFailedTitle": "Failed to resend invite",
     "resendInvite": "Resend",
     "resendingInvite": "Sending…"
-  },
-  "account": {
-    "saved": "Saved",
-    "savedDescription": "Account {{field}} updated.",
-    "notFound": "Account not found"
   },
   "cropDialog": {
     "title": "Crop Photo",
@@ -75,7 +71,7 @@
     "outreachPagesDescription": "Show the Inbox, Prospects and Cadence pages in the nav bar.",
     "outreachPagesToggle": "Show in nav bar",
     "servicePages": "Service pages",
-    "servicePagesDescription": "Show these service pages in the nav bar and on Home. Hidden by default.",
+    "servicePagesDescription": "Show these service pages in the nav bar and on Stats. Hidden by default.",
     "servicePageSpeed": "Speed to Lead",
     "servicePageReputation": "Reputation",
     "servicePageMissedCalls": "Missed Calls",
@@ -156,7 +152,10 @@
       "bookingCancelled": "Appointment Cancelled",
       "callbackRequested": "Callback Request",
       "dailyRecap": "Daily Recap"
-    }
+    },
+    "alertsHint": "Which events are sent, and to whom, is set per account in Alerts.",
+    "alertsLink": "Open Alerts",
+    "alsoInAlerts": "Only sent when the account's Alerts have it on"
   },
   "hub": {
     "back": "Back",
@@ -316,6 +315,16 @@
         "email": "Email",
         "backup": "Backup code"
       }
+    },
+    "summary": {
+      "on": "On: {{methods}}",
+      "off": "Off",
+      "totp": "authenticator",
+      "email": "email code",
+      "passkeys_one": "{{count}} passkey",
+      "passkeys_other": "{{count}} passkeys",
+      "show": "Show methods",
+      "hide": "Hide methods"
     }
   },
   "twoFactorPolicy": {
@@ -379,5 +388,14 @@
       "policy_changed": "Policy changed",
       "enrollment_forced": "Setup required"
     }
+  },
+  "rail": {
+    "profile": "Name, photo and contact details",
+    "security": "Password and two-step login",
+    "preferences": "Start page, time zone and theme",
+    "notificationsAgency": "Push, email and Telegram",
+    "notificationsClient": "Push on this device",
+    "users": "Who can sign in",
+    "billing": "Invoices and contracts"
   }
 }

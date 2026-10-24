@@ -1,6 +1,7 @@
 /**
- * The last tab a user opened on a page (Calls, Chats), per user and per page.
- * The first visit opens on `fallback` (Stats). Storage can be missing or throw
+ * The last tab a user opened on a page, per user and per page (every page tab bar;
+ * React pages usually go through hooks/useLastTab.ts).
+ * The first visit opens on `fallback` (each page passes its own default tab). Storage can be missing or throw
  * (private windows, blocked site data), so every access is guarded.
  */
 type Store = Pick<Storage, "getItem" | "setItem">;

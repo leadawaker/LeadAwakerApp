@@ -138,6 +138,28 @@
       "callNumber": "Number shown as \"Or call her\""
     },
     "empty": "No settings for this service yet.",
+    "rail": {
+      "label": "Services",
+      "voice": "Voices, password, call limit",
+      "none": "No settings yet",
+      "shared": "Runs on the {{service}} campaign"
+    },
+    "campaign": {
+      "help": "The campaign this demo runs on. Changes save on their own.",
+      "loadFailed": "Could not load campaign {{id}}.",
+      "meta": "#{{id}} · {{status}}",
+      "saving": "Saving...",
+      "pending": "Saving in a moment",
+      "saved": "All changes saved",
+      "sharedHelp": "{{service}} runs on the same campaign as {{owner}} ({{campaign}}), so its settings are under {{owner}}.",
+      "openShared": "Open {{service}}"
+    },
+    "campaigns": {
+      "label": "Demo campaigns",
+      "help": "Demo campaigns that no service above runs on.",
+      "none": "No other demo campaigns",
+      "pick": "Campaign"
+    },
     "widget": {
       "avatarTitle": "Agent photo",
       "avatarHint": "Shown on the launcher bubble, the chat header and every reply, in every widget demo.",
@@ -163,42 +185,28 @@
       "limitHint": "How long one demo call may run before it ends itself.",
       "save": "Save",
       "cancel": "Cancel",
-      "phone": {
-        "title": "Office sound on the phone line",
-        "hint": "Plays a quiet office under her voice on {{number}}. On: calls go through a Telnyx conference (about $0.007 a minute more). Off: calls go straight to OpenAI, as before.",
-        "onState": "On: callers hear the office. Takes effect on the next call.",
-        "offState": "Off: calls go straight to OpenAI, with no room sound.",
-        "levelTitle": "Office volume",
-        "levelHint": "How loud the office is under her voice. Reaches the next call.",
-        "level": {
-          "low": "Soft",
-          "medium": "Medium",
-          "high": "Loud"
-        }
-      },
-      "jitter": {
-        "title": "Smooth audio (jitter buffer)",
-        "hint": "Holds {{min}} to {{max}} ms of her audio at Telnyx so uneven packets from OpenAI play without tiny dropouts. Adds up to {{max}} ms of delay. Applies to every call on the line.",
-        "onState": "On: smoother audio, up to {{max}} ms later. Takes effect on the next call.",
-        "offState": "Off: lowest delay, small dropouts are possible.",
-        "anchor": "Media routed through {{site}}."
-      },
       "engines": {
         "title": "Engine tests",
         "hint": "Calls from these numbers to the demo line are answered by the engine, voice and prompt you pick here. Every other caller keeps the line's own setup. Takes effect within 30 seconds.",
+        "retired": "Grok is retired: calls from this number are answered by GPT-Live. Pick an engine to change that.",
         "xaiReady": "Grok is set up for {{numbers}}.",
         "xaiMissing": "Grok is not set up yet (missing {{missing}}): these calls stay on GPT-Live until it is.",
+        "elevenReady": "ElevenLabs is set up for {{numbers}}.",
+        "elevenMissing": "ElevenLabs is not set up yet (missing {{missing}}): these calls stay on GPT-Live until it is.",
         "number": "Phone number",
         "numberPlaceholder": "+31 6 12345678",
         "label": "Name",
         "labelPlaceholder": "Name (optional)",
         "enabled": "Test on",
+        "freshCaller": "Memory off (sounds like a first-time caller)",
+        "freshCallerHint": "This number's earlier calls, name, language and appointments are hidden from the AI. Bookings still go to the diary.",
         "remove": "Remove",
         "add": "Add a tester",
         "lineVoice": "The line's own voice",
         "engine": {
           "gpt-live": "GPT-Live",
-          "xai": "Grok"
+          "xai": "Grok",
+          "elevenlabs": "ElevenLabs"
         },
         "gender": {
           "female": "Female",

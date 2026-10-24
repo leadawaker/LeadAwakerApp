@@ -17,7 +17,7 @@
 - **i18n:** every new user-facing string goes in `client/src/locales/{en,nl}/` (pt is retired — do not touch pt files).
 - **DB migrations:** `npm run db:push` fails (no TTY). Use a one-off `node --env-file=.env scripts/<name>.mjs` script with the `pg` package.
 - **Never use em dashes** in any copy or comments. Use colons, commas, or parentheses.
-- **Login for API verification:** `POST /api/auth/login` with `{"email":"leadawaker@gmail.com","password":"Admin1234"}` (resolves to Gabriel, user 4, Owner). Use `curl -c /tmp/claude-1000/cookies.txt` / `-b` to hold the session.
+- **Login for API verification:** `POST /api/auth/login` with `{"email":"leadawaker@gmail.com","password":"$LA_OWNER_PASSWORD"}` (resolves to Gabriel, user 4, Owner). Use `curl -c /tmp/claude-1000/cookies.txt` / `-b` to hold the session.
 - Verification base URL: `http://localhost:5000` (check `ecosystem.config.cjs` / `pm2 describe leadawaker` if the port differs; use the port the Express server listens on).
 
 **Known DB facts (verified 2026-07-06):**
@@ -806,7 +806,7 @@ and in the callback body:
 ```bash
 curl -s -c /tmp/claude-1000/cookies.txt -X POST http://localhost:5000/api/auth/login \
   -H 'Content-Type: application/json' \
-  -d '{"email":"leadawaker@gmail.com","password":"Admin1234"}' | head -c 200
+  -d '{"email":"leadawaker@gmail.com","password":"$LA_OWNER_PASSWORD"}' | head -c 200
 curl -s -b /tmp/claude-1000/cookies.txt http://localhost:5000/api/gmail/oauth/status
 ```
 Expected: `{"connected":true,"email":"leadawaker@gmail.com","sendAs":"gabriel@leadawaker.com"}`

@@ -18,6 +18,7 @@ import {
 import { useListPanelState } from "@/hooks/useListPanelState";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useLocation } from "wouter";
+import { openLead } from "@/lib/leadLink";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { ChatsDetailSkeleton } from "../LeadsSkeletons";
@@ -117,14 +118,10 @@ export function LeadsCardView({
   // Chats is always the list (its header has Stats · Chats, no Pipeline switch).
   const mobileListMode = isConversationsMode ? "list" : storedMobileListMode;
 
-  // ── Open this lead's chat inline on the Leads page (Chats page retired) ──────
+  // ── Open this lead's chat: its one home, Chats with the lead selected ──────
   const handleOpenConversation = useCallback((leadId: number | string) => {
-    try {
-      localStorage.setItem("selected-lead-id", String(leadId));
-    } catch { /* ignore */ }
-    const basePath = "/platform";
-    setLocation(`${basePath}/chat`);
-  }, [isAgencyUser, setLocation]);
+    openLead(setLocation, leadId);
+  }, [setLocation]);
 
   // ── Quick action tray state (Feature #41) ────────────────────────────────────
   const {

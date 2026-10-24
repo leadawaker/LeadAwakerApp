@@ -32,6 +32,8 @@ export interface AccountVoicePrompts {
   locale: string;
   layer: VoicePromptRow | null;
   backend: VoicePromptRow | null;
+  /** The ElevenLabs prompt (`eleven_layer_{nl|en}`), shared by every ElevenLabs line. */
+  eleven: VoicePromptRow | null;
 }
 
 function toRow(r: typeof promptLibrary.$inferSelect | undefined): VoicePromptRow | null {
@@ -70,9 +72,19 @@ async function backendRow(locale: string) {
   return toRow(byAccount);
 }
 
+/** Engine rule: Dutch lines use eleven_layer_nl, every other language (Portuguese too) eleven_layer_en. */
+async function elevenRow(locale: string) {
+  const lang = localeLanguage(locale) === "nl" ? "nl" : "en";
+  const [r] = await db.select().from(promptLibrary)
+    .where(and(eq(promptLibrary.useCase, `eleven_layer_${lang}`), active))
+    .orderBy(sql`${promptLibrary.updatedAt} DESC NULLS LAST`, desc(promptLibrary.id))
+    .limit(1);
+  return toRow(r);
+}
+
 async function getAccountVoicePrompts(locale: string): Promise<AccountVoicePrompts> {
-  const [layer, backend] = await Promise.all([layerRow(locale), backendRow(locale)]);
-  return { locale, layer, backend };
+  const [layer, backend, eleven] = await Promise.all([layerRow(locale), backendRow(locale), elevenRow(locale)]);
+  return { locale, layer, backend, eleven };
 }
 
 /**

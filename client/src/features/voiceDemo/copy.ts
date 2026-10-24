@@ -32,8 +32,6 @@ export interface DemoCopy {
   voiceDefault: string;
   voiceFemale: string;
   voiceMale: string;
-  ambienceLabel: string;
-  ambienceHint: string;
   nightMode: string;
   settingsLabel: string;
   dayMode: string;
@@ -100,8 +98,6 @@ const EN: DemoCopy = {
   voiceDefault: "Default for this language",
   voiceFemale: "Female",
   voiceMale: "Male",
-  ambienceLabel: "Office sound in the background",
-  ambienceHint: "A quiet office behind her voice. Only you hear it, the recording does not have it.",
   nightMode: "Night mode",
   settingsLabel: "Call settings",
   dayMode: "Day mode",
@@ -169,8 +165,6 @@ const NL: DemoCopy = {
   voiceDefault: "Standaard voor deze taal",
   voiceFemale: "Vrouwelijk",
   voiceMale: "Mannelijk",
-  ambienceLabel: "Kantoorgeluid op de achtergrond",
-  ambienceHint: "Een rustig kantoor achter haar stem. Alleen u hoort het, de opname heeft het niet.",
   nightMode: "Nachtmodus",
   settingsLabel: "Belinstellingen",
   dayMode: "Dagmodus",
@@ -238,8 +232,6 @@ const PT: DemoCopy = {
   voiceDefault: "Padrão para este idioma",
   voiceFemale: "Feminina",
   voiceMale: "Masculina",
-  ambienceLabel: "Som de escritório ao fundo",
-  ambienceHint: "Um escritório tranquilo atrás da voz dela. Só você ouve, a gravação não inclui.",
   nightMode: "Modo noturno",
   settingsLabel: "Configurações da chamada",
   dayMode: "Modo claro",
@@ -305,7 +297,6 @@ const PT_PT: Partial<DemoCopy> = {
   wrongPassword: "Palavra-passe incorreta. Tente novamente.",
   companyLabel: "Empresa pela qual atende",
   phoneLabel: "O número de onde está a ligar",
-  ambienceHint: "Um escritório tranquilo atrás da voz dela. Só se ouve nesta página, a gravação não o inclui.",
   sayHello: "É ela que começa a conversa.",
   crmAfter: "Escrito enquanto estava a falar",
   crmEmpty:

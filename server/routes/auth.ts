@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { pool } from "../db";
 import { registerAuthRoutes } from "../auth";
+import { registerPasswordResetRoutes } from "./passwordReset";
 import { verifySmtp, sendInviteEmail, sendRawEmail, escapeHtml, renderEmailLayout, renderEmailText } from "../email";
 import { emailDetails } from "../emailComponents";
 import { requireAgency } from "../auth";
@@ -41,6 +42,7 @@ export function registerAuthAndAdminRoutes(app: Express): void {
 
   // ─── Auth Routes (public) ──────────────────────────────────────────
   registerAuthRoutes(app);
+  registerPasswordResetRoutes(app);
 
   // ─── Email Test (agency only) ──────────────────────────────────────
   app.post("/api/admin/test-email", requireAgency, async (req, res) => {

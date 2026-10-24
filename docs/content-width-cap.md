@@ -3,7 +3,10 @@
 **Feature:** Prevent CRM panel content from stretching infinitely on ultra-wide screens (2560px+), while keeping the left-hand nav and side panels fixed. Applied to all right-side detail/content panels as of March 2026.
 
 **Cap value:** `max-w-[1386px]` (matches the leads page, the reference implementation).
-**Alignment:** Left-aligned (`mr-auto`, not `mx-auto`).
+
+**Alignment, two rules (2026-10-22):**
+- **Pages with a list panel** (Chats, Leads, Calls, Campaigns, Accounts, Billing, Calendar): left-aligned, `max-w-[1386px] mr-auto` on the outer flex child, as described below. The list panel and the detail column stay next to each other.
+- **Single-column pages** (Home, the Stats tabs, Demos new / sessions / settings, Socials): centered with the shared class `.la-page-center` (`client/src/styles/design-system.css`), which is `width:100%; max-width:1386px; margin:0 auto`. Put it on the content column inside the scroll container, not on the scroll container itself, so the scrollbar stays at the window edge.
 
 ---
 

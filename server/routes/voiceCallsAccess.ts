@@ -56,3 +56,20 @@ export function decideScope(access: VoiceAccess, q: { scope?: unknown; accountId
 export function hidesTestData(access: VoiceAccess): boolean {
   return !access.isAgency;
 }
+
+/** Which demo-classified calls a user may open: real demo calls are Owner only, browser test calls any agency user's. */
+export function callReach(access: VoiceAccess): { allowDemo: boolean; allowTest: boolean } {
+  return { allowDemo: access.isOwner, allowTest: access.isAgency };
+}
+
+/**
+ * A browser test call (test_account_id set) lives in the demo account, so it classifies as demo;
+ * it belongs to the tested client's Voice tab and its agency staff, not to the Owner-only Demo tab.
+ */
+export function demoCallVisible(
+  call: { isDemo: boolean; testAccountId: number | null },
+  reach: { allowDemo: boolean; allowTest: boolean },
+): boolean {
+  if (!call.isDemo || reach.allowDemo) return true;
+  return reach.allowTest && call.testAccountId != null;
+}

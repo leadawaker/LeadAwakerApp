@@ -15,6 +15,8 @@ export interface AccountVoicePrompts {
   locale: string | null;
   layer: VoicePromptRow | null;
   backend: VoicePromptRow | null;
+  /** eleven_layer_nl / eleven_layer_en: shared by every ElevenLabs line. */
+  eleven?: VoicePromptRow | null;
 }
 
 export const voicePromptsKey = (accountId: number) => ["/api/accounts", accountId, "voice", "prompts"] as const;

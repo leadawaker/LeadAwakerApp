@@ -1,10 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { Redirect } from "wouter";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileBillingView } from "../components/mobile/MobileBillingView";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
+import { readLastTab, writeLastTab } from "@/lib/lastTab";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { BillingWorkspace } from "../components/workspace/BillingWorkspace";
 import { useInvoicesData } from "../hooks/useInvoicesData";
@@ -13,26 +15,56 @@ import type { InvoiceRow, ContractRow } from "../types";
 import { useToast } from "@/hooks/use-toast";
 
 type BillingTab = "invoices" | "contracts" | "expenses";
+const BILLING_TABS: readonly BillingTab[] = ["invoices", "contracts", "expenses"];
+/** Before lastTab: one key for every user of this browser. Read once as the first fallback. */
+const LEGACY_TAB_KEY = "billing-active-tab";
+
+function legacyTab(): BillingTab {
+  try {
+    const saved = localStorage.getItem(LEGACY_TAB_KEY);
+    return saved === "expenses" || saved === "contracts" ? saved : "invoices";
+  } catch {
+    return "invoices";
+  }
+}
 type SortBy = "recent" | "oldest" | "amount_desc" | "amount_asc" | "due_asc" | "due_desc" | "name_asc" | "name_desc";
 type ViewMode = "list" | "table";
 type RightPanelMode = "view" | "edit" | "create";
 
+/**
+ * The agency's Billing page. A client's billing (their invoices and contracts)
+ * lives in Settings > Billing, so a client landing here is sent there.
+ */
 export function BillingPage() {
+  const { isAgencyUser } = useWorkspace();
+  if (!isAgencyUser) return <Redirect to="/platform/settings?tab=billing" />;
+  return (
+    <CrmShell>
+      <BillingContent />
+    </CrmShell>
+  );
+}
+
+/** Billing without the shell: the agency page, and the client's Settings > Billing. */
+export function BillingContent() {
   const { t } = useTranslation("billing");
   const { currentAccountId, isAgencyUser, isOwner } = useWorkspace();
   const { clearTopbarActions } = useTopbarActions();
   const isMobile = useIsMobile();
 
+  // The tab used last, per user. Expenses is the Owner's alone (the same rule
+  // as the desktop tab in BillingTopBar), so a stored "expenses" never opens a hidden tab.
   const [activeTab, setActiveTab] = useState<BillingTab>(() => {
-    const saved = localStorage.getItem("billing-active-tab");
-    if (saved === "expenses" || saved === "contracts") return saved;
-    return "invoices";
+    const allowed = isOwner ? BILLING_TABS : BILLING_TABS.filter((x) => x !== "expenses");
+    const legacy = legacyTab();
+    return readLastTab("billing", allowed, allowed.includes(legacy) ? legacy : "invoices");
   });
 
   const handleTabChange = useCallback((tab: string) => {
     const newTab = tab as BillingTab;
     setActiveTab(newTab);
-    localStorage.setItem("billing-active-tab", newTab);
+    writeLastTab("billing", newTab);
+    try { localStorage.removeItem(LEGACY_TAB_KEY); } catch { /* storage blocked */ }
   }, []);
 
   // View mode (persisted)
@@ -184,62 +216,58 @@ export function BillingPage() {
   // ── Mobile: wine/paper single-pane experience (desktop tree untouched) ──────
   if (isMobile) {
     return (
-      <CrmShell>
-        <MobileBillingView
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          invoices={invoicesHook.invoices}
-          contracts={contractsHook.contracts}
-          isAgencyUser={isAgencyUser}
-          onMarkSent={invoicesHook.markSent}
-          onMarkPaid={invoicesHook.markPaid}
-          onMarkSigned={contractsHook.markSigned}
-          onDeleteInvoice={handleDeleteInvoice}
-          onDeleteContract={handleDeleteContract}
-          onEditInvoice={(inv) => { setSelectedInvoice(inv); setEditingInvoice(inv); setRightPanelMode("edit"); }}
-          onNewInvoice={() => { setEditingInvoice(null); setRightPanelMode("create"); }}
-          onNewContract={() => { setSelectedContract(null); setRightPanelMode("create"); }}
-          listSearch={listSearch}
-          setListSearch={setListSearch}
-        />
-      </CrmShell>
+      <MobileBillingView
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        invoices={invoicesHook.invoices}
+        contracts={contractsHook.contracts}
+        isAgencyUser={isAgencyUser}
+        onMarkSent={invoicesHook.markSent}
+        onMarkPaid={invoicesHook.markPaid}
+        onMarkSigned={contractsHook.markSigned}
+        onDeleteInvoice={handleDeleteInvoice}
+        onDeleteContract={handleDeleteContract}
+        onEditInvoice={(inv) => { setSelectedInvoice(inv); setEditingInvoice(inv); setRightPanelMode("edit"); }}
+        onNewInvoice={() => { setEditingInvoice(null); setRightPanelMode("create"); }}
+        onNewContract={() => { setSelectedContract(null); setRightPanelMode("create"); }}
+        listSearch={listSearch}
+        setListSearch={setListSearch}
+      />
     );
   }
 
   return (
-    <CrmShell>
-      <div className="h-full flex flex-col">
-        <BillingWorkspace
-          activeTab={activeTab}
-          onTabChange={handleTabChange}
-          // Invoice data
-          invoices={invoicesHook.invoices}
-          invoicesLoading={invoicesHook.loading}
-          selectedInvoice={selectedInvoice}
-          onSelectInvoice={setSelectedInvoice}
-          onCreateInvoice={invoicesHook.create}
-          onUpdateInvoice={invoicesHook.update}
-          onDeleteInvoice={handleDeleteInvoice}
-          onMarkSent={invoicesHook.markSent}
-          onMarkPaid={invoicesHook.markPaid}
-          onRefreshInvoices={invoicesHook.fetchData}
-          // Contract data
-          contracts={contractsHook.contracts}
-          contractsLoading={contractsHook.loading}
-          selectedContract={selectedContract}
-          onSelectContract={setSelectedContract}
-          onCreateContract={contractsHook.create}
-          onUpdateContract={contractsHook.update}
-          onDeleteContract={handleDeleteContract}
-          onMarkSigned={contractsHook.markSigned}
-          onRefreshContracts={contractsHook.fetchData}
-          // Shared
-          isAgencyUser={isAgencyUser}
-          isOwner={isOwner}
-          accountFilter={accountFilter}
-          setAccountFilter={setAccountFilter}
-        />
-      </div>
-    </CrmShell>
+    <div className="h-full flex flex-col">
+      <BillingWorkspace
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        // Invoice data
+        invoices={invoicesHook.invoices}
+        invoicesLoading={invoicesHook.loading}
+        selectedInvoice={selectedInvoice}
+        onSelectInvoice={setSelectedInvoice}
+        onCreateInvoice={invoicesHook.create}
+        onUpdateInvoice={invoicesHook.update}
+        onDeleteInvoice={handleDeleteInvoice}
+        onMarkSent={invoicesHook.markSent}
+        onMarkPaid={invoicesHook.markPaid}
+        onRefreshInvoices={invoicesHook.fetchData}
+        // Contract data
+        contracts={contractsHook.contracts}
+        contractsLoading={contractsHook.loading}
+        selectedContract={selectedContract}
+        onSelectContract={setSelectedContract}
+        onCreateContract={contractsHook.create}
+        onUpdateContract={contractsHook.update}
+        onDeleteContract={handleDeleteContract}
+        onMarkSigned={contractsHook.markSigned}
+        onRefreshContracts={contractsHook.fetchData}
+        // Shared
+        isAgencyUser={isAgencyUser}
+        isOwner={isOwner}
+        accountFilter={accountFilter}
+        setAccountFilter={setAccountFilter}
+      />
+    </div>
   );
 }

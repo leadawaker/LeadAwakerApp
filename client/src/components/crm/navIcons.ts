@@ -1,11 +1,12 @@
 import {
-  AudioLines, BookUser, Building2, CalendarDays, Clapperboard, ClipboardList, Home, Megaphone, MessageSquare, Receipt, type LucideIcon,
+  AudioLines, BookUser, Building2, CalendarDays, ChartColumn, Clapperboard, ClipboardList, MessageSquare, Receipt, type LucideIcon,
 } from "lucide-react";
 import type { AgencyBarKey, ClientNavKey } from "./navGates";
 
 /** One icon per nav page, shared by the nav bar, the bottom bar and the More page. */
 export const NAV_ICON: Record<ClientNavKey | AgencyBarKey, LucideIcon> = {
-  home: Home,
+  // "home" is the Stats page (/platform/home): every figure on one page.
+  home: ChartColumn,
   calls: AudioLines,
   chats: MessageSquare,
   leads: BookUser,
@@ -13,6 +14,5 @@ export const NAV_ICON: Record<ClientNavKey | AgencyBarKey, LucideIcon> = {
   social: Clapperboard,
   myReceptionist: Building2,
   billing: Receipt,
-  campaigns: Megaphone,
   tasks: ClipboardList,
 };

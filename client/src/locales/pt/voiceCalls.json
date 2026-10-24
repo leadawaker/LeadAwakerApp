@@ -10,10 +10,14 @@
     "90d": "Últimos 90 dias"
   },
   "tabs": {
-    "stats": "Estatísticas",
     "people": "Pessoas",
     "calls": "Todas as ligações",
     "aria": "Visualização"
+  },
+  "pageTabs": {
+    "aria": "Página de chamadas",
+    "calls": "Chamadas",
+    "settings": "Configurações"
   },
   "title": "Chamadas",
   "webCaller": "Visitante do site",
@@ -80,15 +84,16 @@
   "skipBack": "Voltar 15 segundos",
   "skipForward": "Avançar 15 segundos",
   "speed": "Velocidade",
-  "hideSpeakers": "Ocultar",
+  "hideSpeakers": "Ocultar quem falou quando",
   "showSpeakers": "Mostrar quem falou quando",
   "downloadShort": "Baixar",
   "loadingRecording": "Carregando a gravação…",
   "searchTranscript": "Buscar na transcrição",
   "matches_one": "{{count}} resultado",
   "matches_other": "{{count}} resultados",
-  "followAudio": "Seguir áudio",
-  "followAudioHint": "Mantém a transcrição no que está sendo dito",
+  "clearSearch": "Limpar busca",
+  "minimizeList": "Minimizar lista",
+  "expandList": "Expandir lista",
   "playFromHere": "Tocar a partir daqui",
   "events": {
     "askedBackend": "Consultou o backend",

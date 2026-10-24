@@ -13,10 +13,11 @@ import {
   insertPromptVersionsSchema,
   openerTemplates,
 } from "@shared/schema";
+import { PROMPT_CATEGORIES, parsePromptCategoryInput } from "@shared/promptCategories";
 import { OPENER_TEMPLATE_TYPES, isOpenerTemplateType, type OpenerTemplateEdit } from "../storage/openerTemplates";
 import { toDbKeys, toDbKeysArray, fromDbKeys } from "../dbKeys";
 import { db, pool } from "../db";
-import { handleZodError, wrapAsync, getPagination, getEngineUrl } from "./_helpers";
+import { handleZodError, wrapAsync, getPagination, getEngineUrl, ownsAccount } from "./_helpers";
 import { eq, count, and, gte, sql } from "drizzle-orm";
 import { generateCampaignContext, generateBilingualContext, translateFields, parseLang } from "../demo-session";
 
@@ -188,6 +189,7 @@ async function getOrCreateSystemPrompt(useCase: string, defaultName: string, def
       temperature: "0.7",
       maxTokens: BigInt(600),
       status: "active",
+      category: "crm",
       notes: "System prompt — auto-created. Edit freely. Use {{variable}} placeholders for dynamic data.",
     } as any);
     console.log(`[prompt-library] Auto-created system prompt: "${defaultName}" (useCase=${useCase})`);
@@ -333,6 +335,7 @@ export function registerCampaignsRoutes(app: Express): void {
   app.post("/api/campaigns", requireAuth, wrapAsync(async (req, res) => {
     const parsed = insertCampaignsSchema.safeParse(fromDbKeys(req.body, campaigns));
     if (!parsed.success) return handleZodError(res, parsed.error);
+    if (!ownsAccount(req, parsed.data.accountsId)) return res.status(403).json({ message: "Forbidden" });
     const campaign = await storage.createCampaign(parsed.data);
 
     // Auto-create default conversation prompt for the new campaign
@@ -502,12 +505,15 @@ export function registerCampaignsRoutes(app: Express): void {
 
       // Get campaign AB settings
       const campResult = await pool.query(
-        'SELECT ab_enabled, ab_split_ratio FROM p2mxx34fvbf3ll6."Campaigns" WHERE id = $1',
+        'SELECT ab_enabled, ab_split_ratio, "Accounts_id" FROM p2mxx34fvbf3ll6."Campaigns" WHERE id = $1',
         [campaignId]
       );
 
       if (!campResult.rows[0]) {
         return res.status(404).json({ error: "Campaign not found" });
+      }
+      if (!ownsAccount(req, campResult.rows[0].Accounts_id)) {
+        return res.status(403).json({ error: "Forbidden" });
       }
 
       const { ab_enabled, ab_split_ratio } = campResult.rows[0];
@@ -641,6 +647,7 @@ export function registerCampaignsRoutes(app: Express): void {
 
     const campaign = await storage.getCampaignById(campaignId);
     if (!campaign) return res.status(404).json({ message: "Campaign not found" });
+    if (!ownsAccount(req, campaign.accountsId)) return res.status(403).json({ message: "Forbidden" });
 
     // Resolve language from account (source of truth), with fallback
     let language: string = (req.body?.language as string) || "en";
@@ -783,8 +790,18 @@ export function registerCampaignsRoutes(app: Express): void {
     res.json(data);
   }));
 
+  // Prompt_Library.category must be one of the library's areas (shared list).
+  const withCheckedCategory = (body: any): any | null => {
+    const cat = parsePromptCategoryInput(body?.category);
+    if (!cat.ok) return null;
+    return cat.value === undefined ? body : { ...body, category: cat.value };
+  };
+  const badCategory = { message: `Invalid category. Use one of: ${PROMPT_CATEGORIES.join(", ")}` };
+
   app.post("/api/prompts", requireAgency, wrapAsync(async (req, res) => {
-    const parsed = insertPrompt_LibrarySchema.safeParse(req.body);
+    const body = withCheckedCategory(req.body);
+    if (!body) return res.status(400).json(badCategory);
+    const parsed = insertPrompt_LibrarySchema.safeParse(body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     const prompt = await storage.createPrompt(parsed.data);
     res.status(201).json(prompt);
@@ -792,7 +809,9 @@ export function registerCampaignsRoutes(app: Express): void {
 
   app.put("/api/prompts/:id", requireAgency, wrapAsync(async (req, res) => {
     const id = Number(req.params.id);
-    const parsed = insertPrompt_LibrarySchema.partial().safeParse(req.body);
+    const body = withCheckedCategory(req.body);
+    if (!body) return res.status(400).json(badCategory);
+    const parsed = insertPrompt_LibrarySchema.partial().safeParse(body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     const updated = await storage.updatePrompt(id, parsed.data);
     if (!updated) return res.status(404).json({ error: "Prompt not found" });
@@ -854,15 +873,19 @@ export function registerCampaignsRoutes(app: Express): void {
 
   // ─── Campaign Metrics History ──────────────────────────────────────
 
-  app.get("/api/campaign-metrics-history", requireAuth, wrapAsync(async (req, res) => {
+  app.get("/api/campaign-metrics-history", requireAuth, scopeToAccount, wrapAsync(async (req, res) => {
     const campaignId = req.query.campaignId ? Number(req.query.campaignId) : undefined;
     const data = campaignId
       ? await storage.getCampaignMetricsHistoryByCampaignId(campaignId)
       : await storage.getCampaignMetricsHistory();
-    res.json(data);
+    // A client (or view-as) gets only its own account's campaigns.
+    const forcedId = (req as any).forcedAccountId as number | undefined;
+    if (forcedId === undefined) return res.json(data);
+    const own = new Set((await storage.getCampaignsByAccountId(forcedId)).map((c) => c.id));
+    res.json(data.filter((m: any) => own.has(m.campaignsId ?? m.campaigns_id)));
   }));
 
-  app.post("/api/campaign-metrics-history", requireAuth, wrapAsync(async (req, res) => {
+  app.post("/api/campaign-metrics-history", requireAgency, wrapAsync(async (req, res) => {
     const parsed = insertCampaignMetricsHistorySchema.partial().safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
     const row = await storage.createCampaignMetricsHistory(parsed.data);
@@ -870,10 +893,11 @@ export function registerCampaignsRoutes(app: Express): void {
   }));
 
   // ─── Dashboard KPI Trends ──────────────────────────────────────────
-  app.get("/api/dashboard-trends", requireAuth, async (req, res) => {
+  app.get("/api/dashboard-trends", requireAuth, scopeToAccount, async (req, res) => {
     try {
       const days = Math.min(Number(req.query.days) || 30, 90);
-      const accountId = req.query.accountId ? Number(req.query.accountId) : undefined;
+      const forcedId = (req as any).forcedAccountId as number | undefined;
+      const accountId = forcedId ?? (req.query.accountId ? Number(req.query.accountId) : undefined);
 
       const allMetrics = await storage.getCampaignMetricsHistory();
 
@@ -934,7 +958,7 @@ export function registerCampaignsRoutes(app: Express): void {
   });
 
   // POST /api/campaigns/:id/generate-demo — AI-fill demo campaign fields; preserves non-empty fields
-  app.post("/api/campaigns/:id/generate-demo", requireAuth, wrapAsync(async (req, res) => {
+  app.post("/api/campaigns/:id/generate-demo", requireAgency, wrapAsync(async (req, res) => {
     const campaignId = Number(req.params.id);
     const { niche } = req.body;
     if (!niche || typeof niche !== "string" || !niche.trim()) {
@@ -991,7 +1015,7 @@ export function registerCampaignsRoutes(app: Express): void {
   }));
 
   // POST /api/campaigns/:id/generate — fill empty fields in en+nl, translate single-lang fields
-  app.post("/api/campaigns/:id/generate", requireAuth, wrapAsync(async (req, res) => {
+  app.post("/api/campaigns/:id/generate", requireAgency, wrapAsync(async (req, res) => {
     const campaignId = Number(req.params.id);
     const { niche } = req.body as { niche?: string };
 

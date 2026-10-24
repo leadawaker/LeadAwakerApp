@@ -24,6 +24,7 @@ import { openerTemplatesStorage } from "./storage/openerTemplates";
 import { voiceCallsStorage } from "./storage/voiceCalls";
 import { voiceCallersStorage } from "./storage/voiceCallers";
 import { voiceLinesStorage } from "./storage/voiceLines";
+import { saveLineEngine } from "./storage/voiceLineEngine";
 import { voiceStatsStorage } from "./storage/voiceStats";
 import { voiceAccountPromptsStorage } from "./storage/voiceAccountPrompts";
 import { siteVisitsStorage } from "./storage/siteVisits";
@@ -108,6 +109,7 @@ export const storage = {
   ...voiceCallsStorage,
   ...voiceCallersStorage,
   ...voiceLinesStorage,
+  saveLineEngine,
   ...voiceStatsStorage,
   ...voiceAccountPromptsStorage,
   ...siteVisitsStorage,

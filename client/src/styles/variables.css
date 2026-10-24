@@ -144,16 +144,20 @@
   --chart-4: 260 23% 45%;
   --chart-5: 10 50% 40%;
 
-  /* ── Pipeline stages ── */
+  /* ── Pipeline stages ──
+     PIPELINE_HEX in lib/avatarUtils.ts holds the same light values for JS and charts:
+     change both together. */
   --stage-new: #6C5A8C;
   --stage-contacted: #547BB0;
   --stage-responded: #3F8E8E;
   --stage-multi: #5E8E5E;
-  --stage-qualified: #B58F3E;
+  --stage-qualified: #7AAB3F;
   --stage-booked: #C48A2F;
   --stage-closed: #6E7A5E;
   --stage-lost: #A24B3F;
   --stage-dnd: #9D8E76;
+  /* Sand: an ochre for palettes that need one (studio tags). Not a pipeline stage. */
+  --sand: #B58F3E;
 
   /* ── Voice kind (voice picker icon): natural green, generated blue ── */
   --voice-natural: hsl(var(--success));
@@ -306,11 +310,12 @@
   --stage-contacted: #6E97CC;
   --stage-responded: #54AAAA;
   --stage-multi: #74AB74;
-  --stage-qualified: #D0A954;
+  --stage-qualified: #90C258;
   --stage-booked: #DCA146;
   --stage-closed: #8A9674;
   --stage-lost: #C26659;
   --stage-dnd: #B3A488;
+  --sand: #D0A954;
 
   /* ── Voice kind (voice picker icon): natural green, generated blue ── */
   --voice-natural: hsl(var(--success));

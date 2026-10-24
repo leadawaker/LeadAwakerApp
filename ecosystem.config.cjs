@@ -6,7 +6,8 @@ module.exports = {
     // unreliable on the Pi's filesystem (changes were missed, needing manual
     // restarts), so we use pm2 polling-watch instead — deterministic on any FS.
     args: '--env-file=.env server/index.ts',
-    cwd: '/home/gabriel/LeadAwakerApp',
+    // The folder this file lives in (the repo root), so it works on any machine.
+    cwd: __dirname,
     env: {
       NODE_ENV: 'development',
       PORT: 5000,

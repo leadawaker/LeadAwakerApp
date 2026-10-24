@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { RefreshCw } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
-import { IconBtn } from "@/components/ui/icon-btn";
-import { SearchPill } from "@/components/ui/search-pill";
+import { PageTopbar, TopbarIconButton, ExpandingSearch } from "@/components/crm/primitives";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 import { SERVICE_ORDER, type AutomationService } from "@shared/automationCatalogue";
@@ -14,6 +13,7 @@ import { OverviewHero } from "@/features/automation/components/OverviewHero";
 import { ServiceSection } from "@/features/automation/components/ServiceSection";
 import { DiaryPanel } from "@/features/automation/components/DiaryPanel";
 import { AutomationRail, railPanelId } from "@/features/automation/components/AutomationRail";
+import { SectionLayout } from "@/features/accounts/components/workspace/SectionRail";
 import { ClearFailuresButton } from "@/features/automation/components/ClearFailuresButton";
 import { automationName, automationDescription } from "@/features/automation/labels";
 import { bucketOf, rowActions24h } from "@/features/automation/status";
@@ -30,7 +30,6 @@ export default function AutomationLogsPage() {
   const [picked, setPicked] = useState<GroupKey | null>(null);
   const [filter, setFilter] = useState<Filter>("all");
   const [search, setSearch] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
 
   const rows = q.data?.rows ?? [];
   const filterCounts = useMemo(() => ({
@@ -66,24 +65,39 @@ export default function AutomationLogsPage() {
 
   const panelOnly = isMobile && !!selected;
 
+  const filterTabs = (
+    <div className="la-seg la-seg--pill shrink-0" role="tablist" aria-label={t("filter.label")}>
+      {(["all", "attention", "active"] as Filter[]).map((f) => (
+        <button key={f} type="button" role="tab" aria-selected={filter === f} className={cn("la-seg-btn", filter === f && "on")} onClick={() => setFilter(f)} data-testid={`automation-filter-${f}`}>
+          {t(`filter.${f}`)} <span style={{ opacity: 0.7 }}>{filterCounts[f]}</span>
+        </button>
+      ))}
+    </div>
+  );
+  const searchField = <ExpandingSearch value={search} onChange={setSearch} placeholder={t("filter.search")} />;
+
   return (
     <CrmShell>
       <div className="la-page" style={{ background: "var(--bg)" }} data-testid="page-automation-logs">
         {!panelOnly && (
-          <div className="la-page-header">
-            <span className="serif" style={{ fontSize: 20, color: "var(--ink)" }}>{t("page.title")}</span>
-            <span style={{ fontSize: 12.5, color: "var(--mute)" }} className="max-md:hidden">{t("page.subtitle")}</span>
-            <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
-              <IconBtn onClick={() => q.refetch()} title={t("page.refresh")}>
+          <PageTopbar
+            title={t("page.title")}
+            left={!isMobile && filterTabs}
+            right={<>
+              {!isMobile && searchField}
+              <TopbarIconButton label={t("page.refresh")} onClick={() => q.refetch()}>
                 <RefreshCw className={cn("w-4 h-4", q.isFetching && "animate-spin")} />
-              </IconBtn>
-            </div>
-          </div>
+              </TopbarIconButton>
+            </>}
+          >
+            <span className="max-lg:hidden" style={{ fontSize: 12.5, color: "var(--mute)", minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{t("page.subtitle")}</span>
+          </PageTopbar>
         )}
 
         <div style={{ flex: 1, minHeight: 0, overflow: "hidden", display: "flex" }}>
           {!panelOnly && (
-            <div className="min-h-0 overflow-y-auto" style={{ flex: 1, minWidth: 0 }}>
+            // The category menu sticks 20px under the top of this scroller, level with its padding (SectionLayout adds 32px).
+            <div className="min-h-0 overflow-y-auto" style={{ flex: 1, minWidth: 0, ["--ws-sticky-top" as string]: "-12px" }}>
               <div style={{ maxWidth: 1386, padding: isMobile ? "14px 12px 32px" : "20px 24px 40px", display: "flex", flexDirection: "column", gap: 18 }}>
                 {q.error ? (
                   <ApiErrorFallback error={q.error as Error} onRetry={() => q.refetch()} />
@@ -96,28 +110,24 @@ export default function AutomationLogsPage() {
                   <>
                     <OverviewHero data={q.data} />
 
-                    <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-                      <div className="la-seg la-seg--pill" role="tablist" aria-label={t("filter.label")}>
-                        {(["all", "attention", "active"] as Filter[]).map((f) => (
-                          <button key={f} type="button" role="tab" aria-selected={filter === f} className={cn("la-seg-btn", filter === f && "on")} onClick={() => setFilter(f)} data-testid={`automation-filter-${f}`}>
-                            {t(`filter.${f}`)} <span style={{ opacity: 0.7 }}>{filterCounts[f]}</span>
-                          </button>
-                        ))}
+                    {/* Phones keep the filter and search above the list; desktop has them in the topbar. */}
+                    {isMobile && (
+                      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                        {filterTabs}
+                        <div style={{ marginLeft: "auto" }}>{searchField}</div>
                       </div>
-                      <div style={{ marginLeft: "auto" }}>
-                        <SearchPill value={search} onChange={setSearch} open={searchOpen || !!search} onOpenChange={setSearchOpen} placeholder={t("filter.search")} />
-                      </div>
-                    </div>
+                    )}
 
                     {groups.length === 0 ? (
                       <div style={{ padding: "40px 0", textAlign: "center", color: "var(--mute)", fontSize: 14 }}>
                         {filter === "attention" && !search ? t("filter.noneAttention") : t("filter.none")}
                       </div>
                     ) : active && (
-                      <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 16, alignItems: isMobile ? "stretch" : "flex-start" }}>
-                        <div style={isMobile ? undefined : { width: 232, flexShrink: 0 }}>
-                          <AutomationRail items={railItems} active={active.key} onSelect={(k) => setPicked(k)} layout={isMobile ? "grid" : "rail"} />
-                        </div>
+                      <SectionLayout
+                        stacked={isMobile}
+                        testId="automation-sections"
+                        rail={(layout) => <AutomationRail items={railItems} active={active.key} onSelect={(k) => setPicked(k)} layout={layout} />}
+                      >
                         <div className="am-list" style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 10 }}>
                           <div className="am-captions" aria-hidden>
                             <span /><span>{t("captions.automation")}</span><span>{t("captions.runs")}</span><span>{t("captions.pulse")}</span>
@@ -134,7 +144,7 @@ export default function AutomationLogsPage() {
                             action={<ClearFailuresButton count={active.failures} scope={{ automationIds: active.rows.map((r) => r.id) }} />}
                           />
                         </div>
-                      </div>
+                      </SectionLayout>
                     )}
                   </>
                 ) : null}

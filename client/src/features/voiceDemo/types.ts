@@ -87,6 +87,8 @@ export interface CrmReceipt {
   booking_failed?: boolean;
   booked_iso?: string | null;
   summary?: CallSummary;
+  /** A tool the engine answered itself (diary checks, a dealer test's car tools). */
+  tool_output?: Record<string, unknown>;
 }
 
 export interface CallSetup {
@@ -136,6 +138,38 @@ export interface LiveOptions {
   voices: { id: string; label: string; gender?: "female" | "male" }[];
   /** How long a demo call may run, set on the Demos page. */
   max_call_minutes?: number;
+  /** USD per minute of each engine (call_costs.rates), for a staff test's live price. */
+  rates?: LiveRates;
+}
+
+export interface LiveRates { gptLivePerMin: number; elevenPerMin: number }
+
+/**
+ * A staff test started from the CRM's Voice tab: answers as that account's or
+ * line's phone line, with the picked LLM. Given, it replaces the page's
+ * `?line=` / `?account=` query (which /voice-demo keeps using).
+ */
+export interface LiveStaffTest {
+  account?: number;
+  line?: number;
+  llm?: "sol" | "terra" | "luna";
+}
+
+/** A tool the browser ran during the call, as the test panel shows it live. */
+/**
+ * A tool the model called. It is added the moment it starts (`pending`, no result or ms yet)
+ * and filled in when the backend answers. `afterTurnId` is the last transcript turn at that
+ * moment, so the test panel can draw it right after that turn.
+ */
+export interface LiveToolRun {
+  name: string;
+  result: unknown;
+  ms: number | null;
+  at: number;
+  callId?: string;
+  args?: unknown;
+  pending?: boolean;
+  afterTurnId?: string | null;
 }
 
 export interface LiveSetup {
@@ -144,4 +178,5 @@ export interface LiveSetup {
   callerNumber: string;
   /** Overrides the locale's default voice. Empty means "use the default". */
   voice: string;
+  staff?: LiveStaffTest;
 }

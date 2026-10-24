@@ -6,6 +6,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { useLastTab } from "@/hooks/useLastTab";
 import { cn } from "@/lib/utils";
 import { Link } from "wouter";
 import {
@@ -26,7 +27,7 @@ import {
   User,
 } from "lucide-react";
 import { PIPELINE_HEX } from "@/lib/avatarUtils";
-import { Pill } from "@/components/crm/primitives";
+import { Pill, PageTopbar, TopbarTabs, TopbarIconButton } from "@/components/crm/primitives";
 import { DocSection, Step, Tip, STAGE_KEYS, STAGE_KEY_TO_HEX } from "@/features/docs/docParts";
 import { ReactivationGuide } from "@/features/docs/ReactivationGuide";
 import { ClientGuide } from "@/features/docs/ClientGuide";
@@ -375,8 +376,9 @@ export default function DocsPage() {
   const { t } = useTranslation("docs");
   const { t: tc } = useTranslation("crm");
   const isOperator = isOperatorRole();
-  const [tab, setTab] = useState<"operator" | "client">(
-    isOperator ? "operator" : "client"
+  // Operators reopen on the docs tab they used last; everyone else only has the client docs.
+  const [tab, setTab] = useLastTab<"operator" | "client">(
+    "docs", isOperator ? ["operator", "client"] : ["client"], isOperator ? "operator" : "client",
   );
   const [whatsNew, setWhatsNew] = useState(false);
   const { currentAccountId, currentAccount } = useWorkspace();
@@ -395,56 +397,32 @@ export default function DocsPage() {
     <CrmShell>
       <div className="la-page" data-testid="page-docs">
         {/* ── Topbar ─────────────────────────────────────────────────────── */}
-        <div className="la-page-header flex items-center gap-3">
-          <span className="serif shrink-0" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>
-            {t("title")}
-          </span>
-
-          {/* Tab switcher: operator view only */}
-          {isOperator && (
-            <div className="la-seg shrink-0" role="tablist">
-              <button
-                role="tab"
-                aria-selected={tab === "operator"}
-                className={cn("la-seg-btn", tab === "operator" && "on")}
-                onClick={() => setTab("operator")}
-              >
-                {t("agencyDocs")}
-              </button>
-              <button
-                role="tab"
-                aria-selected={tab === "client"}
-                className={cn("la-seg-btn", tab === "client" && "on")}
-                onClick={() => setTab("client")}
-              >
-                {t("userDocs")}
-              </button>
-            </div>
+        <PageTopbar
+          title={t("title")}
+          left={isOperator && (
+            /* Tab switcher: operator view only */
+            <TopbarTabs
+              tabs={[
+                { id: "operator" as const, label: t("agencyDocs") },
+                { id: "client" as const, label: t("userDocs") },
+              ]}
+              value={tab}
+              onChange={setTab}
+            />
           )}
-
-          {/* Right-side actions */}
-          <div className="flex items-center gap-2 ml-auto">
+          right={<>
             {/* Chat with Gabriel */}
-            <button
-              onClick={openFounderChat}
-              className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[160px] border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground"
-            >
-              <MessageSquare className="h-4 w-4 shrink-0" />
-              <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{tc("sidebar.messageFounder")}</span>
-            </button>
-
+            <TopbarIconButton label={tc("sidebar.messageFounder")} onClick={openFounderChat}>
+              <MessageSquare className="h-4 w-4" />
+            </TopbarIconButton>
             {/* What's New: operator only */}
             {isOperator && (
-              <button
-                onClick={() => setWhatsNew(true)}
-                className="group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9 hover:max-w-[120px] border-black/[0.125] dark:border-white/[0.125] text-foreground/60 hover:text-foreground"
-              >
-                <Sparkles className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150">{t("whatsNew")}</span>
-              </button>
+              <TopbarIconButton label={t("whatsNew")} onClick={() => setWhatsNew(true)}>
+                <Sparkles className="h-4 w-4" />
+              </TopbarIconButton>
             )}
-          </div>
-        </div>
+          </>}
+        />
 
         {/* ── Scrollable content ──────────────────────────────────────────── */}
         <div className="flex-1 min-h-0 overflow-y-auto" data-testid="docs-content">

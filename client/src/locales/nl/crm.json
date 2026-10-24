@@ -23,13 +23,13 @@
   "sidebar": {
     "skipToMain": "Naar de inhoud",
     "menu": "Menu",
-    "home": "Home",
+    "home": "Stats",
     "calls": "Gesprekken",
-    "myReceptionist": "Account",
+    "myReceptionist": "Mijn account",
     "myReceptionistShort": "Account",
     "myAccount": "Mijn account",
     "services": "Diensten",
-    "reactivation": "Campagnes",
+    "reactivation": "Reactivatie",
     "reputation": "Reputatie",
     "speedToLead": "Speed to Lead",
     "missedCalls": "Gemiste oproepen",
@@ -78,8 +78,7 @@
     "outreach": "Outreach",
     "admin": "Admin",
     "backend": "Backend",
-    "agency": "Agentuur",
-    "setup": "Instellen"
+    "agency": "Agentuur"
   },
   "sidebarSubmenu": {
     "summary": "Overzicht",
@@ -323,14 +322,11 @@
     "navigate": "Navigeren",
     "select": "Selecteren",
     "close": "Sluiten",
-    "team": "Team",
-    "unknownStatus": "Onbekend",
+    "team": "Gebruikers",
     "fallbackLead": "Lead #{{id}}",
-    "fallbackCampaign": "Campagne #{{id}}",
     "fallbackAccount": "Account #{{id}}",
     "resultTypes": {
       "lead": "Lead",
-      "campaign": "Campagne",
       "account": "Account",
       "result": "Resultaat"
     }

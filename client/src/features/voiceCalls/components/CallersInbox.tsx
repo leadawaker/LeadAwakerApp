@@ -4,12 +4,15 @@ import { AudioLines, Users } from "lucide-react";
 import { MonoLabel } from "@/features/voice/components/atoms";
 import { CallListSkeleton } from "./VoiceCallsSkeleton";
 import { VOICE_OUTCOMES, type VoiceCaller, type VoiceCallListItem, type VoiceScope } from "../api/voiceCallsApi";
-import { filterCallers, type PeopleOptions } from "../callers";
+import { callerStatus, filterCallers, maskVoiceCaller, type PeopleOptions } from "../callers";
 import { normalizeOutcome, OUTCOME_LABEL_KEY } from "../status";
 import { dateSections } from "../listOptions";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useListPanelState } from "@/hooks/useListPanelState";
+import { callerIni, callerTitle } from "./bits";
 import { CallerDetail } from "./CallerDetail";
 import { CallerListCard } from "./CallerListCard";
+import { CompactCallRail, RAIL_WIDTH, type RailItem } from "./CompactCallRail";
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
@@ -59,8 +62,17 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
     return () => window.removeEventListener("resize", onR);
   }, []);
   const narrow = vw < 920;
+  // Same minimize switch as the Chats list (shared across pages, desktop only).
+  const { state: panel } = useListPanelState();
+  const compact = !narrow && panel === "compact";
+  const hidden = !narrow && panel === "hidden";
 
   const items = useMemo(() => filterCallers(callers, query, options), [callers, query, options]);
+  const railItems: RailItem[] = useMemo(() => items.map((raw) => {
+    const c = maskVoiceCaller(raw, masked);
+    const who = { callerName: c.name, callerNumber: c.phone };
+    return { key: c.key, ini: callerIni(who, t("webCaller")), status: callerStatus(c), title: callerTitle(who, t("webCaller")) };
+  }), [items, masked, t]);
   // Date groups use each person's latest call, in the account timezone.
   const sections = useMemo(() => {
     if (options.group === "none") return [{ key: "all", label: "", items }];
@@ -99,7 +111,7 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
     sections.map((sec) => (
       <div key={sec.key}>
         {sec.label && <GroupHeader label={sec.label} count={sec.items.length} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="la-cards">
           {sec.items.map((c) => (
             <CallerListCard key={c.key} caller={c} masked={masked} showAccount={scope === "live"} active={selection === c.key} onClick={() => setSelection(c.key)} />
           ))}
@@ -108,7 +120,16 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
     ))
   );
 
-  const listPane = (
+  const renderCard = (key: string) => {
+    const c = items.find((x) => x.key === key);
+    return c ? <CallerListCard caller={c} masked={masked} showAccount={scope === "live"} active={selection === key} onClick={() => setSelection(key)} /> : null;
+  };
+
+  const listPane = compact ? (
+    <div style={{ width: RAIL_WIDTH, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--line)", background: "var(--surface)" }}>
+      <CompactCallRail items={isLoading || error ? [] : railItems} selection={selection} onSelect={setSelection} renderCard={renderCard} />
+    </div>
+  ) : (
     <div style={{ width: narrow ? "100%" : 348, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: narrow ? "none" : "1px solid var(--line)", background: "var(--surface)" }}>
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 10px 8px", display: "flex", flexDirection: "column" }}>
         {listBody}
@@ -138,7 +159,7 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden", background: "var(--bg)" }}>
-      {narrow ? (selected ? rightPane : listPane) : <>{listPane}{rightPane}</>}
+      {narrow ? (selected ? rightPane : listPane) : <>{!hidden && listPane}{rightPane}</>}
     </div>
   );
 }

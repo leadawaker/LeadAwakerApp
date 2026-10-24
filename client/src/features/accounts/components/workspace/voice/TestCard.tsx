@@ -1,47 +1,44 @@
-// "Try her out": one big button that calls this account's line in the
-// browser, and the recent test calls folded underneath. The prompts she is
-// given are edited (and shown filled in) further down the Prompt & test
-// section, so this card is only the call.
+// "Try her out" in Prompt & test: the test panel (VoiceTestPanel: engine tab, pick,
+// one Test button, the live call and its review) and the recent test calls folded
+// underneath. From 1440px the panel itself is the sticky column beside the tab
+// (VoiceTab), so this card then holds only the list. The prompts she is given are
+// edited further down the section; a test runs on the saved ones.
+import { useCallback, useRef } from "react";
 import { useVoiceT } from "./voiceGender";
-import { Headphones, PhoneCall } from "lucide-react";
+import { Headphones } from "lucide-react";
 import { VoiceCardShell, helpStyle } from "./voiceAtoms";
-import type { VoiceLine } from "./voiceApi";
+import type { VoiceLine, VoiceLinePatch } from "./voiceApi";
 import { TestCallsList } from "./TestCallsList";
+import { VoiceTestPanel } from "./test/VoiceTestPanel";
+import { useVoiceTest } from "./test/VoiceTestProvider";
 
-/** The /voice-demo link that answers as this account's line. */
-function testUrl(line: VoiceLine): string {
-  const q = new URLSearchParams({ account: String(line.accountId), start: "1" });
-  // Only labels the page before the call; the engine decides the rest.
-  if (line.persona?.companyName) q.set("company", line.persona.companyName);
-  if (line.locale) q.set("locale", line.locale);
-  return `/voice-demo?${q.toString()}`;
-}
-
-export function TestCard({ line }: { line: VoiceLine }) {
+export function TestCard({ line, canEdit, saving, onSave }: {
+  line: VoiceLine; canEdit: boolean; saving: boolean; onSave: (patch: VoiceLinePatch) => Promise<boolean>;
+}) {
   const { t } = useVoiceT();
+  const { column } = useVoiceTest();
   const canTest = !!line.persona;
+  // Narrow layout: the panel sits above the list, so opening a row brings it into view.
+  const panelRef = useRef<HTMLDivElement>(null);
+  const showPanel = useCallback(() => {
+    if (column) return;
+    const reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    requestAnimationFrame(() => panelRef.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" }));
+  }, [column]);
 
   return (
     <VoiceCardShell card="test" icon={<Headphones size={17} />} title={t("test.title")}>
-      <a
-        href={canTest ? testUrl(line) : undefined}
-        target="_blank"
-        rel="noopener"
-        className="la-btn la-btn--wine"
-        aria-disabled={!canTest}
-        style={{
-          width: "100%", justifyContent: "center", padding: "16px 20px", fontSize: 14,
-          ...(canTest ? {} : { opacity: 0.5, pointerEvents: "none" }),
-        }}
-        data-testid="voice-test-call"
-      >
-        <PhoneCall size={16} />
-        {t("test.call")}
-      </a>
-      <p style={{ ...helpStyle, margin: "10px 0 0", textAlign: "center" }}>
-        {canTest ? t("test.filedNote") : t("test.needsPersona")}
-      </p>
-      {canTest && <TestCallsList accountId={line.accountId} />}
+      {column
+        ? <p style={{ ...helpStyle, margin: 0 }} data-testid="voice-test-beside">{t("test.panel.besideNote")}</p>
+        : (
+          <>
+            <div ref={panelRef} style={{ scrollMarginTop: 80 }}>
+              <VoiceTestPanel line={line} canEdit={canEdit} saving={saving} onSave={onSave} />
+            </div>
+            {canTest && <p style={{ ...helpStyle, margin: "12px 0 0", textAlign: "center" }}>{t("test.panel.filedNote")}</p>}
+          </>
+        )}
+      {canTest && <TestCallsList accountId={line.accountId} onOpened={showPanel} />}
     </VoiceCardShell>
   );
 }

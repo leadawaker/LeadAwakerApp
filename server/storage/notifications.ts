@@ -103,22 +103,26 @@ import {
 } from "@shared/schema";
 
 import type { NotificationItem, ProspectsListParams } from "./types";
+import { notTestInteractionSql } from "../routes/testDataAccess";
 
 export const notificationsStorage = {
   // ─── Notifications ──────────────────────────────────────────────────
 
-  async getRecentNotifications(accountId?: number, limit = 20): Promise<NotificationItem[]> {
+  async getRecentNotifications(accountId?: number, limit = 20, hideTest = false): Promise<NotificationItem[]> {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    // A client never counts Gabriel's test calls or test leads (unread chat badge).
+    const notTestReply = hideTest ? notTestInteractionSql : undefined;
+    const notTestLead = hideTest ? sql`COALESCE(${leads.isTest}, false) = false` : undefined;
 
     // 1. Inbound interactions (last 7 days)
     const interactionRows = accountId
       ? await db.select().from(interactions)
-          .where(and(eq(interactions.accountsId, accountId), eq(interactions.direction, 'inbound'), gte(interactions.createdAt, sevenDaysAgo)))
+          .where(and(eq(interactions.accountsId, accountId), eq(interactions.direction, 'inbound'), gte(interactions.createdAt, sevenDaysAgo), notTestReply))
           .orderBy(desc(interactions.createdAt))
           .limit(20)
       : await db.select().from(interactions)
-          .where(and(eq(interactions.direction, 'inbound'), gte(interactions.createdAt, sevenDaysAgo)))
+          .where(and(eq(interactions.direction, 'inbound'), gte(interactions.createdAt, sevenDaysAgo), notTestReply))
           .orderBy(desc(interactions.createdAt))
           .limit(20);
     const inboundNotifs: NotificationItem[] = interactionRows.map(r => ({
@@ -133,11 +137,11 @@ export const notificationsStorage = {
     // 2. Booked calls (last 7 days)
     const bookedLeads = accountId
       ? await db.select().from(leads)
-          .where(and(eq(leads.accountsId, accountId), isNotNull(leads.bookedCallDate), gte(leads.bookedCallDate, sevenDaysAgo)))
+          .where(and(eq(leads.accountsId, accountId), isNotNull(leads.bookedCallDate), gte(leads.bookedCallDate, sevenDaysAgo), notTestLead))
           .orderBy(desc(leads.bookedCallDate))
           .limit(10)
       : await db.select().from(leads)
-          .where(and(isNotNull(leads.bookedCallDate), gte(leads.bookedCallDate, sevenDaysAgo)))
+          .where(and(isNotNull(leads.bookedCallDate), gte(leads.bookedCallDate, sevenDaysAgo), notTestLead))
           .orderBy(desc(leads.bookedCallDate))
           .limit(10);
     const bookingNotifs: NotificationItem[] = bookedLeads.map(l => ({

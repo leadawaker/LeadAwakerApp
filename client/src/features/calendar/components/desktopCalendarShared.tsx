@@ -196,6 +196,8 @@ export interface DesktopCalendarProps {
   onCreateBlock?: (data: { date: string; startTime?: string; endTime?: string; allDay: boolean; label?: string }) => Promise<void>;
   onUpdateBlock?: (id: number, data: { date?: string; startTime?: string; endTime?: string; allDay?: boolean; label?: string }) => Promise<void>;
   onDeleteBlock?: (id: number) => Promise<void>;
+  // Opens the block panel (no block = create): injected by DesktopCalendar
+  onOpenBlockPanel?: (block?: CalendarBlock) => void;
 }
 
 // Toolbar dropdown trigger (wine soft icon button)

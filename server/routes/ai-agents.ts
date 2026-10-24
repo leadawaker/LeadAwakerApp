@@ -40,6 +40,7 @@ import {
   type AgentPermissions,
   type CrmToolCall,
 } from "../crmTools";
+import { APP_DIR } from "../paths";
 
 const VALID_THINKING_LEVELS = ["none", "low", "medium", "high"];
 const VALID_MODELS = [
@@ -1180,7 +1181,7 @@ export function registerAiAgentsRoutes(app: Express): void {
 
       let fileRecord: any = null;
       if (session_id) {
-        const uploadsDir = path.join("/home/gabriel/LeadAwakerApp", "uploads", "agent-files", session_id);
+        const uploadsDir = path.join(APP_DIR, "uploads", "agent-files", session_id);
         fs.mkdirSync(uploadsDir, { recursive: true });
         const filePath = path.join(uploadsDir, filename);
         fs.writeFileSync(filePath, buffer);
@@ -1271,7 +1272,7 @@ export function registerAiAgentsRoutes(app: Express): void {
         return res.status(400).json({ message: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` });
       }
 
-      const uploadsDir = path.join("/home/gabriel/LeadAwakerApp", "uploads", "agent-files", sessionId);
+      const uploadsDir = path.join(APP_DIR, "uploads", "agent-files", sessionId);
       fs.mkdirSync(uploadsDir, { recursive: true });
       const safeFilename = `${Date.now()}-${filename.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
       const filePath = path.join(uploadsDir, safeFilename);

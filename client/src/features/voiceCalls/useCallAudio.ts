@@ -80,10 +80,12 @@ export function useCallAudio(callId: string | null, sessionId: string | null): C
         const res = await apiFetch(`/api/voice-calls/${encodeURIComponent(callId)}/recording`, { signal: ctl.signal });
         if (!res.ok) throw new Error(String(res.status));
         const buf = await res.arrayBuffer();
+        // ElevenLabs calls come as mp3 with both voices mixed: playable, but no speaker lines.
+        const type = res.headers.get("content-type") || "audio/wav";
         // The Blob copies the bytes, so the buffer can go straight to the decoder.
-        const url = URL.createObjectURL(new Blob([buf], { type: "audio/wav" }));
+        const url = URL.createObjectURL(new Blob([buf], { type }));
         let ready: CallAudio = { status: "ready", url, duration: 0, caller: [], ai: [] };
-        try {
+        if (type.startsWith("audio/wav")) try {
           // Decode at a low rate: enough to see speech, a fraction of the memory.
           const audio = await new OfflineAudioContext(2, 1, 8000).decodeAudioData(buf);
           const left = audio.getChannelData(0);

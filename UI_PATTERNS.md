@@ -34,10 +34,66 @@ Add `style={{ background: 'var(--bg)' }}` when the page uses the warm design-sys
 `la-page-header` = `height: 60px; flex-shrink: 0; border-bottom: 1px solid var(--line);
 display: flex; align-items: center; gap: 16px; padding: 0 20px`.
 
+Do not hand-write this bar on a page. Use `<PageTopbar>` (below), which wraps it.
+
+### Page topbar: `<PageTopbar>` (every page header)
+
+All four parts come from `@/components/crm/primitives`. Every page header is built from them, so
+pages cannot drift.
+
+```tsx
+import { PageTopbar, TopbarTabs, TopbarIconButton, ExpandingSearch } from "@/components/crm/primitives";
+
+<PageTopbar
+  desktopOnly                                  // hide below 768px when the page has its own mobile header
+  title={t("page.title")}                      // serif 20px; use the same string as the nav label
+  count={rows.length}                          // optional, shows "#12" after the title
+  left={<>                                     // right after the title: tabs, mode switch, list fold
+    <TopbarTabs tabs={TABS} value={tab} onChange={setTab} />
+    <TopbarIconButton label={t("toolbar.hidePanel")} onClick={cycle}><PanelLeftClose className="h-4 w-4" /></TopbarIconButton>
+  </>}
+  right={<>                                    // after the flexible spacer: search, menus, + last
+    <ExpandingSearch value={search} onChange={setSearch} placeholder={t("page.searchPlaceholder")} />
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <TopbarIconButton label={t("toolbar.filter")} active={isFilterActive}><Filter className="h-4 w-4" /></TopbarIconButton>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">…</DropdownMenuContent>
+    </DropdownMenu>
+    <TopbarIconButton label={t("toolbar.add")} primary onClick={onCreate}><Plus className="h-4 w-4" /></TopbarIconButton>
+  </>}
+/>
+```
+
+| Part | Props | Notes |
+|------|-------|-------|
+| `PageTopbar` | `title`, `count?`, `left?`, `right?`, `children?` (placed between `left` and the spacer), `desktopOnly?`, `scroll?` (sideways scroll for crowded bars on phones), `className?`, `style?`, `testId?` | 60px `.la-page-header`, gap 12, padding `0 17px`. `left` and `right` are flex rows with gap 8. |
+| `TopbarTabs` | `tabs: { id, label, icon?, badge? }[]`, `value`, `onChange`, `ariaLabel?`, `testId?`, `testIdPrefix?` | The `la-seg` track, mono 11px uppercase items, 13px icons. For a coloured mode switch (Live/Demo, Chats/Stats) use `PillSwitch` instead. |
+| `TopbarIconButton` | `label` (tooltip + aria-label), `active?` (wine dot), `primary?` (wine + button), `danger?`, plus any button props | Soft raised `la-btn la-btn--icon`. Works as a `DropdownMenuTrigger asChild` child. For a toggle, add `className={on && "on"}` (`.la-btn--soft.on`). |
+| `ExpandingSearch` | `value`, `onChange`, `placeholder`, `label?`, `matchCount?` ("N matches"), `defaultOpen?`, `alwaysOpen?`, `width?` (open width, default 220), `fillOnMobile?`, `testId?` | A 36px round icon that opens into a pill field on click and folds back when empty and blurred. Escape or the cross clears it. |
+
+Rules:
+- Order on the right: selection actions (when rows are selected), search, menus (filter, sort, group, fields, settings), then the wine `+` last.
+- Menus opened from the right side use `align="end"`.
+- Mobile list headers (`MobileListHeader`, the phone toolbars) may keep their own pattern.
+- `TranscriptSearch` (Calls) and the Leads `TopbarSearch` are thin wrappers over `ExpandingSearch`. Do not add another search control.
+
 ### Wide-screen centering
 
-When content should center on very wide viewports but stay left-aligned with the toolbar,
-wrap the **inside** of both the header and the content area with the same max-width div:
+Single-column pages (Stats, Demos, Socials) center their content column with the
+shared `.la-page-center` class (`design-system.css`: `max-width: 1386px; margin: 0 auto`).
+Pages with a list panel stay left-aligned (`max-w-[1386px] mr-auto`). See `docs/content-width-cap.md`.
+
+```tsx
+<div className="min-h-0 flex-1 overflow-y-auto">   {/* scroll container: full width */}
+  <div className="la-page-center px-4 md:px-9">   {/* content column: capped + centered */}
+    {/* page content */}
+  </div>
+</div>
+```
+
+Older variant (header and content both centered at 1600px), when the toolbar must line up with
+centered content, wrap the **inside** of both the header and the content area with the same max-width div:
 
 ```tsx
 <div className="la-page-header">
@@ -96,15 +152,17 @@ import { ListCard } from "@/components/crm/primitives";
 </ListCard>
 
 // Row that manages its own inner padding (variable layout, swipe trays, footers):
-<ListCard selected={isActive} padded={false} hoverShadow className="group" onClick={onClick}>
+<ListCard selected={isActive} padded={false} className="group" onClick={onClick}>
   <div className="px-3 pt-3 pb-2.5">{/* content */}</div>
 </ListCard>
 ```
 
-Props: `selected`, `interactive` (cursor + hover bg, default `true`), `hoverShadow` (lift on hover,
-**opt-in** — leave off to match a card that never lifted), `padded` (default `true`), `as`
-(`"div" | "button" | "li"`), `accentColor`. Anything else (`style`, `onClick`, `data-*`, `role`)
-forwards to the element. Overrides via `className` win through tailwind-merge.
+It renders `.la-camp-card` (flat, wine tint on hover, `.active` white with the wine bar when
+`selected`) as a block box, so free-form content lays out normally. Props: `selected`,
+`interactive` (pointer cursor, default `true`), `hoverShadow` (kept for compatibility, no effect),
+`padded` (default `true`), `as` (`"div" | "button" | "li"`), `accentColor`. Anything else (`style`,
+`onClick`, `data-*`, `role`) forwards to the element. `.la-camp-card` is unlayered CSS, so a
+`className` can't override its background, padding or shadow: pass `style` for that.
 
 ### 13.2 Group header — `<GroupHeader>`
 
@@ -129,7 +187,8 @@ import { SectionCard, Pill } from "@/components/crm/primitives";
 
 ### 13.4 Toolbar buttons
 
-Import the shared strings instead of re-declaring them per page:
+Page topbars use `TopbarIconButton` (§0, §17). The expand-on-hover strings below are only for
+the remaining Style B in-panel toolbars. Import them instead of re-declaring them per page:
 
 ```tsx
 import { xBase, xDefault, xActive, xSpan, ToolbarButton } from "@/components/crm/primitives";
@@ -171,6 +230,39 @@ The active state reads `--primary` (the global accent), so toolbar highlights fo
 - No fixed pixel heights — grows to fill the right panel column
 - Sticky footer always visible
 
+### 14.2.1 `<RightPanel>`: build every new create / edit panel on it
+
+`RightPanel` (`components/crm/primitives/RightPanel.tsx`, exported from the primitives index) is
+the shell above: header (title, optional subtitle and icon, 36px close), a scrolling `.neu-panel`
+body, and a sticky footer (Cancel left; `footerExtra` and the wine submit right).
+
+```tsx
+{open && (
+  <RightPanel
+    title={t("x.editTitle")}
+    onClose={() => setOpen(false)}
+    submitLabel={saving ? t("x.saving") : t("x.save")}
+    onSubmit={handleSave}          // or formId="x-form" to submit a <form> in the body
+    submitting={saving}
+    className="w-[480px]"          // default w-[440px] + left border
+  >
+    {/* fields */}
+  </RightPanel>
+)}
+```
+
+- **Mount** it only while open, in the page's flex row beside the content or in the detail
+  column, so the full-height chain stays intact (parent `overflow-hidden min-h-0`).
+- **Close**: Cancel, the X and Escape call `onClose` (Escape waits while `submitting`, and an open
+  Radix select or menu takes Escape first).
+- **Phones (below 768px)**: by default a full-screen panel above the bottom tab bar; the phone Back
+  button closes it. Pages that already use `MobileSheet` pass `mobile="inline"` and wrap it in the sheet.
+- `footer` replaces the default footer (multi-step flows like `CsvImportWizard`); `footer={null}` hides it.
+- Built on it: `EditUserPanel`, `PromptFormPanel`, `BlockPanel` (calendar), `ContractUploadPanel`,
+  `CsvImportWizard`, `EmailComposePanel`.
+- Follow-up: the five references below still hand-roll the same shell; move them onto `RightPanel`
+  when you touch them.
+
 ### 14.3 Reference Panel Components
 
 | Component | Path |
@@ -178,6 +270,8 @@ The active state reads `--primary` (the global accent), so toolbar highlights fo
 | `ContractCreatePanel` | `features/billing/components/ContractCreatePanel.tsx` |
 | `InvoiceCreatePanel` | `features/billing/components/InvoiceCreatePanel.tsx` |
 | `ExpenseCreatePanel` | `features/billing/components/ExpenseCreatePanel.tsx` |
+| `AccountCreatePanel` | `features/accounts/components/AccountCreatePanel.tsx` |
+| `ProspectCreatePanel` | `features/prospects/components/ProspectCreatePanel.tsx` |
 | `LeadInfoPanel` | `features/leads/components/LeadInfoPanel.tsx` |
 
 ---
@@ -195,7 +289,7 @@ Applies to **both** `LeadsCardView.tsx` (list) and `LeadsKanban.tsx` / `KanbanCa
 | Selected / Active | `bg-[#FFF9D9]` | none |
 | Dragging (kanban) | `bg-white scale-[1.02] rotate-1 opacity-95` | — |
 
-> All left panel cards (Leads, Campaigns, Accounts, Inbox, Calendar, Users, Billing) use `bg-card`. Use the CSS variable, not hardcoded hex.
+> All left panel cards (Leads, Accounts, Inbox, Calendar, Users, Billing) use `bg-card`. Use the CSS variable, not hardcoded hex.
 
 ### 15.1.1 Card Gaps
 
@@ -252,7 +346,7 @@ Both avatar bg/text and score ring stroke come from `PIPELINE_HEX` and `getStatu
 
 ## §16 — Left Panel Standard (All Split-Pane Pages)
 
-Applies to: Leads, Accounts, Campaigns, Inbox/Conversations, Users, Billing, Calendar.
+Applies to: Leads, Accounts, Inbox/Conversations, Users, Billing, Calendar.
 
 ### 16.1 Container
 
@@ -287,36 +381,47 @@ px-3 pt-1.5 pb-3  flex items-center gap-1.5
 
 ## §17 — Table Toolbar Standard
 
-> All toolbar buttons use the **expand-on-hover** pattern (§28). `ToolbarPill` is deprecated.
+> Table, pipeline and list controls live in the page topbar (§0, `<PageTopbar>`), built from
+> `TopbarIconButton`, `TopbarTabs` and `ExpandingSearch`. The expand-on-hover buttons (§28),
+> `SearchPill`, `ViewTabBar` and `ToolbarPill` are the retired Style B. Do not use them in new code.
 
-### 17.1 Button Constants
+### 17.1 Buttons
 
-```ts
-const xBase    = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-const xActive  = "border-brand-indigo text-brand-indigo";
-const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
+```tsx
+<DropdownMenu>
+  <DropdownMenuTrigger asChild>
+    <TopbarIconButton label={t("toolbar.sort")} active={sortBy !== "recent"}>
+      <ArrowUpDown className="h-4 w-4 shrink-0" />
+    </TopbarIconButton>
+  </DropdownMenuTrigger>
+  <DropdownMenuContent align="end" className="w-52">…</DropdownMenuContent>
+</DropdownMenu>
 ```
+
+`active` shows the wine dot when the menu holds a non-default value. The create button is
+`<TopbarIconButton label={…} primary>` with a `Plus` icon, always last.
 
 ### 17.2 Toolbar Layout
 
 ```
-[ViewTabBar]  [│]  [+ New]  [SearchPill]  [Sort]  [Filter]  [Group]  [Fields]  ··· [ml-auto → selection actions]
+PageTopbar:  [Title #count] [TopbarTabs] [fold] ········ [selection actions] [ExpandingSearch] [Filter] [Sort] [Group] [Fields] [Settings] [+]
 ```
-
-Separator: `<div className="w-px h-5 bg-border/40 mx-1 shrink-0" />`.
 
 ### 17.3 Row Selection Actions
 
-- Appear only when `selectedIds.size > 0`, floated right via `ml-auto`
-- Appear inline in the toolbar — NEVER as a separate bar
-- Order: action buttons → count badge with X dismiss
-- **Delete:** `border-red-300/60 text-red-400 hover:border-red-400 hover:text-red-600`
+- Appear only when `selectedIds.size > 0`, inside the topbar's `right`, before the search
+- Appear inline in the topbar, NEVER as a separate bar
+- Order: action buttons (`TopbarIconButton`, `danger` for delete) → mono wine count → `TopbarIconButton` with `X` to clear
+- Confirm-before-acting buttons: the inline "Label? Yes / No" pill (see `ConfirmToolbarButton` in `features/leads/components/LeadsTopbarParts.tsx`)
 
-### 17.4 Search (SearchPill)
+### 17.4 Search (ExpandingSearch)
 
 ```tsx
-<SearchPill value={search} onChange={setSearch} open={true} onOpenChange={() => {}} placeholder="Search…" />
+<ExpandingSearch value={search} onChange={setSearch} placeholder={t("page.searchPlaceholder")} />
+// a page that needs the field visible:
+<ExpandingSearch value={search} onChange={setSearch} placeholder={…} alwaysOpen />
+// with a hit count (transcripts):
+<ExpandingSearch value={q} onChange={setQ} placeholder={…} matchCount={matches} width={240} />
 ```
 
 ---
@@ -354,60 +459,23 @@ Inherits §16. Specific values:
 
 ---
 
-## §21 — Campaign Detail View
+## §21: Campaign settings (the Campaigns page is retired)
 
-### 21.1 Structure
+The Campaigns page is out of the nav: agency only, reachable by URL at `/platform/campaigns`. Don't
+link to it or build on its layout. A campaign stays as data (every lead belongs to one; the Python
+engine reads its fields), and each kind is edited where it lives:
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Gradient header                                            │
-│  ┌──────────────────────────────────────────────────────┐   │
-│  │ Row 1: [Add][Search][Sort][Filter][Group]  …ml-auto… │   │
-│  │         [Pause][Refresh][Delete]                      │   │
-│  │ Row 2: [Avatar 72px]  Campaign Name + Badges         │   │
-│  └──────────────────────────────────────────────────────┘   │
-│  Tab row: [Summary] [1D 7D 1M All Custom] [Config] [Tags]  │
-│  Body (scrollable, 3-col grid for Summary)                  │
-└─────────────────────────────────────────────────────────────┘
-```
+| Where | What | Component |
+|-------|------|-----------|
+| Accounts > Reactivation (agency) | Reactivation campaigns: picker, status, Activate/Pause, settings, New campaign panel | `features/accounts/components/workspace/reactivation/` |
+| Demos > Settings | The demo campaigns on account 1, one per service tile | `features/demos/components/DemoCampaignSettings.tsx` |
+| Chats > Settings > Advanced (owner) | The receptionist campaign's engine fields | `features/accounts/components/workspace/chat/ChatAdvanced.tsx` |
 
-### 21.2 Toolbar
-
-- **LEFT:** Add, SearchPill, Sort, Filter, Group (expand-on-hover §28)
-- **RIGHT (`ml-auto`):** Pause/Activate, Refresh, Delete
-
-### 21.3 Tab Row
-
-Tabs: **Summary** | **Configurations** | **Tags** (agency-only). Height `h-9`.
-- Active: `bg-foreground text-background`
-- Inactive: `border border-black/[0.125] text-foreground/60 hover:text-foreground`
-
-### 21.4 Date Range Pill Bar
-
-```tsx
-<div className="inline-flex items-center h-9 rounded-full border border-black/[0.125] bg-muted/30 p-0.5 gap-0">
-  <button className="px-3 h-full rounded-full text-[11px] font-semibold ...">1D</button>
-</div>
-```
-- Active: `bg-white text-foreground shadow-sm`
-- Inactive: `text-foreground/50 hover:text-foreground`
-
-### 21.5 Summary Grid
-
-| Col 1 | Col 2 | Col 3 |
-|-------|-------|-------|
-| Campaign Info/KPIs | Up Next (Agenda) | Pipeline Funnel |
-| Financials + ROI Trend | Activity Feed | Conversions Doughnut |
-
-### 21.6 Tags Tab
-
-- Component: `CampaignTagsSection` + `useCampaignTags(campaignId, campaignName)`
-- Default group: category
-- Toolbar: `[Search] [+Add] [Sort] [Filter] [Group] …ml-auto… [count/selection]`
-
-### 21.7 Default Tags on Creation
-
-New campaigns auto-clone tags from the most-tagged existing campaign.
+- The settings screen is `CampaignStageEditor` with `settings/CampaignSettingsLayout` (its own
+  `SectionRail`: Business, AI, Behavior). Data and autosave: `components/useCampaignDetail.ts`.
+- Field inputs (`EditText`, `EditSelect`, `InfoRow`...) come from `features/campaigns/components/formFields`.
+- Writes shared by every home (niche template sync, default tags): `features/campaigns/lib/campaignWrites.ts`.
+  New campaigns clone their tags from the most-tagged existing campaign.
 
 ---
 
@@ -539,9 +607,10 @@ Width derivation: `340px (panel) − 17px (pl-[17px]) − 14px (pr-3.5) = 309px`
 
 ---
 
-## §28 — Expand-on-Hover Button Pattern (Global Default)
+## §28 — Expand-on-Hover Button Pattern (retired Style B)
 
-> Default for ALL toolbar, filter, sort, group, and action buttons. `ToolbarPill` is deprecated.
+> Retired for page topbars: use `TopbarIconButton` (§0, §17). Kept for reference while the
+> remaining in-panel toolbars are migrated. `ToolbarPill` is deprecated.
 
 ### Pattern
 
@@ -647,3 +716,4 @@ container.scrollTo({ top: cardTop - headerHeight - 3, behavior: "smooth" });
 - **2026-02-28:** §26 ViewTabBar positioning added. §27 Table Group Header added. §21 rewritten.
 - **2026-03-01:** §28 Expand-on-Hover added. §17 rewritten.
 - **2026-03-03:** §30 Inline Confirmation Tooltip added. Split from UI_STANDARDS.md into separate file. §15.3 Tag/Label Pill Colors standard added (transparent rgba overlays for all left panel cards).
+- **2026-10-22:** §0 `PageTopbar` / `TopbarTabs` / `TopbarIconButton` / `ExpandingSearch` added. §17 rewritten for the topbar primitives. §28 marked retired. §21 now describes where campaign settings live (the Campaigns page retired).

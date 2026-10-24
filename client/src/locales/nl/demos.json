@@ -138,6 +138,28 @@
       "callNumber": "Nummer bij \"Of bel haar\""
     },
     "empty": "Nog geen instellingen voor deze dienst.",
+    "rail": {
+      "label": "Diensten",
+      "voice": "Stemmen, wachtwoord, gesprekslimiet",
+      "none": "Nog geen instellingen",
+      "shared": "Draait op de campagne van {{service}}"
+    },
+    "campaign": {
+      "help": "De campagne waarop deze demo draait. Wijzigingen worden vanzelf opgeslagen.",
+      "loadFailed": "Campagne {{id}} kon niet worden geladen.",
+      "meta": "#{{id}} · {{status}}",
+      "saving": "Opslaan...",
+      "pending": "Zo meteen opgeslagen",
+      "saved": "Alle wijzigingen opgeslagen",
+      "sharedHelp": "{{service}} draait op dezelfde campagne als {{owner}} ({{campaign}}), dus de instellingen staan onder {{owner}}.",
+      "openShared": "Open {{service}}"
+    },
+    "campaigns": {
+      "label": "Democampagnes",
+      "help": "Democampagnes waarop geen van de diensten hierboven draait.",
+      "none": "Geen andere democampagnes",
+      "pick": "Campagne"
+    },
     "widget": {
       "avatarTitle": "Foto van de medewerker",
       "avatarHint": "Zichtbaar in het welkomstbericht, de chatkop en bij elk antwoord, in elke widgetdemo.",
@@ -163,42 +185,28 @@
       "limitHint": "Hoe lang een demogesprek mag duren voordat het zichzelf beëindigt.",
       "save": "Opslaan",
       "cancel": "Annuleren",
-      "phone": {
-        "title": "Kantoorgeluid op de telefoonlijn",
-        "hint": "Speelt een rustig kantoor onder haar stem op {{number}}. Aan: gesprekken lopen via een Telnyx-conferentie (ongeveer $0,007 per minuut extra). Uit: gesprekken gaan rechtstreeks naar OpenAI, zoals voorheen.",
-        "onState": "Aan: bellers horen het kantoor. Geldt vanaf het volgende gesprek.",
-        "offState": "Uit: gesprekken gaan rechtstreeks naar OpenAI, zonder achtergrondgeluid.",
-        "levelTitle": "Volume kantoor",
-        "levelHint": "Hoe hard het kantoor onder haar stem klinkt. Geldt vanaf het volgende gesprek.",
-        "level": {
-          "low": "Zacht",
-          "medium": "Gemiddeld",
-          "high": "Hard"
-        }
-      },
-      "jitter": {
-        "title": "Vloeiend geluid (jitterbuffer)",
-        "hint": "Houdt {{min}} tot {{max}} ms van haar geluid vast bij Telnyx, zodat ongelijk binnenkomende pakketten van OpenAI zonder kleine haperingen spelen. Voegt tot {{max}} ms vertraging toe. Geldt voor elk gesprek op de lijn.",
-        "onState": "Aan: vloeiender geluid, tot {{max}} ms later. Geldt vanaf het volgende gesprek.",
-        "offState": "Uit: zo min mogelijk vertraging, kleine haperingen zijn mogelijk.",
-        "anchor": "Geluid loopt via {{site}}."
-      },
       "engines": {
         "title": "Engine-tests",
         "hint": "Gesprekken vanaf deze nummers naar de demolijn worden beantwoord door de engine, stem en prompt die je hier kiest. Iedere andere beller houdt de instellingen van de lijn. Binnen 30 seconden actief.",
+        "retired": "Grok is gestopt: gesprekken van dit nummer worden door GPT-Live beantwoord. Kies een engine om dat te wijzigen.",
         "xaiReady": "Grok is ingesteld voor {{numbers}}.",
         "xaiMissing": "Grok is nog niet ingesteld (ontbreekt: {{missing}}): deze gesprekken blijven op GPT-Live tot dat klaar is.",
+        "elevenReady": "ElevenLabs is ingesteld voor {{numbers}}.",
+        "elevenMissing": "ElevenLabs is nog niet ingesteld (ontbreekt: {{missing}}): deze gesprekken blijven op GPT-Live tot dat klaar is.",
         "number": "Telefoonnummer",
         "numberPlaceholder": "+31 6 12345678",
         "label": "Naam",
         "labelPlaceholder": "Naam (optioneel)",
         "enabled": "Test aan",
+        "freshCaller": "Geheugen uit (klinkt als een nieuwe beller)",
+        "freshCallerHint": "Eerdere gesprekken, naam, taal en afspraken van dit nummer blijven verborgen voor de AI. Boekingen komen nog steeds in de agenda.",
         "remove": "Verwijderen",
         "add": "Tester toevoegen",
         "lineVoice": "De eigen stem van de lijn",
         "engine": {
           "gpt-live": "GPT-Live",
-          "xai": "Grok"
+          "xai": "Grok",
+          "elevenlabs": "ElevenLabs"
         },
         "gender": {
           "female": "Vrouw",

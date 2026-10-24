@@ -22,6 +22,7 @@ export function PreferencesTab({
   onProfileUpdated,
   showNotifications = true,
   showAppearance = true,
+  showSecurity = true,
   flat = false,
 }: {
   profile: UserProfile;
@@ -30,6 +31,8 @@ export function PreferencesTab({
   showNotifications?: boolean;
   /** Hide theme + language (the phone has them as More tiles). */
   showAppearance?: boolean;
+  /** Hide the Owner 2FA policy and security log (desktop Settings shows them under Security). */
+  showSecurity?: boolean;
   /** Sections on one surface, split by spacing and eyebrow headings. */
   flat?: boolean;
 }) {
@@ -47,8 +50,8 @@ export function PreferencesTab({
         </SettingsCard>
       )}
       {isOwner && <OwnerToolsCard profile={profile} onProfileUpdated={onProfileUpdated} flat={flat} />}
-      {isOwner && <TwoFactorPolicyCard flat={flat} />}
-      {isOwner && <SecurityLogCard flat={flat} />}
+      {isOwner && showSecurity && <TwoFactorPolicyCard flat={flat} />}
+      {isOwner && showSecurity && <SecurityLogCard flat={flat} />}
     </div>
   );
 }

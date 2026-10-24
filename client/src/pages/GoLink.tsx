@@ -2,7 +2,7 @@
 // Resolves the opaque code on the server (which checks the user may see that
 // account), preselects the lead or call, then opens the CRM page. With
 // ?to=settings (the email footer's link) it opens the account's Recaps &
-// alerts tab instead, ?to=calls the Calls page and ?call=<id> that one call. Logged-out visitors go to the login page and come back
+// alerts tab instead, ?to=calls the Calls page, ?call=<id> that one call and ?lead=<id> that lead's chat. Logged-out visitors go to the login page and come back
 // here afterwards.
 import { useEffect, useState } from "react";
 import { useRoute } from "wouter";

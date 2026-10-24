@@ -1,5 +1,6 @@
 /**
- * CsvImportWizard — multi-step dialog for importing leads from CSV.
+ * CsvImportWizard: multi-step right-hand panel for importing leads from CSV
+ * (UI_STANDARDS 3.7). Mount it only while open.
  *
  * Steps:
  *  1. Upload  — pick a .csv file, parse headers + preview rows
@@ -8,15 +9,7 @@
  *  4. Results — show created / error counts after the POST completes
  */
 import { useState, useRef, useCallback } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import { RightPanel } from "@/components/crm/primitives";
 import {
   Select,
   SelectContent,
@@ -135,11 +128,11 @@ interface ImportResults {
 }
 
 interface Props {
-  open: boolean;
   onClose: () => void;
   onImportComplete?: () => void;
   /** Optional: lock accountsId for non-agency users */
   defaultAccountId?: number;
+  className?: string;
 }
 
 // ─── Step Indicator ───────────────────────────────────────────────────────────
@@ -189,8 +182,9 @@ function StepIndicator({ current }: { current: Step }) {
 }
 
 // ─── Main Component ───────────────────────────────────────────────────────────
-export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccountId }: Props) {
+export function CsvImportWizard({ onClose, onImportComplete, defaultAccountId, className }: Props) {
   const { t } = useTranslation("leads");
+  const { t: tc } = useTranslation("crm");
 
   const fieldLabel: Record<string, string> = {
     __skip__: t("csvImport.targetFields.skip"),
@@ -382,20 +376,92 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
 
   const { mappedHeaders, preview } = step === "preview" ? previewData() : { mappedHeaders: [], preview: [] };
 
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && handleClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden">
-        <DialogHeader className="px-6 pt-6 pb-4 border-b border-border shrink-0">
-          <DialogTitle className="flex items-center gap-2 text-lg">
-            <FileText className="h-4 w-4 text-brand-indigo" />
-            {t("csvImport.title")}
-          </DialogTitle>
-          <DialogDescription className="text-sm text-muted-foreground">
-            {t("csvImport.description")}
-          </DialogDescription>
-        </DialogHeader>
+  // Footer: Back / Cancel / Close on the left, the step action on the right.
+  const footer = (
+    <>
+      <div className="flex items-center gap-2">
+        {step !== "upload" && step !== "results" && (
+          <button
+            type="button"
+            className="la-btn la-btn--soft h-9 px-4 text-sm gap-1.5"
+            onClick={() => {
+              if (step === "mapping") setStep("upload");
+              else if (step === "preview") setStep("mapping");
+            }}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {tc("actions.back")}
+          </button>
+        )}
+        {(step === "upload" || step === "results") && (
+          <button type="button" className="la-btn la-btn--soft h-9 px-4 text-sm" onClick={handleClose}>
+            {step === "results" ? tc("actions.close") : tc("actions.cancel")}
+          </button>
+        )}
+      </div>
 
-        <div className="flex-1 overflow-y-auto px-6 py-4">
+      <div className="flex items-center gap-2">
+        {/* Upload: proceeding happens automatically on file select */}
+        {step === "mapping" && (
+          <button
+            type="button"
+            className="la-btn la-btn--wine h-9 px-5 text-sm gap-1.5 disabled:opacity-50"
+            onClick={() => setStep("preview")}
+            disabled={mappedCount === 0 || hasDuplicates}
+            data-testid="csv-mapping-next"
+          >
+            {t("csvImport.preview.previewImport")}
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        )}
+
+        {step === "preview" && (
+          <button
+            type="button"
+            className="la-btn la-btn--wine h-9 px-5 text-sm gap-1.5 disabled:opacity-50"
+            onClick={handleImport}
+            disabled={importing}
+            data-testid="csv-import-confirm"
+          >
+            {importing ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t("csvImport.importing")}
+              </>
+            ) : (
+              <>
+                {t("csvImport.importButton", { count: csvRows.length })}
+                <ArrowRight className="h-4 w-4" />
+              </>
+            )}
+          </button>
+        )}
+
+        {step === "results" && importResults && importResults.errors > 0 && importResults.created === 0 && (
+          <button
+            type="button"
+            className="la-btn la-btn--soft h-9 px-4 text-sm gap-1.5"
+            onClick={() => setStep("mapping")}
+          >
+            <ArrowLeft className="h-4 w-4" />
+            {t("csvImport.results.fixMapping")}
+          </button>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <RightPanel
+      title={t("csvImport.title")}
+      subtitle={t("csvImport.description")}
+      icon={<FileText className="h-4 w-4 text-brand-indigo mt-1" />}
+      onClose={handleClose}
+      footer={footer}
+      submitting={importing}
+      className={className}
+      data-testid="csv-import-panel"
+    >
           <StepIndicator current={step} />
 
           {/* ── Step 1: Upload ─────────────────────────────────────────── */}
@@ -684,81 +750,6 @@ export function CsvImportWizard({ open, onClose, onImportComplete, defaultAccoun
               )}
             </div>
           )}
-        </div>
-
-        {/* ── Footer ─────────────────────────────────────────────────────── */}
-        <DialogFooter className="px-6 py-4 border-t border-border shrink-0 flex items-center justify-between gap-3">
-          {/* Back button */}
-          {step !== "upload" && step !== "results" && (
-            <Button
-              variant="outline"
-              className="gap-2"
-              onClick={() => {
-                if (step === "mapping") setStep("upload");
-                else if (step === "preview") setStep("mapping");
-              }}
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
-          )}
-          {(step === "upload" || step === "results") && (
-            <Button variant="outline" onClick={handleClose}>
-              {step === "results" ? "Close" : "Cancel"}
-            </Button>
-          )}
-
-          {/* Spacer */}
-          <div className="flex-1" />
-
-          {/* Next / Import button */}
-          {step === "upload" && null /* proceed happens automatically on file select */}
-
-          {step === "mapping" && (
-            <Button
-              className="gap-2 bg-brand-indigo hover:bg-brand-indigo/90 text-white"
-              onClick={() => setStep("preview")}
-              disabled={mappedCount === 0 || hasDuplicates}
-              data-testid="csv-mapping-next"
-            >
-              {t("csvImport.preview.previewImport")}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          )}
-
-          {step === "preview" && (
-            <Button
-              className="gap-2 bg-brand-indigo hover:bg-brand-indigo/90 text-white"
-              onClick={handleImport}
-              disabled={importing}
-              data-testid="csv-import-confirm"
-            >
-              {importing ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  {t("csvImport.importing")}
-                </>
-              ) : (
-                <>
-                  {t("csvImport.importButton", { count: csvRows.length })}
-                  <ArrowRight className="h-4 w-4" />
-                </>
-              )}
-            </Button>
-          )}
-
-          {step === "results" && importResults && importResults.errors > 0 && importResults.created === 0 && (
-            <Button
-              variant="outline"
-              onClick={() => setStep("mapping")}
-              className="gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              {t("csvImport.results.fixMapping")}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </RightPanel>
   );
 }

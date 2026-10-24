@@ -2,7 +2,7 @@
   "toolbar": {
     "invite": "Uitnodigen",
     "search": "Zoeken",
-    "searchPlaceholder": "Gebruikers zoeken\u2026",
+    "searchPlaceholder": "Gebruikers zoeken…",
     "sort": "Sorteren",
     "sortBy": "Sorteren op",
     "filter": "Filteren",
@@ -14,8 +14,8 @@
     "deactivate": "Deactiveren"
   },
   "sort": {
-    "nameAsc": "Naam A \u2192 Z",
-    "nameDesc": "Naam Z \u2192 A",
+    "nameAsc": "Naam A → Z",
+    "nameDesc": "Naam Z → A",
     "recent": "Meest Recent"
   },
   "group": {
@@ -57,11 +57,11 @@
     "emailPlaceholder": "gebruiker@voorbeeld.nl",
     "role": "Rol",
     "roleRequired": "Rol *",
-    "rolePlaceholder": "Selecteer rol\u2026",
+    "rolePlaceholder": "Selecteer rol…",
     "account": "Account",
     "noAccount": "Geen account",
     "sendInvite": "Uitnodiging Versturen",
-    "sending": "Versturen\u2026",
+    "sending": "Versturen…",
     "emailRequired_error": "E-mail verplicht",
     "inviteCreated": "Uitnodiging aangemaakt voor {{email}}",
     "shareToken": "Deel dit uitnodigingstoken met de gebruiker:",
@@ -76,9 +76,9 @@
     "expired": "Verlopen",
     "resent": "Opnieuw verstuurd",
     "resend": "Opnieuw versturen",
-    "sending": "Versturen\u2026",
+    "sending": "Versturen…",
     "revoke": "Intrekken",
-    "revoking": "Intrekken\u2026",
+    "revoking": "Intrekken…",
     "inviteResent": "Uitnodiging opnieuw verstuurd",
     "resendFailed": "Opnieuw versturen mislukt",
     "inviteRevoked": "Uitnodiging ingetrokken",
@@ -155,5 +155,28 @@
     "errPasswordMismatch": "De wachtwoorden komen niet overeen.",
     "errFailed": "Het account kon niet worden geactiveerd. Probeer het opnieuw.",
     "errNetwork": "Netwerkfout. Probeer het opnieuw."
+  },
+  "resetPassword": {
+    "invalidTitle": "Ongeldige resetlink",
+    "invalidBody": "Aan deze link om je wachtwoord opnieuw in te stellen ontbreekt informatie. Vraag op de inlogpagina een nieuwe link aan.",
+    "title": "Kies een nieuw wachtwoord",
+    "subtitle": "Nieuw wachtwoord instellen voor",
+    "password": "Nieuw wachtwoord",
+    "passwordPlaceholder": "Minimaal 6 tekens",
+    "confirmPassword": "Bevestig nieuw wachtwoord",
+    "confirmPlaceholder": "Voer je nieuwe wachtwoord opnieuw in",
+    "submit": "Wachtwoord opnieuw instellen",
+    "saving": "Opslaan...",
+    "errPasswordShort": "Het wachtwoord moet minimaal 6 tekens bevatten.",
+    "errPasswordMismatch": "De wachtwoorden komen niet overeen.",
+    "errLinkInvalid": "Deze link is ongeldig of verlopen. Vraag op de inlogpagina een nieuwe aan.",
+    "errTooMany": "Te veel pogingen. Probeer het later opnieuw.",
+    "errFailed": "Het wachtwoord kon niet worden gewijzigd. Probeer het opnieuw.",
+    "errNetwork": "Netwerkfout. Probeer het opnieuw.",
+    "successTitle": "Wachtwoord gewijzigd",
+    "successBody": "Je wachtwoord is gewijzigd. Log in met je nieuwe wachtwoord.",
+    "toLogin": "Naar inloggen",
+    "requestNew": "Nieuwe link aanvragen",
+    "backToLogin": "Terug naar inloggen"
   }
 }

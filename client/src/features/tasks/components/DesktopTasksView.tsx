@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { ArrowUpDown, Check, ChevronDown, ChevronLeft, ChevronRight, Filter, Plus } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useTranslation } from "react-i18next";
+import { PageTopbar, ExpandingSearch } from "@/components/crm/primitives";
 import {
   DndContext, DragOverlay, pointerWithin, PointerSensor, useSensor, useSensors,
   type DragStartEvent, type DragEndEvent,
@@ -37,17 +38,18 @@ const SORT_KEYS: Record<string, string> = {
 };
 
 type PriorityFilter = 'all' | 'low' | 'medium' | 'high' | 'urgent';
+// Second item is the i18n key of the label (tasks namespace).
 const PRIORITY_OPTS: Array<[PriorityFilter, string]> = [
-  ['all', 'All'], ['low', 'Low'], ['medium', 'Medium'], ['high', 'High'], ['urgent', 'Urgent'],
+  ['all', 'filter.all'], ['low', 'priority.low'], ['medium', 'priority.medium'], ['high', 'priority.high'], ['urgent', 'priority.urgent'],
 ];
 
 // Calendar status filter options
 const CAL_STATUS_OPTS = [
-  { key: 'all',         label: 'All' },
-  { key: 'todo',        label: 'To Do' },
-  { key: 'in_progress', label: 'In Progress' },
-  { key: 'waiting',     label: 'Waiting' },
-  { key: 'done',        label: 'Done' },
+  { key: 'all',         labelKey: 'filter.all' },
+  { key: 'todo',        labelKey: 'status.todo' },
+  { key: 'in_progress', labelKey: 'status.inProgress' },
+  { key: 'waiting',     labelKey: 'status.waiting' },
+  { key: 'done',        labelKey: 'status.done' },
 ] as const;
 
 type CalStatusFilter = (typeof CAL_STATUS_OPTS)[number]['key'];
@@ -203,169 +205,152 @@ export default function DesktopTasksView({ tasks, categories, users, todayISO, c
   return (
     <div className="la-page" style={{ background: 'var(--bg)' }}>
 
-      {/* Top header bar — full width, no inner centering so title never shifts */}
-      <div style={{ height: 60, flexShrink: 0, borderTop: '1px solid var(--line)', borderBottom: '1px solid var(--line)', background: 'var(--surface)', display: 'flex', alignItems: 'center', padding: '0 20px', gap: 12 }}>
-
-        {/* Title — always at left edge */}
-        <span style={{ fontFamily: 'var(--serif)', fontSize: 24, color: 'var(--ink)', letterSpacing: '-0.01em', flexShrink: 0 }}>Tasks</span>
-        <span style={{ fontFamily: 'var(--mono)', fontSize: 10, color: 'var(--mute-2)', letterSpacing: '0.1em', flexShrink: 0 }}>{boardTasks.length}</span>
-
-        {/* Calendar navigation */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <button onClick={goToday} className="la-btn la-btn--soft" style={{ height: BTN_H }}>Today</button>
-          <button onClick={isWide ? goPrevMonth : goPrevWeek} className="la-btn la-btn--soft la-btn--icon" style={{ width: BTN_H, height: BTN_H }}><ChevronLeft size={15} /></button>
-          <span style={{ fontFamily: 'var(--serif)', fontSize: 17, color: 'var(--ink)', letterSpacing: '-0.01em', minWidth: isWide ? 140 : 116, textAlign: 'center' }}>
-            {isWide ? monthLabel(weekStart) : weekRangeLabel(weekStart)}
-          </span>
-          <button onClick={isWide ? goNextMonth : goNextWeek} className="la-btn la-btn--soft la-btn--icon" style={{ width: BTN_H, height: BTN_H }}><ChevronRight size={15} /></button>
-        </div>
-
-        {/* Calendar filter */}
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button title="Calendar filter" className={`la-btn la-btn--soft${calStatusFilter !== 'all' || dateFrom || dateTo ? ' on' : ''}`} style={{ height: BTN_H }}>
-              Cal
-              <ChevronDown size={12} style={{ opacity: 0.5 }} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-48 glass-strong border-none">
-            <DropdownMenuLabel>Status</DropdownMenuLabel>
-            {CAL_STATUS_OPTS.map(o => (
-              <DropdownMenuItem key={o.key} onClick={() => handleCalStatus(o.key)} className="flex items-center gap-2">
-                {calStatusFilter === o.key && <Check className="h-3.5 w-3.5 text-brand-indigo" />}
-                <span className={cn(calStatusFilter === o.key ? "font-semibold ml-0" : "ml-[22px]")}>{o.label}</span>
-              </DropdownMenuItem>
-            ))}
-            <DropdownMenuSeparator />
-            <DropdownMenuCheckboxItem checked={!hideWeekends} onCheckedChange={v => handleHideWeekends(!v)}>
-              Show weekends
-            </DropdownMenuCheckboxItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-
-        <div style={{ flex: 1 }} />
-
-        {/* Right controls */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          {/* Search */}
-          <div style={{ position: 'relative' }}>
-            <input
-              className="neu-input"
-              placeholder="Search tasks…"
-              value={desktopSearch}
-              onChange={e => setDesktopSearch(e.target.value)}
-              style={{ paddingLeft: 32, paddingTop: 0, paddingBottom: 0, height: BTN_H, fontSize: 12, width: 190 }}
-            />
-            <span style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: 'var(--mute-2)', display: 'flex', pointerEvents: 'none' }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <PageTopbar
+        title={t("page.title")}
+        count={boardTasks.length}
+        left={<>
+          {/* Calendar navigation */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <button onClick={goToday} className="la-btn la-btn--soft" style={{ height: BTN_H }}>{t("views.today")}</button>
+            <button onClick={isWide ? goPrevMonth : goPrevWeek} className="la-btn la-btn--soft la-btn--icon" style={{ width: BTN_H, height: BTN_H }} title={t("topbar.previous")} aria-label={t("topbar.previous")}><ChevronLeft size={15} /></button>
+            <span style={{ fontFamily: 'var(--serif)', fontSize: 17, color: 'var(--ink)', letterSpacing: '-0.01em', minWidth: isWide ? 140 : 116, textAlign: 'center' }}>
+              {isWide ? monthLabel(weekStart) : weekRangeLabel(weekStart)}
             </span>
+            <button onClick={isWide ? goNextMonth : goNextWeek} className="la-btn la-btn--soft la-btn--icon" style={{ width: BTN_H, height: BTN_H }} title={t("topbar.next")} aria-label={t("topbar.next")}><ChevronRight size={15} /></button>
           </div>
 
-          {/* Filter — Priority + Category + Date Range (all in one, cascading submenus) */}
+          {/* Calendar filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button title="Filters" className={`la-btn la-btn--soft${priorityFilter !== 'all' || categoryFilter !== 'all' || dateFrom || dateTo ? ' on' : ''}`} style={{ height: BTN_H }}>
-                <Filter size={13} />
+              <button title={t("topbar.calendarFilter")} className={`la-btn la-btn--soft${calStatusFilter !== 'all' || dateFrom || dateTo ? ' on' : ''}`} style={{ height: BTN_H }}>
+                {t("topbar.cal")}
                 <ChevronDown size={12} style={{ opacity: 0.5 }} />
               </button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 glass-strong border-none">
-              {/* Priority submenu */}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="flex items-center justify-between gap-2">
-                  <span>Priority</span>
-                  {priorityFilter !== 'all' && <span className="text-[10px] font-mono text-brand-indigo capitalize">{priorityFilter}</span>}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-44 glass-strong border-none">
-                  {PRIORITY_OPTS.map(([k, lbl]) => (
-                    <DropdownMenuItem key={k} onClick={() => handlePriorityFilter(k)} className="flex items-center justify-between gap-3">
-                      <span className="flex items-center gap-2">
-                        {k === priorityFilter && <Check className="h-3.5 w-3.5 text-brand-indigo" />}
-                        <span className={cn(k === priorityFilter && "font-semibold", k === priorityFilter ? "" : "ml-[22px]")}>{lbl}</span>
-                      </span>
-                      <span className="font-mono text-[10px] text-muted-foreground tabular-nums">{priorityCounts[k]}</span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-              {/* Category submenu */}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="flex items-center justify-between gap-2">
-                  <span>Category</span>
-                  {categoryFilter !== 'all' && <span className="text-[10px] font-mono text-brand-indigo truncate max-w-[60px]">{categories.find((c: any) => c.id === categoryFilter)?.name}</span>}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-48 glass-strong border-none max-h-[60vh] overflow-y-auto">
-                  <DropdownMenuItem onClick={() => handleCategoryFilter('all')} className="flex items-center gap-2">
-                    {categoryFilter === 'all' && <Check className="h-3.5 w-3.5 text-brand-indigo" />}
-                    <span className={cn(categoryFilter === 'all' ? "font-semibold ml-0" : "ml-[22px]")}>All</span>
-                  </DropdownMenuItem>
-                  {categories.map((c: any) => (
-                    <DropdownMenuItem key={c.id} onClick={() => handleCategoryFilter(c.id)} className="flex items-center gap-2">
-                      {categoryFilter === c.id && <Check className="h-3.5 w-3.5 text-brand-indigo" />}
-                      <span className={cn(categoryFilter === c.id ? "font-semibold ml-0" : "ml-[22px]", "flex items-center gap-1.5")}>
-                        {c.icon && <span>{c.icon}</span>}
-                        <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: c.color ?? 'var(--mute-2)', flexShrink: 0 }} />
-                        {c.name}
-                      </span>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-
-              {/* Date Range submenu */}
-              <DropdownMenuSub>
-                <DropdownMenuSubTrigger className="flex items-center justify-between gap-2">
-                  <span>Date range</span>
-                  {(dateFrom || dateTo) && <span className="text-[10px] font-mono text-brand-indigo">on</span>}
-                </DropdownMenuSubTrigger>
-                <DropdownMenuSubContent className="w-56 glass-strong border-none">
-                  <DropdownMenuItem onClick={handleThisMonth} className="flex items-center gap-2">
-                    <span className="font-medium">This Month</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <div className="px-2 pb-1 flex flex-col gap-1.5 pt-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-muted-foreground w-8 shrink-0">From</span>
-                      <input type="date" value={dateFrom} onChange={e => handleDateFrom(e.target.value)}
-                        className="flex-1 text-[11px] rounded-[5px] bg-[var(--bg)] border border-[var(--line)] px-2 py-1 text-[var(--ink)] focus:outline-none" />
-                      {dateFrom && <button onClick={() => handleDateFrom('')} className="text-muted-foreground hover:text-foreground text-[10px]">✕</button>}
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-[11px] text-muted-foreground w-8 shrink-0">To</span>
-                      <input type="date" value={dateTo} onChange={e => handleDateTo(e.target.value)}
-                        className="flex-1 text-[11px] rounded-[5px] bg-[var(--bg)] border border-[var(--line)] px-2 py-1 text-[var(--ink)] focus:outline-none" />
-                      {dateTo && <button onClick={() => handleDateTo('')} className="text-muted-foreground hover:text-foreground text-[10px]">✕</button>}
-                    </div>
-                  </div>
-                </DropdownMenuSubContent>
-              </DropdownMenuSub>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          {/* Sort */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button title="Sort" className={`la-btn la-btn--soft${sort !== 'due_date_asc' ? ' on' : ''}`} style={{ height: BTN_H }}>
-                <ArrowUpDown size={13} /><ChevronDown size={12} style={{ opacity: 0.5 }} />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-52 max-h-[60vh] overflow-y-auto glass-strong border-none">
-              <DropdownMenuLabel>Sort by</DropdownMenuLabel>
-              {SORT_OPTIONS.map(o => (
-                <DropdownMenuItem key={o.value} onClick={() => handleSort(o.value)} className="flex items-center gap-2">
-                  {sort === o.value && <Check className="h-3.5 w-3.5 text-brand-indigo" />}
-                  <span className={cn(sort === o.value ? "font-semibold" : "ml-[22px]")}>{t(SORT_KEYS[o.value] ?? o.label)}</span>
+            <DropdownMenuContent align="start" className="w-48 glass-strong border-none">
+              <DropdownMenuLabel>{t("topbar.status")}</DropdownMenuLabel>
+              {CAL_STATUS_OPTS.map(o => (
+                <DropdownMenuItem key={o.key} onClick={() => handleCalStatus(o.key)} className="flex items-center gap-2">
+                  {calStatusFilter === o.key && <Check className="h-3.5 w-3.5 text-[color:var(--wine)]" />}
+                  <span className={cn(calStatusFilter === o.key ? "font-semibold ml-0" : "ml-[22px]")}>{t(o.labelKey)}</span>
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuSeparator />
+              <DropdownMenuCheckboxItem checked={!hideWeekends} onCheckedChange={v => handleHideWeekends(!v)}>
+                {t("topbar.showWeekends")}
+              </DropdownMenuCheckboxItem>
             </DropdownMenuContent>
           </DropdownMenu>
+        </>}
+        right={<>
+        {/* Search */}
+        <ExpandingSearch value={desktopSearch} onChange={setDesktopSearch} placeholder={t("page.searchPlaceholder")} />
 
-          <button title={t("create.title")} onClick={handleCreate} className="la-btn la-btn--wine la-btn--lg" style={{ height: BTN_H, padding: '0 18px' }}>
-            <Plus size={14} /> Add task
-          </button>
-        </div>
-      </div>
+        {/* Filter — Priority + Category + Date Range (all in one, cascading submenus) */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button title={t("topbar.filters")} aria-label={t("topbar.filters")} className={`la-btn la-btn--soft${priorityFilter !== 'all' || categoryFilter !== 'all' || dateFrom || dateTo ? ' on' : ''}`} style={{ height: BTN_H }}>
+              <Filter size={13} />
+              <ChevronDown size={12} style={{ opacity: 0.5 }} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-44 glass-strong border-none">
+            {/* Priority submenu */}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="flex items-center justify-between gap-2">
+                <span>{t("topbar.priority")}</span>
+                {priorityFilter !== 'all' && <span className="text-[10px] font-mono text-[color:var(--wine)] capitalize">{priorityFilter}</span>}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-44 glass-strong border-none">
+                {PRIORITY_OPTS.map(([k, lbl]) => (
+                  <DropdownMenuItem key={k} onClick={() => handlePriorityFilter(k)} className="flex items-center justify-between gap-3">
+                    <span className="flex items-center gap-2">
+                      {k === priorityFilter && <Check className="h-3.5 w-3.5 text-[color:var(--wine)]" />}
+                      <span className={cn(k === priorityFilter && "font-semibold", k === priorityFilter ? "" : "ml-[22px]")}>{t(lbl)}</span>
+                    </span>
+                    <span className="font-mono text-[10px] text-muted-foreground tabular-nums">{priorityCounts[k]}</span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            {/* Category submenu */}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="flex items-center justify-between gap-2">
+                <span>{t("topbar.category")}</span>
+                {categoryFilter !== 'all' && <span className="text-[10px] font-mono text-[color:var(--wine)] truncate max-w-[60px]">{categories.find((c: any) => c.id === categoryFilter)?.name}</span>}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-48 glass-strong border-none max-h-[60vh] overflow-y-auto">
+                <DropdownMenuItem onClick={() => handleCategoryFilter('all')} className="flex items-center gap-2">
+                  {categoryFilter === 'all' && <Check className="h-3.5 w-3.5 text-[color:var(--wine)]" />}
+                  <span className={cn(categoryFilter === 'all' ? "font-semibold ml-0" : "ml-[22px]")}>{t("filter.all")}</span>
+                </DropdownMenuItem>
+                {categories.map((c: any) => (
+                  <DropdownMenuItem key={c.id} onClick={() => handleCategoryFilter(c.id)} className="flex items-center gap-2">
+                    {categoryFilter === c.id && <Check className="h-3.5 w-3.5 text-[color:var(--wine)]" />}
+                    <span className={cn(categoryFilter === c.id ? "font-semibold ml-0" : "ml-[22px]", "flex items-center gap-1.5")}>
+                      {c.icon && <span>{c.icon}</span>}
+                      <span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: '50%', background: c.color ?? 'var(--mute-2)', flexShrink: 0 }} />
+                      {c.name}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+
+            {/* Date Range submenu */}
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger className="flex items-center justify-between gap-2">
+                <span>{t("topbar.dateRange")}</span>
+                {(dateFrom || dateTo) && <span className="text-[10px] font-mono text-[color:var(--wine)]">{t("topbar.on")}</span>}
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-56 glass-strong border-none">
+                <DropdownMenuItem onClick={handleThisMonth} className="flex items-center gap-2">
+                  <span className="font-medium">{t("topbar.thisMonth")}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <div className="px-2 pb-1 flex flex-col gap-1.5 pt-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground w-8 shrink-0">{t("topbar.from")}</span>
+                    <input type="date" value={dateFrom} onChange={e => handleDateFrom(e.target.value)}
+                      className="flex-1 text-[11px] rounded-[5px] bg-[var(--bg)] border border-[var(--line)] px-2 py-1 text-[var(--ink)] focus:outline-none" />
+                    {dateFrom && <button onClick={() => handleDateFrom('')} className="text-muted-foreground hover:text-foreground text-[10px]">✕</button>}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-[11px] text-muted-foreground w-8 shrink-0">{t("topbar.to")}</span>
+                    <input type="date" value={dateTo} onChange={e => handleDateTo(e.target.value)}
+                      className="flex-1 text-[11px] rounded-[5px] bg-[var(--bg)] border border-[var(--line)] px-2 py-1 text-[var(--ink)] focus:outline-none" />
+                    {dateTo && <button onClick={() => handleDateTo('')} className="text-muted-foreground hover:text-foreground text-[10px]">✕</button>}
+                  </div>
+                </div>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Sort */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button title={t("topbar.sort")} aria-label={t("topbar.sort")} className={`la-btn la-btn--soft${sort !== 'due_date_asc' ? ' on' : ''}`} style={{ height: BTN_H }}>
+              <ArrowUpDown size={13} /><ChevronDown size={12} style={{ opacity: 0.5 }} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52 max-h-[60vh] overflow-y-auto glass-strong border-none">
+            <DropdownMenuLabel>{t("topbar.sortBy")}</DropdownMenuLabel>
+            {SORT_OPTIONS.map(o => (
+              <DropdownMenuItem key={o.value} onClick={() => handleSort(o.value)} className="flex items-center gap-2">
+                {sort === o.value && <Check className="h-3.5 w-3.5 text-[color:var(--wine)]" />}
+                <span className={cn(sort === o.value ? "font-semibold" : "ml-[22px]")}>{t(SORT_KEYS[o.value] ?? o.label)}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        <button title={t("create.title")} onClick={handleCreate} className="la-btn la-btn--wine la-btn--lg" style={{ height: BTN_H, padding: '0 18px' }}>
+          <Plus size={14} /> {t("topbar.addTask")}
+        </button>
+        </>}
+      />
 
       {/* Content — merged board + calendar (responsive), one shared drag context */}
       <DndContext sensors={dndSensors} collisionDetection={pointerWithin} onDragStart={handleDndStart} onDragEnd={handleDndEnd}>

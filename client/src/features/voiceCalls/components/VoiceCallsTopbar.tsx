@@ -1,10 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { Search } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { PanelLeft, PanelLeftClose } from "lucide-react";
+import { ExpandingSearch } from "@/components/crm/primitives";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useListPanelState } from "@/hooks/useListPanelState";
 import type { VoiceScope } from "../api/voiceCallsApi";
 import type { CallsTab, PeopleOptions } from "../callers";
-import { CALLS_TAB_ICON } from "./callsTabs";
+import { CallsListTabs, CallsPageTabs } from "./CallsPageTabs";
+import type { CallsPageView } from "./callsTabs";
 import type { ListOptions } from "../listOptions";
 import { AccountFilter, type AccountOption } from "./AccountFilter";
 import { PresentingToggle } from "./PresentingToggle";
@@ -18,10 +20,13 @@ interface Props {
   /** Owner only: shows the Live | Demo switch (by the search), the account chip and the Presenting toggle. */
   isOwner: boolean;
   onScope: (s: VoiceScope) => void;
-  /** Stats · People (everyone) · All calls (agency only). */
+  /** People (everyone) · All calls (agency only). */
   tabs: CallsTab[];
-  view: CallsTab;
-  onView: (v: CallsTab) => void;
+  /** A tab, or Settings (the receptionist's settings: no list, so no list controls). */
+  view: CallsPageView;
+  /** The list tab "Calls" returns to from Settings (People or All calls). */
+  listView: CallsTab;
+  onView: (v: CallsPageView) => void;
   options: ListOptions;
   setOptions: (patch: Partial<ListOptions>) => void;
   peopleOptions: PeopleOptions;
@@ -32,18 +37,26 @@ interface Props {
   onAccount: (id: number | undefined) => void;
   masked: boolean;
   onTogglePresenting: () => void;
+  /** Settings: the spot right after the tabs where the receptionist's account picker is placed. */
+  onPickerSlot?: (el: HTMLElement | null) => void;
 }
 
-export function VoiceCallsTopbar({ scope, isOwner, onScope, tabs, view, onView, options, setOptions, peopleOptions, setPeopleOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting }: Props) {
+export function VoiceCallsTopbar({ scope, isOwner, onScope, tabs, view, listView, onView, options, setOptions, peopleOptions, setPeopleOptions, languages, accounts, accountId, onAccount, masked, onTogglePresenting, onPickerSlot }: Props) {
   const { t } = useTranslation("voiceCalls");
   const isMobile = useIsMobile(768);
+  // Below 920px the inboxes show one pane at a time, so there is no list to minimize.
+  const singlePane = useIsMobile(920);
+  const { state: panel, setState: setPanel } = useListPanelState();
+  const listCompact = panel === "compact";
+  // Settings has no list: search, filters, the scope switch and the list toggle hide.
+  const hasList = view !== "settings";
   if (isMobile) {
     return (
       <VoiceCallsMobileTopbar
         scope={scope} isOwner={isOwner} onScope={onScope} tabs={tabs} view={view} onView={onView}
         options={options} setOptions={setOptions} peopleOptions={peopleOptions} setPeopleOptions={setPeopleOptions} languages={languages}
         accounts={accounts} accountId={accountId} onAccount={onAccount}
-        masked={masked} onTogglePresenting={onTogglePresenting}
+        masked={masked} onTogglePresenting={onTogglePresenting} onPickerSlot={onPickerSlot}
       />
     );
   }
@@ -53,44 +66,39 @@ export function VoiceCallsTopbar({ scope, isOwner, onScope, tabs, view, onView, 
         {t("title")}
       </span>
 
-      <div className="la-seg shrink-0" role="tablist" aria-label={t("callers.view.aria")}>
-        {tabs.map((v) => {
-          const Icon = CALLS_TAB_ICON[v];
-          return (
-            <button
-              key={v}
-              role="tab"
-              aria-selected={view === v}
-              data-testid={`voice-view-${v}`}
-              className={cn("la-seg-btn", view === v && "on")}
-              style={{ padding: "8px 14px", fontSize: 11, letterSpacing: "0.13em" }}
-              onClick={() => onView(v)}
-            >
-              <Icon size={13} />
-              {t(`tabs.${v}`)}
-            </button>
-          );
-        })}
-      </div>
+      <CallsPageTabs view={view} listView={listView} onView={onView} />
+      {view === "settings" && onPickerSlot && <span ref={onPickerSlot} style={{ display: "contents" }} data-testid="calls-settings-picker-slot" />}
+      <CallsListTabs tabs={tabs} view={view} onView={onView} />
 
-      {view !== "stats" && <WeekSummary scope={scope} accountId={accountId} />}
+      {/* Minimize / expand the list, as on the Chats page */}
+      {hasList && !singlePane && (
+        <button
+          type="button"
+          onClick={() => setPanel(listCompact ? "full" : "compact")}
+          className="la-btn la-btn--soft la-btn--icon shrink-0"
+          aria-label={listCompact ? t("expandList") : t("minimizeList")}
+          title={listCompact ? t("expandList") : t("minimizeList")}
+          data-testid="voice-list-toggle"
+        >
+          {listCompact ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        </button>
+      )}
+
+      {hasList && <WeekSummary scope={scope} accountId={accountId} />}
 
       <div style={{ flex: 1, minWidth: 8 }} />
 
-      {isOwner && view !== "stats" && <ScopeSwitch scope={scope} onScope={onScope} />}
+      {isOwner && hasList && <ScopeSwitch scope={scope} onScope={onScope} />}
 
-      {view !== "stats" && <div className="hidden md:flex" style={{ alignItems: "center", gap: 6, background: "var(--bg)", borderRadius: "var(--r-surface)", boxShadow: "var(--sh-inset-crisp)", padding: "7px 12px", width: 200, flexShrink: 0 }}>
-        <Search size={13} style={{ color: "var(--mute-2)", flexShrink: 0 }} />
-        <input
+      {hasList && (
+        <ExpandingSearch
           value={options.query}
-          onChange={(e) => setOptions({ query: e.target.value })}
+          onChange={(v) => setOptions({ query: v })}
           placeholder={view === "people" ? t("callers.search") : t("search")}
-          aria-label={view === "people" ? t("callers.search") : t("search")}
-          style={{ border: "none", outline: "none", background: "transparent", fontSize: 12.5, color: "var(--ink)", flex: 1, fontFamily: "var(--sans)", minWidth: 0 }}
         />
-      </div>}
+      )}
 
-      {isOwner && scope === "live" && view !== "stats" && (accounts.length > 1 || accountId != null) && (
+      {isOwner && scope === "live" && hasList && (accounts.length > 1 || accountId != null) && (
         <AccountFilter accounts={accounts} value={accountId} onChange={onAccount} />
       )}
 

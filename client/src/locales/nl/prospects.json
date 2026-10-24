@@ -493,5 +493,22 @@
   },
   "interactions": {
     "openConversations": "Openen in Chats"
+  },
+  "topbar": {
+    "hasPhone": "Heeft telefoon",
+    "hasEmail": "Heeft e-mail",
+    "sortDefault": "Standaard",
+    "compact": "Compacte kaarten",
+    "normal": "Normale kaarten",
+    "resetColumnOrder": "Kolomvolgorde herstellen",
+    "resetColumnWidths": "Kolombreedtes herstellen",
+    "clearSelection": "Selectie wissen",
+    "allTypes": "Alle typen",
+    "newTemplate": "Nieuw sjabloon",
+    "templateCount": "{{count}} van {{total}}",
+    "searchTemplates": "Sjablonen zoeken…",
+    "filterType": "Sjabloontype",
+    "ascending": "Oplopend",
+    "descending": "Aflopend"
   }
 }

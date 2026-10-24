@@ -8,3 +8,10 @@ export { Pill, type PillProps } from "./Pill";
 export { ToolbarButton, type ToolbarButtonProps } from "./ToolbarButton";
 export * from "./toolbarButtonClasses";
 export { PillSwitch, type PillSwitchItem } from "./PillSwitch";
+// Page topbar (Style A): build every page header from these.
+export { PageTopbar, type PageTopbarProps } from "./PageTopbar";
+export { TopbarTabs, type TopbarTab } from "./TopbarTabs";
+export { TopbarIconButton, type TopbarIconButtonProps } from "./TopbarIconButton";
+export { ExpandingSearch, type ExpandingSearchProps } from "./ExpandingSearch";
+// Create / edit forms: the right-hand panel shell (no backdrop; full screen on phones).
+export { RightPanel, type RightPanelProps } from "./RightPanel";

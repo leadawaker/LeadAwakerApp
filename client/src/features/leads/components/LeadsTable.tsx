@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo, useState, useEffect, useCallback, useRef } from "react";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -7,7 +7,9 @@ import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
-import { usePersistedSelection } from "@/hooks/usePersistedSelection";
+import { usePersistedSelection, setPersistedSelection } from "@/hooks/usePersistedSelection";
+import { useSearch } from "wouter";
+import { readLeadParam } from "@/lib/leadLink";
 import { apiFetch } from "@/lib/apiUtils";
 import {
   LeadsCardView, LeadDetailView, getLeadId as getLeadIdHelper, getFullName as getFullNameHelper,
@@ -28,15 +30,15 @@ import { CHAT_CHANNEL_TABS, type ChatChannelTab } from "./chatChannel";
 import type { ConversationType } from "./conversationType";
 import { LeadsTableTopbar, type TableFilters } from "./LeadsTableTopbar";
 import { LeadsPipelineTopbar } from "./LeadsPipelineTopbar";
-import { LeadsQuickFilters } from "./LeadsQuickFilters";
+import { LeadsQuickControls, LeadsQuickFilters } from "./LeadsQuickFilters";
 import { useLeadsLookups } from "./useLeadsLookups";
-import { ChatsPageTabs, CHATS_LAST_TAB_PAGE, CHATS_TABS, type ChatsTab } from "./cardView/ChatsPageTabs";
-import { MobileListHeader } from "@/components/crm/mobile/MobileListHeader";
+import { ChatsPageTabs, CHATS_LAST_TAB_PAGE, CHATS_REMEMBERED_TABS, type ChatsTab } from "./cardView/ChatsPageTabs";
+import { ChatsSideView } from "./cardView/ChatsSideView";
+import { readSettingsParams } from "@/features/accounts/components/workspace/receptionist/settingsLink";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { readLastTab, writeLastTab } from "@/lib/lastTab";
 import { useHomeServices } from "@/features/home/api/homeApi";
 
-const StatsPanel = lazy(() => import("@/features/home/stats/StatsPanel").then((m) => ({ default: m.StatsPanel })));
 import {
   VIEW_MODE_KEY, VISIBLE_COLS_KEY, LIST_PREFS_KEY, TABLE_PREFS_KEY, PIPE_PREFS_KEY, COL_ORDER_KEY, COL_WIDTHS_KEY,
   QUICK_PREFS_KEY, DEFAULT_VISIBLE_COLS, VIEW_TAB_KEYS, ALLOWED_VIEWS_BY_MODE, safeListSort, safeTableSort, normalizeLead,
@@ -64,6 +66,8 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   /* ── View mode (persisted per page mode) ── */
   const [mobileView, setMobileView] = useState<"list" | "detail">(() => {
     try { if (localStorage.getItem("leadawaker-returnto") && localStorage.getItem("selected-lead-id")) return "detail"; } catch {}
+    // An "open this lead" link (?lead=) shows the lead, not the list.
+    if (readLeadParam(window.location.search)) return "detail";
     return "list";
   });
   const viewModeKey = mode === "all" ? VIEW_MODE_KEY : `${VIEW_MODE_KEY}:${mode}`;
@@ -103,9 +107,18 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   const toggleListFilterType = useCallback((v: ConversationType) => setListFilterType((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v])), []);
   const clearListFilterType = useCallback(() => setListFilterType([]), []);
   const [storedChannelTab, setChannelTab] = usePersistedState<ChatChannelTab>("chats-channel-tab", "all", (v) => CHAT_CHANNEL_TABS.includes(v as ChatChannelTab));
-  // Chats page: [chart] Stats · [chat] Chats, opening on Stats the first time, then the last tab used.
-  const [chatsTab, setChatsTabState] = useState<ChatsTab>(() => readLastTab(CHATS_LAST_TAB_PAGE, CHATS_TABS, "stats"));
-  const setChatsTab = useCallback((tab: ChatsTab) => { setChatsTabState(tab); writeLastTab(CHATS_LAST_TAB_PAGE, tab); }, []);
+  // Chats page: [chat] Chats · [gear] Settings, opening on Chats the first time, then the
+  // last tab used (the figures live on the Stats page, /platform/home). Settings also opens from ?view=settings (links, reloads).
+  // A ?lead= link (the lead's one home, lib/leadLink) opens on Chats with that lead selected.
+  const [chatsTab, setChatsTabState] = useState<ChatsTab>(() => (
+    mode === "conversations" && readSettingsParams(window.location.search).open ? "settings"
+      : mode === "conversations" && readLeadParam(window.location.search) ? "chats"
+      : readLastTab(CHATS_LAST_TAB_PAGE, CHATS_REMEMBERED_TABS, "chats")
+  ));
+  const setChatsTab = useCallback((tab: ChatsTab) => {
+    setChatsTabState(tab);
+    writeLastTab(CHATS_LAST_TAB_PAGE, tab);
+  }, []);
   const isPhone = useIsMobile(768);
   // The All / Website / WhatsApp filter only exists when the account runs both channels.
   const { data: chatServices } = useHomeServices(currentAccountId);
@@ -220,7 +233,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     hasPhone: pipePrefs.filterHasPhone, hasEmail: pipePrefs.filterHasEmail, ...quick,
   }), [filterAccountId, dKanbanSearch, pipelineSortBy, pipePrefs.filterHasPhone, pipePrefs.filterHasEmail, JSON.stringify(quick)]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const listData = usePagedLeads(listQuery, { enabled: viewMode === "list" && !(mode === "conversations" && chatsTab === "stats") });
+  const listData = usePagedLeads(listQuery, { enabled: viewMode === "list" && !(mode === "conversations" && chatsTab !== "chats") });
   const tableData = usePagedLeads(tableQuery, { enabled: viewMode === "table" });
   const pipeData = usePagedLeads(pipeQuery, { enabled: viewMode === "pipeline", perGroup: 30 });
   const active = viewMode === "list" ? listData : viewMode === "table" ? tableData : pipeData;
@@ -238,12 +251,19 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   // ?lead=<id> deep link: select it (overrides the stored selection).
   const deepLinkRef = useRef<string | null>(null);
   if (deepLinkRef.current === null) {
-    try {
-      const id = new URLSearchParams(window.location.search).get("lead");
-      deepLinkRef.current = id && /^\d+$/.test(id) ? id : "";
-      if (deepLinkRef.current) localStorage.setItem("selected-lead-id", deepLinkRef.current);
-    } catch { deepLinkRef.current = ""; }
+    deepLinkRef.current = readLeadParam(window.location.search);
+    try { if (deepLinkRef.current) localStorage.setItem("selected-lead-id", deepLinkRef.current); } catch {}
   }
+  // A later ?lead= while the page stays mounted (an "open lead" link clicked on Chats): show that lead too.
+  const search = useSearch();
+  useEffect(() => {
+    const id = readLeadParam(search);
+    if (!id || id === deepLinkRef.current) return;
+    deepLinkRef.current = id;
+    try { setPersistedSelection("selected-lead-id", id); } catch {}
+    if (mode === "conversations") setChatsTabState("chats");
+    setMobileView("detail");
+  }, [search, mode]);
   const [pinned, setPinned] = useState<Record<string, any> | null>(null);
   const [pinnedMissing, setPinnedMissing] = useState(false);
   useEffect(() => {
@@ -408,24 +428,23 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
       onToggleStage={(st) => toggleTableFilter("status", st)}
     />
   );
+  // Desktop: the same two switches, inside the topbar instead of a row under it.
+  const quickControls = mode !== "conversations" && (
+    <LeadsQuickControls
+      view={quickPrefs.view}
+      onViewChange={(v) => setQuickPrefs((p) => ({ ...p, view: v }))}
+      channel={quickPrefs.channel}
+      onChannelChange={(c) => setQuickPrefs((p) => ({ ...p, channel: c }))}
+      total={active.total}
+      viewCounts={active.viewCounts}
+      channelCounts={active.channelCounts}
+    />
+  );
   const sidePanelStyle: React.CSSProperties = { flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" };
 
-  if (mode === "conversations" && chatsTab === "stats") {
-    return (
-      <div className="flex flex-col h-full" data-onboarding="leads-table">
-        {isPhone ? (
-          <MobileListHeader title={t("page.chatsTitle")} tabSwitcher={<ChatsPageTabs variant="mobile" active={chatsTab} onChange={setChatsTab} />} />
-        ) : (
-          <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
-            <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("page.chatsTitle")}</span>
-            <ChatsPageTabs active={chatsTab} onChange={setChatsTab} />
-          </div>
-        )}
-        <Suspense fallback={<div className="flex-1" aria-busy="true" />}>
-          <StatsPanel kind="chats" />
-        </Suspense>
-      </div>
-    );
+  if (mode === "conversations" && chatsTab !== "chats") {
+    // Agency: Settings opens on the account the chat list is filtered to, else the nav bar's account.
+    return <ChatsSideView tab={chatsTab} onTab={setChatsTab} fallbackAccountId={Number(listFilterAccount) || undefined} />;
   }
 
   return (
@@ -527,6 +546,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             onResetColumnWidths={() => setColumnWidths({})}
             onAdd={handleAddLead}
             isAgency={!!isAgencyUser}
+            quickControls={quickControls}
           />
           {quickFilters}
           <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
@@ -552,7 +572,15 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
                 onLoadMore={tableData.loadMore}
               />
             </div>
-            {selectedLead && tableSelectedIds.has(Number(selectedLead.Id ?? selectedLead.id)) && (
+            {/* CSV import: right-hand panel beside the table; takes the detail slot while open */}
+            {importWizardOpen ? (
+              <CsvImportWizard
+                onClose={() => setImportWizardOpen(false)}
+                onImportComplete={handleRefresh}
+                defaultAccountId={filterAccountId}
+                className="w-[640px] max-w-[55%]"
+              />
+            ) : selectedLead && tableSelectedIds.has(Number(selectedLead.Id ?? selectedLead.id)) && (
               <div className="shrink-0 overflow-hidden flex flex-col" style={sidePanelStyle}>
                 <LeadDetailView
                   lead={selectedLead}
@@ -594,6 +622,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             setHasEmail={(v) => setPipePrefs((p) => ({ ...p, filterHasEmail: v }))}
             sortBy={pipelineSortBy}
             setSortBy={(v) => setPipePrefs((p) => ({ ...p, sortBy: v }))}
+            quickControls={quickControls}
           />
           {quickFilters}
           <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
@@ -622,8 +651,6 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
           </div>
         </div>
       )}
-
-      <CsvImportWizard open={importWizardOpen} onClose={() => setImportWizardOpen(false)} onImportComplete={handleRefresh} defaultAccountId={filterAccountId} />
     </div>
   );
 }

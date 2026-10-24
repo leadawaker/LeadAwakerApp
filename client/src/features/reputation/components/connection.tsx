@@ -5,7 +5,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
-import { useWorkspace } from "@/hooks/useWorkspace";
+import { useWorkspace, type Account } from "@/hooks/useWorkspace";
+import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { apiFetch } from "@/lib/apiUtils";
 import {
   disconnectReviews,
@@ -34,10 +35,17 @@ export function RepLiveConnection({ initialAccountId, onChanged }: {
   const { toast } = useToast();
   const { currentAccountId, accounts } = useWorkspace();
 
-  // Scoped to one account in the nav bar: use it. Agency view: pick one here.
+  // Scoped to one account in the nav bar: use it. Agency view: pick one here; the last pick is kept
+  // in this browser for the next visit (an account from a link, e.g. after OAuth, still wins).
   const scoped = currentAccountId > 0;
   const [picked, setPicked] = useState<number>(initialAccountId || 0);
-  const accountId = scoped ? currentAccountId : picked || accounts[0]?.id || 0;
+  const [remembered, setRemembered] = usePersistedSelection<Account>("reputation-settings-account", (a) => a.id, accounts);
+  const accountId = scoped ? currentAccountId : picked || remembered?.id || accounts[0]?.id || 0;
+  const chooseAccount = (id: number) => {
+    setPicked(id);
+    const chosen = accounts.find((a) => a.id === id);
+    if (chosen) setRemembered(chosen);
+  };
 
   const [account, setAccount] = useState<Record<string, any> | null>(null);
   const [conn, setConn] = useState<ReviewsConnection | null>(null);
@@ -149,7 +157,7 @@ export function RepLiveConnection({ initialAccountId, onChanged }: {
 
         {!scoped && (
           <RepSettingRow title={t("reviewResponse.accountLabel")} desc={t("reviewResponse.accountHint")}>
-            <select className="neu-input" value={accountId} onChange={(e) => setPicked(Number(e.target.value))}
+            <select className="neu-input" value={accountId} onChange={(e) => chooseAccount(Number(e.target.value))}
               style={{ fontSize: 12.5, padding: "7px 10px", background: "var(--bg)", color: "var(--ink)", minWidth: 200 }}>
               {accounts.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>

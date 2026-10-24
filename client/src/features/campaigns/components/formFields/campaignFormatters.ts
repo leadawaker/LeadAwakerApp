@@ -1,5 +1,5 @@
 // ── Campaign formatting utilities ─────────────────────────────────────────────
-// Shared between CampaignStageEditor and CampaignDetailPanel.
+// Shared by the campaign settings fields (see ./index.ts).
 
 export function formatHours(h: number | null | undefined): string {
   if (!h && h !== 0) return "—";

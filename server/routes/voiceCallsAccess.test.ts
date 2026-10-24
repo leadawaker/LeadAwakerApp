@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { resolveVoiceAccess, decideScope, hidesTestData } from "./voiceCallsAccess";
+import { resolveVoiceAccess, decideScope, hidesTestData, callReach, demoCallVisible } from "./voiceCallsAccess";
 
 const owner = resolveVoiceAccess({ role: "Owner", accountsId: 1, impersonatedAccountId: null });
 const admin = resolveVoiceAccess({ role: "Admin", accountsId: 1, impersonatedAccountId: null });
@@ -90,4 +90,30 @@ test("test data is hidden from clients and impersonation, never from agency", ()
   assert.equal(hidesTestData(resolveVoiceAccess({ role: "Manager", accountsId: 53, impersonatedAccountId: null })), true);
   assert.equal(hidesTestData(resolveVoiceAccess({ role: "Owner", accountsId: 1, impersonatedAccountId: 53 })), true);
   assert.equal(hidesTestData(resolveVoiceAccess({ role: "Owner", accountsId: 1, impersonatedAccountId: null, impersonatedRole: "Admin" })), false);
+});
+
+const testCall = { isDemo: true, testAccountId: 42 };
+const demoCall = { isDemo: true, testAccountId: null };
+const liveCall = { isDemo: false, testAccountId: null };
+
+test("a browser test call opens for the Owner and for an agency Admin", () => {
+  assert.equal(demoCallVisible(testCall, callReach(owner)), true);
+  assert.equal(demoCallVisible(testCall, callReach(admin)), true);
+  assert.equal(demoCallVisible(testCall, callReach(agencyViewer)), true);
+});
+
+test("a real demo call stays Owner only", () => {
+  assert.equal(demoCallVisible(demoCall, callReach(owner)), true);
+  assert.equal(demoCallVisible(demoCall, callReach(admin)), false);
+  assert.equal(demoCallVisible(demoCall, callReach(agencyViewer)), false);
+});
+
+test("a client never opens a test call or a demo call, and impersonation does not either", () => {
+  assert.equal(demoCallVisible(testCall, callReach(client)), false);
+  assert.equal(demoCallVisible(demoCall, callReach(client)), false);
+  assert.equal(demoCallVisible(testCall, callReach(impersonating)), false);
+});
+
+test("a live call is not gated by the demo rule", () => {
+  for (const a of [owner, admin, client]) assert.equal(demoCallVisible(liveCall, callReach(a)), true);
 });

@@ -27,7 +27,7 @@ function makeRequest(method, path, data, cookie) {
 
 async function main() {
   // Login
-  const loginRes = await makeRequest('POST', LOGIN_URL, { email: 'leadawaker@gmail.com', password: 'test123' });
+  const loginRes = await makeRequest('POST', LOGIN_URL, { email: process.env.LA_LOGIN_EMAIL, password: process.env.LA_LOGIN_PASSWORD });
   if (loginRes.status !== 200) {
     console.error('Login failed:', loginRes.status, loginRes.body);
     process.exit(1);

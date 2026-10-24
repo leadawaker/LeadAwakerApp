@@ -16,7 +16,7 @@ import { db, pool } from "../db";
 import { syncLivePersona, type PersonaSourceChange } from "../storage/voicePersona";
 import { provisionCaldiyForAccount, resyncCaldiySchedule } from "../calendar/caldiy";
 import { generateAndSaveNicheRow } from "../nicheGenerator";
-import { handleZodError, wrapAsync, getPagination, getEngineUrl } from "./_helpers";
+import { handleZodError, wrapAsync, getPagination, getEngineUrl, accountIdFor } from "./_helpers";
 import { editLevelForRequest, pickClientAccountPatch } from "./clientEditAccess";
 import { registerProspectsRoutes } from "./prospects";
 import { registerProspectsWhatsappRoutes } from "./prospectsWhatsapp";
@@ -236,7 +236,8 @@ export function registerAccountsRoutes(app: Express): void {
   const KB_TABLE = 'p2mxx34fvbf3ll6."Account_Knowledge_Base"';
 
   app.get("/api/accounts/:id/knowledge", requireAuth, wrapAsync(async (req, res) => {
-    const accountId = Number(req.params.id);
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
     const { rows } = await pool.query(
       `SELECT id, account_id AS "accountId", category, title, content, campaign_ids AS "campaignIds", min_inbound_messages AS "minInboundMessages", created_at AS "createdAt", updated_at AS "updatedAt"
        FROM ${KB_TABLE} WHERE account_id = $1 ORDER BY category, id`, [accountId]

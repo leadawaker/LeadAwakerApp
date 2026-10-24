@@ -150,6 +150,7 @@ export const billingStorage = {
   // happened). "Final" means the 48h no-show claim window has closed.
   // Cancellations clear booked_call_date + billable_booking engine-side, so
   // they never appear here; no-show claims keep the date but flip the flag.
+  // A lead flagged is_test (Gabriel's tests on a client's line) is never billed.
 
   async getAccountBookingStats(
     accountId: number,
@@ -178,6 +179,7 @@ export const billingStorage = {
           END AS status
         FROM "p2mxx34fvbf3ll6"."Leads"
         WHERE "Accounts_id" = ${accountId}
+          AND COALESCE(is_test, false) = false
           AND booked_call_date >= ${monthStart}::date
           AND booked_call_date < ${monthStart}::date + interval '1 month'
         ORDER BY booked_call_date ASC
@@ -225,6 +227,7 @@ export const billingStorage = {
         COUNT(*) FILTER (WHERE no_show = TRUE) AS excluded
       FROM "p2mxx34fvbf3ll6"."Leads"
       WHERE "Accounts_id" = ${accountId}
+        AND COALESCE(is_test, false) = false
         AND booked_call_date IS NOT NULL
         AND booked_call_date >= date_trunc('month', NOW()) - make_interval(months => ${monthsBack - 1})
       GROUP BY 1

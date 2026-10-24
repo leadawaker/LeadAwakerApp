@@ -10,10 +10,14 @@
     "90d": "Last 90 days"
   },
   "tabs": {
-    "stats": "Stats",
     "people": "People",
     "calls": "All calls",
     "aria": "View"
+  },
+  "pageTabs": {
+    "aria": "Calls page",
+    "calls": "Calls",
+    "settings": "Settings"
   },
   "title": "Calls",
   "webCaller": "Web caller",
@@ -80,15 +84,16 @@
   "skipBack": "Back 15 seconds",
   "skipForward": "Forward 15 seconds",
   "speed": "Speed",
-  "hideSpeakers": "Hide",
+  "hideSpeakers": "Hide who spoke when",
   "showSpeakers": "Show who spoke when",
   "downloadShort": "Download",
   "loadingRecording": "Loading the recording…",
   "searchTranscript": "Search the transcript",
   "matches_one": "{{count}} match",
   "matches_other": "{{count}} matches",
-  "followAudio": "Follow audio",
-  "followAudioHint": "Keep the transcript on what is being said",
+  "clearSearch": "Clear search",
+  "minimizeList": "Minimize list",
+  "expandList": "Expand list",
   "playFromHere": "Play from here",
   "events": {
     "askedBackend": "Asked backend",

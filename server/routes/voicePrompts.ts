@@ -12,13 +12,18 @@ const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 
 const previewSchema = z.object({
   // xai: the lean Grok prompt (voice_xai_layer_*), as Grok hears it.
-  kind: z.enum(["layer", "greeting", "backend", "xai"]),
+  // eleven: the read-only prompt ElevenLabs gets for lineId (needs accountId too).
+  kind: z.enum(["layer", "greeting", "backend", "xai", "eleven"]),
   // "" renders the saved prompt (the Voice tab's "What she is told").
   text: z.string().max(60_000).default(""),
   locale: z.string().max(10).default("en-GB"),
   niche: z.string().max(200).nullable().optional(),
   // Instead of niche: that account's line, in its own locale.
   accountId: z.number().int().positive().optional(),
+  // kind "eleven": the Voice_Numbers row, which must be accountId's own (the engine 404s otherwise).
+  lineId: z.number().int().positive().optional(),
+  // kind "layer": the lean test layer (voice_lean_layer_*), with its compact stock lines.
+  leanLayer: z.boolean().optional(),
 });
 
 export function registerVoicePromptRoutes(app: Express) {
@@ -28,11 +33,19 @@ export function registerVoicePromptRoutes(app: Express) {
     const resp = await fetch(`${ENGINE_BASE}/voice/prompt-preview`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
-      body: JSON.stringify({ ...parsed.data, accountId: undefined, account_id: parsed.data.accountId }),
+      body: JSON.stringify({
+        ...parsed.data, accountId: undefined, account_id: parsed.data.accountId, lineId: undefined, line_id: parsed.data.lineId,
+        leanLayer: undefined, lean_layer: parsed.data.leanLayer ?? false,
+      }),
       signal: AbortSignal.timeout(15_000),
     });
     const data = await resp.json().catch(() => ({}));
-    if (!resp.ok) return res.status(resp.status === 404 ? 404 : 502).json({ message: data?.detail || "Could not render the preview." });
+    if (!resp.ok) {
+      // The engine's own sentence for a missing line (404), a missing client or persona (409) or ids (422).
+      const status = [404, 409, 422].includes(resp.status) ? resp.status : 502;
+      const detail = (data as { detail?: unknown })?.detail;
+      return res.status(status).json({ message: typeof detail === "string" && detail ? detail : "Could not render the preview." });
+    }
     res.json(data);
   }));
 }

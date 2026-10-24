@@ -15,6 +15,7 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 import { execFileSync } from "child_process";
+import { EXPENSES_DIR } from "../paths";
 
 export function registerBillingRoutes(app: Express): void {
   // ─── Billable booking stats ──────────────────────────────────────────
@@ -400,7 +401,7 @@ Rules:
         const yr = d.getFullYear();
         const mo = d.getMonth();
         const q = mo <= 2 ? "Q1" : mo <= 5 ? "Q2" : mo <= 8 ? "Q3" : "Q4";
-        const dir = `/home/gabriel/Images/Expenses/${yr}/${q}`;
+        const dir = path.join(EXPENSES_DIR, String(yr), q);
         fs.mkdirSync(dir, { recursive: true });
         const supplier = (body.supplier || "Unknown").replace(/[^a-zA-Z0-9]/g, "_").slice(0, 30);
         const invNum = (body.invoice_number || "").replace(/[^a-zA-Z0-9\-]/g, "_").slice(0, 30);

@@ -1,105 +1,163 @@
-import { useState, useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
-import { useToast } from "@/hooks/use-toast";
-import { apiFetch } from "@/lib/apiUtils";
-import { cn } from "@/lib/utils";
-import { Building2, SlidersHorizontal, UserRound, Users } from "lucide-react";
+import { Bell, Receipt, ShieldCheck, SlidersHorizontal, UserRound, Users } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { readLastTab, writeLastTab } from "@/lib/lastTab";
+import { useIsMobile } from "@/hooks/useIsMobile";
+import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 import { SettingsTeamSection } from "@/features/users/components/SettingsTeamSection";
-import { AccountDetailView } from "@/features/accounts/components/AccountDetailView";
-import { updateAccount } from "@/features/accounts/api/accountsApi";
-import type { AccountRow } from "@/features/accounts/components/AccountDetailsDialog";
-import { SkeletonSettingsSection } from "@/components/ui/skeleton";
+import { BillingContent } from "@/features/billing/pages/BillingPage";
+import { SectionHeader, SectionRail, type SectionRailItem, type SectionState } from "@/features/accounts/components/workspace/SectionRail";
 import { MobileAgencySwitcher } from "@/components/crm/mobile/MobileAgencySwitcher";
 import { MyProfileGate } from "@/features/settings/components/MyProfileGate";
 import { ProfileTab } from "@/features/settings/components/ProfileTab";
 import { PreferencesTab } from "@/features/settings/components/PreferencesTab";
+import { SecurityTab } from "@/features/settings/components/SecurityTab";
+import { NotificationsSection } from "@/features/settings/components/NotificationsSection";
+import { SettingsCard } from "@/features/settings/components/SettingsCard";
+import { useTwoFactor } from "@/features/settings/twoFactor/useTwoFactor";
 
 // ── Settings sections ────────────────────────────────────────────────
-// URL contract: /platform/settings?tab=profile|preferences|team|account.
+// URL contract: /platform/settings?tab=profile|security|preferences|notifications|users|billing.
 // The tab lives in the query string (not local state) so nav links that only
 // change ?tab= switch the tab even while this page is already open.
-type SettingsSection = "profile" | "preferences" | "team" | "account";
+// Old links still work: ?tab=team opens Users, ?tab=account (removed: the
+// Accounts page edits the account) falls back to Profile.
+type SettingsSection = "profile" | "security" | "preferences" | "notifications" | "users" | "billing";
 const DEFAULT_SECTION: SettingsSection = "profile";
+const ALIASES: Record<string, SettingsSection> = { team: "users" };
 
-const BASE_SECTIONS: { id: SettingsSection; labelKey: string; icon: React.ElementType; scopedOnly?: boolean }[] = [
-  { id: "profile", labelKey: "sections.profile", icon: UserRound },
-  { id: "preferences", labelKey: "sections.preferences", icon: SlidersHorizontal },
-  { id: "team", labelKey: "sections.team", icon: Users },
-  // "My Account" shown only for agency users scoped to a specific client account
-  { id: "account", labelKey: "sections.account", icon: Building2, scopedOnly: true },
-];
+const SECTION_ICON: Record<SettingsSection, React.ElementType> = {
+  profile: UserRound,
+  security: ShieldCheck,
+  preferences: SlidersHorizontal,
+  notifications: Bell,
+  users: Users,
+  billing: Receipt,
+};
 
-const isSection = (v: string | null): v is SettingsSection => BASE_SECTIONS.some((s) => s.id === v);
+const ALL_SECTIONS = Object.keys(SECTION_ICON) as SettingsSection[];
+const LAST_TAB_PAGE = "settings";
+
+/** Users and Billing are whole workspaces (list + detail): they fill the page instead of a column of cards. */
+const FULL_HEIGHT: SettingsSection[] = ["users", "billing"];
+
+function toSection(v: string | null): SettingsSection | null {
+  if (!v) return null;
+  if (ALIASES[v]) return ALIASES[v];
+  return v in SECTION_ICON ? (v as SettingsSection) : null;
+}
 
 // ── Main Settings Page ───────────────────────────────────────────────
 function SettingsContent() {
   const { t } = useTranslation("settings");
-  const { toast } = useToast();
-  const { isAgencyUser, currentAccountId } = useWorkspace();
-  const isScopedToAccount = currentAccountId > 0;
+  const { isAgencyUser } = useWorkspace();
+  const { hasInvoices } = useClientNavFacts();
+  const stacked = useIsMobile(768);
   const [location, navigate] = useLocation();
   const search = useSearch();
+  const twoFactor = useTwoFactor();
 
-  const SECTIONS = BASE_SECTIONS.filter((s) => !(s.scopedOnly && !(isScopedToAccount && isAgencyUser)));
+  // A client's own billing (invoices and contracts) is a Settings section; the agency keeps its Billing page.
+  const sections: SettingsSection[] = ["profile", "security", "preferences", "notifications", "users"];
+  if (!isAgencyUser && hasInvoices) sections.push("billing");
 
-  // ── Active tab: derived from ?tab=, unknown / unauthorized falls back to profile
-  const requested = new URLSearchParams(search).get("tab");
-  const activeSection: SettingsSection =
-    isSection(requested) && SECTIONS.some((s) => s.id === requested) ? requested : DEFAULT_SECTION;
+  // ── Active section: derived from ?tab=, else the section used last; unknown / unauthorized falls back to profile
+  const linked = toSection(new URLSearchParams(search).get("tab"));
+  const requested = linked ?? readLastTab<SettingsSection>(LAST_TAB_PAGE, ALL_SECTIONS, DEFAULT_SECTION);
+  const active: SettingsSection = sections.includes(requested) ? requested : DEFAULT_SECTION;
 
-  const setActiveSection = useCallback((id: SettingsSection) => {
+  // Remember the section a ?tab= opens (a link or a pick), so coming back to Settings lands on it.
+  useEffect(() => {
+    if (linked && sections.includes(linked)) writeLastTab(LAST_TAB_PAGE, linked);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [linked, sections.length]);
+
+  const setActive = useCallback((id: SettingsSection) => {
     const params = new URLSearchParams(window.location.search);
     params.set("tab", id);
+    writeLastTab(LAST_TAB_PAGE, id);
     navigate(`${location}?${params.toString()}`, { replace: true });
   }, [location, navigate]);
 
-  // Deep-link: other pages can set sessionStorage to open a tab
+  // Deep-link: other pages can set sessionStorage to open a section
   useEffect(() => {
-    const pending = sessionStorage.getItem("pendingSettingsSection");
-    if (!pending) return;
+    const pending = toSection(sessionStorage.getItem("pendingSettingsSection"));
     sessionStorage.removeItem("pendingSettingsSection");
-    if (isSection(pending)) setActiveSection(pending);
+    if (pending) setActive(pending);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── Account detail state (when scoped to a specific account) ───────
-  const [accountData, setAccountData] = useState<AccountRow | null>(null);
-  const [accountLoading, setAccountLoading] = useState(false);
-
+  // The Security tile shows whether 2FA is on: re-read it when you leave a section
+  // (the hook already loads it once on mount).
+  const { refresh: refreshTwoFactor } = twoFactor;
+  const firstSection = useRef(active);
   useEffect(() => {
-    if (!isScopedToAccount) { setAccountData(null); return; }
-    setAccountLoading(true);
-    apiFetch(`/api/accounts/${currentAccountId}`)
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => setAccountData(data))
-      .catch(() => setAccountData(null))
-      .finally(() => setAccountLoading(false));
-  }, [currentAccountId, isScopedToAccount]);
+    if (active === firstSection.current) return;
+    firstSection.current = active;
+    void refreshTwoFactor();
+  }, [active, refreshTwoFactor]);
+  const tfa = twoFactor.status;
+  const tfaOn = !!tfa && (tfa.totp || tfa.email || tfa.passkeys > 0);
+  const securityState: SectionState | undefined = !tfa ? undefined : tfaOn ? "on" : tfa.required ? "pending" : "off";
 
-  const handleAccountFieldSave = useCallback(async (field: string, value: string) => {
-    if (!accountData) return;
-    const aid = accountData.Id ?? accountData.id ?? 0;
-    await updateAccount(aid, { [field]: value });
-    setAccountData((prev) => prev ? { ...prev, [field]: value } : prev);
-    toast({ title: t("account.saved"), description: t("account.savedDescription", { field }) });
-  }, [accountData, toast]);
-
-  const renderAccountSection = () => {
-    if (accountLoading) return <SkeletonSettingsSection rows={6} />;
-    if (!accountData) return <div className="text-muted-foreground text-sm py-8 text-center">{t("account.notFound")}</div>;
-    return (
-      <AccountDetailView
-        account={accountData}
-        onSave={handleAccountFieldSave}
-        onAddAccount={() => {}}
-        onDelete={() => {}}
-        onToggleStatus={() => {}}
-      />
-    );
+  const detail: Record<SettingsSection, string> = {
+    profile: t("rail.profile"),
+    security: t("rail.security"),
+    preferences: t("rail.preferences"),
+    notifications: isAgencyUser ? t("rail.notificationsAgency") : t("rail.notificationsClient"),
+    users: t("rail.users"),
+    billing: t("rail.billing"),
   };
+  const items: SectionRailItem<SettingsSection>[] = sections.map((id) => {
+    const Icon = SECTION_ICON[id];
+    return {
+      key: id,
+      icon: <Icon className="h-4 w-4" />,
+      label: t(`sections.${id}`),
+      detail: detail[id],
+      state: id === "security" ? securityState : undefined,
+    };
+  });
+
+  const rail = (layout: "rail" | "grid") => (
+    <SectionRail items={items} active={active} onSelect={setActive} layout={layout} testId="settings-tabs" />
+  );
+
+  const full = FULL_HEIGHT.includes(active);
+
+  const cards = (
+    <div className="space-y-4" data-testid={`settings-panel-${active}`}>
+      <SectionHeader index={sections.indexOf(active) + 1} title={t(`sections.${active}`)} help={detail[active]} />
+      <MyProfileGate key={active} testId={`section-${active}`}>
+        {(profile, setProfile) =>
+          active === "profile" ? (
+            <ProfileTab profile={profile} onProfileUpdated={setProfile} withSecurity={false} />
+          ) : active === "security" ? (
+            <SecurityTab profile={profile} />
+          ) : active === "notifications" ? (
+            <SettingsCard icon={Bell} title={t("notifications.title")} data-testid="section-notifications-card">
+              <NotificationsSection />
+            </SettingsCard>
+          ) : (
+            <PreferencesTab profile={profile} onProfileUpdated={setProfile} showNotifications={false} showSecurity={false} />
+          )
+        }
+      </MyProfileGate>
+    </div>
+  );
+
+  const workspace = active === "users" ? (
+    <div className="h-full" data-testid="settings-panel-users">
+      <SettingsTeamSection isUltrawide={false} />
+    </div>
+  ) : (
+    <div className="h-full" data-testid="settings-panel-billing">
+      <BillingContent />
+    </div>
+  );
 
   return (
     <div className="la-page" data-testid="page-settings">
@@ -113,58 +171,35 @@ function SettingsContent() {
         <span className="serif shrink-0" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>
           {t("title")}
         </span>
-        {/* Tabs immediately next to title */}
-        <div className="la-seg min-w-0 max-w-full overflow-x-auto" role="tablist" data-testid="settings-tabs">
-          {SECTIONS.map((s) => (
-            <button
-              key={s.id}
-              role="tab"
-              aria-selected={activeSection === s.id}
-              className={cn("la-seg-btn", activeSection === s.id && "on")}
-              onClick={() => setActiveSection(s.id)}
-              data-testid={`settings-tab-${s.id}`}
-            >
-              <s.icon className="h-3.5 w-3.5" />
-              {t(s.labelKey)}
-            </button>
-          ))}
-        </div>
-        {/* Toolbar portal slot: the team toolbar mounts here on the topbar */}
-        {activeSection === "team" && (
+        {/* Toolbar portal slot: the Users toolbar mounts here on the topbar */}
+        {active === "users" && (
           <div id="settings-team-toolbar-slot" className="flex-1 flex items-center justify-end gap-1.5 px-2" style={{ overflow: "visible" }} />
         )}
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto">
-        {activeSection === "team" ? (
-          // Team: full-height layout, toolbar (cards) flush left, divider spans full height
-          <div className="h-full" data-testid="settings-panel-team">
-            <SettingsTeamSection isUltrawide={false} />
+      {stacked ? (
+        // Phone: the tiles in a grid above the open section, one scroll.
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          <div className="px-4 py-4 space-y-6">
+            {rail("grid")}
+            {full ? <div style={{ minHeight: 560 }}>{workspace}</div> : cards}
           </div>
-        ) : activeSection === "account" ? (
-          // Account: centered layout
-          <div className="flex justify-center">
-            <div className="w-full max-w-[500px] px-4 md:px-6 py-6">
-              <div className="neu-raised p-5 mb-4" data-testid="settings-panel-account">
-                {renderAccountSection()}
-              </div>
+        </div>
+      ) : (
+        // Desktop: the menu stays put on the left, the open section beside it.
+        <div className="flex-1 min-h-0 flex">
+          <div className="shrink-0 overflow-y-auto" style={{ width: 268, padding: "24px 0 24px 24px" }}>
+            {rail("rail")}
+          </div>
+          {full ? (
+            <div className="flex-1 min-w-0 min-h-0" style={{ paddingLeft: 24 }}>{workspace}</div>
+          ) : (
+            <div className="flex-1 min-w-0 min-h-0 overflow-y-auto">
+              <div className="w-full max-w-[760px] py-6 px-7">{cards}</div>
             </div>
-          </div>
-        ) : (
-          // Profile / Preferences: centered single column of cards
-          <div className="flex justify-center">
-            <div className="w-full max-w-[720px] px-4 md:px-6 py-6" data-testid={`settings-panel-${activeSection}`}>
-              <MyProfileGate key={activeSection} testId={activeSection === "profile" ? "section-profile" : "section-preferences"}>
-                {(profile, setProfile) =>
-                  activeSection === "profile"
-                    ? <ProfileTab profile={profile} onProfileUpdated={setProfile} />
-                    : <PreferencesTab profile={profile} onProfileUpdated={setProfile} />
-                }
-              </MyProfileGate>
-            </div>
-          </div>
-        )}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -1,41 +1,17 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "wouter";
-import { writeLastTab } from "@/lib/lastTab";
-import { rememberStatsChannel } from "../stats/StatsPanel";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { cn } from "@/lib/utils";
-import { HOME_PERIODS, type HomePeriod, type HomeServices, type HomeTab } from "@shared/homeTypes";
+import { HOME_PERIODS, type HomePeriod, type HomeServices } from "@shared/homeTypes";
 import { useHomeServices, type HomeScope } from "../api/homeApi";
 import { WelcomeChecklistCard } from "../onboarding/WelcomeChecklistCard";
 import { EmptyState } from "../components/EmptyState";
+import { OverviewGrid } from "../stats/OverviewGrid";
+import { SERVICE_ANCHOR, ServiceCards, type ServiceKey } from "../stats/ServiceCards";
 import "../home.css";
 
-const OverviewTab = lazy(() => import("../tabs/OverviewTab"));
-const ReactivationTab = lazy(() => import("../tabs/ReactivationTab"));
-const ReputationTab = lazy(() => import("../tabs/ReputationTab"));
-const SocialTab = lazy(() => import("../tabs/SocialTab"));
-
-// Phone moved to Calls › Stats, Website and WhatsApp to Chats › Stats: Home is the overview.
-// Reactivation, Reputation and Social stay until their pages get a Stats tab of their own.
-type HomePanelTab = Exclude<HomeTab, "phone" | "whatsapp" | "website">;
-const PANELS: Record<HomePanelTab, typeof OverviewTab> = {
-  overview: OverviewTab, reactivation: ReactivationTab, reputation: ReputationTab, social: SocialTab,
-};
-const ORDER: HomePanelTab[] = ["overview", "reactivation", "reputation", "social"];
 const DATE_LOCALE: Record<string, string> = { en: "en-US", pt: "pt-BR", nl: "nl-NL" };
 const PERIOD_KEY = "leadawaker_home_period";
-
-export function visibleTabs(services: HomeServices | undefined): HomePanelTab[] {
-  if (!services) return ["overview"];
-  return ORDER.filter((tab) => tab === "overview" || services[tab]);
-}
-
-function readTab(): HomePanelTab {
-  const wanted = new URLSearchParams(window.location.search).get("tab");
-  return (ORDER as string[]).includes(wanted ?? "") ? (wanted as HomePanelTab) : "overview";
-}
 
 function readPeriod(): HomePeriod {
   try {
@@ -45,40 +21,41 @@ function readPeriod(): HomePeriod {
   return "month";
 }
 
-function HomeDashboard() {
+/**
+ * Old links still say ?tab=reactivation (Accounts > Services) or ?tab=phone: the page
+ * has no tabs any more, so the link scrolls to that service's card instead. Read once.
+ */
+function linkedAnchor(): string | null {
+  const wanted = new URLSearchParams(window.location.search).get("tab") ?? "";
+  return Object.hasOwn(SERVICE_ANCHOR, wanted) ? SERVICE_ANCHOR[wanted as ServiceKey] : null;
+}
+
+/** The overview grid shows once a conversation channel (or Reactivation, which runs over WhatsApp/SMS) is on. */
+const hasConversations = (s: HomeServices) => s.phone || s.whatsapp || s.website || s.sms || s.reactivation;
+
+function StatsDashboard() {
   const { t, i18n } = useTranslation("home");
   const { currentAccountId, isAgencyUser } = useWorkspace();
-  const [tab, setTab] = useState<HomePanelTab>(readTab);
-  const [, setLocation] = useLocation();
-  // The channel figures live on their own pages now: open Calls › Stats or Chats › Stats.
-  const openTab = (next: HomeTab) => {
-    if (next === "phone") {
-      writeLastTab("calls", "stats");
-      setLocation("/platform/voice-calls");
-    } else if (next === "website" || next === "whatsapp") {
-      writeLastTab("chats", "stats");
-      rememberStatsChannel(next);
-      setLocation("/platform/chat");
-    } else {
-      setTab(next);
-    }
-  };
   const [period, setPeriod] = useState<HomePeriod>(readPeriod);
+  const [anchor, setAnchor] = useState<string | null>(linkedAnchor);
   const { data: services, isLoading, isError } = useHomeServices(currentAccountId);
-  const tabs = useMemo(() => visibleTabs(services), [services]);
 
-  // A tab that is not live for this account (deep link, or after switching account) falls back to Overview.
-  // While services are still loading, keep the requested tab so a deep link is not lost.
-  const active = !services || tabs.includes(tab) ? tab : "overview";
-
-  // Keep the open tab in the URL so a refresh or a shared link reopens it.
+  // Drop the old ?tab= from the URL, then scroll to what it asked for once the sections are there.
   useEffect(() => {
-    if (!services) return;
     const params = new URLSearchParams(window.location.search);
-    if (active === "overview") params.delete("tab"); else params.set("tab", active);
+    if (!params.has("tab")) return;
+    params.delete("tab");
     const qs = params.toString();
     window.history.replaceState(null, "", window.location.pathname + (qs ? `?${qs}` : ""));
-  }, [active, services]);
+  }, []);
+  useEffect(() => {
+    if (!services || !anchor) return;
+    const timer = window.setTimeout(() => {
+      document.getElementById(anchor)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      setAnchor(null);
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [services, anchor]);
 
   const choosePeriod = (p: HomePeriod) => {
     setPeriod(p);
@@ -101,56 +78,45 @@ function HomeDashboard() {
   }, []);
 
   const scope: HomeScope = { accountId: currentAccountId, period };
-  const Panel = PANELS[active];
   const noServices = !isLoading && services && !Object.values(services).some(Boolean);
+  const loading = <div className="eyebrow eyebrow-sm" style={{ padding: 24 }}>{t("loading")}</div>;
+  // Cards first (one per service that is on), then the overview grid.
 
   return (
     <div className="la-page" data-testid="page-home" style={{ background: "var(--bg)", overflow: "hidden" }}>
-      {/* Fixed header: greeting + tabs never scroll. The tab content scrolls in
-          its own container below, so cards (and their shadows) are cut off at
-          the header's bottom edge instead of painting over it. */}
+      {/* Fixed header: greeting and period never scroll. The page scrolls in its own
+          container below, so cards (and their shadows) are cut off at the header's
+          bottom edge instead of painting over it. */}
       <div className="shrink-0 la-m-chrome" style={{ background: "var(--bg)", position: "relative", zIndex: 1 }}>
-        <div className="mr-auto flex max-w-[1386px] flex-col gap-5 px-4 pb-3 pt-7 md:px-9">
-          <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1">
+        <div className="la-page-center flex flex-wrap items-end justify-between gap-x-4 gap-y-3 px-4 pb-3 pt-7 md:px-9">
+          <div className="flex min-w-0 flex-col gap-1">
+            <span className="eyebrow eyebrow-sm">{t("title")} · {dateStr}</span>
             <h1 className="text-[26px] md:text-[32px]" style={{ margin: 0, fontWeight: 700, color: "var(--ink)", lineHeight: 1.1 }}>
               {firstName ? `${greeting}, ${firstName}` : greeting}
             </h1>
-            <span className="eyebrow eyebrow-sm">{dateStr}</span>
           </div>
-
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            {tabs.length > 1 ? <div className="la-seg la-seg--fill la-seg--touch max-w-full" role="tablist" style={{ overflowX: "auto", scrollbarWidth: "none" }}>
-              {tabs.map((k) => (
-                <button key={k} role="tab" aria-selected={active === k} data-testid={`home-tab-${k}`}
-                  className={cn("la-seg-btn shrink-0", active === k && "on")} onClick={() => setTab(k)}>
-                  {t(`tabs.${k}`)}
-                </button>
-              ))}
-            </div> : <span />}
-            <select value={period} onChange={(e) => choosePeriod(e.target.value as HomePeriod)} aria-label={t("period.label")}
-              className="neu-inset-crisp" data-testid="home-period"
-              style={{ padding: "7px 12px", borderRadius: "var(--r-button)", fontSize: 13, border: "none", background: "var(--bg)", color: "var(--ink-soft)" }}>
-              {HOME_PERIODS.map((p) => <option key={p} value={p}>{t(`period.${p}`)}</option>)}
-            </select>
-          </div>
+          <select value={period} onChange={(e) => choosePeriod(e.target.value as HomePeriod)} aria-label={t("period.label")}
+            className="neu-inset-crisp" data-testid="home-period"
+            style={{ padding: "7px 12px", borderRadius: "var(--r-button)", fontSize: 13, border: "none", background: "var(--bg)", color: "var(--ink-soft)" }}>
+            {HOME_PERIODS.map((p) => <option key={p} value={p}>{t(`period.${p}`)}</option>)}
+          </select>
         </div>
       </div>
 
       {/* The page's one scroll container. Side and top padding live inside it so
           resting card shadows have room and are never clipped. */}
       <div className="min-h-0 flex-1 overflow-y-auto" data-testid="home-scroll">
-        <div className="mr-auto flex max-w-[1386px] flex-col gap-5 px-4 pb-11 pt-3 md:px-9">
+        <div className="la-page-center flex flex-col gap-5 px-4 pb-11 pt-3 md:px-9">
           {!isAgencyUser && <WelcomeChecklistCard />}
           {isError ? (
             <EmptyState title={t("errorTitle")} body={t("error")} />
           ) : noServices ? (
             <EmptyState title={t("empty.noServicesTitle")} body={t(isAgencyUser ? "empty.noServicesAgency" : "empty.noServicesClient")} />
-          ) : (
-            <Suspense fallback={<div className="eyebrow eyebrow-sm" style={{ padding: 24 }}>{t("loading")}</div>}>
-              {services ? <Panel key={currentAccountId} scope={scope} services={services} onOpenTab={openTab} /> : (
-                <div className="eyebrow eyebrow-sm" style={{ padding: 24 }}>{t("loading")}</div>
-              )}
-            </Suspense>
+          ) : !services ? loading : (
+            <div key={currentAccountId} className="flex flex-col gap-8">
+              <ServiceCards scope={scope} services={services} />
+              {hasConversations(services) && <OverviewGrid scope={scope} services={services} />}
+            </div>
           )}
         </div>
       </div>
@@ -161,7 +127,7 @@ function HomeDashboard() {
 export default function HomePage() {
   return (
     <CrmShell>
-      <HomeDashboard />
+      <StatsDashboard />
     </CrmShell>
   );
 }

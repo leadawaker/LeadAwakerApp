@@ -185,7 +185,7 @@ export function registerCalendarRoutes(app: Express): void {
   }));
 
   // ─── Working hours from the account's primary Cal.com schedule ───────────
-  app.get("/api/calendar/working-hours", requireAuth, wrapAsync(async (req, res) => {
+  app.get("/api/calendar/working-hours", requireAuth, requireAccountAccess(false), wrapAsync(async (req, res) => {
     const accountId = Number(req.query.accountId);
     if (!accountId) return res.status(400).json({ message: "accountId required" });
     const wh = await getWorkingHoursForAccount(accountId);
@@ -193,7 +193,7 @@ export function registerCalendarRoutes(app: Express): void {
   }));
 
   // ─── Free/busy (merged across all connected calendars) ────────────────────
-  app.get("/api/calendar/freebusy", requireAuth, wrapAsync(async (req, res) => {
+  app.get("/api/calendar/freebusy", requireAuth, requireAccountAccess(false), wrapAsync(async (req, res) => {
     const accountId = Number(req.query.accountId);
     const timeMin = req.query.timeMin as string;
     const timeMax = req.query.timeMax as string;
@@ -206,7 +206,7 @@ export function registerCalendarRoutes(app: Express): void {
 
   // ─── Push a booked call as a calendar event ───────────────────────────────
   // Used by server write-sites and (via x-internal-key) the Python engine.
-  app.post("/api/calendar/sync-booking", requireAuth, wrapAsync(async (req, res) => {
+  app.post("/api/calendar/sync-booking", requireAuth, requireAccountAccess(true), wrapAsync(async (req, res) => {
     const { accountId, title, description, start, end, timezone, attendees, location } = req.body || {};
     if (!accountId || !title || !start || !end) {
       return res.status(400).json({ message: "accountId, title, start, end required" });
@@ -221,7 +221,7 @@ export function registerCalendarRoutes(app: Express): void {
   }));
 
   // ─── Cancel a previously-pushed event ─────────────────────────────────────
-  app.post("/api/calendar/cancel-booking", requireAuth, wrapAsync(async (req, res) => {
+  app.post("/api/calendar/cancel-booking", requireAuth, requireAccountAccess(true), wrapAsync(async (req, res) => {
     const { accountId, provider, externalEventId } = req.body || {};
     if (!accountId || !provider || !externalEventId) {
       return res.status(400).json({ message: "accountId, provider, externalEventId required" });
@@ -232,7 +232,7 @@ export function registerCalendarRoutes(app: Express): void {
 
   // ─── Calendar Blocks: CRUD ────────────────────────────────────────────────
 
-  app.get("/api/calendar/blocks", requireAuth, wrapAsync(async (req, res) => {
+  app.get("/api/calendar/blocks", requireAuth, requireAccountAccess(false), wrapAsync(async (req, res) => {
     const accountId = Number(req.query.accountId);
     if (!accountId) return res.status(400).json({ message: "accountId required" });
     const from = req.query.from ? new Date(req.query.from as string) : undefined;
@@ -241,7 +241,7 @@ export function registerCalendarRoutes(app: Express): void {
     res.json(blocks);
   }));
 
-  app.post("/api/calendar/blocks", requireAuth, wrapAsync(async (req, res) => {
+  app.post("/api/calendar/blocks", requireAuth, requireAccountAccess(true), wrapAsync(async (req, res) => {
     const { accountId, date, startTime, endTime, allDay, label } = req.body || {};
     if (!accountId || !date) return res.status(400).json({ message: "accountId and date required" });
 
@@ -295,7 +295,7 @@ export function registerCalendarRoutes(app: Express): void {
     res.json(block);
   }));
 
-  app.delete("/api/calendar/blocks/:id", requireAuth, wrapAsync(async (req, res) => {
+  app.delete("/api/calendar/blocks/:id", requireAuth, requireAccountAccess(true), wrapAsync(async (req, res) => {
     const id = Number(req.params.id);
     // accountId is required so we can trigger a resync after deletion.
     const accountId = Number(req.query.accountId || req.body?.accountId || 0);
@@ -350,6 +350,9 @@ export function registerCalendarRoutes(app: Express): void {
       eventTypeSlug: conn.caldiyEventTypeSlug ?? null,
       visitEventTypeId: conn.caldiyVisitEventTypeId ?? null,
       visitEventTypeSlug: conn.caldiyVisitEventTypeSlug ?? null,
+      // The account's own booking link (provisioning stores it as the display name):
+      // a phone line that books in this account's diary has no campaign naming it.
+      bookingUrl: conn.displayName ?? null,
     });
   }));
 

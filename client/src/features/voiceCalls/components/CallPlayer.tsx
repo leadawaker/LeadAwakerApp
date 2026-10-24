@@ -1,6 +1,6 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronDown, ChevronUp, Pause, Play, RotateCcw, RotateCw, Volume2, VolumeX } from "lucide-react";
+import { ChevronDown, Pause, Play, RotateCcw, RotateCw, Volume2, VolumeX } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -43,9 +43,10 @@ function SkipButton({ back, onClick, label }: { back?: boolean; onClick: () => v
 /**
  * Call player in the HubSpot layout: transport controls on top, then one line
  * per speaker showing when each side talked, with a playhead across both.
+ * The speaker lines fold away from the toggle in the transcript header.
  */
 export function CallPlayer({
-  state, controls, caller, ai, callerLabel, callerTitle,
+  state, controls, caller, ai, callerLabel, callerTitle, showTracks,
 }: {
   state: PlayerState;
   controls: PlayerControls;
@@ -53,9 +54,9 @@ export function CallPlayer({
   ai: Segment[];
   callerLabel: string;
   callerTitle: string;
+  showTracks: boolean;
 }) {
   const { t } = useTranslation("voiceCalls");
-  const [showTracks, setShowTracks] = useState(true);
   const trackRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
   const { playing, current, duration, volume, muted, rate } = state;
@@ -164,13 +165,6 @@ export function CallPlayer({
             <div key={tr.label} style={{ ...rowStyle, ...valueCol, justifyContent: "flex-end" }}>{tr.share}%</div>
           ))}
         </div>
-      </div>
-
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 6 }}>
-        <button onClick={() => setShowTracks((v) => !v)} style={{ border: "none", background: "transparent", cursor: "pointer", color: "var(--ink-soft)", fontSize: 13, fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 6, padding: "4px 8px" }}>
-          {showTracks ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
-          {showTracks ? t("hideSpeakers") : t("showSpeakers")}
-        </button>
       </div>
     </div>
   );

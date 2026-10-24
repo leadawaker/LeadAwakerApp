@@ -4,6 +4,7 @@ import { storage } from "../storage";
 import { requireAuth, requireAgency } from "../auth";
 import { accountIdFor, handleZodError, wrapAsync } from "./_helpers";
 import { resolveVoiceAccess } from "./voiceCallsAccess";
+import { LINE_PURPOSES, LLM_KEYS } from "../storage/voiceLineEngine";
 import {
   AFTER_HOURS, HOLD_MUSIC, NOTICE_SPEEDS, NOTICE_VOICES, TRANSFER_MODES, TRANSFER_WAITING, VOICE_LOCALES,
   VOICE_REGIONS, VoiceLineError, type RecordingNoticeCustom,
@@ -12,17 +13,21 @@ import {
 // Account Workspace "Voice" tab (specs/voice-tab). Reads are open to the
 // account's own users; writes are agency-only.
 
-/** The Owner, not viewing as someone else: the only one who sees what calls cost. */
-function isOwnerRequest(req: Request): boolean {
+function voiceAccessOf(req: Request) {
   const user = req.user;
-  if (!user) return false;
+  if (!user) return null;
   return resolveVoiceAccess({
     role: user.role ?? "",
     accountsId: user.accountsId ?? null,
     impersonatedAccountId: req.session?.impersonation?.accountId ?? null,
     impersonatedRole: req.session?.impersonation?.role ?? null,
-  }).isOwner;
+  });
 }
+
+/** The Owner, not viewing as someone else: the only one who sees what calls cost. */
+const isOwnerRequest = (req: Request): boolean => voiceAccessOf(req)?.isOwner === true;
+/** The agency (not a client, not viewing as one): the only one who sees a line's purpose and engine. */
+const isAgencyRequest = (req: Request): boolean => voiceAccessOf(req)?.isAgency === true;
 
 const E164 = /^\+[1-9]\d{6,14}$/;
 const e164 = z.string().trim().regex(E164, "Must be an E.164 number, e.g. +31612345678");
@@ -56,7 +61,6 @@ const putBodySchema = z.object({
   transferWaiting: z.enum(TRANSFER_WAITING).optional(),
   transferHoldMusic: z.enum(HOLD_MUSIC).optional(),
   transferMode: z.enum(TRANSFER_MODES).optional(),
-  officeSound: z.boolean().optional(),
   region: z.enum(VOICE_REGIONS).optional(),
   recordingNotice: z.boolean().optional(),
   screening: z.object({
@@ -64,6 +68,9 @@ const putBodySchema = z.object({
     robocalls: z.boolean().optional(),
     abuse: z.boolean().optional(),
   }).strict().optional(),
+  agentGender: z.enum(["female", "male"]).nullable().optional(),
+  // Which GPT Live voice layer the Test button runs (engine client_setup.TEST_PROMPTS). Never a phone call.
+  testPrompt: z.enum(["standard", "lean"]).optional(),
   greeting: z.string().max(500).optional(),
   pronunciation: z.array(z.object({
     word: z.string().max(80),
@@ -81,17 +88,27 @@ const putBodySchema = z.object({
   path: ["numberId"],
 });
 
+// The line's purpose and engine pick (storage/voiceLineEngine.ts): agency only, read and write.
+const lineEngineBodySchema = z.object({
+  purpose: z.enum(LINE_PURPOSES).optional(),
+  engine: z.enum(["gpt-live", "elevenlabs"]).optional(),
+  engineVoice: z.string().regex(/^[A-Za-z0-9]{1,40}$/).nullable().optional(),
+  // The reasoning model behind each engine's voice; null = Sol. A client line may set liveLlm too.
+  liveLlm: z.enum(LLM_KEYS).nullable().optional(),
+  elevenLlm: z.enum(LLM_KEYS).nullable().optional(),
+}).strict().refine((b) => Object.values(b).some((v) => v !== undefined), { message: "Send at least one field" });
+
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 
 /** The patch fields that can change which Telnyx route a number belongs on. */
-const WIRING_FIELDS = ["numberId", "phoneNumber", "transferNumber", "transferMode", "officeSound"] as const;
+const WIRING_FIELDS = ["numberId", "phoneNumber", "transferNumber", "transferMode"] as const;
 
 export interface NumberWiring { number: string; wiring: "conference" | "direct" | null; changed?: boolean; error?: string }
 
 /**
  * Put the account's numbers on the Telnyx route its saved settings call for
- * (engine line_wiring.py): the conference route for screened transfers or the
- * office sound, else direct. Never throws: a save that worked stays saved, and
+ * (engine line_wiring.py): the Telnyx (conference) route for a number in
+ * BRIDGE_ROUTE_NUMBERS, a screened transfer or an ElevenLabs line, else direct. Never throws: a save that worked stays saved, and
  * the tab shows the wiring error instead.
  */
 export async function syncVoiceWiring(
@@ -146,7 +163,34 @@ export function registerVoiceLineRoutes(app: Express): void {
     if (accountId == null) return;
     const line = await storage.getVoiceLine(accountId);
     if (!line) return res.status(404).json({ message: "Account not found" });
+    if (line.number && !isAgencyRequest(req)) {
+      const { purpose, engine, engineVoice, liveLlm, elevenLlm, ...number } = line.number;
+      const { otherLines, ...rest } = line;
+      return res.json({ ...rest, number, otherLines: [] });
+    }
     res.json(line);
+  }));
+
+  app.put("/api/accounts/:id/voice/numbers/:numberId", requireAgency, wrapAsync(async (req, res) => {
+    const accountId = accountIdFor(req, res);
+    if (accountId == null) return;
+    const numberId = Number(req.params.numberId);
+    if (!Number.isInteger(numberId) || numberId <= 0) return res.status(400).json({ message: "Invalid number id" });
+    const parsed = lineEngineBodySchema.safeParse(req.body);
+    if (!parsed.success) return handleZodError(res, parsed.error);
+    try {
+      const { line, wiringChanged } = await storage.saveLineEngine(accountId, numberId, parsed.data);
+      if (!line) return res.status(404).json({ message: "Account not found" });
+      // An ElevenLabs line always runs through Telnyx (engine line_wiring.py): an engine or
+      // type change can move the number, so the wiring follows it like a Voice tab save.
+      // Only when the stored engine or type really changed: the card sends both on every
+      // save, and a re-sync is Telnyx round trips (up to 20 s).
+      const wiring = wiringChanged ? await syncVoiceWiring(accountId) : undefined;
+      res.json(wiring === undefined ? line : { ...line, wiring });
+    } catch (err) {
+      if (err instanceof VoiceLineError) return res.status(err.status).json({ message: err.message });
+      throw err;
+    }
   }));
 
   app.put("/api/accounts/:id/voice", requireAgency, wrapAsync(async (req, res) => {
@@ -233,14 +277,17 @@ export function registerVoiceLineRoutes(app: Express): void {
   app.get("/api/accounts/:id/voice/test-calls", requireAgency, wrapAsync(async (req, res) => {
     const accountId = accountIdFor(req, res);
     if (accountId == null) return;
-    res.json(await storage.listTestCalls(accountId));
+    const items = await storage.listTestCalls(accountId);
+    // What a call costs us is the Owner's number only (same rule as voice-stats above).
+    res.json(isOwnerRequest(req) ? items : items.map((i) => ({ ...i, costUsd: null })));
   }));
 
   // Numbers blocked for abuse on this account's line, and lifting one.
   app.get("/api/accounts/:id/voice/blocked", requireAuth, wrapAsync(async (req, res) => {
     const accountId = accountIdFor(req, res);
     if (accountId == null) return;
-    res.json(await storage.listBlockedCallers(accountId));
+    // A client does not see a strike from a test call (plan Task 10). The block itself still holds.
+    res.json(await storage.listBlockedCallers(accountId, !isAgencyRequest(req)));
   }));
 
   app.delete("/api/accounts/:id/voice/blocked/:blockId", requireAgency, wrapAsync(async (req, res) => {

@@ -1,9 +1,12 @@
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { PageTopbar } from "@/components/crm/primitives";
 import { useCadenceQueue } from "../hooks/useCadenceQueue";
 import { CadenceDailyProgress } from "../components/CadenceDailyProgress";
 import { CadenceQueueRow } from "../components/CadenceQueueRow";
 
 export default function CadencePage() {
+  const { t } = useTranslation("cadence");
   const { queue, isLoading, logContact, enterCadence, skipCadence } = useCadenceQueue();
 
   const todayContactCount = useMemo(() => {
@@ -16,23 +19,21 @@ export default function CadencePage() {
   }, [queue]);
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <h1 className="text-lg font-semibold text-foreground">Cadence</h1>
-      </div>
+    <div className="la-page" style={{ background: "var(--bg)" }}>
+      <PageTopbar title={t("title")} count={queue.length} />
 
-      <div className="px-4 pb-3">
+      <div className="px-4 pt-3 pb-3">
         <CadenceDailyProgress queue={queue} todayContactCount={todayContactCount} />
       </div>
 
       <div className="flex-1 overflow-y-auto min-h-0">
         {isLoading ? (
           <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-            Loading…
+            {t("loading")}
           </div>
         ) : queue.length === 0 ? (
           <div className="flex items-center justify-center h-32 text-sm text-muted-foreground">
-            No contacts due today.
+            {t("empty")}
           </div>
         ) : (
           queue.map((prospect) => (

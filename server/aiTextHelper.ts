@@ -11,8 +11,8 @@ import { execFile, spawn } from "child_process";
 import { mkdtempSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
+import { CLAUDE_BIN } from "./paths";
 
-const CLAUDE_BIN = "/home/gabriel/.npm-global/bin/claude";
 const CLAUDE_TIMEOUT_MS = 30_000;
 const GROQ_TIMEOUT_MS = 20_000;
 const GROQ_MODEL = "llama-3.1-8b-instant";

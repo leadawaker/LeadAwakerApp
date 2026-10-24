@@ -13,6 +13,10 @@
       "settings": "Configurações",
       "comments": "Comentário para DM",
       "insights": "Resultados"
+    },
+    "modes": {
+      "aria": "Resultados ou redes sociais",
+      "work": "Redes sociais"
     }
   },
   "captions": {

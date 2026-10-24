@@ -3,7 +3,7 @@ import { db } from "../db";
 import { T, liveCallSql } from "./homeSql";
 import { interactions, leads, voiceCalls, type VoiceCall, type VoiceCallSummary } from "@shared/schema";
 import { deriveOutcome, isVoiceOutcome, type VoiceOutcome } from "@shared/voiceOutcome";
-import type { VoiceAccess } from "../routes/voiceCallsAccess";
+import { demoCallVisible, type VoiceAccess } from "../routes/voiceCallsAccess";
 import {
   accountNameOf,
   durationSecondsSql,
@@ -15,6 +15,7 @@ import {
   testAccountIdSql,
 } from "./voiceCallsSql";
 import { listVoiceCallEvents, type VoiceCallEventItem } from "./voiceCallEvents";
+import { callEngine, costIsCurrent, type ReviewEngine } from "./voiceCallReview";
 
 export type { VoiceOutcome };
 export type VoiceScope = "live" | "demo";
@@ -49,6 +50,14 @@ export interface VoiceCallListItem {
   accountId: number;
   /** Only populated for agency users. */
   accountName: string | null;
+  /** Test-call list only (null elsewhere): what the call cost us, USD; the route nulls it again for non-Owners. */
+  costUsd: number | null;
+  /** Test-call list only (null elsewhere): gpt-live or elevenlabs, from the call id. */
+  engine: ReviewEngine | null;
+  /** Test-call list only (null elsewhere): false when costUsd is an old, wrong price (costIsCurrent). */
+  costCurrent: boolean | null;
+  /** Test-call list only (null elsewhere): median reply delay in ms (Voice_Calls.latency_ms); null on older calls. */
+  latencyMs: number | null;
 }
 
 export interface VoiceStats {
@@ -126,6 +135,8 @@ interface ItemExtras {
   callerNumber: string | null;
   isDemo: boolean;
   accountName: string | null;
+  /** The test-call list's extra figures (cost, engine, reply speed). Off by default: most lists reach clients. */
+  forTestList?: boolean;
 }
 
 export function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
@@ -167,6 +178,10 @@ export function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
     personaNiche: x.isDemo ? row.personaNiche : null,
     accountId: row.accountsId,
     accountName: x.accountName,
+    costUsd: x.forTestList && row.costUsd !== null && Number.isFinite(Number(row.costUsd)) ? Number(row.costUsd) : null,
+    engine: x.forTestList ? callEngine(row.callId, row.sessionId) : null,
+    costCurrent: x.forTestList ? costIsCurrent(callEngine(row.callId, row.sessionId), row.usage, row.turnMetrics) : null,
+    latencyMs: x.forTestList ? row.latencyMs ?? null : null,
   };
 }
 
@@ -189,6 +204,7 @@ export function itemColumns(includeAccountName: boolean) {
     leadStatus: leadStatusOf,
     callerNumber: leadPhoneOf,
     isDemo: isDemoSql,
+    testAccountId: testAccountIdSql,
     accountName: includeAccountName ? accountNameOf : sql<string | null>`NULL::text`,
   };
 }
@@ -218,15 +234,24 @@ export const voiceCallsStorage = {
     return rows.map((r) => toItem(r.call, r));
   },
 
+  /** Live calls (never demo or test) that started after `since`: the Calls nav badge. */
+  async countVoiceCallsSince(opts: { accountId: number | null; since: Date }): Promise<number> {
+    const [row] = await db
+      .select({ n: sql<number>`count(*)::int` })
+      .from(voiceCalls)
+      .where(and(scopeWhere("live", opts.accountId, true), sql`${voiceCalls.startedAt} > ${opts.since}`));
+    return row?.n ?? 0;
+  },
+
   /** Browser test calls of one client's line, newest first (Voice tab). */
-  async listTestCalls(accountId: number, limit = 10): Promise<VoiceCallListItem[]> {
+  async listTestCalls(accountId: number, limit = 50): Promise<VoiceCallListItem[]> {
     const rows = await db
       .select(itemColumns(false))
       .from(voiceCalls)
       .where(sql`${testAccountIdSql} = ${accountId}`)
       .orderBy(desc(voiceCalls.startedAt))
       .limit(limit);
-    return rows.map((r) => toItem(r.call, r));
+    return rows.map((r) => toItem(r.call, { ...r, forTestList: true }));
   },
 
   /**
@@ -235,7 +260,7 @@ export const voiceCallsStorage = {
    */
   async getVoiceCall(
     callId: string,
-    opts: { accountId: number | null; allowDemo: boolean; includeAccountName?: boolean; hideTest?: boolean; includeEvents?: boolean },
+    opts: { accountId: number | null; allowDemo: boolean; allowTest?: boolean; includeAccountName?: boolean; hideTest?: boolean; includeEvents?: boolean },
   ): Promise<VoiceCallDetail | undefined> {
     const [row] = await db
       .select(itemColumns(opts.includeAccountName ?? false))
@@ -246,7 +271,8 @@ export const voiceCallsStorage = {
       const [t] = await db.select({ hidden: sql<boolean>`NOT ${notTestSql}` }).from(voiceCalls).where(eq(voiceCalls.callId, callId));
       if (t?.hidden) return undefined;
     }
-    if (row.isDemo && !opts.allowDemo) return undefined;
+    // Browser test calls classify as demo; agency users may open them (allowTest), real demo calls stay Owner only.
+    if (!demoCallVisible({ isDemo: row.isDemo, testAccountId: row.testAccountId }, { allowDemo: opts.allowDemo, allowTest: opts.allowTest === true })) return undefined;
     if (opts.accountId !== null && row.call.accountsId !== opts.accountId) return undefined;
     const turns = await db
       .select({

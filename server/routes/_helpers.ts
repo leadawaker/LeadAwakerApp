@@ -4,6 +4,7 @@
  */
 import type { Request, Response, NextFunction } from "express";
 import { ZodError } from "zod";
+import { leadWriteLevelForRequest } from "./leadWriteAccess";
 
 /** Module-level flag to emit the FRONTEND_URL warning only once per process. */
 export let frontendUrlWarned = false;
@@ -91,10 +92,36 @@ export function accountIdFor(req: Request, res: Response): number | null {
     res.status(400).json({ message: "Invalid account id" });
     return null;
   }
-  const user = req.user;
-  if (user && user.accountsId !== 1 && user.accountsId !== accountId) {
+  if (!ownsAccount(req, accountId)) {
     res.status(403).json({ message: "Forbidden" });
     return null;
   }
   return accountId;
+}
+
+/**
+ * The agency (account 1) and the engine's internal key reach every account;
+ * anyone else only their own. View-as keeps the Owner's agency reach here.
+ */
+export function ownsAccount(req: Request, accountId: number | null | undefined): boolean {
+  if (!req.user) return true; // requireAuth only lets a sessionless request through on the internal key
+  return req.user.accountsId === 1 || accountId === req.user.accountsId;
+}
+
+/**
+ * A write to a lead: the agency anywhere, a Manager only on the lead's own
+ * account (effective role, so view-as gets the client's answer), a Viewer
+ * never. Sends the 403 itself and returns false.
+ */
+export function canWriteLead(req: Request, res: Response, leadAccountId: number | null | undefined): boolean {
+  const level = leadWriteLevelForRequest(req as any, leadAccountId ?? null);
+  if (level === "none") {
+    res.status(403).json({ message: "Forbidden" });
+    return false;
+  }
+  if (level === "readonly") {
+    res.status(403).json({ message: "Read-only access" });
+    return false;
+  }
+  return true;
 }

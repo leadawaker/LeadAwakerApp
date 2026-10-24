@@ -456,7 +456,7 @@ export function LeadsListPanel({
           {/* Tablet chrome (768–1023): legacy header (title + view tabs + actions + search) */}
           <div className="hidden md:flex pl-[17px] pr-[17px] pt-3 pb-1 shrink-0 flex-col gap-2">
             <div className="flex items-center justify-between w-full">
-              <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{isConversationsMode ? t("page.chatsTitle") : t("page.title")}</h2>
+              <h2 className="text-[20px] font-bold font-heading text-foreground leading-tight tracking-[-0.01em]">{isConversationsMode ? t("page.chatsTitle") : t("page.title")}</h2>
               {/* Mobile action buttons: filter + kanban toggle + add (Feature #42 + #39 + #45) */}
               <div className="flex items-center gap-1.5">
                 {/* Filter button (Feature #42) */}

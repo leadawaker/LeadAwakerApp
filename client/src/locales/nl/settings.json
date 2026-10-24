@@ -7,10 +7,11 @@
   "sections": {
     "profile": "Profiel",
     "preferences": "Voorkeuren",
-    "team": "Team",
-    "account": "Mijn Account",
+    "team": "Gebruikers",
     "security": "Beveiliging",
-    "notifications": "Meldingen"
+    "notifications": "Meldingen",
+    "users": "Gebruikers",
+    "billing": "Facturatie"
   },
   "mobileProfile": {
     "title": "Mijn profiel",
@@ -23,7 +24,7 @@
     "table": "Tabel",
     "back": "Terug",
     "editProfile": "Profiel bewerken",
-    "title": "Team",
+    "title": "Gebruikers",
     "inviteEmailFailedTitle": "Uitnodigingsmail niet verzonden",
     "inviteEmailFailedBody": "De uitnodiging voor {{email}} is aangemaakt, maar de e-mail kon niet worden verzonden. Gebruik Opnieuw versturen bij openstaande uitnodigingen om het nog eens te proberen.",
     "inviteSentTitle": "Uitnodiging verzonden",
@@ -33,11 +34,6 @@
     "resendFailedTitle": "Uitnodiging opnieuw verzenden mislukt",
     "resendInvite": "Opnieuw versturen",
     "resendingInvite": "Verzenden…"
-  },
-  "account": {
-    "saved": "Opgeslagen",
-    "savedDescription": "Account veld {{field}} bijgewerkt.",
-    "notFound": "Account niet gevonden"
   },
   "cropDialog": {
     "title": "Foto bijsnijden",
@@ -75,7 +71,7 @@
     "outreachPagesDescription": "Toon de Inbox-, Prospects- en Cadence-pagina's in de navigatiebalk.",
     "outreachPagesToggle": "Tonen in navigatiebalk",
     "servicePages": "Servicepagina's",
-    "servicePagesDescription": "Toon deze servicepagina's in de navigatiebalk en op Home. Standaard verborgen.",
+    "servicePagesDescription": "Toon deze servicepagina's in de navigatiebalk en op Stats. Standaard verborgen.",
     "servicePageSpeed": "Speed to Lead",
     "servicePageReputation": "Reputatie",
     "servicePageMissedCalls": "Gemiste oproepen",
@@ -156,7 +152,10 @@
       "bookingCancelled": "Afspraak geannuleerd",
       "callbackRequested": "Terugbelverzoek",
       "dailyRecap": "Dagoverzicht"
-    }
+    },
+    "alertsHint": "Welke gebeurtenissen worden verstuurd, en naar wie, stel je per account in bij Meldingen.",
+    "alertsLink": "Meldingen openen",
+    "alsoInAlerts": "Alleen verstuurd als de Meldingen van het account dit aan hebben"
   },
   "hub": {
     "back": "Terug",
@@ -316,6 +315,16 @@
         "email": "E-mail",
         "backup": "Back-upcode"
       }
+    },
+    "summary": {
+      "on": "Aan: {{methods}}",
+      "off": "Uit",
+      "totp": "authenticator",
+      "email": "e-mailcode",
+      "passkeys_one": "{{count}} passkey",
+      "passkeys_other": "{{count}} passkeys",
+      "show": "Methodes tonen",
+      "hide": "Methodes verbergen"
     }
   },
   "twoFactorPolicy": {
@@ -379,5 +388,14 @@
       "policy_changed": "Beleid gewijzigd",
       "enrollment_forced": "Instellen verplicht"
     }
+  },
+  "rail": {
+    "profile": "Naam, foto en contactgegevens",
+    "security": "Wachtwoord en inloggen in twee stappen",
+    "preferences": "Startpagina, tijdzone en thema",
+    "notificationsAgency": "Push, e-mail en Telegram",
+    "notificationsClient": "Push op dit apparaat",
+    "users": "Wie kan inloggen",
+    "billing": "Facturen en contracten"
   }
 }

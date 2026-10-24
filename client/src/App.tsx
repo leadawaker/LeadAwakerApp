@@ -21,13 +21,13 @@ const IntakeDemo = lazy(() => import("@/pages/intake-demo"));
 const VoiceDemo = lazy(() => import("@/pages/voice-demo"));
 const ReviewDemo = lazy(() => import("@/pages/review-demo"));
 const AcceptInvite = lazy(() => import("@/pages/AcceptInvite"));
+const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const LegacyHome = lazy(() => import("@/legacy/LegacyRoute"));
 const LegacyTermsOfService = lazy(() => import("@/legacy/TermsOfServiceRoute"));
 
 const AppArea = lazy(() => import("@/pages/app"));
 const Canvas = lazy(() => import("@/pages/canvas"));
 const TermsOfService = lazy(() => import("@/pages/terms-of-service"));
-const Accounts = lazy(() => import("@/pages/Accounts"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 const GoLink = lazy(() => import("@/pages/GoLink"));
 const NumberDocs = lazy(() => import("@/pages/NumberDocs"));
@@ -76,7 +76,8 @@ function useSyncLanguage(lang: Lang) {
     // CRM pages: use stored preference instead of URL-derived lang
     const isCrmPage = window.location.pathname.startsWith("/platform");
     // The invite link carries the invitee's language: follow it, and never store "en" over it.
-    const isInvitePage = window.location.pathname.startsWith("/accept-invite");
+    const isInvitePage = window.location.pathname.startsWith("/accept-invite")
+      || window.location.pathname.startsWith("/reset-password");
     const inviteLang = new URLSearchParams(window.location.search).get("lang");
     const effectiveLang = isInvitePage && SUPPORTED_LANGS.includes(inviteLang as Lang)
       ? (inviteLang as Lang)
@@ -129,20 +130,21 @@ function AppRoutes() {
       <Route path="/voice-demo" component={VoiceDemo} />
       <Route path="/review-demo" component={ReviewDemo} />
       <Route path="/accept-invite" component={AcceptInvite} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/go/:code" component={GoLink} />
       <Route path="/number-docs/:token" component={NumberDocs} />
       <Route path="/platform" component={AppArea} />
-      <Route path="/platform/:rest*" component={AppArea} />
+      {/* "/*", not "/:rest*": regexparam's :rest* matches one segment, so /platform/contacts/12 fell through to NotFound. */}
+      <Route path="/platform/*" component={AppArea} />
       {/* Legacy CRM prefixes — redirect to the unified /platform area */}
-      <Route path="/agency/:rest*" component={LegacyAppRedirect} />
+      <Route path="/agency/*" component={LegacyAppRedirect} />
       <Route path="/agency" component={LegacyAppRedirect} />
-      <Route path="/subaccount/:rest*" component={LegacyAppRedirect} />
+      <Route path="/subaccount/*" component={LegacyAppRedirect} />
       <Route path="/subaccount" component={LegacyAppRedirect} />
       <Route path="/app/agency" component={() => <Redirect to="/platform" />} />
       <Route path="/app/subaccount" component={() => <Redirect to="/platform" />} />
       <Route path="/canvas" component={Canvas} />
       <Route path="/terms-of-service" component={TermsOfService} />
-      <Route path="/test-table" component={Accounts} />
       <Route component={NotFound} />
     </Switch>
     </Suspense>
@@ -238,6 +240,8 @@ function Router() {
     location.startsWith("/number-docs/") ||
     // Pre-login invite acceptance: a client's first screen, its own branded card.
     location.startsWith("/accept-invite") ||
+    // The button in a password-reset email: the same bare branded card.
+    location.startsWith("/reset-password") ||
     // The button in an alert email: a bare redirect card, then the CRM.
     location.startsWith("/go/");
 

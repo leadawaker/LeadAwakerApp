@@ -7,7 +7,6 @@ import {
 import {
   useCompactPanelState,
   useCompactHoverCard,
-  CompactTabPopover,
   CompactHoverCardPortal,
 } from "@/components/crm/CompactEntityRail";
 import { GradientTester, GradientControlPoints, layerToStyle, type GradientLayer } from "@/components/ui/gradient-tester";
@@ -18,9 +17,7 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { xBase, xDefault, xActive, xSpan } from "@/components/crm/primitives";
-import { ViewTabBar } from "@/components/ui/view-tab-bar";
-import { SearchPill } from "@/components/ui/search-pill";
+import { PageTopbar, TopbarTabs, TopbarIconButton, ExpandingSearch } from "@/components/crm/primitives";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useListPanelState } from "@/hooks/useListPanelState";
 import { ProspectDetailViewEmpty } from "./ProspectDetailView";
@@ -43,6 +40,9 @@ import {
 } from "./prospectTypes";
 
 export type { ProspectRow, NewProspectForm, ProspectViewMode, ProspectGroupBy, ProspectSortBy };
+
+/** Locale key for a stored label value: "In Progress" -> "inProgress", "High" -> "high". */
+const labelKey = (v: string) => v.replace(/\s+(.)/g, (_, c: string) => c.toUpperCase()).replace(/^./, (c) => c.toLowerCase());
 
 /** Matches the hardcoded CSS fallback gradients for this page */
 const PAGE_DEFAULT_LAYERS: GradientLayer[] = [
@@ -397,16 +397,9 @@ export function ProspectListView({
 
   // ── Expand-on-hover button classes — shared from @/components/crm/primitives ──
 
-  // ── Search pill ───────────────────────────────────────────────────────────
-  const searchPill = (
-    <SearchPill
-      value={listSearch}
-      onChange={onListSearchChange}
-      open={searchOpen}
-      onOpenChange={onSearchOpenChange}
-      placeholder={t("page.searchPlaceholder")}
-      className="ml-[9px] max-w-[171px]"
-    />
+  // ── Search ────────────────────────────────────────────────────────────────
+  const searchField = (
+    <ExpandingSearch value={listSearch} onChange={onListSearchChange} placeholder={t("page.searchPlaceholder")} defaultOpen={searchOpen} />
   );
 
   // ── Toolbar (filter / sort / group / add) ─────────────────────────────────
@@ -415,12 +408,11 @@ export function ProspectListView({
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, isFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
+          <TopbarIconButton label={t("toolbar.filter")} active={isFilterActive}>
             <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.filter")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52 max-h-[400px] overflow-y-auto">
+        <DropdownMenuContent align="end" className="w-52 max-h-[400px] overflow-y-auto">
           <FilterAccordionSection label={t("group.niche")} activeCount={filterNiche.length} defaultOpen={filterNiche.length > 0}>
             {availableNiches.map((s) => (
               <DropdownMenuItem key={`niche-${s}`} onClick={(e) => { e.preventDefault(); onToggleFilterNiche(s); }} className="flex items-center gap-2 text-[12px]">
@@ -434,7 +426,7 @@ export function ProspectListView({
             {STATUS_FILTER_OPTIONS.map((s) => (
               <DropdownMenuItem key={`status-${s}`} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
                 <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PROSPECT_STATUS_HEX[s] || "#94A3B8" }} />
-                <span className="flex-1">{s}</span>
+                <span className="flex-1">{t(`status.${labelKey(s)}`, s)}</span>
                 {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
               </DropdownMenuItem>
             ))}
@@ -454,7 +446,7 @@ export function ProspectListView({
             {INLINE_PRIORITY_OPTIONS.map((s) => (
               <DropdownMenuItem key={`priority-${s}`} onClick={(e) => { e.preventDefault(); onToggleFilterPriority(s); }} className="flex items-center gap-2 text-[12px]">
                 <SignalBars priority={s} />
-                <span className="flex-1 capitalize">{s}</span>
+                <span className="flex-1 capitalize">{t(`priority.${labelKey(s)}`, s)}</span>
                 {filterPriority.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
               </DropdownMenuItem>
             ))}
@@ -463,7 +455,7 @@ export function ProspectListView({
             <FilterAccordionSection label={t("filter.source")} activeCount={filterSource.length} defaultOpen={filterSource.length > 0}>
               {availableSources.map((s) => (
                 <DropdownMenuItem key={`source-${s}`} onClick={(e) => { e.preventDefault(); onToggleFilterSource(s); }} className="flex items-center gap-2 text-[12px]">
-                  <span className="flex-1">{s}</span>
+                  <span className="flex-1">{t(`source.${labelKey(s)}`, s)}</span>
                   {filterSource.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                 </DropdownMenuItem>
               ))}
@@ -489,12 +481,11 @@ export function ProspectListView({
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, isSortNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
+          <TopbarIconButton label={t("toolbar.sort")} active={isSortNonDefault}>
             <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
+        <DropdownMenuContent align="end" className="w-52">
           {([
             { key: "recent", label: t("sort.mostRecent"), asc: null, desc: null },
             { key: "name", label: t("sort.name"), asc: "name_asc" as ProspectSortBy, desc: "name_desc" as ProspectSortBy },
@@ -514,11 +505,11 @@ export function ProspectListView({
                 {isActive && group.asc && group.desc && (
                   <>
                     <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange(group.asc!); }}
-                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")} title="Ascending">
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")} title={t("topbar.ascending")}>
                       <ArrowUp className="h-3 w-3" />
                     </button>
                     <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange(group.desc!); }}
-                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")} title="Descending">
+                      className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")} title={t("topbar.descending")}>
                       <ArrowDown className="h-3 w-3" />
                     </button>
                   </>
@@ -532,23 +523,22 @@ export function ProspectListView({
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, isGroupNonDefault ? xActive : xDefault, "hover:max-w-[100px]")}>
+          <TopbarIconButton label={t("toolbar.group")} active={isGroupNonDefault}>
             <Layers className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.group")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
+        <DropdownMenuContent align="end" className="w-52">
           {(Object.keys(GROUP_TKEYS) as ProspectGroupBy[]).map((opt) => (
             <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); onGroupByChange(opt); }} className="text-[12px] flex items-center gap-2">
               <span className={cn("flex-1", groupBy === opt && "font-semibold !text-brand-indigo")}>{t(GROUP_TKEYS[opt])}</span>
               {groupBy === opt && opt !== "none" && (
                 <>
                   <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("asc"); }}
-                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")} title="Ascending">
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")} title={t("topbar.ascending")}>
                     <ArrowUp className="h-3 w-3" />
                   </button>
                   <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("desc"); }}
-                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")} title="Descending">
+                    className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")} title={t("topbar.descending")}>
                     <ArrowDown className="h-3 w-3" />
                   </button>
                 </>
@@ -560,214 +550,25 @@ export function ProspectListView({
       </DropdownMenu>
 
       {/* +Add */}
-      <button className={cn(xBase, xDefault, "hover:max-w-[80px]")} onClick={() => setPanelMode("create")}>
+      <TopbarIconButton label={t("toolbar.add")} primary onClick={() => setPanelMode("create")}>
         <Plus className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>{t("toolbar.add")}</span>
-      </button>
+      </TopbarIconButton>
     </>
   );
 
-  // ── Compact toolbar ("..." menu with sub-menus) ────────────────────────────
-  const compactToolbar = isCompact ? (
-    <div className="flex flex-col items-center gap-1 px-1.5 pb-2 shrink-0">
-      {/* "..." menu */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className={cn(
-              "h-9 w-9 rounded-full flex items-center justify-center transition-colors",
-              (isFilterActive || isSortNonDefault || isGroupNonDefault || listSearch)
-                ? "bg-brand-indigo/10 text-brand-indigo"
-                : "text-foreground/50 hover:text-foreground hover:bg-black/[0.04]"
-            )}
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent side="right" align="start" className="w-56 max-h-[500px] overflow-y-auto">
-          {/* Inline search */}
-          <div className="px-2 py-1.5" onClick={(e) => e.stopPropagation()}>
-            <div className={cn(
-              "flex items-center h-8 px-2.5 gap-1.5 rounded-full border",
-              listSearch ? "border-brand-indigo/40 bg-brand-indigo/5" : "border-black/[0.08] bg-muted/40"
-            )}>
-              <Search className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-              <input
-                value={listSearch}
-                onChange={(e) => onListSearchChange(e.target.value)}
-                placeholder={t("page.searchPlaceholder")}
-                onKeyDown={(e) => { if (e.key === "Escape") onListSearchChange(""); }}
-                className="flex-1 min-w-0 bg-transparent outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60"
-              />
-              {listSearch && (
-                <button type="button" onClick={() => onListSearchChange("")} className="shrink-0 text-muted-foreground hover:text-foreground">
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </div>
-          </div>
-          <DropdownMenuSeparator />
-          {/* Filter sub-menu */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-              <Filter className="h-3.5 w-3.5 shrink-0" />
-              <span className="flex-1">{t("toolbar.filter")}</span>
-              {isFilterActive && (
-                <span className="h-4 min-w-4 px-1 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0">
-                  {filterNiche.length + filterStatus.length + filterCountry.length + filterPriority.length + filterSource.length}
-                </span>
-              )}
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-52 max-h-[400px] overflow-y-auto">
-              <FilterAccordionSection label={t("group.niche")} activeCount={filterNiche.length} defaultOpen={filterNiche.length > 0}>
-                {availableNiches.map((s) => (
-                  <DropdownMenuItem key={`niche-${s}`} onClick={(e) => { e.preventDefault(); onToggleFilterNiche(s); }} className="flex items-center gap-2 text-[12px]">
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: getNicheColor(s).hex }} />
-                    <span className="flex-1">{s}</span>
-                    {filterNiche.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
-              </FilterAccordionSection>
-              <FilterAccordionSection label={t("filter.status")} activeCount={filterStatus.length} defaultOpen={filterStatus.length > 0}>
-                {STATUS_FILTER_OPTIONS.map((s) => (
-                  <DropdownMenuItem key={`status-${s}`} onClick={(e) => { e.preventDefault(); onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-                    <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: PROSPECT_STATUS_HEX[s] || "#94A3B8" }} />
-                    <span className="flex-1">{s}</span>
-                    {filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
-              </FilterAccordionSection>
-              {availableCountries.length > 0 && (
-                <FilterAccordionSection label={t("filter.country")} activeCount={filterCountry.length} defaultOpen={filterCountry.length > 0}>
-                  {availableCountries.map((s) => (
-                    <DropdownMenuItem key={`country-${s}`} onClick={(e) => { e.preventDefault(); onToggleFilterCountry(s); }} className="flex items-center gap-2 text-[12px]">
-                      <MapPin className="h-3 w-3 text-muted-foreground/50 shrink-0" />
-                      <span className="flex-1">{s}</span>
-                      {filterCountry.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                    </DropdownMenuItem>
-                  ))}
-                </FilterAccordionSection>
-              )}
-              <FilterAccordionSection label={t("filter.priority")} activeCount={filterPriority.length} defaultOpen={filterPriority.length > 0}>
-                {INLINE_PRIORITY_OPTIONS.map((s) => (
-                  <DropdownMenuItem key={`priority-${s}`} onClick={(e) => { e.preventDefault(); onToggleFilterPriority(s); }} className="flex items-center gap-2 text-[12px]">
-                    <SignalBars priority={s} />
-                    <span className="flex-1 capitalize">{s}</span>
-                    {filterPriority.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
-              </FilterAccordionSection>
-              {availableSources.length > 0 && (
-                <FilterAccordionSection label={t("filter.source")} activeCount={filterSource.length} defaultOpen={filterSource.length > 0}>
-                  {availableSources.map((s) => (
-                    <DropdownMenuItem key={`source-${s}`} onClick={(e) => { e.preventDefault(); onToggleFilterSource(s); }} className="flex items-center gap-2 text-[12px]">
-                      <span className="flex-1">{s}</span>
-                      {filterSource.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                    </DropdownMenuItem>
-                  ))}
-                </FilterAccordionSection>
-              )}
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); setFilterOverdue((v) => !v); }} className="flex items-center gap-2 text-[12px]">
-                <Clock className="h-3 w-3 text-red-500/60 shrink-0" />
-                <span className="flex-1">{t("toolbar.overdue")}</span>
-                {filterOverdue && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-              </DropdownMenuItem>
-              {isFilterActive && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => { onResetControls(); setFilterOverdue(false); }} className="text-[12px] text-muted-foreground">
-                    {t("toolbar.clearAllFilters")}
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-
-          {/* Sort sub-menu */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-              <ArrowUpDown className="h-3.5 w-3.5 shrink-0" />
-              <span className={cn("flex-1", isSortNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.sort")}</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-52">
-              {([
-                { key: "recent", label: t("sort.mostRecent"), asc: null, desc: null },
-                { key: "name", label: t("sort.name"), asc: "name_asc" as ProspectSortBy, desc: "name_desc" as ProspectSortBy },
-                { key: "priority", label: t("sort.priority"), asc: null, desc: null },
-              ] as { key: string; label: string; asc: ProspectSortBy | null; desc: ProspectSortBy | null }[]).map((group) => {
-                const isActive = group.asc && group.desc
-                  ? sortBy === group.asc || sortBy === group.desc
-                  : sortBy === (group.key as ProspectSortBy);
-                const activeDir: "asc" | "desc" = sortBy === group.asc ? "asc" : "desc";
-                return (
-                  <DropdownMenuItem
-                    key={group.key}
-                    onSelect={(e) => { e.preventDefault(); if (!isActive) onSortByChange(group.desc ?? (group.key as ProspectSortBy)); }}
-                    className="text-[12px] flex items-center gap-2"
-                  >
-                    <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{group.label}</span>
-                    {isActive && group.asc && group.desc && (
-                      <>
-                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange(group.asc!); }}
-                          className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "asc" ? "text-brand-indigo" : "text-foreground/30")} title="Ascending">
-                          <ArrowUp className="h-3 w-3" />
-                        </button>
-                        <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onSortByChange(group.desc!); }}
-                          className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", activeDir === "desc" ? "text-brand-indigo" : "text-foreground/30")} title="Descending">
-                          <ArrowDown className="h-3 w-3" />
-                        </button>
-                      </>
-                    )}
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-
-          {/* Group sub-menu */}
-          <DropdownMenuSub>
-            <DropdownMenuSubTrigger className="flex items-center gap-2 text-[12px]">
-              <Layers className="h-3.5 w-3.5 shrink-0" />
-              <span className={cn("flex-1", isGroupNonDefault && "text-brand-indigo font-semibold")}>{t("toolbar.group")}</span>
-            </DropdownMenuSubTrigger>
-            <DropdownMenuSubContent className="w-52">
-              {(Object.keys(GROUP_TKEYS) as ProspectGroupBy[]).map((opt) => (
-                <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); onGroupByChange(opt); }} className="text-[12px] flex items-center gap-2">
-                  <span className={cn("flex-1", groupBy === opt && "font-semibold !text-brand-indigo")}>{t(GROUP_TKEYS[opt])}</span>
-                  {groupBy === opt && opt !== "none" && (
-                    <>
-                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("asc"); }}
-                        className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")} title="Ascending">
-                        <ArrowUp className="h-3 w-3" />
-                      </button>
-                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setGroupDirection("desc"); }}
-                        className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")} title="Descending">
-                        <ArrowDown className="h-3 w-3" />
-                      </button>
-                    </>
-                  )}
-                  {groupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
-                </DropdownMenuItem>
-              ))}
-            </DropdownMenuSubContent>
-          </DropdownMenuSub>
-
-          <DropdownMenuSeparator />
-
-          {/* +Add */}
-          <DropdownMenuItem onClick={() => setPanelMode("create")} className="flex items-center gap-2 text-[12px]">
-            <Plus className="h-3.5 w-3.5 shrink-0" />
-            <span>{t("toolbar.add")}</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </div>
-  ) : null;
-
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="flex h-full gap-[var(--panel-gap)]" data-testid="prospect-list-view">
+    <div className="flex flex-col h-full" data-testid="prospect-list-view">
+      <PageTopbar
+        scroll
+        title={t("page.title")}
+        left={<TopbarTabs tabs={viewTabs} value={viewMode} onChange={(id) => onViewModeChange(id as ProspectViewMode)} testIdPrefix="prospects-view" />}
+        right={<>
+          {searchField}
+          {toolbarPrefix}
+        </>}
+      />
+    <div className="flex flex-1 min-h-0 gap-[var(--panel-gap)]">
 
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(
@@ -778,37 +579,6 @@ export function ProspectListView({
             ? cn("w-[65px] shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
             : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
       )}>
-
-        {isCompact ? (
-          /* ── COMPACT HEADER: vertical tabs + compact toolbar ─── */
-          <>
-            <CompactTabPopover
-              tabs={viewTabs}
-              activeId={viewMode}
-              onChange={(id) => onViewModeChange(id as ProspectViewMode)}
-            />
-            {compactToolbar}
-          </>
-        ) : (
-          /* ── FULL HEADER ─── */
-          <>
-            <div className="pl-[17px] pr-[17px] pt-3 md:pt-10 pb-3 flex items-center shrink-0">
-              <div className="flex items-center justify-between w-full">
-                <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
-                <ViewTabBar
-                  tabs={viewTabs}
-                  activeId={viewMode}
-                  onTabChange={(id) => onViewModeChange(id as ProspectViewMode)}
-                  variant="segment"
-                />
-              </div>
-            </div>
-            <div className="pl-2 pr-[17px] pb-2 flex items-center gap-1 shrink-0">
-              {searchPill}
-              {toolbarPrefix}
-            </div>
-          </>
-        )}
 
         {/* Scrollable prospect list */}
         <div ref={scrollContainerRef} className="la-list-area">
@@ -983,6 +753,7 @@ export function ProspectListView({
         onSave={handleSaveGradient}
         onApply={handleApplyGradient}
       />
+    </div>
     </div>
   );
 }

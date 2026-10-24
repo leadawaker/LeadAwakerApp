@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import type {
-  HomeOverview, HomePeriod, HomePhone, HomeReactivation, HomeReactivationLive, HomeReputation, HomeServices, HomeSocial,
+  HomeOverview, HomePeriod, HomePhone, HomeReactivation, HomeReputation, HomeServices, HomeSocial,
   HomeWebsite, HomeWhatsapp,
 } from "@shared/homeTypes";
 
@@ -18,8 +18,9 @@ async function getJson<T>(path: string, params: Record<string, string | number |
 // The app's default staleTime is Infinity, so every dashboard query sets its own.
 const STALE = 60 * 1000;
 
-function useHome<T>(path: string, s: HomeScope) {
+function useHome<T>(path: string, s: HomeScope, enabled = true) {
   return useQuery<T>({
+    enabled,
     queryKey: ["/api/home", path, s.accountId, s.period, s.campaignId ?? null],
     queryFn: () => getJson<T>(path, { accountId: s.accountId, period: s.period, campaignId: s.campaignId }),
     staleTime: STALE,
@@ -36,19 +37,9 @@ export function useHomeServices(accountId: number) {
   });
 }
 export const useHomeOverview = (s: HomeScope) => useHome<HomeOverview>("overview", s);
-export const useHomePhone = (s: HomeScope) => useHome<HomePhone>("phone", s);
-export const useHomeWhatsapp = (s: HomeScope) => useHome<HomeWhatsapp>("whatsapp", s);
-export const useHomeWebsite = (s: HomeScope) => useHome<HomeWebsite>("website", s);
+export const useHomePhone = (s: HomeScope, enabled = true) => useHome<HomePhone>("phone", s, enabled);
+export const useHomeWhatsapp = (s: HomeScope, enabled = true) => useHome<HomeWhatsapp>("whatsapp", s, enabled);
+export const useHomeWebsite = (s: HomeScope, enabled = true) => useHome<HomeWebsite>("website", s, enabled);
 export const useHomeReactivation = (s: HomeScope) => useHome<HomeReactivation>("reactivation", s);
-/** Live panels: not tied to the period, refreshed every minute while the tab is open. */
-export function useHomeReactivationLive(s: HomeScope) {
-  return useQuery<HomeReactivationLive>({
-    queryKey: ["/api/home", "reactivation/live", s.accountId, s.campaignId ?? null],
-    queryFn: () => getJson<HomeReactivationLive>("reactivation/live", { accountId: s.accountId, campaignId: s.campaignId }),
-    staleTime: STALE,
-    refetchInterval: STALE,
-    placeholderData: (prev, prevQuery) => (prevQuery?.queryKey[2] === s.accountId ? prev : undefined),
-  });
-}
 export const useHomeReputation = (s: HomeScope) => useHome<HomeReputation>("reputation", s);
 export const useHomeSocial = (s: HomeScope) => useHome<HomeSocial>("social", s);

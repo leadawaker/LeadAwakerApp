@@ -1,14 +1,12 @@
 // DesktopCalendarWeek.tsx — week-view grid: time-grid events, availability /
-// busy overlay, and the WeekGrid container (with the edit-block dialog).
-import { useMemo, useState, useRef, useEffect } from "react";
+// busy overlay, and the WeekGrid container. Clicking a block opens the block panel.
+import { useMemo, useRef, useEffect } from "react";
 import type { TFunction } from "i18next";
 import { hourLabel } from "./hourLabel";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   type Appointment, HOUR0, HOUR1, SPAN, PX_PER_HOUR,
   statusMetaOf, kindLabelOf, apptHm, dateKeyOf,
 } from "../lib/calendarDesign";
-import { AddBlockForm } from "./AddBlockForm";
 import type { CalendarBlock } from "../hooks/useCalendarBlocks";
 import {
   type DesktopCalendarProps, MONO, SERIF, DAY_KEYS, isWeekendDay, emitCalSwipe,
@@ -172,7 +170,6 @@ function AvailabilityOverlay({ p, days, nCols, onEditBlock }: {
 
 export function WeekGrid(p: DesktopCalendarProps) {
   const { t } = p;
-  const [editingBlock, setEditingBlock] = useState<CalendarBlock | null>(null);
   const days = useMemo(
     () => p.weekDays.filter((d) => !p.hideWeekends || !isWeekendDay(d)),
     [p.weekDays, p.hideWeekends],
@@ -286,7 +283,7 @@ export function WeekGrid(p: DesktopCalendarProps) {
               p={p.showAvailability ? p : { ...p, busySlots: [] }}
               days={days}
               nCols={nCols}
-              onEditBlock={(block) => setEditingBlock(block)}
+              onEditBlock={(block) => p.onOpenBlockPanel?.(block)}
             />
           )}
           {/* events */}
@@ -306,20 +303,6 @@ export function WeekGrid(p: DesktopCalendarProps) {
         </div>
       </div>
     </div>
-    {/* Edit-block dialog — Dialog uses a Portal so it's never clipped by the scroll container */}
-    {editingBlock && p.onUpdateBlock && p.onDeleteBlock && p.accountId && (
-      <Dialog open={!!editingBlock} onOpenChange={(open) => { if (!open) setEditingBlock(null); }}>
-        <DialogContent className="w-72 p-4 max-w-[calc(100vw-32px)]">
-          <AddBlockForm
-            accountId={p.accountId}
-            block={editingBlock}
-            onClose={() => setEditingBlock(null)}
-            onSave={async (data) => { await p.onUpdateBlock!(editingBlock.id, data); setEditingBlock(null); }}
-            onDelete={async () => { await p.onDeleteBlock!(editingBlock.id); setEditingBlock(null); }}
-          />
-        </DialogContent>
-      </Dialog>
-    )}
     </>
   );
 }

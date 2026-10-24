@@ -1,9 +1,9 @@
 /**
- * The two tabs of the Calls page: Stats (the figures) and People (everyone
- * who called, one status each, "Needs you" when a callback waits).
+ * The Stats page (the figures) beside the Calls page (everyone who called,
+ * one status each, "Needs you" when a callback waits).
  */
 
-import { BarChart3, Users, PhoneCall, CalendarCheck, PhoneOutgoing } from "lucide-react";
+import { BarChart3, PhoneCall, CalendarCheck, PhoneOutgoing } from "lucide-react";
 import { Figure, MockRow, NeedsYou, OutcomePill, type K, type Outcome } from "./parts";
 
 const BARS = [3, 5, 2, 6, 4, 7, 3];
@@ -22,12 +22,12 @@ const PEOPLE: { n: string; outcome: Outcome; needs?: boolean }[] = [
 
 function Tabs({ active, p }: { active: "stats" | "people"; p: (key: string) => string }) {
   const tabs = [
-    { key: "stats" as const, icon: BarChart3 },
-    { key: "people" as const, icon: Users },
+    { key: "stats" as const, icon: BarChart3, label: p("stats") },
+    { key: "people" as const, icon: PhoneCall, label: p("calls") },
   ];
   return (
     <div className="grid grid-cols-2 gap-1 p-1 mb-2" style={{ background: "var(--chrome-deep)", borderRadius: "var(--r-button)" }}>
-      {tabs.map(({ key, icon: Icon }) => (
+      {tabs.map(({ key, icon: Icon, label }) => (
         <span
           key={key}
           className="flex items-center justify-center gap-1 py-1 text-[10px] font-semibold"
@@ -38,7 +38,7 @@ function Tabs({ active, p }: { active: "stats" | "people"; p: (key: string) => s
           }}
         >
           <Icon className="h-3 w-3" />
-          {p(key)}
+          {label}
         </span>
       ))}
     </div>

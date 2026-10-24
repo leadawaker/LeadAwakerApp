@@ -1,7 +1,7 @@
 {
   "chatsTabs": {
-    "stats": "Statistieken",
     "chats": "Chats",
+    "settings": "Instellingen",
     "aria": "Weergave"
   },
   "chatChannel": {

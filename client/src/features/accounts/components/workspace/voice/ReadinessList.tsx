@@ -1,12 +1,17 @@
 // Everything the line needs before a real caller is put through, as a short
-// list. Shown when hovering the phone figure in the account header.
+// list. Shown when hovering the phone figure in the account header. For the
+// agency each row opens the card that fixes it, in Calls > Settings.
 import { useTranslation } from "react-i18next";
+import { Link } from "wouter";
 import { CheckCircle2, CircleAlert } from "lucide-react";
-import { READINESS_ORDER } from "./readiness";
+import { useWorkspace } from "@/hooks/useWorkspace";
+import { READINESS_CARD, READINESS_ORDER } from "./readiness";
+import { receptionistSettingsHref } from "../receptionist/settingsLink";
 import type { VoiceLine } from "./voiceApi";
 
 export function ReadinessList({ line }: { line: VoiceLine }) {
   const { t } = useTranslation("voiceTab");
+  const { isAgencyUser } = useWorkspace();
   const byKey = new Map(line.readiness.items.map((i) => [i.key, i.ok]));
   const keys = READINESS_ORDER.filter((k) => byKey.has(k));
   const missing = keys.filter((k) => !byKey.get(k)).length;
@@ -32,7 +37,11 @@ export function ReadinessList({ line }: { line: VoiceLine }) {
             <li key={k} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 0", borderTop: "1px solid var(--line)" }}>
               <span style={{ color: ok ? "var(--good)" : "var(--warn)", display: "flex", flexShrink: 0 }}><Icon size={15} /></span>
               <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, color: ok ? "var(--ink-soft)" : "var(--ink)", fontWeight: ok ? 400 : 600 }}>
-                {t(`readiness.items.${k}`)}
+                {isAgencyUser ? (
+                  <Link href={receptionistSettingsHref("voice", { accountId: line.accountId, focus: READINESS_CARD[k] })} style={{ color: "inherit" }} data-testid={`voice-readiness-link-${k}`}>
+                    {t(`readiness.items.${k}`)}
+                  </Link>
+                ) : t(`readiness.items.${k}`)}
               </span>
             </li>
           );

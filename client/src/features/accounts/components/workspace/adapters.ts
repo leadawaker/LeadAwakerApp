@@ -5,10 +5,8 @@ import type {
   AccountRow,
   AccountDetail,
   IntegrationField,
-  CampaignRowData,
   ContractRowData,
   TeamMemberData,
-  MetaChip,
   VoiceSlot,
 } from "./types";
 
@@ -75,22 +73,6 @@ export function toAccountDetail(a: AccountRow, t: TFunction): AccountDetail {
   };
 }
 
-// ── Campaign → row ────────────────────────────────────────────────────────────
-export function toCampaignRow(c: any): CampaignRowData {
-  const id = c.Id ?? c.id ?? 0;
-  const name = s(c.name ?? c.campaign_name ?? c.Name) || "Unnamed";
-  return {
-    id,
-    name,
-    mono: getInitials(name) || "?",
-    channel: s(c.channel) || "WhatsApp",
-    status: s(c.status ?? c.Status),
-    leads: Number(c.total_leads_targeted ?? c.totalLeadsTargeted ?? c.Leads ?? 0),
-    resp: Math.round(Number(c.response_rate_percent ?? c.responseRatePercent ?? 0)),
-    contractId: null,
-  };
-}
-
 // ── Contract → row ────────────────────────────────────────────────────────────
 function formatMoney(raw: unknown, currency: unknown): string {
   if (raw == null || raw === "") return "—";
@@ -139,26 +121,4 @@ export function toTeamMember(u: any): TeamMemberData {
     init: getInitials(name) || "?",
     avatarUrl: s(u.avatarUrl ?? u.avatar_url) || null,
   };
-}
-
-// ── Derived identity-card metrics ─────────────────────────────────────────────
-export function deriveMetrics(
-  campaigns: CampaignRowData[],
-  contracts: ContractRowData[],
-  team: TeamMemberData[],
-  t: TFunction,
-): MetaChip[] {
-  const respValues = campaigns.map((c) => c.resp).filter((n) => Number.isFinite(n));
-  const avgResp = respValues.length
-    ? Math.round(respValues.reduce((sum, n) => sum + n, 0) / respValues.length)
-    : 0;
-  const activeContracts = contracts.filter((c) => c.status === "active").length;
-  const owners = team.filter((m) => m.role === "Owner" || m.role === "Admin").length;
-
-  return [
-    { key: "campaigns", label: t("metrics.campaigns"), value: campaigns.length, sub: t("metrics.allActive"), accent: "var(--wine)" },
-    { key: "response", label: t("metrics.avgResponse"), value: `${avgResp}%`, sub: t("metrics.acrossAll"), accent: "var(--good)" },
-    { key: "contracts", label: t("metrics.contracts"), value: contracts.length, sub: t("metrics.nActive", { count: activeContracts }), accent: "var(--stage-contacted)" },
-    { key: "team", label: t("metrics.team"), value: team.length, sub: t("metrics.nOwner", { count: owners }), accent: "var(--mute)" },
-  ];
 }

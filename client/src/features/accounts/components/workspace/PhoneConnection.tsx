@@ -6,12 +6,13 @@ import { useVoiceLine } from "./voice/useVoiceLine";
 import { NumberCard } from "./voice/NumberCard";
 import { NumberDocsCard } from "./voice/NumberDocsCard";
 import { VoiceGenderProvider, voiceGender } from "./voice/voiceGender";
+import { effectiveVoice } from "./voice/lineEngine";
 
 export function PhoneConnection({ accountId }: { accountId: number }) {
   const { line, saving, save } = useVoiceLine(accountId);
   if (!line) return null;
   return (
-    <VoiceGenderProvider value={voiceGender(line.voice)}>
+    <VoiceGenderProvider value={voiceGender(effectiveVoice(line.voice, line.agentGender))}>
       <NumberCard line={line} canEdit saving={saving} onSave={save} />
       <NumberDocsCard
         accountId={accountId}

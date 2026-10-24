@@ -134,8 +134,8 @@ const LEAD_TEMPLATES = [
 async function main() {
   // 1. Login
   const loginRes = await makeRequest('POST', '/api/auth/login', {
-    email: 'leadawaker@gmail.com',
-    password: 'test123',
+    email: process.env.LA_LOGIN_EMAIL,
+    password: process.env.LA_LOGIN_PASSWORD,
   });
 
   if (loginRes.status !== 200) {

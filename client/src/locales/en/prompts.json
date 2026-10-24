@@ -24,7 +24,11 @@
     "allCampaigns": "All Campaigns",
     "allAccounts": "All Accounts",
     "allTypes": "All types",
-    "voiceAgents": "Voice agents"
+    "voiceAgents": "Voice agents",
+    "compactPanel": "Compact panel",
+    "hidePanel": "Hide panel",
+    "showPanel": "Show panel",
+    "hardcodedModel": "Hardcoded"
   },
   "views": {
     "list": "List",
@@ -139,14 +143,25 @@
     "clickToArchive": "Click to archive",
     "clickToActivate": "Click to activate",
     "campaign": "Campaign",
-    "openCampaign": "Open campaign"
+    "openCampaign": "Open campaign",
+    "systemMsg": "System msg",
+    "toggleSystemMessage": "Show or hide the system message",
+    "toggleNotes": "Show or hide the notes",
+    "sidebar": "Sections",
+    "toggleSidebar": "Show or hide sections and variables",
+    "preview": "Preview",
+    "togglePreview": "Show or hide the preview (Ctrl+P)",
+    "sizeEstimate": "~{{tokens}} tok · {{chars}}k chr"
   },
   "empty": {
     "selectPrompt": "Select a prompt",
     "selectPromptDesc": "Click any prompt on the left to view its details",
     "noPromptsMatch": "No prompts match your filters",
     "noPromptsYet": "No prompts yet",
-    "createFirstPrompt": "Create your first prompt"
+    "createFirstPrompt": "Create your first prompt",
+    "category": "No {{area}} prompts yet",
+    "categoryHint": "Create one with the + button.",
+    "socialHint": "Captions, scripts and post ideas are still written in code, not in the library."
   },
   "columns": {
     "name": "Name",
@@ -162,10 +177,6 @@
     "editPrompt": "Edit prompt",
     "deletePrompt": "Delete prompt",
     "clickToToggle": "Click to {{action}}"
-  },
-  "tabs": {
-    "system": "System",
-    "campaigns": "Campaigns"
   },
   "editor": {
     "raw": "Raw",
@@ -203,7 +214,7 @@
     "reverted": "Reverted to current",
     "confirmLoadTitle": "Load v{{v}}?",
     "confirmLoadDesc": "This will replace the current prompt content.",
-    "labelPlaceholder": "Label (optional) — e.g. Added Spanish support",
+    "labelPlaceholder": "Label (optional), e.g. Added Spanish support",
     "revertToCurrent": "← Current",
     "deleteVersion": "Delete version",
     "current": "Current",
@@ -211,7 +222,8 @@
     "versionCount_one": "{{count}} version",
     "versionCount_other": "{{count}} versions",
     "minorUpdate": "Minor (+0.1)",
-    "majorUpdate": "Major (+1.0)"
+    "majorUpdate": "Major (+1.0)",
+    "history": "Version history"
   },
   "preview": {
     "conditionsTitle": "Preview conditions",
@@ -232,7 +244,8 @@
         "midMarket": "Mid-market",
         "premium": "Premium"
       }
-    }
+    },
+    "empty": "Nothing to preview yet."
   },
   "vocabulary": {
     "intro": "Per-niche words the AI uses to re-theme the universal demo prompt. Pick a niche on a campaign and the prompt swaps these terms in automatically, so the AI sounds native to that trade without a new prompt. The first word in each group is the one the prompt uses.",
@@ -293,6 +306,34 @@
       "greeting": "Greeting",
       "backend": "Backend",
       "xai": "Grok prompt (lean)"
-    }
+    },
+    "noLine": "{{name}} has no voice line yet, so this is the prompt without client details.",
+    "otherLocale": "{{name}}'s line speaks {{line}}, so its calls never get this {{prompt}} prompt. Shown without client details."
+  },
+  "category": {
+    "label": "Area",
+    "chat": "Chat",
+    "voice": "Voice",
+    "crm": "CRM",
+    "social": "Social",
+    "test": "Test",
+    "reputation": "Reputation"
+  },
+  "demo": {
+    "tag": "Demo",
+    "show": "Demo ({{count}})",
+    "showLabel": "Show demo prompts",
+    "mark": "Mark as a demo prompt",
+    "unmark": "Remove the demo tag",
+    "fieldHint": "Serves a demo"
+  },
+  "font": {
+    "title": "Font",
+    "previewFont": "Preview font",
+    "size": "Font size",
+    "mono": "Mono",
+    "sans": "Sans",
+    "system": "System",
+    "humanist": "Humanist"
   }
 }

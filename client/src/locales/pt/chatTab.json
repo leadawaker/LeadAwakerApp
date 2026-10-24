@@ -44,6 +44,10 @@
     "hours": {
       "label": "Horário ativo",
       "help": "Quando a retomada pode ser enviada."
+    },
+    "advanced": {
+      "label": "Avançado",
+      "help": "Configurações do motor deste assistente. Só o Owner vê."
     }
   },
   "overview": {
@@ -135,7 +139,7 @@
     "whenHelp": "Só dentro do horário ativo, só no WhatsApp (quem visitou o site já saiu). Esta janela é fixa.",
     "what": "O que ele envia",
     "whatValue": "Uma frase sobre o que o cliente perguntou, ou nada quando o chat terminou naturalmente. O status do cliente nunca muda.",
-    "notReceptionist": "Esta campanha usa as retomadas de reativação. Elas são definidas na página Campanhas.",
+    "notReceptionist": "Esta campanha usa as retomadas de reativação. Elas são definidas em Contas > Reativação.",
     "openPrompt": "Editar as instruções da retomada (prompt {{id}})"
   },
   "hours": {
@@ -147,5 +151,48 @@
     "to": "até",
     "active_hours_start": "Das",
     "active_hours_end": "Até"
+  },
+  "advanced": {
+    "modelTitle": "Modelo",
+    "model": "Modelo de IA",
+    "modelHelp": "O modelo que escreve as respostas e as retomadas.",
+    "modelDefault": "Padrão do motor",
+    "role": "Função",
+    "roleHelp": "O que o assistente é na empresa, como o prompt diz. Salvo para o idioma em que você usa o app.",
+    "rolePlaceholder": "ex.: recepcionista",
+    "conversationTitle": "Conversa",
+    "conversationMode": "Modo de conversa",
+    "conversationModeHelp": "Levantamento monta um briefing para leads ainda sem orçamento. Decisão descobre em que pé está um lead com orçamento. Automático escolhe pela etapa do lead.",
+    "conversationModes": {
+      "auto": "Automático",
+      "scoping": "Levantamento",
+      "decision": "Decisão"
+    },
+    "bookingMode": "Modo de agendamento",
+    "bookingModeHelp": "Agente de ligação: um sinal de compra (\"me liga\", \"quero fechar\") avisa o closer na hora. Qualificação: o assistente qualifica e pula o agendamento.",
+    "bookingModes": {
+      "unset": "Não definido",
+      "callAgent": "Agente de ligação",
+      "qualifying": "Qualificação"
+    },
+    "typos": "Erros de digitação por mensagem",
+    "typosHelp": "Quantos errinhos de digitação o assistente pode cometer, para parecer uma pessoa digitando. O motor conta 0 como 1.",
+    "timingTitle": "Tempo de resposta",
+    "textDelay": "Espera após um texto",
+    "textDelayHelp": "Segundos que ele espera após um texto antes de responder, para que mensagens rápidas recebam uma só resposta. 0 responde na hora. Vazio: 10 segundos.",
+    "voiceDelay": "Espera após um áudio",
+    "voiceDelayHelp": "Segundos que ele espera após um áudio. Vazio: o mesmo que após um texto, ou 60 segundos se esse também estiver vazio.",
+    "seconds": "{{n}} s",
+    "disclosureTitle": "Aviso de IA",
+    "optOut": "Linha de descadastro na primeira mensagem",
+    "optOutHelp": "Coloca como parar de receber mensagens embaixo da primeira mensagem de uma campanha ativa (outbound). O assistente só responde, então isso raramente se aplica.",
+    "bumpsTitle": "Retomadas de reativação",
+    "bumpsHelp": "Estas duas só valem quando a campanha usa as retomadas de reativação em vez da única retomada do assistente (veja Retomada).",
+    "aiBumps": "A IA escreve as retomadas",
+    "aiBumpsHelp": "Desligado: são enviados os textos fixos de retomada.",
+    "stopOnResponse": "Parar as retomadas quando o cliente responde",
+    "stopOnResponseHelp": "Cancela a próxima retomada planejada assim que chega uma resposta.",
+    "objectionsTitle": "Roteiro de objeções",
+    "objectionsHelp": "Até cinco objeções, cada uma com a resposta que a empresa aprova. O assistente usa essas respostas em vez de inventar uma."
   }
 }

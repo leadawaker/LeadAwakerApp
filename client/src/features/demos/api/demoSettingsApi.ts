@@ -53,14 +53,13 @@ export interface VoiceDemoSettings {
   passwords?: string[];
   /** null (on a save) clears it back to the engine's default. */
   maxCallMinutes?: number | null;
-  phoneAmbienceLevel?: "low" | "medium" | "high";
   /** Numbers never greeted as returning callers (engine demo_settings.forgotten_numbers). */
   forgetNumbers?: string[];
   /** Per tester phone: which engine answers, with which voice and prompt (engine voice_engines.py). */
   engineTests?: EngineTest[];
 }
 
-export type VoiceEngine = "gpt-live" | "xai";
+export type VoiceEngine = "gpt-live" | "xai" | "elevenlabs";
 
 /** One tester's engine choice. Their calls on a conference-route line only;
  *  every other caller keeps the line's own setup. */
@@ -75,6 +74,8 @@ export interface EngineTest {
   prompt?: "standard" | "lean";
   /** Grok only: empty is xAI's default ("high"). */
   reasoning?: "high" | "none";
+  /** Memory off, any engine: heard as a first-time caller. Bookings still go to the diary. */
+  freshCaller?: boolean;
 }
 
 export interface EngineVoice {
@@ -87,7 +88,9 @@ export interface EngineVoice {
 export interface EngineOptions {
   engines: VoiceEngine[];
   xai: { ready: boolean; missing: string[]; numbers: string[] };
-  voices: Record<VoiceEngine, EngineVoice[]>;
+  /** Optional until the engine ships ElevenLabs: the card works without it. */
+  eleven?: { ready: boolean; missing: string[]; numbers: string[] };
+  voices: Partial<Record<VoiceEngine, EngineVoice[]>>;
 }
 
 export function useEngineOptions() {
@@ -99,66 +102,6 @@ export function useEngineOptions() {
       return (await res.json()) as EngineOptions;
     },
     staleTime: 60_000,
-  });
-}
-
-/** The demo phone number's route at Telnyx (engine telnyx_bridge.get_route). */
-export interface PhoneRoute {
-  number: string;
-  ambience: boolean;
-}
-
-const ROUTE_KEY = ["demo-phone-route"];
-
-export function usePhoneRoute() {
-  return useQuery({
-    queryKey: ROUTE_KEY,
-    queryFn: async () => json<PhoneRoute>(await apiFetch("/api/demo-settings/voice/phone-route")),
-  });
-}
-
-/** Moves the number at Telnyx right away: no Save button. */
-export function useSetPhoneRoute() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (ambience: boolean) =>
-      json<PhoneRoute>(await apiFetch("/api/demo-settings/voice/phone-route", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ambience }),
-      })),
-    onSuccess: (next) => qc.setQueryData(ROUTE_KEY, next),
-  });
-}
-
-/** The direct line's jitter buffer at Telnyx (engine telnyx_bridge.get_jitter). */
-export interface PhoneJitter {
-  enabled: boolean;
-  min_ms: number | null;
-  max_ms: number | null;
-  anchorsite: string | null;
-}
-
-const JITTER_KEY = ["demo-phone-jitter"];
-
-export function usePhoneJitter() {
-  return useQuery({
-    queryKey: JITTER_KEY,
-    queryFn: async () => json<PhoneJitter>(await apiFetch("/api/demo-settings/voice/phone-jitter")),
-  });
-}
-
-/** Changes the connection at Telnyx right away: no Save button. */
-export function useSetPhoneJitter() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: async (enabled: boolean) =>
-      json<PhoneJitter>(await apiFetch("/api/demo-settings/voice/phone-jitter", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ enabled }),
-      })),
-    onSuccess: (next) => qc.setQueryData(JITTER_KEY, next),
   });
 }
 

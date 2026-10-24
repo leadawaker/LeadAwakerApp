@@ -59,12 +59,6 @@
     "typeLabel": "Ou digite um número (formato internacional)",
     "attach": "Vincular número",
     "invalid": "Use o formato internacional, por exemplo +5511912345678.",
-    "officeSound": {
-      "label": "Som de escritório",
-      "on": "Som suave de escritório sob a voz da recepcionista",
-      "off": "Desligado",
-      "help": "Quem liga ouve um escritório tranquilo ao fundo. Só quem liga ouve, e o som para quando você atende uma ligação transferida."
-    },
     "summaryNone": "Nenhum número vinculado ainda",
     "summaryNoneClient": "Seu número de telefone está sendo configurado",
     "summaryHelp": "O número, os documentos do cliente e a ativação ficam na aba Integrações.",
@@ -123,7 +117,72 @@
     "pronunciationCount_other": "{{count}} palavras",
     "pronunciationSaveNote": "As mudanças aqui ficam no cartão: clique em Salvar no cartão quando terminar.",
     "spokenAs_male": "Nas ligações ele se apresenta como {{name}}.",
-    "pronunciationAutosave": "Salvo quando você fechar."
+    "pronunciationAutosave": "Salvo quando você fechar.",
+    "gender": "Gênero",
+    "genderOption": {
+      "auto": "Automático",
+      "female": "Feminino",
+      "male": "Masculino"
+    },
+    "alsoUsedBy": "Também usado por {{number}}",
+    "playElevenSample": "Ouvir {{voice}}",
+    "elevenSamplesHelp": "Ouça uma prévia de uma voz da ElevenLabs e clique nela para escolher."
+  },
+  "lineEngine": {
+    "title": "Tipo de linha e motor",
+    "help": "Que tipo de linha é esta, qual motor atende as ligações reais e com qual modelo de linguagem. No ElevenLabs você também escolhe qual dos dois agentes atende, nomeado pelo que ele roda.",
+    "type": "Tipo de linha",
+    "purpose": {
+      "client": "Cliente",
+      "demo": "Demo",
+      "test": "Teste"
+    },
+    "purposeHelp": {
+      "client": "Uma linha de cliente de verdade. Por enquanto, as linhas de cliente são atendidas pelo GPT Live.",
+      "demo": "Uma linha usada para mostrar a recepcionista a prospects. Pode rodar no ElevenLabs.",
+      "test": "Toda ligação nesta linha é uma ligação de teste: fica fora das ligações, dos números e dos alertas do cliente."
+    },
+    "realCalls": "Ligações reais",
+    "llm": {
+      "label": "Modelo de linguagem",
+      "realLabel": "Ligações reais: modelo de linguagem",
+      "confirm": "Quem ligar de verdade para esta linha vai usar o {{model}}. Trocar?",
+      "confirmYes": "Confirmar",
+      "confirmNo": "Cancelar",
+      "help": "O modelo por trás da recepcionista nas ligações reais do GPT-Live. Sol é o padrão.",
+      "sol": "Sol",
+      "terra": "Terra",
+      "luna": "Luna"
+    },
+    "clientElevenOff": "O ElevenLabs ainda não está disponível nas linhas de cliente.",
+    "voice": "Voz do ElevenLabs",
+    "defaultVoice": "Voz padrão para {{name}}",
+    "voiceHint": "Vozes que combinam com {{name}}. A voz acima decide quais.",
+    "voicesFailed": "Não foi possível carregar a lista de vozes, então a voz salva é mostrada como está.",
+    "notSetUp": "Este número não está configurado no ElevenLabs: as ligações continuam no GPT-Live.",
+    "mismatch": "Esta voz não combina com {{name}}: as ligações usam uma voz padrão compatível.",
+    "chip": {
+      "test": "Linha de teste",
+      "demo": "Linha de demo",
+      "eleven": "ElevenLabs"
+    }
+  },
+  "elevenPrompt": {
+    "title": "Prompt do ElevenLabs",
+    "help": "O que a próxima ligação nesta linha recebe, montado a partir das configurações desta linha. Somente leitura.",
+    "who": "Numa linha de teste é o que um testador ou o dono ouve (os outros recebem o GPT-Live); numa linha de demo, qualquer pessoa que ligar.",
+    "refresh": "Atualizar",
+    "name": "Nome",
+    "voice": "Voz",
+    "model": "Modelo",
+    "tools": "Ferramentas",
+    "noTools": "Nenhuma",
+    "firstMessage": "Primeira mensagem",
+    "prompt": "Prompt",
+    "chars": "{{chars}} caracteres",
+    "asOf": "Em {{time}}",
+    "notReady": "As ligações desta linha continuam no GPT-Live: {{reason}}",
+    "failed": "Não foi possível carregar o prompt do ElevenLabs."
   },
   "transfer": {
     "title": "Transferência",
@@ -191,7 +250,7 @@
       "direct": "Direto",
       "off": "Sem transferência",
       "screenedHelp": "Seu telefone toca com um breve resumo sobre quem está ligando. Pressione 1 para atender, ou 2 e a recepcionista agenda um retorno. Se você não atender, a pessoa volta para a recepcionista.",
-      "directHelp": "A ligação é transferida direto quando você atende, sem resumo. Sem o som de escritório, a recepcionista sai da ligação na hora, então se você não atender a pessoa cai na sua caixa postal.",
+      "directHelp": "A ligação é transferida direto quando você atende, sem resumo. A menos que a linha passe pela Telnyx, a recepcionista sai da ligação na hora, então se você não atender a pessoa cai na sua caixa postal.",
       "offHelp": "Ninguém é transferido. Quando alguém pede para falar com uma pessoa, a Recepcionista IA anota o recado e agenda um retorno."
     },
     "wiringFailed": "Salvo, mas não foi possível reconfigurar a linha: {{error}}"
@@ -215,6 +274,12 @@
     "call": "Testar no navegador",
     "filedNote": "Abre em uma nova aba. As ligações de teste aparecem abaixo, fora das estatísticas e do CRM deste cliente.",
     "needsPersona": "Crie a persona ao vivo primeiro.",
+    "prompt": {
+      "label": "Prompt de teste",
+      "standard": "Padrão",
+      "lean": "Enxuto (teste A/B)",
+      "help": "Só para o teste no navegador acima. Ligações reais e demos sempre usam o prompt padrão."
+    },
     "promptTitle": "O que ela recebe",
     "promptFailed": "Não foi possível carregar o prompt.",
     "kind": {
@@ -233,13 +298,147 @@
       "backend_male": "O backend que responde por ele: dados do negócio, conhecimento, horários, fora do horário e regras de agendamento."
     },
     "recentTitle": "Ligações de teste recentes",
-    "recentEmpty": "Nenhuma ligação de teste ainda. Clique em Testar no navegador para fazer uma.",
+    "recentEmpty": "Nenhuma ligação de teste ainda. Clique em Iniciar ligação de teste para fazer uma.",
+    "recentMore": "Mostrar mais",
+    "recentOpen": "Abrir a revisão da chamada de teste de {{when}}",
     "callFailed": "Não foi possível carregar esta ligação.",
     "title_male": "Teste o recepcionista",
     "help_male": "Fale com ele no navegador, exatamente como quem liga para esta linha o ouviria: persona, voz, saudação, horários e configuração deste cliente. Sem telefone.",
     "promptTitle_male": "O que ele recebe",
     "promptHelp": "O prompt exato que ela recebe numa ligação, em três partes. Só para administradores.",
-    "promptHelp_male": "O prompt exato que ele recebe numa ligação, em três partes. Só para administradores."
+    "promptHelp_male": "O prompt exato que ele recebe numa ligação, em três partes. Só para administradores.",
+    "elevenNote": "O botão acima testa o GPT-Live. Teste o ElevenLabs abaixo ou ligue para {{number}}.",
+    "eleven": {
+      "start": "Testar ElevenLabs no navegador",
+      "again": "Testar ElevenLabs de novo",
+      "callerLabel": "Ligar como",
+      "callerHelp": "O número de onde vem esta ligação de teste: a memória de quem liga e os agendamentos usam esse número.",
+      "callerInvalid": "Digite o número com o código do país, como +31612345678.",
+      "hangUp": "Desligar",
+      "you": "Você",
+      "agent": "Agente",
+      "note": "Transferências não tocam para ninguém em um teste no navegador; os agendamentos caem na agenda de demonstração, nunca numa agenda real.",
+      "status": {
+        "idle": "Pronto",
+        "connecting": "Conectando",
+        "listening": "Ouvindo",
+        "speaking": "Falando",
+        "ended": "Ligação encerrada. Ela aparece nas ligações de teste abaixo em instantes.",
+        "error": "Não conectado"
+      },
+      "error": {
+        "busy": "Já há um teste no navegador em andamento. Tente de novo quando ele terminar.",
+        "notEleven": "Esta linha não pertence a esta conta, então não pode ser testada aqui.",
+        "notSetUp": "Esta linha ainda não está configurada: vincule um cliente e crie a persona primeiro.",
+        "badCaller": "Esse número de quem liga não é um telefone válido.",
+        "eleven": "O ElevenLabs não conseguiu iniciar a ligação. Tente de novo em instantes.",
+        "mic": "O acesso ao microfone foi bloqueado. Permita o microfone para este site e tente de novo.",
+        "dropped": "A conexão caiu.",
+        "generic": "Não foi possível iniciar o teste no navegador."
+      }
+    },
+    "panel": {
+      "title": "Ligação de teste",
+      "engine": "Motor",
+      "engines": {
+        "gpt-live": "GPT Live",
+        "elevenlabs": "ElevenLabs"
+      },
+      "testOnly": "Só para o teste. Quem liga de verdade continua com as configurações desta linha.",
+      "start": "Iniciar ligação de teste",
+      "connecting": "Conectando",
+      "ending": "Encerrando a ligação",
+      "hangUp": "Desligar",
+      "liveNote": "O que você editar agora vale para o próximo teste.",
+      "elevenNoNumber": "Testes no ElevenLabs precisam de um número de telefone nesta linha.",
+      "filedNote": "As ligações de teste aparecem na lista abaixo, fora das estatísticas e do CRM deste cliente.",
+      "besideNote": "O painel de teste fica à direita, ao lado de cada seção. As ligações de teste aparecem abaixo.",
+      "error": {
+        "gptLive": "Não foi possível iniciar o teste no GPT Live."
+      },
+      "phase": {
+        "connecting": "Conectando",
+        "live": "Em ligação",
+        "ending": "Encerrando",
+        "review": "Ligação encerrada"
+      },
+      "inProgress": "Ligação de teste em andamento",
+      "openPanel": "Ver teste",
+      "newTest": "Novo teste",
+      "reviewSoon": "O resumo da ligação aparece aqui.",
+      "liveEmpty": "Diga olá: o que for dito aparece aqui.",
+      "live": {
+        "time": "Tempo",
+        "cost": "Custo até agora",
+        "costHint": "Uma estimativa pelo valor por minuto. O custo final aparece depois da ligação.",
+        "tools": "Ferramentas",
+        "toolsEmpty": "Nenhuma ferramenta usada ainda.",
+        "toolFailed": "Falhou",
+        "delaysHint": "Aproximado: medido pela transcrição, não pelo áudio.",
+        "transcript": "Transcrição",
+        "ms": "{{ms}} ms"
+      },
+      "review": {
+        "loading": "Carregando o resumo",
+        "waiting": "Preparando a ligação. Isso leva alguns segundos.",
+        "failed": "Não foi possível carregar o resumo.",
+        "retry": "Tentar de novo",
+        "duration": "Duração",
+        "cost": "Custo",
+        "costPart": {
+          "ai": "IA",
+          "telephony": "Linha telefônica",
+          "recap": "Resumo"
+        },
+        "minutes": "{{n}} min",
+        "costEstimate": "Uma estimativa pelo preço do plano, não uma fatura.",
+        "median": "Atraso mediano",
+        "slowest": "Maior atraso",
+        "delaysHint": "Aproximado: calculado pelos horários da transcrição.",
+        "tools": "Ferramentas",
+        "unknown": "Desconhecido",
+        "noTools": "Nenhuma ferramenta foi usada",
+        "recording": "Gravação",
+        "recordingLoading": "Carregando a gravação",
+        "noRecording": "Esta ligação não tem gravação: os marcadores mostram quando as ferramentas rodaram.",
+        "recordingFailed": "Não foi possível tocar a gravação: os marcadores mostram quando as ferramentas rodaram.",
+        "play": "Tocar",
+        "pause": "Pausar",
+        "back": "Voltar 10 segundos",
+        "forward": "Avançar 10 segundos",
+        "speed": "Velocidade de reprodução",
+        "zoomIn": "Aumentar zoom",
+        "zoomOut": "Diminuir zoom",
+        "download": "Baixar a gravação",
+        "transcript": "Transcrição",
+        "transcriptEmpty": "Nada foi dito nesta ligação.",
+        "transcriptProcessing": "A ligação ainda está sendo processada...",
+        "seekTo": "Tocar a partir de {{time}}"
+      },
+      "understood": {
+        "title": "O que ela entendeu",
+        "title_male": "O que ele entendeu",
+        "empty": "Preenche quando ela faz as anotações, em geral perto do fim da ligação.",
+        "empty_male": "Preenche quando ele faz as anotações, em geral perto do fim da ligação.",
+        "emptyReview": "Ela não fez um resumo desta ligação.",
+        "emptyReview_male": "Ele não fez um resumo desta ligação.",
+        "wants": "Quer",
+        "notes": "Notas",
+        "outcome": "Resultado"
+      }
+    },
+    "tools": {
+      "search_stock": "Buscar estoque",
+      "car_details": "Dados do carro",
+      "check_availability": "Ver agenda",
+      "book_appointment": "Agendar horário",
+      "cancel_appointment": "Cancelar horário",
+      "request_callback": "Pedido de retorno",
+      "update_call_summary": "Notas da ligação",
+      "end_call": "Encerrar ligação",
+      "other": "Ferramenta",
+      "running": "Em andamento"
+    }
   },
   "live": {
     "goLive": "Ativar",
@@ -428,7 +627,7 @@
     "on": "Quem liga ouve esta frase antes de a recepcionista atender",
     "off": "Desligado",
     "help": "As ligações são gravadas, e quem liga precisa saber disso antes de a conversa começar. Uma frase curta gravada, em outra voz, resolve isso.",
-    "routeOnly": "Toca nas linhas com transferência com triagem ou com o som de escritório ligado.",
+    "routeOnly": "Toca nas linhas que passam pela Telnyx: toda linha ElevenLabs e as linhas com transferência com triagem.",
     "edit": "Editar frase",
     "title": "Aviso de gravação",
     "standardTag": "Frase padrão",
@@ -459,7 +658,8 @@
     },
     "makers": {
       "openai": "Vozes da OpenAI",
-      "google": "Vozes do Google"
+      "google": "Vozes do Google",
+      "eleven": "Vozes da ElevenLabs"
     },
     "unsaved": "Ainda não foi salvo. Aperte Gerar áudio, ouça e depois Usar este áudio para salvar."
   },
@@ -511,7 +711,7 @@
   "line": {
     "title": "Na linha",
     "help": "O que quem liga ouve em volta da voz dela. Cada chave salva na hora.",
-    "needsNumber": "Primeiro vincule um número em Integrações > Telefone: o aviso de gravação, o som de escritório e a região valem para esse número.",
+    "needsNumber": "Primeiro vincule um número em Integrações > Telefone: o aviso de gravação e a região valem para esse número.",
     "help_male": "O que quem liga ouve em volta da voz dele. Cada chave salva na hora."
   },
   "conversation": {
@@ -554,6 +754,34 @@
       "failed": "Não foi possível preencher o prompt para esta linha.",
       "valueLegend": "Preenchido para esta empresa",
       "addedLegend": "Adicionado pelo sistema na ligação"
+    },
+    "elevenNotice": "Não usado nesta linha: ela roda no ElevenLabs. As linhas GPT-Live em {{language}} ainda usam este prompt.",
+    "versions": {
+      "save": "Salvar versão",
+      "history": "Histórico",
+      "notePlaceholder": "Nota (opcional), ex.: Saudação mais curta",
+      "saveConfirm": "Salvar",
+      "saved": "Versão salva",
+      "saveFailed": "Não foi possível salvar a versão",
+      "loadFailed": "Não foi possível carregar o histórico",
+      "none": "Nenhuma versão ainda",
+      "restore": "Restaurar",
+      "restoreConfirm": "Restaurar esta",
+      "cancel": "Cancelar",
+      "restored": "v{{v}} restaurada. O texto substituído está no histórico.",
+      "beforeRestore": "Antes de restaurar a v{{v}}",
+      "noText": "Sem texto para restaurar"
+    },
+    "counts": {
+      "exact": "{{chars}} caracteres, {{tokens}} tokens (preenchido)",
+      "approx": "{{chars}} caracteres, aprox. {{tokens}} tokens (preenchido)",
+      "failed": "Contagem indisponível"
+    },
+    "eleven": {
+      "title": "Prompt de voz da ElevenLabs",
+      "help": "O prompt que a ElevenLabs recebe em cada chamada nesta linha.",
+      "syntax": "{name} é preenchido a partir das configurações; uma linha que começa com {?flag} só é mantida quando essa configuração está ativa; os blocos nomeados ({person}, {callback_policy}, ...) são preenchidos a partir das configurações.",
+      "shared": "Compartilhado por toda linha ElevenLabs neste idioma. Uma alteração aqui vale na próxima chamada delas."
     }
   }
 }

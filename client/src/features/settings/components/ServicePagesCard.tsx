@@ -13,6 +13,10 @@ import {
 import type { UserProfile } from "../types";
 import { parsePrefs, patchPreferences } from "./prefsSave";
 
+// Speed to Lead and Missed calls are hidden until finished (list in
+// components/crm/RightSidebar.tsx): no switch, the Owner opens them by URL.
+const SHOWN_KEYS = SERVICE_PAGE_KEYS.filter((key) => key !== "speed" && key !== "missedcall");
+
 const LABEL_KEYS: Record<ServicePageKey, string> = {
   speed: "profile.servicePageSpeed",
   reputation: "profile.servicePageReputation",
@@ -71,7 +75,7 @@ export function ServicePagesCard({
       </div>
       <p className="text-xs text-muted-foreground">{t("profile.servicePagesDescription")}</p>
       <div className="space-y-2 pt-1">
-        {SERVICE_PAGE_KEYS.map((key) => (
+        {SHOWN_KEYS.map((key) => (
           <div key={key} className="flex items-center justify-between">
             <label htmlFor={`switch-service-page-${key}`} className="text-xs font-medium text-foreground">{t(LABEL_KEYS[key])}</label>
             <Switch

@@ -1,10 +1,10 @@
 import type { Express } from "express";
 import { storage } from "../storage";
 import { requireAuth, requireAgency } from "../auth";
-import { leadScoreHistory } from "@shared/schema";
+import { leadScoreHistory, leads } from "@shared/schema";
 import { db, pool } from "../db";
 import { broadcast } from "../sse";
-import { wrapAsync, getEngineUrl } from "./_helpers";
+import { wrapAsync, getEngineUrl, ownsAccount, canWriteLead } from "./_helpers";
 import { eq } from "drizzle-orm";
 
 export function registerLeadsDemoScoreRoutes(app: Express): void {
@@ -156,6 +156,7 @@ export function registerLeadsDemoScoreRoutes(app: Express): void {
     const leadId = Number(req.params.id);
     const lead = await storage.getLeadById(leadId);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (!canWriteLead(req, res, lead.accountsId)) return;
 
     await Promise.all([
       storage.deleteInteractionsByLeadId(leadId),
@@ -196,6 +197,7 @@ export function registerLeadsDemoScoreRoutes(app: Express): void {
     const leadId = Number(req.params.id);
     const lead = await storage.getLeadById(leadId);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (!canWriteLead(req, res, lead.accountsId)) return;
     const accountId = lead.accountsId;
 
     await Promise.all([
@@ -250,6 +252,7 @@ export function registerLeadsDemoScoreRoutes(app: Express): void {
     const leadId = Number(req.params.id);
     const lead = await storage.getLeadById(leadId);
     if (!lead) return res.status(404).json({ message: "Lead not found" });
+    if (!canWriteLead(req, res, lead.accountsId)) return;
     const accountId = lead.accountsId;
     try {
       const hasFirstMessage = lead.firstMessageSentAt != null;
@@ -282,9 +285,16 @@ export function registerLeadsDemoScoreRoutes(app: Express): void {
 
   app.get("/api/lead-score-history", requireAuth, wrapAsync(async (req, res) => {
     const leadId = req.query.leadId ? Number(req.query.leadId) : undefined;
-    const data = leadId
-      ? await storage.getLeadScoreHistoryByLeadId(leadId)
-      : await storage.getLeadScoreHistory();
-    res.json(data);
+    if (leadId) {
+      const lead = await storage.getLeadById(leadId);
+      if (lead && !ownsAccount(req, lead.accountsId)) return res.status(403).json({ message: "Forbidden" });
+      return res.json(await storage.getLeadScoreHistoryByLeadId(leadId));
+    }
+    const data = await storage.getLeadScoreHistory();
+    if (!req.user || req.user.accountsId === 1) return res.json(data);
+    // A client gets only its own account's leads.
+    const own = await db.select({ id: leads.id }).from(leads).where(eq(leads.accountsId, req.user.accountsId ?? -1));
+    const ownIds = new Set(own.map((l) => l.id));
+    res.json(data.filter((row) => ownIds.has(row.leadsId)));
   }));
 }

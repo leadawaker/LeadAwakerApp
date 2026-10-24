@@ -7,10 +7,10 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { KNOWN_VARIABLE_SET } from "./PromptVariableAutocomplete";
 import { PromptCodeEditor, type PromptCodeEditorHandle } from "./PromptCodeEditor";
 import { VoicePreviewPane, voicePromptTarget } from "./VoicePreviewPane";
-import { cn } from "@/lib/utils";
+import { PromptPreviewSections, buildPreviewSections } from "./PromptPreviewSections";
 import { apiFetch } from "@/lib/apiUtils";
 import { useToast } from "@/hooks/use-toast";
-import { ChevronDown, ChevronRight, ChevronsUpDown, SlidersHorizontal } from "lucide-react";
+import { ChevronsUpDown, SlidersHorizontal } from "lucide-react";
 import {
   getPromptId,
   type PromptFormData,
@@ -495,132 +495,22 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
     const text = promptTextValRef.current ?? "";
     void highlightTick;
     const selectedCampaign = campaigns.find((c) => String(c.id) === form.campaignsId) ?? null;
-    const rawLines = text.split("\n");
-
     if (!text.trim()) return (
-      <p className="text-muted-foreground italic text-[12px]">Nothing to preview yet.</p>
+      <p className="text-muted-foreground italic text-[12px]">{t("preview.empty")}</p>
     );
-
-    // Group RAW lines into foldable sections first, then resolve variables per
-    // section. Resolving the whole text up front breaks line alignment because
-    // multi-line {{#if}} conditionals collapse into fewer lines, shifting every
-    // heading below them.
-    type RawSection = {
-      headingLineIndex: number | null;
-      headingRawLine: string | null;
-      headingLevel: number;
-      bodyRawLines: string[];
-    };
-
-    const rawSections: RawSection[] = [];
-    let currentRaw: RawSection = { headingLineIndex: null, headingRawLine: null, headingLevel: 0, bodyRawLines: [] };
-
-    rawLines.forEach((rawLine, i) => {
-      const m = rawLine.match(/^(#{1,3})\s+/);
-      if (m) {
-        rawSections.push(currentRaw);
-        currentRaw = {
-          headingLineIndex: i,
-          headingRawLine: rawLine,
-          headingLevel: m[1].length,
-          bodyRawLines: [],
-        };
-      } else {
-        currentRaw.bodyRawLines.push(rawLine);
-      }
-    });
-    rawSections.push(currentRaw);
-
-    type Section = {
-      headingLineIndex: number | null;
-      headingHtmlLine: string | null;
-      headingLevel: number;
-      bodyLines: { htmlLine: string; lineIndex: number }[];
-    };
-
-    const sections: Section[] = rawSections.map((s) => ({
-      headingLineIndex: s.headingLineIndex,
-      headingHtmlLine: s.headingRawLine !== null
-        ? resolveVariablesHtml(s.headingRawLine, selectedCampaign, sampleLead, null, i18n.language, resolveOpts)
-        : null,
-      headingLevel: s.headingLevel,
-      bodyLines: s.bodyRawLines.length > 0
-        ? splitHtmlPreservingMarks(
-            resolveVariablesHtml(s.bodyRawLines.join("\n"), selectedCampaign, sampleLead, null, i18n.language, resolveOpts),
-          ).map((htmlLine, j) => ({ htmlLine, lineIndex: j }))
-        : [],
-    }));
-
-    // Determine which section indices have a "real" heading (for top border logic)
-    const headingIndices = new Set(sections.map((s, si) => s.headingLineIndex !== null ? si : -1).filter((n) => n >= 0));
-
-    // Pre-compute which sections are hidden by a folded ancestor
-    const hiddenByParent = new Set<number>();
-    const activeAncestors: Record<number, number> = {}; // level -> lineIndex of last ancestor heading
-    sections.forEach((section, si) => {
-      if (section.headingLineIndex === null) return;
-      const level = section.headingLevel;
-      for (let parentLevel = 1; parentLevel < level; parentLevel++) {
-        if (activeAncestors[parentLevel] !== undefined && foldedSections.has(activeAncestors[parentLevel])) {
-          hiddenByParent.add(si);
-          break;
-        }
-      }
-      activeAncestors[level] = section.headingLineIndex;
-      for (let l = level + 1; l <= 3; l++) delete activeAncestors[l];
-    });
-
+    const sections = buildPreviewSections(
+      text,
+      (raw) => resolveVariablesHtml(raw, selectedCampaign, sampleLead, null, i18n.language, resolveOpts),
+      splitHtmlPreservingMarks,
+    );
     return (
-      <div
-        className="text-foreground break-words"
-        style={{ fontSize: `${editorFontSize}px`, fontFamily: previewFont, lineHeight: 1.7 }}
-      >
-        {sections.map((section, si) => {
-          if (section.headingLineIndex === null && section.bodyLines.length === 0) return null;
-          if (hiddenByParent.has(si)) return null;
-          const isFolded = section.headingLineIndex !== null && foldedSections.has(section.headingLineIndex);
-          const h1 = section.headingLevel === 1;
-          const h2 = section.headingLevel === 2;
-          const h3 = section.headingLevel === 3;
-          const hasHeading = h1 || h2 || h3;
-          const sizeClass = h1 ? "text-[1.3em] font-bold" : h2 ? "text-[1.15em] font-bold" : h3 ? "text-[1.05em] font-semibold" : "";
-          const prevHasHeading = [...headingIndices].some((idx) => idx < si);
-          const showTopBorder = hasHeading && (h1 || h2) && prevHasHeading;
-
-          return (
-            <div key={si}>
-              {hasHeading && section.headingHtmlLine !== null && (
-                <div
-                  className="flex items-start gap-1"
-                  style={showTopBorder ? { borderTop: "1px solid var(--line)", marginTop: 14, paddingTop: 14 } : {}}
-                >
-                  <button
-                    onClick={() => toggleFold(section.headingLineIndex!)}
-                    style={{
-                      background: "transparent", border: "none", cursor: "pointer",
-                      padding: "2px 1px 0", flexShrink: 0, color: "var(--mute-2)",
-                      display: "flex", alignItems: "center",
-                    }}
-                  >
-                    {isFolded ? <ChevronRight size={12} /> : <ChevronDown size={12} />}
-                  </button>
-                  <div
-                    className={cn("leading-relaxed whitespace-pre-wrap flex-1 min-w-0", sizeClass)}
-                    dangerouslySetInnerHTML={{ __html: section.headingHtmlLine.replace(/^#{1,3}\s*/, "") || "&nbsp;" }}
-                  />
-                </div>
-              )}
-              {!isFolded && section.bodyLines.map(({ htmlLine, lineIndex }) => (
-                <div
-                  key={lineIndex}
-                  className="leading-relaxed whitespace-pre-wrap"
-                  dangerouslySetInnerHTML={{ __html: htmlLine || "&nbsp;" }}
-                />
-              ))}
-            </div>
-          );
-        })}
-      </div>
+      <PromptPreviewSections
+        sections={sections}
+        folded={foldedSections}
+        onToggleFold={toggleFold}
+        fontSize={editorFontSize}
+        font={previewFont}
+      />
     );
   };
 
@@ -781,7 +671,7 @@ export const PromptEditorPanel = forwardRef(function PromptEditorPanel({
               for a chosen Client instead (VoicePreviewPane). */}
           {previewOpen && voicePromptTarget(form.useCase) && (
             <div style={{ flex: 1, minHeight: 0, overflow: "hidden", borderRadius: 8 }}>
-              <VoicePreviewPane useCase={form.useCase} text={promptTextValRef.current ?? ""} font={previewFont} />
+              <VoicePreviewPane useCase={form.useCase} text={promptTextValRef.current ?? ""} font={previewFont} fontSize={editorFontSize} />
             </div>
           )}
           {previewOpen && !voicePromptTarget(form.useCase) && (

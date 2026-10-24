@@ -1,4 +1,4 @@
-/** Fired when a call is opened while the Calls page is already mounted (its Stats tab links to calls). */
+/** Fired when a call is opened while the Calls page is already mounted (the page listens, so the call still opens). */
 export const OPEN_VOICE_CALL_EVENT = "open-voice-call";
 
 /** Opens one call on the Calls page, using the page's own one-shot hand-off (see VoiceCallsPage consumeCallDeepLink). */

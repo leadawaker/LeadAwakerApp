@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import twilio from "twilio";
 import { storage } from "../storage";
 import { broadcast } from "../sse";
-import { requireAuth } from "../auth";
+import { requireAgency } from "../auth";
 import { wrapAsync } from "./_helpers";
 import { exec } from "child_process";
 import { writeFile, unlink, readFile } from "fs/promises";
@@ -114,7 +114,8 @@ async function findInteractionByCallSid(callSid: string) {
 
 export function registerTwilioVoiceRoutes(app: Express): void {
   // ── Token endpoint (browser client auth) ──────────────────────────
-  app.post("/api/twilio/token", requireAuth, wrapAsync(async (_req, res) => {
+  // Agency only: the dialer calls prospects from the agency's own Twilio numbers.
+  app.post("/api/twilio/token", requireAgency, wrapAsync(async (_req, res) => {
     if (!TWILIO_ACCOUNT_SID || !TWILIO_AUTH_TOKEN || !TWILIO_APP_SID) {
       return res.status(503).json({ error: "Twilio voice not configured" });
     }

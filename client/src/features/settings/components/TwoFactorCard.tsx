@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Fingerprint, KeyRound, Mail, ShieldCheck, Smartphone } from "lucide-react";
+import { ChevronDown, Fingerprint, KeyRound, Mail, ShieldCheck, Smartphone } from "lucide-react";
 import { Pill } from "@/components/crm/primitives";
 import { useToast } from "@/hooks/use-toast";
 import { SettingsCard } from "./SettingsCard";
@@ -18,9 +18,10 @@ type Panel = "totp" | "email" | "backup" | "passkey" | null;
 const ok = (t: (k: string) => string) => <Pill color="hsl(var(--success))">{t("twoFactor.on")}</Pill>;
 
 /**
- * Settings > Profile: two-factor authentication. Authenticator app, email code and
+ * Settings > Security: two-factor authentication. Authenticator app, email code and
  * passkeys, plus backup codes and trusted devices. Removing a method needs a recent
  * second-factor proof (StepUpPanel); adding one needs the password (PasswordGate).
+ * Folded to one status line until opened, unless the account still has to enrol.
  */
 export function TwoFactorCard({ flat = false }: { flat?: boolean }) {
   const { t } = useTranslation("settings");
@@ -28,10 +29,19 @@ export function TwoFactorCard({ flat = false }: { flat?: boolean }) {
   const { status, refresh } = useTwoFactor();
   const [panel, setPanel] = useState<Panel>(null);
   const [stepUp, setStepUp] = useState<{ run: () => Promise<void> } | null>(null);
+  const [open, setOpen] = useState(false);
 
   if (!status) return null;
 
   const enabled = status.totp || status.email || status.passkeys > 0;
+  // Someone who must enrol sees the methods straight away.
+  const expanded = open || (status.required && !enabled);
+  const methods = [
+    status.totp ? t("twoFactor.summary.totp") : null,
+    status.email ? t("twoFactor.summary.email") : null,
+    status.passkeys > 0 ? t("twoFactor.summary.passkeys", { count: status.passkeys }) : null,
+  ].filter(Boolean).join(", ");
+  const summary = enabled ? t("twoFactor.summary.on", { methods }) : t("twoFactor.summary.off");
   const closePanel = () => { setPanel(null); void refresh(); };
   const done = (msg: string) => { setPanel(null); void refresh(); toast({ variant: "success", title: msg }); };
 
@@ -57,11 +67,26 @@ export function TwoFactorCard({ flat = false }: { flat?: boolean }) {
     <SettingsCard
       icon={ShieldCheck}
       title={t("twoFactor.title")}
-      description={t("twoFactor.description")}
+      description={expanded ? t("twoFactor.description") : summary}
       flat={flat}
-      action={enabled ? ok(t) : <Pill>{t("twoFactor.off")}</Pill>}
+      action={
+        <button
+          type="button"
+          onClick={() => setOpen(!expanded)}
+          aria-expanded={expanded}
+          aria-label={expanded ? t("twoFactor.summary.hide") : t("twoFactor.summary.show")}
+          title={expanded ? t("twoFactor.summary.hide") : t("twoFactor.summary.show")}
+          className="inline-flex items-center gap-2 shrink-0"
+          style={{ border: "none", background: "transparent", padding: 0, cursor: "pointer", color: "var(--mute)" }}
+          data-testid="button-two-factor-toggle"
+        >
+          {enabled ? ok(t) : <Pill>{t("twoFactor.off")}</Pill>}
+          <ChevronDown className="h-4 w-4" style={{ transform: expanded ? "rotate(180deg)" : "none", transition: "transform 160ms" }} />
+        </button>
+      }
       data-testid="section-two-factor"
     >
+      {expanded && <>
       {status.required && (
         <div
           className="rounded-lg border px-3 py-2 text-xs"
@@ -170,6 +195,7 @@ export function TwoFactorCard({ flat = false }: { flat?: boolean }) {
           </>
         )}
       </div>
+      </>}
     </SettingsCard>
   );
 }

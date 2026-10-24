@@ -596,6 +596,8 @@ body, html { margin: 0; padding: 0; }
   background: var(--card); box-shadow: var(--sh-raised-crisp);
   color: var(--wine); font-weight: 700;
 }
+.la-seg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.la-seg-btn:disabled:hover { color: var(--mute); }
 .la-seg--pill, .la-seg--pill .la-seg-btn { border-radius: var(--r-pill); }
 .la-seg--pill .la-seg-btn { padding: 6px 15px; }
 .la-seg--fill { display: flex; }
@@ -797,6 +799,16 @@ body, html { margin: 0; padding: 0; }
   height: 100%;
   display: flex;
   flex-direction: column;
+}
+
+/* Content column for single-column pages (Home, Stats, Demos, Social): capped
+   and centered. Pages with a list panel keep the left-aligned cap instead
+   (max-w-[1386px] mr-auto), see docs/content-width-cap.md. */
+.la-page-center {
+  width: 100%;
+  max-width: 1386px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /*

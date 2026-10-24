@@ -3,14 +3,18 @@
  * Creates a Brazilian solar company demo account with 3 campaigns,
  * 60 leads (Brazilian names), and Portuguese conversations — for the onboarding video.
  *
- * Run: node script/seed-demo-br.cjs
+ * Run: node --env-file=.env script/seed-demo-br.cjs
  */
 
 const http = require('http');
 
 const HOST = 'localhost';
 const PORT = 5000;
-const API_KEY = 'DQDQPVjYyNafvgVBGimW0Caq7Wk6GcTEBihx8Vhvx8w';
+const API_KEY = process.env.INTERNAL_API_KEY;
+if (!API_KEY) {
+  console.error('Set INTERNAL_API_KEY (from .env) before running this script.');
+  process.exit(1);
+}
 
 function req(method, path, data) {
   return new Promise((resolve, reject) => {

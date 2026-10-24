@@ -155,5 +155,28 @@
     "errPasswordMismatch": "Passwords do not match.",
     "errFailed": "Failed to activate the account. Please try again.",
     "errNetwork": "Network error. Please try again."
+  },
+  "resetPassword": {
+    "invalidTitle": "Invalid reset link",
+    "invalidBody": "This password reset link is missing information. Request a new link from the sign-in page.",
+    "title": "Choose a new password",
+    "subtitle": "Setting a new password for",
+    "password": "New password",
+    "passwordPlaceholder": "At least 6 characters",
+    "confirmPassword": "Confirm new password",
+    "confirmPlaceholder": "Re-enter your new password",
+    "submit": "Reset password",
+    "saving": "Saving...",
+    "errPasswordShort": "Password must be at least 6 characters.",
+    "errPasswordMismatch": "Passwords do not match.",
+    "errLinkInvalid": "This link is invalid or has expired. Request a new one from the sign-in page.",
+    "errTooMany": "Too many attempts. Please try again later.",
+    "errFailed": "Could not reset the password. Please try again.",
+    "errNetwork": "Network error. Please try again.",
+    "successTitle": "Password updated",
+    "successBody": "Your password has been changed. Sign in with your new password.",
+    "toLogin": "Go to sign in",
+    "requestNew": "Request a new link",
+    "backToLogin": "Back to sign in"
   }
 }

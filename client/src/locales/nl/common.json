@@ -40,5 +40,10 @@
     "delete": "Verwijderen",
     "confirmArchive": "Deze {{entity}} archiveren? Het wordt verborgen uit actieve weergaven en kan later worden hersteld.",
     "confirmDelete": "Deze {{entity}} permanent verwijderen? Dit kan niet ongedaan worden gemaakt."
+  },
+  "search": {
+    "clear": "Zoekopdracht wissen",
+    "matches_one": "{{count}} resultaat",
+    "matches_other": "{{count}} resultaten"
   }
 }

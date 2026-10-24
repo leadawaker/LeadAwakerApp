@@ -20,9 +20,7 @@ import {
   Inbox,
   BookUser,
   Settings,
-  Send,
   Star,
-  PhoneMissed,
   type LucideIcon,
 } from "lucide-react";
 import { FounderInbox } from "@/components/crm/FounderInbox";
@@ -137,7 +135,6 @@ export function MobileMorePage({
   const cycleTheme = () => setThemeMode(THEME_CYCLE[(themeIndex + 1) % THEME_CYCLE.length].mode);
 
   // Nav items grouped like the desktop nav bar (Services, Engage, Admin, Backend).
-  // Reactivation is shown to everyone: Home holds the first bottom-bar slot, so this is the clients' way to Campaigns.
   type Item = NavGate & { label: string; href: string; icon: LucideIcon };
   // Clients get their own flat list (clientMoreItems) instead of the agency groups.
   const clientFacts = useClientNavFacts();
@@ -145,12 +142,11 @@ export function MobileMorePage({
     key: k, label: t(clientNavLabelKey(k, clientFacts)), href: CLIENT_NAV_HREF[k], icon: NAV_ICON[k],
   }));
   const visible = (items: Item[]) => (isAgencyUser ? items.filter((it) => isNavItemVisible(it, navCtx)) : []);
-  // Campaigns stays on the desktop nav only; Calendar lives here unless the bar already holds it.
+  // Calendar lives here unless the bar already holds it.
   const calendarInBar = agencyBottomBar(navCtx.hasVoiceCalls).includes("calendar");
+  // Speed to Lead and Missed calls are hidden until finished (list in RightSidebar.tsx).
   const serviceItems = visible([
-    { label: t("sidebar.speedToLead"), href: `${prefix}/speed-to-lead`, icon: Send, agencyOnly: true, serviceKey: "speed" },
     { label: t("sidebar.reputation"), href: `${prefix}/reputation`, icon: Star, serviceKey: "reputation" },
-    { label: t("sidebar.missedCalls"), href: `${prefix}/missed-calls`, icon: PhoneMissed, serviceKey: "missedcall" },
   ]);
   const engageItems = visible([
     ...(calendarInBar ? [] : [{ label: t("sidebar.calendar"), href: `${prefix}/calendar`, icon: NAV_ICON.calendar }]),

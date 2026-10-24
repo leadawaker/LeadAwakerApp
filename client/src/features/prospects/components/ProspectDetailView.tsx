@@ -7,7 +7,7 @@ import {
   ChevronDown, ChevronUp, Users, Sparkles,
   UserPlus, Send,
 } from "lucide-react";
-import { EmailComposeModal } from "./EmailComposeModal";
+import { EmailComposePanel } from "./EmailComposePanel";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
 import { cn } from "@/lib/utils";
@@ -500,7 +500,8 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
   const displayPriority   = isEditing ? (draft.priority || priority) : priority;
 
   return (
-    <div className="relative flex flex-col h-full overflow-hidden" data-testid="prospect-detail-view">
+    <div className="flex h-full min-h-0 overflow-hidden">
+    <div className="relative flex-1 min-w-0 flex flex-col h-full overflow-hidden" data-testid="prospect-detail-view">
 
       {/* ── Full-height warm gradient ── */}
       <div className="absolute inset-0 bg-popover dark:bg-background" />
@@ -941,13 +942,16 @@ export function ProspectDetailView({ prospect, onSave, onDelete, toolbarPrefix, 
           onCancel={handleCropCancel}
         />
       )}
+    </div>
 
-      {/* Email compose modal */}
-      <EmailComposeModal
-        open={emailComposeOpen}
-        onOpenChange={setEmailComposeOpen}
+    {/* Email compose: right-hand panel beside the detail (UI_STANDARDS 3.7) */}
+    {emailComposeOpen && (
+      <EmailComposePanel
+        onClose={() => setEmailComposeOpen(false)}
         prospect={prospect}
+        className="w-[520px] max-w-[50%]"
       />
+    )}
     </div>
   );
 }

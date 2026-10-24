@@ -5,10 +5,11 @@ import { execFile as execFileCb } from "node:child_process";
 import { promisify } from "node:util";
 import { storage } from "../storage";
 import { encryptSecret, decryptSecret } from "./crypto";
+import { CALDIY_DIR } from "../paths";
 
 const execFile = promisify(execFileCb);
 
-const CALDIY = "/home/gabriel/caldiy";
+const CALDIY = CALDIY_DIR;
 
 /** Self-hosted Cal.diy v2 REST API (pm2 "caldiy-api", port 5555) — same host as this server. */
 export const CALDIY_ENGINE_BASE_URL = "http://localhost:5555";

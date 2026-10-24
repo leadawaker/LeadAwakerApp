@@ -561,7 +561,7 @@ With:
 
 - [ ] **Step 6: Verify in browser (manual — no test harness exists for this component)**
 
-Using playwright-cli or a manual browser check against `app.leadawaker.com` (credentials in memory: leadawaker@gmail.com / Admin1234):
+Using playwright-cli or a manual browser check against `app.leadawaker.com` (credentials in memory: leadawaker@gmail.com / <owner password>):
 
 1. Open Discovery Demo campaign (id 61, "Instakeukens" or similar), Business panel, Edit mode.
 2. Type a First Message containing `{first_name}`, `{business}`, `{project}`. Leave Demo Lead Name empty. Click Preview — confirm the block replaces the editor, shows "Resolving…" briefly, then resolved text with the logged-in user's first name substituted for `{first_name}` and `{project}` resolved to the niche vocabulary term (e.g. "keuken" for niche "Kitchens"), not the service name.

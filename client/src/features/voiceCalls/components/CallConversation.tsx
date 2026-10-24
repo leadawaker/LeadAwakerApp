@@ -1,23 +1,20 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Download, LocateFixed, Search } from "lucide-react";
+import { ChevronsDownUp, ChevronsUpDown, Download } from "lucide-react";
 import type { VoiceCallDetail } from "../api/voiceCallsApi";
 import { useCallAudio } from "../useCallAudio";
 import { activeTurn, turnTimes } from "../turnTimes";
 import { callerIni, callerTitle } from "./bits";
 import { CallPlayer, type PlayerControls, type PlayerState } from "./CallPlayer";
 import { CallTranscript } from "./CallTranscript";
+import { TranscriptSearch } from "./TranscriptSearch";
+import { recordingMissingKey } from "../recordingNote";
 
-/** The call itself: player with speaker tracks on top, searchable transcript below. */
-// OpenAI needs a few minutes after hang-up to finish a recording, and keeps it
-// for 30 days. Only blame the 30 days once the call is actually that old.
-const RECORDING_PENDING_MS = 60 * 60 * 1000;
-const RECORDING_KEPT_MS = 30 * 24 * 60 * 60 * 1000;
-function recordingMissingKey(startedAt: string): string {
-  const age = Date.now() - new Date(startedAt).getTime();
-  if (age < RECORDING_PENDING_MS) return "recordingPending";
-  return age > RECORDING_KEPT_MS ? "recordingExpired" : "recordingUnavailable";
-}
+/**
+ * The call itself: player with speaker tracks on top, searchable transcript below.
+ * Only the Calendar's appointment detail still uses it; the Calls page shows the call
+ * review (CallReviewPanel).
+ */
 
 const NO_EVENTS: VoiceCallDetail["events"] = [];
 
@@ -28,9 +25,13 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<PlayerState>({ playing: false, current: 0, duration: 0, volume: 1, muted: false, rate: 1 });
+  // The transcript keeps the spoken line in view. Scrolling it by hand pauses
+  // that; playing (the player or a line) picks it up again.
   const [follow, setFollow] = useState(true);
+  const [showTracks, setShowTracks] = useState(true);
   const [query, setQuery] = useState("");
   const [playFailed, setPlayFailed] = useState(false);
+  const hasPlayer = audio.status === "ready";
 
   const duration = audio.duration || state.duration || call.durationSeconds || 0;
   // A Grok recording starts once the caller is in, after the call opened.
@@ -73,8 +74,10 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
     toggle: () => {
       const a = audioRef.current;
       if (!a) return;
-      if (a.paused) void a.play().catch(() => setPlayFailed(true));
-      else a.pause();
+      if (a.paused) {
+        setFollow(true);
+        void a.play().catch(() => setPlayFailed(true));
+      } else a.pause();
     },
     seek: (s) => { if (audioRef.current) audioRef.current.currentTime = s; setState((p) => ({ ...p, current: s })); },
     skip: (d) => { const a = audioRef.current; if (a) a.currentTime = Math.max(0, Math.min(duration, a.currentTime + d)); },
@@ -95,14 +98,37 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
 
   return (
     <div className="glass" style={{ flex: 1, minWidth: 0, minHeight: 0, borderRadius: "var(--r-card)", overflow: "hidden", display: "flex", flexDirection: "column" }}>
-      <div style={{ flexShrink: 0, padding: "16px 20px 12px", borderBottom: "1px solid var(--line)" }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <span style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)", lineHeight: 1 }}>{t("sections.transcript")}</span>
-          {audio.url && (
-            <a href={audio.url} download={`${call.callId}.wav`} className="la-btn la-btn--soft" style={{ textDecoration: "none" }}>
-              <Download size={13} />{t("downloadShort")}
-            </a>
-          )}
+      <div style={{ flexShrink: 0, padding: "16px 20px 14px", borderBottom: "1px solid var(--line)" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+          <span style={{ fontFamily: "var(--serif)", fontSize: 22, color: "var(--ink)", lineHeight: 1, flexShrink: 0 }}>{t("sections.transcript")}</span>
+          <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8 }}>
+            {hasPlayer && (
+              <button
+                type="button"
+                onClick={() => setShowTracks((v) => !v)}
+                aria-pressed={showTracks}
+                aria-label={showTracks ? t("hideSpeakers") : t("showSpeakers")}
+                title={showTracks ? t("hideSpeakers") : t("showSpeakers")}
+                className="la-btn la-btn--soft la-btn--icon la-btn--pill"
+                style={{ width: 36, height: 36, flexShrink: 0 }}
+              >
+                {showTracks ? <ChevronsDownUp size={14} /> : <ChevronsUpDown size={14} />}
+              </button>
+            )}
+            <TranscriptSearch query={query} onQuery={setQuery} matches={matches} />
+            {audio.url && (
+              <a
+                href={audio.url}
+                download={`${call.callId}.wav`}
+                aria-label={t("downloadShort")}
+                title={t("downloadShort")}
+                className="la-btn la-btn--soft la-btn--pill"
+                style={{ textDecoration: "none", height: 36, flexShrink: 0 }}
+              >
+                <Download size={13} /><span className="hidden sm:inline">{t("downloadShort")}</span>
+              </a>
+            )}
+          </div>
         </div>
 
         {audio.status === "missing" ? (
@@ -129,40 +155,17 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
               ai={audio.ai}
               callerLabel={callerIni(call, t("webCaller"))}
               callerTitle={callerTitle(call, t("caller"))}
+              showTracks={showTracks}
             />
           </>
         )}
-
-        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 10 }}>
-          <label style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8, height: 36, padding: "0 14px", borderRadius: "var(--r-pill)", boxShadow: "var(--sh-inset-crisp)", color: "var(--mute)" }}>
-            <Search size={14} style={{ flexShrink: 0 }} />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={t("searchTranscript")}
-              style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", color: "var(--ink)", fontSize: 13 }}
-            />
-            {query.trim() && <span style={{ fontSize: 11.5, flexShrink: 0 }}>{t("matches", { count: matches })}</span>}
-          </label>
-          {times && (
-            <button
-              onClick={() => setFollow((v) => !v)}
-              aria-pressed={follow}
-              title={t("followAudioHint")}
-              style={{
-                height: 36, flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 7, padding: "0 14px",
-                borderRadius: "var(--r-pill)", border: "none", cursor: "pointer", fontSize: 12.5, fontWeight: 600,
-                background: follow ? "var(--ink)" : "transparent",
-                color: follow ? "var(--paper)" : "var(--ink-soft)",
-                boxShadow: follow ? "none" : "var(--sh-inset-crisp)",
-              }}
-            >
-              <LocateFixed size={14} />{t("followAudio")}
-            </button>
-          )}
-        </div>
       </div>
-      <div ref={scrollRef} style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "18px 18px 22px" }}>
+      <div
+        ref={scrollRef}
+        onWheel={() => setFollow(false)}
+        onTouchMove={() => setFollow(false)}
+        style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "18px 18px 22px" }}
+      >
         <CallTranscript ref={listRef} turns={call.turns} events={call.events ?? NO_EVENTS} t0={t0} times={times} active={active} query={query} onSeek={seekAndPlay} />
       </div>
     </div>

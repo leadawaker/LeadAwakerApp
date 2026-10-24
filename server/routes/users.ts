@@ -24,6 +24,30 @@ async function trySendInvite(params: Parameters<typeof sendInviteEmail>[0]): Pro
   }
 }
 
+/** Owner and Admin reach every account (requireAgency), so they only live on the agency account. */
+const AGENCY_ROLE_ON_CLIENT = "Owner and Admin users belong to the agency account";
+const isAgencyRole = (role: unknown) => role === "Owner" || role === "Admin";
+
+/**
+ * A user as the read routes return it: no credentials, and a pending invite's
+ * token swapped for `invite_pending` (the token is the invite link, so anyone
+ * who reads it can accept the invite). Only the invite and resend routes hand
+ * a token out, to whoever made the invite.
+ */
+function publicUser<T extends Record<string, any>>(user: T) {
+  const safe: Record<string, any> = { ...stripSecrets(user) };
+  delete safe.encryptedClaudeApiKey;
+  if (typeof safe.preferences === "string" && safe.preferences.includes("invite_token")) {
+    try {
+      const { invite_token, ...rest } = JSON.parse(safe.preferences);
+      safe.preferences = JSON.stringify({ ...rest, invite_pending: !!invite_token });
+    } catch {
+      safe.preferences = null;
+    }
+  }
+  return safe;
+}
+
 export function registerUsersRoutes(app: Express): void {
   // ─── Users ────────────────────────────────────────────────────────
   // (users routes relate to account management and invites)
@@ -46,7 +70,7 @@ export function registerUsersRoutes(app: Express): void {
     }
     // Never expose credentials; `twoFactorEnabled` lets the Owner reset UI show its button.
     const withTwoFactor = await storage.userIdsWithTwoFactor();
-    res.json(data.map((u: any) => ({ ...stripSecrets(u), twoFactorEnabled: withTwoFactor.has(u.id) })));
+    res.json(data.map((u: any) => ({ ...publicUser(u), twoFactorEnabled: withTwoFactor.has(u.id) })));
   }));
 
   app.get("/api/users/:id", requireAuth, wrapAsync(async (req, res) => {
@@ -57,9 +81,12 @@ export function registerUsersRoutes(app: Express): void {
     if (user.role === "Owner" && !isOwner(sessionUser)) {
       return res.status(404).json({ message: "User not found" });
     }
-    // Never expose password hash
-    const safeUser = stripSecrets(user);
-    res.json(safeUser);
+    // Same reach as GET /api/users: the agency sees everyone, a client only its own account.
+    const isAgency = sessionUser.accountsId === 1 || sessionUser.role === "Owner" || sessionUser.role === "Admin";
+    if (!isAgency && user.accountsId !== sessionUser.accountsId) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(publicUser(user));
   }));
 
   app.patch("/api/users/:id", requireAuth, async (req, res) => {
@@ -102,6 +129,14 @@ export function registerUsersRoutes(app: Express): void {
       }
       const parsed = insertUsersSchema.partial().safeParse(fromDbKeys(rawBody, users));
       if (!parsed.success) return handleZodError(res, parsed.error);
+      if (parsed.data.role !== undefined || parsed.data.accountsId !== undefined) {
+        const nextRole = parsed.data.role ?? target.role;
+        const nextAccount = parsed.data.accountsId !== undefined ? parsed.data.accountsId : target.accountsId;
+        if (isAgencyRole(nextRole)) {
+          if (nextAccount == null) parsed.data.accountsId = 1;
+          else if (nextAccount !== 1) return res.status(400).json({ message: AGENCY_ROLE_ON_CLIENT });
+        }
+      }
       const hasFields = Object.keys(parsed.data).length > 0;
       let updated = hasFields || prefsPatch === undefined
         ? await storage.updateAppUser(targetId, parsed.data as any)
@@ -129,6 +164,15 @@ export function registerUsersRoutes(app: Express): void {
       }
       if (!role || typeof role !== "string") {
         return res.status(400).json({ message: "role is required" });
+      }
+      // Same rule as PATCH /api/users/:id.
+      if (role === "Owner" && !isOwner(req.user)) {
+        return res.status(403).json({ message: "Only an Owner can grant Owner role" });
+      }
+      let inviteAccountId: number | null = accountsId ? Number(accountsId) || null : null;
+      if (isAgencyRole(role)) {
+        if (inviteAccountId == null) inviteAccountId = 1;
+        else if (inviteAccountId !== 1) return res.status(400).json({ message: AGENCY_ROLE_ON_CLIENT });
       }
 
       const existing = await storage.getAppUserByEmail(email);
@@ -189,7 +233,7 @@ export function registerUsersRoutes(app: Express): void {
         email,
         role: role as any,
         status: "Invited",
-        accountsId: accountsId ? Number(accountsId) : null,
+        accountsId: inviteAccountId,
         preferences,
         notificationEmail: false, // email notifications are opt-in
         notificationSms: false,

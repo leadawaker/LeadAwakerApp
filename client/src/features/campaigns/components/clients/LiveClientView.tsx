@@ -2,12 +2,13 @@
  * Read-only view of a LIVE persona (specs/voice-tab).
  *
  * A live persona belongs to a real client's phone line and is generated from
- * that account, so it is edited in Account > Voice, never here. Showing it
+ * that account, so it is edited in Calls > Settings, never here. Showing it
  * read-only (instead of hiding it) lets Gabriel see which personas are live
  * without a demo edit being able to change a client's calls.
  */
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
+import { receptionistSettingsHref } from "@/features/accounts/components/workspace/receptionist/settingsLink";
 import type { ReactNode } from "react";
 import { BookOpenText, ExternalLink, Lock } from "lucide-react";
 import { SectionCard } from "@/components/crm/primitives";
@@ -24,17 +25,10 @@ const FIELDS = [
   { field: "descriptionTemplate", labelKey: "clients.fields.description" },
 ] as const;
 
-const ACCOUNT_SELECTION_KEY = "selected-account-id";
-
-/** Opens Account > Voice, pre-selecting the persona's account when it is known. */
+/** Opens Calls > Settings (the phone receptionist's settings) on the persona's account when it is known. */
 export function useOpenAccountVoice(accountsId?: number | null) {
   const [, navigate] = useLocation();
-  return () => {
-    if (accountsId) {
-      try { localStorage.setItem(ACCOUNT_SELECTION_KEY, String(accountsId)); } catch { /* storage blocked */ }
-    }
-    navigate("/platform/accounts?tab=voice");
-  };
+  return () => navigate(receptionistSettingsHref("voice", { accountId: accountsId ?? undefined }));
 }
 
 export function LiveClientView({ client, onBack, actions }: {

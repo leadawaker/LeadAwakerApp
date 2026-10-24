@@ -74,7 +74,7 @@ export function ManagerHome({ accountId, timeZone, onOpen }: { accountId: number
   const refreshPosts = () => qc.invalidateQueries({ queryKey: socialPostsKey(accountId) });
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16, maxWidth: 640 }} data-testid="manager-home">
+    <div style={{ display: "flex", flexDirection: "column", gap: 16, width: "100%", maxWidth: 640, margin: "0 auto" }} data-testid="manager-home">
       {canAct && (
         <section className="neu-raised" style={card}>
           <TopicComposer accountId={accountId} />

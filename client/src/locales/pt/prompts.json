@@ -24,7 +24,11 @@
     "allCampaigns": "Todas as Campanhas",
     "allAccounts": "Todas as Contas",
     "allTypes": "Todos os tipos",
-    "voiceAgents": "Agentes de voz"
+    "voiceAgents": "Agentes de voz",
+    "compactPanel": "Painel compacto",
+    "hidePanel": "Ocultar painel",
+    "showPanel": "Mostrar painel",
+    "hardcodedModel": "Fixo no código"
   },
   "views": {
     "list": "Lista",
@@ -135,14 +139,25 @@
     "systemMessage": "Mensagem do Sistema",
     "notes": "Notas",
     "clickToArchive": "Clique para arquivar",
-    "clickToActivate": "Clique para ativar"
+    "clickToActivate": "Clique para ativar",
+    "systemMsg": "Msg do sistema",
+    "toggleSystemMessage": "Mostrar ou ocultar a mensagem do sistema",
+    "toggleNotes": "Mostrar ou ocultar as notas",
+    "sidebar": "Seções",
+    "toggleSidebar": "Mostrar ou ocultar seções e variáveis",
+    "preview": "Prévia",
+    "togglePreview": "Mostrar ou ocultar a prévia (Ctrl+P)",
+    "sizeEstimate": "~{{tokens}} tok · {{chars}}k car"
   },
   "empty": {
     "selectPrompt": "Selecione um prompt",
     "selectPromptDesc": "Clique em qualquer prompt à esquerda para ver seus detalhes",
     "noPromptsMatch": "Nenhum prompt corresponde aos seus filtros",
     "noPromptsYet": "Nenhum prompt ainda",
-    "createFirstPrompt": "Crie seu primeiro prompt"
+    "createFirstPrompt": "Crie seu primeiro prompt",
+    "category": "Ainda não há prompts de {{area}}",
+    "categoryHint": "Crie um com o botão +.",
+    "socialHint": "Legendas, roteiros e ideias de post ainda ficam no código, não na biblioteca."
   },
   "columns": {
     "name": "Nome",
@@ -158,10 +173,6 @@
     "editPrompt": "Editar prompt",
     "deletePrompt": "Excluir prompt",
     "clickToToggle": "Clique para {{action}}"
-  },
-  "tabs": {
-    "system": "Sistema",
-    "campaigns": "Campanhas"
   },
   "editor": {
     "raw": "Raw",
@@ -199,7 +210,7 @@
     "reverted": "Revertido para atual",
     "confirmLoadTitle": "Carregar v{{v}}?",
     "confirmLoadDesc": "Isso substituirá o conteúdo atual do prompt.",
-    "labelPlaceholder": "Rótulo (opcional) — ex: Adicionado suporte em espanhol",
+    "labelPlaceholder": "Rótulo (opcional), ex: Adicionado suporte em espanhol",
     "revertToCurrent": "← Atual",
     "deleteVersion": "Excluir versão",
     "current": "Atual",
@@ -207,7 +218,8 @@
     "versionCount_one": "{{count}} versão",
     "versionCount_other": "{{count}} versões",
     "minorUpdate": "Menor (+0.1)",
-    "majorUpdate": "Maior (+1.0)"
+    "majorUpdate": "Maior (+1.0)",
+    "history": "Histórico de versões"
   },
   "preview": {
     "conditionsTitle": "Condições da prévia",
@@ -228,7 +240,8 @@
         "midMarket": "Mercado intermediário",
         "premium": "Premium"
       }
-    }
+    },
+    "empty": "Nada para mostrar ainda."
   },
   "vocabulary": {
     "intro": "Palavras por nicho que a IA usa para readaptar o prompt de demonstracao universal. Escolha um nicho em uma campanha e o prompt troca esses termos automaticamente, para a IA soar nativa daquele setor sem um novo prompt. A primeira palavra de cada grupo e a que o prompt utiliza.",
@@ -269,6 +282,34 @@
       "greeting": "Saudação",
       "backend": "Backend",
       "xai": "Prompt do Grok (enxuto)"
-    }
+    },
+    "noLine": "{{name}} ainda não tem linha de voz, então este é o prompt sem os dados do cliente.",
+    "otherLocale": "A linha de {{name}} fala {{line}}, então as ligações dela nunca recebem este prompt {{prompt}}. Mostrado sem os dados do cliente."
+  },
+  "category": {
+    "label": "Área",
+    "chat": "Chat",
+    "voice": "Voz",
+    "crm": "CRM",
+    "social": "Social",
+    "test": "Teste",
+    "reputation": "Reputação"
+  },
+  "demo": {
+    "tag": "Demo",
+    "show": "Demo ({{count}})",
+    "showLabel": "Mostrar prompts de demo",
+    "mark": "Marcar como prompt de demo",
+    "unmark": "Tirar a tag de demo",
+    "fieldHint": "Usado em uma demo"
+  },
+  "font": {
+    "title": "Fonte",
+    "previewFont": "Fonte da prévia",
+    "size": "Tamanho da fonte",
+    "mono": "Mono",
+    "sans": "Sans",
+    "system": "Sistema",
+    "humanist": "Humanista"
   }
 }

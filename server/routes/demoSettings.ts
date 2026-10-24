@@ -18,8 +18,6 @@ import { promisify } from "util";
 import os from "os";
 import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
-import { storage } from "../storage";
-import { syncVoiceWiring } from "./voice-line";
 import { toE164, type PhoneCountry } from "@shared/phoneE164";
 
 export const DEMO_AVATAR_DIR = path.resolve("uploads/demo-avatars");
@@ -222,15 +220,12 @@ export function registerDemoSettingsRoutes(app: Express) {
     passwords: z.array(z.string().trim().min(1).max(60)).max(10).optional(),
     // null clears it back to the engine's default.
     maxCallMinutes: z.number().int().min(1).max(30).nullable().optional(),
-    // How loud the office bed is on the phone's ambience route. Read by the
-    // engine at the start of each call (telnyx_bridge.py).
-    phoneAmbienceLevel: z.enum(["low", "medium", "high"]).optional(),
     // Numbers Sara never remembers as returning callers (on every line), so a
     // demo from your own phone always starts fresh. Stored as E.164 (see
     // FORGET_COUNTRIES): the engine compares them with the caller's number.
     forgetNumbers: z.array(z.string().trim().min(1).max(30)).max(20).optional(),
-    // Engine tests: a tester's own phone number gets this engine (GPT-Live or
-    // Grok), voice, prompt variant and reasoning on a conference-route line;
+    // Engine tests: a tester's own phone number gets this engine (GPT-Live,
+    // Grok or ElevenLabs), voice, prompt variant and reasoning on a conference-route line;
     // every other caller keeps the line's setup. Read per call by the engine
     // (src/automations/voice/voice_engines.py), which ignores a voice id the
     // chosen engine does not have. Stored as E.164, like forgetNumbers.
@@ -238,10 +233,14 @@ export function registerDemoSettingsRoutes(app: Express) {
       number: z.string().trim().min(1).max(30),
       label: z.string().trim().max(40).optional(),
       enabled: z.boolean().optional(),
-      engine: z.enum(["gpt-live", "xai"]),
+      engine: z.enum(["gpt-live", "xai", "elevenlabs"]),
       voice: z.string().trim().max(40).optional(),
       prompt: z.enum(["standard", "lean"]).optional(),
       reasoning: z.enum(["high", "none"]).optional(),
+      // Memory off, any engine: the call is heard as a first-time caller's (no
+      // memory, stored language or appointment; the booking tools see no booking)
+      // and writes no name or language back. Bookings still land on the lead.
+      freshCaller: z.boolean().optional(),
     })).max(10).optional(),
   });
 
@@ -284,63 +283,6 @@ export function registerDemoSettingsRoutes(app: Express) {
     }
     await writeSettings("voice", next);
     res.json({ settings: next });
-  }));
-
-  /**
-   * Which route the demo phone number is on: direct to OpenAI, or through the
-   * Telnyx conference that plays an office bed under her voice. The engine
-   * owns the Telnyx calls; this only relays, so the switch shows what Telnyx
-   * actually has rather than what was last clicked.
-   */
-  const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
-  const engineRoute = async (method: "GET" | "PUT", body?: unknown, path = "route") => {
-    const resp = await fetch(`${ENGINE_BASE}/voice/phone/${path}`, {
-      method,
-      headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
-      body: body ? JSON.stringify(body) : undefined,
-      signal: AbortSignal.timeout(20_000),
-    });
-    const data = await resp.json().catch(() => ({}));
-    return { ok: resp.ok, status: resp.status, data };
-  };
-
-  // The office sound is now the demo account's own Voice tab switch (account 1,
-  // setup.voice.officeSound). This switch writes the same setting, and the
-  // engine then wires the number: the conference route serves screened
-  // transfers too, so "on the conference route" no longer means "office sound".
-  const DEMO_ACCOUNT_ID = 1;
-
-  app.get("/api/demo-settings/voice/phone-route", requireAuth, requireAgency, wrapAsync(async (_req: Request, res: Response) => {
-    const r = await engineRoute("GET");
-    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not read the phone route." });
-    const line = await storage.getVoiceLine(DEMO_ACCOUNT_ID);
-    res.json({ ...r.data, ambience: !!line?.officeSound });
-  }));
-
-  app.put("/api/demo-settings/voice/phone-route", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
-    const parsed = z.object({ ambience: z.boolean() }).safeParse(req.body);
-    if (!parsed.success) return handleZodError(res, parsed.error);
-    await storage.saveVoiceLine(DEMO_ACCOUNT_ID, { officeSound: parsed.data.ambience });
-    const wiring = await syncVoiceWiring(DEMO_ACCOUNT_ID);
-    if (!Array.isArray(wiring)) return res.status(502).json({ message: wiring.error || "Could not switch the phone route." });
-    const r = await engineRoute("GET");
-    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not read the phone route." });
-    res.json({ ...r.data, ambience: parsed.data.ambience });
-  }));
-
-  // The direct line's jitter buffer at Telnyx: smoother audio for a little delay.
-  app.get("/api/demo-settings/voice/phone-jitter", requireAuth, requireAgency, wrapAsync(async (_req: Request, res: Response) => {
-    const r = await engineRoute("GET", undefined, "jitter");
-    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not read the jitter buffer." });
-    res.json(r.data);
-  }));
-
-  app.put("/api/demo-settings/voice/phone-jitter", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
-    const parsed = z.object({ enabled: z.boolean() }).safeParse(req.body);
-    if (!parsed.success) return handleZodError(res, parsed.error);
-    const r = await engineRoute("PUT", parsed.data, "jitter");
-    if (!r.ok) return res.status(502).json({ message: r.data?.detail || "Could not switch the jitter buffer." });
-    res.json(r.data);
   }));
 
   /**

@@ -15,6 +15,8 @@ import { CenterHeader } from "./DesktopCalendarHeader";
 import { WeekGrid } from "./DesktopCalendarWeek";
 import { MonthGrid, AgendaList, CompactAgendaList } from "./DesktopCalendarMonthAgenda";
 import { bookingLeadId, DetailPanel } from "./DesktopCalendarDetail";
+import { BlockPanel } from "./BlockPanel";
+import type { CalendarBlock } from "../hooks/useCalendarBlocks";
 import { useBookingCallId } from "@/features/voiceCalls/api/voiceCallsApi";
 
 export type { DesktopCalendarProps } from "./desktopCalendarShared";
@@ -73,9 +75,31 @@ const DETAIL_W = 372;
 // A booking made on a call shows its player and transcript, which need the room.
 const DETAIL_W_CALL = 500;
 
-export function DesktopCalendar(p: DesktopCalendarProps) {
+export function DesktopCalendar(props: DesktopCalendarProps) {
   const { state: leftPanelState, cycle } = useListPanelState();
   const isMobile = useIsMobile(1024);
+  const isPhone = useIsMobile(768);
+
+  // Block panel (create / edit a busy block). Opened from the toolbar and the week grid;
+  // it takes the right slot, or a MobileSheet on phones.
+  const [blockPanel, setBlockPanel] = useState<{ block?: CalendarBlock } | null>(null);
+  const p: DesktopCalendarProps = { ...props, onOpenBlockPanel: (block) => setBlockPanel({ block }) };
+  const editBlock = blockPanel?.block;
+  const canShowBlockPanel = !!blockPanel && !!p.accountId && (editBlock ? !!(p.onUpdateBlock && p.onDeleteBlock) : !!p.onCreateBlock);
+  const blockPanelEl = canShowBlockPanel ? (
+    <BlockPanel
+      key={editBlock?.id ?? "new"}
+      accountId={p.accountId!}
+      block={editBlock}
+      mobile={isPhone ? "inline" : "fullscreen"}
+      className="w-full border-l-0"
+      onClose={() => setBlockPanel(null)}
+      onSave={editBlock
+        ? async (data) => { await p.onUpdateBlock!(editBlock.id, data); setBlockPanel(null); }
+        : async (data) => { await p.onCreateBlock!(data); setBlockPanel(null); }}
+      onDelete={editBlock ? async () => { await p.onDeleteBlock!(editBlock.id); setBlockPanel(null); } : undefined}
+    />
+  ) : null;
 
   const rootRef = useRef<HTMLDivElement>(null);
   const [rootWidth, setRootWidth] = useState(0);
@@ -135,8 +159,13 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
             </>
           )}
         </div>
-        {/* RIGHT — detail: floating slide-over, desktop/tablet only (mobile uses the bottom sheet below) */}
-        {!isMobile && p.selectedBooking && (
+        {/* RIGHT: block panel (create / edit busy block) takes the slot while open; phones use the sheet below */}
+        {!isPhone && blockPanelEl ? (
+          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(DETAIL_W, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--card)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
+            {blockPanelEl}
+          </div>
+        ) : !isMobile && p.selectedBooking && (
+        /* RIGHT: detail, a floating slide-over, desktop/tablet only (mobile uses the bottom sheet below) */
           <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(detailW, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--bg)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
             <DetailPanel {...p} showClose />
           </div>
@@ -146,6 +175,11 @@ export function DesktopCalendar(p: DesktopCalendarProps) {
       {/* Mobile detail — bottom sheet rising over the grid, drag down to close */}
       <MobileSheet open={!!p.selectedBooking} onClose={() => p.onSelectBooking(null)} data-testid="mobile-calendar-detail-sheet">
         {p.selectedBooking && <DetailPanel {...p} showClose />}
+      </MobileSheet>
+
+      {/* Phone block panel: bottom sheet, same pattern as the detail */}
+      <MobileSheet open={isPhone && !!blockPanelEl} onClose={() => setBlockPanel(null)} data-testid="mobile-calendar-block-sheet">
+        {isPhone && blockPanelEl}
       </MobileSheet>
     </div>
   );

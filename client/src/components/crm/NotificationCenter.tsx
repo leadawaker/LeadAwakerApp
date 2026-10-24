@@ -31,6 +31,7 @@ import {
 import { cn } from "@/lib/utils";
 import { useNotificationStream, notificationGroupKey } from "@/hooks/useNotificationStream";
 import { setPersistedSelection } from "@/hooks/usePersistedSelection";
+import { leadPath } from "@/lib/leadLink";
 
 // ─── Types ─────────────────────────────────────────────────────────────────
 
@@ -283,7 +284,13 @@ export function NotificationCenter({
         .find(({ match }) => match);
       if (matched) {
         setPersistedSelection(`selected-${matched.entity.slice(0, -1)}-id`, matched.match![1]);
-        setLocation(`/platform/${matched.entity}`);
+        // A lead opens in its one home: Chats with the lead selected.
+        setLocation(matched.entity === "leads" ? leadPath(matched.match![1]) : `/platform/${matched.entity}`);
+        return;
+      }
+      // The engine links lead events to the retired /leads page: open the lead itself.
+      if (n.leadId && rawPath === "/leads") {
+        setLocation(leadPath(n.leadId));
         return;
       }
       // A booking made on a phone call links to that call (client alerts).
@@ -301,8 +308,8 @@ export function NotificationCenter({
       const dest = n.link.startsWith("/platform") ? n.link : `/platform${n.link}`;
       setLocation(dest);
     } else if (n.leadId) {
-      // No explicit link — default to the leads page with the lead preselected
-      setLocation("/platform/leads");
+      // No explicit link: open the lead in its one home.
+      setLocation(leadPath(n.leadId));
     }
   }, [handleMarkAsRead, onClose, setLocation]);
 

@@ -3,11 +3,13 @@ import { maskName, maskNumber } from "./maskIdentity";
 import { phoneMatches } from "./phoneMatch";
 import { callStatus, normalizeOutcome, type VoiceCallStatus } from "./status";
 
-/** Calls page tabs: Stats and People for everyone, All calls for the agency only. */
-export type CallsTab = "stats" | "people" | "calls";
-export const AGENCY_TABS: CallsTab[] = ["stats", "people", "calls"];
-export const CLIENT_TABS: CallsTab[] = ["stats", "people"];
+/** Calls page tabs: People for everyone, All calls for the agency only. The figures live on the Stats page (/platform/home). */
+export type CallsTab = "people" | "calls";
+export const AGENCY_TABS: CallsTab[] = ["people", "calls"];
+export const CLIENT_TABS: CallsTab[] = ["people"];
 export const LAST_TAB_PAGE = "calls";
+/** Which list (People or All calls) the "Calls" pill reopens after Settings. */
+export const LAST_LIST_PAGE = "calls.list";
 
 /** Presenting mode, applied once at the render edge (same rule as maskCaller for calls). */
 export function maskVoiceCaller(caller: VoiceCaller, masked: boolean): VoiceCaller {

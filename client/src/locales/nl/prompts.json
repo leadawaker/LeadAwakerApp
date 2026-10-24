@@ -24,7 +24,11 @@
     "allCampaigns": "Alle Campagnes",
     "allAccounts": "Alle Accounts",
     "allTypes": "Alle types",
-    "voiceAgents": "Spraakagenten"
+    "voiceAgents": "Spraakagenten",
+    "compactPanel": "Paneel compact",
+    "hidePanel": "Paneel verbergen",
+    "showPanel": "Paneel tonen",
+    "hardcodedModel": "Vast ingesteld"
   },
   "views": {
     "list": "Lijst",
@@ -139,14 +143,25 @@
     "clickToArchive": "Klik om te archiveren",
     "clickToActivate": "Klik om te activeren",
     "campaign": "Campagne",
-    "openCampaign": "Campagne openen"
+    "openCampaign": "Campagne openen",
+    "systemMsg": "Systeembericht",
+    "toggleSystemMessage": "Systeembericht tonen of verbergen",
+    "toggleNotes": "Notities tonen of verbergen",
+    "sidebar": "Secties",
+    "toggleSidebar": "Secties en variabelen tonen of verbergen",
+    "preview": "Voorbeeld",
+    "togglePreview": "Voorbeeld tonen of verbergen (Ctrl+P)",
+    "sizeEstimate": "~{{tokens}} tok · {{chars}}k tek"
   },
   "empty": {
     "selectPrompt": "Selecteer een prompt",
     "selectPromptDesc": "Klik op een prompt links om de details te bekijken",
     "noPromptsMatch": "Geen prompts komen overeen met je filters",
     "noPromptsYet": "Nog geen prompts",
-    "createFirstPrompt": "Maak je eerste prompt aan"
+    "createFirstPrompt": "Maak je eerste prompt aan",
+    "category": "Nog geen prompts voor {{area}}",
+    "categoryHint": "Maak er een met de + knop.",
+    "socialHint": "Captions, scripts en postideeën staan nog in de code, niet in de bibliotheek."
   },
   "columns": {
     "name": "Naam",
@@ -162,10 +177,6 @@
     "editPrompt": "Prompt bewerken",
     "deletePrompt": "Prompt verwijderen",
     "clickToToggle": "Klik om te {{action}}"
-  },
-  "tabs": {
-    "system": "Systeem",
-    "campaigns": "Campagnes"
   },
   "editor": {
     "raw": "Raw",
@@ -203,7 +214,7 @@
     "reverted": "Teruggezet naar huidig",
     "confirmLoadTitle": "Versie v{{v}} laden?",
     "confirmLoadDesc": "Dit vervangt de huidige promptinhoud.",
-    "labelPlaceholder": "Label (optioneel) — bijv. Spaans toegevoegd",
+    "labelPlaceholder": "Label (optioneel), bijv. Spaans toegevoegd",
     "revertToCurrent": "← Huidig",
     "deleteVersion": "Versie verwijderen",
     "current": "Huidig",
@@ -211,7 +222,8 @@
     "versionCount_one": "{{count}} versie",
     "versionCount_other": "{{count}} versies",
     "minorUpdate": "Klein (+0.1)",
-    "majorUpdate": "Groot (+1.0)"
+    "majorUpdate": "Groot (+1.0)",
+    "history": "Versiegeschiedenis"
   },
   "preview": {
     "conditionsTitle": "Voorbeeldcondities",
@@ -232,7 +244,8 @@
         "midMarket": "Middensegment",
         "premium": "Premium"
       }
-    }
+    },
+    "empty": "Nog niets om te tonen."
   },
   "vocabulary": {
     "intro": "Woorden per niche die de AI gebruikt om de universele demo-prompt om te vormen. Kies een niche bij een campagne en de prompt wisselt deze termen automatisch in, zodat de AI native klinkt voor dat vakgebied zonder een nieuwe prompt. Het eerste woord in elke groep is het woord dat de prompt gebruikt.",
@@ -293,6 +306,34 @@
       "greeting": "Begroeting",
       "backend": "Backend",
       "xai": "Grok-prompt (kort)"
-    }
+    },
+    "noLine": "{{name}} heeft nog geen voicelijn, dus dit is de prompt zonder klantgegevens.",
+    "otherLocale": "De lijn van {{name}} spreekt {{line}}, dus gesprekken daar krijgen deze {{prompt}} prompt nooit. Getoond zonder klantgegevens."
+  },
+  "category": {
+    "label": "Gebied",
+    "chat": "Chat",
+    "voice": "Voice",
+    "crm": "CRM",
+    "social": "Social",
+    "test": "Test",
+    "reputation": "Reputatie"
+  },
+  "demo": {
+    "tag": "Demo",
+    "show": "Demo ({{count}})",
+    "showLabel": "Demoprompts tonen",
+    "mark": "Markeren als demoprompt",
+    "unmark": "Demolabel weghalen",
+    "fieldHint": "Voor een demo"
+  },
+  "font": {
+    "title": "Lettertype",
+    "previewFont": "Lettertype voorbeeld",
+    "size": "Lettergrootte",
+    "mono": "Mono",
+    "sans": "Sans",
+    "system": "Systeem",
+    "humanist": "Humanist"
   }
 }

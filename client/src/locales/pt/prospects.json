@@ -493,5 +493,22 @@
   },
   "interactions": {
     "openConversations": "Abrir em Chats"
+  },
+  "topbar": {
+    "hasPhone": "Tem telefone",
+    "hasEmail": "Tem e-mail",
+    "sortDefault": "Padrão",
+    "compact": "Cartões compactos",
+    "normal": "Cartões normais",
+    "resetColumnOrder": "Redefinir ordem das colunas",
+    "resetColumnWidths": "Redefinir largura das colunas",
+    "clearSelection": "Limpar seleção",
+    "allTypes": "Todos os tipos",
+    "newTemplate": "Novo modelo",
+    "templateCount": "{{count}} de {{total}}",
+    "searchTemplates": "Buscar modelos…",
+    "filterType": "Tipo de modelo",
+    "ascending": "Crescente",
+    "descending": "Decrescente"
   }
 }

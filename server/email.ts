@@ -187,6 +187,8 @@ const EMAIL_ART = {
   callback: { side: "callback-header-side.jpg", strip: "callback-header-strip.jpg", footer: "callback-footer.jpg" },
   reply: { side: "reply-header-side.jpg", strip: "reply-header-strip.jpg", footer: "reply-footer.jpg" },
   photo: { side: "photo-header-side.jpg", strip: "photo-header-strip.jpg", footer: "photo-footer.jpg" },
+  // A message a caller left for the team (callback_requested, reason leave_message).
+  message: { side: "message-header-side.jpg", strip: "message-header-strip.jpg", footer: "message-footer.jpg" },
 } as const;
 
 export interface EmailCta {
@@ -228,7 +230,7 @@ export function emailParagraph(html: string, opts: { muted?: boolean } = {}): st
 
 /** Bulletproof pill button, centred: the colour sits on the cell, so it
  *  survives clients that strip padding or backgrounds from links. */
-function emailButton(cta: EmailCta): string {
+export function emailButton(cta: EmailCta): string {
   return `<table role="presentation" align="center" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
   <tr>
     <td align="center" bgcolor="${T.wine}" style="border-radius:999px;background-color:${T.wine};">
@@ -404,7 +406,7 @@ const TRANSLATIONS: Record<Lang, Translations> = {
     bodyLine2: "Click the button below to set up your account and get started.",
     cta: "Set Up Your Account",
     footer:
-      "This invite link expires in 72 hours. If you did not expect this invitation, you can safely ignore this email.",
+      "This invite link expires in 2 weeks. If you did not expect this invitation, you can safely ignore this email.",
   },
   pt: {
     subject: "Você foi convidado para o Lead Awaker",
@@ -414,7 +416,7 @@ const TRANSLATIONS: Record<Lang, Translations> = {
     bodyLine2: "Clique no botão abaixo para configurar sua conta e começar.",
     cta: "Configurar Minha Conta",
     footer:
-      "Este link expira em 72 horas. Se você não esperava este convite, ignore este e-mail.",
+      "Este link expira em 2 semanas. Se você não esperava este convite, ignore este e-mail.",
   },
   nl: {
     subject: "Je bent uitgenodigd voor Lead Awaker",
@@ -425,7 +427,7 @@ const TRANSLATIONS: Record<Lang, Translations> = {
       "Klik op de knop hieronder om je account in te stellen en te beginnen.",
     cta: "Account Instellen",
     footer:
-      "Deze uitnodigingslink verloopt over 72 uur. Als je deze uitnodiging niet verwachtte, kun je deze e-mail veilig negeren.",
+      "Deze uitnodigingslink verloopt over 2 weken. Als je deze uitnodiging niet verwachtte, kun je deze e-mail veilig negeren.",
   },
 };
 

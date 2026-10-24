@@ -196,6 +196,36 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
     return items.filter(n => n.type === 'inbound' && (!cutoff || new Date(n.at) > cutoff)).length;
   }, [notifData, onConversations]);
 
+  // ── Unread calls badge: live calls since the Calls page was last opened ──────
+  // Same idea as the chats badge above: opening the page moves the cutoff to now.
+  const onCalls = /\/voice-calls(\/|$)/.test(location);
+  const lastCallsVisitRef = useRef<string | null>(null);
+  const prevOnCalls = useRef(false);
+  if (lastCallsVisitRef.current === null) {
+    try { lastCallsVisitRef.current = localStorage.getItem("leadawaker_lastCallsVisitedAt") ?? ""; } catch { lastCallsVisitRef.current = ""; }
+  }
+  if (prevOnCalls.current !== onCalls) {
+    prevOnCalls.current = onCalls;
+    if (onCalls) {
+      const ts = new Date().toISOString();
+      lastCallsVisitRef.current = ts;
+      try { localStorage.setItem("leadawaker_lastCallsVisitedAt", ts); } catch { /* private mode */ }
+    }
+  }
+  const callsSince = lastCallsVisitRef.current;
+  const { data: unseenCalls } = useQuery<{ count: number }>({
+    queryKey: ['/api/voice-calls/unseen-count', callsSince],
+    queryFn: async () => {
+      const res = await apiFetch(`/api/voice-calls/unseen-count${callsSince ? `?since=${encodeURIComponent(callsSince)}` : ""}`);
+      if (!res.ok) return { count: 0 };
+      return res.json();
+    },
+    enabled: !onCalls,
+    refetchInterval: 60_000,
+    staleTime: 30_000,
+  });
+  const unreadCallCount = onCalls ? 0 : unseenCalls?.count ?? 0;
+
   // ── Color Tester: force re-render when JS-based colors change (debounced) ──
   const [colorTick, setColorTick] = useState(0);
 
@@ -272,6 +302,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           onToggleMobileMenu={() => setIsMobileMenuOpen((v) => !v)}
           onLogout={handleLogout}
           unreadChatCount={unreadChatCount}
+          unreadCallCount={unreadCallCount}
           isDark={isDark}
           onToggleTheme={toggleTheme}
         />

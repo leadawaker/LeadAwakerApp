@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Card, CardLabel } from "@/features/leads/components/cardView/designPrimitives";
 import type { VoiceCallDetail } from "../api/voiceCallsApi";
+import { groupSummaryItems } from "../summaryGroups";
 import { CallSummaryBody } from "./CallSummaryBody";
 
 /** Three weeks around the booked day, enough to read "that's next week". Fills its column. */
@@ -35,13 +36,19 @@ function MiniMonth({ date, locale }: { date: Date; locale: string }) {
   );
 }
 
-/** The booked appointment: a mini calendar across the column, then the day and time. */
-export function CallBooking({ call }: { call: VoiceCallDetail }) {
+/**
+ * The booked appointment: a mini calendar across the column, then the day and
+ * time, then what it is for (the recap's booking item, so the summary below
+ * does not repeat it).
+ */
+export function CallBooking({ call, divider = false }: { call: VoiceCallDetail; divider?: boolean }) {
   const { t, i18n } = useTranslation("voiceCalls");
   if (!call.bookedSlot) return null;
   const when = call.bookedIso ? new Date(call.bookedIso) : null;
+  const purpose = groupSummaryItems(call.summary?.items ?? [])
+    .find((g) => g.id === "booked")?.items.map((i) => i.interest).filter(Boolean).join(" · ");
   return (
-    <Card variant="flat" headLeft={<CardLabel>{t("sections.booked")}</CardLabel>} style={{ minWidth: 0 }} bodyStyle={{ padding: "14px 16px 18px" }}>
+    <Card variant="flat" headLeft={<CardLabel>{t("sections.booked")}</CardLabel>} style={{ minWidth: 0, borderTop: divider ? "1px solid var(--line)" : undefined }} bodyStyle={{ padding: "14px 16px 18px" }}>
       {when ? (
         <>
           <MiniMonth date={when} locale={i18n.language} />
@@ -54,6 +61,9 @@ export function CallBooking({ call }: { call: VoiceCallDetail }) {
         </>
       ) : (
         <div style={{ fontSize: 13.5, color: "var(--ink)" }}>{call.bookedSlot}</div>
+      )}
+      {purpose && (
+        <div data-testid="voice-booking-purpose" style={{ marginTop: 8, fontSize: 13, lineHeight: 1.45, color: "var(--ink-soft)" }}>{purpose}</div>
       )}
     </Card>
   );
@@ -80,7 +90,7 @@ export function CallSummaryCard({ call, divider }: { call: VoiceCallDetail; divi
       style={{ minWidth: 0, borderTop: divider ? "1px solid var(--line)" : undefined }}
       bodyStyle={{ padding: "14px 16px 18px" }}
     >
-      <CallSummaryBody call={call} />
+      <CallSummaryBody call={call} withBooking={!!call.bookedSlot} />
     </Card>
   );
 }
@@ -92,7 +102,7 @@ export function CallRecap({ call }: { call: VoiceCallDetail }) {
     <div style={{ minWidth: 0 }}>
       <CallBooking call={call} />
       <Card variant="flat" headLeft={<CardLabel>{t("sections.summary")}</CardLabel>} style={{ minWidth: 0, borderTop: call.bookedSlot ? "1px solid var(--line)" : undefined }} bodyStyle={{ padding: "14px 16px 18px" }}>
-        <CallSummaryBody call={call} />
+        <CallSummaryBody call={call} withBooking={!!call.bookedSlot} />
       </Card>
     </div>
   );

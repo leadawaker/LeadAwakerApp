@@ -1,8 +1,7 @@
 // Small pieces shared by the Leads page topbars (Table + Pipeline).
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Search, X } from "lucide-react";
-import { useIsMobile } from "@/hooks/useIsMobile";
+import { ExpandingSearch } from "@/components/crm/primitives";
 
 /** Raised icon button that asks "Label? Yes / No" inline before acting. */
 export function ConfirmToolbarButton({
@@ -47,45 +46,13 @@ export function ConfirmToolbarButton({
 }
 
 /**
- * Inset search field used in the topbars. On phones it is an icon button that
- * expands on tap and collapses again when it is empty and loses focus.
+ * Search used in the topbars: a round icon that opens into a field on click and
+ * folds back once it is empty and loses focus (every screen size, so the desktop
+ * topbar has room for the quick view and channel switches). On a phone the open
+ * field takes the free space in the row. A thin wrapper over ExpandingSearch.
  */
 export function TopbarSearch({ value, onChange, placeholder }: { value: string; onChange: (v: string) => void; placeholder: string }) {
-  const { t } = useTranslation("leads");
-  const isPhone = useIsMobile(768);
-  const [open, setOpen] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
-  useEffect(() => { if (open) inputRef.current?.focus(); }, [open]);
-  if (isPhone && !open && !value) {
-    return (
-      <button type="button" className="la-btn la-btn--soft la-btn--icon la-hit" aria-label={placeholder} title={placeholder}
-        onClick={() => setOpen(true)} data-testid="leads-topbar-search-open">
-        <Search className="h-4 w-4" />
-      </button>
-    );
-  }
-  return (
-    <div className="relative max-md:flex-1 max-md:min-w-0" style={{ width: isPhone ? undefined : 180 }}>
-      <input
-        ref={inputRef}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={() => { if (!value) setOpen(false); }}
-        placeholder={placeholder}
-        className="la-input la-m-crisp"
-        data-testid="leads-topbar-search"
-        style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 24, height: isPhone ? 36 : 32, fontSize: isPhone ? 14 : 11, width: "100%" }}
-      />
-      <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
-        <Search className="h-3 w-3" />
-      </span>
-      {value && (
-        <button type="button" onClick={() => { onChange(""); if (isPhone) setOpen(false); }} aria-label={t("toolbar.clearAll")} className="absolute right-[7px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] hover:text-foreground">
-          <X className="h-3 w-3" />
-        </button>
-      )}
-    </div>
-  );
+  return <ExpandingSearch value={value} onChange={onChange} placeholder={placeholder} width={180} fillOnMobile testId="leads-topbar-search" />;
 }
 
 /** Wine dot under a topbar icon button when its menu holds a non-default value. */

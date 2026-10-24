@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, PanelLeft, PanelLeftClose } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
 import { useListPanelState } from "@/hooks/useListPanelState";
@@ -9,6 +9,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { fetchProspectsByIds } from "@/features/prospects/api/prospectsApi";
 import { InboxPanel } from "@/features/conversations/components/InboxPanel";
+import { ProspectInboxTopbarControls, useProspectInboxFilters } from "@/features/conversations/components/ProspectInboxControls";
+import { PageTopbar, TopbarIconButton } from "@/components/crm/primitives";
 import { ProspectChatPanel } from "@/features/conversations/components/ProspectChatPanel";
 import { ProspectDetailSidebar } from "@/features/conversations/components/ProspectDetailSidebar";
 import { useProspectConversations } from "@/features/conversations/hooks/useProspectConversations";
@@ -22,6 +24,8 @@ import { useProspectConversations } from "@/features/conversations/hooks/usePros
  */
 export default function OutreachInbox() {
   const { t } = useTranslation("crm");
+  const { t: tc } = useTranslation("conversations");
+  const prospectFilters = useProspectInboxFilters();
   const { isAgencyUser } = useWorkspace();
 
   const [selectedProspectId, setSelectedProspectId] = useState<number | null>(null);
@@ -77,7 +81,7 @@ export default function OutreachInbox() {
           if (found) {
             setUncontactedProspect({
               id: prospectId,
-              name: found.contact_name || found.contactName || found.company || found.name || "Unknown",
+              name: found.contact_name || found.contactName || found.company || found.name || tc("inbox.unknownName"),
               company: found.company || found.name || "",
               phone: found.contact_phone || found.contactPhone || found.phone || null,
             });
@@ -96,7 +100,8 @@ export default function OutreachInbox() {
 
   // Shared global list-panel state (Prospects/Leads/Campaigns/Chats all cycle together).
   const { ref: chatPanelAreaRef, narrow: chatPanelNarrow } = useCompactPanelState(false, { activateBelow: 720, deactivateAbove: 960 });
-  const { state: listPanelState } = useListPanelState();
+  const { state: listPanelState, setState: setListPanelState } = useListPanelState();
+  const cycleListPanel = () => setListPanelState(listPanelState === "full" ? "compact" : listPanelState === "compact" ? "hidden" : "full");
   const isListCompact = !isMobile && (listPanelState === "compact" || (listPanelState === "full" && chatPanelNarrow));
   const isListHidden = listPanelState === "hidden";
 
@@ -117,6 +122,7 @@ export default function OutreachInbox() {
                 setMobileView("inbox");
               }}
               className="h-10 w-10 rounded-full border border-black/[0.125] bg-background grid place-items-center"
+              aria-label={tc("prospectInbox.back")}
               data-testid="mobile-chat-back-button"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -124,10 +130,25 @@ export default function OutreachInbox() {
           )}
           <h1 className="text-2xl font-extrabold tracking-tight truncate min-w-0">
             {mobileView === "chat" && selectedProspectId
-              ? (selectedThread?.company || uncontactedProspect?.company || "Prospect")
+              ? (selectedThread?.company || uncontactedProspect?.company || tc("prospectInbox.prospectFallback"))
               : t("sidebar.inbox")}
           </h1>
         </div>
+
+        {/* Desktop topbar: the list controls live here (phones keep the panel's own toolbar) */}
+        <PageTopbar
+          desktopOnly
+          title={t("sidebar.inbox")}
+          left={
+            <TopbarIconButton
+              label={listPanelState === "full" ? tc("prospectInbox.compactPanel") : listPanelState === "compact" ? tc("prospectInbox.hidePanel") : tc("prospectInbox.showPanel")}
+              onClick={cycleListPanel}
+            >
+              {listPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+            </TopbarIconButton>
+          }
+          right={<ProspectInboxTopbarControls filters={prospectFilters} />}
+        />
 
         <div
           className="flex-1 min-h-0 flex flex-col lg:flex-row gap-[var(--panel-gap)]"
@@ -152,6 +173,7 @@ export default function OutreachInbox() {
             selectedProspectId={selectedProspectId}
             onSelectProspect={handleSelectProspect}
             onDialProspect={handleDialProspect}
+            prospectFilters={prospectFilters}
             listPanelState={isListHidden ? "hidden" : isListCompact ? "compact" : "full"}
             className={cn(
               isListHidden
@@ -194,12 +216,12 @@ export default function OutreachInbox() {
                 />
               ) : (
                 <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                  Select a prospect to view messages
+                  {tc("prospectInbox.selectProspect")}
                 </div>
               );
             })() : (
               <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                Select a prospect to view messages
+                {tc("prospectInbox.selectProspect")}
               </div>
             )}
           </div>

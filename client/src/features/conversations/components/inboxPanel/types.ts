@@ -1,5 +1,6 @@
 import type { ProspectThread } from "../../hooks/useProspectConversations";
 import type { Thread, Lead, Interaction } from "../../hooks/useConversationsData";
+import type { ProspectInboxFilters } from "../ProspectInboxControls";
 
 export type ChatGroupBy = "date" | "status" | "campaign" | "none";
 export type GroupDirection = "asc" | "desc";
@@ -80,6 +81,9 @@ export interface InboxPanelProps {
   /** Prospect-only mode (Outreach Inbox page): hides the Inbox/Unread/Prospects tab bar
    *  and retitles the panel, since only the prospects view is shown. */
   prospectOnly?: boolean;
+  /** Prospect list state owned by the page, whose PageTopbar holds the controls.
+   *  When set, the panel drops its own title and (on desktop) its prospects toolbar. */
+  prospectFilters?: ProspectInboxFilters;
 }
 
 export type { Thread, Lead, Interaction, ProspectThread };

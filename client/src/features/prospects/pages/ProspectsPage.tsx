@@ -9,9 +9,6 @@ import {
 } from "lucide-react";
 import OutreachPipelineView from "../components/OutreachPipelineView";
 import OutreachTemplatesView, { TemplatesToolbar, type TemplatesViewHandle } from "../components/OutreachTemplatesView";
-import { ViewTabBar, type TabDef } from "@/components/ui/view-tab-bar";
-import { ToolbarPill } from "@/components/ui/toolbar-pill";
-import { IconBtn } from "@/components/ui/icon-btn";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
@@ -32,7 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { xBase, xDefault, xActive, xSpan } from "@/components/crm/primitives";
+import { PageTopbar, TopbarTabs, TopbarIconButton, ExpandingSearch, type TopbarTab } from "@/components/crm/primitives";
 import { createProspect, updateProspect } from "../api/prospectsApi";
 
 type ViewMode = "list" | "table" | "pipeline" | "followups" | "templates";
@@ -128,25 +125,23 @@ const STATUS_DOT: Record<string, string> = {
 
 const PRIORITY_ORDER: Record<string, number> = { High: 0, Medium: 1, Low: 2 };
 
-/* -- Expand-on-hover button constants — shared from @/components/crm/primitives -- */
-
-// -- Inline confirmation button --
+// -- Inline confirmation button (topbar): an icon that asks "Label? Yes / No" before acting --
 function ConfirmToolbarButton({
-  icon: Icon, label, onConfirm, variant = "default", confirmYes = "Yes", confirmNo = "No",
+  icon: Icon, label, onConfirm, variant = "default", confirmYes, confirmNo,
 }: {
   icon: React.ElementType; label: string;
   onConfirm: () => Promise<void> | void;
-  variant?: "default" | "danger";
-  confirmYes?: string; confirmNo?: string;
+  variant?: "default" | "danger" | "primary";
+  confirmYes: string; confirmNo: string;
 }) {
   const [confirming, setConfirming] = useState(false);
   const [loading, setLoading] = useState(false);
   if (confirming) {
     return (
-      <div className="h-9 flex items-center gap-1 rounded-full border border-black/[0.125] bg-card px-2.5 text-[12px] shrink-0">
+      <div className="h-9 flex items-center gap-1 rounded-full bg-card px-2.5 text-[12px] shrink-0" style={{ boxShadow: "var(--sh-raised-crisp)" }}>
         <span className="text-foreground/60 mr-0.5 whitespace-nowrap">{label}?</span>
         <button
-          className="px-2 py-0.5 rounded-full bg-brand-indigo text-white font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
+          className="px-2 py-0.5 rounded-full bg-primary text-primary-foreground font-semibold text-[11px] hover:opacity-90 disabled:opacity-50"
           onClick={async () => { setLoading(true); try { await onConfirm(); } finally { setLoading(false); setConfirming(false); } }}
           disabled={loading}
         >
@@ -156,21 +151,10 @@ function ConfirmToolbarButton({
       </div>
     );
   }
-  const labelLen = label.length;
-  const hoverMaxW = labelLen <= 4 ? "hover:max-w-[80px]" : labelLen <= 6 ? "hover:max-w-[100px]" : "hover:max-w-[120px]";
   return (
-    <button
-      className={cn(
-        xBase, hoverMaxW,
-        variant === "danger"
-          ? "border-red-300/50 text-red-500 hover:text-red-600"
-          : xDefault,
-      )}
-      onClick={() => setConfirming(true)}
-    >
+    <TopbarIconButton label={label} danger={variant === "danger"} primary={variant === "primary"} onClick={() => setConfirming(true)}>
       <Icon className="h-4 w-4 shrink-0" />
-      <span className={xSpan}>{label}</span>
-    </button>
+    </TopbarIconButton>
   );
 }
 
@@ -532,7 +516,6 @@ export default function ProspectsPage() {
   /* -- Pipeline toolbar state -- */
   const [pipelineCompactMode, setPipelineCompactMode] = useState(false);
   const [pipelineSearch, setPipelineSearch] = useState("");
-  const [pipelineSearchOpen, setPipelineSearchOpen] = useState(false);
   const [pipelineSortBy, setPipelineSortBy] = useState<"name-asc" | "name-desc" | "priority" | null>(null);
   const [pipelineFilterHasPhone, setPipelineFilterHasPhone] = useState(false);
   const [pipelineFilterHasEmail, setPipelineFilterHasEmail] = useState(false);
@@ -658,12 +641,12 @@ export default function ProspectsPage() {
   }, [rows, followUpSearch, followUpFilterNiche, followUpFilterCountry, followUpFilterPriority, followUpFilterContactMethod, followUpSortBy]);
 
   /* -- View tabs (segment style) -- */
-  const viewTabs: TabDef[] = useMemo(() => [
-    { id: "list",      label: "List",      icon: List },
-    { id: "table",     label: "Table",     icon: Table2 },
-    { id: "pipeline",  label: "Pipeline",  icon: Kanban },
-    { id: "templates", label: "Templates", icon: FileText },
-  ], []);
+  const viewTabs: TopbarTab<ViewMode>[] = useMemo(() => [
+    { id: "list",      label: t("views.list"),      icon: List },
+    { id: "table",     label: t("views.table"),     icon: Table2 },
+    { id: "pipeline",  label: t("views.pipeline"),  icon: Kanban },
+    { id: "templates", label: t("views.templates"), icon: FileText },
+  ], [t]);
 
   /* -- Table flat items (filtered, sorted, grouped) -- */
   const tableFlatItems = useMemo((): ProspectTableItem[] => {
@@ -775,34 +758,48 @@ export default function ProspectsPage() {
   /* -- Table toolbar (rendered inline with tab buttons) -- */
   const tableToolbar = (
     <>
-      {/* Search */}
-      <div className="inline-flex items-center h-9 px-2.5 rounded-full border border-black/[0.125] gap-1.5 shrink-0">
-        <Search className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-        <input
-          value={tableSearch}
-          onChange={(e) => setTableSearch(e.target.value)}
-          placeholder={t("page.searchPlaceholder")}
-          className="bg-transparent outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[140px]"
-        />
-        {tableSearch && (
-          <button onClick={() => setTableSearch("")} className="shrink-0">
-            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-          </button>
-        )}
-      </div>
+      {/* Selection actions -- before the search, when rows are selected */}
+      {tableSelectedIds.size > 0 && (
+        <>
+          <div className="flex items-center gap-2 shrink-0">
+            {/* Change Status dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <TopbarIconButton label={t("toolbar.changeStatus")}>
+                  <Pencil className="h-4 w-4 shrink-0" />
+                </TopbarIconButton>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                {STATUS_OPTIONS.map((s) => (
+                  <DropdownMenuItem key={s} onClick={() => handleBulkStatusChange(s)} className="text-[12px]">
+                    {s}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-      {/* +Add */}
-      <ConfirmToolbarButton icon={Plus} label={t("toolbar.add")} onConfirm={handleAddProspect} confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
+            <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateProspects} confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
+            <ConfirmToolbarButton icon={Trash2} label={deleteLabel} onConfirm={handleBulkDeleteProspects} variant="danger" confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
+
+            {/* Count + clear */}
+            <span className="tabular-nums" style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--wine)", fontWeight: 700, padding: "0 2px" }}>{tableSelectedIds.size}</span>
+            <TopbarIconButton label={t("topbar.clearSelection")} onClick={() => setTableSelectedIds(new Set())}>
+              <X className="h-4 w-4" />
+            </TopbarIconButton>
+          </div>
+        </>
+      )}
+      {/* Search */}
+      <ExpandingSearch value={tableSearch} onChange={setTableSearch} placeholder={t("page.searchPlaceholder")} />
 
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, tableSortBy !== "recent" ? xActive : xDefault, "hover:max-w-[100px]")}>
+          <TopbarIconButton label={t("toolbar.sort")} active={tableSortBy !== "recent"}>
             <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
+        <DropdownMenuContent align="end" className="w-44">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {(Object.keys(TABLE_SORT_KEYS) as TableSortByOption[]).map((opt) => (
@@ -817,12 +814,11 @@ export default function ProspectsPage() {
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, isTableFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
+          <TopbarIconButton label={t("toolbar.filter")} active={isTableFilterActive}>
             <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.filter")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52 max-h-[400px] overflow-y-auto">
+        <DropdownMenuContent align="end" className="w-52 max-h-[400px] overflow-y-auto">
           <FilterAccordionSection label={t("filter.status")} activeCount={tableFilterStatus.length} defaultOpen={tableFilterStatus.length > 0}>
             {STATUS_OPTIONS.map((s) => (
               <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); toggleTableFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
@@ -885,12 +881,11 @@ export default function ProspectsPage() {
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, tableGroupBy !== "status" ? xActive : xDefault, "hover:max-w-[100px]")}>
+          <TopbarIconButton label={t("toolbar.group")} active={tableGroupBy !== "status"}>
             <Layers className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.group")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-44">
+        <DropdownMenuContent align="end" className="w-44">
           {(Object.keys(TABLE_GROUP_KEYS) as TableGroupByOption[]).map((opt) => (
             <DropdownMenuItem
               key={opt}
@@ -925,24 +920,18 @@ export default function ProspectsPage() {
       </DropdownMenu>
 
       {/* Overdue toggle */}
-      <button
-        onClick={() => setTableFilterOverdue((v) => !v)}
-        className={cn(xBase, tableFilterOverdue ? xActive : xDefault, "hover:max-w-[100px]")}
-        title={t("toolbar.overdue")}
-      >
+      <TopbarIconButton label={t("toolbar.overdue")} className={cn(tableFilterOverdue && "on")} onClick={() => setTableFilterOverdue((v) => !v)}>
         <Clock className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>{t("toolbar.overdue")}</span>
-      </button>
+      </TopbarIconButton>
 
       {/* Fields (Column Visibility) */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, visibleCols.size !== DEFAULT_VISIBLE.length ? xActive : xDefault, "hover:max-w-[100px]")}>
+          <TopbarIconButton label={t("toolbar.fields")} active={visibleCols.size !== DEFAULT_VISIBLE.length}>
             <Eye className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.fields")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
+        <DropdownMenuContent align="end" className="w-52 max-h-72 overflow-y-auto">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.showHideColumns")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           {TABLE_COL_META.map((col) => {
@@ -984,12 +973,11 @@ export default function ProspectsPage() {
       {/* Settings */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, xDefault, "hover:max-w-[100px]")}>
+          <TopbarIconButton label={t("toolbar.settings")}>
             <Settings className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.settings")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
+        <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.display")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={(e) => { e.preventDefault(); setShowVerticalLines(!showVerticalLines); }} className="flex items-center gap-2 text-[12px]">
@@ -1005,10 +993,10 @@ export default function ProspectsPage() {
             <span className="flex-1">{t("toolbar.fullWidth")}</span>
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setColumnOrder([])} className="text-[12px] text-muted-foreground">
-            Reset column order
+            {t("topbar.resetColumnOrder")}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setColumnWidths({})} className="text-[12px] text-muted-foreground">
-            Reset column widths
+            {t("topbar.resetColumnWidths")}
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.data")}</DropdownMenuLabel>
@@ -1018,84 +1006,25 @@ export default function ProspectsPage() {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Selection actions -- far right, when rows selected */}
-      {tableSelectedIds.size > 0 && (
-        <>
-          <div className="flex-1 min-w-0" />
-          <div className="flex items-center gap-1 shrink-0">
-            {/* Change Status dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button className={cn(xBase, xDefault, "hover:max-w-[140px]")}>
-                  <Pencil className="h-4 w-4 shrink-0" />
-                  <span className={xSpan}>{t("toolbar.changeStatus")}</span>
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-44">
-                {STATUS_OPTIONS.map((s) => (
-                  <DropdownMenuItem key={s} onClick={() => handleBulkStatusChange(s)} className="text-[12px]">
-                    {s}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
-
-            <ConfirmToolbarButton icon={Copy} label={t("toolbar.duplicate")} onConfirm={handleDuplicateProspects} confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
-            <ConfirmToolbarButton icon={Trash2} label={deleteLabel} onConfirm={handleBulkDeleteProspects} variant="danger" confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
-
-            {/* Count badge with dismiss */}
-            <button
-              className="h-9 inline-flex items-center gap-1.5 rounded-full border border-black/[0.125] bg-card px-3 text-[12px] font-medium shrink-0 cursor-default ml-1 text-foreground/60"
-              onClick={() => setTableSelectedIds(new Set())}
-            >
-              <span className="tabular-nums">{tableSelectedIds.size}</span>
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        </>
-      )}
+      {/* +Add (wine, last) */}
+      <ConfirmToolbarButton icon={Plus} label={t("toolbar.add")} onConfirm={handleAddProspect} variant="primary" confirmYes={t("toolbar.yes")} confirmNo={t("toolbar.no")} />
     </>
   );
 
   /* -- Pipeline toolbar (leads-style) -- */
   const pipelineToolbar = (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      {/* Search (expandable) */}
-      {pipelineSearchOpen ? (
-        <div className="flex items-center gap-1.5 h-10 rounded-full border border-black/[0.125] bg-card/60 px-2.5 shrink-0">
-          <Search className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-          <input
-            autoFocus
-            value={pipelineSearch}
-            onChange={(e) => setPipelineSearch(e.target.value)}
-            placeholder={t("page.searchPlaceholder")}
-            onBlur={() => { if (!pipelineSearch) setPipelineSearchOpen(false); }}
-            className="text-[12px] bg-transparent outline-none w-28 min-w-0 text-foreground placeholder:text-muted-foreground/60"
-          />
-          <button type="button" onClick={() => { setPipelineSearch(""); setPipelineSearchOpen(false); }}>
-            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-          </button>
-        </div>
-      ) : (
-        <IconBtn onClick={() => setPipelineSearchOpen(true)} active={!!pipelineSearch} title="Search prospects">
-          <Search className="h-4 w-4" />
-        </IconBtn>
-      )}
+    <div className="flex items-center gap-2">
+      {/* Search */}
+      <ExpandingSearch value={pipelineSearch} onChange={setPipelineSearch} placeholder={t("page.searchPlaceholder")} />
 
       {/* Filter Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn("toolbar-pill-base", isPipelineFilterActive && "toolbar-pill-active")}>
+          <TopbarIconButton label={isPipelineFilterActive ? `${t("toolbar.filter")} (${pipelineActiveFilterCount})` : t("toolbar.filter")} active={isPipelineFilterActive}>
             <SlidersHorizontal className="h-4 w-4 shrink-0" />
-            {t("toolbar.filter")}
-            {isPipelineFilterActive && (
-              <span className="h-4 w-4 rounded-full bg-brand-indigo text-white text-[9px] font-bold flex items-center justify-center shrink-0 ml-0.5">
-                {pipelineActiveFilterCount}
-              </span>
-            )}
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-60 rounded-2xl max-h-[400px] overflow-y-auto">
+        <DropdownMenuContent align="end" className="w-60 rounded-2xl max-h-[400px] overflow-y-auto">
           <FilterAccordionSection
             label={t("toolbar.contactInfo")}
             activeCount={(pipelineFilterHasPhone ? 1 : 0) + (pipelineFilterHasEmail ? 1 : 0)}
@@ -1106,7 +1035,7 @@ export default function ProspectsPage() {
               className="flex items-center gap-2 cursor-pointer rounded-xl"
             >
               <Phone className={cn("h-4 w-4 shrink-0", pipelineFilterHasPhone ? "text-brand-indigo" : "text-muted-foreground")} />
-              <span className={cn("text-sm flex-1", pipelineFilterHasPhone && "font-semibold")}>Has Phone</span>
+              <span className={cn("text-sm flex-1", pipelineFilterHasPhone && "font-semibold")}>{t("topbar.hasPhone")}</span>
               {pipelineFilterHasPhone && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
             </DropdownMenuItem>
             <DropdownMenuItem
@@ -1114,7 +1043,7 @@ export default function ProspectsPage() {
               className="flex items-center gap-2 cursor-pointer rounded-xl"
             >
               <Mail className={cn("h-4 w-4 shrink-0", pipelineFilterHasEmail ? "text-brand-indigo" : "text-muted-foreground")} />
-              <span className={cn("text-sm flex-1", pipelineFilterHasEmail && "font-semibold")}>Has Email</span>
+              <span className={cn("text-sm flex-1", pipelineFilterHasEmail && "font-semibold")}>{t("topbar.hasEmail")}</span>
               {pipelineFilterHasEmail && <Check className="h-4 w-4 text-brand-indigo shrink-0" />}
             </DropdownMenuItem>
           </FilterAccordionSection>
@@ -1170,19 +1099,16 @@ export default function ProspectsPage() {
       {/* Sort Dropdown */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <ToolbarPill
-            icon={ArrowUpDown}
-            label={t("toolbar.sort")}
-            active={isPipelineSortActive}
-            activeValue={isPipelineSortActive ? (pipelineSortBy === "name-asc" ? "A-Z" : pipelineSortBy === "name-desc" ? "Z-A" : "Priority") : undefined}
-          />
+          <TopbarIconButton label={t("toolbar.sort")} active={isPipelineSortActive}>
+            <ArrowUpDown className="h-4 w-4 shrink-0" />
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-56 rounded-2xl">
+        <DropdownMenuContent align="end" className="w-56 rounded-2xl">
           {([
-            { value: null, label: "Default" },
-            { value: "name-asc" as const, label: "Name A → Z" },
-            { value: "name-desc" as const, label: "Name Z → A" },
-            { value: "priority" as const, label: "Priority" },
+            { value: null, label: t("topbar.sortDefault") },
+            { value: "name-asc" as const, label: t("sort.nameAZ") },
+            { value: "name-desc" as const, label: t("sort.nameZA") },
+            { value: "priority" as const, label: t("sort.priority") },
           ]).map((opt) => (
             <DropdownMenuItem
               key={String(opt.value)}
@@ -1197,21 +1123,18 @@ export default function ProspectsPage() {
       </DropdownMenu>
 
       {/* Compact mode toggle */}
-      <button
+      <TopbarIconButton
+        label={pipelineCompactMode ? t("topbar.normal") : t("topbar.compact")}
+        className={cn("max-md:!hidden", pipelineCompactMode && "on")}
         onClick={() => setPipelineCompactMode((v) => !v)}
-        className={cn(
-          "h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium transition-colors hidden md:inline-flex",
-          pipelineCompactMode
-            ? "bg-black text-[#FFE35B] border border-black hover:opacity-85"
-            : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground"
-        )}
       >
         <Rows3 className="h-4 w-4 shrink-0" />
-        <span>{pipelineCompactMode ? "Normal" : "Compact"}</span>
-      </button>
+      </TopbarIconButton>
 
       {/* Fold / Unfold — simple toggle: fold empty columns or unfold all */}
-      <button
+      <TopbarIconButton
+        label={pipelineHasCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}
+        className={cn(pipelineHasCollapsed && "on")}
         onClick={() => {
           if (pipelineHasCollapsed) {
             pipelineExpandAllRef.current?.();
@@ -1219,16 +1142,9 @@ export default function ProspectsPage() {
             pipelineFoldThresholdRef.current?.(0);
           }
         }}
-        className={cn(
-          "h-10 px-4 rounded-full flex items-center gap-2 text-sm font-medium transition-colors",
-          pipelineHasCollapsed
-            ? "bg-black text-[#FFE35B] border border-black hover:opacity-85"
-            : "border border-border/60 text-muted-foreground hover:bg-card hover:text-foreground"
-        )}
       >
         <Columns3 className="h-4 w-4 shrink-0" />
-        <span>{pipelineHasCollapsed ? t("toolbar.unfold") : t("toolbar.fold")}</span>
-      </button>
+      </TopbarIconButton>
     </div>
   );
 
@@ -1287,206 +1203,171 @@ export default function ProspectsPage() {
               />
           ) : (
 
-          <div className="flex-1 min-h-0 flex overflow-hidden h-full gap-[3px]">
-            <div className="flex flex-col bg-muted overflow-hidden flex-1 min-w-0 rounded-lg">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden h-full">
+            <PageTopbar
+              scroll
+              title={t("page.title")}
+              left={<TopbarTabs tabs={viewTabs} value={viewMode} onChange={setViewMode} testIdPrefix="prospects-view" />}
+              right={<>
+                {viewMode === "table" && tableToolbar}
+                {viewMode === "pipeline" && pipelineToolbar}
+                {viewMode === "followups" && (
+                  <div className="flex items-center gap-2">
+                    {/* Search */}
+                    <ExpandingSearch value={followUpSearch} onChange={setFollowUpSearch} placeholder={t("followups.searchPlaceholder")} />
 
-              {/* Title + view tabs + toolbar */}
-              <div className="pl-[17px] pr-3.5 pt-3 md:pt-10 pb-1 md:pb-3 shrink-0 flex flex-col md:flex-row md:items-center md:gap-3 md:overflow-x-auto md:[scrollbar-width:none]">
-                <div className="flex items-center justify-between w-full md:w-auto md:shrink-0 md:gap-6">
-                  <h2 className="text-2xl font-semibold font-heading text-foreground leading-tight">{t("page.title")}</h2>
-                  <span className="hidden md:block">
-                    <ViewTabBar
-                      tabs={viewTabs}
-                      activeId={viewMode}
-                      onTabChange={(id) => setViewMode(id as ViewMode)}
-                      variant="segment"
-                    />
-                  </span>
-                </div>
+                    {/* Sort */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <TopbarIconButton label={t("toolbar.sort")} active={followUpSortBy !== "date_asc"}>
+                          <ArrowUpDown className="h-4 w-4 shrink-0" />
+                        </TopbarIconButton>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-48">
+                        <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        {([
+                          { value: "date_asc" as const, labelKey: "sort.dateSoonest" },
+                          { value: "date_desc" as const, labelKey: "sort.dateLatest" },
+                          { value: "priority" as const, labelKey: "sort.priority" },
+                          { value: "name_asc" as const, labelKey: "sort.nameAZ" },
+                        ]).map((opt) => (
+                          <DropdownMenuItem key={opt.value} onClick={() => setFollowUpSortBy(opt.value)} className={cn("text-[12px]", followUpSortBy === opt.value && "font-semibold text-brand-indigo")}>
+                            {t(opt.labelKey)}
+                            {followUpSortBy === opt.value && <Check className="h-3 w-3 ml-auto" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
 
-                <div className="flex items-center gap-3 overflow-x-auto [scrollbar-width:none] pb-2 md:pb-0 md:contents">
-                  <div className="md:hidden">
-                    <ViewTabBar
-                      tabs={viewTabs}
-                      activeId={viewMode}
-                      onTabChange={(id) => setViewMode(id as ViewMode)}
-                      variant="segment"
-                    />
-                  </div>
-                  <div className="w-px h-5 bg-border/40 mx-0.5 shrink-0" />
-                  {viewMode === "table" && tableToolbar}
-                  {viewMode === "pipeline" && pipelineToolbar}
-                  {viewMode === "followups" && (
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      {/* Search */}
-                      <div className="inline-flex items-center h-9 px-2.5 rounded-full border border-black/[0.125] gap-1.5 shrink-0">
-                        <Search className="h-4 w-4 text-muted-foreground/60 shrink-0" />
-                        <input
-                          value={followUpSearch}
-                          onChange={(e) => setFollowUpSearch(e.target.value)}
-                          placeholder={t("followups.searchPlaceholder")}
-                          className="bg-transparent outline-none text-[12px] text-foreground placeholder:text-muted-foreground/60 w-[140px]"
-                        />
-                        {followUpSearch && (
-                          <button onClick={() => setFollowUpSearch("")} className="shrink-0">
-                            <X className="h-3 w-3 text-muted-foreground hover:text-foreground" />
-                          </button>
-                        )}
-                      </div>
-
-                      {/* Sort */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className={cn(xBase, followUpSortBy !== "date_asc" ? xActive : xDefault, "hover:max-w-[100px]")}>
-                            <ArrowUpDown className="h-4 w-4 shrink-0" />
-                            <span className={xSpan}>{t("toolbar.sort")}</span>
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-48">
-                          <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("toolbar.sortBy")}</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          {([
-                            { value: "date_asc" as const, labelKey: "sort.dateSoonest" },
-                            { value: "date_desc" as const, labelKey: "sort.dateLatest" },
-                            { value: "priority" as const, labelKey: "sort.priority" },
-                            { value: "name_asc" as const, labelKey: "sort.nameAZ" },
-                          ]).map((opt) => (
-                            <DropdownMenuItem key={opt.value} onClick={() => setFollowUpSortBy(opt.value)} className={cn("text-[12px]", followUpSortBy === opt.value && "font-semibold text-brand-indigo")}>
-                              {t(opt.labelKey)}
-                              {followUpSortBy === opt.value && <Check className="h-3 w-3 ml-auto" />}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      {/* Filter */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className={cn(xBase, isFollowUpFilterActive ? xActive : xDefault, "hover:max-w-[100px]")}>
-                            <Filter className="h-4 w-4 shrink-0" />
-                            <span className={xSpan}>{t("toolbar.filter")}</span>
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-52 max-h-[400px] overflow-y-auto">
-                          {availableNiches.length > 0 && (
-                            <FilterAccordionSection
-                              label={t("filter.niche")}
-                              activeCount={followUpFilterNiche.length}
-                              defaultOpen={followUpFilterNiche.length > 0}
-                            >
-                              {availableNiches.map((n) => (
-                                <DropdownMenuItem
-                                  key={n}
-                                  onClick={(e) => { e.preventDefault(); toggleFollowUpFilterNiche(n); }}
-                                  className="flex items-center gap-2 text-[12px]"
-                                >
-                                  <span className="flex-1">{n}</span>
-                                  {followUpFilterNiche.includes(n) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                                </DropdownMenuItem>
-                              ))}
-                            </FilterAccordionSection>
-                          )}
-                          {availableCountries.length > 0 && (
-                            <FilterAccordionSection
-                              label={t("filter.country")}
-                              activeCount={followUpFilterCountry.length}
-                              defaultOpen={followUpFilterCountry.length > 0}
-                            >
-                              {availableCountries.map((c) => (
-                                <DropdownMenuItem
-                                  key={c}
-                                  onClick={(e) => { e.preventDefault(); toggleFollowUpFilterCountry(c); }}
-                                  className="flex items-center gap-2 text-[12px]"
-                                >
-                                  <MapPin className="h-3 w-3 text-muted-foreground/50 shrink-0" />
-                                  <span className="flex-1">{c}</span>
-                                  {followUpFilterCountry.includes(c) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                                </DropdownMenuItem>
-                              ))}
-                            </FilterAccordionSection>
-                          )}
-                          {availablePriorities.length > 0 && (
-                            <FilterAccordionSection
-                              label={t("filter.priority")}
-                              activeCount={followUpFilterPriority.length}
-                              defaultOpen={followUpFilterPriority.length > 0}
-                            >
-                              {availablePriorities.map((p) => (
-                                <DropdownMenuItem
-                                  key={p}
-                                  onClick={(e) => { e.preventDefault(); toggleFollowUpFilterPriority(p); }}
-                                  className="flex items-center gap-2 text-[12px]"
-                                >
-                                  <span className="flex-1">{p}</span>
-                                  {followUpFilterPriority.includes(p) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
-                                </DropdownMenuItem>
-                              ))}
-                            </FilterAccordionSection>
-                          )}
+                    {/* Filter */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <TopbarIconButton label={t("toolbar.filter")} active={isFollowUpFilterActive}>
+                          <Filter className="h-4 w-4 shrink-0" />
+                        </TopbarIconButton>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-52 max-h-[400px] overflow-y-auto">
+                        {availableNiches.length > 0 && (
                           <FilterAccordionSection
-                            label={t("filter.contactMethod")}
-                            activeCount={followUpFilterContactMethod.length}
-                            defaultOpen={followUpFilterContactMethod.length > 0}
+                            label={t("filter.niche")}
+                            activeCount={followUpFilterNiche.length}
+                            defaultOpen={followUpFilterNiche.length > 0}
                           >
-                            {CONTACT_METHOD_OPTIONS.map((m) => (
+                            {availableNiches.map((n) => (
                               <DropdownMenuItem
-                                key={m}
-                                onClick={(e) => { e.preventDefault(); toggleFollowUpFilterContactMethod(m); }}
+                                key={n}
+                                onClick={(e) => { e.preventDefault(); toggleFollowUpFilterNiche(n); }}
                                 className="flex items-center gap-2 text-[12px]"
                               >
-                                <span className="flex-1 capitalize">{m}</span>
-                                {followUpFilterContactMethod.includes(m) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                                <span className="flex-1">{n}</span>
+                                {followUpFilterNiche.includes(n) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                               </DropdownMenuItem>
                             ))}
                           </FilterAccordionSection>
-                          {isFollowUpFilterActive && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={clearFollowUpFilters} className="text-[12px] text-destructive">
-                                {t("toolbar.clearAllFilters")}
+                        )}
+                        {availableCountries.length > 0 && (
+                          <FilterAccordionSection
+                            label={t("filter.country")}
+                            activeCount={followUpFilterCountry.length}
+                            defaultOpen={followUpFilterCountry.length > 0}
+                          >
+                            {availableCountries.map((c) => (
+                              <DropdownMenuItem
+                                key={c}
+                                onClick={(e) => { e.preventDefault(); toggleFollowUpFilterCountry(c); }}
+                                className="flex items-center gap-2 text-[12px]"
+                              >
+                                <MapPin className="h-3 w-3 text-muted-foreground/50 shrink-0" />
+                                <span className="flex-1">{c}</span>
+                                {followUpFilterCountry.includes(c) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                               </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-
-                      {/* Group */}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className={cn(xBase, followUpGroupBy !== "none" ? xActive : xDefault, "hover:max-w-[100px]")}>
-                            <Layers className="h-4 w-4 shrink-0" />
-                            <span className={xSpan}>{t("toolbar.group")}</span>
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="start" className="w-44">
-                          {(["none", "niche", "country", "priority", "contact_method"] as const).map((opt) => (
+                            ))}
+                          </FilterAccordionSection>
+                        )}
+                        {availablePriorities.length > 0 && (
+                          <FilterAccordionSection
+                            label={t("filter.priority")}
+                            activeCount={followUpFilterPriority.length}
+                            defaultOpen={followUpFilterPriority.length > 0}
+                          >
+                            {availablePriorities.map((p) => (
+                              <DropdownMenuItem
+                                key={p}
+                                onClick={(e) => { e.preventDefault(); toggleFollowUpFilterPriority(p); }}
+                                className="flex items-center gap-2 text-[12px]"
+                              >
+                                <span className="flex-1">{p}</span>
+                                {followUpFilterPriority.includes(p) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+                              </DropdownMenuItem>
+                            ))}
+                          </FilterAccordionSection>
+                        )}
+                        <FilterAccordionSection
+                          label={t("filter.contactMethod")}
+                          activeCount={followUpFilterContactMethod.length}
+                          defaultOpen={followUpFilterContactMethod.length > 0}
+                        >
+                          {CONTACT_METHOD_OPTIONS.map((m) => (
                             <DropdownMenuItem
-                              key={opt}
-                              onClick={() => setFollowUpGroupBy(opt)}
-                              className={cn("text-[12px]", followUpGroupBy === opt && "font-semibold text-brand-indigo")}
+                              key={m}
+                              onClick={(e) => { e.preventDefault(); toggleFollowUpFilterContactMethod(m); }}
+                              className="flex items-center gap-2 text-[12px]"
                             >
-                              {t(opt === "contact_method" ? "filter.contactMethod" : opt === "none" ? "group.none" : `group.${opt}`)}
-                              {followUpGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                              <span className="flex-1 capitalize">{m}</span>
+                              {followUpFilterContactMethod.includes(m) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
                             </DropdownMenuItem>
                           ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  )}
-                  {viewMode === "templates" && (
-                    <TemplatesToolbar
-                      search={tplSearch}
-                      onSearchChange={setTplSearch}
-                      filterType={tplFilterType}
-                      onFilterTypeChange={setTplFilterType}
-                      templateTypes={tplViewRef.current?.templateTypes ?? []}
-                      count={tplViewRef.current?.filteredCount ?? 0}
-                      total={tplViewRef.current?.totalCount ?? 0}
-                      onNew={() => tplViewRef.current?.createNew()}
-                    />
-                  )}
-                </div>
-              </div>
+                        </FilterAccordionSection>
+                        {isFollowUpFilterActive && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={clearFollowUpFilters} className="text-[12px] text-destructive">
+                              {t("toolbar.clearAllFilters")}
+                            </DropdownMenuItem>
+                          </>
+                        )}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    {/* Group */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <TopbarIconButton label={t("toolbar.group")} active={followUpGroupBy !== "none"}>
+                          <Layers className="h-4 w-4 shrink-0" />
+                        </TopbarIconButton>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44">
+                        {(["none", "niche", "country", "priority", "contact_method"] as const).map((opt) => (
+                          <DropdownMenuItem
+                            key={opt}
+                            onClick={() => setFollowUpGroupBy(opt)}
+                            className={cn("text-[12px]", followUpGroupBy === opt && "font-semibold text-brand-indigo")}
+                          >
+                            {t(opt === "contact_method" ? "filter.contactMethod" : opt === "none" ? "group.none" : `group.${opt}`)}
+                            {followUpGroupBy === opt && <Check className="h-3 w-3 ml-auto" />}
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                )}
+                {viewMode === "templates" && (
+                  <TemplatesToolbar
+                    search={tplSearch}
+                    onSearchChange={setTplSearch}
+                    filterType={tplFilterType}
+                    onFilterTypeChange={setTplFilterType}
+                    templateTypes={tplViewRef.current?.templateTypes ?? []}
+                    count={tplViewRef.current?.filteredCount ?? 0}
+                    total={tplViewRef.current?.totalCount ?? 0}
+                    onNew={() => tplViewRef.current?.createNew()}
+                  />
+                )}
+              </>}
+            />
+          <div className="flex-1 min-h-0 flex overflow-hidden gap-[3px]">
+            <div className="flex flex-col bg-muted overflow-hidden flex-1 min-w-0 rounded-lg">
 
                 {/* Content area — switches based on view mode */}
                 <div className="flex-1 min-h-0 overflow-hidden">
@@ -1571,6 +1452,7 @@ export default function ProspectsPage() {
                   )}
                 </div>
             </div>
+          </div>
           </div>
           )}
 

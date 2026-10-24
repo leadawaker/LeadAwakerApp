@@ -1,13 +1,16 @@
 import { useMemo, useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { useLastTab } from "@/hooks/useLastTab";
 import { cn } from "@/lib/utils";
 import { mockSpeedToLeadCampaigns } from "../data/mockMetrics";
 import { SpeedToLeadListPanel } from "../components/SpeedToLeadListPanel";
 import { SpeedToLeadTopbar, type SpeedToLeadTab } from "../components/SpeedToLeadTopbar";
 import { SpeedToLeadDetailView } from "../components/SpeedToLeadDetailView";
 
+const TABS: readonly SpeedToLeadTab[] = ["performance", "settings"];
+
 function SpeedToLeadContent() {
-  const [tab, setTab] = useState<SpeedToLeadTab>("performance");
+  const [tab, setTab] = useLastTab<SpeedToLeadTab>("speedToLead", TABS, "performance");
   const [search, setSearch] = useState("");
   const [listHidden, setListHidden] = useState(false);
   const [selectedId, setSelectedId] = useState<number>(mockSpeedToLeadCampaigns[0]?.id ?? 0);

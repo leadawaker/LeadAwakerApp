@@ -44,6 +44,10 @@
     "hours": {
       "label": "Actieve uren",
       "help": "Wanneer de opvolging verstuurd mag worden."
+    },
+    "advanced": {
+      "label": "Geavanceerd",
+      "help": "Engine-instellingen van deze assistent. Alleen de Owner ziet ze."
     }
   },
   "overview": {
@@ -135,7 +139,7 @@
     "whenHelp": "Alleen binnen de actieve uren, alleen op WhatsApp (websitebezoekers zijn al weg). Dit venster ligt vast.",
     "what": "Wat hij stuurt",
     "whatValue": "Eén regel over waar de klant naar vroeg, of niets als de chat vanzelf eindigde. De status van de klant verandert nooit.",
-    "notReceptionist": "Deze campagne gebruikt de reactivatie-opvolging. Die stel je in op de pagina Campagnes.",
+    "notReceptionist": "Deze campagne gebruikt de reactivatie-opvolging. Die stel je in bij Accounts > Reactivatie.",
     "openPrompt": "Instructies voor de opvolging bewerken (prompt {{id}})"
   },
   "hours": {
@@ -147,5 +151,48 @@
     "to": "tot",
     "active_hours_start": "Van",
     "active_hours_end": "Tot"
+  },
+  "advanced": {
+    "modelTitle": "Model",
+    "model": "AI-model",
+    "modelHelp": "Het model dat de antwoorden en de opvolgingen schrijft.",
+    "modelDefault": "Standaard van de engine",
+    "role": "Rol",
+    "roleHelp": "Wat de assistent is bij het bedrijf, zoals de prompt het zegt. Opgeslagen voor de taal waarin je de app gebruikt.",
+    "rolePlaceholder": "bijv. receptionist",
+    "conversationTitle": "Gesprek",
+    "conversationMode": "Gespreksmodus",
+    "conversationModeHelp": "Scoping maakt een briefing voor leads zonder offerte. Beslissing zoekt uit waar een lead met offerte staat. Automatisch kiest op basis van de fase van de lead.",
+    "conversationModes": {
+      "auto": "Automatisch",
+      "scoping": "Scoping",
+      "decision": "Beslissing"
+    },
+    "bookingMode": "Boekingsmodus",
+    "bookingModeHelp": "Belagent: een koopsignaal (\"bel me\", \"schrijf me in\") waarschuwt meteen de closer. Kwalificeren: de assistent kwalificeert en slaat het boeken over.",
+    "bookingModes": {
+      "unset": "Niet ingesteld",
+      "callAgent": "Belagent",
+      "qualifying": "Kwalificeren"
+    },
+    "typos": "Typfouten per bericht",
+    "typosHelp": "Hoeveel kleine typfouten de assistent mag maken, zodat het leest alsof een mens typt. De engine telt 0 als 1.",
+    "timingTitle": "Wachttijd voor een antwoord",
+    "textDelay": "Wachten na een tekstbericht",
+    "textDelayHelp": "Seconden dat hij wacht na een tekstbericht, zodat snelle berichten één antwoord krijgen. 0 antwoordt meteen. Leeg: 10 seconden.",
+    "voiceDelay": "Wachten na een spraakbericht",
+    "voiceDelayHelp": "Seconden dat hij wacht na een spraakbericht. Leeg: hetzelfde als na een tekstbericht, of 60 seconden als dat ook leeg is.",
+    "seconds": "{{n}} s",
+    "disclosureTitle": "AI-vermelding",
+    "optOut": "Afmeldregel in het eerste bericht",
+    "optOutHelp": "Zet onder het eerste bericht van een uitgaande campagne hoe iemand zich afmeldt. De assistent antwoordt alleen, dus dit speelt zelden.",
+    "bumpsTitle": "Reactivatie-opvolging",
+    "bumpsHelp": "Deze twee tellen alleen als de campagne de reactivatie-opvolging gebruikt in plaats van het ene opvolgbericht van de assistent (zie Opvolging).",
+    "aiBumps": "De AI schrijft de opvolgberichten",
+    "aiBumpsHelp": "Uit: de vaste opvolgteksten worden verstuurd.",
+    "stopOnResponse": "Stop de opvolging als de klant antwoordt",
+    "stopOnResponseHelp": "Wist de volgende geplande opvolging zodra er een antwoord binnenkomt.",
+    "objectionsTitle": "Bezwaren-script",
+    "objectionsHelp": "Tot vijf bezwaren, elk met het antwoord dat het bedrijf goedkeurt. De assistent gebruikt deze antwoorden in plaats van er zelf een te verzinnen."
   }
 }

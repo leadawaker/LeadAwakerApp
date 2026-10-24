@@ -1,602 +1,368 @@
-# Lead Awaker — UI Standards
+# Lead Awaker CRM: UI Standards
 
-> **This is the single canonical source of truth for all UI work.**
-> Every Claude session MUST read this file before writing any frontend code.
-> If a rule exists here, it overrides anything in CLAUDE.md, frontend.md, or memory files.
+> The source of truth for every UI change in the CRM: what to use and what never to do. Exact
+> markup and props live in [`UI_PATTERNS.md`](UI_PATTERNS.md). If code and this file disagree,
+> check `client/src/styles/` and `client/src/components/crm/primitives/`, then fix whichever is wrong.
+> The marketing site (`client/public/site/`, `client/public/premium/`) is not the CRM.
 
----
-
-## 1. Brand Identity
-
-**Lead Awaker** is an AI-powered WhatsApp lead reactivation engine. It is NOT a generic CRM.
-
-- **North Star KPI:** Calls Booked — must be the most prominent element on the Dashboard.
-- **Mental Model:** Accounts → Campaigns → Leads → Interactions → Pipeline Movement.
-- **Default Pipeline:** New → Contacted → Responded → Multiple Responses → Qualified → Call Booked → Lost → DND.
-
-**Design Priorities (in order of tradeoff):**
-1. Pipeline visibility
-2. Perceived speed
-3. Cognitive clarity
-4. Operational efficiency
-5. Professional SaaS polish
-
-**Personality:** Linear/Stripe energy — confident, minimal, data-dense. Not playful, not enterprise-gray.
+Goal: one consistent UI. Every page is built from the same few parts, so a new page looks like it
+was always there. Calm, warm, data-dense: wine accent on warm paper, soft neumorphic depth.
 
 ---
 
-## 2. Color System
+## 1. How to build a page (checklist)
 
-> ### ⭐ Source of truth: `client/src/styles/variables.css`
-> The **token names** below are canonical. Their **values live in `variables.css`** (mirrored
-> into Tailwind via `tokens.css`) — that file is the one place colors are defined, and it is
-> what ships. Any hex written in this doc is illustrative of the *current* value and may lag the
-> CSS; when they disagree, **the CSS wins.** Never hardcode a hex in a component — reference the
-> token (`bg-primary`, `text-primary`, `hsl(var(--brand-indigo))`). This is what makes a full
-> re-skin (e.g. going neumorphic, or swapping the accent) a single-file edit.
-
-**Current palette: warm-bone neumorphic with deep wine accent.** The primary accent is deep wine
-`#5E2230` (`346 43% 25%`) on a warm bone page (`#ECE7DD`, `38 27% 88%`) with white neumorphic cards.
-The design uses directional-light neumorphic shadows (bilateral dark + light highlights) and
-frosted glass for overlays. (The earlier indigo `#4F46E5` + yellow `#FFDF3D` + wine `#8D354B`
-palettes have been retired; `--brand-indigo`/`--brand-yellow` token *names* still exist but
-resolve to deep wine for backwards-compat — see `variables.css` and `neu.css` for the full system.)
-**Dark mode is live** (warm charcoal): `.dark` token overrides live in `variables.css` and
-`design-system.css`. Never hardcode `bg-white`, `text-black`, or raw hex in components; anything
-not going through tokens breaks in dark mode. (Known debt: Settings forms, billing panels, and
-some mobile sheets still hardcode `bg-white`.)
-
-### 2.1 Brand Colors (Primary Palette)
-
-Token **roles** (exact values in `variables.css`):
-
-| Token | Role |
-|-------|------|
-| `--primary` / `--accent` | **Primary brand accent (wine).** Buttons, links, focus rings, active nav, CTAs. |
-| `--brand-indigo`, `--brand-blue` | Legacy accent token names — now resolve to `--primary` (wine). Prefer `--primary`. |
-| `--brand-deep-blue` | Deep accent — strong emphasis, dark wine. |
-| `--brand-yellow`, `--brand-soft-yellow` | Legacy KPI-accent names — now resolve to wine. |
-| `--foreground` / `--muted-foreground` | Text — near-black / muted gray. |
-
-**Rule:** `--primary` and `--brand-blue` resolve to the same wine accent. New code should reach
-for `--primary` (or the `primary` Tailwind color), not the legacy `--brand-*` aliases.
-
-### 2.2 Highlight & Selection Colors
-
-| Token | Usage |
-|-------|-------|
-| `--highlight-active` | Active nav pill, active tab pill, selected filter pills (light wine tint). |
-| `--highlight-selected` | Selected card background, highlighted table row, selected containers (light wine tint). |
-| `--highlight-hover` | Hover state on already-highlighted elements. |
-
-Selection/active tints are wine-derived (`--wine-tint: rgba(94,34,48,0.08)`) for hover/inactive
-and `--wine-glow: rgba(94,34,48,0.18)` for stronger emphasis — both defined in `variables.css`.
-**NEVER USE** any lime/chartreuse yellow (`#FFF375`, `#FFF6C8`, etc.) — banned.
-
-### 2.25 Surface Primitives & Layout Tokens
-
-Recurring surfaces (list rows, group headers, panels, pills, toolbar buttons) are **not**
-hand-rolled per page. They are rendered by shared primitives in
-`client/src/components/crm/primitives/`, each of which bakes in CSS tokens from `variables.css`.
-Change the token (or the primitive) once → every page follows. This is the same single-edit
-re-skin principle as the color system, extended to dimensions/shadows/spacing.
-
-**The rule: new list / card / panel / pill UI MUST compose a primitive. Never hand-roll
-`rounded-*`, `shadow-*`, or card padding on a list row.** Per-instance tweaks go through
-`className` (tailwind-merge lets a page override without forking the component).
-
-| Primitive | Use for | Key tokens |
-|-----------|---------|-----------|
-| `<ListCard>` | Any selectable list row (Leads, Prospects, Conversations, Tasks, Campaigns) | `--list-card-radius`, `--list-card-radius-mobile`, `--list-card-pad-x/y`, `--list-card-min-h`, `--list-card-shadow`, `--list-card-shadow-hover` |
-| `<GroupHeader>` | Sticky section divider in list views | `--group-header-pad-x/y`, `--group-header-sticky-top`, `--group-header-bg` |
-| `<SectionCard>` | Larger container (kanban column, detail section, widget shell) | `--panel-radius`, `--panel-bg`, `--panel-pad`, `--panel-shadow` |
-| `<Pill>` | Status / label badge | `--pill-radius`, `--pill-pad-x/y` |
-| `<ToolbarButton>` + `toolbarButtonClasses` | Expand-on-hover toolbar filter/action buttons | (Tailwind strings; active state reads `--primary`) |
-
-`<ListCard>` props of note: `selected`, `interactive` (cursor + hover bg, default on),
-`hoverShadow` (lift on hover — **opt-in**, so pages that never had one keep parity), `padded`
-(bake the standard padding, default on; set false when a card manages its own inner padding),
-`as` (`div`/`button`/`li`), `accentColor`. Import from `@/components/crm/primitives`.
-
-All dimensional tokens live in `:root` in `variables.css`; only color-bearing ones (shadows on
-dark navy, selection tints) carry a `.dark` override. To overhaul the look of every card/panel
-in the app (radius, density, elevation, even a neumorphic pass), edit those tokens — not the pages.
-
-### 2.3 Surface Hierarchy (Warm-Bone Neumorphic System)
-
-Depth is communicated through neumorphic directional-light shadows, NOT visible borders.
-
-| Level | Token | Hex | HSL | Usage |
-|-------|-------|-----|-----|-------|
-| 0 (page) | `--background` | `#ECE7DD` | `38 27% 88%` | Page ground, inset surface background |
-| 1 (sidebar) | `--bg-2` | `#E4DCCC` | `38 29% 85%` | Sidebar, nav rail, bottom bar |
-| 2 (muted) | `--muted` | warm near-white | `39 30% 96%` | Secondary panels, surface fills |
-| 3 (card) | `--card` | `#FFFFFF` | `0 0% 100%` | White neumorphic raised cards |
-| 4 (surface) | `--surface` | `#FBF8F2` | hex | Near-white raised chips, buttons |
-
-**Shadows:** Neumorphic bilateral shadows (dark cast + light highlight) defined in `neu.css`.
-Use `.neu-raised`, `.neu-raised-crisp`, `.neu-inset`, `.neu-polished`, `.glass`, `.glass-strong`
-utility classes. See `neu.css` for the complete shadow token system.
-
-> **Narrow icon buttons** (small square/icon-only triggers like a popover toggle,
-> a settings gear, an inline action icon) use **`.neu-inset-super-crisp`** — the
-> shallowest inset. Never leave them as bare transparent buttons; the shallow inset
-> gives them a tactile, pressable affordance without reading as a deep well.
-
-**Radius tiers:** Six semantic tiers (`--r-flush: 6px`, `--r-button: 8px`, `--r-surface: 11px`,
-`--r-card: 16px`, `--r-panel: 22px`, `--r-pill: 999px`). Snap all corners to these tiers —
-never use ad-hoc px values. The legacy `--radius: 1.5rem` still exists for backwards compatibility
-with existing shadcn components.
-
-### 2.4 Text Colors
-
-| Token | Hex | HSL | Usage |
-|-------|-----|-----|-------|
-| `--foreground` | `#1F1A14` | `30 14% 10%` | Primary text, headings, body copy. |
-| `--ink-soft` | `#322B22` | hex | Softened headings, secondary text. |
-| `--muted-foreground` | `#6C6354` | `39 15% 38%` | Secondary text, captions, icon default color. |
-| `--secondary-foreground` | `#322B22` | hex | Slightly muted primary text. |
-
-### 2.5 Pipeline Stage Colors
-
-These are fixed hex values used in Kanban columns, status badges, and pipeline charts.
-
-| Stage | Hex | Notes |
-|-------|-----|-------|
-| New | `#6C5A8C` | Muted purple |
-| Contacted | `#547BB0` | Steel blue |
-| Responded | `#3F8E8E` | Teal |
-| Multiple Responses | `#5E8E5E` | Sage green |
-| Qualified | `#B58F3E` | Warm gold |
-| Booked | `#C48A2F` | Amber-gold |
-| Closed | `#6E7A5E` | Muted olive |
-| Lost | `#A24B3F` | Warm red |
-| DND | `#9D8E76` | Warm taupe |
-
-> **Source of truth:** `PIPELINE_STAGE_COLORS` in `client/src/lib/avatarUtils.ts`. If you update stage colors, update there — docs follow code.
-
-### 2.6 Status Colors (Campaigns, Accounts)
-
-**Campaign Status:**
-
-| Status | Badge BG | Badge Text | Dot Color |
-|--------|----------|------------|-----------|
-| Active | `#DCFCE7` | `#15803D` | `#22C55E` |
-| Paused | `#FEF3C7` | `#92400E` | `#F59E0B` |
-| Completed | `#DBEAFE` | `#1D4ED8` | `#3B82F6` |
-| Finished | `#DBEAFE` | `#1D4ED8` | `#3B82F6` |
-| Inactive | `#F4F4F5` | `#52525B` | `#94A3B8` |
-| Archived | `#F4F4F5` | `#52525B` | `#94A3B8` |
-| Draft | `#E5E7EB` | `#374151` | `#6B7280` |
-
-**Account Status:**
-
-| Status | Color |
-|--------|-------|
-| Active | `#10B981` |
-| Trial | `#F59E0B` |
-| Inactive | `#94A3B8` |
-| Suspended | `#F43F5E` |
-| Paused | `#F59E0B` |
-
-### 2.7 Semantic Colors
-
-| Token | Hex | Role |
-|-------|-----|------|
-| `--destructive` | `hsl(0 84% 60%)` | Errors, delete actions, dangerous operations. |
-| `--success` | `hsl(142 71% 45%)` | Success toasts, positive confirmation. |
-| `--info` | `#4F46E5` | Informational — same as brand indigo. |
-| `--accent` | `hsl(35 95% 55%)` | Orange/gold accent from logo rays. |
-
-### 2.8 Chart Colors
-
-| Chart Token | HSL | Notes |
-|-------------|-----|-------|
-| `--chart-1` | `346 43% 25%` | Deep Wine |
-| `--chart-2` | `150 52% 38%` | Emerald |
-| `--chart-3` | `37 70% 50%` | Warm Amber |
-| `--chart-4` | `260 23% 45%` | Muted Purple |
-| `--chart-5` | `10 50% 40%` | Warm Red |
-
-### 2.9 Dark Mode
-
-**Dark mode is deferred.** Dark-mode overrides have been removed from `variables.css` for the
-current phase. The warm-bone neumorphic system targets light mode only. Dark equivalents will
-be added as a follow-up phase after the full light-mode migration is approved.
+1. **Shell.** Outer div `.la-page`. Header is `<PageTopbar>`. Never hand-write a header bar.
+2. **Topbar parts, left to right:** title (same i18n key as the nav label), optional `count`,
+   then `left`: the `PillSwitch` (work | Settings on Calls and Chats), `TopbarTabs` for views,
+   the list fold button. Then `right`: selection actions, `ExpandingSearch`, `TopbarIconButton`
+   menus, and the wine `+` (`TopbarIconButton primary`) last.
+3. **List?** List panel on the left, `w-full lg:w-[var(--toolbar-w)] lg:shrink-0`, scrolling in
+   `.la-list-area > .la-cards`. Rows are Chats-style cards: `.la-camp-card` plus `.active` when
+   selected. Minimizing uses `useListPanelState` and the `CompactEntityRail` parts.
+4. **Sections?** Use `SectionLayout` + `SectionRail` + `SectionHeader` (side tabs), as in Settings and Accounts.
+5. **Create or edit?** A right-hand panel (or a `MobileSheet` on phones). No `Dialog`.
+6. **Width.** List page: `max-w-[1386px] mr-auto` on the outer flex child. Single-column page:
+   `.la-page-center` on the content column inside the scroll container.
+7. **Colors and depth** only from tokens and the `neu-*` utilities. Check the page in dark mode.
+8. **Phone.** Check below 768px. Mobile changes are additive and respect safe-area insets.
+9. **Strings.** Every visible string, `aria-label`, `title` and placeholder goes through `t()` in en, nl and pt.
+10. **Where does it live?** One home per thing (section 6). Don't add a second place to open a lead.
 
 ---
 
-## 3. Typography
+## 2. Tokens
 
-| Property | Value |
-|----------|-------|
-| Body font | `Manrope` (`--font-sans`) |
-| Heading font | `Manrope` bold (`--font-heading`). No serif anywhere in the CRM (decided 2026-10-15) |
-| Mono font | `Geist Mono` — eyebrows, labels, data, status pills |
-| Headings | `font-heading font-bold tracking-tight` |
-| Body | `font-sans antialiased` |
+### 2.1 Where they live
 
-**Rules:**
-- All `<h1>` through `<h6>` use `--font-heading` (Manrope, bold) automatically via the base layer.
-- Never use a serif face (Playfair Display, Instrument Serif, Georgia...) in the CRM. `--serif` and `--display` are kept only as aliases of `--sans`. The public website (`client/public/premium/`) and legal pages keep their own fonts.
-- Geist Mono is used for eyebrows (`.eyebrow`), UI labels, status pills (`.la-status`),
-  segmented controls (`.la-seg-btn`), and compact buttons (`.la-btn`).
-- No additional font imports needed beyond Manrope + Geist Mono.
+| File | Holds |
+|------|-------|
+| `client/src/styles/variables.css` | **Every color**, light and dark (`:root` and `:root.dark`). The only file allowed to define a color. |
+| `client/src/styles/design-system.css` | Geometry: radius tiers, spacing, shadow shapes (`--sh-*`), type classes, component classes (`.la-btn`, `.la-seg`, `.la-page`...). Never a color value. |
+| `client/src/styles/neu.css` | Neumorphic surface utilities (`.neu-raised`, `.neu-inset`, `.glass`...). |
+| `client/src/styles/tokens.css` | Maps tokens into Tailwind (`bg-card`, `text-primary`, `bg-popover`, `text-muted-foreground`...). |
+| `client/src/styles/components.css` | Shared list classes (`.la-list-area`, `.la-cards`, `.la-camp-card`, `.la-mono-tile`). |
 
----
+**The dials** at the top of `variables.css` drive everything: `--brand-h/-s/-l` (deep wine `#5E2230`
+in light, brightened `#B14A5C` in dark) and `--ground-h/-s` with `--ground-page/-panel/-chrome`
+(the warm paper grounds). A rebrand is a change to the dials, not to components.
 
-## 4. Spacing, Sizing & Layout
+**Two formats, never mixed:**
+- Channel triples (`--background`, `--primary`, `--muted`, `--border`, `--foreground`...): use as
+  `hsl(var(--primary))`, `hsl(var(--primary) / 0.2)` or the Tailwind class (`bg-primary`).
+- Full colors (`--bg`, `--surface`, `--card`, `--wine`, `--ink`, `--line`...): use as `var(--wine)`.
+  `hsl(var(--wine))` is a bug.
 
-### 4.1 The ONE Size Rule
+### 2.2 Color roles
 
-There is ONE standard size for interactive circle/pill elements: **36px** (`h-9`). No sm/md/lg variants.
+| Token | Use |
+|-------|-----|
+| `--bg` / `bg-background` | Page ground (very light warm paper). Also the fill of inset wells. |
+| `--surface` | Topbar, toolbars, list panels, raised chips and soft buttons. |
+| `--bg-2` / `--chrome` | Nav rail. `--chrome-deep` and `--chrome-deep-ink` for phone chrome. |
+| `--card` / `bg-card` | White cards: the selected list card, detail sections, tiles. |
+| `--muted`, `--bone`, `--input` | Secondary fills, writing surfaces, input fills. |
+| `--line`, `--line-strong` | Hairlines and dividers. Prefer depth over borders. |
+| `--ink`, `--ink-soft`, `--mute`, `--mute-2` | Text: primary, secondary, muted, tertiary (or `text-foreground`, `text-muted-foreground`). |
+| `--primary`, `--wine` | The brand accent: active states, links, focus, the one primary action. |
+| `--wine-soft` | Hover on wine. |
+| `--wine-tint`, `--wine-glow` | 8% and 18% wine washes: hover, applied filters, emphasis. |
+| `--wine-grad` | The one primary-action gradient (`.la-btn--wine`). |
+| `--on-wine` | Text and icons on a filled wine surface. |
+| `--good`, `--warn`, `--destructive`, `--success` | Status. `--good-tint`, `--warn-tint` for soft backgrounds. |
+| `--highlight-active/-selected/-hover` | Warm amber tints. Legacy selection color; don't use for list cards. |
+| `--stage-new` ... `--stage-dnd` | Pipeline stages, the source of truth. In JS use `PIPELINE_HEX` (same values, for charts that need hex) and `getLeadStatusAvatarColor` from `lib/avatarUtils.ts`. Change both together. |
+| `--sand` | An ochre for palettes that need one (studio tags). Not a stage. |
+| `CAMPAIGN_STATUS_HEX`, `ACCOUNT_STATUS_HEX` | Campaign and account status colors (`lib/avatarUtils.ts`). |
+| `--chart-1` ... `--chart-5`, `--chart-wine` | Chart series. `--chart-wine` is the wine that reads as a data mark. |
 
-| Element | Size | Tailwind | Notes |
-|---------|------|----------|-------|
-| Icon button circle | 36px | `h-9 w-9` | Outline circle, `rounded-full border border-border/60` |
-| Icon inside circle | 16px | `h-4 w-4` | Always. No exceptions. |
-| Toolbar action button | 36px | `h-9 pl-[9px] rounded-full` | **Expand-on-hover pill** — icon-only at rest (`max-w-9`), label slides in on hover. See §24. |
-| Nav active pill | 44px | `h-[44px]` | Sidebar selected page highlight. |
-| Lead avatar circle | 36px | `h-9 w-9` | Uses `getStatusAvatarColor(status)`. |
-| Lead score circle | 36px | `h-9 w-9` | — |
+**Dark mode is live** (warm charcoal). `useTheme` toggles `<html class="dark">`; colors switch in
+`variables.css` and shadow shapes in `design-system.css`. Anything that bypasses tokens breaks
+in dark mode, so check every new surface in both themes.
 
-### 4.2 Table Row Heights
+**Retired:** the indigo/blue and yellow palettes. `--brand-indigo` (and the other `--brand-*`
+names) still exists only as an alias that resolves to wine. New code uses `--primary`.
 
-| Context | Height | Tailwind |
-|---------|--------|----------|
-| Data rows (all tables) | 52px | `h-[52px]` |
-| Skeleton rows | 52px | `h-[52px]` |
-| Header rows | auto | `py-2` |
+### 2.3 Radius and spacing
 
-**This is project-standard.** All new data tables (`Leads`, `Campaigns`, `Accounts`, `Users`, etc.) MUST use `h-[52px]` for data rows.
+Radius tiers: `--r-flush` 6px (wells, tracks), `--r-button` 8px (buttons, chips), `--r-surface` 11px
+(seg tracks, balloons), `--r-card` 16px (cards and panels with a header), `--r-panel` 22px (hero bands,
+largest floating surfaces), `--r-pill` 999px (pills, round buttons, `rounded-full`).
+List cards use `--list-card-radius` (12px). The shadcn `--radius` is 24px and `rounded-sm/md/lg/xl`
+all resolve to it on purpose. Never invent a radius in px.
 
-### 4.3 Sidebar Layout
+Spacing scale (8px base): `--space-xxs` 4, `--space-xs` 8, `--space-sm` 12, `--space-md` 16,
+`--space-lg` 20, `--space-xl` 24, `--space-xxl` 32, `--space-section` 80 (editorial bands only).
 
-| Property | Value |
-|----------|-------|
-| Position | `fixed left-0 top-16 bottom-0` |
-| Collapsed width | `w-[86px]` |
-| Expanded width | `w-[259px]` |
-| Nav icon circles | `h-10 w-10` with `border border-black/25` (overlay mode) |
-| Active pill (expanded) | `h-[43px] rounded-full bg-[var(--highlight-active)]` |
-| Active pill (collapsed) | Circle fills `bg-[var(--highlight-active)]` |
-| DbStatusIndicator | Bottom-left, `h-10 w-10` circle, `justify-start` |
+### 2.4 Depth (neumorphic shadows)
 
-### 4.4 Border Radius
+Depth comes from shadows, not borders. Use the utilities or the tokens, never Tailwind `shadow-*`.
 
-`--radius: 1.5rem` (24px) is the global radius. All shadcn components inherit this. Do not use `rounded-sm`, `rounded-md`, `rounded-lg` — they all resolve to the same 24px value intentionally.
+| Utility (`neu.css`) | Token | Use |
+|---------------------|-------|-----|
+| `.neu-raised-crisp` | `--sh-raised-crisp` | Small raised things: selected card, soft buttons, chips |
+| `.neu-raised` | `--sh-raised-medium` | Standard panels, `SectionRail` |
+| `.neu-raised-large` | `--sh-raised-large` | Hero bands, big floating surfaces |
+| `.neu-inset-super-crisp` | `--sh-inset-super-crisp` | Shallowest well: seg tracks, small icon wells, tags |
+| `.neu-inset-crisp` | `--sh-inset-crisp` | Inputs, the open search field, pressed states |
+| `.neu-inset` | `--sh-inset-medium` | Deeper wells |
+| `.neu-polished`, `.neu-polished-large` | `--sh-polished-*` | Hero surfaces with a lit edge, the active nav item |
+| `.glass`, `.glass-strong` | | Overlays only: phone sheets, profile menu, tweak panels |
 
-For pills and circles: `rounded-full` (infinite radius).
+Raised sits above the ground, inset is pressed into it. The shadow colors (`--neu-dark`, `--neu-light`)
+switch for dark mode by themselves. Popovers and menus use the solid `bg-popover`, not glass.
 
-### 4.5 Design System Token File
+### 2.5 Typography
 
-`client/src/styles/design-system.css` is the canonical token file for the warm-bone neumorphic system. It runs in parallel with `variables.css` — old tokens keep working, new tokens are available immediately on any page.
+| Role | Face | How |
+|------|------|-----|
+| Body and UI text | Manrope | `font-sans` / `var(--sans)` (the default) |
+| Headings and titles | Manrope bold | `h1` to `h6` get `font-heading font-bold tracking-tight` from `base.css` |
+| Labels and data | Geist Mono | `var(--mono)`, `.eyebrow`, `.eyebrow-sm`, and built into `.la-btn`, `.la-seg-btn`, `.la-status` |
 
-**Border Radius Scale** (snap all corners to these — never use ad-hoc px values):
+- **No serif in the CRM** (decided 2026-10-15). `--serif`, `--display`, `.serif` and `.display` are
+  legacy aliases that render Manrope. Don't use them in new code. The font imports still load
+  other faces (Playfair Display, Instrument Serif, Yeseva One): never use them in the CRM.
+- Page titles: one size, 20px, rendered by `PageTopbar`. Card names and widget titles: see UI_PATTERNS §25.
+- Mono is for eyebrows, labels, timestamps, counts, IDs, status pills and compact buttons. Not for sentences.
 
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--r-flush` | 6px | Wells, tracks, inset-crisp surfaces, tiny glyph tiles |
-| `--r-button` | 8px | Buttons, segmented controls, small action chips |
-| `--r-surface` | 11px | List rows, message balloons, mono tiles, raised chips |
-| `--r-card` | 16px | Cards and panels that carry a header |
-| `--r-panel` | 22px | Hero bands, modals, the largest floating surfaces |
-| `--r-pill` | 999px | Pills, toggles, circular icon buttons, avatars-as-pill |
+### 2.6 Motion
 
-**Spacing Scale** (8px base unit — use these for gap and padding):
-
-| Token | Value | Usage |
-|-------|-------|-------|
-| `--space-xxs` | 4px | Micro gaps |
-| `--space-xs` | 8px | Tight gaps |
-| `--space-sm` | 12px | Default inner padding |
-| `--space-md` | 16px | Standard padding |
-| `--space-lg` | 20px | Relaxed padding |
-| `--space-xl` | 24px | Section padding |
-| `--space-xxl` | 32px | Wide section padding |
-| `--space-section` | 80px | Full-bleed editorial bands only |
-
-**Breakpoints** (mirror the values used in `@media` queries and JS width checks):
-
-| Token | Value | Behavior |
-|-------|-------|----------|
-| `--bp-phone` | 768px | Below: mobile app (bottom tabs, sheets) |
-| `--bp-tablet` | 1024px | 768–1023: sidebar + stacked detail |
-| `--bp-desktop` | 1240px | Below 1240: Leads list collapses to icon rail |
-| `--bp-wide` | 1680px | 1680+: detail splits chat + summary columns |
-
-**Elevation Scale** (shadow tokens, defined in `design-system.css` `:root`):
-
-| Token | Usage |
-|-------|-------|
-| `--sh-raised-crisp` | Small raised surfaces, cards, buttons |
-| `--sh-raised-medium` | Medium depth — standard card elevation |
-| `--sh-raised-large` | Hero bands, modals, prominent floating surfaces |
-| `--sh-inset-crisp` | Inset wells, active pressed state |
-| `--sh-inset-medium` | Deeper wells |
-| `--sh-polished-medium` | Polished/hero surfaces with inner light edge |
-| `--sh-polished-large` | Large polished hero panels |
-
-**Responsive Behavior:**
-- Below `--bp-phone` (768px): mobile shell — bottom tab bar (`--bottombar-h: 64px`), full-screen panels, safe-area insets apply
-- 768–1023px: sidebar + stacked detail panel
-- 1024–1239px: full sidebar, Leads list icon rail
-- 1240–1679px: full Leads list + detail panel
-- 1680px+: detail panel splits into chat column + summary column
-
-**JSX inline style rule:** CSS vars in inline styles MUST be quoted strings:
-```jsx
-// Correct
-<div style={{ borderRadius: 'var(--r-card)', padding: 'var(--space-md)' }}>
-// Wrong (Babel syntax error)
-<div style={{ borderRadius: var(--r-card) }}>
-```
+- Never `transition-all`. Name the properties: `transition: background-color 150ms, color 150ms`.
+  Hover and press take 120 to 180ms, panels and sheets about 250ms.
+- Animate `transform` and `opacity`, not layout (`width`, `height`, `margin`). The app runs on a Raspberry Pi.
+- List entrance: `animate-card-enter` (or `animate-fade-in` on virtualized rows). Card selection scrolls smoothly (UI_PATTERNS §29).
 
 ---
 
-## 5. Component Patterns
+## 3. Components
 
-### 5.1 Shared UI Components
+Import primitives from `@/components/crm/primitives`. Markup and props: UI_PATTERNS §0, §13, §17.
 
-These components live in `client/src/components/ui/` and MUST be used instead of building custom equivalents:
+### 3.1 The topbar
 
-| Component | File | Purpose |
-|-----------|------|---------|
-| `IconBtn` | `icon-btn.tsx` | Circle button — `h-9 w-9`, `h-4 w-4` icons. Icon-only, no label. |
-| `ViewTabBar` | `view-tab-bar.tsx` | Tab switcher. Active tab: `h-9 px-3 rounded-full` with `--highlight-active` bg. |
-| `SearchPill` | `search-pill.tsx` | Expandable search input. Collapses to icon circle; expands on hover/focus/value. Use `open={true}` for always-expanded. |
-| ~~`ToolbarPill`~~ | `toolbar-pill.tsx` | **DEPRECATED.** Do not use. Replace with the expand-on-hover pattern (§24). |
-| All shadcn/ui | `components/ui/*` | Prefer existing components. Don't rebuild. |
+| Part | What it is |
+|------|------------|
+| `PageTopbar` | The 60px `.la-page-header` bar: `title`, `count`, `left`, `right`, `desktopOnly` (when the page has its own phone header), `scroll` (crowded bars on phones). |
+| `PillSwitch` | Round pill switch for page modes: Calls \| Settings, Chats \| Settings, Live \| Demo. Examples: `CallsPageTabs`, `ChatsPageTabs`. |
+| `TopbarTabs` | View tabs inside the work area (`la-seg` track, mono items, 13px icons). |
+| `ExpandingSearch` | The one search: a 36px round icon that opens into a pill field. `TranscriptSearch` (Calls) and the Leads `TopbarSearch` wrap it. Never add another search control. |
+| `TopbarIconButton` | Icon action: soft `la-btn la-btn--icon` with tooltip, `active` (wine dot when a filter, sort or group is set), `primary` (the wine `+`), `danger`. |
 
-### 5.2 Active & Selected States
+Menus opened from the right side use `align="end"`. Phone headers use `MobileListHeader` and may keep their own pattern.
 
-| State | Background | Text | Example Usage |
-|-------|------------|------|---------------|
-| Active tab/pill | `--wine-tint` (rgba wine 8%) | `--wine` | ViewTabBar active, nav active pill. |
-| Selected card | `--card` (white) + `--sh-raised-crisp` | `--foreground` | Campaign selected, leads selected. |
-| Selected row | `--wine-tint` | `--foreground` | Highlighted table row. |
-| Hover (warm) | `--wine-tint` | `--foreground` | Hover on cards, rows. |
-| Hover (neutral) | `--card-hover` (near-white) | `--foreground` | Default hover on cards, rows. |
-| Focus ring | `--primary` (deep wine #5E2230) | — | 2px outline, 2px offset. |
-| Primary button | `--wine-grad` (wine gradient) | white | CTA buttons, primary actions. |
-| KPI emphasis | `--warn` (amber #DA9426) | `--foreground` | Call Booked badge, sparklines. |
+### 3.2 Tabs and switches
 
-### 5.3 Cards & Panels
+- Page modes: `PillSwitch`. Views: `TopbarTabs`. Section menus down the side: `SectionRail` (3.6), never a hand-made menu.
+- Inside a panel, a hand-written `.la-seg` with `.la-seg-btn` items (`.on` for the active one) is fine.
+  Modifiers: `--pill`, `--fill`, `--lg`, `--touch` (readable, 36px-tall items on phones).
+- Page tabs and section rails remember the last tab per user: `useLastTab` (`hooks/useLastTab.ts`, on `lib/lastTab.ts`).
+  A link's `?tab=` / `?section=` wins; a stored tab the user may not see falls back to the default.
+- A page-level account picker (agency) sits in the topbar right after the tabs, never in a row above the content.
+  Calls and Chats > Settings portal it there through `ReceptionistSettings`' `pickerSlot`.
 
-- Cards float on `--card` (`#F8F8F8`) above the `--background` (`#DEDEDE`) canvas.
-- **Widget cards in detail/list views:** `bg-white/60 dark:bg-white/[0.10]` (semi-transparent white, lets gradient backgrounds show through).
-- **Highlighted widget cards** (Key Metrics, Financials): `bg-white dark:bg-white/[0.12]` (pure white, fully opaque for prominence).
-- No visible borders on cards — depth comes from color contrast.
-- Detail panel right sidebar (LeadInfoPanel): 288px wide (`w-72`).
-- Full slide-over panel (LeadDetailPanel): Sheet component.
-- Detail panel header bloom effect: use `--highlight-active` (`#FFF28D`), not lime yellow.
+### 3.3 Buttons
 
-**Never let a parent container clip a card's neumorphic shadow/highlight.** This bug recurs every time a new list panel is built:
-- Any flex child that scrolls (`overflow-y-auto`) must also have `overflow-hidden`'s sibling/ancestor wired with `min-h-0` — without it, the child refuses to shrink, overflows its flex parent, and the parent's `overflow-hidden` silently clips the raised/inset shadow on cards (usually only noticed on the selected/active card, since that's the one with the visible shadow). Audit pattern: `cn("flex-col h-full min-h-0 ... overflow-hidden", widthClass)` on the panel root, `flex-1 overflow-y-auto la-list-area` on the scroll child.
-- If a card needs its own `overflow-hidden` wrapper (e.g. for a swipe gesture), do **not** put the active-state `box-shadow` inside that wrapper — emit it on the wrapper's own inline style instead, or it gets clipped by its own clipping context. See `LeadListCard.tsx`'s outer swipe wrapper for the pattern.
-- Reference implementation with no clipping: the Calendar page's agenda cards (`DesktopCalendar.tsx`). When building a new neumorphic list/grid, copy its scroll-container structure, not just its shadow tokens.
+`.la-btn` plus one surface modifier, plus optional shape modifiers (`design-system.css`):
 
-### 5.4 Tables (DataTable pattern)
+| Class | Use |
+|-------|-----|
+| `.la-btn--wine` | The one primary action per view. |
+| `.la-btn--soft` | Secondary actions. Add `.on` for an applied filter or a toggled state. |
+| `.la-btn--inset` | Recessed utility button on the ground. |
+| `.la-btn--plain` | Text-only wine button. |
+| `.la-btn--icon` | Icon-only square, 32px. `TopbarIconButton` uses it. |
+| `.la-btn--lg`, `.la-btn--pill` | Larger label; fully round corners. |
 
-- Row height: `h-[52px]` (standard for all tables).
-- Hover: `bg-card` or similar neutral lift.
-- Selected: `bg-[var(--highlight-selected)]`.
-- Header: `py-2`, `text-muted-foreground`, `text-xs`, `font-medium`.
-- Skeleton loading rows: same `h-[52px]` height.
+- **Interactive circles are 36px** (`h-9 w-9`), with 16px icons (`h-4 w-4`). No sm/md/lg variants.
+  For a round icon-only button outside the topbar use `IconBtn` (`components/ui/icon-btn.tsx`).
+  Square icon actions (`.la-btn--icon`) stay 32px. Never make them round (`la-btn--icon la-btn--pill`).
+- Every clickable thing has hover, focus-visible (the global `--ring` outline), active and disabled states.
 
-### 5.5 Forms & Inputs
+### 3.4 The list card (Chats behaviour)
 
-- Input background: `--input` (same as `--muted`, `#E3E3E3`).
-- Focus: 2px ring in `--brand-indigo`.
-- No visible borders at rest — background differentiation only.
-- Radius: inherits global `--radius` (24px).
+One list card everywhere: **flat until selected.**
+- Markup: `.la-camp-card`, plus `.active` on the selected row, inside `.la-list-area > .la-cards` (3px gap).
+- At rest: transparent, `--wine-tint` on hover. Selected: `--card` white, `--sh-raised-crisp`, and a
+  3px wine bar on the left. A `.la-mono-tile` inside goes inset while the card is not active.
+- On phones every card is raised and the gap grows to 10px. The CSS does this, add nothing.
+- References: `VoiceCallListCard` (Calls), `LeadListCard` (Chats), `WorkspaceAccountCard` (Accounts).
+- `<ListCard>` renders the same `.la-camp-card` look for rows with free-form content (it drops the
+  class's flex row and pads itself, or not with `padded={false}`). Used by `EntityListView`, the
+  Outreach inbox prospect rows, `ThreadList` and the studio `ScriptCard`. `hoverShadow` is a no-op now.
+- Tables: rows are `.la-lead-row` (add `.is-selected`), `h-[52px]`.
 
----
+### 3.5 Minimizing the list
 
-## 6. Interactive States
+- `useListPanelState()` (`hooks/useListPanelState.ts`) is the one shared state for every list page:
+  `"full" | "compact" | "hidden"`, remembered across pages.
+- The fold button sits in the topbar `left` slot: a `TopbarIconButton` with `PanelLeftClose` / `PanelLeft`,
+  or `ListPanelToggleButton` to cycle all three states.
+- In `"compact"` the list becomes an avatar rail built from `components/crm/CompactEntityRail`
+  (`COMPACT_RAIL_WIDTH`, `useCompactHoverCard`, `CompactHoverCardPortal` shows the full card on hover).
+  Example: `CompactCallRail` on Calls.
 
-Every clickable element MUST have all four states:
+### 3.6 Side tabs for sections
 
-| State | Treatment |
-|-------|-----------|
-| **Default** | Base styling. |
-| **Hover** | `filter: brightness(1.08)` and/or subtle shadow via `hover-elevate` utility. |
-| **Active/Press** | `transform: scale(0.97)`, `filter: brightness(0.95)` via `active-elevate-2` utility. |
-| **Focus-visible** | `outline: 2px solid hsl(var(--ring)); outline-offset: 2px;` (keyboard only). |
-| **Disabled** | `opacity: 0.35`, `cursor: not-allowed`. |
+From `@/features/accounts/components/workspace/SectionRail`:
+- `SectionLayout`: a 220px sticky rail beside the open section on desktop, a grid above it on phones (`stacked`).
+- `SectionRail`: one tile per section (icon, label, one-line detail, optional state dot `on` / `pending` / `off`).
+  The open tile is white with a wine bar.
+- `SectionHeader`: the numbered heading at the top of a section.
+- Used by:
+  - Settings (`pages/Settings.tsx`).
+  - Calls > Settings and Chats > Settings: the receptionist settings (`receptionist/ReceptionistSettings`,
+    `voice/VoiceTab` + `VoiceRail`, `chat/ChatTab`).
+  - Accounts > Alerts (`alerts/AlertsTab`) and Accounts > Automations (`ClientAutomationsTab`, via `AutomationRail`).
+  - Automation logs (`pages/AutomationLogs.tsx`, via `features/automation/components/AutomationRail`).
+  - Demo settings (`features/demos/components/DemoSettingsTab`).
+  - Campaign settings (`features/campaigns/components/settings/CampaignSettingsLayout`, inside
+    `CampaignStageEditor`). Self-contained, so it opens the same in Accounts > Reactivation, Demos > Settings
+    and on the hidden Campaigns page.
 
----
+### 3.7 Create and edit: right-hand panel
 
-## 7. Animation & Transitions
+- Create, add and edit open a panel inside the layout, with no backdrop. On phones, a full-screen panel or `MobileSheet`.
+- Anatomy: header (title + close), scrolling body, sticky footer (Cancel, Save). UI_PATTERNS §14.
+- Wrap the form body in `.neu-panel`: inputs and selects become inset wells. Standalone inputs use `.neu-input`.
+- References: `ContractCreatePanel`, `InvoiceCreatePanel`, `ExpenseCreatePanel`, `AccountCreatePanel`, `ProspectCreatePanel`.
 
-### 7.1 Duration Tiers
+### 3.8 Dialogs, popovers, menus
 
-| Tier | Duration | Usage |
-|------|----------|-------|
-| `--t-micro` | 150ms | Color, opacity, hover states (buttons, badges, inputs, table rows). |
-| `--t-standard` | 200ms | UI open/close (dialogs, dropdowns, popovers, tooltips). |
-| `--t-panel` | 250ms | Larger slides (sheets, sidebar, panels, drawers). |
-| `--t-page` | 220ms | Full page transitions. |
+- **Dialogs only for destructive confirmations** ("Delete this account?"), with `AlertDialog`.
+- Lighter confirmations: the inline confirm popover (UI_PATTERNS §30).
+- Option menus, filters and sorts: `Popover` or `DropdownMenu`. They paint `bg-popover`, which is
+  white in light mode and charcoal in dark. Never force `bg-white` on them.
 
-### 7.2 Easing
+### 3.9 Other shared parts
 
-| Curve | Value | Usage |
-|-------|-------|-------|
-| `--ease-default` | `cubic-bezier(0.25, 0.1, 0.25, 1)` | All standard transitions. |
-| `--ease-bounce` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Toggle/checkbox micro-interactions. |
+| Part | Use |
+|------|-----|
+| `GroupHeader` | Sticky divider in grouped lists (label + count). UI_PATTERNS §24. |
+| `SectionCard` | Detail sections, widget shells, kanban columns. |
+| `Pill` | Label or status badge in a soft tint of a color. |
+| `.la-status` + `.dot` | Mono status pill. Modifiers `.active-s`, `.paused`, `.inactive`. |
+| `EntityAvatar` | Every person or account circle, colored from `avatarUtils.ts`. UI_PATTERNS §23. |
+| `.eyebrow` | Mono uppercase label above a value or section. |
 
-### 7.3 Rules
-
-- **NEVER** use `transition-all`. Always specify exact properties: `transition: background-color 150ms ease, color 150ms ease`.
-- Only animate `transform` and `opacity` for GPU acceleration. Avoid animating `width`, `height`, `margin`, `padding`.
-- Performance-first: this app runs on Raspberry Pi. No heavy animations.
-- Use `will-change` sparingly and only on elements that actually animate.
-
-### 7.4 Named Keyframes (index.css)
-
-| Class | Keyframe | Duration | Easing | Usage |
-|-------|----------|----------|--------|-------|
-| `animate-card-enter` | `card-enter` — fade + `translateY(6px→0)` | 220ms | `ease-out` | Left-panel card list stagger on load |
-| `animate-fade-in` | `fade-in` — opacity only | 220ms | `ease-out` | Virtualized list items (no transform conflict) |
-| `animate-bubble-left` | `bubble-enter-left` — fade + `translateX(-8px→0)` | 200ms | `ease-out` | Inbound chat bubbles |
-| `animate-bubble-right` | `bubble-enter-right` — fade + `translateX(8px→0)` | 200ms | `ease-out` | Outbound chat bubbles |
-| `animate-panel-slide-up` | `panel-slide-up` — fade + `translateY(12px→0)` | 250ms | `cubic-bezier(0.22,1,0.36,1)` | Reserved — do not use for card selection (see §29) |
-
-### 7.5 Card Selection Scroll
-
-Selecting a card in a split-pane left panel **smoothly scrolls** the list to bring that card to the top — it never jumps. See **§29** for the full standard and reference implementation.
-
----
-
-## 8. Glassmorphism
-
-Glassmorphism is permitted in the neumorphic warm-bone design system. Use `.glass` (55% opacity warm white + backdrop-blur 22px + 12px radius) and `.glass-strong` (75% opacity + blur 28px + warm ambient glow + 14px radius) for:
-- Mobile bottom sheets and overlays
-- Tweak/config panels
-- Profile dropdown menus
-
-For functional UI (popovers, dialogs, dropdowns), prefer solid `.neu-raised` cards over glass.
-The old blanket ban is retired — the new glass tokens are defined in `neu.css` and use the
-warm-bone palette rather than cold transparency.
+`ToolbarButton`, the `xBase` / `xDefault` / `xActive` strings, `SearchPill`, `ViewTabBar` and
+`ToolbarPill` are the retired Style B toolbar (UI_PATTERNS §28). Don't use them in new code.
 
 ---
 
-## 9. Coding Rules
+## 4. Layout
 
-### 9.1 Mandatory
+### 4.1 Page shell
 
-1. **Use CSS variables for all brand colors.** Never hardcode a hex in component files — use the token (`bg-primary`, `text-primary`, or `hsl(var(--primary))`). Values live in `variables.css`.
-1b. **Compose a surface primitive for list/card/panel/pill UI** (`ListCard`, `GroupHeader`, `SectionCard`, `Pill` from `@/components/crm/primitives`). Don't hand-roll the surface — see §2.25.
-2. **Use `apiFetch`** from `@/lib/apiUtils` for data requests. **Use `apiRequest`** from `queryClient.ts` for mutations.
-3. **Use existing shadcn/ui components.** Don't rebuild dialogs, buttons, dropdowns, etc.
-4. **Use `IconBtn`** for all icon-only buttons. Don't create custom circle buttons.
-5. **Follow feature-based folder structure:** `client/src/features/{domain}/`.
-6. **Respect database field names exactly:** `Conversion_Status`, `Accounts_id`, `full_name_1`, etc.
-7. **Include `credentials: "include"`** on all API calls (handled by `apiFetch`/`apiRequest`).
-8. **Always invoke the `frontend-design` skill** before writing any frontend code.
+- `CrmShell` adds no padding. Every page starts with `.la-page` (full-height flex column) and a
+  `PageTopbar`. No negative-margin hacks.
+- Full-height columns: the parent gets `overflow-hidden min-h-0`, each column `min-h-0 overflow-y-auto`.
+- Don't let a parent clip a card's shadow. Keep the `min-h-0` chain intact, and never put the selected
+  card's shadow inside its own `overflow-hidden` wrapper. Reference: `DesktopCalendar.tsx`.
 
-### 9.2 Forbidden (NEVER DO)
+### 4.2 Width
 
-1. **NEVER** use `#FFF375`, `#FFF6C8`, or any lime/chartreuse yellow. These are banned.
-2. **NEVER** hardcode a brand hex (`#4F46E5`, `#8D354B`, `#5170FF`, …) in a component. Use the token (`primary` / `--primary`). The accent is defined once in `variables.css`.
-2b. **NEVER** hand-roll `rounded-*`, `shadow-*`, or padding on a list card / group header / panel. Compose the primitive (§2.25) so a global re-skin stays a single CSS edit.
-3. **NEVER** use `transition-all`. Specify exact properties.
-4. **NEVER** use default Tailwind palette colors (`blue-500`, `yellow-400`, etc.) for brand elements. Use CSS variable-based classes.
-5. **NEVER** add new npm packages without explicit user approval.
-6. **NEVER** modify backend/Express server code.
-7. **NEVER** modify landing/marketing pages (pre-login).
-8. **NEVER** use raw `fetch()` — always go through `apiFetch` or `apiRequest`.
-9. **NEVER** use icons larger than `h-4 w-4` (16px) inside circle buttons or smaller than `h-4 w-4`.
-10. **NEVER** create button size variants (sm, md, lg). Everything is 36px (`h-9`).
-11. **NEVER** use `Dialog` / backdrop-modal components for create/edit forms, add-item flows, or option menus. These darken and blur the surrounding UI and are banned. Use instead:
-    - **Right-panel** (inline, no overlay — same layout as `ContractCreatePanel` / `InvoiceCreatePanel` / `ExpenseCreatePanel`) for create/edit forms.
-    - **`Popover`** for lightweight option menus (sort, filter, quick actions).
-    - **Inline expansion** (accordion, collapsible row) for contextual forms within a list.
-    - `Dialog` is **only** permitted for destructive confirmation prompts (e.g. "Confirm delete?").
+- **List pages** (a list panel beside a detail panel: Chats, Leads, Calls, Accounts, Billing, Calendar): `max-w-[1386px] mr-auto` on the **outer flex child**, never an inner wrapper. In a grid,
+  cap the column instead: `minmax(0,1386px)`.
+- **Single-column pages** (Stats, Demos, Social, settings-style pages): `.la-page-center`
+  on the content column **inside** the scroll container, so the scrollbar stays at the window edge.
+- Details and the mistakes to avoid: `docs/content-width-cap.md`.
+- List panel width: `--toolbar-w` (300px).
 
-### 9.3 Anti-Generic Guardrails
+### 4.3 Breakpoints and mobile
 
-These rules prevent the UI from looking like generic AI-generated output:
+Breakpoint tokens (they mirror the values used in media queries and JS, which can't read them):
+`--bp-phone` 768px (below it: the phone app), `--bp-tablet` 1024px, `--bp-desktop` 1240px, `--bp-wide` 1680px.
 
-- No default Tailwind blue (`blue-500`/`blue-600`). Only deep wine (`#5E2230`, `--primary`).
-- Neumorphic shadows over generic `shadow-md`. Use `.neu-raised`, `.neu-inset`, `.neu-polished`, etc.
-- Fonts: Manrope for headings and body, Geist Mono for labels/data. No serif.
-- No gratuitous gradients. If you use a gradient, use `--wine-grad` for wine or the `.neu-polished` radial overlay for hero surfaces.
-- Every clickable needs hover + focus + active states. No exceptions.
+- **Breakpoint 768px.** Tailwind `md:` / `max-md:`, `@media (max-width: 767px)`, and
+  `useIsMobile(768)` from `hooks/useIsMobile.ts` (always pass 768: its default is 640).
+- **Additive only.** A mobile fix never changes the desktop layout. Use `max-md:`, `md:hidden` or a media query.
+- **Safe areas.** Use `--safe-top` and `--safe-bottom` (the env insets). Clear the bottom tab bar with `--bottombar-h`.
+- Phone parts: `MobileListHeader`, `MobileTabSeg`, `MobileHeaderIconBtn`, `MobileSheet` (the Back button closes it first).
+- Detail views open full screen with a back button. Touch targets are at least 36px.
 
 ---
 
-## 10. CSS Utilities Reference
+## 5. Code conventions that touch the UI
 
-These custom utilities are defined in `index.css` and available globally:
-
-| Utility | Purpose |
-|---------|---------|
-| `icon-circle-lg` | 36px circle container (h-9 w-9, flex, centered). |
-| `icon-circle-base` | Border + hover/active/focus states for icon circles. |
-| `icon-circle-selected` | Brand-indigo filled circle (selected state). |
-| `toolbar-pill-base` | 36px-tall text pill with border + states. |
-| `toolbar-pill-active` | Active state modifier for toolbar pills. |
-| `hover-elevate` | Brightness lift + shadow on hover. |
-| `active-elevate-2` | Press-down scale on active. |
-| `micro-check` | Checkbox tick bounce animation. |
-| `micro-icon-hover` | Icon button hover scale. |
-| `glass-overlay/divider/accent/surface/nav` | Glassmorphism utilities. |
-| `scrollbar-hide` | Hides scrollbar (keeps scroll functional). |
-| `scrollbar-visible` | Shows thin styled scrollbar. |
+- Data: `apiFetch` (`lib/apiUtils.ts`) for reads, `apiRequest` (`lib/queryClient.ts`) for mutations. Never raw `fetch()`.
+- Features live in `client/src/features/{domain}/`. Pages are `React.lazy` imports (see `CLAUDE.md`).
+- List pipelines: `buildEntityRows()` / `groupItemsToMap()` from `components/crm/entityList/`.
+- Reuse the shadcn components in `components/ui/`. No new npm packages without Gabriel's approval.
 
 ---
 
-## 11. Leads Views Reference
+## 6. One home per thing
 
-The Leads feature has three views managed by `LeadsTable.tsx`:
-
-| View | Component | Layout |
-|------|-----------|--------|
-| List (default) | `LeadsCardView.tsx` | D365-style split-pane: compact lead list left + detail panel right. |
-| Table | `LeadsInlineTable.tsx` | Full-width data table + `LeadInfoPanel` (288px sidebar). |
-| Kanban | `LeadsKanban.tsx` | Pipeline columns. Supports `onCardClick` + `selectedLeadId`. |
-
-- `LeadInfoPanel.tsx`: Right sidebar in Table view / Kanban card click. 288px wide.
-- `LeadDetailPanel.tsx`: Full slide-over Sheet for deep editing / interaction timeline.
-
----
-
-## 12. Dark Mode Notes
-
-**Dark mode is deferred.** The `.dark` overrides have been removed from `variables.css`. The
-current design system targets light mode only (warm-bone neumorphic). Dark mode equivalents
-will be added as a separate follow-up phase after the full warm-bone migration is approved
-and stabilized. The themed color variables (`bg-card`, `text-foreground`, etc.) still work —
-they just render the light-mode values regardless of user preference for now.
+- **A lead opens in one place:** the Chats page detail, `/platform/chat?lead=<id>`. Link to it with
+  `leadPath()` or navigate with `openLead()`, both from `lib/leadLink.ts`. The old `/platform/leads` and
+  `/platform/contacts/:id` only redirect there. Don't add another lead detail route.
+- **Channel pages** (Calls, Chats) are **work | Settings** for that channel, as a `PillSwitch`
+  in the topbar. Their figures live on the one Stats page (`/platform/home`); Socials keeps its own Insights. Per-account receptionist settings live in the channel's Settings view
+  (`?view=settings&account=`).
+- **Accounts** is the business and its connections: Overview, Reactivation (agency only, when the
+  account has a reactivation campaign), Integrations, Alerts, Automations (owner only). One-time
+  plumbing (numbers, WhatsApp, calendar, integrations) stays in Accounts > Integrations.
+- **Campaigns** are data, not a page. Each kind of campaign is edited where it lives: Accounts >
+  Reactivation (reactivation campaigns) and Demos > Settings (the demo campaigns) open the one campaign
+  settings screen (`CampaignStageEditor`); Chats > Settings > Advanced (`chat/ChatAdvanced`) edits the
+  receptionist campaign's engine fields with the same `formFields` inputs. The old Campaigns page is
+  retired: out of the nav, agency only at `/platform/campaigns` by URL.
+- **Settings** is the person: Profile, Security, Preferences, Notifications, Users, and Billing for clients.
+- **Alerts** decides which events are sent and to whom.
+- A page title uses the same i18n string as its nav label. Unfinished pages stay hidden until they are finished.
 
 ---
 
-## 13. File Locations
+## 7. i18n
 
-| What | Path |
-|------|------|
-| CSS variables & utilities | `client/src/index.css` |
-| All shadcn/ui components | `client/src/components/ui/` |
-| IconBtn | `client/src/components/ui/icon-btn.tsx` |
-| ViewTabBar | `client/src/components/ui/view-tab-bar.tsx` |
-| ToolbarPill | `client/src/components/ui/toolbar-pill.tsx` |
-| SearchPill | `client/src/components/ui/search-pill.tsx` |
-| API helpers | `client/src/lib/apiUtils.ts`, `client/src/lib/queryClient.ts` |
-| Feature modules | `client/src/features/{domain}/` |
-| Route pages | `client/src/pages/` |
-| Full file index | `FILE_MAP.md` (project root) |
+- Every user-facing string goes through `t()`: labels, toasts, empty states, placeholders, `aria-label`, `title`, `alt`.
+- Locales: `client/src/locales/en/`, `nl/`, `pt/` (`pt` is Brazilian Portuguese). Add the key to all three.
+- No text in module-level constants or helper functions that run outside a component. Store keys and translate them at render.
 
 ---
 
-## Implementation Patterns (§14–§30)
+## 8. Bans
 
-> **Detailed implementation patterns, exact markup, and code-level references have been moved to [`UI_PATTERNS.md`](UI_PATTERNS.md).**
-> This keeps `UI_STANDARDS.md` focused on rules, tokens, and design decisions (the "what" and "why").
-> `UI_PATTERNS.md` contains the "how" — copy-pasteable markup, exact class strings, and reference implementations.
+1. **No raw colors in components:** no hex, no `rgb()`, no `bg-white`, no `text-black`, no Tailwind
+   palette colors (`blue-500`, `indigo-600`, `yellow-400`, `gray-*`). Use tokens. Hex belongs only in
+   `variables.css` and the status maps in `avatarUtils.ts`.
+2. **No `transition-all`.**
+3. **No Tailwind shadows** (`shadow-sm`, `shadow-md`, `shadow-lg`). Use the `neu-*` utilities or `--sh-*` tokens.
+4. **No `Dialog` for create, edit, add or menus.** Dialogs are for destructive confirmations only.
+5. **No hand-rolled page parts:** no hand-written header bar, second search control, custom tab track,
+   custom side menu or custom list-card shell. Use the parts in section 3.
+6. **No serif faces** in the CRM, and no `.serif`, `.display`, `--serif` or `--display` in new code.
+7. **No size variants** for buttons or circles. Circles are 36px with 16px icons.
+8. **No hardcoded strings.**
+9. **No mixed color formats** (`hsl(var(--wine))`, `var(--primary)` used as a color).
+10. **No retired styles:** indigo, blue or lime/yellow accents, `--brand-*` aliases in new code, Style B toolbars.
+11. **No desktop changes for a mobile fix,** and no width cap on an inner wrapper.
+12. **No glass or blur behind functional UI** (popovers, menus, forms). Glass is for phone sheets and overlays.
 
-### Quick Reference — Pattern Index
+---
 
-| Section | Topic | Key Rule (read `UI_PATTERNS.md` for markup) |
-|---------|-------|----------------------------------------------|
-| §14 | Interaction Patterns | **No backdrop dialogs.** Use right-panels for create/edit, Popovers for menus. `Dialog` only for destructive confirms. |
-| §15 | Lead Card Standard | Default `bg-[#F1F1F1]`, selected `bg-[#FFF9D9]`, `gap-[3px]` between cards, virtualized lists use `gap: 3` on virtualizer. Tag/label pills: `rgba(0,0,0,0.09)` unselected, `rgba(255,255,255,0.75)` selected — always inline `style`, never Tailwind bg classes. |
-| §16 | Left Panel Standard | `w-[340px]`, header `px-3.5 pt-5 pb-1`, controls `px-3 pt-1.5 pb-3 gap-1.5`. Always `IconBtn`. Account/Campaign pills banned. |
-| §17 | Table Toolbar | All buttons use expand-on-hover (§28). `SearchPill` for search. Selection actions inline via `ml-auto`. |
-| §18 | Calendar Layout | Left panel: Monthly\|Weekly\|Daily. Yellow active tabs. Main toolbar: only `← date →` + Today. |
-| §19 | Modal & Overlay Policy | **BANNED:** glass/blur overlays, dark modals for editing. Use `bg-white` tooltip-style panels. |
-| §20 | Settings Page | Left nav `w-[200px]`, active section `bg-[var(--highlight-active)]`. |
-| §21 | Campaign Detail | Gradient header, toolbar row, tab row (Summary\|Config\|Tags), date range pill bar. |
-| §22 | Popups & Fields | **NEVER** darken/blur behind popups. Fields: `bg-input-bg`, no outlines, subtle `ring-brand-indigo/20` focus. |
-| §23 | Avatar Standard | Always `EntityAvatar` + `avatarUtils.ts`. Photo > initials. Sizes: 36/34/72/28px. |
-| §24 | Group Headers | `sticky top-0 z-30 bg-muted`. Centered label – count with decorative lines. Title case, no `uppercase`. |
-| §25 | Typography | Card names + widget titles: `text-[16px] font-semibold font-heading`. No other sizes. |
-| §26 | ViewTabBar Position | `w-[309px] shrink-0 justify-between` wrapper. Same position across all views. |
-| §27 | Table Group Headers | 3-cell `<tr>`: checkbox (36px) + label + spacer. `PIPELINE_HEX` tinted backgrounds. |
-| §28 | Expand-on-Hover Buttons | `xBase`/`xDefault`/`xActive`/`xSpan` constants. `pl-[9px]` centering. `ToolbarPill` deprecated. |
-| §29 | Card Selection Scroll | `scrollTo({ behavior: "smooth" })`. `useLayoutEffect`. Detail panel: no remount, no `key`. |
-| §30 | Inline Confirm Tooltip | `Popover` with `bg-white rounded-xl`. No dark overlay. Cancel + Confirm buttons. `AlertDialog` only for hard deletes. |
+## 9. Known debt
 
-### Dropdown & Popover Background Rule
+Fix these when you touch a file. Don't copy them.
+- `bg-white` in about 100 files, `transition-all` in about 24, `shadow-md` in about 19, and `Dialog`s
+  for create/edit (Wave 3 of the handover plan lists them).
+- `IconBtn`'s selected state reads `--brand-indigo` (it renders wine).
 
-**All dropdowns, popovers, and tooltips must use `bg-white`** — never `bg-popover`, `bg-background`, or theme-variable backgrounds. This ensures consistent white surfaces across all floating UI.
+---
+
+## 10. File map
+
+| What | Where |
+|------|-------|
+| Colors (light + dark) | `client/src/styles/variables.css` |
+| Geometry, shadows, component classes | `client/src/styles/design-system.css` |
+| Neumorphic utilities | `client/src/styles/neu.css` |
+| List classes | `client/src/styles/components.css` |
+| Primitives | `client/src/components/crm/primitives/` (`index.ts`) |
+| Side tabs | `client/src/features/accounts/components/workspace/SectionRail.tsx` |
+| List minimize | `client/src/hooks/useListPanelState.ts`, `client/src/components/crm/CompactEntityRail/` |
+| Phone parts | `client/src/components/crm/mobile/` |
+| Markup and props | `UI_PATTERNS.md` |
+| Width rule | `docs/content-width-cap.md` |
+| Agreed decisions | `docs/superpowers/plans/2026-10-22-crm-unification-and-handover.md` |

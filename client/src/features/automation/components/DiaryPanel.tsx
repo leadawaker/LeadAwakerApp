@@ -4,7 +4,7 @@ import { useLocation } from "wouter";
 import { X, NotebookPen } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { setPersistedSelection } from "@/hooks/usePersistedSelection";
+import { openLead as openLeadHome } from "@/lib/leadLink";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { cn } from "@/lib/utils";
 import { findEntry } from "@shared/automationCatalogue";
@@ -52,10 +52,7 @@ export function DiaryPanel({ automationId, accountId: fixedAccountId, row, onClo
   const openFailures = shown.filter((l) => l.outcome === "failed" && !l.resolvedAt).length;
 
   const resetPaging = () => { setPage(1); setLines([]); };
-  const openLead = (leadId: number) => {
-    setPersistedSelection("selected-lead-id", leadId);
-    setLocation("/platform/leads");
-  };
+  const openLead = (leadId: number) => openLeadHome(setLocation, leadId);
 
   const entry = findEntry(automationId);
   const Icon = SERVICE_ICON[entry?.service ?? "unlisted"];

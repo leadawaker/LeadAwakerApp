@@ -7,7 +7,6 @@ import { CrmShell } from "@/components/crm/CrmShell";
 import { usePersistedSelection, setPersistedSelection } from "@/hooks/usePersistedSelection";
 import { useBreadcrumb } from "@/contexts/BreadcrumbContext";
 import { CampaignListView } from "../components/CampaignListView";
-import { CampaignDetailPanel } from "../components/CampaignDetailPanel";
 import { useCampaignsData } from "../hooks/useCampaignsData";
 import { useCampaignMetrics } from "@/hooks/useApiData";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -15,7 +14,7 @@ import type { Campaign } from "@/types/models";
 import { useTopbarActions } from "@/contexts/TopbarActionsContext";
 import { cn } from "@/lib/utils";
 import { xBase, xDefault, xSpan } from "@/components/crm/primitives";
-import { apiFetch } from "@/lib/apiUtils";
+import { syncNicheTemplate, cloneDefaultTags } from "../lib/campaignWrites";
 import { createCampaign, deleteCampaign, updateCampaign, fetchCampaignPreflight } from "../api/campaignsApi";
 import { useToast } from "@/hooks/use-toast";
 import { ApiErrorFallback } from "@/components/crm/ApiErrorFallback";
@@ -135,9 +134,6 @@ function CampaignsContent() {
   const setFilterStatus = useCallback((v: string[] | ((p: string[]) => string[])) => setListPrefs(p => ({ ...p, filterStatus: typeof v === "function" ? v(p.filterStatus) : v })), [setListPrefs]);
   const setListFilterAccount = useCallback((v: string) => setListPrefs(p => ({ ...p, filterAccount: v })), [setListPrefs]);
   const setShowDemoCampaigns = useCallback((v: boolean | null) => setListPrefs(p => ({ ...p, showDemoCampaigns: v })), [setListPrefs]);
-
-  const [editPanelOpen, setEditPanelOpen] = useState(false);
-  const [editCampaign, setEditCampaign] = useState<Campaign | null>(null);
 
   // ── Workspace & data ───────────────────────────────────────────────────────
   const { currentAccountId, isAgencyUser } = useWorkspace();
@@ -281,16 +277,6 @@ function CampaignsContent() {
     setSelectedCampaign(campaign);
   }, []);
 
-  const handleEditCampaign = useCallback((campaign: Campaign) => {
-    setEditCampaign(campaign);
-    setEditPanelOpen(true);
-  }, []);
-
-  const handleCloseEditPanel = useCallback(() => {
-    setEditPanelOpen(false);
-    setEditCampaign(null);
-  }, []);
-
   const handleToggleStatus = useCallback(async (campaign: Campaign) => {
     const cid = campaign.id || campaign.Id;
     const newStatus = String(campaign.status) === "Active" ? "Paused" : "Active";
@@ -329,36 +315,8 @@ function CampaignsContent() {
 
     // When business profile fields are saved, write them back to the niche
     // template so future campaigns pre-fill with the latest values.
-    const niche = String(patch.niche ?? campaigns.find((c) => c.id === id || c.Id === id)?.niche ?? "").trim();
-    const hasBusinessFields = "company_name" in patch || "description" in patch || "kb" in patch;
-    if (niche && hasBusinessFields && isAgencyUser) {
-      try {
-        const toTemplate = (raw: unknown): { nl: string; en: string } | undefined => {
-          if (!raw) return undefined;
-          const s = String(raw).trim();
-          if (s.startsWith("{")) {
-            try { return JSON.parse(s); } catch { /* ok */ }
-          }
-          return s ? { nl: s, en: s } : undefined;
-        };
-        const body: Record<string, unknown> = {};
-        if ("company_name" in patch) {
-          const v = String(patch.company_name ?? "").trim();
-          if (v) body.companyNameTemplate = { nl: v, en: v };
-        }
-        if ("description" in patch) body.descriptionTemplate = toTemplate(patch.description);
-        if ("kb" in patch) body.kbTemplate = toTemplate(patch.kb);
-        if (Object.keys(body).length) {
-          await fetch(`/api/niche-vocabulary/${encodeURIComponent(niche)}/template`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-        }
-      } catch {
-        // Non-critical — best-effort template sync.
-      }
-    }
+    const niche = String(patch.niche ?? campaigns.find((c) => c.id === id || c.Id === id)?.niche ?? "");
+    if (isAgencyUser) await syncNicheTemplate(niche, patch);
   }, [setCampaigns, campaigns, isAgencyUser]);
 
   // ── List-view control helpers ──────────────────────────────────────────────
@@ -438,46 +396,7 @@ function CampaignsContent() {
         setSelectedCampaign(newCampaign);
 
         // Auto-create default tags by cloning from the campaign with the most tags
-        try {
-          const tagsRes = await apiFetch("/api/tags");
-          if (tagsRes.ok) {
-            const allTags: any[] = await tagsRes.json();
-            if (Array.isArray(allTags) && allTags.length > 0) {
-              const byCampaign = new Map<number, any[]>();
-              allTags.forEach((t) => {
-                if (t.campaign_id && t.campaign_id !== campaignId) {
-                  if (!byCampaign.has(t.campaign_id)) byCampaign.set(t.campaign_id, []);
-                  byCampaign.get(t.campaign_id)!.push(t);
-                }
-              });
-              let templateTags: any[] = [];
-              byCampaign.forEach((tags) => {
-                if (tags.length > templateTags.length) templateTags = tags;
-              });
-              if (templateTags.length > 0) {
-                const campaignName = newCampaign.name || t("newCampaignName", "New campaign");
-                await Promise.allSettled(
-                  templateTags.map((tag) =>
-                    apiFetch("/api/tags", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        name: tag.name,
-                        color: tag.color,
-                        category: tag.category,
-                        description: tag.description,
-                        campaign_id: campaignId,
-                        campaign_name: campaignName,
-                      }),
-                    }),
-                  ),
-                );
-              }
-            }
-          }
-        } catch (tagErr) {
-          console.error("Failed to auto-create default tags:", tagErr);
-        }
+        await cloneDefaultTags(campaignId, newCampaign.name || t("newCampaignName", "New campaign"));
       }
     } catch (err) { console.error("Create campaign failed", err); }
   }, [handleRefresh, setSelectedCampaign, t]);
@@ -495,61 +414,50 @@ function CampaignsContent() {
   }
 
   return (
-    <>
-      <div className="la-page" data-onboarding="campaigns-list">
-        <div className="flex-1 overflow-hidden relative">
-          <CampaignListView
-            campaigns={campaigns}
-            metrics={metrics}
-            loading={loading}
-            selectedCampaign={selectedCampaign}
-            onSelectCampaign={handleSelectCampaign}
-            onEditCampaign={isAgencyUser ? handleEditCampaign : () => {}}
-            onToggleStatus={isAgencyUser ? handleToggleStatus : () => {}}
-            onSave={isAgencyUser ? handleSaveCampaign : async () => {}}
-            onCreateCampaign={isAgencyUser ? handleAddCampaign : () => {}}
-            onRefresh={handleRefresh}
-            onDelete={isAgencyUser ? handleDeleteCampaign : undefined}
-            onDuplicate={isAgencyUser ? handleDuplicateCampaign : undefined}
-            // Detail tab
-            detailTab={detailTab}
-            onDetailTabChange={setDetailTab}
-            // Lifted controls
-            listSearch={listSearch}
-            onListSearchChange={setListSearch}
-            searchOpen={searchOpen}
-            onSearchOpenChange={setSearchOpen}
-            groupBy={groupBy}
-            onGroupByChange={setGroupBy}
-            groupDirection={groupDirection}
-            onGroupDirectionChange={setGroupDirection}
-            sortBy={sortBy}
-            onSortByChange={setSortBy}
-            filterStatus={filterStatus}
-            onToggleFilterStatus={toggleFilterStatus}
-            onFilterStatusSet={setFilterStatus}
-            filterAccount={listFilterAccount}
-            onFilterAccountChange={setListFilterAccount}
-            availableAccounts={availableAccounts}
-            showDemoCampaigns={showDemoCampaigns}
-            onShowDemoCampaignsChange={isAgencyUser ? setShowDemoCampaigns : () => {}}
-            hasNonDefaultControls={hasNonDefaultControls}
-            isGroupNonDefault={isGroupNonDefault}
-            isSortNonDefault={isSortNonDefault}
-            onResetControls={handleResetControls}
-            initialSettingsSection={initialSettingsSection}
-          />
-        </div>
+    <div className="la-page" data-onboarding="campaigns-list">
+      <div className="flex-1 overflow-hidden relative">
+        <CampaignListView
+          campaigns={campaigns}
+          metrics={metrics}
+          loading={loading}
+          selectedCampaign={selectedCampaign}
+          onSelectCampaign={handleSelectCampaign}
+          onToggleStatus={isAgencyUser ? handleToggleStatus : () => {}}
+          onSave={isAgencyUser ? handleSaveCampaign : async () => {}}
+          onCreateCampaign={isAgencyUser ? handleAddCampaign : () => {}}
+          onRefresh={handleRefresh}
+          onDelete={isAgencyUser ? handleDeleteCampaign : undefined}
+          onDuplicate={isAgencyUser ? handleDuplicateCampaign : undefined}
+          // Detail tab
+          detailTab={detailTab}
+          onDetailTabChange={setDetailTab}
+          // Lifted controls
+          listSearch={listSearch}
+          onListSearchChange={setListSearch}
+          searchOpen={searchOpen}
+          onSearchOpenChange={setSearchOpen}
+          groupBy={groupBy}
+          onGroupByChange={setGroupBy}
+          groupDirection={groupDirection}
+          onGroupDirectionChange={setGroupDirection}
+          sortBy={sortBy}
+          onSortByChange={setSortBy}
+          filterStatus={filterStatus}
+          onToggleFilterStatus={toggleFilterStatus}
+          onFilterStatusSet={setFilterStatus}
+          filterAccount={listFilterAccount}
+          onFilterAccountChange={setListFilterAccount}
+          availableAccounts={availableAccounts}
+          showDemoCampaigns={showDemoCampaigns}
+          onShowDemoCampaignsChange={isAgencyUser ? setShowDemoCampaigns : () => {}}
+          hasNonDefaultControls={hasNonDefaultControls}
+          isGroupNonDefault={isGroupNonDefault}
+          isSortNonDefault={isSortNonDefault}
+          onResetControls={handleResetControls}
+          initialSettingsSection={initialSettingsSection}
+        />
       </div>
-
-      {/* Edit slide-over */}
-      <CampaignDetailPanel
-        campaign={editCampaign}
-        metrics={metrics}
-        open={editPanelOpen}
-        onClose={handleCloseEditPanel}
-      />
-    </>
+    </div>
   );
 }
 

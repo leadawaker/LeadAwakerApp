@@ -3,7 +3,7 @@ import type { AccountRow } from "../AccountDetailsDialog";
 
 export type { AccountRow };
 
-export type WorkspaceTab = "overview" | "integrations" | "communication" | "voice" | "chat" | "alerts" | "automations";
+export type WorkspaceTab = "overview" | "reactivation" | "integrations" | "communication" | "voice" | "chat" | "alerts" | "automations";
 
 // ── Identity-card metric chip ────────────────────────────────────────────────
 export interface MetaChip {
@@ -66,17 +66,6 @@ export interface AccountDetail {
 }
 
 // ── Related-entity rows ───────────────────────────────────────────────────────
-export interface CampaignRowData {
-  id: number;
-  name: string;
-  mono: string;
-  channel: string;
-  status: string;
-  leads: number;
-  resp: number;
-  contractId: number | null;
-}
-
 export interface ContractRowData {
   id: number;
   name: string;

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { registerFlush } from "./autosaveRegistry";
 
 export type AutosaveState = "idle" | "saving" | "saved" | "error";
 
@@ -47,6 +48,9 @@ export function useAutosave(value: string, saved: string, save: (value: string) 
 
   // Leaving the section with an edit still in the debounce window.
   useEffect(() => () => { void flush(); }, [flush]);
+
+  // A test call waits for this before it starts (autosaveRegistry, VoiceTestProvider).
+  useEffect(() => registerFlush(flush), [flush]);
 
   return state;
 }

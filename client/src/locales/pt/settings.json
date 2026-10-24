@@ -7,10 +7,11 @@
   "sections": {
     "profile": "Perfil",
     "preferences": "Preferências",
-    "team": "Equipe",
-    "account": "Minha Conta",
-    "security": "Seguranca",
-    "notifications": "Notificacoes"
+    "team": "Usuários",
+    "security": "Segurança",
+    "notifications": "Notificações",
+    "users": "Usuários",
+    "billing": "Faturamento"
   },
   "mobileProfile": {
     "title": "Meu perfil",
@@ -23,7 +24,7 @@
     "table": "Tabela",
     "back": "Voltar",
     "editProfile": "Editar perfil",
-    "title": "Equipe",
+    "title": "Usuários",
     "inviteEmailFailedTitle": "E-mail de convite não enviado",
     "inviteEmailFailedBody": "O convite para {{email}} foi criado, mas o e-mail não pôde ser enviado. Use Reenviar nos convites pendentes para tentar de novo.",
     "inviteSentTitle": "Convite enviado",
@@ -33,11 +34,6 @@
     "resendFailedTitle": "Falha ao reenviar convite",
     "resendInvite": "Reenviar",
     "resendingInvite": "Enviando…"
-  },
-  "account": {
-    "saved": "Salvo",
-    "savedDescription": "Campo {{field}} da conta atualizado.",
-    "notFound": "Conta nao encontrada"
   },
   "cropDialog": {
     "title": "Recortar Foto",
@@ -75,7 +71,7 @@
     "outreachPagesDescription": "Mostrar as paginas Inbox, Prospects e Cadence na barra de navegacao.",
     "outreachPagesToggle": "Mostrar na barra de navegacao",
     "servicePages": "Páginas de serviço",
-    "servicePagesDescription": "Mostrar estas páginas de serviço na barra de navegação e no Início. Ocultas por padrão.",
+    "servicePagesDescription": "Mostrar estas páginas de serviço na barra de navegação e em Métricas. Ocultas por padrão.",
     "servicePageSpeed": "Resposta Rápida",
     "servicePageReputation": "Reputação",
     "servicePageMissedCalls": "Chamadas Perdidas",
@@ -156,7 +152,10 @@
       "bookingCancelled": "Agendamento Cancelado",
       "callbackRequested": "Pedido de Retorno",
       "dailyRecap": "Resumo do Dia"
-    }
+    },
+    "alertsHint": "Quais eventos são enviados, e para quem, é definido por conta em Alertas.",
+    "alertsLink": "Abrir Alertas",
+    "alsoInAlerts": "Só é enviado quando os Alertas da conta estão ligados"
   },
   "hub": {
     "back": "Voltar",
@@ -316,6 +315,16 @@
         "email": "E-mail",
         "backup": "Código de backup"
       }
+    },
+    "summary": {
+      "on": "Ativa: {{methods}}",
+      "off": "Desativada",
+      "totp": "autenticador",
+      "email": "código por e-mail",
+      "passkeys_one": "{{count}} passkey",
+      "passkeys_other": "{{count}} passkeys",
+      "show": "Mostrar métodos",
+      "hide": "Ocultar métodos"
     }
   },
   "twoFactorPolicy": {
@@ -379,5 +388,14 @@
       "policy_changed": "Política alterada",
       "enrollment_forced": "Configuração obrigatória"
     }
+  },
+  "rail": {
+    "profile": "Nome, foto e contato",
+    "security": "Senha e login em duas etapas",
+    "preferences": "Página inicial, fuso horário e tema",
+    "notificationsAgency": "Push, e-mail e Telegram",
+    "notificationsClient": "Push neste aparelho",
+    "users": "Quem pode entrar",
+    "billing": "Faturas e contratos"
   }
 }

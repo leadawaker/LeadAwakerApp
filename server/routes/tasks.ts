@@ -18,6 +18,7 @@ import { createAndDispatchNotification } from "../notification-dispatcher";
 import { handleZodError, wrapAsync } from "./_helpers";
 import { eq, count, and, gte, lte, lt, ne, isNotNull, desc, sql, type SQL } from "drizzle-orm";
 import { ilike } from "drizzle-orm";
+import { APP_DIR } from "../paths";
 
 export function registerTasksRoutes(app: Express): void {
   // ─── Tasks ─────────────────────────────────────────────────────────
@@ -411,7 +412,7 @@ export function registerTasksRoutes(app: Express): void {
     const base64 = base64Match ? base64Match[1] : fileData;
     const buffer = Buffer.from(base64, "base64");
 
-    const uploadsDir = path.join("/home/gabriel/LeadAwakerApp", "uploads", "task-files", String(taskId));
+    const uploadsDir = path.join(APP_DIR, "uploads", "task-files", String(taskId));
     fs.mkdirSync(uploadsDir, { recursive: true });
     const safeFileName = `${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, "_")}`;
     const filePath = path.join(uploadsDir, safeFileName);

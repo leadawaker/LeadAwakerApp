@@ -1,32 +1,3 @@
-import { Ban, Clock } from "lucide-react";
-import { createElement } from "react";
-import type { ReactNode } from "react";
-import { getAccountAvatarColor } from "@/lib/avatarUtils";
-
-// ── Status helpers ─────────────────────────────────────────────────────────────
-
-export function getStatusDotCls(status: string): string {
-  switch (status) {
-    case "Active":    return "bg-emerald-500";
-    case "Trial":     return "bg-amber-500";
-    case "Suspended": return "bg-rose-500";
-    case "Inactive":  return "bg-slate-400";
-    default:          return "bg-indigo-400";
-  }
-}
-
-export function getStatusBadgeStyle(status: string): { bg: string; text: string } {
-  return getAccountAvatarColor(status);
-}
-
-export function getStatusIcon(status: string): ReactNode {
-  switch (status) {
-    case "Trial":     return createElement(Clock, { className: "w-3 h-3" });
-    case "Suspended": return createElement(Ban, { className: "w-3 h-3" });
-    default:          return null;
-  }
-}
-
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 export function formatTimeDisplay(val: string | null | undefined): string {

@@ -28,6 +28,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { ViewMode } from "./types";
+import { ExpandingSearch } from "@/components/crm/primitives";
 import { PIPELINE_HEX, ALL_LEAD_FILTER_STAGES } from "./constants";
 import type { ConversationType } from "../conversationType";
 import {
@@ -331,18 +332,7 @@ export function LeadsDesktopToolbar({
         </DropdownMenu>
       )}
 
-      <div className="relative" style={{ width: 160 }}>
-        <input
-          value={listSearch}
-          onChange={(e) => onListSearchChange(e.target.value)}
-          placeholder={searchPlaceholder ?? t("toolbar.searchPlaceholder")}
-          className="la-input"
-          style={{ background: "var(--surface)", paddingLeft: 27, paddingTop: 7, paddingBottom: 7, paddingRight: 10, height: 32, fontSize: 11 }}
-        />
-        <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
-        </span>
-      </div>
+      <ExpandingSearch value={listSearch} onChange={onListSearchChange} placeholder={searchPlaceholder ?? t("toolbar.searchPlaceholder")} width={180} />
 
       {/* Filter */}
       <DropdownMenu>

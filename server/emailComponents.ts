@@ -76,16 +76,23 @@ export function emailSection(s: { title: string; icon?: string; aside?: string; 
 }
 
 /** One thing that happened: a tinted row with a round icon, the kind in
- *  small capitals, one sentence and one line of detail. */
-export function emailEventRow(r: { icon: string; hue: EmailHue; label: string; textHtml: string; subHtml?: string }): string {
+ *  small capitals, one sentence and one line of detail. `link` adds a small
+ *  "Open →" under it, to that one call or chat. */
+export function emailEventRow(r: {
+  icon: string; hue: EmailHue; label: string; textHtml: string; subHtml?: string; link?: { label: string; url: string };
+}): string {
   const h = EMAIL_HUES[r.hue];
   const sub = r.subHtml ? `<p style="margin:4px 0 0;font-family:${T.sans};font-size:11.5px;line-height:1.5;color:${T.mute};">${r.subHtml}</p>` : "";
+  const link = r.link
+    ? `<p style="margin:5px 0 0;"><a href="${e(r.link.url)}" target="_blank" style="font-family:${T.sans};font-size:12px;font-weight:600;line-height:1.5;color:${h.ink};text-decoration:none;">${e(r.link.label)}&nbsp;&rarr;</a></p>`
+    : "";
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${h.tint}" style="margin:12px 0 0;background-color:${h.tint};border-radius:10px;"><tr>
   <td width="36" valign="top" style="width:36px;padding:14px 0 14px 14px;font-size:0;line-height:0;">${img(r.icon, 36)}</td>
   <td valign="top" style="padding:13px 16px 14px 14px;">
     ${kicker(r.label, h.ink)}
     <p style="margin:0;font-family:${T.sans};font-size:13.5px;line-height:1.5;color:${T.ink};">${r.textHtml}</p>
     ${sub}
+    ${link}
   </td>
 </tr></table>`;
 }
@@ -199,5 +206,26 @@ export function emailDetails(rows: Array<{ label: string; valueHtml: string; ico
   }).join("\n");
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ${CARD}margin:0 0 4px;">
 ${body}
+</table>`;
+}
+
+/** A message a caller left, shown as a chat bubble in a card: a small-caps
+ *  label, the words themselves (corner cut at top left, like a received chat
+ *  message) and who said it. `textHtml` and `byHtml` must already be escaped. */
+export function emailMessageBubble(m: { label: string; textHtml: string; byHtml?: string }): string {
+  const h = EMAIL_HUES.callback;
+  const by = m.byHtml
+    ? `<p style="margin:9px 0 0 4px;font-family:${T.sans};font-size:12px;line-height:1.5;color:${T.mute};">${m.byHtml}</p>`
+    : "";
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" ${CARD}margin:0 0 10px;">
+<tr><td style="padding:16px 18px 16px;">
+  ${kicker(m.label, h.ink)}
+  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 0;"><tr>
+    <td bgcolor="${h.tint}" style="background-color:${h.tint};border-radius:3px 16px 16px 16px;padding:13px 16px 14px;">
+      <p style="margin:0;font-family:${T.sans};font-size:16px;line-height:1.55;color:${T.ink};">${m.textHtml}</p>
+    </td>
+  </tr></table>
+  ${by}
+</td></tr>
 </table>`;
 }

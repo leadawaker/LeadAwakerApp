@@ -18,6 +18,7 @@ interface Copy {
     customer: string; phone: string; email: string; when: string; oldWhen: string;
     source: string; callbackPhone: string; about: string; reason: string; lastMessage: string; since: string; summary: string;
     photo: string; description: string; caption: string; channel: string;
+    messageFor: string; caller: string; whatsapp: string;
   };
   /** Shown instead of the photo when it could not be attached (too large, or a test). */
   photoMissing: string;
@@ -31,6 +32,19 @@ interface Copy {
     attached: string;
     /** Photos left out of the email (size caps): still in Lead Awaker. */
     more: (n: number) => string;
+  };
+  /** A message a caller left for the team: callback_requested with reason
+   *  "leave_message". `to` is who it is for, "" when the call did not say. */
+  message: {
+    subject: (name: string, to: string) => string;
+    heading: (to: string) => string;
+    intro: (account: string, to: string) => string;
+    /** Above the message bubble. */
+    label: string;
+    /** Under the bubble: who left it. */
+    by: (who: string) => string;
+    note: (to: string) => string;
+    cta: string;
   };
   subject: Record<AlertEmailType, (name: string, time: string, phone: string) => string> & {
     daily_recap: (account: string, date: string) => string;
@@ -48,6 +62,8 @@ interface Copy {
     callsToday: (n: number) => string;
     allCalls: (n: number) => string;
     openCall: string;
+    /** A waiting row's link to the lead's chat. */
+    openChat: string;
     unknownCaller: string;
     subheading: string; sectionToday: string; quiet: string;
     /** Agenda: the rest of this week, or all of next week on a Sunday. */
@@ -66,6 +82,7 @@ interface Copy {
     cancelled: { title: string; text: (name: string, at: string) => string };
     callback: { title: string; text: (name: string) => string };
     reply: { title: string; text: (name: string) => string };
+    message: { title: string; text: (name: string, to: string) => string };
   };
 }
 
@@ -78,6 +95,7 @@ const EN: Copy = {
     customer: "Customer", phone: "Phone", email: "Email", when: "Date", oldWhen: "Was",
     source: "Booked through", callbackPhone: "Call back on", about: "About", reason: "Reason", lastMessage: "Last message", since: "Since", summary: "Summary",
     photo: "Photo", description: "What the photo shows", caption: "Their message", channel: "Sent through",
+    messageFor: "For", caller: "Caller", whatsapp: "WhatsApp",
   },
   photoMissing: "Open Lead Awaker to see the photo.",
   photoAttached: "The full-size photo is attached to this email.",
@@ -87,6 +105,17 @@ const EN: Copy = {
     intro: (a, n) => `A customer sent ${a} ${n} photos in the chat.`,
     attached: "The full-size photos are attached to this email.",
     more: (n) => (n === 1 ? "1 more photo is in Lead Awaker." : `${n} more photos are in Lead Awaker.`),
+  },
+  message: {
+    subject: (n, to) => (to ? `Message for ${to} from ${n}` : `New message from ${n}`),
+    heading: (to) => (to ? `Message for ${to}` : "New message"),
+    intro: (a, to) => `Someone called ${a} and left a message for ${to || "your team"}.`,
+    label: "The message",
+    by: (w) => `From ${w}`,
+    note: (to) => (to
+      ? `Please pass it on to ${to}, or call them back on the number above.`
+      : "Call them back on the number above, or open the call to see the whole conversation."),
+    cta: "Open the call",
   },
   subject: {
     daily_recap: (a, d) => `Daily recap for ${a}, ${d}`,
@@ -122,6 +151,7 @@ const EN: Copy = {
     callsToday: (n) => `${n} today`,
     allCalls: (n) => `See all ${n} calls`,
     openCall: "Open",
+    openChat: "Open chat",
     unknownCaller: "unknown caller",
     subheading: "Today's most important updates, at a glance.",
     sectionToday: "Today in brief",
@@ -145,6 +175,7 @@ const EN: Copy = {
     cancelled: { title: "Appointment cancelled", text: (n, at) => `${n} cancelled the appointment on ${at}.` },
     callback: { title: "Callback request", text: (n) => `${n} would like a call back.` },
     reply: { title: "Waiting for a reply", text: (n) => `${n} is waiting for an answer from your team in the chat.` },
+    message: { title: "Message", text: (n, to) => `${n} left a message for ${to || "your team"}.` },
   },
 };
 
@@ -157,6 +188,7 @@ const NL: Copy = {
     customer: "Klant", phone: "Telefoon", email: "E-mail", when: "Datum", oldWhen: "Was",
     source: "Geboekt via", callbackPhone: "Terugbellen op", about: "Onderwerp", reason: "Reden", lastMessage: "Laatste bericht", since: "Sinds", summary: "Samenvatting",
     photo: "Foto", description: "Wat er op de foto staat", caption: "Hun bericht", channel: "Gestuurd via",
+    messageFor: "Voor", caller: "Beller", whatsapp: "WhatsApp",
   },
   photoMissing: "Open Lead Awaker om de foto te bekijken.",
   photoAttached: "De foto zit op ware grootte als bijlage bij deze e-mail.",
@@ -166,6 +198,17 @@ const NL: Copy = {
     intro: (a, n) => `Een klant heeft ${a} ${n} foto's gestuurd in de chat.`,
     attached: "De foto's zitten op ware grootte als bijlage bij deze e-mail.",
     more: (n) => (n === 1 ? "Nog 1 foto staat in Lead Awaker." : `Nog ${n} foto's staan in Lead Awaker.`),
+  },
+  message: {
+    subject: (n, to) => (to ? `Bericht voor ${to} van ${n}` : `Nieuw bericht van ${n}`),
+    heading: (to) => (to ? `Bericht voor ${to}` : "Nieuw bericht"),
+    intro: (a, to) => `Iemand belde ${a} en liet een bericht achter voor ${to || "jullie team"}.`,
+    label: "Het bericht",
+    by: (w) => `Van ${w}`,
+    note: (to) => (to
+      ? `Geef het door aan ${to}, of bel de beller terug op het nummer hierboven.`
+      : "Bel de beller terug op het nummer hierboven, of open het gesprek om alles terug te lezen."),
+    cta: "Open het gesprek",
   },
   subject: {
     daily_recap: (a, d) => `Dagoverzicht ${a}, ${d}`,
@@ -201,6 +244,7 @@ const NL: Copy = {
     callsToday: (n) => `${n} vandaag`,
     allCalls: (n) => `Bekijk alle ${n} telefoontjes`,
     openCall: "Openen",
+    openChat: "Open de chat",
     unknownCaller: "onbekende beller",
     subheading: "De belangrijkste updates van vandaag, in één oogopslag.",
     sectionToday: "Vandaag in het kort",
@@ -224,6 +268,7 @@ const NL: Copy = {
     cancelled: { title: "Afspraak geannuleerd", text: (n, at) => `${n} heeft de afspraak van ${at} geannuleerd.` },
     callback: { title: "Terugbelverzoek", text: (n) => `${n} wil graag teruggebeld worden.` },
     reply: { title: "Wacht op een reactie", text: (n) => `${n} wacht in de chat op een antwoord van jullie team.` },
+    message: { title: "Bericht", text: (n, to) => `${n} liet een bericht achter voor ${to || "jullie team"}.` },
   },
 };
 
@@ -236,6 +281,7 @@ const PT: Copy = {
     customer: "Cliente", phone: "Telefone", email: "E-mail", when: "Data", oldWhen: "Antes",
     source: "Agendado por", callbackPhone: "Retornar para", about: "Assunto", reason: "Motivo", lastMessage: "Última mensagem", since: "Desde", summary: "Resumo",
     photo: "Foto", description: "O que a foto mostra", caption: "Mensagem", channel: "Enviada por",
+    messageFor: "Para", caller: "Quem ligou", whatsapp: "WhatsApp",
   },
   photoMissing: "Abra o Lead Awaker para ver a foto.",
   photoAttached: "A foto em tamanho original está anexada a este e-mail.",
@@ -245,6 +291,17 @@ const PT: Copy = {
     intro: (a, n) => `Um cliente enviou ${n} fotos para ${a} no chat.`,
     attached: "As fotos em tamanho original estão anexadas a este e-mail.",
     more: (n) => (n === 1 ? "Mais 1 foto está no Lead Awaker." : `Mais ${n} fotos estão no Lead Awaker.`),
+  },
+  message: {
+    subject: (n, to) => (to ? `Recado para ${to} de ${n}` : `Novo recado de ${n}`),
+    heading: (to) => (to ? `Recado para ${to}` : "Novo recado"),
+    intro: (a, to) => `Alguém ligou para ${a} e deixou um recado para ${to || "a sua equipe"}.`,
+    label: "O recado",
+    by: (w) => `De ${w}`,
+    note: (to) => (to
+      ? `Repasse o recado para ${to} ou retorne a ligação no número acima.`
+      : "Retorne a ligação no número acima ou abra a ligação para ver a conversa completa."),
+    cta: "Abrir a ligação",
   },
   subject: {
     daily_recap: (a, d) => `Resumo do dia de ${a}, ${d}`,
@@ -280,6 +337,7 @@ const PT: Copy = {
     callsToday: (n) => `${n} hoje`,
     allCalls: (n) => `Ver todas as ${n} ligações`,
     openCall: "Abrir",
+    openChat: "Abrir conversa",
     unknownCaller: "número desconhecido",
     subheading: "As novidades mais importantes de hoje, de relance.",
     sectionToday: "Hoje em resumo",
@@ -303,6 +361,7 @@ const PT: Copy = {
     cancelled: { title: "Agendamento cancelado", text: (n, at) => `${n} cancelou o horário de ${at}.` },
     callback: { title: "Pedido de retorno", text: (n) => `${n} pediu para receber uma ligação de volta.` },
     reply: { title: "Aguardando resposta", text: (n) => `${n} está aguardando uma resposta da sua equipe no chat.` },
+    message: { title: "Recado", text: (n, to) => `${n} deixou um recado para ${to || "a sua equipe"}.` },
   },
 };
 

@@ -3,11 +3,13 @@ import { useTranslation } from "react-i18next";
 import {
   Filter, Check, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
   PanelLeft, PanelLeftClose, MoreHorizontal, Trash2,
-  Building2, Link2, MessagesSquare, MessageCircle, Phone, Zap, BellRing,
+  Building2, Link2, MessagesSquare, MessageCircle, Phone, Zap, BellRing, Megaphone,
+  type LucideIcon,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PageTopbar, TopbarTabs, TopbarIconButton, ExpandingSearch, type TopbarTab } from "@/components/crm/primitives";
 import { cn } from "@/lib/utils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { myAccountLabelKey } from "@/components/crm/navGates";
@@ -20,16 +22,16 @@ import type { ListPanelState } from "@/hooks/useListPanelState";
 import type { WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
-const TAB_ICONS: Record<WorkspaceTab, ReactNode> = {
-  overview: <Building2 size={13} />,
-  integrations: <Link2 size={13} />,
-  communication: <MessagesSquare size={13} />,
-  voice: <Phone size={13} />,
-  chat: <MessageCircle size={13} />,
-  alerts: <BellRing size={13} />,
-  automations: <Zap size={13} />,
+const TAB_ICONS: Record<WorkspaceTab, LucideIcon> = {
+  overview: Building2,
+  reactivation: Megaphone,
+  integrations: Link2,
+  communication: MessagesSquare,
+  voice: Phone,
+  chat: MessageCircle,
+  alerts: BellRing,
+  automations: Zap,
 };
-const SORT_OPTIONS: AccountSortBy[] = ["recent", "name_asc", "name_desc"];
 
 interface Props {
   tab: WorkspaceTab;
@@ -58,9 +60,15 @@ interface Props {
   hasSelection: boolean;
 }
 
-const wineDot = (
-  <span style={{ position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: "50%", background: "var(--wine)" }} />
-);
+// Small asc/desc arrows inside a sort or group menu item.
+function DirButton({ on, onClick, children }: { on: boolean; onClick: () => void; children: ReactNode }) {
+  return (
+    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onClick(); }}
+      className={cn("p-0.5 rounded hover:bg-muted/60", on ? "text-primary" : "text-foreground/30")}>
+      {children}
+    </button>
+  );
+}
 
 export function AccountsTopBar(p: Props) {
   const { t } = useTranslation("accounts");
@@ -74,54 +82,38 @@ export function AccountsTopBar(p: Props) {
     else { setDeleteConfirm(true); setTimeout(() => setDeleteConfirm(false), 3000); }
   };
 
-  return (
-    <div className="shrink-0 hidden md:flex items-center gap-2 px-[17px]" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)" }}>
-      <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{isAgencyUser ? t("page.title") : tc(myAccountLabelKey(navFacts))}</span>
-      {isAgencyUser && <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)", marginLeft: 4 }}>#{p.count}</span>}
+  const tabItems: TopbarTab<WorkspaceTab>[] = p.tabs.map((k) => ({ id: k, label: t(`workspace.tabs.${k}`), icon: TAB_ICONS[k] }));
+  const foldLabel = p.listPanelState === "full" ? t("workspace.compactPanel") : p.listPanelState === "compact" ? t("workspace.hidePanel") : t("workspace.showPanel");
+  const nameSortActive = p.sortBy === "name_asc" || p.sortBy === "name_desc";
+  const nameSortDir = p.sortBy === "name_asc" ? "asc" : "desc";
 
-      {p.showTabs && (
-        <div className="la-seg shrink-0" style={{ marginLeft: 10 }}>
-          {p.tabs.map((k) => (
-            <button key={k} onClick={() => p.onTabChange(k)} data-testid={`account-topbar-tab-${k}`} className={`la-seg-btn${p.tab === k ? " on" : ""}`} style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "8px 14px", fontSize: 11, letterSpacing: "0.13em" }}>
-              <span style={{ display: "flex" }}>{TAB_ICONS[k]}</span>
-              {t(`workspace.tabs.${k}`)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Fold/cycle list panel (agency only: a client has no account list) */}
+  // A client has no account list: no fold button, search, filter, sort, group, delete or create.
+  const left = (p.showTabs || isAgencyUser) ? (
+    <>
+      {p.showTabs && <TopbarTabs tabs={tabItems} value={p.tab} onChange={p.onTabChange} testIdPrefix="account-topbar-tab" />}
       {isAgencyUser && (
-      <button className="la-btn la-btn--soft la-btn--icon" onClick={p.onCycle}
-        title={p.listPanelState === "full" ? t("workspace.compactPanel") : p.listPanelState === "compact" ? t("workspace.hidePanel") : t("workspace.showPanel")}>
-        {p.listPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-      </button>
+        <TopbarIconButton label={foldLabel} onClick={p.onCycle}>
+          {p.listPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
+        </TopbarIconButton>
       )}
+    </>
+  ) : undefined;
 
-      <div className="flex-1" />
-
-      {/* Search, filter, sort and group: agency only */}
-      {isAgencyUser && (<>
-      <div className="relative shrink-0" style={{ width: 180 }}>
-        <input value={p.listSearch} onChange={(e) => p.onListSearchChange(e.target.value)} placeholder={t("page.searchPlaceholder")} className="neu-input" style={{ paddingLeft: 28, paddingTop: 0, paddingBottom: 0, paddingRight: 10, height: 32, fontSize: 12 }} />
-        <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6" /><path d="m20 20-3.5-3.5" /></svg>
-        </span>
-      </div>
+  const right = isAgencyUser ? (
+    <>
+      <ExpandingSearch value={p.listSearch} onChange={p.onListSearchChange} placeholder={t("page.searchPlaceholder")} testId="accounts-topbar-search" />
 
       {/* Filter */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="la-btn la-btn--soft la-btn--icon" style={{ position: "relative" }}>
-            <Filter className="h-4 w-4 shrink-0" />{p.isFilterActive && wineDot}
-          </button>
+          <TopbarIconButton label={t("toolbar.filter")} active={p.isFilterActive}><Filter className="h-4 w-4" /></TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48 bg-white">
+        <DropdownMenuContent align="end" className="w-48">
           {STATUS_FILTER_OPTIONS.map((s) => (
             <DropdownMenuItem key={s} onClick={(e) => { e.preventDefault(); p.onToggleFilterStatus(s); }} className="flex items-center gap-2 text-[12px]">
-              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: ACCOUNT_STATUS_HEX[s] || "#94A3B8" }} />
-              <span className={cn("flex-1", p.filterStatus.includes(s) && "font-bold text-brand-indigo")}>{t(STATUS_I18N_KEY[s] ?? s)}</span>
-              {p.filterStatus.includes(s) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
+              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: ACCOUNT_STATUS_HEX[s] || "var(--mute-2)" }} />
+              <span className={cn("flex-1", p.filterStatus.includes(s) && "font-bold text-primary")}>{t(STATUS_I18N_KEY[s] ?? s)}</span>
+              {p.filterStatus.includes(s) && <Check className="h-3 w-3 text-primary shrink-0" />}
             </DropdownMenuItem>
           ))}
           {p.isFilterActive && (
@@ -136,47 +128,37 @@ export function AccountsTopBar(p: Props) {
       {/* Sort */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="la-btn la-btn--soft la-btn--icon" style={{ position: "relative" }}>
-            <ArrowUpDown className="h-4 w-4 shrink-0" />{p.isSortNonDefault && wineDot}
-          </button>
+          <TopbarIconButton label={t("toolbar.sort")} active={p.isSortNonDefault}><ArrowUpDown className="h-4 w-4" /></TopbarIconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuItem onSelect={(e) => { e.preventDefault(); p.onSortByChange("recent"); }} className="text-[12px] flex items-center gap-2">
-            <span className={cn("flex-1", p.sortBy === "recent" && "font-semibold !text-brand-indigo")}>{t("sort.mostRecent")}</span>
+            <span className={cn("flex-1", p.sortBy === "recent" && "font-semibold !text-primary")}>{t("sort.mostRecent")}</span>
           </DropdownMenuItem>
-          {(() => {
-            const isActive = p.sortBy === "name_asc" || p.sortBy === "name_desc";
-            const dir = p.sortBy === "name_asc" ? "asc" : "desc";
-            return (
-              <DropdownMenuItem onSelect={(e) => { e.preventDefault(); p.onSortByChange(isActive ? p.sortBy : "name_desc"); }} className="text-[12px] flex items-center gap-2">
-                <span className={cn("flex-1", isActive && "font-semibold !text-brand-indigo")}>{t("sort.name", { defaultValue: "Name" })}</span>
-                {isActive && (
-                  <>
-                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.onSortByChange("name_asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", dir === "asc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowUp className="h-3 w-3" /></button>
-                    <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.onSortByChange("name_desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", dir === "desc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowDown className="h-3 w-3" /></button>
-                  </>
-                )}
-              </DropdownMenuItem>
-            );
-          })()}
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); p.onSortByChange(nameSortActive ? p.sortBy : "name_desc"); }} className="text-[12px] flex items-center gap-2">
+            <span className={cn("flex-1", nameSortActive && "font-semibold !text-primary")}>{t("sort.name")}</span>
+            {nameSortActive && (
+              <>
+                <DirButton on={nameSortDir === "asc"} onClick={() => p.onSortByChange("name_asc")}><ArrowUp className="h-3 w-3" /></DirButton>
+                <DirButton on={nameSortDir === "desc"} onClick={() => p.onSortByChange("name_desc")}><ArrowDown className="h-3 w-3" /></DirButton>
+              </>
+            )}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
       {/* Group */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className="la-btn la-btn--soft la-btn--icon" style={{ position: "relative" }}>
-            <Layers className="h-4 w-4 shrink-0" />{p.isGroupNonDefault && wineDot}
-          </button>
+          <TopbarIconButton label={t("toolbar.group")} active={p.isGroupNonDefault}><Layers className="h-4 w-4" /></TopbarIconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-52">
           {(Object.keys(GROUP_TKEYS) as AccountGroupBy[]).map((opt) => (
             <DropdownMenuItem key={opt} onSelect={(e) => { e.preventDefault(); p.onGroupByChange(opt); }} className="text-[12px] flex items-center gap-2">
-              <span className={cn("flex-1", p.groupBy === opt && "font-semibold !text-brand-indigo")}>{t(GROUP_TKEYS[opt])}</span>
+              <span className={cn("flex-1", p.groupBy === opt && "font-semibold !text-primary")}>{t(GROUP_TKEYS[opt])}</span>
               {p.groupBy === opt && opt !== "none" && (
                 <>
-                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.onGroupDirectionChange("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", p.groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowUp className="h-3 w-3" /></button>
-                  <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); p.onGroupDirectionChange("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60", p.groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")}><ArrowDown className="h-3 w-3" /></button>
+                  <DirButton on={p.groupDirection === "asc"} onClick={() => p.onGroupDirectionChange("asc")}><ArrowUp className="h-3 w-3" /></DirButton>
+                  <DirButton on={p.groupDirection === "desc"} onClick={() => p.onGroupDirectionChange("desc")}><ArrowDown className="h-3 w-3" /></DirButton>
                 </>
               )}
               {p.groupBy === opt && opt === "none" && <Check className="h-3 w-3" />}
@@ -185,26 +167,32 @@ export function AccountsTopBar(p: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      </>)}
+      {/* Overflow: delete the selected account (click twice to confirm) */}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <TopbarIconButton label={t("toolbar.moreActions")}><MoreHorizontal className="h-4 w-4" /></TopbarIconButton>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="w-44">
+          <DropdownMenuItem onClick={(e) => { e.preventDefault(); handleDelete(); }} disabled={!p.hasSelection} className={cn("flex items-center gap-2 text-[12px] text-destructive", deleteConfirm && "font-semibold")}>
+            <Trash2 className="h-3.5 w-3.5" />{deleteConfirm ? t("detail.confirm") : t("toolbar.delete")}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
-      {/* Overflow menu and Create — agency only */}
-      {isAgencyUser && (
-        <>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="la-btn la-btn--soft la-btn--icon"><MoreHorizontal className="h-4 w-4" /></button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44 bg-white">
-              <DropdownMenuItem onClick={(e) => { e.preventDefault(); handleDelete(); }} disabled={!p.hasSelection} className={cn("flex items-center gap-2 text-[12px]", deleteConfirm ? "text-red-600" : "text-destructive")}>
-                <Trash2 className="h-3.5 w-3.5" />{deleteConfirm ? t("detail.confirm") : t("toolbar.delete")}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <button className="la-btn la-btn--wine la-btn--icon" onClick={p.onCreate} title={t("workspace.createAccount")}>
-            <Plus className="h-4 w-4" />
-          </button>
-        </>
-      )}
-    </div>
+      <TopbarIconButton label={t("workspace.createAccount")} primary onClick={p.onCreate}>
+        <Plus className="h-4 w-4" />
+      </TopbarIconButton>
+    </>
+  ) : undefined;
+
+  return (
+    <PageTopbar
+      desktopOnly
+      title={isAgencyUser ? t("page.title") : tc(myAccountLabelKey(navFacts))}
+      count={isAgencyUser ? p.count : null}
+      left={left}
+      right={right}
+      testId="accounts-topbar"
+    />
   );
 }

@@ -35,20 +35,10 @@ export function CallerListCard({ caller: rawCaller, active, masked, showAccount,
     <div
       onClick={onClick}
       data-testid="voice-caller-row"
-      style={{
-        // Every row is a raised card (same tokens as ListCard); the open one lifts and gets the wine bar.
-        borderRadius: "var(--list-card-radius)", position: "relative", cursor: "pointer",
-        background: "var(--card)",
-        boxShadow: active ? "var(--sh-raised-medium), inset 0 0 0 1px var(--line-strong)" : "var(--list-card-shadow)",
-        transform: active ? "translateX(2px)" : "none",
-        transition: "background 130ms, transform 130ms, box-shadow 130ms",
-      }}
-      onMouseEnter={(e) => { if (!active) e.currentTarget.style.background = "hsl(var(--card-hover))"; }}
-      onMouseLeave={(e) => { if (!active) e.currentTarget.style.background = "var(--card)"; }}
+      // The Chats card: flat until opened, then a raised card with the wine bar (all raised on phones).
+      className={active ? "la-camp-card active" : "la-camp-card"}
+      style={{ display: "block", padding: 0 }}
     >
-      {active && (
-        <div style={{ position: "absolute", left: 0, top: 6, bottom: 6, width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0" }} />
-      )}
       <div style={{ padding: "9px 12px", display: "flex", gap: 10 }}>
         <CallAvatar ini={callerIni(who, t("webCaller"))} status={callerStatus(caller)} size={38} />
         <div style={{ flex: 1, minWidth: 0 }}>

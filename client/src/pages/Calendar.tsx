@@ -9,6 +9,7 @@ import { useLeads } from "@/hooks/useApiData";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import type { Interaction } from "@/features/conversations/hooks/useConversationsData";
 import { useLocation } from "wouter";
+import { openLead } from "@/lib/leadLink";
 import { DesktopCalendar } from "@/features/calendar/components/DesktopCalendar";
 import { apiFetch } from "@/lib/apiUtils";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
@@ -219,11 +220,8 @@ export default function CalendarPage() {
     const lead = selectedBooking?.rawLead;
     const leadId = lead?.id ?? lead?.Id;
     if (leadId == null) return;
-    try {
-      localStorage.setItem("selected-lead-id", String(leadId));
-      localStorage.setItem("leadawaker-returnto", "/platform/calendar");
-    } catch {}
-    goTo("/platform/contacts");
+    try { localStorage.setItem("leadawaker-returnto", "/platform/calendar"); } catch {}
+    openLead(goTo, leadId);
   }, [selectedBooking, goTo]);
 
   const navigate = (direction: number) => {

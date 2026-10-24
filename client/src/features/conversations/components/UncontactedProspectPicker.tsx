@@ -5,6 +5,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 import { EntityAvatar } from "@/components/ui/entity-avatar";
 import { getProspectAvatarColor } from "@/lib/avatarUtils";
 import { Search, X, PhoneOff } from "lucide-react";
@@ -25,6 +26,7 @@ interface Props {
 }
 
 export function UncontactedProspectPicker({ open, onClose, onSelect, existingProspectIds }: Props) {
+  const { t } = useTranslation("conversations");
   const [search, setSearch] = useState("");
 
   const { data: allProspects = [], isLoading } = useQuery<any[]>({
@@ -53,9 +55,9 @@ export function UncontactedProspectPicker({ open, onClose, onSelect, existingPro
     <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <DialogContent className="max-w-sm p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-4 pt-4 pb-3 border-b border-black/[0.06]">
-          <DialogTitle className="text-[16px] font-semibold">Start new WhatsApp chat</DialogTitle>
+          <DialogTitle className="text-[16px] font-semibold">{t("prospectInbox.picker.title")}</DialogTitle>
           <p className="text-[12px] text-muted-foreground mt-0.5">
-            Prospects not yet messaged via WhatsApp
+            {t("prospectInbox.picker.subtitle")}
           </p>
         </DialogHeader>
 
@@ -68,7 +70,7 @@ export function UncontactedProspectPicker({ open, onClose, onSelect, existingPro
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search by name or company…"
+              placeholder={t("prospectInbox.picker.searchPlaceholder")}
               className="flex-1 min-w-0 bg-transparent outline-none text-[13px] text-foreground placeholder:text-muted-foreground/60"
             />
             {search && (
@@ -82,17 +84,17 @@ export function UncontactedProspectPicker({ open, onClose, onSelect, existingPro
         {/* List */}
         <div className="overflow-y-auto max-h-[360px] px-2 pb-3">
           {isLoading ? (
-            <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">Loading…</div>
+            <div className="flex items-center justify-center py-8 text-sm text-muted-foreground">{t("prospectInbox.picker.loading")}</div>
           ) : filtered.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-8 gap-2 text-muted-foreground">
               <Search className="h-8 w-8 opacity-30" />
-              <p className="text-sm">{search ? "No matching prospects" : "All prospects already have conversations"}</p>
+              <p className="text-sm">{search ? t("prospectInbox.picker.noMatch") : t("prospectInbox.picker.allContacted")}</p>
             </div>
           ) : (
             <div className="flex flex-col gap-[3px]">
               {filtered.map((p: any) => {
                 const pid = p.id ?? p.Id;
-                const name = p.company || p.name || "Unknown";
+                const name = p.company || p.name || t("inbox.unknownName");
                 const contactName = p.contact_name || p.contactName;
                 const phone = p.contact_phone || p.contactPhone || p.phone;
                 const avatarColor = getProspectAvatarColor(p.outreach_status || p.outreachStatus);

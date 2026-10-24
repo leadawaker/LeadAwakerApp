@@ -35,18 +35,20 @@ export const isGeneratedVoice = (voice: string) => GENERATED_VOICES.includes(voi
 
 // The default names, mirroring DEFAULT_AGENT_NAME / MALE_AGENT_NAMES in the engine.
 export const DEFAULT_AGENT_NAME = "Sara";
-export const MALE_AGENT_NAMES: Record<string, string> = { en: "Harry", nl: "Daan", pt: "Pedro" };
+export const MALE_AGENT_NAMES: Record<string, string> = { en: "Frank", nl: "Daan", pt: "Pedro" };
 
 export const isMasculineVoice = (voice: string) => (MASCULINE_VOICE_OPTIONS as readonly string[]).includes(voice);
 
 // The name after a voice or language change: a default name follows the
 // voice's gender and language, a name the client typed themselves stays.
-export function nameForVoice(current: string, voice: string, locale: string): string {
-  const maleDefaults = Object.values(MALE_AGENT_NAMES);
-  const isDefault = !current || current === DEFAULT_AGENT_NAME || maleDefaults.includes(current);
+// Only the male default of the line's own language (`fromLocale`) counts as a
+// default: Frank on a Dutch line was typed, so it stays Frank, not Daan.
+export function nameForVoice(current: string, voice: string, locale: string, fromLocale: string): string {
+  const maleDefault = current !== "" && current === maleNameFor(fromLocale);
+  const isDefault = !current || current === DEFAULT_AGENT_NAME || maleDefault;
   if (!isDefault) return current;
   if (isMasculineVoice(voice)) return maleNameFor(locale);
-  return maleDefaults.includes(current) ? DEFAULT_AGENT_NAME : current;
+  return maleDefault ? DEFAULT_AGENT_NAME : current;
 }
 
 // No language set means the engine's default, Dutch.

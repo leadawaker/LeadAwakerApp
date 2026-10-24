@@ -1,7 +1,6 @@
 export const HOME_PERIODS = ["month", "7d", "30d", "last_month"] as const;
 export type HomePeriod = (typeof HOME_PERIODS)[number];
 export type HomeChannel = "phone" | "whatsapp" | "sms" | "website";
-export type HomeTab = "overview" | "phone" | "whatsapp" | "website" | "reactivation" | "reputation" | "social";
 export interface Compared { value: number; previous: number }
 export interface DayPoint { day: string; value: number }
 

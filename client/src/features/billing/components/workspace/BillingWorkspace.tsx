@@ -24,7 +24,7 @@ import { ContractCreatePanel } from "../ContractCreatePanel";
 import { ExpenseCreatePanel } from "../ExpenseCreatePanel";
 import { ExpensesView } from "../ExpensesView";
 import { useExpensesData } from "../ExpensesListView";
-import { ContractUploadDialog } from "../ContractUploadDialog";
+import { ContractUploadPanel } from "../ContractUploadPanel";
 import { InvoicesInlineTable, DEFAULT_INVOICE_COLS } from "../InvoicesInlineTable";
 import { ContractsInlineTable, DEFAULT_CONTRACT_COLS } from "../ContractsInlineTable";
 import { deleteExpense } from "../../api/expensesApi";
@@ -106,8 +106,8 @@ export function BillingWorkspace(p: Props) {
   const [listSelectedIds, setListSelectedIds] = useState<Set<number>>(new Set());
   const visibleInvoiceColumns = useMemo(() => new Set(DEFAULT_INVOICE_COLS), []);
   const visibleContractColumns = useMemo(() => new Set(DEFAULT_CONTRACT_COLS), []);
-  // Contract upload dialog
-  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  // Contract upload panel (nothing opens it yet: no button sets this to true)
+  const [uploadPanelOpen, setUploadPanelOpen] = useState(false);
 
   const { accounts } = useAccounts({ enabled: p.isAgencyUser });
   const { data: expensesData } = useExpensesData(isExpenses);
@@ -355,14 +355,6 @@ export function BillingWorkspace(p: Props) {
           {renderMain()}
         </div>
       </div>
-
-      <ContractUploadDialog
-        open={uploadDialogOpen}
-        onOpenChange={setUploadDialogOpen}
-        accounts={accounts}
-        isAgencyUser={p.isAgencyUser}
-        onCreate={p.onCreateContract}
-      />
     </div>
   );
 
@@ -371,7 +363,7 @@ export function BillingWorkspace(p: Props) {
     if (tableMode) {
       const showCreate =
         (p.activeTab === "invoices" && (panelMode === "create" || panelMode === "edit")) ||
-        (p.activeTab === "contracts" && panelMode === "create") ||
+        (p.activeTab === "contracts" && (panelMode === "create" || uploadPanelOpen)) ||
         (isExpenses && expensePanelOpen);
       return (
         <div className="flex-1 min-h-0 flex overflow-hidden">
@@ -442,7 +434,9 @@ export function BillingWorkspace(p: Props) {
                   onClose={() => { setPanelMode("view"); setEditingInvoice(null); setDuplicatingInvoice(null); }}
                 />
               ) : p.activeTab === "contracts" ? (
-                <ContractCreatePanel accounts={accounts} isAgencyUser={p.isAgencyUser} onCreate={p.onCreateContract} onClose={() => setPanelMode("view")} />
+                uploadPanelOpen
+                  ? <ContractUploadPanel accounts={accounts} isAgencyUser={p.isAgencyUser} onCreate={p.onCreateContract} onClose={() => setUploadPanelOpen(false)} className="w-full border-l-0" />
+                  : <ContractCreatePanel accounts={accounts} isAgencyUser={p.isAgencyUser} onCreate={p.onCreateContract} onClose={() => setPanelMode("view")} />
               ) : (
                 <ExpenseCreatePanel editingExpense={editingExpense} onClose={() => { setExpensePanelOpen(false); setEditingExpense(null); }} />
               )}
@@ -466,6 +460,13 @@ export function BillingWorkspace(p: Props) {
             onUpdate={p.onUpdateInvoice}
             onClose={() => { setPanelMode("view"); setEditingInvoice(null); setDuplicatingInvoice(null); }}
           />
+        </div>
+      );
+    }
+    if (p.activeTab === "contracts" && uploadPanelOpen) {
+      return (
+        <div className="flex-1 min-h-0 overflow-hidden flex justify-end">
+          <ContractUploadPanel accounts={accounts} isAgencyUser={p.isAgencyUser} onCreate={p.onCreateContract} onClose={() => setUploadPanelOpen(false)} className="w-[520px] max-w-full" />
         </div>
       );
     }

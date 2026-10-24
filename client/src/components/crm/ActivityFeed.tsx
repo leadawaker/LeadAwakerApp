@@ -1,5 +1,6 @@
 import { useCallback } from "react";
 import { useLocation } from "wouter";
+import { openLead } from "@/lib/leadLink";
 import {
   MessageSquare,
   Send,
@@ -250,9 +251,7 @@ export function ActivityFeed({
   const handleItemClick = useCallback(
     (item: ActivityItem) => {
       if (!item.leadId) return;
-      const prefix = "/platform";
-      try { localStorage.setItem("selected-lead-id", String(item.leadId)); } catch {}
-      setLocation(`${prefix}/leads`);
+      openLead(setLocation, item.leadId);
     },
     [isAgencyUser, setLocation],
   );

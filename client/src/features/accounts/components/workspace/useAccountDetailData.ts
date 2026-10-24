@@ -1,14 +1,12 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/apiUtils";
-import { toCampaignRow, toContractRow, toTeamMember } from "./adapters";
-import type { CampaignRowData, ContractRowData, TeamMemberData } from "./types";
+import { toContractRow, toTeamMember } from "./adapters";
+import type { ContractRowData, TeamMemberData } from "./types";
 
 interface AccountDetailData {
-  campaigns: CampaignRowData[];
   contracts: ContractRowData[];
   team: TeamMemberData[];
   leadCount: number | null;
-  loadingCampaigns: boolean;
   loadingContracts: boolean;
   loadingTeam: boolean;
   refresh: () => void;
@@ -21,15 +19,14 @@ async function fetchList(url: string): Promise<any[]> {
 }
 
 /**
- * Per-account related data: campaigns, contracts, team members, lead count.
+ * Per-account related data: contracts, team members, lead count. The
+ * account's campaigns are on its Reactivation tab (and Calls / Chats for the receptionist).
  * Contract rows are linked to their campaign (campaignId) so panels can pair them.
  */
 export function useAccountDetailData(accountId: number): AccountDetailData {
-  const [campaigns, setCampaigns] = useState<CampaignRowData[]>([]);
   const [contracts, setContracts] = useState<ContractRowData[]>([]);
   const [team, setTeam] = useState<TeamMemberData[]>([]);
   const [leadCount, setLeadCount] = useState<number | null>(null);
-  const [loadingCampaigns, setLoadingCampaigns] = useState(true);
   const [loadingContracts, setLoadingContracts] = useState(true);
   const [loadingTeam, setLoadingTeam] = useState(true);
   const [nonce, setNonce] = useState(0);
@@ -39,12 +36,6 @@ export function useAccountDetailData(accountId: number): AccountDetailData {
   useEffect(() => {
     if (!accountId) return;
     let alive = true;
-
-    setLoadingCampaigns(true);
-    fetchList(`/api/campaigns?accountId=${accountId}`)
-      .then((list) => { if (alive) setCampaigns(list.map(toCampaignRow)); })
-      .catch(() => { if (alive) setCampaigns([]); })
-      .finally(() => { if (alive) setLoadingCampaigns(false); });
 
     setLoadingContracts(true);
     fetchList(`/api/contracts?accountId=${accountId}`)
@@ -79,11 +70,9 @@ export function useAccountDetailData(accountId: number): AccountDetailData {
   }, [accountId, nonce]);
 
   return {
-    campaigns,
     contracts,
     team,
     leadCount,
-    loadingCampaigns,
     loadingContracts,
     loadingTeam,
     refresh,

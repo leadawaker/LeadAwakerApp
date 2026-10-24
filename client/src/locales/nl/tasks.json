@@ -250,5 +250,24 @@
     "overdue": "Te laat",
     "today": "Vandaag",
     "tomorrow": "Morgen"
+  },
+  "topbar": {
+    "cal": "Kal",
+    "calendarFilter": "Kalenderfilter",
+    "status": "Status",
+    "showWeekends": "Weekenden tonen",
+    "filters": "Filters",
+    "priority": "Prioriteit",
+    "category": "Categorie",
+    "dateRange": "Periode",
+    "on": "aan",
+    "thisMonth": "Deze maand",
+    "from": "Van",
+    "to": "Tot",
+    "sort": "Sorteren",
+    "sortBy": "Sorteren op",
+    "addTask": "Taak toevoegen",
+    "previous": "Vorige",
+    "next": "Volgende"
   }
 }

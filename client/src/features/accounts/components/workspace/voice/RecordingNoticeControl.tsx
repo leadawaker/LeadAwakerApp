@@ -17,14 +17,17 @@ import {
 } from "./voiceApi";
 
 // Mirrors VOICES / SPEEDS / STANDARD_TEXT / NOTICE_VERSION in the engine's recording_notice.py.
-type Maker = "openai" | "google";
+type Maker = "openai" | "google" | "eleven";
 const VOICES: { id: NoticeVoice; gender: "female" | "male"; maker: Maker }[] = [
   { id: "nova", gender: "female", maker: "openai" }, { id: "sage", gender: "female", maker: "openai" },
   { id: "ash", gender: "male", maker: "openai" }, { id: "onyx", gender: "male", maker: "openai" },
   { id: "kore", gender: "female", maker: "google" }, { id: "aoede", gender: "female", maker: "google" },
   { id: "puck", gender: "male", maker: "google" }, { id: "charon", gender: "male", maker: "google" },
+  // Emma is the voice the ElevenLabs (Realtime Max) receptionist speaks with.
+  { id: "emma", gender: "female", maker: "eleven" }, { id: "iris", gender: "female", maker: "eleven" },
+  { id: "jasmijn", gender: "female", maker: "eleven" },
 ];
-const MAKERS: Maker[] = ["openai", "google"];
+const MAKERS: Maker[] = ["openai", "google", "eleven"];
 const SPEEDS = [1, 1.25, 1.5];
 const NOTICE_LOCALES = ["nl", "en-GB", "en-US", "pt-BR", "pt-PT"];
 const STANDARD_VERSION = 2;

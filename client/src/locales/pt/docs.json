@@ -8,8 +8,8 @@
     "welcome": {
       "title": "Bem-vindo ao seu CRM",
       "intro": "É aqui que você acompanha a {{company}}. {{Name}} atende suas ligações e chats, e tudo o que acontece aparece aqui, então você nunca precisa adivinhar. Veja o que fica onde:",
-      "home": "<b>Início</b>: o retrato rápido. O que chegou, o que foi agendado e o que precisa de você.",
-      "calls": "<b>Chamadas</b>: todas as ligações que {{name}} atendeu. <b>Estatísticas</b> mostra os números, <b>Pessoas</b> mostra quem ligou. Abra uma chamada para ler o que foi dito e o que resultou.",
+      "home": "<b>Métricas</b>: o retrato rápido. O que chegou, o que foi agendado e o que precisa de você. Todos os números ficam nesta única página.",
+      "calls": "<b>Chamadas</b>: todas as ligações que {{name}} atendeu, por pessoa. Abra uma chamada para ler o que foi dito e o que resultou.",
       "calendar": "<b>Calendário</b>: seus agendamentos e visitas. Aqui você também adiciona bloqueios de horário.",
       "chats": "<b>Chats</b>: os chats do seu site. Acompanhe e responda você mesmo quando quiser.",
       "more": "<b>Mais</b>: seus <b>Leads</b> (as pessoas que entraram em contato), sua <b>Conta</b>, este guia e Mensagem para Gabriel.",
@@ -21,9 +21,9 @@
       "intro": "Quando alguém liga para o número da sua empresa, {{name}} atende, escuta e ajuda como uma boa recepcionista. Isto pode acontecer numa ligação:",
       "calls": "<strong>Ligações:</strong> {{Name}} responde perguntas sobre sua empresa, no idioma de quem ligou. Cada ligação aparece em Chamadas com um resumo.",
       "transfers": "<strong>Transferências:</strong> se quem ligou quiser falar com você ou com um colega, {{name}} pode passar a ligação. Na chamada você vê se a transferência deu certo.",
-      "callbacks": "<strong>Retornos:</strong> se ninguém puder atender, {{name}} anota o nome, o número e a dúvida de quem ligou. Esses pedidos de retorno aparecem na sua página Início, para você ligar de volta.",
+      "callbacks": "<strong>Retornos:</strong> se ninguém puder atender, {{name}} anota o nome, o número e a dúvida de quem ligou. Esses pedidos de retorno aparecem na sua página Métricas, para você ligar de volta.",
       "bookings": "<strong>Agendamentos e visitas:</strong> {{name}} pode marcar uma visita ou um agendamento direto na sua agenda, num horário realmente livre. O agendamento aparece na hora no seu Calendário.",
-      "page": "Em <strong>Chamadas</strong> há duas abas. <strong>Estatísticas</strong> mostra quantas ligações chegaram e como terminaram. <strong>Pessoas</strong> lista todo mundo que ligou, cada um com um único status, e uma marca <strong>Aguarda você</strong> enquanto um retorno estiver pendente. Abra uma pessoa para ver todas as ligações dela, com o resumo e o que foi dito.",
+      "page": "<strong>Métricas</strong> mostra quantas ligações chegaram e como terminaram. Em <strong>Chamadas</strong> você encontra todo mundo que ligou, cada um com um único status, e uma marca <strong>Aguarda você</strong> enquanto um retorno estiver pendente. Abra uma pessoa para ver todas as ligações dela, com o resumo e o que foi dito.",
       "tip": "Quer outra saudação ou outro horário de funcionamento? O horário você mesmo altera. Para o resto, aperte Pedir uma alteração."
     },
     "chat": {
@@ -108,7 +108,7 @@
     "illus": {
       "bar": {
         "caption": "A barra na parte de baixo do celular. Leads e Conta ficam em Mais.",
-        "home": "Início",
+        "home": "Métricas",
         "calls": "Chamadas",
         "calendar": "Calendário",
         "chats": "Chats",
@@ -136,9 +136,8 @@
         "recapSub": "Um e-mail no horário que você escolheu"
       },
       "tabs": {
-        "caption": "A página Chamadas: Estatísticas e Pessoas",
-        "stats": "Estatísticas",
-        "people": "Pessoas",
+        "caption": "A página Métricas e a página Chamadas",
+        "stats": "Métricas",
         "calls": "Chamadas",
         "booked": "Agendados",
         "callbacks": "Retornos",

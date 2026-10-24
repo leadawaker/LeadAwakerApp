@@ -34,6 +34,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
+import { PageTopbar, ExpandingSearch } from "@/components/crm/primitives";
 import { CampaignDetailView, CampaignDetailViewEmpty } from "./CampaignDetailView";
 import { ClientsTab } from "./clients/ClientsTab";
 import { MobileCampaignDetailPanel } from "./MobileCampaignDetailPanel";
@@ -104,7 +105,6 @@ interface CampaignListViewProps {
   loading: boolean;
   selectedCampaign: Campaign | null;
   onSelectCampaign: (campaign: Campaign) => void;
-  onEditCampaign: (campaign: Campaign) => void;
   onToggleStatus: (campaign: Campaign) => void;
   onSave: (id: number, patch: Record<string, unknown>) => Promise<void>;
   onCreateCampaign: () => void;
@@ -148,7 +148,6 @@ export function CampaignListView({
   loading,
   selectedCampaign,
   onSelectCampaign,
-  onEditCampaign,
   onToggleStatus,
   onSave,
   onCreateCampaign,
@@ -182,6 +181,8 @@ export function CampaignListView({
   initialSettingsSection,
 }: CampaignListViewProps) {
   const { t } = useTranslation("campaigns");
+  // Page title = the nav label, from the same key, so the two cannot drift.
+  const { t: tNav } = useTranslation("crm");
   const { isAgencyUser } = useWorkspace();
   const isMobile768 = useIsMobile(768);
   const isNarrow = useIsMobile(1024);
@@ -622,7 +623,7 @@ export function CampaignListView({
 
       {/* ── MOBILE HEADER (< 768px) ─────────────────────────────────────── */}
       <MobileListHeader
-        title={t("title")}
+        title={tNav("sidebar.reactivation")}
         searchValue={listSearch}
         onSearchChange={onListSearchChange}
         searchPlaceholder={t("toolbar.searchPlaceholder", "Search...")}
@@ -640,11 +641,12 @@ export function CampaignListView({
       />
 
       {/* ── FULL-WIDTH TOP BAR (desktop only) — always visible ──────────── */}
-      <div className="shrink-0 hidden md:flex items-center gap-2 px-[17px]" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)" }}>
-          {/* Left: title + count + tabs */}
-          <span className="serif" style={{ fontSize: 20, color: 'var(--ink)', letterSpacing: '-0.01em' }}>{t("title")}</span>
-          <span className="eyebrow eyebrow-sm" style={{ color: 'var(--mute-2)', marginLeft: 4 }}>#{totalCampaigns}</span>
-          <div className="la-seg la-seg--fill shrink-0" style={{ marginLeft: 10 }}>
+      <PageTopbar
+        desktopOnly
+        title={tNav("sidebar.reactivation")}
+        count={totalCampaigns}
+        left={<>
+          <div className="la-seg la-seg--fill shrink-0">
             {DETAIL_TABS.map((tab) => (
               <button
                 key={tab.id}
@@ -661,11 +663,12 @@ export function CampaignListView({
           <button
             className="la-btn la-btn--soft la-btn--icon"
             onClick={cycle}
-            title={leftPanelState === "full" ? "Compact panel" : leftPanelState === "compact" ? "Hide panel" : "Show panel"}
+            title={leftPanelState === "full" ? t("toolbar.compactPanel") : leftPanelState === "compact" ? t("toolbar.hidePanel") : t("toolbar.showPanel")}
           >
             {leftPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
           </button>
-          <div className="flex-1" />
+        </>}
+        right={<>
           {/* Duplicate/Delete — Clients tab only, when a Client is open */}
           {detailTab === "clients" && isAgencyUser && selectedClientNiche && (
             <ClientActionsMenu
@@ -679,26 +682,15 @@ export function CampaignListView({
           {/* Prompt panel — agency only */}
           {isAgencyUser && (
             <button
-              className={cn("la-btn la-btn--soft la-btn--icon", promptPanelOpen && "!text-brand-indigo !bg-brand-indigo/10")}
+              className={cn("la-btn la-btn--soft la-btn--icon", promptPanelOpen && "!text-[var(--wine)] !bg-[var(--wine-tint)]")}
               onClick={togglePromptPanel}
-              title="Prompt panel"
+              title={t("toolbar.promptPanel")}
             >
               <FileText className="h-4 w-4" />
             </button>
           )}
           {/* Search */}
-          <div className="relative shrink-0" style={{ width: 180 }}>
-            <input
-              value={listSearch}
-              onChange={(e) => onListSearchChange(e.target.value)}
-              placeholder={t("toolbar.searchPlaceholder", "Search...")}
-              className="neu-input"
-              style={{ paddingLeft: 28, paddingTop: 0, paddingBottom: 0, paddingRight: 10, height: 32, fontSize: 12 }}
-            />
-            <span className="absolute left-[9px] top-1/2 -translate-y-1/2 text-[var(--mute-2)] flex pointer-events-none">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="6"/><path d="m20 20-3.5-3.5"/></svg>
-            </span>
-          </div>
+          <ExpandingSearch value={listSearch} onChange={onListSearchChange} placeholder={t("toolbar.searchPlaceholder")} />
           {/* Filter */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -733,8 +725,8 @@ export function CampaignListView({
                   <span className={cn("flex-1", groupBy === g && "font-semibold !text-brand-indigo")}>{t(DETAIL_GROUP_LABEL_KEYS[g])}</span>
                   {groupBy === g && g !== "none" && (
                     <>
-                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")} title="Ascending"><ArrowUp className="h-3 w-3" /></button>
-                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")} title="Descending"><ArrowDown className="h-3 w-3" /></button>
+                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("asc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "asc" ? "text-brand-indigo" : "text-foreground/30")} title={t("toolbar.ascending")}><ArrowUp className="h-3 w-3" /></button>
+                      <button type="button" onClick={(e) => { e.preventDefault(); e.stopPropagation(); onGroupDirectionChange("desc"); }} className={cn("p-0.5 rounded hover:bg-muted/60 transition-colors", groupDirection === "desc" ? "text-brand-indigo" : "text-foreground/30")} title={t("toolbar.descending")}><ArrowDown className="h-3 w-3" /></button>
                     </>
                   )}
                   {groupBy === g && g === "none" && <Check className="h-3 w-3" />}
@@ -746,7 +738,8 @@ export function CampaignListView({
           <button className="la-btn la-btn--wine la-btn--icon" onClick={onCreateCampaign} title={t("toolbar.add", "New campaign")}>
             <Plus className="h-4 w-4" />
           </button>
-        </div>
+        </>}
+      />
 
       {/* ── CONTENT ROW: left panel + right panel ─────────────────────── */}
       <div className="flex flex-1 min-h-0 overflow-hidden">

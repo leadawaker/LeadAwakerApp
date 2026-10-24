@@ -29,6 +29,8 @@ export function LeadsPipelineTopbar(p: {
   setHasEmail: (v: boolean) => void;
   sortBy: PipelineSort;
   setSortBy: (v: PipelineSort) => void;
+  /** Desktop: the quick view dropdown and channel tabs (LeadsQuickControls). */
+  quickControls?: React.ReactNode;
 }) {
   const { t } = useTranslation("leads");
   const filterOn = p.hasPhone || p.hasEmail;
@@ -49,6 +51,7 @@ export function LeadsPipelineTopbar(p: {
           ))}
         </div>
       )}
+      {p.quickControls}
       <div className="flex-1 min-w-0" />
       <div className="shrink-0 flex items-center gap-[5px]">
         {/* Phones: no Compact and no Fold toggle; empty columns start folded instead. */}

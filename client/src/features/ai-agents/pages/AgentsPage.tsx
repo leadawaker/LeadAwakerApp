@@ -80,7 +80,7 @@ export function AgentsPage() {
     <CrmShell>
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold font-heading text-foreground">AI Agents</h1>
+        <h1 className="text-[20px] font-bold font-heading text-foreground tracking-[-0.01em]">AI Agents</h1>
         <p className="text-sm text-muted-foreground mt-1">Your specialized AI assistants — powered by Claude Code</p>
       </div>
 

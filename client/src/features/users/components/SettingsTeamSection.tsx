@@ -17,9 +17,7 @@ import { apiFetch } from "@/lib/apiUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useSession } from "@/hooks/useSession";
 import { cn } from "@/lib/utils";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from "@/components/ui/dialog";
+import { EditUserPanel } from "./EditUserPanel";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
@@ -27,7 +25,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { toast } from "@/hooks/use-toast";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
@@ -453,7 +450,8 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
     if ((u.status || "").toLowerCase() !== "invited") return false;
     try {
       const prefs = typeof u.preferences === "string" ? JSON.parse(u.preferences || "{}") : (u.preferences || {});
-      return !!prefs?.invite_token;
+      // The users list sends `invite_pending` instead of the token itself.
+      return !!(prefs?.invite_pending || prefs?.invite_token);
     } catch { return false; }
   }), [users]);
 
@@ -505,7 +503,7 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
   const [viewTakeoverCount, setViewTakeoverCount] = useState(0);
   const [viewDataLoading, setViewDataLoading]     = useState(false);
 
-  // Deep-link: AccountDetailView sets pendingUserSelection to auto-open a user
+  // Deep-link: the Accounts TeamPanel sets pendingUserSelection to auto-open a user
   useEffect(() => {
     if (loading || users.length === 0) return;
     const pending = sessionStorage.getItem("pendingUserSelection");
@@ -539,7 +537,7 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
     return () => { cancelled = true; };
   }, [viewingUser?.accountsId, viewingUser?.id, viewingUser?.fullName1]);
 
-  // ── Edit user dialog ───────────────────────────────────────────────────────
+  // ── Edit user panel ────────────────────────────────────────────────────────
   const [editingUser, setEditingUser] = useState<AppUser | null>(null);
 
   const handleSaveUser = useCallback(async () => {
@@ -794,8 +792,20 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
             </div>
           </div>
 
-          {/* Detail — its own raised white panel, on the right */}
-          {viewingUser && (
+          {/* Edit user: right-hand panel in the detail slot (UI_STANDARDS 3.7) */}
+          {editingUser ? (
+            <EditUserPanel
+              user={editingUser}
+              onChange={setEditingUser}
+              isAdmin={isAdmin}
+              isSelf={editingUser.email === currentUserEmail}
+              roleOptions={ROLE_OPTIONS}
+              onSave={handleSaveUser}
+              onClose={() => setEditingUser(null)}
+              className="w-[600px] h-auto my-4 rounded-2xl neu-raised border-l-0"
+            />
+          ) : viewingUser && (
+          /* Detail: its own raised white panel, on the right */
             <div className="neu-raised rounded-2xl bg-card shrink-0 flex flex-col min-h-0 my-4" style={{ width: 600 }}>
               {/* Header: big name + badges + close */}
               <div className="px-6 pt-5 pb-4 shrink-0">
@@ -937,81 +947,6 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
         </div>
       </div>
 
-      {/* ── Edit User Dialog ────────────────────────────────────────────────── */}
-      <Dialog open={!!editingUser} onOpenChange={open => !open && setEditingUser(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit User: {editingUser?.fullName1 || editingUser?.email}</DialogTitle>
-          </DialogHeader>
-          {editingUser && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-              <div className="space-y-2">
-                <Label>Full Name</Label>
-                <Input value={editingUser.fullName1 || ""} onChange={e => setEditingUser({ ...editingUser, fullName1: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Email</Label>
-                <Input value={editingUser.email || ""} onChange={e => setEditingUser({ ...editingUser, email: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input value={editingUser.phone || ""} onChange={e => setEditingUser({ ...editingUser, phone: e.target.value })} />
-              </div>
-              <div className="space-y-2">
-                <Label>Timezone</Label>
-                <Select value={editingUser.timezone || ""} onValueChange={(val: any) => setEditingUser({ ...editingUser, timezone: val })}>
-                  <SelectTrigger><SelectValue placeholder="Select timezone" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="America/Sao_Paulo">America/Sao Paulo</SelectItem>
-                    <SelectItem value="Europe/Amsterdam">Europe/Amsterdam</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Select value={editingUser.role || ""} onValueChange={(val: any) => setEditingUser({ ...editingUser, role: val })} disabled={!isAdmin}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {ROLE_OPTIONS.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Status</Label>
-                <Select value={editingUser.status || ""} onValueChange={(val: any) => setEditingUser({ ...editingUser, status: val })} disabled={!isAdmin}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Active">Active</SelectItem>
-                    <SelectItem value="Inactive">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              {editingUser.email === currentUserEmail && (
-                <div className="space-y-2">
-                  <Label>Password</Label>
-                  <Input type="password" placeholder="Enter new password" onChange={e => setEditingUser({ ...editingUser, password: e.target.value } as any)} />
-                </div>
-              )}
-              {editingUser.email === currentUserEmail && (
-                <div className="space-y-2 flex flex-col justify-end gap-4">
-                  <div className="flex items-center justify-between">
-                    <Label>Email Notifications</Label>
-                    <Switch checked={!!editingUser.notificationEmail} onCheckedChange={checked => setEditingUser({ ...editingUser, notificationEmail: checked })} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <Label>SMS Notifications</Label>
-                    <Switch checked={!!editingUser.notificationSms} onCheckedChange={checked => setEditingUser({ ...editingUser, notificationSms: checked })} />
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingUser(null)}>Cancel</Button>
-            <Button onClick={handleSaveUser}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

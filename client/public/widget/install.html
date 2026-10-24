@@ -1,0 +1,68 @@
+<!doctype html>
+<!-- The page behind the "copy the code" button in the widget install email:
+     an email cannot run a copy button, so the email links here.
+     ?key=wk_... (the public key, already on the client's site) &lang=nl|en|pt&name=Frank (optional) -->
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Widget installeren · Lead Awaker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700&family=Playfair+Display:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#F3EFE7; --card:#FDFCFA; --line:#E8E2D7; --ink:#1F1A14; --soft:#3A322A; --mute:#6C6354; --wine:#5E2230; --wineDeep:#4E1B27; --onWine:#F7F1E6; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:15px/1.65 Manrope,'Helvetica Neue',Arial,sans-serif; }
+  main { max-width:640px; margin:0 auto; padding:48px 16px 64px; }
+  h1 { font:600 32px/1.15 'Playfair Display',Georgia,serif; color:var(--wineDeep); margin:0 0 12px; }
+  p { margin:0 0 16px; color:var(--soft); }
+  .code { background:var(--wine); color:var(--onWine); border-radius:12px; padding:18px; margin:20px 0 28px; }
+  pre { margin:0 0 14px; font:13px/1.55 'SFMono-Regular',Menlo,Consolas,monospace; white-space:pre-wrap; word-break:break-all; user-select:all; }
+  button { font:600 14px/1 Manrope,Arial,sans-serif; background:var(--onWine); color:var(--wineDeep); border:0; border-radius:999px; padding:12px 24px; cursor:pointer; }
+  button:focus-visible { outline:2px solid var(--onWine); outline-offset:3px; }
+  ol { margin:0 0 20px 20px; padding:0; color:var(--soft); }
+  li { margin:0 0 6px; }
+  .muted { font-size:13px; color:var(--mute); }
+  .err { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:18px; }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+(function () {
+  var COPY = {
+    nl: { title: "Je AI-assistent op je website", named: "{n} op je website", intro: "Plak deze regel code in de footer van je website. Daarna staat de assistent rechtsonder op elke pagina.",
+          copy: "Code kopiëren", copied: "Gekopieerd", wp: "Zo doe je het in WordPress:",
+          steps: ["Installeer de gratis plugin <strong>WPCode</strong> (Plugins › Nieuwe plugin).", "Ga naar <strong>Code Snippets › Header &amp; Footer</strong>.", "Plak de code in het vak <strong>Footer</strong> en klik op Opslaan."],
+          note: "Beheert iemand anders je website? Stuur deze pagina dan door.", bad: "Deze link is niet compleet. Vraag ons om een nieuwe." },
+    en: { title: "Your AI assistant on your website", named: "{n} on your website", intro: "Paste this line of code into your website's footer. The assistant then appears in the corner of every page.",
+          copy: "Copy code", copied: "Copied", wp: "On WordPress:",
+          steps: ["Install the free <strong>WPCode</strong> plugin (Plugins › Add New).", "Go to <strong>Code Snippets › Header &amp; Footer</strong>.", "Paste the code into <strong>Footer</strong> and click Save."],
+          note: "Does someone else manage your website? Just forward them this page.", bad: "This link is incomplete. Ask us for a new one." },
+    pt: { title: "O seu assistente no seu site", named: "{n} no seu site", intro: "Cole esta linha de código no rodapé do seu site. O assistente aparece depois no canto de cada página.",
+          copy: "Copiar código", copied: "Copiado", wp: "No WordPress:",
+          steps: ["Instale o plugin gratuito <strong>WPCode</strong> (Plugins › Adicionar novo).", "Vá a <strong>Code Snippets › Header &amp; Footer</strong>.", "Cole o código em <strong>Footer</strong> e clique em Salvar."],
+          note: "Outra pessoa cuida do seu site? Encaminhe esta página.", bad: "Este link está incompleto. Peça-nos um novo." }
+  };
+  var q = new URLSearchParams(location.search);
+  var lang = COPY[q.get("lang")] ? q.get("lang") : "nl";
+  var t = COPY[lang], app = document.getElementById("app"), key = q.get("key") || "";
+  document.documentElement.lang = lang;
+  if (!/^wk_[A-Za-z0-9]{8,64}$/.test(key)) { app.innerHTML = '<div class="err">' + t.bad + "</div>"; return; }
+  var snippet = '<script src="' + location.origin + '/widget/v1.js" data-key="' + key + '" async><\/script>';
+  var name = (q.get("name") || "").replace(/[^\p{L} .'-]/gu, "").slice(0, 40);
+  app.innerHTML = "<h1>" + (name ? t.named.replace("{n}", name) : t.title) + "</h1><p>" + t.intro + '</p><div class="code"><pre id="s"></pre><button id="b" type="button">' + t.copy +
+    "</button></div><p><strong>" + t.wp + "</strong></p><ol>" + t.steps.map(function (s) { return "<li>" + s + "</li>"; }).join("") +
+    '</ol><p class="muted">' + t.note + "</p>";
+  document.getElementById("s").textContent = snippet;
+  var b = document.getElementById("b");
+  b.onclick = function () {
+    var done = function () { b.textContent = t.copied; setTimeout(function () { b.textContent = t.copy; }, 2000); };
+    if (navigator.clipboard) navigator.clipboard.writeText(snippet).then(done, fallback); else fallback();
+    function fallback() { var r = document.createRange(); r.selectNodeContents(document.getElementById("s")); var s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand("copy"); done(); }
+  };
+})();
+</script>
+</body>
+</html>

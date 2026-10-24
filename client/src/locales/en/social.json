@@ -13,6 +13,10 @@
       "settings": "Settings",
       "comments": "Comments to DM",
       "insights": "Insights"
+    },
+    "modes": {
+      "aria": "Insights or socials",
+      "work": "Socials"
     }
   },
   "captions": {

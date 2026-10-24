@@ -17,7 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SearchPill } from "@/components/ui/search-pill";
+import { ExpandingSearch, TopbarIconButton } from "@/components/crm/primitives";
 import { cn } from "@/lib/utils";
 
 import {
@@ -29,14 +29,9 @@ import {
 } from "../types";
 
 /* ════════════════════════════════════════════════════════════════════════════
-   PromptsToolbar — search, filters, sort, group, fields, create
+   PromptsToolbar — search, filters, sort, group, fields, create: the right
+   side of the Prompt Library table topbar (PageTopbar `right`).
    ════════════════════════════════════════════════════════════════════════════ */
-
-/* ── Expand-on-hover button constants ──────────────────────────────────────── */
-const xBase = "group inline-flex items-center h-9 pl-[9px] rounded-full border text-[12px] font-medium overflow-hidden shrink-0 transition-[max-width,color,border-color] duration-200 max-w-9";
-const xDefault = "border-black/[0.125] text-foreground/60 hover:text-foreground";
-const xActive  = "border-brand-indigo text-brand-indigo";
-const xSpan    = "whitespace-nowrap pl-1.5 pr-2.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150";
 
 /* ── Module-level tKey maps (data-as-labels pattern) ──────────────────────── */
 const SORT_TKEYS: Record<PromptSortOption, string> = {
@@ -135,38 +130,18 @@ export function PromptsToolbar({
   const { t } = useTranslation("prompts");
 
   return (
-    <div className="flex items-center gap-1 flex-1 min-w-0">
-      {/* ── Separator from ViewTabBar ───────────────────────────────────── */}
-      <div className="w-px h-4 bg-border/25 mx-0.5 shrink-0" />
-
+    <>
       {/* ── 1. Search ───────────────────────────────────────────────────── */}
-      <SearchPill
-        value={searchQuery}
-        onChange={onSearchQueryChange}
-        open={searchOpen ?? false}
-        onOpenChange={onSearchOpenChange ?? (() => {})}
-        placeholder={t("toolbar.searchPlaceholder")}
-      />
-
-      {/* ── 2. +Create button ────────────────────────────────────────────── */}
-      <button
-        className={cn(xBase, "hover:max-w-[100px]", xDefault)}
-        onClick={onOpenCreate}
-        data-testid="button-create-prompt"
-      >
-        <Plus className="h-4 w-4 shrink-0" />
-        <span className={xSpan}>{t("toolbar.create")}</span>
-      </button>
+      <ExpandingSearch value={searchQuery} onChange={onSearchQueryChange} placeholder={t("toolbar.searchPlaceholder")} />
 
       {/* ── 3. Filter dropdown (status + model + campaign) ───────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[100px]", isFilterActive ? xActive : xDefault)}>
+          <TopbarIconButton label={t("toolbar.filter")} active={isFilterActive}>
             <Filter className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.filter")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52 max-h-80 overflow-y-auto">
+        <DropdownMenuContent align="end" className="w-52 max-h-80 overflow-y-auto">
           {/* Type section: voice-agent prompts (use_case voice_*) vs everything else */}
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("labels.type")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
@@ -289,12 +264,11 @@ export function PromptsToolbar({
       {/* ── 4. Sort dropdown ─────────────────────────────────────────────── */}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <button className={cn(xBase, "hover:max-w-[80px]", sortBy !== "recent" ? xActive : xDefault)}>
+          <TopbarIconButton label={t("toolbar.sort")} active={sortBy !== "recent"}>
             <ArrowUpDown className="h-4 w-4 shrink-0" />
-            <span className={xSpan}>{t("toolbar.sort")}</span>
-          </button>
+          </TopbarIconButton>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="start" className="w-52">
+        <DropdownMenuContent align="end" className="w-52">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
             {t("toolbar.sortBy")}
           </DropdownMenuLabel>
@@ -390,12 +364,11 @@ export function PromptsToolbar({
       {showTableControls && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, "hover:max-w-[100px]", groupBy !== "none" ? xActive : xDefault)}>
+            <TopbarIconButton label={t("toolbar.group")} active={groupBy !== "none"}>
               <Layers className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.group")}</span>
-            </button>
+            </TopbarIconButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-52">
+          <DropdownMenuContent align="end" className="w-52">
             {GROUP_OPTIONS.map((opt) => (
               <DropdownMenuItem
                 key={opt}
@@ -436,12 +409,11 @@ export function PromptsToolbar({
       {showTableControls && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className={cn(xBase, "hover:max-w-[100px]", visibleCols.size !== DEFAULT_VISIBLE_PROMPT_COLS.length ? xActive : xDefault)}>
+            <TopbarIconButton label={t("toolbar.fields")} active={visibleCols.size !== DEFAULT_VISIBLE_PROMPT_COLS.length}>
               <Eye className="h-4 w-4 shrink-0" />
-              <span className={xSpan}>{t("toolbar.fields")}</span>
-            </button>
+            </TopbarIconButton>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-52 max-h-72 overflow-y-auto">
+          <DropdownMenuContent align="end" className="w-52 max-h-72 overflow-y-auto">
             <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
               {t("toolbar.showHideColumns")}
             </DropdownMenuLabel>
@@ -489,13 +461,10 @@ export function PromptsToolbar({
         </DropdownMenu>
       )}
 
-      {/* ── 7. Count label ─────────────────────────────────────────────── */}
-      <span className="text-[12px] text-muted-foreground/60 tabular-nums whitespace-nowrap shrink-0 ml-1">
-        {t("toolbar.promptCount", { count: totalCount })}
-      </span>
-
-      {/* ── Spacer ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 min-w-0" />
-    </div>
+      {/* ── 7. +Create (wine, last) ──────────────────────────────────────── */}
+      <TopbarIconButton label={t("toolbar.create")} primary onClick={onOpenCreate} data-testid="button-create-prompt">
+        <Plus className="h-4 w-4 shrink-0" />
+      </TopbarIconButton>
+    </>
   );
 }

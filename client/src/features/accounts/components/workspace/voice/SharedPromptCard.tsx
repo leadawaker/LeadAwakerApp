@@ -4,13 +4,15 @@
 // placeholder's value in green and the engine's own additions greyed.
 import { useState } from "react";
 import { Link } from "wouter";
-import { AlertTriangle, Braces, Check, Loader2, Pencil } from "lucide-react";
+import { AlertTriangle, Braces, Check, Info, Loader2, Pencil } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { useVoiceT } from "./voiceGender";
 import { VoiceCardShell, helpStyle } from "./voiceAtoms";
 import { PromptCodeEditor } from "@/features/prompts/components/PromptCodeEditor";
 import { useAutosave, type AutosaveState } from "./useAutosave";
 import { resolvedSegments, type Segment } from "./resolvedSegments";
+import { PromptVersions } from "./PromptVersions";
+import { PromptCounts } from "./PromptCounts";
 import type { VoicePromptRow } from "./voicePromptsApi";
 import type { VoiceCard } from "./readiness";
 
@@ -58,19 +60,29 @@ function FilledIn({ segments }: { segments: Segment[] }) {
   );
 }
 
-export function SharedPromptCard({ card, kind, accountId, icon, title, help, row, onSave }: {
+export function SharedPromptCard({ card, kind, accountId, lineId, approx, sharedText, icon, title, help, notice, row, onSave }: {
   card: VoiceCard;
   /** Which voice prompt this is, for the engine's preview. */
-  kind: "layer" | "backend";
+  kind: "layer" | "backend" | "eleven";
   accountId: number;
+  /** kind "eleven": the line the preview is rendered for. */
+  lineId?: number;
+  /** The token count is an estimate (ElevenLabs does not use the GPT tokenizer). */
+  approx?: boolean;
+  /** Replaces the default "shared by every client line" sentence. */
+  sharedText?: string;
   icon: React.ReactNode;
   title: string;
   help: string;
+  /** Shown above the text when this prompt is not used on the line being viewed. */
+  notice?: string;
   row: VoicePromptRow;
   onSave: (promptId: number, text: string) => Promise<boolean>;
 }) {
   const { t } = useVoiceT();
   const [text, setText] = useState(row.promptText);
+  // Bumped by a restore so the uncontrolled editor reopens on the restored text.
+  const [rev, setRev] = useState(0);
   const state = useAutosave(text, row.promptText, (next) => onSave(row.id, next));
   const [filled, setFilled] = useState<Segment[] | null>(null);
   const [resolving, setResolving] = useState(false);
@@ -84,7 +96,7 @@ export function SharedPromptCard({ card, kind, accountId, icon, title, help, row
       const res = await apiFetch("/api/voice-prompts/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, accountId, text }),
+        body: JSON.stringify({ kind, accountId, lineId, text }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok || typeof body.text !== "string") throw new Error();
@@ -115,25 +127,39 @@ export function SharedPromptCard({ card, kind, accountId, icon, title, help, row
   return (
     <VoiceCardShell card={card} icon={icon} title={title} action={toggle}>
       <p style={helpStyle}>{help}</p>
+      {notice && (
+        <div
+          className="neu-inset-crisp" data-testid={`voice-prompt-notice-${kind}`}
+          style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "9px 12px", borderRadius: "var(--r-button)", marginBottom: 12, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.45 }}
+        >
+          <Info size={14} style={{ color: "var(--mute)", flexShrink: 0, marginTop: 2 }} />
+          <span>{notice}</span>
+        </div>
+      )}
       <div
         className="neu-inset-crisp"
         style={{ display: "flex", alignItems: "flex-start", gap: 8, padding: "9px 12px", borderRadius: "var(--r-button)", marginBottom: 12, fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.45 }}
       >
         <AlertTriangle size={14} style={{ color: "var(--stage-contacted)", flexShrink: 0, marginTop: 2 }} />
         <span>
-          {t("prompt.shared", { useCase: row.useCase })}{" "}
+          {sharedText ?? t("prompt.shared", { useCase: row.useCase })}{" "}
           <Link href="/platform/prompt-library" style={{ color: "var(--wine)" }}>{t("prompt.history", { id: row.id })}</Link>
         </span>
       </div>
+      <PromptVersions
+        promptId={row.id} kind={kind} getText={() => text}
+        onRestore={(restored) => { setText(restored); setFilled(null); setRev((r) => r + 1); }}
+      />
       {resolveError && <p role="alert" style={{ ...helpStyle, color: "var(--stage-lost)" }}>{t("prompt.resolve.failed")}</p>}
       {filled ? (
         <FilledIn segments={filled} />
       ) : (
         <div className="neu-inset-crisp" style={{ height: EDITOR_HEIGHT, borderRadius: "var(--r-card)", overflow: "hidden" }}>
           {/* Keyed by the row so a switch back from the filled-in view opens on the latest text. */}
-          <PromptCodeEditor key={`${row.id}`} initialValue={text} fontSize={13} onChange={setText} />
+          <PromptCodeEditor key={`${row.id}-${rev}`} initialValue={text} fontSize={13} onChange={setText} />
         </div>
       )}
+      <PromptCounts text={text} resolve={{ kind, accountId, lineId }} approx={approx} />
     </VoiceCardShell>
   );
 }

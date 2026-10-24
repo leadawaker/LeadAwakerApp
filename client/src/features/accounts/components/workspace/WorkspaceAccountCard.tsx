@@ -4,7 +4,7 @@ import { getInitials } from "@/lib/avatarUtils";
 import { STATUS_I18N_KEY, formatRelativeTime } from "../listWidgets/accountListConstants";
 import type { AccountRow } from "./types";
 
-// Account list card styled to match the Campaigns page (la-camp-card / la-mono-tile / la-status).
+// Account list card built from the shared list-card classes (la-camp-card / la-mono-tile / la-status).
 export function WorkspaceAccountCard({
   account, isActive, onClick, campaignNames, leadCount,
 }: {

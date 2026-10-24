@@ -21,7 +21,7 @@ export function SocialAccountPicker({ options, selectedId, onSelect }: {
           <ChevronDown size={12} style={{ flexShrink: 0 }} />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" sideOffset={6} className="w-56 rounded-2xl shadow-xl border-border bg-background">
+      <DropdownMenuContent align="start" sideOffset={6} className="w-56 rounded-2xl shadow-xl border-border bg-background">
         {options.map((o) => (
           <DropdownMenuItem key={o.id} onClick={() => onSelect(o.id)}
             className={cn("flex items-center gap-2 cursor-pointer py-2.5 rounded-xl mx-1", o.id === selectedId && "bg-muted font-bold")}

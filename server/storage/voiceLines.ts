@@ -23,6 +23,9 @@ import {
   type DbLike, type Tx,
 } from "./voicePersona";
 import { normalizeIntake } from "@shared/voiceIntake";
+import {
+  CLIENT_ELEVEN_ALLOWED, DETACHED_LINE, ELEVEN_LLM_SUPPORTED, lineFieldsOf, type LineEngineFields,
+} from "./voiceLineEngine";
 
 export const VOICE_LOCALES = ["nl", "en-GB", "en-US", "pt-BR"] as const;
 export const AFTER_HOURS = ["message", "callback", "ringHot"] as const;
@@ -45,7 +48,7 @@ export type Screening = Record<(typeof SCREENING_KINDS)[number], boolean>;
 export interface PronunciationRow { word: string; sayAs: string }
 
 /** The engine's notice voices (four OpenAI, four Google) and speeds (recording_notice.py VOICES / SPEEDS). */
-export const NOTICE_VOICES = ["nova", "sage", "ash", "onyx", "kore", "aoede", "puck", "charon"] as const;
+export const NOTICE_VOICES = ["nova", "sage", "ash", "onyx", "kore", "aoede", "puck", "charon", "emma", "iris", "jasmijn"] as const;
 /** Where Telnyx places a line's call legs and conference (engine telnyx_bridge.py REGIONS). */
 export const VOICE_REGIONS = ["Europe", "US", "Canada", "Australia", "Middle East"] as const;
 export const NOTICE_SPEEDS = [1, 1.25, 1.5] as const;
@@ -68,19 +71,27 @@ function noticeCustom(value: unknown): RecordingNoticeCustom | null {
 
 export interface VoiceLine {
   accountId: number;
-  number: { id: number; phoneNumber: string; enabled: boolean; status: "not_set" | "pending" | "live" } | null;
+  number: ({ id: number; phoneNumber: string; enabled: boolean; status: "not_set" | "pending" | "live" } & Partial<LineEngineFields>) | null;
   persona: { id: number; niche: string; companyName: string; description: string; usp: string; isLive: boolean } | null;
   agentName: string | null;
   agentNameCustom: string | null;
   voice: string | null;
+  /** The agent's gender when set explicitly; null = automatic (the GPT Live voice's gender). */
+  agentGender: "female" | "male" | null;
+  /** Agency A/B test: the voice layer the browser Test button runs ("lean" = voice_lean_layer_*). Phone calls ignore it. */
+  testPrompt: "standard" | "lean";
+  /** Agency only: the account's other real lines (the settings above are shared with them). */
+  otherLines: { phoneNumber: string; purpose: "client" | "demo" | "test" }[];
+  /** Whether ElevenLabs lets a line pick its LLM (engine ELEVEN_LLM_SUPPORTED); false hides that pick. */
+  elevenLlmSupported: boolean;
+  /** Whether a client line's ElevenLabs pick reaches its real callers (engine CLIENT_ELEVEN_ALLOWED). */
+  clientElevenAllowed: boolean;
   locale: string | null;
   transferNumber: string | null;
   transferName: string | null;
   transferWaiting: (typeof TRANSFER_WAITING)[number];
   transferHoldMusic: HoldMusic;
   transferMode: (typeof TRANSFER_MODES)[number];
-  /** Office sound under her voice (puts the number on the Telnyx conference route). */
-  officeSound: boolean;
   /** Where the line's calls are handled: every leg of a call sits in this one region. */
   region: (typeof VOICE_REGIONS)[number];
   /** The recorded "this call is recorded" line before she answers (engine recording_notice.py). */
@@ -122,13 +133,15 @@ export interface VoiceLinePatch {
   agentName?: string | null;
   agentNameCustom?: string | null;
   voice?: string | null;
+  /** female | male, or null for automatic (the key is removed). */
+  agentGender?: "female" | "male" | null;
+  testPrompt?: "standard" | "lean";
   locale?: string | null;
   transferNumber?: string | null;
   transferName?: string | null;
   transferWaiting?: (typeof TRANSFER_WAITING)[number];
   transferHoldMusic?: HoldMusic;
   transferMode?: (typeof TRANSFER_MODES)[number];
-  officeSound?: boolean;
   region?: (typeof VOICE_REGIONS)[number];
   recordingNotice?: boolean;
   /** The account's own clip, as the engine applied it; null goes back to the standard line. Not on the PUT body. */
@@ -183,13 +196,16 @@ async function loadState(exec: DbLike, accountId: number) {
     .orderBy(desc(voiceNumbers.enabled), asc(voiceNumbers.id))
     .limit(1);
   const persona = await getLivePersona(exec, accountId);
+  const others = await exec.select({ phoneNumber: voiceNumbers.phoneNumber, purpose: voiceNumbers.purpose }).from(voiceNumbers)
+    .where(and(eq(voiceNumbers.accountsId, accountId), isRealNumber, number ? ne(voiceNumbers.id, number.id) : undefined))
+    .orderBy(asc(voiceNumbers.id));
   const kb = await exec.execute(sql`
     SELECT count(*)::int AS n FROM "p2mxx34fvbf3ll6"."Account_Knowledge_Base" WHERE account_id = ${accountId}
   `);
   const kbCount = Number((kb.rows as { n: number }[])[0]?.n ?? 0);
   const [sender] = await exec.select({ status: whatsappSenders.status }).from(whatsappSenders)
     .where(eq(whatsappSenders.accountsId, accountId));
-  return { account, profile, number, persona, kbCount, whatsappConnected: sender?.status === "connected" };
+  return { account, profile, number, others, persona, kbCount, whatsappConnected: sender?.status === "connected" };
 }
 
 type State = NonNullable<Awaited<ReturnType<typeof loadState>>>;
@@ -197,7 +213,7 @@ type State = NonNullable<Awaited<ReturnType<typeof loadState>>>;
 const hhmm = (t: string | null | undefined) => (t ? String(t).slice(0, 5) : null);
 
 function toVoiceLine(accountId: number, st: State): VoiceLine {
-  const { account, profile, number, persona, kbCount, whatsappConnected } = st;
+  const { account, profile, number, others, persona, kbCount, whatsappConnected } = st;
   const setup = obj(profile?.setup);
   const voiceSetup = obj(setup.voice);
   const handoff = obj(setup.handoff);
@@ -244,7 +260,7 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
   return {
     accountId,
     number: number
-      ? { id: number.id, phoneNumber: number.phoneNumber, enabled: number.enabled, status: number.enabled ? "live" : "pending" }
+      ? { id: number.id, phoneNumber: number.phoneNumber, enabled: number.enabled, status: number.enabled ? "live" : "pending", ...lineFieldsOf(number) }
       : null,
     persona: persona
       ? {
@@ -259,13 +275,17 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     agentName,
     agentNameCustom,
     voice,
+    agentGender: voiceSetup.agentGender === "female" || voiceSetup.agentGender === "male" ? voiceSetup.agentGender : null,
+    testPrompt: voiceSetup.testPrompt === "lean" ? "lean" : "standard",
+    elevenLlmSupported: ELEVEN_LLM_SUPPORTED,
+    clientElevenAllowed: CLIENT_ELEVEN_ALLOWED,
+    otherLines: others.map((o) => ({ phoneNumber: o.phoneNumber, purpose: lineFieldsOf({ purpose: o.purpose, engine: null, engineVoice: null }).purpose })),
     locale,
     transferNumber,
     transferName: text(handoff.name) || null,
     transferWaiting: text(handoff.waiting) === "hold" ? "hold" : "sara",
     transferHoldMusic: HOLD_MUSIC.find((k) => k === text(handoff.holdMusic)) ?? DEFAULT_HOLD_MUSIC,
     transferMode,
-    officeSound: voiceSetup.officeSound === true,
     region: VOICE_REGIONS.find((r) => r === voiceSetup.region) ?? "Europe",
     recordingNotice: {
       enabled: voiceSetup.recordingNotice !== false,
@@ -310,7 +330,7 @@ async function detachNumbers(tx: Tx, accountId: number, keepId: number | null) {
     keepId != null ? ne(voiceNumbers.id, keepId) : undefined,
   );
   await tx.update(voiceNumbers).set({
-    accountsId: null, campaignsId: null, personaId: null, clientNiche: null, enabled: false, updatedAt: new Date(),
+    accountsId: null, campaignsId: null, personaId: null, clientNiche: null, enabled: false, ...DETACHED_LINE, engineModel: null, updatedAt: new Date(),
   }).where(cond);
 }
 
@@ -371,6 +391,11 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   const setHandoff = (k: string, v: unknown) => { handoff[k] = v; setupTouched = true; };
 
   if (patch.voice !== undefined) setVoice("voice", patch.voice);
+  if (patch.agentGender !== undefined) {
+    if (patch.agentGender) setVoice("agentGender", patch.agentGender);
+    else { delete voice.agentGender; setupTouched = true; }
+  }
+  if (patch.testPrompt !== undefined) setVoice("testPrompt", patch.testPrompt);
   if (patch.locale !== undefined) setVoice("locale", patch.locale);
   if (patch.greeting !== undefined) setVoice("greeting", patch.greeting);
   if (patch.pronunciation !== undefined) setVoice("pronunciation", patch.pronunciation);
@@ -382,7 +407,6 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   if (patch.transferWaiting !== undefined) setHandoff("waiting", patch.transferWaiting);
   if (patch.transferHoldMusic !== undefined) setHandoff("holdMusic", patch.transferHoldMusic);
   if (patch.transferMode !== undefined) setHandoff("mode", patch.transferMode);
-  if (patch.officeSound !== undefined) setVoice("officeSound", patch.officeSound);
   if (patch.region !== undefined) setVoice("region", patch.region);
   if (patch.recordingNotice !== undefined) setVoice("recordingNotice", patch.recordingNotice);
   if (patch.recordingNoticeCustom !== undefined) setVoice("recordingNoticeCustom", patch.recordingNoticeCustom);
@@ -501,13 +525,13 @@ export interface BlockedCaller { id: number; phone: string; reason: string; bloc
 const STRIKE_DAYS = 30;
 
 /** Numbers blocked on the account's line right now, then numbers on a first warning, newest first. */
-async function listBlockedCallers(accountId: number): Promise<BlockedCaller[]> {
+async function listBlockedCallers(accountId: number, hideTest = false): Promise<BlockedCaller[]> {
   const r = await db.execute(sql`
     SELECT id, phone, reason,
       to_char(blocked_until AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "blockedUntil",
       to_char(created_at AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') AS "createdAt"
     FROM "p2mxx34fvbf3ll6"."Voice_Blocked_Callers" b
-    WHERE accounts_id = ${accountId} AND unblocked_at IS NULL AND (
+    WHERE accounts_id = ${accountId} AND unblocked_at IS NULL ${hideTest ? sql`AND NOT EXISTS (SELECT 1 FROM "p2mxx34fvbf3ll6"."Voice_Calls" tv WHERE tv.call_id = b.call_id AND tv.is_test = true)` : sql``} AND (
       (reason <> 'warned' AND blocked_until > now())
       OR (reason = 'warned' AND created_at > now() - make_interval(days => ${STRIKE_DAYS})
           AND NOT EXISTS (

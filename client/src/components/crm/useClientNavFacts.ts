@@ -28,7 +28,6 @@ export function useClientNavFacts(): ClientNavFacts {
   return useMemo(() => ({
     voiceLive: !!caps?.live,
     hasInvoices: Array.isArray(invoices) && invoices.length > 0,
-    hasReactivation: !!services?.reactivation,
     // Until services load, assume a receptionist so the label does not flicker to "My account".
     hasReceptionist: services ? !!(services.phone || services.website) : true,
     hasChats: !!(services?.website || services?.whatsapp),

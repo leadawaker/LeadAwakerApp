@@ -3,7 +3,7 @@ import { Readable } from "node:stream";
 import { storage } from "../storage";
 import { requireAuth, scopeToAccount } from "../auth";
 import { wrapAsync } from "./_helpers";
-import { decideScope, hidesTestData, resolveVoiceAccess, type VoiceAccess } from "./voiceCallsAccess";
+import { callReach, decideScope, hidesTestData, resolveVoiceAccess, type VoiceAccess } from "./voiceCallsAccess";
 import { registerVoiceCallersRoutes } from "./voiceCallers";
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
@@ -30,7 +30,7 @@ async function loadAllowedCall(req: Request) {
   const access = accessOf(req);
   return storage.getVoiceCall(String(req.params.callId), {
     accountId: access.lockedAccountId,
-    allowDemo: access.isOwner,
+    ...callReach(access),
     includeAccountName: access.isAgency,
     hideTest: hidesTestData(access),
     includeEvents: access.isAgency,
@@ -60,7 +60,8 @@ async function proxyRecording(req: Request, res: Response): Promise<void> {
     return;
   }
   res.status(200);
-  res.setHeader("Content-Type", "audio/wav");
+  // GPT-Live and Grok calls are wav, ElevenLabs calls mp3: the engine says which.
+  res.setHeader("Content-Type", upstream.headers.get("content-type") || "audio/wav");
   res.setHeader("Cache-Control", "private, no-store");
   const len = upstream.headers.get("content-length");
   if (len) res.setHeader("Content-Length", len);
@@ -70,6 +71,16 @@ async function proxyRecording(req: Request, res: Response): Promise<void> {
 export function registerVoiceCallsRoutes(app: Express): void {
   app.get("/api/voice-calls/capabilities", ...guards, wrapAsync(async (req, res) => {
     res.json(await storage.getVoiceCapabilities(accessOf(req)));
+  }));
+
+  // Nav badge: live calls since the Calls page was last opened (the client keeps
+  // that moment). Agency counts every account, a client only their own.
+  app.get("/api/voice-calls/unseen-count", ...guards, wrapAsync(async (req, res) => {
+    const access = accessOf(req);
+    const parsed = typeof req.query.since === "string" ? new Date(req.query.since) : null;
+    const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+    const since = parsed && !Number.isNaN(parsed.getTime()) ? parsed : weekAgo;
+    res.json({ count: await storage.countVoiceCallsSince({ accountId: access.lockedAccountId, since }) });
   }));
 
   app.get("/api/voice-calls/stats", ...guards, wrapAsync(async (req, res) => {

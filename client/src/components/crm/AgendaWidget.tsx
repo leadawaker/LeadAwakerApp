@@ -1,6 +1,7 @@
 import { useMemo, useCallback, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { openLead } from "@/lib/leadLink";
 import {
   CalendarCheck, Phone, Check, Calendar, Mail,
   X, AlertTriangle,
@@ -258,22 +259,14 @@ export function AgendaWidget({ accountId, className, hideHeader }: AgendaWidgetP
   const agendaCount = upcomingCalls.length + visibleTakeovers.length;
 
   // ── Navigation ────────────────────────────────────────────────────────────
-  const goToLead = useCallback((leadId: number) => {
-    try { localStorage.setItem("selected-lead-id", String(leadId)); } catch {}
-    setLocation(`${prefix}/leads`);
-  }, [prefix, setLocation]);
+  const goToLead = useCallback((leadId: number) => openLead(setLocation, leadId), [setLocation]);
 
   const goToCalendar = useCallback(() => {
     setLocation(`${prefix}/calendar`);
   }, [prefix, setLocation]);
 
-  const goToChat = useCallback((leadId: number) => {
-    // Lead chat now lives on the Leads page (Chats page retired)
-    try {
-      localStorage.setItem("selected-lead-id", String(leadId));
-    } catch {}
-    setLocation(`${prefix}/chat`);
-  }, [prefix, setLocation]);
+  // The lead's chat is its one home (Chats with the lead selected).
+  const goToChat = goToLead;
 
   return (
     <div className={cn("flex flex-col rounded-lg overflow-hidden", className)}>

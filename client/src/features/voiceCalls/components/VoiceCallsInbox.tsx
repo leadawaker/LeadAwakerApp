@@ -5,9 +5,13 @@ import { MonoLabel } from "@/features/voice/components/atoms";
 import { CallListSkeleton } from "./VoiceCallsSkeleton";
 import type { VoiceCallListItem, VoiceScope } from "../api/voiceCallsApi";
 import { filterCalls, groupCalls, sortCalls, type ListOptions } from "../listOptions";
+import { callStatus } from "../status";
+import { callerIni, callerInitials, callerTitle, maskCaller } from "./bits";
+import { CompactCallRail, RAIL_WIDTH, type RailItem } from "./CompactCallRail";
 import { VoiceCallListCard } from "./VoiceCallListCard";
 import { VoiceCallDetail } from "./VoiceCallDetail";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useListPanelState } from "@/hooks/useListPanelState";
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
@@ -49,8 +53,19 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
     return () => window.removeEventListener("resize", onR);
   }, []);
   const narrow = vw < 920;
+  // Same minimize switch as the Chats list (shared across pages, desktop only).
+  const { state: panel } = useListPanelState();
+  const compact = !narrow && panel === "compact";
+  const hidden = !narrow && panel === "hidden";
 
   const items = useMemo(() => sortCalls(filterCalls(calls, options), options.sort), [calls, options]);
+  const railItems: RailItem[] = useMemo(() => items.map((raw) => {
+    // Titled like the list card: Demo by the business answered for, Live by who called.
+    const c = maskCaller(raw, masked);
+    const title = c.scope === "demo" ? c.personaCompany || t("persona.universal") : callerTitle(c, t("webCaller"));
+    const ini = c.scope === "demo" ? callerInitials(title, t("persona.universal")) : callerIni(c, t("webCaller"));
+    return { key: c.callId, ini, status: callStatus(c), title };
+  }), [items, masked, t]);
   const sections = useMemo(
     () => groupCalls(items, options.group, t, { timeZone, locale: i18n.language }),
     [items, options.group, t, timeZone, i18n.language],
@@ -82,7 +97,7 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
     sections.map((sec) => (
       <div key={sec.key}>
         {sec.label && <GroupHeader label={sec.label} count={sec.items.length} />}
-        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+        <div className="la-cards">
           {sec.items.map((c) => (
             <VoiceCallListCard key={c.callId} call={c} masked={masked} active={selection === c.callId} onClick={() => setSelection(c.callId)} />
           ))}
@@ -91,7 +106,16 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
     ))
   );
 
-  const listPane = (
+  const renderCard = (key: string) => {
+    const c = items.find((x) => x.callId === key);
+    return c ? <VoiceCallListCard call={c} masked={masked} active={selection === key} onClick={() => setSelection(key)} /> : null;
+  };
+
+  const listPane = compact ? (
+    <div style={{ width: RAIL_WIDTH, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--line)", background: "var(--surface)" }}>
+      <CompactCallRail items={isLoading || error ? [] : railItems} selection={selection} onSelect={setSelection} renderCard={renderCard} />
+    </div>
+  ) : (
     <div style={{ width: narrow ? "100%" : 348, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: narrow ? "none" : "1px solid var(--line)", background: "var(--surface)" }}>
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 10px 8px", display: "flex", flexDirection: "column" }}>
         {listBody}
@@ -121,7 +145,7 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden", background: "var(--bg)" }}>
-      {narrow ? (selection ? rightPane : listPane) : <>{listPane}{rightPane}</>}
+      {narrow ? (selection ? rightPane : listPane) : <>{!hidden && listPane}{rightPane}</>}
     </div>
   );
 }

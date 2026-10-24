@@ -13,18 +13,21 @@ import { SecurityCard } from "./SecurityCard";
 import { TwoFactorCard } from "./TwoFactorCard";
 
 /**
- * Settings > Profile: who you are. Identity header (avatar), personal info with
- * Save, and the change-password block. `flat` (phone My profile) renders it as
- * sections on one surface instead of a stack of cards.
+ * Settings > Profile: who you are. Identity header (avatar) and personal info
+ * with Save. The phone My profile also carries the password and two-factor
+ * blocks (`withSecurity`); desktop Settings has them under Security. `flat`
+ * renders it as sections on one surface instead of a stack of cards.
  */
 export function ProfileTab({
   profile,
   onProfileUpdated,
   flat = false,
+  withSecurity = true,
 }: {
   profile: UserProfile;
   onProfileUpdated: (p: UserProfile) => void;
   flat?: boolean;
+  withSecurity?: boolean;
 }) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
@@ -127,8 +130,8 @@ export function ProfileTab({
         flat={flat}
       />
 
-      <SecurityCard email={email} flat={flat} />
-      <TwoFactorCard flat={flat} />
+      {withSecurity && <SecurityCard email={email} flat={flat} />}
+      {withSecurity && <TwoFactorCard flat={flat} />}
     </div>
   );
 }

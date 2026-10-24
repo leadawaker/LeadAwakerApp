@@ -16,14 +16,12 @@ export type LandingOption = NavGate & {
 
 /**
  * Short list of sensible landing pages. Each carries the same NavGate as its nav
- * bar entry, so the picker never offers a page the nav hides.
+ * bar entry, so the picker never offers a page the nav hides. Speed to Lead and
+ * Missed calls are hidden until finished (list in RightSidebar.tsx).
  */
 export const LANDING_OPTIONS: LandingOption[] = [
   { href: "/platform/home", labelKey: "sidebar.home" },
-  { href: "/platform/campaigns", labelKey: "sidebar.reactivation" },
-  { href: "/platform/speed-to-lead", labelKey: "sidebar.speedToLead", serviceKey: "speed", agencyOnly: true },
   { href: "/platform/reputation", labelKey: "sidebar.reputation", serviceKey: "reputation" },
-  { href: "/platform/missed-calls", labelKey: "sidebar.missedCalls", serviceKey: "missedcall" },
   { href: "/platform/chat", labelKey: "sidebar.conversations", agencyOnly: true },
   { href: "/platform/contacts", labelKey: "sidebar.leads" },
   { href: "/platform/calendar", labelKey: "sidebar.calendar" },
