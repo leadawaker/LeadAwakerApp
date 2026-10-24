@@ -892,6 +892,7 @@
         "publishing": "Wordt geplaatst"
       },
       "previewLabel": "Voorbeeld van de video",
+      "cover": "Cover",
       "enlargeVideo": "Groter bekijken",
       "noCaption": "Geen bijschrift",
       "approvedBy": "Goedgekeurd door {{name}}",

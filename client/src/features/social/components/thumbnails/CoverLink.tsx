@@ -8,16 +8,12 @@ import { Check, ImageUp, Loader2 } from "lucide-react";
 import { fetchSocialPosts, SocialApiError, socialPostsKey, updateSocialPost, type SocialPostView } from "../../api/socialApi";
 import type { ThumbnailView } from "../../api/thumbnailsApi";
 import { errorKey } from "../../lib/posts";
+import { PostMiniature } from "../PostMiniature";
 
 const iconBtn: React.CSSProperties = { padding: "4px 7px", minHeight: 28, fontSize: 11 };
 
 /** Only scheduled and held posts can still change; the server refuses the rest. */
 const canTakeCover = (p: SocialPostView) => p.status === "scheduled" || p.status === "held";
-
-function postLabel(p: SocialPostView, fallback: string): string {
-  const text = p.caption.replace(/\s+/g, " ").trim();
-  return text ? (text.length > 36 ? `${text.slice(0, 36)}…` : text) : fallback;
-}
 
 const when = (iso: string) => new Date(iso).toLocaleString(undefined, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 
@@ -27,7 +23,6 @@ export function CoverLink({ accountId, thumb, canLink }: { accountId: number; th
   const qc = useQueryClient();
   const [open, setOpen] = useState(false);
   const posts = useQuery({ queryKey: socialPostsKey(accountId), queryFn: () => fetchSocialPosts(accountId), staleTime: 30_000 });
-  const fallback = (p: SocialPostView) => t("thumbnails.cover.reel", { id: p.id });
 
   const covered = (posts.data ?? []).filter((p) => p.coverThumbnailId === thumb.id);
   // The post this thumbnail was made for comes first, then the soonest to go out.
@@ -37,7 +32,7 @@ export function CoverLink({ accountId, thumb, canLink }: { accountId: number; th
 
   const link = useMutation({
     mutationFn: (p: SocialPostView) => updateSocialPost(accountId, p.id, { coverThumbnailId: p.coverThumbnailId === thumb.id ? null : thumb.id }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: socialPostsKey(accountId) }),
+    onSuccess: () => { qc.invalidateQueries({ queryKey: socialPostsKey(accountId) }); setOpen(false); },
   });
   const error = link.error instanceof SocialApiError ? link.error.reason : link.error ? "failed" : null;
 
@@ -45,8 +40,8 @@ export function CoverLink({ accountId, thumb, canLink }: { accountId: number; th
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
       {covered.map((p) => (
-        <p key={p.id} style={{ margin: 0, fontSize: 10.5, color: "var(--wine)", fontWeight: 600, overflowWrap: "anywhere" }} data-testid={`thumb-cover-of-${thumb.id}`}>
-          {t("thumbnails.cover.coverOf", { post: postLabel(p, fallback(p)) })}
+        <p key={p.id} style={{ margin: 0, display: "flex", alignItems: "center", gap: 6, fontSize: 10.5, color: "var(--wine)", fontWeight: 600 }} data-testid={`thumb-cover-of-${thumb.id}`}>
+          <span>{t("thumbnails.cover.coverOf")}</span><PostMiniature post={p} width={18} />
         </p>
       ))}
       {canLink && (
@@ -63,11 +58,11 @@ export function CoverLink({ accountId, thumb, canLink }: { accountId: number; th
             const on = p.coverThumbnailId === thumb.id;
             return (
               <button key={p.id} type="button" className="la-btn la-btn--plain" disabled={link.isPending} onClick={() => link.mutate(p)}
-                style={{ ...iconBtn, justifyContent: "flex-start", textAlign: "left", height: "auto", whiteSpace: "normal", gap: 6, alignItems: "flex-start" }}
+                style={{ ...iconBtn, justifyContent: "flex-start", textAlign: "left", height: "auto", whiteSpace: "normal", gap: 6, alignItems: "center" }}
                 aria-pressed={on} data-testid={`thumb-cover-post-${thumb.id}-${p.id}`}>
-                {on ? <Check size={12} style={{ flexShrink: 0, marginTop: 2, color: "var(--wine)" }} /> : <span style={{ width: 12, flexShrink: 0 }} />}
+                {on ? <Check size={12} style={{ flexShrink: 0, color: "var(--wine)" }} /> : <span style={{ width: 12, flexShrink: 0 }} />}
+                <PostMiniature post={p} />
                 <span style={{ minWidth: 0 }}>
-                  <span style={{ display: "block", fontWeight: 600, color: "var(--ink-soft)", overflowWrap: "anywhere" }}>{postLabel(p, fallback(p))}</span>
                   <span style={{ display: "block", color: "var(--mute)" }}>{when(p.scheduledAt)}{p.id === thumb.postId ? ` · ${t("thumbnails.cover.madeFor")}` : ""}</span>
                 </span>
               </button>

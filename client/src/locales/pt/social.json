@@ -438,8 +438,7 @@
     },
     "cover": {
       "use": "Usar como capa",
-      "coverOf": "Capa de: {{post}}",
-      "reel": "Reel #{{id}}",
+      "coverOf": "Capa de",
       "madeFor": "feita para este",
       "noPosts": "Nenhum Reel agendado para ligar.",
       "approvalNote": "Se o post estava aprovado, ele volta para aprovação."

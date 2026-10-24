@@ -438,8 +438,7 @@
     },
     "cover": {
       "use": "Use as cover",
-      "coverOf": "Cover of: {{post}}",
-      "reel": "Reel #{{id}}",
+      "coverOf": "Cover of",
       "madeFor": "made for this one",
       "noPosts": "No scheduled Reels to attach it to.",
       "approvalNote": "If the post was approved, it goes back for approval."

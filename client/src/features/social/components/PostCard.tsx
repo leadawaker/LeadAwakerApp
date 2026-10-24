@@ -118,12 +118,21 @@ export function PostCard({ post, accountId, timeZone, who, onChanged, onEdit }: 
         <div style={{ width: 96, aspectRatio: "9 / 16", borderRadius: "var(--r-surface)", background: "var(--bg)", flexShrink: 0 }} />
       )}
 
+      {post.coverUrl && (
+        <figure style={{ margin: 0, width: 56, flexShrink: 0, display: "flex", flexDirection: "column", gap: 4 }} data-testid={`post-${post.id}-cover`}>
+          <img src={`${API_BASE}${post.coverUrl}`} alt={t("social.posts.cover")} loading="lazy"
+            style={{ display: "block", width: 56, aspectRatio: "9 / 16", objectFit: "cover", borderRadius: "var(--r-surface)", background: "var(--bg)" }} />
+          <figcaption style={{ fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--mute-2)" }}>{t("social.posts.cover")}</figcaption>
+        </figure>
+      )}
+
       <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 8 }}>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
           <Pill color={STATUS_COLOR[post.section]}>{t(`social.posts.badge.${post.status === "publishing" ? "publishing" : post.section}`)}</Pill>
           <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute)" }}>
             {formatPostTime(post.scheduledAt, timeZone, i18n.language)}
           </span>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 700, color: "var(--ink-soft)" }} data-testid={`post-${post.id}-number`}>#{post.id}</span>
         </div>
 
         <p style={{ margin: 0, fontSize: 13, color: "var(--ink-soft)", lineHeight: 1.45, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden", whiteSpace: "pre-line" }}>

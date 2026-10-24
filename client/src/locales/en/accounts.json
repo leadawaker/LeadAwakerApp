@@ -892,6 +892,7 @@
         "publishing": "Publishing"
       },
       "previewLabel": "Video preview",
+      "cover": "Cover",
       "enlargeVideo": "Watch larger",
       "noCaption": "No caption",
       "approvedBy": "Approved by {{name}}",

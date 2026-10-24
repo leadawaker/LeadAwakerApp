@@ -121,7 +121,8 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", script, in
       </h3>
 
       {!timeOnly && (
-        <div>
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 20, alignItems: "flex-start" }}>
+        <div style={{ flex: "1 1 280px", minWidth: 0 }}>
           <span style={labelStyle}>{t("social.posts.sheet.video")}</span>
           <div className="row" style={{ gap: 14, alignItems: "flex-start" }}>
             {previewUrl ? (
@@ -153,11 +154,11 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", script, in
             </div>
           </div>
         </div>
-      )}
-
-      {!timeOnly && (
-        <CoverPicker accountId={accountId} postId={post?.id} value={form.coverThumbnailId} previewUrl={coverPreview}
-          onChange={(id, url) => { set("coverThumbnailId", id); setCoverPreview(url); }} />
+        <div style={{ flex: "1 1 240px", minWidth: 0 }}>
+          <CoverPicker accountId={accountId} postId={post?.id} value={form.coverThumbnailId} previewUrl={coverPreview}
+            onChange={(id, url) => { set("coverThumbnailId", id); setCoverPreview(url); }} />
+        </div>
+        </div>
       )}
 
       {!timeOnly && (

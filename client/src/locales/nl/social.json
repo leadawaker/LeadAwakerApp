@@ -438,8 +438,7 @@
     },
     "cover": {
       "use": "Als cover gebruiken",
-      "coverOf": "Cover van: {{post}}",
-      "reel": "Reel #{{id}}",
+      "coverOf": "Cover van",
       "madeFor": "hiervoor gemaakt",
       "noPosts": "Geen geplande Reels om hem aan te koppelen.",
       "approvalNote": "Was de post al goedgekeurd, dan moet hij opnieuw goedgekeurd worden."

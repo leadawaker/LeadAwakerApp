@@ -841,6 +841,7 @@
         "publishing": "Publicando"
       },
       "previewLabel": "Prévia do vídeo",
+      "cover": "Capa",
       "enlargeVideo": "Ver em tamanho maior",
       "noCaption": "Sem legenda",
       "approvedBy": "Aprovado por {{name}}",
