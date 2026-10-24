@@ -19,6 +19,7 @@ import { SocialSettingsSection } from "../components/SocialSettingsSection";
 import { StudioSection } from "../components/studio/StudioSection";
 import { CommentsSection } from "../components/comments/CommentsSection";
 import { InsightsSection } from "../components/insights/InsightsSection";
+import { ThumbnailsSection } from "../components/thumbnails/ThumbnailsSection";
 import { showSocialTab } from "../lib/posts";
 import { SocialApiError } from "../api/socialApi";
 import { parseSocialDeepLink, pickSocialAccount, socialAccountOptions, socialSections, SOCIAL_PAGE_PATH, type SocialSection } from "../lib/socialPage";
@@ -127,6 +128,7 @@ export function SocialPage() {
                 {section === "home" && <ManagerHome accountId={account.id} timeZone={account.timeZone} onOpen={pick} />}
                 {section === "posts" && <SocialTab accountId={account.id} timeZone={account.timeZone} />}
                 {section === "studio" && <StudioSection accountId={account.id} timeZone={account.timeZone} />}
+                {section === "thumbnails" && <ThumbnailsSection accountId={account.id} />}
                 {section === "comments" && <CommentsSection accountId={account.id} />}
                 {section === "insights" && <InsightsSection accountId={account.id} />}
                 {section === "settings" && <SocialSettingsSection accountId={account.id} />}

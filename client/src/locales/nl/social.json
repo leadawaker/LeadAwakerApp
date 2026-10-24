@@ -12,7 +12,8 @@
       "studio": "Studio",
       "settings": "Instellingen",
       "comments": "Reactie naar DM",
-      "insights": "Inzichten"
+      "insights": "Inzichten",
+      "thumbnails": "Thumbnails"
     },
     "modes": {
       "aria": "Inzichten of socials",
@@ -405,5 +406,113 @@
       "reels_skip_rate": "Overslaan"
     },
     "skipped": "Nu niet beschikbaar vanuit Instagram voor dit account: {{metrics}}."
+  },
+  "thumbnails": {
+    "notConfigured": "Er is nog geen beeldgenerator gekoppeld. Zet OPENAI_API_KEY op de server om thumbnails te maken.",
+    "composer": {
+      "title": "Nieuwe thumbnail",
+      "help": "Kies waarvoor hij is, de stijl en het formaat. Voeg referentiebeelden toe om het resultaat te sturen.",
+      "source": "Voor",
+      "sourceNone": "Niets in het bijzonder",
+      "sourceScripts": "Scripts",
+      "sourcePosts": "Posts",
+      "titleLabel": "Titel op de cover",
+      "titlePlaceholder": "Bijvoorbeeld: 3 fouten waardoor je vastzit",
+      "look": "Stijl",
+      "needPerson": "Upload eerst minstens één foto bij Personen: een cover met persoon heeft een persoon nodig.",
+      "format": "Formaat",
+      "prompt": "Extra instructies",
+      "promptPlaceholder": "Optioneel. Bijvoorbeeld: warme kleuren, Mia lacht, gele titel",
+      "variants": "Varianten",
+      "makeForMe": "Maak het voor mij",
+      "generate": "Maak met deze stijl",
+      "makeForMeHelp": "Bij Maak het voor mij kiest de AI de stijl. Genereren duurt ongeveer een minuut; je kunt intussen verder werken."
+    },
+    "kinds": {
+      "auto": {
+        "name": "Automatisch",
+        "help": "De AI kiest wat bij de post past"
+      },
+      "presenter": {
+        "name": "Persoon op cover",
+        "help": "Zet de persoon uit Personen (bijv. Mia) op de cover"
+      },
+      "title": {
+        "name": "Alleen titel",
+        "help": "Grote typografie, geen mensen"
+      },
+      "collage": {
+        "name": "Collage",
+        "help": "Meerdere beelden gecombineerd"
+      }
+    },
+    "formats": {
+      "reel": "Reel 9:16",
+      "post": "Post 4:5",
+      "square": "Vierkant 1:1",
+      "landscape": "Liggend 16:9"
+    },
+    "refs": {
+      "title": "Referentiebeelden",
+      "pickHelp": "Tik op beelden om ze mee te sturen (maximaal {{max}}).",
+      "upload": "Beelden uploaden",
+      "delete": "Beeld verwijderen",
+      "groups": {
+        "person": "Personen",
+        "style": "Stijlen om na te doen",
+        "asset": "Materiaal"
+      },
+      "help": {
+        "person": "Duidelijke foto's van het gezicht, bijv. Mia. Gebruikt voor covers met persoon.",
+        "style": "Covers die je mooi vindt. De AI neemt de kleuren, letters en indeling over.",
+        "asset": "Logo's, producten of foto's voor in het ontwerp."
+      },
+      "kinds": {
+        "person": "Persoon",
+        "style": "Stijl",
+        "asset": "Materiaal"
+      }
+    },
+    "styles": {
+      "title": "Opgeslagen stijlen",
+      "save": "Opslaan als stijl",
+      "saveConfirm": "Opslaan",
+      "cancel": "Annuleren",
+      "namePlaceholder": "Naam van de stijl",
+      "delete": "Deze stijl verwijderen"
+    },
+    "gallery": {
+      "title": "Thumbnails",
+      "filters": {
+        "all": "Alle",
+        "starred": "Met ster"
+      },
+      "empty": "Nog geen thumbnails. Maak links je eerste.",
+      "emptyStarred": "Nog geen thumbnails met ster.",
+      "generating": "Bezig met maken...",
+      "untitled": "Geen titel",
+      "download": "Downloaden",
+      "star": "Ster geven",
+      "unstar": "Ster weghalen",
+      "reuse": "Deze instellingen opnieuw gebruiken",
+      "delete": "Verwijderen"
+    },
+    "errors": {
+      "failed": "Er ging iets mis. Probeer het opnieuw.",
+      "not_configured": "Er is nog geen beeldgenerator gekoppeld.",
+      "no_person": "Upload eerst een foto bij Personen.",
+      "no_title": "Een cover met alleen titel heeft een titel nodig.",
+      "ref_missing": "Een van de referentiebeelden is verwijderd. Kies opnieuw.",
+      "script_missing": "Dat script is niet beschikbaar.",
+      "post_missing": "Die post is niet beschikbaar.",
+      "bad_image": "Dat bestand kon niet als beeld worden gelezen (PNG, JPEG of WebP).",
+      "too_large": "Dat beeld is te groot.",
+      "too_many": "De limiet is bereikt. Verwijder er eerst een paar.",
+      "rate_limited": "Te veel thumbnails in korte tijd. Wacht een paar minuten.",
+      "busy": "Nog bezig met eerdere thumbnails. Wacht even.",
+      "timed_out": "Deze duurde te lang en is gestopt.",
+      "no_image": "De AI gaf voor deze geen beeld terug.",
+      "save_failed": "Het beeld kon niet worden opgeslagen."
+    }
   }
 }
