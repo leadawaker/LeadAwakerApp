@@ -57,12 +57,15 @@ test("generate body: defaults, limits, and script or post but not both", () => {
   assert.ok(dedup.ok && dedup.value.refIds.join() === "3,4");
 });
 
-test("request refs: only a presenter cover without a person adds the account's person photos", () => {
+test("request refs: every look but title-only adds the account's person photos when none is picked", () => {
   const ref = (id: number, kind: string) => ({ id, kind } as SocialThumbnailRef);
   const all = [ref(1, "person"), ref(2, "person"), ref(3, "style")];
   assert.deepEqual(pickRequestRefs("presenter", [ref(3, "style")], all).map((r) => r.id), [1, 2, 3]);
   assert.deepEqual(pickRequestRefs("presenter", [ref(2, "person")], all).map((r) => r.id), [2]);
-  assert.deepEqual(pickRequestRefs("auto", [], all), []);
+  assert.deepEqual(pickRequestRefs("auto", [], all).map((r) => r.id), [1, 2]);
+  assert.deepEqual(pickRequestRefs("collage", [ref(3, "style")], all).map((r) => r.id), [1, 2, 3]);
+  assert.deepEqual(pickRequestRefs("auto", [ref(2, "person")], all).map((r) => r.id), [2]);
+  assert.deepEqual(pickRequestRefs("title", [], all), []);
 });
 
 test("OpenAI provider: generations without references, edits (multipart, image[]) with them", async () => {

@@ -75,6 +75,11 @@ export function buildThumbnailPrompt(input: ThumbnailPromptInput): string {
     lines.push(`Attached images: ${described.join("; ")}.`);
   }
 
+  // The presenter direction already says this; the other looks get it whenever a person photo is attached.
+  if (input.kind !== "presenter" && input.refs.some((r) => r.kind === "person")) {
+    lines.push("If the person from the attached person photos appears, keep their exact likeness (face, hair, skin tone); do not invent a different person.");
+  }
+
   const context = clip(input.context, CONTEXT_MAX);
   if (context) lines.push(`The post is about: ${context}`);
   const about = clip(input.about, ABOUT_MAX);

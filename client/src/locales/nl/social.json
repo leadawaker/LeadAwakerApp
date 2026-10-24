@@ -439,7 +439,7 @@
     "kinds": {
       "auto": {
         "name": "Automatisch",
-        "help": "De AI kiest wat bij de post past"
+        "help": "De AI kiest wat bij de post past en gebruikt je foto's uit Personen"
       },
       "presenter": {
         "name": "Persoon op cover",
@@ -471,7 +471,7 @@
         "asset": "Materiaal"
       },
       "help": {
-        "person": "Duidelijke foto's van het gezicht, bijv. Mia. Gebruikt voor covers met persoon.",
+        "person": "Duidelijke foto's van het gezicht, bijv. Mia. Gebruikt op elke cover behalve Alleen titel, tenzij je andere foto's kiest.",
         "style": "Covers die je mooi vindt. De AI neemt de kleuren, letters en indeling over.",
         "asset": "Logo's, producten of foto's voor in het ontwerp."
       },

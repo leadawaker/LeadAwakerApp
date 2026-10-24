@@ -439,7 +439,7 @@
     "kinds": {
       "auto": {
         "name": "Automático",
-        "help": "A IA escolhe o que combina com o post"
+        "help": "A IA escolhe o que combina com o post e usa suas fotos de Pessoas"
       },
       "presenter": {
         "name": "Pessoa na capa",
@@ -471,7 +471,7 @@
         "asset": "Materiais"
       },
       "help": {
-        "person": "Fotos nítidas do rosto, ex.: Mia. Usadas nas capas com pessoa.",
+        "person": "Fotos nítidas do rosto, ex.: Mia. Usadas em toda capa, menos em Só título, a não ser que você escolha outras fotos.",
         "style": "Capas que você gosta. A IA copia as cores, fontes e o layout.",
         "asset": "Logos, produtos ou fotos para usar no design."
       },

@@ -98,11 +98,12 @@ export function parseRefBody(body: unknown): Parsed<{ kind: RefKind; label: stri
 }
 
 /**
- * The references a request sends: the picked ones, and for a presenter cover without a person among
- * them, the account's person photos (newest first) in the slots left.
+ * The references a request sends: the picked ones, and, unless the cover is title-only, the account's
+ * person photos (newest first) in the slots left when no person is among them. So the same face comes
+ * back on every cover, whether the look is Auto, a collage, a saved style or "Make it for me".
  */
 export function pickRequestRefs(kind: ThumbKind, picked: SocialThumbnailRef[], all: SocialThumbnailRef[]): SocialThumbnailRef[] {
-  if (kind !== "presenter" || picked.some((r) => r.kind === "person")) return picked;
+  if (kind === "title" || picked.some((r) => r.kind === "person")) return picked;
   const room = THUMB_LIMITS.refsPerRequest - picked.length;
   const people = all.filter((r) => r.kind === "person" && !picked.some((p) => p.id === r.id)).slice(0, Math.max(0, room));
   return [...people, ...picked];

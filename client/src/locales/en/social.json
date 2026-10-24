@@ -439,7 +439,7 @@
     "kinds": {
       "auto": {
         "name": "Auto",
-        "help": "The AI picks what fits the post"
+        "help": "The AI picks what fits the post and uses your People photos"
       },
       "presenter": {
         "name": "Person on cover",
@@ -471,7 +471,7 @@
         "asset": "Assets"
       },
       "help": {
-        "person": "Clear photos of the face, e.g. Mia. Used for person covers.",
+        "person": "Clear photos of the face, e.g. Mia. Used on every cover except Title only, unless you pick other photos.",
         "style": "Covers you like. The AI copies the colors, fonts and layout.",
         "asset": "Logos, products or photos to put in the design."
       },
