@@ -68,12 +68,13 @@ const deps: ThumbnailDeps = {
     async listThumbnails(id) { return thumbs.filter((t) => t.accountsId === id); },
     async getThumbnail(accountId, id) { return thumbs.find((t) => t.accountsId === accountId && t.id === id) ?? null; },
     async insertThumbnails(rows) {
-      const made = rows.map((r) => row<SocialThumbnail>(r as any, { id: ++seq, error: null, filePath: null, model: null, starred: false, createdAt: NOW, updatedAt: NOW }));
+      const made = rows.map((r) => row<SocialThumbnail>(r as any, { id: ++seq, error: null, filePath: null, model: null, starred: false, parentId: null, review: null, createdAt: NOW, updatedAt: NOW }));
       thumbs.push(...made);
       return made.map((m) => ({ ...m }));
     },
     async updateThumbnails(ids, fields) { for (const t of thumbs) if (ids.includes(t.id)) Object.assign(t, fields); },
     async setThumbnailStarred(accountId, id, starred) { const x = thumbs.find((t) => t.accountsId === accountId && t.id === id); if (!x) return null; x.starred = starred; return x; },
+    async approveThumbnail(accountId, id) { const x = thumbs.find((t) => t.accountsId === accountId && t.id === id && t.review === "pending"); if (!x) return null; x.review = "approved"; return x; },
     async deleteThumbnail(accountId, id) {
       const x = thumbs.find((t) => t.accountsId === accountId && t.id === id);
       thumbs = thumbs.filter((t) => t !== x);
@@ -273,4 +274,59 @@ test("a row stuck generating for longer than 15 minutes shows as failed", async 
   const [t] = (await call("GET", `/api/social/accounts/${A}/thumbnails`, AGENCY)).json;
   assert.equal(t.status, "failed");
   assert.equal(t.error, "timed_out");
+});
+
+// ─── Editing a finished cover ────────────────────────────────────────────────
+
+async function readyThumb(over: Record<string, unknown> = {}) {
+  const mia = (await addRef("person", "Mia")).json;
+  const made = await call("POST", `/api/social/accounts/${A}/thumbnails`, AGENCY, { kind: "auto", title: "Hello", format: "post", ...over });
+  await routes.idle();
+  imageCalls.length = 0;
+  return { mia, id: made.json[0].id as number };
+}
+
+test("edit: the cover goes first with the person photos, versions wait for approval and keep their parent", async () => {
+  const { mia, id } = await readyThumb();
+  const res = await call("POST", `/api/social/accounts/${A}/thumbnails/${id}/edit`, MANAGER_A, { instruction: "make the title bigger", variants: 2 });
+  assert.equal(res.status, 202);
+  assert.equal(res.json.length, 2);
+  assert.ok(res.json.every((t: any) => t.parentId === id && t.review === "pending" && t.format === "post" && t.status === "generating"));
+  await routes.idle();
+  assert.equal(imageCalls.length, 1);
+  assert.equal(imageCalls[0].n, 2);
+  assert.equal(imageCalls[0].references.length, 2);
+  assert.match(imageCalls[0].references[0].name, /^cover-/);
+  assert.match(imageCalls[0].prompt, /Edit image 1/);
+  assert.match(imageCalls[0].prompt, /make the title bigger/);
+  assert.match(imageCalls[0].prompt, /image 2 is a photo of the person to feature \(Mia\)/);
+  assert.deepEqual(thumbs.find((t) => t.parentId === id)!.refIds, [mia.id]);
+
+  const child = res.json[0].id;
+  assert.equal((await call("PATCH", `/api/social/accounts/${A}/thumbnails/${child}`, VIEWER_A, { review: "approved" })).status, 403);
+  const ok = await call("PATCH", `/api/social/accounts/${A}/thumbnails/${child}`, MANAGER_A, { review: "approved" });
+  assert.equal(ok.status, 200);
+  assert.equal(ok.json.review, "approved");
+  assert.equal((await call("PATCH", `/api/social/accounts/${A}/thumbnails/${child}`, MANAGER_A, { review: "approved" })).status, 404);
+  assert.equal((await call("PATCH", `/api/social/accounts/${A}/thumbnails/${id}`, MANAGER_A, { review: "approved" })).status, 404);
+});
+
+test("edit: a new format alone is enough, an empty edit, a missing or unfinished cover and a viewer are refused", async () => {
+  const { id } = await readyThumb();
+  const reshaped = await call("POST", `/api/social/accounts/${A}/thumbnails/${id}/edit`, AGENCY, { format: "portrait" });
+  assert.equal(reshaped.status, 202);
+  assert.equal(reshaped.json[0].format, "portrait");
+  await routes.idle();
+  assert.match(imageCalls[0].prompt, /Recompose it for the 3:4 frame/);
+  assert.equal(imageCalls[0].size, "1024x1536");
+
+  const empty = await call("POST", `/api/social/accounts/${A}/thumbnails/${id}/edit`, AGENCY, {});
+  assert.equal(empty.status, 422);
+  assert.equal(empty.json.reason, "no_instruction");
+  assert.equal((await call("POST", `/api/social/accounts/${A}/thumbnails/9999/edit`, AGENCY, { instruction: "x" })).json.reason, "thumbnail_missing");
+  assert.equal((await call("POST", `/api/social/accounts/${A}/thumbnails/${id}/edit`, VIEWER_A, { instruction: "x" })).status, 403);
+  assert.equal((await call("POST", `/api/social/accounts/${A}/thumbnails/${id}/edit`, AGENCY, { instruction: "x", variants: 9 })).status, 400);
+  const pending = thumbs.find((t) => t.parentId === id)!;
+  pending.status = "generating";
+  assert.equal((await call("POST", `/api/social/accounts/${A}/thumbnails/${pending.id}/edit`, AGENCY, { instruction: "x" })).json.reason, "thumbnail_missing");
 });

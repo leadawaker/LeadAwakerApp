@@ -101,6 +101,42 @@ export function buildThumbnailPrompt(input: ThumbnailPromptInput): string {
   return lines.join("\n");
 }
 
+export interface EditPromptInput {
+  format: ThumbFormat;
+  /** The cover being edited. */
+  title: string;
+  /** What to change; empty when only the format changes. */
+  instruction: string;
+  /** True when the new format differs from the cover's own. */
+  reshape: boolean;
+  /** Attached after the cover being edited, in order. */
+  refs: PromptRef[];
+  about: string;
+}
+
+/** The prompt for editing a finished cover: image 1 is the cover, the rest are the usual references. */
+export function buildEditPrompt(input: EditPromptInput): string {
+  const size = THUMB_FORMAT_SIZE[input.format];
+  const lines = [`Edit image 1, an existing Instagram cover image, and return the edited cover (${size.ratio}).`];
+  const instruction = input.instruction.trim();
+  if (instruction) lines.push(`Apply this change: ${instruction}`);
+  if (input.reshape) lines.push(`Recompose it for the ${size.ratio} frame without cutting off the title or the face.`);
+  lines.push(
+    "Keep everything the change does not mention exactly as it is: the layout, colors, style, the text and its spelling, " +
+    "and the exact likeness of any person (face, hair, skin tone). Do not invent a different person.",
+  );
+  const title = input.title.trim();
+  if (title) lines.push(`The cover's title, unless the change says otherwise, is "${title}".`);
+  if (input.refs.length > 0) {
+    const described = input.refs.map((r, i) => `image ${i + 2} is ${REF_ROLE[r.kind]}${r.label.trim() ? ` (${clip(r.label, 60)})` : ""}`);
+    lines.push(`Other attached images: ${described.join("; ")}.`);
+  }
+  const about = clip(input.about, ABOUT_MAX);
+  if (about) lines.push(`About the creator: ${about}`);
+  lines.push("Modern, clean, high contrast, made for a phone screen. No watermarks, no Instagram interface, no borders.");
+  return lines.join("\n");
+}
+
 /** What the image model is asked for, and the pixel size the result is cropped and scaled to. */
 export interface GenerationPlan {
   size: "1024x1536" | "1536x1024" | "1024x1024";

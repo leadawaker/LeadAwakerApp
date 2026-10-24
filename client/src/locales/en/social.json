@@ -436,6 +436,17 @@
       "generate": "Generate with this look",
       "makeForMeHelp": "Make it for me lets the AI pick the look. Generating takes about a minute; you can keep working meanwhile."
     },
+    "edit": {
+      "open": "Ask for changes",
+      "placeholder": "What should change? e.g. make the title bigger",
+      "current": "current",
+      "send": "Edit",
+      "cancel": "Cancel",
+      "editedFrom": "Edited from #{{id}}",
+      "pendingFrom": "Edit of #{{id}}: waiting for you",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
     "cover": {
       "use": "Use as cover",
       "coverOf": "Cover of",
@@ -516,6 +527,8 @@
     "errors": {
       "failed": "Something went wrong. Try again.",
       "not_configured": "No image generator is connected yet.",
+      "thumbnail_missing": "That image is not available to edit.",
+      "no_instruction": "Write what should change, or pick another format.",
       "no_person": "Upload a photo under People first.",
       "no_title": "A title-only cover needs a title.",
       "ref_missing": "One of the reference images was deleted. Pick again.",

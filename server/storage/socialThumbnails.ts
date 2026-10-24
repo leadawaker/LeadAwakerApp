@@ -107,6 +107,15 @@ export const socialThumbnailsStorage = {
     return row ?? null;
   },
 
+  /** Approves an edited version that is waiting. null when it is not there or was approved already. */
+  async approveThumbnail(accountId: number, thumbId: number): Promise<SocialThumbnail | null> {
+    const [row] = await db.update(socialThumbnails)
+      .set({ review: "approved", updatedAt: new Date() })
+      .where(and(eq(socialThumbnails.id, thumbId), eq(socialThumbnails.accountsId, accountId), eq(socialThumbnails.review, "pending")))
+      .returning();
+    return row ?? null;
+  },
+
   async deleteThumbnail(accountId: number, thumbId: number): Promise<SocialThumbnail | null> {
     const [row] = await db.delete(socialThumbnails)
       .where(and(eq(socialThumbnails.id, thumbId), eq(socialThumbnails.accountsId, accountId)))

@@ -58,6 +58,10 @@ CREATE TABLE IF NOT EXISTS ${S}."Social_Thumbnails" (
 );
 CREATE INDEX IF NOT EXISTS "social_thumbnails_accounts_id_idx" ON ${S}."Social_Thumbnails" ("accounts_id", "created_at");
 
+-- Edited versions: the thumbnail they came from, and whether the edit was approved yet.
+ALTER TABLE ${S}."Social_Thumbnails" ADD COLUMN IF NOT EXISTS "parent_id" integer;
+ALTER TABLE ${S}."Social_Thumbnails" ADD COLUMN IF NOT EXISTS "review" text;
+
 -- A post's Reel cover: its own copy of a generated thumbnail (server/social/postRoutes.ts).
 ALTER TABLE ${S}."Social_Posts" ADD COLUMN IF NOT EXISTS "cover_thumbnail_id" integer;
 ALTER TABLE ${S}."Social_Posts" ADD COLUMN IF NOT EXISTS "cover_public_id" text;

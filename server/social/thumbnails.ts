@@ -73,6 +73,25 @@ export function parseGenerateBody(body: unknown): Parsed<GenerateInput> {
   };
 }
 
+export interface EditInput { instruction: string; format: ThumbFormat | null; variants: number }
+
+/** An edit is an instruction, or just a new format; 1 to 3 versions. */
+export function parseEditBody(body: unknown): Parsed<EditInput> {
+  const b = obj(body);
+  const instruction = str(b.instruction).trim();
+  if (instruction.length > THUMB_LIMITS.prompt) return { ok: false, message: "Instructions are too long" };
+  let format: ThumbFormat | null = null;
+  if (b.format !== undefined && b.format !== null) {
+    if (!isThumbFormat(b.format)) return { ok: false, message: "Invalid format" };
+    format = b.format;
+  }
+  const variants = b.variants ?? 1;
+  if (!Number.isInteger(variants) || (variants as number) < 1 || (variants as number) > THUMB_LIMITS.variants) {
+    return { ok: false, message: `variants must be 1 to ${THUMB_LIMITS.variants}` };
+  }
+  return { ok: true, value: { instruction, format, variants: variants as number } };
+}
+
 export interface StyleInput { name: string; kind: ThumbKind; prompt: string; format: ThumbFormat; refIds: number[] }
 
 export function parseStyleBody(body: unknown): Parsed<StyleInput> {
@@ -126,6 +145,9 @@ export interface ThumbnailView {
   error: string | null;
   starred: boolean;
   imageUrl: string | null;
+  /** The thumbnail this one was edited from, and "pending" until the edit is approved. */
+  parentId: number | null;
+  review: string | null;
   createdAt: string;
 }
 
@@ -146,6 +168,8 @@ export function toThumbnailView(row: SocialThumbnail, now: Date): ThumbnailView 
     error: status === "failed" ? row.error || "timed_out" : null,
     starred: row.starred,
     imageUrl: status === "ready" && row.filePath ? `${base(row.accountsId)}/thumbnails/${row.id}/image` : null,
+    parentId: row.parentId ?? null,
+    review: row.review ?? null,
     createdAt: new Date(row.createdAt).toISOString(),
   };
 }

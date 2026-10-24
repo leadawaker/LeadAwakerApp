@@ -33,6 +33,9 @@ export interface ThumbnailView {
   error: string | null;
   starred: boolean;
   imageUrl: string | null;
+  /** The thumbnail this one was edited from; review is "pending" until the edit is approved. */
+  parentId: number | null;
+  review: "pending" | "approved" | null;
   createdAt: string;
 }
 
@@ -62,6 +65,9 @@ export const fetchThumbnails = (accountId: number) => getJson<ThumbnailView[]>(`
 export const generateThumbnails = (accountId: number, input: GenerateInput) => sendJson<ThumbnailView[]>(`${base(accountId)}/thumbnails`, "POST", input);
 export const starThumbnail = (accountId: number, id: number, starred: boolean) => sendJson<ThumbnailView>(`${base(accountId)}/thumbnails/${id}`, "PATCH", { starred });
 export const deleteThumbnail = (accountId: number, id: number) => sendJson<{ ok: true }>(`${base(accountId)}/thumbnails/${id}`, "DELETE");
+export interface EditInput { instruction: string; format: ThumbFormat | null; variants: number }
+export const editThumbnail = (accountId: number, id: number, input: EditInput) => sendJson<ThumbnailView[]>(`${base(accountId)}/thumbnails/${id}/edit`, "POST", input);
+export const approveThumbnail = (accountId: number, id: number) => sendJson<ThumbnailView>(`${base(accountId)}/thumbnails/${id}`, "PATCH", { review: "approved" });
 export const downloadUrl = (t: ThumbnailView) => (t.imageUrl ? `${imageSrc(t.imageUrl)}?download=1` : "");
 
 export const fetchThumbnailRefs = (accountId: number) => getJson<RefView[]>(`${base(accountId)}/thumbnail-refs`);

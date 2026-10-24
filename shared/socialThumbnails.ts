@@ -32,6 +32,10 @@ export type RefKind = (typeof REF_KINDS)[number];
 export const THUMB_STATUSES = ["generating", "ready", "failed"] as const;
 export type ThumbStatus = (typeof THUMB_STATUSES)[number];
 
+/** An edited version waits as "pending" until it is approved; rejecting it deletes it. */
+export const THUMB_REVIEWS = ["pending", "approved"] as const;
+export type ThumbReview = (typeof THUMB_REVIEWS)[number];
+
 export const THUMB_LIMITS = {
   title: 160,
   prompt: 2_000,

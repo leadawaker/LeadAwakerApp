@@ -24,15 +24,16 @@ import type {
   SocialThumbnailRef,
   SocialThumbnailStyle,
 } from "@shared/schema";
-import { THUMB_LIMITS, isRefKind } from "@shared/socialThumbnails";
+import { DEFAULT_THUMB_FORMAT, THUMB_LIMITS, isRefKind, isThumbFormat, isThumbKind } from "@shared/socialThumbnails";
 import { wrapAsync } from "../routes/_helpers";
 import { canManageSocial, isAgency } from "./access";
 import { actorIdOf, forbidden, makeAccountGate, positiveIntParam, refused, type GetAccount } from "./gate";
 import { createRateLimiter, type RateLimiter } from "./rateLimit";
 import { visibleToClient } from "./scripts";
-import { buildThumbnailPrompt, generationPlan, type GenerationPlan } from "./thumbnailPrompt";
+import { buildEditPrompt, buildThumbnailPrompt, generationPlan, type GenerationPlan } from "./thumbnailPrompt";
 import { decodeDataUrl, sniffImage, type ImageProvider } from "./thumbnailImage";
 import {
+  parseEditBody,
   parseGenerateBody,
   parseRefBody,
   parseStyleBody,
@@ -65,6 +66,7 @@ export interface ThumbnailDeps {
     insertThumbnails(rows: InsertSocialThumbnail[]): Promise<SocialThumbnail[]>;
     updateThumbnails(ids: number[], fields: Partial<InsertSocialThumbnail>): Promise<void>;
     setThumbnailStarred(accountId: number, thumbId: number, starred: boolean): Promise<SocialThumbnail | null>;
+    approveThumbnail(accountId: number, thumbId: number): Promise<SocialThumbnail | null>;
     deleteThumbnail(accountId: number, thumbId: number): Promise<SocialThumbnail | null>;
   };
   /** null when no image model is configured (OPENAI_API_KEY not set). */
@@ -229,6 +231,20 @@ export function registerThumbnailRoutes(app: Express, deps: ThumbnailDeps, limit
   }));
 
   // ─── Thumbnails ───────────────────────────────────────────────────────────
+  /** One more generation job for the account, or the 429 answer. */
+  function admit(res: Response, accountId: number, userId: number): boolean {
+    if ((running.get(accountId) ?? 0) >= MAX_RUNNING_PER_ACCOUNT) {
+      refused(res, 429, "busy");
+      return false;
+    }
+    if (!limiter.take(`thumb:${userId}`, deps.now().getTime())) {
+      res.setHeader("Retry-After", String(limiter.retryAfterS(`thumb:${userId}`, deps.now().getTime())));
+      refused(res, 429, "rate_limited");
+      return false;
+    }
+    return true;
+  }
+
   app.get("/api/social/accounts/:id/thumbnails", deps.requireAuth, wrapAsync(async (req, res) => {
     const ctx = await accountGate(req, res);
     if (!ctx) return;
@@ -269,11 +285,7 @@ export function registerThumbnailRoutes(app: Express, deps: ThumbnailDeps, limit
     const refs = pickRequestRefs(input.kind, input.refIds.map((id) => byId.get(id)!), allRefs);
     if (input.kind === "presenter" && !refs.some((r) => r.kind === "person")) return refused(res, 422, "no_person");
 
-    if ((running.get(ctx.accountId) ?? 0) >= MAX_RUNNING_PER_ACCOUNT) return refused(res, 429, "busy");
-    if (!limiter.take(`thumb:${userId}`, deps.now().getTime())) {
-      res.setHeader("Retry-After", String(limiter.retryAfterS(`thumb:${userId}`, deps.now().getTime())));
-      return refused(res, 429, "rate_limited");
-    }
+    if (!admit(res, ctx.accountId, userId)) return;
 
     const settings = await store.getSocialSettings(ctx.accountId);
     const fullPrompt = buildThumbnailPrompt({
@@ -315,14 +327,14 @@ export function registerThumbnailRoutes(app: Express, deps: ThumbnailDeps, limit
   }));
 
   /** Never throws: every row ends ready or failed. */
-  async function generate(provider: ImageProvider, accountId: number, rows: SocialThumbnail[], plan: GenerationPlan, prompt: string, refs: SocialThumbnailRef[]): Promise<void> {
+  async function generate(provider: ImageProvider, accountId: number, rows: SocialThumbnail[], plan: GenerationPlan, prompt: string, refs: SocialThumbnailRef[], leading: Array<{ data: Buffer; mimeType: string; name: string }> = []): Promise<void> {
     const ids = rows.map((r) => r.id);
     try {
-      const references = await Promise.all(refs.map(async (r) => ({
+      const references = [...leading, ...await Promise.all(refs.map(async (r) => ({
         data: await files.read(r.filePath),
         mimeType: r.mimeType,
         name: `reference-${r.id}${extname(r.filePath) || ".png"}`,
-      })));
+      })))];
       const { images, model } = await provider.generate({ prompt, size: plan.size, n: rows.length, references });
       for (const [i, row] of rows.entries()) {
         const image = images[i];
@@ -351,6 +363,78 @@ export function registerThumbnailRoutes(app: Express, deps: ThumbnailDeps, limit
     }
   }
 
+  // An edit: the finished cover goes to the image model as image 1, with the account's person photos,
+  // and the new versions wait as "pending" until they are approved (or rejected, which deletes them).
+  app.post("/api/social/accounts/:id/thumbnails/:thumbId/edit", deps.requireAuth, wrapAsync(async (req, res) => {
+    const ctx = await accountGate(req, res);
+    if (!ctx) return;
+    if (!canManageSocial(req.user, ctx.accountId)) return forbidden(res);
+    const userId = actorIdOf(req, res);
+    if (userId === null) return;
+    const thumbId = positiveIntParam(req, res, "thumbId");
+    if (thumbId === null) return;
+    const parsed = parseEditBody(req.body);
+    if (!parsed.ok) return res.status(400).json({ message: parsed.message });
+    const provider = deps.images();
+    if (!provider) return refused(res, 501, "not_configured");
+    const source = await store.getThumbnail(ctx.accountId, thumbId);
+    if (!source || source.status !== "ready" || !inside(source.filePath)) return refused(res, 404, "thumbnail_missing");
+    const format = parsed.value.format ?? (isThumbFormat(source.format) ? source.format : DEFAULT_THUMB_FORMAT);
+    const reshape = format !== source.format;
+    if (!parsed.value.instruction && !reshape) return refused(res, 422, "no_instruction");
+    if (!admit(res, ctx.accountId, userId)) return;
+
+    const allRefs = await store.listThumbnailRefs(ctx.accountId);
+    const kept = (source.refIds ?? []).map((id) => allRefs.find((r) => r.id === id)).filter((r): r is SocialThumbnailRef => !!r);
+    // The person's photos come along again so the face stays the same; one slot is the cover itself.
+    const refs = pickRequestRefs(isThumbKind(source.kind) ? source.kind : "auto", kept, allRefs).slice(0, THUMB_LIMITS.refsPerRequest - 1);
+    const settings = await store.getSocialSettings(ctx.accountId);
+    const fullPrompt = buildEditPrompt({
+      format,
+      title: source.title,
+      instruction: parsed.value.instruction,
+      reshape,
+      refs: refs.map((r) => ({ kind: isRefKind(r.kind) ? r.kind : "asset", label: r.label })),
+      about: settings?.aboutMe ?? "",
+    });
+    let cover: Buffer;
+    try {
+      cover = await files.read(source.filePath);
+    } catch {
+      return refused(res, 404, "thumbnail_missing");
+    }
+
+    const batchId = randomUUID();
+    const rows = await store.insertThumbnails(Array.from({ length: parsed.value.variants }, () => ({
+      accountsId: ctx.accountId,
+      batchId,
+      styleId: source.styleId,
+      scriptId: source.scriptId,
+      postId: source.postId,
+      parentId: source.id,
+      review: "pending",
+      kind: source.kind,
+      format,
+      title: source.title,
+      prompt: parsed.value.instruction,
+      fullPrompt,
+      refIds: refs.map((r) => r.id),
+      status: "generating",
+      createdByUserId: userId,
+    })));
+
+    running.set(ctx.accountId, (running.get(ctx.accountId) ?? 0) + 1);
+    const job = generate(provider, ctx.accountId, rows, generationPlan(format), fullPrompt, refs, [{ data: cover, mimeType: "image/jpeg", name: `cover-${source.id}.jpg` }]).finally(() => {
+      const left = (running.get(ctx.accountId) ?? 1) - 1;
+      if (left > 0) running.set(ctx.accountId, left);
+      else running.delete(ctx.accountId);
+      jobs.delete(job);
+    });
+    jobs.add(job);
+    const now = deps.now();
+    res.status(202).json(rows.map((r) => toThumbnailView(r, now)));
+  }));
+
   app.get("/api/social/accounts/:id/thumbnails/:thumbId/image", deps.requireAuth, wrapAsync(async (req, res) => {
     const ctx = await accountGate(req, res);
     if (!ctx) return;
@@ -367,6 +451,11 @@ export function registerThumbnailRoutes(app: Express, deps: ThumbnailDeps, limit
     if (!canManageSocial(req.user, ctx.accountId)) return forbidden(res);
     const thumbId = positiveIntParam(req, res, "thumbId");
     if (thumbId === null) return;
+    if (req.body?.review === "approved") {
+      const approved = await store.approveThumbnail(ctx.accountId, thumbId);
+      if (!approved) return res.status(404).json({ message: "Not found" });
+      return res.json(toThumbnailView(approved, deps.now()));
+    }
     const starred = req.body?.starred;
     if (typeof starred !== "boolean") return res.status(400).json({ message: "starred must be a boolean" });
     const row = await store.setThumbnailStarred(ctx.accountId, thumbId, starred);

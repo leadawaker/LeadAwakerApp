@@ -5,7 +5,7 @@ import type { GenerateInput, RefView, StyleView, ThumbnailView } from "../api/th
 
 /** Reasons the thumbnail routes send that have their own message (thumbnails.errors.*). */
 export const THUMB_REASONS = [
-  "not_configured", "no_person", "no_title", "ref_missing", "script_missing", "post_missing",
+  "not_configured", "no_person", "no_title", "ref_missing", "script_missing", "post_missing", "thumbnail_missing", "no_instruction",
   "bad_image", "too_large", "too_many", "rate_limited", "busy", "timed_out", "no_image", "save_failed",
 ] as const;
 

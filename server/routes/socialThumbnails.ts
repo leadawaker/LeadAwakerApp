@@ -38,6 +38,7 @@ export function registerSocialThumbnailRoutes(app: Express): void {
       insertThumbnails: (rows) => storage.insertThumbnails(rows),
       updateThumbnails: (ids, fields) => storage.updateThumbnails(ids, fields),
       setThumbnailStarred: (accountId, thumbId, starred) => storage.setThumbnailStarred(accountId, thumbId, starred),
+      approveThumbnail: (accountId, thumbId) => storage.approveThumbnail(accountId, thumbId),
       deleteThumbnail: (accountId, thumbId) => storage.deleteThumbnail(accountId, thumbId),
     },
     images: () => imageProviderFromEnv(),

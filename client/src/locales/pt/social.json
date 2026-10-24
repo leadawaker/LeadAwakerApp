@@ -436,6 +436,17 @@
       "generate": "Gerar com este estilo",
       "makeForMeHelp": "Em Faça por mim a IA escolhe o estilo. Gerar leva cerca de um minuto; você pode continuar trabalhando enquanto isso."
     },
+    "edit": {
+      "open": "Pedir alterações",
+      "placeholder": "O que deve mudar? ex.: título maior",
+      "current": "atual",
+      "send": "Editar",
+      "cancel": "Cancelar",
+      "editedFrom": "Editada a partir de #{{id}}",
+      "pendingFrom": "Edição de #{{id}}: aguardando você",
+      "approve": "Aprovar",
+      "reject": "Rejeitar"
+    },
     "cover": {
       "use": "Usar como capa",
       "coverOf": "Capa de",
@@ -516,6 +527,8 @@
     "errors": {
       "failed": "Algo deu errado. Tente de novo.",
       "not_configured": "Ainda não há gerador de imagens conectado.",
+      "thumbnail_missing": "Essa imagem não está disponível para editar.",
+      "no_instruction": "Escreva o que deve mudar, ou escolha outro formato.",
       "no_person": "Envie primeiro uma foto em Pessoas.",
       "no_title": "Uma capa só com título precisa de um título.",
       "ref_missing": "Uma das imagens de referência foi apagada. Escolha de novo.",

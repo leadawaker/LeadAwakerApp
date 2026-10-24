@@ -5,7 +5,7 @@ import { anyGenerating, applyStyle, aspectOf, emptyForm, failureText, fitWithin,
 
 const thumb = (over: Partial<ThumbnailView>): ThumbnailView => ({
   id: 1, batchId: "b", styleId: null, scriptId: null, postId: null, kind: "auto", format: "reel", title: "", prompt: "",
-  refIds: [], status: "ready", error: null, starred: false, imageUrl: "/x", createdAt: "2026-10-24T10:00:00Z", ...over,
+  refIds: [], status: "ready", error: null, starred: false, parentId: null, review: null, imageUrl: "/x", createdAt: "2026-10-24T10:00:00Z", ...over,
 });
 
 test("error keys: known reasons, else the fallback; API words are shown as they are", () => {

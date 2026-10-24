@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { AlertTriangle, Download, Loader2, RotateCcw, Star, Trash2 } from "lucide-react";
+import { AlertTriangle, Check, Download, Loader2, Pencil, RotateCcw, Star, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { deleteThumbnail, downloadUrl, imageSrc, starThumbnail, thumbnailsKey, type ThumbnailView } from "../../api/thumbnailsApi";
+import { approveThumbnail, deleteThumbnail, downloadUrl, imageSrc, starThumbnail, thumbnailsKey, type ThumbnailView } from "../../api/thumbnailsApi";
 import { CoverLink } from "./CoverLink";
+import { EditThumbnail } from "./EditThumbnail";
 import { aspectOf, failureText, galleryItems, type GalleryFilter } from "../../lib/thumbnails";
 
 const iconBtn: React.CSSProperties = { padding: "4px 7px", minHeight: 28, fontSize: 11 };
@@ -18,6 +19,9 @@ function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accoun
     qc.setQueryData<ThumbnailView[]>(thumbnailsKey(accountId), (old) => (old ?? []).flatMap((x) => (x.id !== thumb.id ? [x] : next ? [next] : [])));
   const star = useMutation({ mutationFn: () => starThumbnail(accountId, thumb.id, !thumb.starred), onSuccess: replace });
   const remove = useMutation({ mutationFn: () => deleteThumbnail(accountId, thumb.id), onSuccess: () => replace(null) });
+  const approve = useMutation({ mutationFn: () => approveThumbnail(accountId, thumb.id), onSuccess: replace });
+  const [editing, setEditing] = useState(false);
+  const pending = thumb.status === "ready" && thumb.review === "pending";
   const failure = thumb.status === "failed" ? failureText(thumb.error) : null;
 
   return (
@@ -44,7 +48,22 @@ function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accoun
           {thumb.title || t("thumbnails.gallery.untitled")}
         </p>
         <p style={{ margin: 0, fontSize: 10.5, color: "var(--mute)" }}>{t(`thumbnails.kinds.${thumb.kind}.name`)} · {t(`thumbnails.formats.${thumb.format}`)}</p>
+        {thumb.parentId && (
+          <p style={{ margin: 0, fontSize: 10.5, color: pending ? "var(--warn)" : "var(--mute)", fontWeight: 600 }} data-testid={`thumb-parent-${thumb.id}`}>
+            {t(pending ? "thumbnails.edit.pendingFrom" : "thumbnails.edit.editedFrom", { id: thumb.parentId })}
+          </p>
+        )}
       </div>
+      {pending && canEdit && (
+        <div className="row" style={{ gap: 6 }}>
+          <button type="button" className="la-btn la-btn--wine" style={{ ...iconBtn, flex: 1 }} disabled={approve.isPending || remove.isPending} onClick={() => approve.mutate()} data-testid={`thumb-approve-${thumb.id}`}>
+            {approve.isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}{t("thumbnails.edit.approve")}
+          </button>
+          <button type="button" className="la-btn la-btn--soft" style={{ ...iconBtn, flex: 1 }} disabled={approve.isPending || remove.isPending} onClick={() => remove.mutate()} data-testid={`thumb-reject-${thumb.id}`}>
+            {remove.isPending ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}{t("thumbnails.edit.reject")}
+          </button>
+        </div>
+      )}
       <CoverLink accountId={accountId} thumb={thumb} canLink={canLink} />
       <div className="row" style={{ gap: 2, flexWrap: "wrap" }}>
         {thumb.status === "ready" && (
@@ -60,6 +79,12 @@ function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accoun
                 <Star size={12} fill={thumb.starred ? "currentColor" : "none"} />
               </button>
             )}
+            {thumb.status === "ready" && (
+              <button type="button" className="la-btn la-btn--plain" style={{ ...iconBtn, color: editing ? "var(--wine)" : undefined }} aria-expanded={editing} onClick={() => setEditing((e) => !e)}
+                title={t("thumbnails.edit.open")} aria-label={t("thumbnails.edit.open")} data-testid={`thumb-edit-open-${thumb.id}`}>
+                <Pencil size={12} />
+              </button>
+            )}
             <button type="button" className="la-btn la-btn--plain" style={iconBtn} onClick={() => onReuse(thumb)} title={t("thumbnails.gallery.reuse")} aria-label={t("thumbnails.gallery.reuse")}>
               <RotateCcw size={12} />
             </button>
@@ -72,6 +97,7 @@ function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accoun
           </>
         )}
       </div>
+      {editing && canEdit && <EditThumbnail accountId={accountId} thumb={thumb} onDone={() => setEditing(false)} />}
     </li>
   );
 }

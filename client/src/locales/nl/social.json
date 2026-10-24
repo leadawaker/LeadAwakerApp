@@ -436,6 +436,17 @@
       "generate": "Maak met deze stijl",
       "makeForMeHelp": "Bij Maak het voor mij kiest de AI de stijl. Genereren duurt ongeveer een minuut; je kunt intussen verder werken."
     },
+    "edit": {
+      "open": "Wijzigingen vragen",
+      "placeholder": "Wat moet er veranderen? bv. de titel groter",
+      "current": "huidig",
+      "send": "Aanpassen",
+      "cancel": "Annuleren",
+      "editedFrom": "Aangepast van #{{id}}",
+      "pendingFrom": "Aanpassing van #{{id}}: wacht op jou",
+      "approve": "Goedkeuren",
+      "reject": "Afkeuren"
+    },
     "cover": {
       "use": "Als cover gebruiken",
       "coverOf": "Cover van",
@@ -516,6 +527,8 @@
     "errors": {
       "failed": "Er ging iets mis. Probeer het opnieuw.",
       "not_configured": "Er is nog geen beeldgenerator gekoppeld.",
+      "thumbnail_missing": "Deze afbeelding is niet beschikbaar om aan te passen.",
+      "no_instruction": "Schrijf wat er moet veranderen, of kies een ander formaat.",
       "no_person": "Upload eerst een foto bij Personen.",
       "no_title": "Een cover met alleen titel heeft een titel nodig.",
       "ref_missing": "Een van de referentiebeelden is verwijderd. Kies opnieuw.",

@@ -2499,6 +2499,8 @@ export const socialThumbnails = nocodb.table("Social_Thumbnails", {
   styleId: integer("style_id"),
   scriptId: integer("script_id"),
   postId: integer("post_id"),
+  parentId: integer("parent_id"),                              // the thumbnail this one was edited from
+  review: text("review"),                                      // THUMB_REVIEWS: null for a first version
   kind: text("kind").notNull(),
   format: text("format").notNull(),
   title: text("title").notNull().default(""),
