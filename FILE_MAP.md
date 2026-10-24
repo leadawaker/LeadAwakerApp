@@ -256,6 +256,7 @@ The business and its connections. Tabs: Overview, Reactivation (agency, when the
 | contractsApi / invoicesApi / expensesApi | `api/*.ts` | |
 | types | `types.ts` | Billing-specific TypeScript types |
 | contractTemplate | `utils/contractTemplate.ts` | Contract template utilities |
+| invoiceDocument | `utils/invoiceDocument.ts` | Printable A4 invoice (EN/NL/PT), sender details, `printInvoice()`; logo at `client/public/invoice-logo.svg` |
 
 ---
 

@@ -168,7 +168,8 @@
       "edit": "Bewerken",
       "duplicate": "Dupliceren",
       "delete": "Verwijderen",
-      "confirm": "Bevestigen?"
+      "confirm": "Bevestigen?",
+      "pdfLanguage": "PDF-taal"
     },
     "generate": {
       "heading": "Genereren uit afspraken",
@@ -289,7 +290,33 @@
       "newInvoicesCount": "{{count}} nieuwe facturen ontvangen"
     },
     "deleteConfirm": "{{count}} factuur verwijderen? Dit kan niet ongedaan worden gemaakt.",
-    "deleteConfirmPlural": "{{count}} facturen verwijderen? Dit kan niet ongedaan worden gemaakt."
+    "deleteConfirmPlural": "{{count}} facturen verwijderen? Dit kan niet ongedaan worden gemaakt.",
+    "document": {
+      "title": "Factuur",
+      "invoiceNumber": "Factuurnummer",
+      "invoiceDate": "Factuurdatum",
+      "dueDate": "Vervaldatum",
+      "project": "Project",
+      "description": "Omschrijving",
+      "qty": "Aantal",
+      "price": "Prijs",
+      "amount": "Bedrag",
+      "subtotal": "Totaal exclusief btw",
+      "discount": "Korting",
+      "vat": "{{percent}}% btw",
+      "total": "Totaal inclusief btw",
+      "vatId": "Btw-nummer",
+      "paymentRequest": "Graag ontvangen wij uw betaling uiterlijk {{date}} op rekeningnummer {{iban}} ten name van {{holder}}, onder vermelding van factuurnummer {{number}}.",
+      "paymentRequestNoDate": "Graag ontvangen wij uw betaling op rekeningnummer {{iban}} ten name van {{holder}}, onder vermelding van factuurnummer {{number}}.",
+      "paymentRequestCustom": "Graag ontvangen wij uw betaling uiterlijk {{date}}, onder vermelding van factuurnummer {{number}}.",
+      "paymentRequestCustomNoDate": "Graag ontvangen wij uw betaling onder vermelding van factuurnummer {{number}}.",
+      "paymentDetails": "Betaalgegevens",
+      "notes": "Opmerkingen",
+      "accountHolder": "T.n.v.",
+      "bank": "Bank",
+      "kvk": "KvK",
+      "vatNumber": "BTW"
+    }
   },
   "contracts": {
     "title": "Contracten",

@@ -168,7 +168,8 @@
       "edit": "Edit",
       "duplicate": "Duplicate",
       "delete": "Delete",
-      "confirm": "Confirm?"
+      "confirm": "Confirm?",
+      "pdfLanguage": "PDF language"
     },
     "generate": {
       "heading": "Generate from bookings",
@@ -289,7 +290,33 @@
       "newInvoicesCount": "{{count}} new invoices received"
     },
     "deleteConfirm": "Delete {{count}} invoice? This cannot be undone.",
-    "deleteConfirmPlural": "Delete {{count}} invoices? This cannot be undone."
+    "deleteConfirmPlural": "Delete {{count}} invoices? This cannot be undone.",
+    "document": {
+      "title": "Invoice",
+      "invoiceNumber": "Invoice number",
+      "invoiceDate": "Invoice date",
+      "dueDate": "Due date",
+      "project": "Project",
+      "description": "Description",
+      "qty": "Qty",
+      "price": "Price",
+      "amount": "Amount",
+      "subtotal": "Total excl. VAT",
+      "discount": "Discount",
+      "vat": "{{percent}}% VAT",
+      "total": "Total incl. VAT",
+      "vatId": "VAT number",
+      "paymentRequest": "Please pay by {{date}} to account {{iban}} in the name of {{holder}}, quoting invoice number {{number}}.",
+      "paymentRequestNoDate": "Please pay to account {{iban}} in the name of {{holder}}, quoting invoice number {{number}}.",
+      "paymentRequestCustom": "Please pay by {{date}}, quoting invoice number {{number}}.",
+      "paymentRequestCustomNoDate": "Please pay quoting invoice number {{number}}.",
+      "paymentDetails": "Payment details",
+      "notes": "Notes",
+      "accountHolder": "Account holder",
+      "bank": "Bank",
+      "kvk": "KvK",
+      "vatNumber": "VAT"
+    }
   },
   "contracts": {
     "title": "Contracts",
