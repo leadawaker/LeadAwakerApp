@@ -17,6 +17,7 @@ import { SocialSettingsSection } from "../components/SocialSettingsSection";
 import { StudioSection } from "../components/studio/StudioSection";
 import { CommentsSection } from "../components/comments/CommentsSection";
 import { InsightsSection } from "../components/insights/InsightsSection";
+import { ThumbnailsSection } from "../components/thumbnails/ThumbnailsSection";
 import { showSocialTab } from "../lib/posts";
 import { SocialApiError } from "../api/socialApi";
 import { parseSocialDeepLink, pickSocialAccount, socialAccountOptions, socialSections, SOCIAL_PAGE_PATH, type SocialSection } from "../lib/socialPage";
@@ -59,7 +60,7 @@ export function SocialPage() {
         <div className="la-page-header" style={{ gap: 12, padding: isMobile ? "0 12px" : "0 17px" }}>
           <span style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)", flexShrink: 0 }}>{t("page.title")}</span>
           {sections.length > 1 && (
-            // The tab group scrolls sideways (the agency has 6 tabs) and hides its scrollbar.
+            // The tab group scrolls sideways (the agency has 7 tabs) and hides its scrollbar.
             <div className="la-seg la-seg--pill" role="tablist" aria-label={t("page.sections")} style={{ overflowX: "auto", scrollbarWidth: "none", minWidth: 0, flexShrink: 1 }}>
               {sections.map((s) => (
                 <button key={s} type="button" role="tab" aria-selected={section === s} className={cn("la-seg-btn", section === s && "on")}
@@ -91,6 +92,7 @@ export function SocialPage() {
                 {section === "home" && <ManagerHome accountId={account.id} timeZone={account.timeZone} onOpen={setPicked} />}
                 {section === "posts" && <SocialTab accountId={account.id} timeZone={account.timeZone} />}
                 {section === "studio" && <StudioSection accountId={account.id} timeZone={account.timeZone} />}
+                {section === "thumbnails" && <ThumbnailsSection accountId={account.id} />}
                 {section === "comments" && <CommentsSection accountId={account.id} />}
                 {section === "insights" && <InsightsSection accountId={account.id} />}
                 {section === "settings" && <SocialSettingsSection accountId={account.id} />}

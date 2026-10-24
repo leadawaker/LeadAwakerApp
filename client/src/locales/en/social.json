@@ -12,7 +12,8 @@
       "studio": "Studio",
       "settings": "Settings",
       "comments": "Comments to DM",
-      "insights": "Insights"
+      "insights": "Insights",
+      "thumbnails": "Thumbnails"
     }
   },
   "captions": {
@@ -401,5 +402,113 @@
       "reels_skip_rate": "Skip rate"
     },
     "skipped": "Not available from Instagram for this account right now: {{metrics}}."
+  },
+  "thumbnails": {
+    "notConfigured": "No image generator is connected yet. Set OPENAI_API_KEY on the server to start making thumbnails.",
+    "composer": {
+      "title": "New thumbnail",
+      "help": "Pick what it is for, the look and the format. Add reference images to steer the result.",
+      "source": "For",
+      "sourceNone": "Nothing in particular",
+      "sourceScripts": "Scripts",
+      "sourcePosts": "Posts",
+      "titleLabel": "Title on the cover",
+      "titlePlaceholder": "For example: 3 mistakes that keep you stuck",
+      "look": "Look",
+      "needPerson": "Upload at least one photo under People first: a presenter cover needs a person.",
+      "format": "Format",
+      "prompt": "Extra instructions",
+      "promptPlaceholder": "Optional. For example: warm colors, Mia smiling, yellow title",
+      "variants": "Variants",
+      "makeForMe": "Make it for me",
+      "generate": "Generate with this look",
+      "makeForMeHelp": "Make it for me lets the AI pick the look. Generating takes about a minute; you can keep working meanwhile."
+    },
+    "kinds": {
+      "auto": {
+        "name": "Auto",
+        "help": "The AI picks what fits the post"
+      },
+      "presenter": {
+        "name": "Person on cover",
+        "help": "Puts the person from People (e.g. Mia) on the cover"
+      },
+      "title": {
+        "name": "Title only",
+        "help": "Big typography, no people"
+      },
+      "collage": {
+        "name": "Collage",
+        "help": "Several images combined"
+      }
+    },
+    "formats": {
+      "reel": "Reel 9:16",
+      "post": "Post 4:5",
+      "square": "Square 1:1",
+      "landscape": "Landscape 16:9"
+    },
+    "refs": {
+      "title": "Reference images",
+      "pickHelp": "Tap images to send them along (up to {{max}}).",
+      "upload": "Upload images",
+      "delete": "Delete image",
+      "groups": {
+        "person": "People",
+        "style": "Looks to copy",
+        "asset": "Assets"
+      },
+      "help": {
+        "person": "Clear photos of the face, e.g. Mia. Used for person covers.",
+        "style": "Covers you like. The AI copies the colors, fonts and layout.",
+        "asset": "Logos, products or photos to put in the design."
+      },
+      "kinds": {
+        "person": "Person",
+        "style": "Look",
+        "asset": "Asset"
+      }
+    },
+    "styles": {
+      "title": "Saved styles",
+      "save": "Save as style",
+      "saveConfirm": "Save",
+      "cancel": "Cancel",
+      "namePlaceholder": "Style name",
+      "delete": "Delete this style"
+    },
+    "gallery": {
+      "title": "Thumbnails",
+      "filters": {
+        "all": "All",
+        "starred": "Starred"
+      },
+      "empty": "No thumbnails yet. Make your first one on the left.",
+      "emptyStarred": "No starred thumbnails yet.",
+      "generating": "Generating...",
+      "untitled": "No title",
+      "download": "Download",
+      "star": "Star",
+      "unstar": "Remove star",
+      "reuse": "Use these settings again",
+      "delete": "Delete"
+    },
+    "errors": {
+      "failed": "Something went wrong. Try again.",
+      "not_configured": "No image generator is connected yet.",
+      "no_person": "Upload a photo under People first.",
+      "no_title": "A title-only cover needs a title.",
+      "ref_missing": "One of the reference images was deleted. Pick again.",
+      "script_missing": "That script is not available.",
+      "post_missing": "That post is not available.",
+      "bad_image": "That file could not be read as an image (PNG, JPEG or WebP).",
+      "too_large": "That image is too large.",
+      "too_many": "The limit is reached. Delete some first.",
+      "rate_limited": "Too many thumbnails in a short time. Wait a few minutes.",
+      "busy": "Still working on earlier thumbnails. Wait a moment.",
+      "timed_out": "This one took too long and was stopped.",
+      "no_image": "The AI returned no image for this one.",
+      "save_failed": "The image could not be saved."
+    }
   }
 }

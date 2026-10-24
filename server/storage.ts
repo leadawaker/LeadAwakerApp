@@ -43,6 +43,7 @@ import { twoFactorStorage } from "./storage/twoFactor";
 import { socialStudioStorage } from "./storage/socialStudio";
 import { socialDmStorage } from "./storage/socialDm";
 import { socialInsightsStorage } from "./storage/socialInsights";
+import { socialThumbnailsStorage } from "./storage/socialThumbnails";
 
 export type { NotificationItem, ProspectsListParams } from "./storage/types";
 
@@ -127,4 +128,5 @@ export const storage = {
   ...socialStudioStorage,
   ...socialDmStorage,
   ...socialInsightsStorage,
+  ...socialThumbnailsStorage,
 };

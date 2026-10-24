@@ -12,7 +12,8 @@
       "studio": "Estúdio",
       "settings": "Configurações",
       "comments": "Comentário para DM",
-      "insights": "Resultados"
+      "insights": "Resultados",
+      "thumbnails": "Capas"
     }
   },
   "captions": {
@@ -401,5 +402,113 @@
       "reels_skip_rate": "Pularam"
     },
     "skipped": "Não disponível no Instagram para esta conta agora: {{metrics}}."
+  },
+  "thumbnails": {
+    "notConfigured": "Ainda não há gerador de imagens conectado. Defina OPENAI_API_KEY no servidor para começar a criar capas.",
+    "composer": {
+      "title": "Nova capa",
+      "help": "Escolha para que é, o estilo e o formato. Adicione imagens de referência para guiar o resultado.",
+      "source": "Para",
+      "sourceNone": "Nada em especial",
+      "sourceScripts": "Roteiros",
+      "sourcePosts": "Posts",
+      "titleLabel": "Título na capa",
+      "titlePlaceholder": "Por exemplo: 3 erros que te deixam travado",
+      "look": "Estilo",
+      "needPerson": "Envie primeiro pelo menos uma foto em Pessoas: uma capa com pessoa precisa de uma pessoa.",
+      "format": "Formato",
+      "prompt": "Instruções extras",
+      "promptPlaceholder": "Opcional. Por exemplo: cores quentes, Mia sorrindo, título amarelo",
+      "variants": "Variações",
+      "makeForMe": "Faça por mim",
+      "generate": "Gerar com este estilo",
+      "makeForMeHelp": "Em Faça por mim a IA escolhe o estilo. Gerar leva cerca de um minuto; você pode continuar trabalhando enquanto isso."
+    },
+    "kinds": {
+      "auto": {
+        "name": "Automático",
+        "help": "A IA escolhe o que combina com o post"
+      },
+      "presenter": {
+        "name": "Pessoa na capa",
+        "help": "Coloca a pessoa de Pessoas (ex.: Mia) na capa"
+      },
+      "title": {
+        "name": "Só título",
+        "help": "Tipografia grande, sem pessoas"
+      },
+      "collage": {
+        "name": "Colagem",
+        "help": "Várias imagens combinadas"
+      }
+    },
+    "formats": {
+      "reel": "Reel 9:16",
+      "post": "Post 4:5",
+      "square": "Quadrado 1:1",
+      "landscape": "Horizontal 16:9"
+    },
+    "refs": {
+      "title": "Imagens de referência",
+      "pickHelp": "Toque nas imagens para enviá-las junto (até {{max}}).",
+      "upload": "Enviar imagens",
+      "delete": "Apagar imagem",
+      "groups": {
+        "person": "Pessoas",
+        "style": "Estilos para copiar",
+        "asset": "Materiais"
+      },
+      "help": {
+        "person": "Fotos nítidas do rosto, ex.: Mia. Usadas nas capas com pessoa.",
+        "style": "Capas que você gosta. A IA copia as cores, fontes e o layout.",
+        "asset": "Logos, produtos ou fotos para usar no design."
+      },
+      "kinds": {
+        "person": "Pessoa",
+        "style": "Estilo",
+        "asset": "Material"
+      }
+    },
+    "styles": {
+      "title": "Estilos salvos",
+      "save": "Salvar como estilo",
+      "saveConfirm": "Salvar",
+      "cancel": "Cancelar",
+      "namePlaceholder": "Nome do estilo",
+      "delete": "Apagar este estilo"
+    },
+    "gallery": {
+      "title": "Capas",
+      "filters": {
+        "all": "Todas",
+        "starred": "Favoritas"
+      },
+      "empty": "Ainda não há capas. Crie a primeira à esquerda.",
+      "emptyStarred": "Ainda não há capas favoritas.",
+      "generating": "Gerando...",
+      "untitled": "Sem título",
+      "download": "Baixar",
+      "star": "Favoritar",
+      "unstar": "Tirar dos favoritos",
+      "reuse": "Usar estas configurações de novo",
+      "delete": "Apagar"
+    },
+    "errors": {
+      "failed": "Algo deu errado. Tente de novo.",
+      "not_configured": "Ainda não há gerador de imagens conectado.",
+      "no_person": "Envie primeiro uma foto em Pessoas.",
+      "no_title": "Uma capa só com título precisa de um título.",
+      "ref_missing": "Uma das imagens de referência foi apagada. Escolha de novo.",
+      "script_missing": "Esse roteiro não está disponível.",
+      "post_missing": "Esse post não está disponível.",
+      "bad_image": "Não foi possível ler esse arquivo como imagem (PNG, JPEG ou WebP).",
+      "too_large": "Essa imagem é grande demais.",
+      "too_many": "O limite foi atingido. Apague algumas primeiro.",
+      "rate_limited": "Muitas capas em pouco tempo. Espere alguns minutos.",
+      "busy": "Ainda gerando capas anteriores. Espere um momento.",
+      "timed_out": "Esta demorou demais e foi interrompida.",
+      "no_image": "A IA não devolveu imagem para esta.",
+      "save_failed": "Não foi possível salvar a imagem."
+    }
   }
 }

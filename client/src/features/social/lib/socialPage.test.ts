@@ -45,13 +45,14 @@ test("deep links: account and section, junk ignored", () => {
 });
 
 test("sections: agency opens on posts with the studio and settings; clients open on their home, settings (About me only) but no studio", () => {
-  assert.deepEqual(socialSections({ isAgency: true, userRole: "Owner" }), ["posts", "studio", "comments", "insights", "settings"]);
+  assert.deepEqual(socialSections({ isAgency: true, userRole: "Owner" }), ["posts", "studio", "thumbnails", "comments", "insights", "settings"]);
   for (const role of ["Manager", "Viewer"]) {
     const s = socialSections({ isAgency: false, userRole: role });
     assert.equal(s[0], "home");
     assert.ok(s.includes("insights"), "clients see their own insights");
     assert.ok(!(s as string[]).includes("calendar"), "the calendar is part of Posts");
     assert.ok(s.includes("settings"), "clients see About me inside Settings");
+    assert.ok(s.includes("thumbnails"), "clients see their thumbnails (a Viewer read-only)");
     assert.ok(!(s as string[]).includes("about"), "About me is no tab of its own");
     assert.ok(!s.includes("studio") && !s.includes("comments"));
   }

@@ -58,6 +58,7 @@ import { registerHomeRoutes } from "./home";
 import { registerSocialRoutes } from "./social";
 import { registerSocialPostRoutes } from "./socialPosts";
 import { registerSocialStudioRoutes } from "./socialStudio";
+import { registerSocialThumbnailRoutes } from "./socialThumbnails";
 import { registerSocialDmRoutes } from "./socialDm";
 import { registerSocialInsightRoutes } from "./socialInsights";
 import { startPublicDemoPoller } from "../publicDemo/poller";
@@ -135,6 +136,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerSocialRoutes(app);
   registerSocialPostRoutes(app);
   registerSocialStudioRoutes(app);
+  registerSocialThumbnailRoutes(app);
   registerSocialDmRoutes(app);
   registerSocialInsightRoutes(app);
 

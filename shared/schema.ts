@@ -2430,6 +2430,70 @@ export const socialHeygenPulls = nocodb.table("Social_Heygen_Pulls", {
 ]);
 export type SocialHeygenPull = typeof socialHeygenPulls.$inferSelect;
 
+// Thumbnail creator (shared/socialThumbnails.ts, server/social/thumbnailRoutes.ts). Created by
+// script/create-social-thumbnail-tables.mjs. Files live under uploads/social-thumbnails/<accountId>/.
+/** Reference images an account keeps: a person for the cover (e.g. Mia), a look to copy, an asset to use. */
+export const socialThumbnailRefs = nocodb.table("Social_Thumbnail_Refs", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  kind: text("kind").notNull(),                                // shared/socialThumbnails.ts REF_KINDS
+  label: text("label").notNull().default(""),
+  filePath: text("file_path").notNull(),
+  mimeType: text("mime_type").notNull(),
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_thumbnail_refs_accounts_id_idx").on(t.accountsId),
+]);
+export type SocialThumbnailRef = typeof socialThumbnailRefs.$inferSelect;
+export type InsertSocialThumbnailRef = typeof socialThumbnailRefs.$inferInsert;
+
+/** A saved recipe: a kind, extra instructions, reference images and a format, picked with one tap. */
+export const socialThumbnailStyles = nocodb.table("Social_Thumbnail_Styles", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  name: text("name").notNull(),
+  kind: text("kind").notNull(),                                // THUMB_KINDS
+  prompt: text("prompt").notNull().default(""),
+  format: text("format").notNull().default("reel"),            // THUMB_FORMATS
+  refIds: integer("ref_ids").array().notNull().default(sql`'{}'`),
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_thumbnail_styles_accounts_id_idx").on(t.accountsId),
+]);
+export type SocialThumbnailStyle = typeof socialThumbnailStyles.$inferSelect;
+export type InsertSocialThumbnailStyle = typeof socialThumbnailStyles.$inferInsert;
+
+/** One generated image. Rows start as generating and become ready (file_path set) or failed (error set). */
+export const socialThumbnails = nocodb.table("Social_Thumbnails", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  batchId: text("batch_id").notNull(),                         // the variants of one request share it
+  styleId: integer("style_id"),
+  scriptId: integer("script_id"),
+  postId: integer("post_id"),
+  kind: text("kind").notNull(),
+  format: text("format").notNull(),
+  title: text("title").notNull().default(""),
+  prompt: text("prompt").notNull().default(""),                // what the user typed
+  fullPrompt: text("full_prompt").notNull().default(""),       // what went to the image model
+  refIds: integer("ref_ids").array().notNull().default(sql`'{}'`),
+  status: text("status").notNull().default("generating"),      // THUMB_STATUSES
+  error: text("error"),
+  filePath: text("file_path"),
+  model: text("model"),
+  starred: boolean("starred").notNull().default(false),
+  createdByUserId: integer("created_by_user_id"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("social_thumbnails_accounts_id_idx").on(t.accountsId, t.createdAt),
+]);
+export type SocialThumbnail = typeof socialThumbnails.$inferSelect;
+export type InsertSocialThumbnail = typeof socialThumbnails.$inferInsert;
+
 // Comment-to-DM (docs/superpowers/specs/2026-10-20-comment-to-dm-design.md). Off by default; a real
 // send needs Social_Settings.dm_mode = 'live' AND env INSTAGRAM_DM_LIVE=1 (server/social/igMessaging.ts).
 export const socialDmRules = nocodb.table("Social_Dm_Rules", {
