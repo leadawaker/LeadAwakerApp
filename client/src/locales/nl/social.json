@@ -15,6 +15,14 @@
       "insights": "Inzichten",
       "thumbnails": "Thumbnails"
     },
+    "rail": {
+      "home": "Je week in één oogopslag",
+      "posts": "Geplande en gepubliceerde Reels",
+      "studio": "Scripts en video's",
+      "thumbnails": "Covers en afbeeldingen",
+      "comments": "Reageer op comments via DM",
+      "settings": "Account en publiceren"
+    },
     "modes": {
       "aria": "Inzichten of socials",
       "work": "Socials"

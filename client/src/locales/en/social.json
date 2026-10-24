@@ -15,6 +15,14 @@
       "insights": "Insights",
       "thumbnails": "Thumbnails"
     },
+    "rail": {
+      "home": "Your week at a glance",
+      "posts": "Scheduled and published Reels",
+      "studio": "Scripts and videos",
+      "thumbnails": "Covers and images",
+      "comments": "Reply to comments by DM",
+      "settings": "Account and publishing"
+    },
     "modes": {
       "aria": "Insights or socials",
       "work": "Socials"

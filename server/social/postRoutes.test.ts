@@ -39,6 +39,7 @@ function makePost(over: Partial<SocialPost>): SocialPost {
     id: 1, accountsId, connectionId: 3, mediaType: "REELS",
     videoPath: join(tmp, "social", String(accountsId), `${publicId}.mp4`),
     videoPublicId: publicId, videoExt: "mp4", videoDurationS: 58, videoWidth: 1080, videoHeight: 1920, videoBytes: 1000,
+    coverThumbnailId: null, coverPublicId: null, coverPath: null,
     caption: "hello", shareToFeed: true, isAiGenerated: true,
     scheduledAt: new Date("2026-10-27T21:00:00Z"),
     requiresApproval: true, approvalStatus: "pending", approvalNote: null,
@@ -55,6 +56,8 @@ function conn(accountsId: number, status: string): SocialConnection {
 }
 
 let posts: SocialPost[];
+/** Generated thumbnails the cover can come from. */
+let thumbnails: Array<{ id: number; accountsId: number; status: string; filePath: string | null }>;
 let connections: SocialConnection[];
 let managerNotes: Array<{ accountId: number; key: string }>;
 let agencyNotes: Array<{ type: string }>;
@@ -92,18 +95,21 @@ const deps: PostRouteDeps = {
     async listSocialPosts(id) { return posts.filter((p) => p.accountsId === id && p.status !== "cancelled"); },
     async getSocialPost(accountId, postId) { return posts.find((p) => p.id === postId && p.accountsId === accountId) ?? null; },
     async getSocialPostByPublicId(publicId) { return posts.find((p) => p.videoPublicId === publicId) ?? null; },
+    async getSocialPostByCoverId(coverId) { return posts.find((p) => p.coverPublicId === coverId) ?? null; },
+    async getThumbnail(accountId, id) { return thumbnails.find((t) => t.id === id && t.accountsId === accountId) ?? null; },
     async insertSocialPost(row: InsertSocialPost) {
       const p = makePost({ ...(row as Partial<SocialPost>), id: posts.length + 1 });
       posts.push(p);
       return p;
     },
-    async updateSocialPostIf(postId, allowed: SocialPostStatus[], fields, opts: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null } } = {}) {
+    async updateSocialPostIf(postId, allowed: SocialPostStatus[], fields, opts: { approvalStatuses?: ApprovalStatus[]; content?: { caption: string; videoPublicId: string | null; coverPublicId?: string | null } } = {}) {
       const p = posts.find((x) => x.id === postId);
       if (!p) return null;
       beforeUpdate?.(p);
       if (!allowed.includes(p.status as SocialPostStatus)) return null;
       if (opts.approvalStatuses?.length && !opts.approvalStatuses.includes(p.approvalStatus as ApprovalStatus)) return null;
       if (opts.content && (opts.content.caption !== p.caption || opts.content.videoPublicId !== p.videoPublicId)) return null;
+      if (opts.content && opts.content.coverPublicId !== undefined && opts.content.coverPublicId !== p.coverPublicId) return null;
       Object.assign(p, fields);
       return p;
     },
@@ -141,6 +147,7 @@ after(() => new Promise<void>((r) => server.close(() => r())));
 
 beforeEach(() => {
   posts = [];
+  thumbnails = [];
   connections = [conn(A, "connected"), conn(B, "connected")];
   managerNotes = [];
   agencyNotes = [];
@@ -417,6 +424,95 @@ test("cancelling keeps the file when a studio script still holds the same upload
   assert.equal((await call("DELETE", `/api/social/accounts/${A}/posts/1`, AGENCY)).status, 200);
   assert.equal(posts[0].status, "cancelled");
   assert.equal(existsSync(path), true);
+});
+
+// ─── Reel cover ──────────────────────────────────────────────────────────────
+
+function writeThumbnail(id: number, accountsId = A, status = "ready"): void {
+  const p = join(tmp, "thumbs", `${id}.jpg`);
+  mkdirSync(dirname(p), { recursive: true });
+  writeFileSync(p, Buffer.from("jpegbytes"));
+  thumbnails.push({ id, accountsId, status, filePath: p });
+}
+
+test("a new post can take a ready thumbnail as its cover, kept as its own copy", async () => {
+  writeUpload(A, ID1);
+  writeThumbnail(5);
+  const r = await call("POST", `/api/social/accounts/${A}/posts`, AGENCY, { ...newPostBody(), coverThumbnailId: 5 });
+  assert.equal(r.status, 201);
+  assert.equal(posts[0].coverThumbnailId, 5);
+  assert.ok(posts[0].coverPath && existsSync(posts[0].coverPath));
+  assert.notEqual(posts[0].coverPath, thumbnails[0].filePath);
+  assert.match(r.json.coverUrl, /^\/media\/social\/cover\/[0-9a-f-]{36}\.jpg$/);
+  assert.equal(r.json.coverThumbnailId, 5);
+  assert.equal(JSON.stringify(r.json).includes(tmp), false);
+});
+
+test("a cover must be a ready thumbnail of the same account", async () => {
+  writeUpload(A, ID1);
+  writeThumbnail(5, B);
+  writeThumbnail(6, A, "generating");
+  for (const id of [5, 6, 99]) {
+    const r = await call("POST", `/api/social/accounts/${A}/posts`, AGENCY, { ...newPostBody(), coverThumbnailId: id });
+    assert.equal(r.status, 422);
+    assert.equal(r.json.reason, "cover_missing");
+  }
+  assert.equal(posts.length, 0);
+  assert.equal((await call("POST", `/api/social/accounts/${A}/posts`, AGENCY, { ...newPostBody(), coverThumbnailId: "x" })).status, 400);
+});
+
+test("changing the cover of an approved post sends it back for approval and drops the old copy", async () => {
+  writeThumbnail(5);
+  writeThumbnail(6);
+  posts = [makePost({ id: 1, approvalStatus: "approved", approvedByUserId: 21 })];
+  assert.equal((await call("PATCH", `/api/social/accounts/${A}/posts/1`, AGENCY, { coverThumbnailId: 5 })).status, 200);
+  assert.equal(posts[0].approvalStatus, "pending");
+  assert.deepEqual(managerNotes.map((n) => n.key), ["needs_approval"]);
+  const first = posts[0].coverPath!;
+  assert.ok(existsSync(first));
+  assert.equal((await call("PATCH", `/api/social/accounts/${A}/posts/1`, AGENCY, { coverThumbnailId: 6 })).status, 200);
+  assert.equal(posts[0].coverThumbnailId, 6);
+  assert.equal(existsSync(first), false);
+});
+
+test("sending the cover the post already has changes nothing, and null removes it", async () => {
+  writeThumbnail(5);
+  posts = [makePost({ id: 1, approvalStatus: "approved", approvedByUserId: 21 })];
+  await call("PATCH", `/api/social/accounts/${A}/posts/1`, AGENCY, { coverThumbnailId: 5 });
+  posts[0].approvalStatus = "approved";
+  const path = posts[0].coverPath!;
+  assert.equal((await call("PATCH", `/api/social/accounts/${A}/posts/1`, AGENCY, { coverThumbnailId: 5 })).status, 200);
+  assert.equal(posts[0].coverPath, path);
+  assert.equal(posts[0].approvalStatus, "approved");
+  assert.equal((await call("PATCH", `/api/social/accounts/${A}/posts/1`, AGENCY, { coverThumbnailId: null })).status, 200);
+  assert.equal(posts[0].coverPath, null);
+  assert.equal(posts[0].coverThumbnailId, null);
+  assert.equal(existsSync(path), false);
+});
+
+test("the cover is part of what a Manager approves, and cancelling deletes it", async () => {
+  writeThumbnail(5);
+  posts = [makePost({ id: 1 })];
+  const before = contentVersion(posts[0]);
+  await call("PATCH", `/api/social/accounts/${A}/posts/1`, AGENCY, { coverThumbnailId: 5 });
+  assert.notEqual(contentVersion(posts[0]), before);
+  const path = posts[0].coverPath!;
+  assert.equal((await call("DELETE", `/api/social/accounts/${A}/posts/1`, AGENCY)).status, 200);
+  assert.equal(existsSync(path), false);
+});
+
+test("public cover serves the jpeg, never a cancelled post's or an unknown id", async () => {
+  writeThumbnail(5);
+  posts = [makePost({ id: 1 })];
+  await call("PATCH", `/api/social/accounts/${A}/posts/1`, AGENCY, { coverThumbnailId: 5 });
+  const id = posts[0].coverPublicId!;
+  const ok = await call("GET", `/media/social/cover/${id}.jpg`, null);
+  assert.equal(ok.status, 200);
+  assert.equal(ok.headers.get("content-type"), "image/jpeg");
+  assert.equal((await call("GET", `/media/social/cover/${ID3}.jpg`, null)).status, 404);
+  assert.equal((await call("GET", `/media/social/cover/${id}.png`, null)).status, 404);
+  posts[0].status = "cancelled";
+  assert.equal((await call("GET", `/media/social/cover/${id}.jpg`, null)).status, 404);
 });
 
 // ─── Public media ────────────────────────────────────────────────────────────

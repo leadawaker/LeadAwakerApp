@@ -16,6 +16,7 @@ function makePost(over: Partial<SocialPost>): SocialPost {
     id: 1, accountsId: 7, connectionId: 3, mediaType: "REELS",
     videoPath: `/srv/uploads/social/7/${ID1}.mp4`, videoPublicId: ID1, videoExt: "mp4",
     videoDurationS: 58, videoWidth: 1080, videoHeight: 1920, videoBytes: 1000,
+    coverThumbnailId: null, coverPublicId: null, coverPath: null,
     caption: "Olá", shareToFeed: true, isAiGenerated: true,
     scheduledAt: new Date("2026-10-27T21:00:00Z"),
     requiresApproval: true, approvalStatus: "approved", approvalNote: null,
@@ -82,6 +83,7 @@ function deps(): PublisherDeps {
       getPublishingQuotaLeft: async () => ig.quota,
     },
     mediaUrl: (publicId, ext) => `https://app.leadawaker.com/media/social/${publicId}.${ext}`,
+    coverUrl: (publicId) => `https://app.leadawaker.com/media/social/cover/${publicId}.jpg`,
     notifyAgency: async (n) => { agencyNotes.push({ type: n.type, body: n.body }); },
     notifyAccountManagers: async (accountId, n) => { managerNotes.push({ key: n.key, accountId }); },
   };
@@ -157,6 +159,13 @@ test("due approved post creates a container with the public media URL and the AI
   assert.equal(posts[0].igContainerId, "c1");
   assert.ok(posts[0].publishingStartedAt instanceof Date);
   assert.deepEqual(ig.created[0], { videoUrl: `https://app.leadawaker.com/media/social/${ID1}.mp4`, caption: "Olá", shareToFeed: true, isAiGenerated: true });
+});
+
+test("a post with a cover sends its public URL to Instagram as cover_url", async () => {
+  const COVER = "0b9f1c1e-0000-4000-8000-0000000000c1";
+  posts = [makePost({ coverPublicId: COVER, coverThumbnailId: 5 })];
+  await runPublishOnce(deps());
+  assert.equal(ig.created[0].coverUrl, `https://app.leadawaker.com/media/social/cover/${COVER}.jpg`);
 });
 
 test("future posts wait", async () => {

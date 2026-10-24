@@ -41,17 +41,18 @@ export interface PublisherDeps {
     fields: Partial<InsertSocialPost>,
     opts?: {
       approvalStatuses?: ApprovalStatus[];
-      content?: { caption: string; videoPublicId: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
+      content?: { caption: string; videoPublicId: string | null; coverPublicId?: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
     },
   ): Promise<SocialPost | null>;
   ig: {
-    createReelContainer(igUserId: string, token: string, input: { videoUrl: string; caption: string; shareToFeed: boolean; isAiGenerated: boolean }): Promise<string>;
+    createReelContainer(igUserId: string, token: string, input: { videoUrl: string; coverUrl?: string; caption: string; shareToFeed: boolean; isAiGenerated: boolean }): Promise<string>;
     getContainerStatus(containerId: string, token: string): Promise<{ code: ContainerCode; message: string | null }>;
     publishContainer(igUserId: string, token: string, containerId: string): Promise<string>;
     getPermalink(mediaId: string, token: string): Promise<string | null>;
     getPublishingQuotaLeft(igUserId: string, token: string): Promise<number | null>;
   };
   mediaUrl(publicId: string, ext: string): string;
+  coverUrl(publicId: string): string;
   notifyAgency(n: { type: SocialNotifType; title: string; body: string; accountId: number; link: string }): Promise<void>;
   notifyAccountManagers(accountId: number, n: { type: SocialNotifType; key: "needs_approval" | "published"; vars: Record<string, string>; link: string }): Promise<void>;
 }
@@ -82,7 +83,7 @@ async function fail(d: PublisherDeps, p: SocialPost, from: SocialPostStatus, rea
 function sameAsSeen(p: SocialPost) {
   return {
     approvalStatuses: [p.approvalStatus as ApprovalStatus],
-    content: { caption: p.caption, videoPublicId: p.videoPublicId, scheduledAt: p.scheduledAt, shareToFeed: p.shareToFeed, isAiGenerated: p.isAiGenerated },
+    content: { caption: p.caption, videoPublicId: p.videoPublicId, coverPublicId: p.coverPublicId, scheduledAt: p.scheduledAt, shareToFeed: p.shareToFeed, isAiGenerated: p.isAiGenerated },
   };
 }
 
@@ -120,6 +121,7 @@ async function handleDue(d: PublisherDeps, p: SocialPost, now: Date): Promise<vo
     }
     const containerId = await d.ig.createReelContainer(conn.externalUserId, conn.token, {
       videoUrl: d.mediaUrl(p.videoPublicId, p.videoExt),
+      ...(p.coverPublicId ? { coverUrl: d.coverUrl(p.coverPublicId) } : {}),
       caption: p.caption,
       shareToFeed: p.shareToFeed,
       isAiGenerated: p.isAiGenerated,

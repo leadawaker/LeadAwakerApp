@@ -1,5 +1,6 @@
-// Creates the Socials thumbnail creator tables (reference images, saved styles, generated thumbnails).
-// Purely additive and idempotent: CREATE ... IF NOT EXISTS only, no existing table or row is touched.
+// Creates the Socials thumbnail creator tables (reference images, saved styles, generated thumbnails)
+// and adds the cover columns to Social_Posts.
+// Purely additive and idempotent: CREATE ... IF NOT EXISTS and ADD COLUMN IF NOT EXISTS only, no row is touched.
 // Run: node --env-file=.env script/create-social-thumbnail-tables.mjs
 import pg from "pg";
 
@@ -56,6 +57,12 @@ CREATE TABLE IF NOT EXISTS ${S}."Social_Thumbnails" (
   "updated_at" timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS "social_thumbnails_accounts_id_idx" ON ${S}."Social_Thumbnails" ("accounts_id", "created_at");
+
+-- A post's Reel cover: its own copy of a generated thumbnail (server/social/postRoutes.ts).
+ALTER TABLE ${S}."Social_Posts" ADD COLUMN IF NOT EXISTS "cover_thumbnail_id" integer;
+ALTER TABLE ${S}."Social_Posts" ADD COLUMN IF NOT EXISTS "cover_public_id" text;
+ALTER TABLE ${S}."Social_Posts" ADD COLUMN IF NOT EXISTS "cover_path" text;
+CREATE UNIQUE INDEX IF NOT EXISTS "social_posts_cover_public_id_idx" ON ${S}."Social_Posts" ("cover_public_id") WHERE "cover_public_id" IS NOT NULL;
 `;
 
 const client = new pg.Client({ connectionString: process.env.DATABASE_URL });

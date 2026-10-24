@@ -2332,6 +2332,10 @@ export const socialPosts = nocodb.table("Social_Posts", {
   videoWidth: integer("video_width"),
   videoHeight: integer("video_height"),
   videoBytes: bigint("video_bytes", { mode: "number" }),
+  // The Reel cover: a copy of a generated thumbnail (Social_Thumbnails), served publicly at /media/social/cover/<id>.jpg for Meta.
+  coverThumbnailId: integer("cover_thumbnail_id"),
+  coverPublicId: text("cover_public_id"),
+  coverPath: text("cover_path"),
   caption: text("caption").notNull().default(""),
   shareToFeed: boolean("share_to_feed").notNull().default(true),
   isAiGenerated: boolean("is_ai_generated").notNull().default(true),

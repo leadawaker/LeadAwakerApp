@@ -23,11 +23,11 @@ export function isApprovalSatisfied(p: Pick<PostRuleView, "requiresApproval" | "
 
 export function approvalAfterEdit(
   prev: Pick<PostRuleView, "requiresApproval" | "approvalStatus">,
-  change: { videoChanged: boolean; captionChanged: boolean; requiresApproval: boolean },
+  change: { videoChanged: boolean; captionChanged: boolean; coverChanged?: boolean; requiresApproval: boolean },
 ): ApprovalStatus {
   if (!change.requiresApproval) return "not_required";
   if (!prev.requiresApproval) return "pending";
-  if (change.videoChanged || change.captionChanged) return "pending";
+  if (change.videoChanged || change.captionChanged || change.coverChanged) return "pending";
   return prev.approvalStatus;
 }
 

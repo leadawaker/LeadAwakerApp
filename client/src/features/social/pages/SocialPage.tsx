@@ -4,13 +4,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Redirect, useLocation, useSearch } from "wouter";
 import { useTranslation } from "react-i18next";
-import { ChartColumn, Instagram, Loader2 } from "lucide-react";
+import { ChartColumn, Clapperboard, Film, Home, Image as ImageIcon, Instagram, Loader2, MessageCircle, Settings } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { PillSwitch } from "@/components/crm/primitives/PillSwitch";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { cn } from "@/lib/utils";
 import { readLastTab, writeLastTab } from "@/lib/lastTab";
+import { SectionLayout, SectionRail, type SectionRailItem } from "@/features/accounts/components/workspace/SectionRail";
 import { useSocialStatus } from "../components/InstagramConnectCard";
 import { SocialAccountPicker } from "../components/SocialAccountPicker";
 import { SocialTab } from "../components/SocialTab";
@@ -24,7 +24,10 @@ import { showSocialTab } from "../lib/posts";
 import { SocialApiError } from "../api/socialApi";
 import { parseSocialDeepLink, pickSocialAccount, socialAccountOptions, socialSections, SOCIAL_PAGE_PATH, type SocialSection } from "../lib/socialPage";
 
-const ALL_SECTIONS: readonly SocialSection[] = ["home", "posts", "studio", "comments", "insights", "settings"];
+const ALL_SECTIONS: readonly SocialSection[] = ["home", "posts", "studio", "thumbnails", "comments", "insights", "settings"];
+const SECTION_ICON: Record<SocialSection, typeof Home> = {
+  home: Home, posts: Film, studio: Clapperboard, thumbnails: ImageIcon, comments: MessageCircle, insights: ChartColumn, settings: Settings,
+};
 const LAST_TAB_PAGE = "social";
 const LAST_WORK_PAGE = "social.work";
 
@@ -73,6 +76,17 @@ export function SocialPage() {
   }
 
   // A client's own account id can be 0 for a moment after login: wait instead of showing the agency message.
+  const showRail = mode === "work" && workSections.length > 1;
+  const rail = (layout: "rail" | "grid") => (
+    <SectionRail<SocialSection>
+      items={workSections.map((s): SectionRailItem<SocialSection> => {
+        const Icon = SECTION_ICON[s];
+        return { key: s, icon: <Icon className="h-4 w-4" />, label: t(`page.tabs.${s}`), detail: t(`page.rail.${s}`) };
+      })}
+      active={section} onSelect={pick} layout={layout} testId="social-tabs" ariaLabel={t("page.sections")}
+    />
+  );
+
   const loading = (isAgencyUser && isLoadingAccounts) || (accountId > 0 && statusLoading) || (!isAgencyUser && !account);
 
   return (
@@ -94,18 +108,7 @@ export function SocialPage() {
               compact={isMobile}
             />
           )}
-          {mode === "work" && workSections.length > 1 && (
-            // The tab group scrolls sideways on a narrow screen and hides its scrollbar.
-            <div className="la-seg la-seg--pill" role="tablist" aria-label={t("page.sections")} style={{ overflowX: "auto", scrollbarWidth: "none", minWidth: 0, flexShrink: 1 }}>
-              {workSections.map((s) => (
-                <button key={s} type="button" role="tab" aria-selected={section === s} className={cn("la-seg-btn", section === s && "on")}
-                  onClick={() => pick(s)} style={{ whiteSpace: "nowrap", flexShrink: 0 }} data-testid={`social-section-tab-${s}`}>
-                  {t(`page.tabs.${s}`)}
-                </button>
-              ))}
-            </div>
-          )}
-          {/* The account picker sits right after the tabs, as on Calls and Chats > Settings. */}
+          {/* The account picker sits right after the mode switch, as on Calls and Chats > Settings. */}
           {isAgencyUser && options.length > 0 && (
             <div style={{ flexShrink: 0 }}>
               <SocialAccountPicker options={options} selectedId={account?.id ?? null} onSelect={setCurrentAccountId} />
@@ -124,6 +127,7 @@ export function SocialPage() {
                 <p style={{ margin: 0, fontSize: 13, color: "var(--mute)" }}>{t("page.noAccounts")}</p>
               </div>
             ) : (
+              <SectionShell show={showRail} stacked={isMobile} rail={rail}>
               <div key={`${account.id}-${section}`} data-testid={`social-section-${section}-body`}>
                 {section === "home" && <ManagerHome accountId={account.id} timeZone={account.timeZone} onOpen={pick} />}
                 {section === "posts" && <SocialTab accountId={account.id} timeZone={account.timeZone} />}
@@ -133,10 +137,19 @@ export function SocialPage() {
                 {section === "insights" && <InsightsSection accountId={account.id} />}
                 {section === "settings" && <SocialSettingsSection accountId={account.id} />}
               </div>
+              </SectionShell>
             )}
           </div>
         </div>
       </div>
     </CrmShell>
   );
+}
+
+/** The sections menu down the left on desktop, above the open section on a phone; no menu in Insights. */
+function SectionShell({ show, stacked, rail, children }: {
+  show: boolean; stacked: boolean; rail: (layout: "rail" | "grid") => React.ReactNode; children: React.ReactNode;
+}) {
+  if (!show) return <>{children}</>;
+  return <SectionLayout stacked={stacked} rail={rail} testId="social-layout">{children}</SectionLayout>;
 }

@@ -30,6 +30,9 @@ const post: SocialPost = {
   videoWidth: 1080,
   videoHeight: 1920,
   videoBytes: 40_000_000,
+  coverThumbnailId: null,
+  coverPublicId: null,
+  coverPath: null,
   caption: "old",
   shareToFeed: true,
   isAiGenerated: true,
@@ -224,6 +227,8 @@ test("view carries the public path and display names, never the file path", () =
     waivedByName: null,
     shareToFeed: true,
     isAiGenerated: true,
+    coverUrl: null,
+    coverThumbnailId: null,
   });
   assert.ok(!JSON.stringify(v).includes("/srv/"));
 });
@@ -261,12 +266,17 @@ test("upload content types", () => {
 test("new post body: defaults the toggles on, checks types", () => {
   const r = parseNewPostBody({ uploadId: PUBLIC_ID, caption: "hi", date: "2026-10-27", time: "18:00" });
   assert.ok(r.ok);
-  assert.deepEqual(r.input, { uploadId: PUBLIC_ID, caption: "hi", date: "2026-10-27", time: "18:00", shareToFeed: true, isAiGenerated: true, requiresApproval: true });
+  assert.deepEqual(r.input, { uploadId: PUBLIC_ID, caption: "hi", date: "2026-10-27", time: "18:00", shareToFeed: true, isAiGenerated: true, requiresApproval: true, coverThumbnailId: null });
   assert.equal(parseNewPostBody({ caption: "hi", date: "2026-10-27", time: "18:00" }).ok, false);
   assert.equal(parseNewPostBody({ uploadId: "../x", caption: "hi", date: "2026-10-27", time: "18:00" }).ok, false);
   assert.equal(parseNewPostBody({ uploadId: PUBLIC_ID, caption: 5, date: "2026-10-27", time: "18:00" }).ok, false);
   assert.equal(parseNewPostBody({ uploadId: PUBLIC_ID, caption: "hi", date: "2026-10-27", time: "18:00", requiresApproval: "no" }).ok, false);
   assert.equal(parseNewPostBody(null).ok, false);
+});
+test("cover id: a positive whole number or null, nothing else", () => {
+  assert.deepEqual(parsePostEditBody({ coverThumbnailId: 5 }), { ok: true, input: { coverThumbnailId: 5 } });
+  assert.deepEqual(parsePostEditBody({ coverThumbnailId: null }), { ok: true, input: { coverThumbnailId: null } });
+  for (const bad of [0, -1, 1.5, "5", true]) assert.equal(parsePostEditBody({ coverThumbnailId: bad }).ok, false);
 });
 test("edit body: only known fields, each with its type", () => {
   const r = parsePostEditBody({ caption: "x", shareToFeed: false, other: 1 });

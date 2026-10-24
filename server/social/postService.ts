@@ -29,8 +29,18 @@ const UPLOAD_TYPES = new Map<string, VideoExt>([["video/mp4", "mp4"], ["video/qu
 
 export interface ProbedVideo { path: string; ext: string; durationS: number; width: number; height: number; bytes: number }
 
-export interface PostEditInput { uploadId?: string; caption?: string; date?: string; time?: string; shareToFeed?: boolean; isAiGenerated?: boolean; requiresApproval?: boolean }
-export interface NewPostInput { uploadId: string; caption: string; date: string; time: string; shareToFeed: boolean; isAiGenerated: boolean; requiresApproval: boolean }
+/** coverThumbnailId: a ready thumbnail of the account to use as the Reel cover; null removes the cover. */
+export interface PostEditInput { uploadId?: string; caption?: string; date?: string; time?: string; shareToFeed?: boolean; isAiGenerated?: boolean; requiresApproval?: boolean; coverThumbnailId?: number | null }
+export interface NewPostInput { uploadId: string; caption: string; date: string; time: string; shareToFeed: boolean; isAiGenerated: boolean; requiresApproval: boolean; coverThumbnailId: number | null }
+
+/** The post's own copy of a thumbnail (the thumbnail can be deleted later), already written to disk by the route. */
+export interface CoverCopy { thumbnailId: number; publicId: string; path: string }
+
+function coverFields(c: CoverCopy | null): Partial<InsertSocialPost> {
+  return c
+    ? { coverThumbnailId: c.thumbnailId, coverPublicId: c.publicId, coverPath: c.path }
+    : { coverThumbnailId: null, coverPublicId: null, coverPath: null };
+}
 
 export type Refusal = { ok: false; status: 409 | 422; reason: string };
 
@@ -75,7 +85,7 @@ function videoFields(publicId: string, v: ProbedVideo): Partial<InsertSocialPost
 export function planPostEdit(
   post: SocialPost,
   input: PostEditInput,
-  ctx: { timeZone: string; now: Date; userId: number; newVideo?: ProbedVideo },
+  ctx: { timeZone: string; now: Date; userId: number; newVideo?: ProbedVideo; newCover?: CoverCopy },
 ): { ok: true; fields: Partial<InsertSocialPost>; notifyManagers: boolean } | Refusal {
   if (!within(EDITABLE_STATUSES, post.status)) return refuse(409, "not_editable");
   const fields: Partial<InsertSocialPost> = {};
@@ -102,6 +112,13 @@ export function planPostEdit(
     Object.assign(fields, videoFields(input.uploadId!, ctx.newVideo));
   }
 
+  let coverChanged = false;
+  if (input.coverThumbnailId !== undefined && input.coverThumbnailId !== post.coverThumbnailId) {
+    if (input.coverThumbnailId !== null && !ctx.newCover) return refuse(422, "cover_missing");
+    Object.assign(fields, coverFields(input.coverThumbnailId === null ? null : ctx.newCover!));
+    coverChanged = true;
+  }
+
   if (input.shareToFeed !== undefined) fields.shareToFeed = input.shareToFeed;
   if (input.isAiGenerated !== undefined) fields.isAiGenerated = input.isAiGenerated;
 
@@ -109,7 +126,7 @@ export function planPostEdit(
   const requiresApproval = input.requiresApproval ?? post.requiresApproval;
   const approvalStatus = approvalAfterEdit(
     { requiresApproval: post.requiresApproval, approvalStatus: prevApproval },
-    { videoChanged, captionChanged, requiresApproval },
+    { videoChanged, captionChanged, coverChanged, requiresApproval },
   );
   fields.approvalStatus = approvalStatus;
   if (input.requiresApproval !== undefined) fields.requiresApproval = input.requiresApproval;
@@ -128,7 +145,7 @@ export function planPostEdit(
   if (pending && (prevApproval !== "pending" || timeChanged)) fields.approvalReminderSentAt = null;
 
   const notifyManagers =
-    (pending && (prevApproval !== "pending" || videoChanged || captionChanged)) ||
+    (pending && (prevApproval !== "pending" || videoChanged || captionChanged || coverChanged)) ||
     (rescheduledFromHeld && !isApprovalSatisfied({ requiresApproval, approvalStatus }));
 
   return { ok: true, fields, notifyManagers };
@@ -137,7 +154,7 @@ export function planPostEdit(
 /** The row for a new post, from an upload that has already been probed. */
 export function planNewPost(
   input: NewPostInput,
-  ctx: { timeZone: string; now: Date; userId: number; accountId: number; connectionId: number; video: ProbedVideo },
+  ctx: { timeZone: string; now: Date; userId: number; accountId: number; connectionId: number; video: ProbedVideo; cover?: CoverCopy },
 ): { ok: true; row: InsertSocialPost; notifyManagers: boolean } | Refusal {
   const bad = captionRefusal(input.caption);
   if (bad) return bad;
@@ -149,6 +166,7 @@ export function planNewPost(
     connectionId: ctx.connectionId,
     mediaType: "REELS",
     ...videoFields(input.uploadId, ctx.video),
+    ...(ctx.cover ? coverFields(ctx.cover) : {}),
     caption: input.caption,
     shareToFeed: input.shareToFeed,
     isAiGenerated: input.isAiGenerated,
@@ -194,14 +212,28 @@ export interface SocialPostView {
   waivedByName: string | null;
   shareToFeed: boolean;
   isAiGenerated: boolean;
+  /** Path on the API host of the Reel cover, or null. */
+  coverUrl: string | null;
+  coverThumbnailId: number | null;
 }
 
 /**
  * What a Manager approves: the video and the caption. The client sends it back with Approve, so an
  * agency edit that landed after the Manager loaded the list is refused (409 changed), not approved unseen.
  */
-export function contentVersion(p: Pick<SocialPost, "videoPublicId" | "caption">): string {
-  return createHash("sha256").update(`${p.videoPublicId ?? ""}\n${p.caption}`).digest("hex").slice(0, 16);
+export function contentVersion(p: Pick<SocialPost, "videoPublicId" | "caption"> & { coverPublicId?: string | null }): string {
+  // The cover only counts when there is one, so versions of posts without a cover stay as they were.
+  const cover = p.coverPublicId ? `\n${p.coverPublicId}` : "";
+  return createHash("sha256").update(`${p.videoPublicId ?? ""}\n${p.caption}${cover}`).digest("hex").slice(0, 16);
+}
+
+export function coverMediaPath(publicId: string): string {
+  return `/media/social/cover/${publicId}.jpg`;
+}
+
+/** `<uuid>.jpg` from the public cover URL, or null. */
+export function parseCoverFile(file: string): string | null {
+  return /^([0-9a-f-]{36})\.jpg$/.exec(file)?.[1] ?? null;
 }
 
 export function mediaPath(publicId: string, ext: string): string {
@@ -233,6 +265,8 @@ export function toPostView(p: SocialPost, names: ReadonlyMap<number, string>): S
     waivedByName: p.requiresApproval ? null : nameOf(p.approvalWaivedByUserId),
     shareToFeed: p.shareToFeed,
     isAiGenerated: p.isAiGenerated,
+    coverUrl: p.coverPublicId ? coverMediaPath(p.coverPublicId) : null,
+    coverThumbnailId: p.coverThumbnailId,
   };
 }
 
@@ -269,6 +303,11 @@ export function parsePostEditBody(body: unknown): Parsed<PostEditInput> {
     if (typeof b[k] !== "boolean") return { ok: false, message: `${k} must be a boolean` };
     input[k] = b[k] as boolean;
   }
+  if (b.coverThumbnailId !== undefined) {
+    const c = b.coverThumbnailId;
+    if (c !== null && !(typeof c === "number" && Number.isInteger(c) && c > 0)) return { ok: false, message: "coverThumbnailId is invalid" };
+    input.coverThumbnailId = c;
+  }
   return { ok: true, input };
 }
 
@@ -289,6 +328,7 @@ export function parseNewPostBody(body: unknown): Parsed<NewPostInput> {
       shareToFeed: i.shareToFeed ?? true,
       isAiGenerated: i.isAiGenerated ?? true,
       requiresApproval: i.requiresApproval ?? true,
+      coverThumbnailId: i.coverThumbnailId ?? null,
     },
   };
 }

@@ -83,11 +83,14 @@ export interface SocialPostView {
   waivedByName: string | null;
   shareToFeed: boolean;
   isAiGenerated: boolean;
+  /** Path on the API host of the Reel cover (a copy of a thumbnail), or null. */
+  coverUrl: string | null;
+  coverThumbnailId: number | null;
 }
 
 export interface UploadedVideo { uploadId: string; ext: string; durationS: number; width: number; height: number; bytes: number }
 
-export interface PostBody { uploadId: string; caption: string; date: string; time: string; shareToFeed: boolean; isAiGenerated: boolean; requiresApproval: boolean }
+export interface PostBody { uploadId: string; caption: string; date: string; time: string; shareToFeed: boolean; isAiGenerated: boolean; requiresApproval: boolean; coverThumbnailId: number | null }
 
 export const socialPostsKey = (accountId: number) => ["social-posts", accountId] as const;
 

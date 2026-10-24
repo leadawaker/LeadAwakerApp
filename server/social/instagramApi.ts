@@ -128,7 +128,7 @@ export async function refreshLongLivedToken(token: string, deps: IgDeps, now: Da
 
 export async function createReelContainer(
   igUserId: string, token: string,
-  input: { videoUrl: string; caption: string; shareToFeed: boolean; isAiGenerated: boolean },
+  input: { videoUrl: string; coverUrl?: string; caption: string; shareToFeed: boolean; isAiGenerated: boolean },
   deps: IgDeps,
 ): Promise<string> {
   const params: Record<string, string> = {
@@ -138,6 +138,7 @@ export async function createReelContainer(
     share_to_feed: String(input.shareToFeed),
     access_token: token,
   };
+  if (input.coverUrl) params.cover_url = input.coverUrl;
   if (input.isAiGenerated) params[AI_LABEL_PARAM] = "true";
   const r = await post(deps, `${IG_GRAPH}/${igUserId}/media`, params);
   return String(r.id);

@@ -25,6 +25,8 @@ export function registerSocialPostRoutes(app: Express): void {
       listSocialPosts: (id) => storage.listSocialPosts(id),
       getSocialPost: (accountId, postId) => storage.getSocialPost(accountId, postId),
       getSocialPostByPublicId: (publicId) => storage.getSocialPostByPublicId(publicId),
+      getSocialPostByCoverId: (coverPublicId) => storage.getSocialPostByCoverId(coverPublicId),
+      getThumbnail: (accountId, thumbnailId) => storage.getThumbnail(accountId, thumbnailId),
       insertSocialPost: (row) => storage.insertSocialPost(row),
       updateSocialPostIf: (postId, allowed, fields, opts) => storage.updateSocialPostIf(postId, allowed, fields, opts),
       getSocialUserNames: (ids) => storage.getSocialUserNames(ids),

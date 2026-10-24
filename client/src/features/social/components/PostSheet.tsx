@@ -12,6 +12,7 @@ import { IG_CAPTION_MAX, validateCaption } from "@shared/socialPosts";
 import { SocialApiError, createSocialPost, updateSocialPost, uploadSocialVideo, type SocialPostView } from "../api/socialApi";
 import { editBody, errorKey, toLocalDateTime, uploadPrecheck, type PostForm } from "../lib/posts";
 import { CaptionWriter } from "./CaptionWriter";
+import { CoverPicker } from "./CoverPicker";
 import { VideoPreview } from "./VideoLightbox";
 
 const labelStyle: React.CSSProperties = { fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5, display: "block" };
@@ -23,14 +24,14 @@ function uploadIdOf(videoUrl: string): string {
 }
 
 function blankForm(): PostForm {
-  return { uploadId: "", caption: "", date: "", time: "", shareToFeed: true, isAiGenerated: true, requiresApproval: true };
+  return { uploadId: "", caption: "", date: "", time: "", shareToFeed: true, isAiGenerated: true, requiresApproval: true, coverThumbnailId: null };
 }
 
 function formFor(post: SocialPostView, timeZone: string): PostForm {
   const { date, time } = toLocalDateTime(post.scheduledAt, timeZone);
   return {
     uploadId: uploadIdOf(post.videoUrl), caption: post.caption, date, time,
-    shareToFeed: post.shareToFeed, isAiGenerated: post.isAiGenerated, requiresApproval: post.requiresApproval,
+    shareToFeed: post.shareToFeed, isAiGenerated: post.isAiGenerated, requiresApproval: post.requiresApproval, coverThumbnailId: post.coverThumbnailId,
   };
 }
 
@@ -55,6 +56,7 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", script, in
   const original = useMemo(() => (post ? formFor(post, timeZone) : { ...blankForm(), uploadId: initialUploadId ?? "" }), [post, timeZone, initialUploadId]);
   const [form, setForm] = useState<PostForm>(original);
   const [previewUrl, setPreviewUrl] = useState<string>(post?.videoUrl ? `${API_BASE}${post.videoUrl}` : "");
+  const [coverPreview, setCoverPreview] = useState<string | null>(post?.coverUrl ?? null);
   const [progress, setProgress] = useState<number | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -151,6 +153,11 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", script, in
             </div>
           </div>
         </div>
+      )}
+
+      {!timeOnly && (
+        <CoverPicker accountId={accountId} value={form.coverThumbnailId} previewUrl={coverPreview}
+          onChange={(id, url) => { set("coverThumbnailId", id); setCoverPreview(url); }} />
       )}
 
       {!timeOnly && (

@@ -15,8 +15,8 @@
  * with 409 instead of overwriting their change.
  */
 import { randomUUID } from "node:crypto";
-import { unlink } from "node:fs/promises";
-import { resolve, sep } from "node:path";
+import { copyFile, mkdir, unlink } from "node:fs/promises";
+import { dirname, resolve, sep } from "node:path";
 import type { Express, Request, RequestHandler, Response } from "express";
 import type { InsertSocialPost, SocialConnection, SocialPost } from "@shared/schema";
 import type { ApprovalStatus, SocialPostStatus } from "@shared/socialPosts";
@@ -34,6 +34,7 @@ import {
   canReject,
   contentVersion,
   formatWhen,
+  parseCoverFile,
   parseMediaFile,
   parseNewPostBody,
   parsePostEditBody,
@@ -41,6 +42,7 @@ import {
   planPostEdit,
   toPostView,
   uploadExtFor,
+  type CoverCopy,
   type ProbedVideo,
   type VideoExt,
 } from "./postService";
@@ -61,6 +63,9 @@ export interface PostRouteDeps {
     listSocialPosts(accountId: number): Promise<SocialPost[]>;
     getSocialPost(accountId: number, postId: number): Promise<SocialPost | null>;
     getSocialPostByPublicId(publicId: string): Promise<SocialPost | null>;
+    getSocialPostByCoverId(coverPublicId: string): Promise<SocialPost | null>;
+    /** A generated thumbnail of the account (the cover is copied from its file). */
+    getThumbnail(accountId: number, thumbnailId: number): Promise<{ status: string; filePath: string | null } | null>;
     insertSocialPost(row: InsertSocialPost): Promise<SocialPost>;
     updateSocialPostIf(
       postId: number,
@@ -68,7 +73,7 @@ export interface PostRouteDeps {
       fields: Partial<InsertSocialPost>,
       opts?: {
         approvalStatuses?: ApprovalStatus[];
-        content?: { caption: string; videoPublicId: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
+        content?: { caption: string; videoPublicId: string | null; coverPublicId?: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
       },
     ): Promise<SocialPost | null>;
     getSocialUserNames(ids: number[]): Promise<Map<number, string>>;
@@ -105,6 +110,27 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     } catch (err: any) {
       if (err?.code !== "ENOENT") console.error(`[social] could not delete ${path}: ${err?.message ?? err}`);
     }
+  }
+
+  /** Deletes a post's cover copy. */
+  async function removePostCover(p: Pick<SocialPost, "coverPath">): Promise<void> {
+    await removeFile(p.coverPath);
+  }
+
+  /** Copies a ready thumbnail into the account's covers folder, so deleting the thumbnail later leaves the post's cover alone. null when it is not usable. */
+  async function copyCover(accountId: number, thumbnailId: number): Promise<CoverCopy | null> {
+    const thumb = await store.getThumbnail(accountId, thumbnailId);
+    if (!thumb || thumb.status !== "ready" || !thumb.filePath) return null;
+    const publicId = randomUUID();
+    const path = resolve(uploadRoot, String(accountId), "covers", `${publicId}.jpg`);
+    try {
+      await mkdir(dirname(path), { recursive: true });
+      await copyFile(thumb.filePath, path);
+    } catch (err: any) {
+      console.error(`[social] could not copy cover for thumbnail ${thumbnailId}: ${err?.message ?? err}`);
+      return null;
+    }
+    return { thumbnailId, publicId, path };
   }
 
   /** The uploaded file for this account, probed again, or null when it is not there. */
@@ -205,14 +231,23 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     if (!video) return refused(res, 422, "upload_missing");
     if ("ok" in video) return refused(res, 422, video.reason);
 
+    let cover: CoverCopy | undefined;
+    if (input.coverThumbnailId !== null) {
+      cover = (await copyCover(ctx.accountId, input.coverThumbnailId)) ?? undefined;
+      if (!cover) return refused(res, 422, "cover_missing");
+    }
     const plan = planNewPost(input, {
-      timeZone: ctx.timeZone, now: deps.now(), userId, accountId: ctx.accountId, connectionId: connection.id, video,
+      timeZone: ctx.timeZone, now: deps.now(), userId, accountId: ctx.accountId, connectionId: connection.id, video, cover,
     });
-    if (!plan.ok) return refused(res, plan.status, plan.reason);
+    if (!plan.ok) {
+      if (cover) await removeFile(cover.path);
+      return refused(res, plan.status, plan.reason);
+    }
     let created: SocialPost;
     try {
       created = await store.insertSocialPost(plan.row);
     } catch (err: any) {
+      if (cover) await removeFile(cover.path);
       // Two creates with the same upload at once: the unique index on video_public_id decides.
       if (err?.code === "23505") return refused(res, 409, "upload_used");
       throw err;
@@ -245,18 +280,29 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
 
     const userId = actorId(req, res);
     if (userId === null) return;
-    const plan = planPostEdit(post, input, { timeZone: ctx.timeZone, now: deps.now(), userId, newVideo });
-    if (!plan.ok) return refused(res, plan.status, plan.reason);
+    const oldCoverPath = post.coverPath;
+    let newCover: CoverCopy | undefined;
+    if (input.coverThumbnailId != null && input.coverThumbnailId !== post.coverThumbnailId) {
+      newCover = (await copyCover(ctx.accountId, input.coverThumbnailId)) ?? undefined;
+      if (!newCover) return refused(res, 422, "cover_missing");
+    }
+    const plan = planPostEdit(post, input, { timeZone: ctx.timeZone, now: deps.now(), userId, newVideo, newCover });
+    if (!plan.ok) {
+      if (newCover) await removeFile(newCover.path);
+      return refused(res, plan.status, plan.reason);
+    }
     // Only applies when the post is still in the state the plan was made from.
     const updated = await store.updateSocialPostIf(postId, [post.status as SocialPostStatus], plan.fields, {
       approvalStatuses: [post.approvalStatus as ApprovalStatus],
     });
     if (!updated) {
+      if (newCover) await removeFile(newCover.path);
       const now = await store.getSocialPost(ctx.accountId, postId);
       const stillEditable = now && (now.status === "scheduled" || now.status === "held");
       return refused(res, 409, stillEditable ? "changed" : "not_editable");
     }
     if (newVideo && post.videoPath !== updated.videoPath) await removePostVideo(post);
+    if (oldCoverPath && oldCoverPath !== updated.coverPath) await removePostCover({ coverPath: oldCoverPath });
     if (plan.notifyManagers) notifyNeedsApproval(ctx, updated);
     res.json(await viewOf(updated));
   }));
@@ -279,7 +325,7 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
       postId,
       APPROVE_FROM.statuses,
       { approvalStatus: "approved", approvedByUserId: userId, approvedAt: deps.now(), approvalNote: null },
-      { approvalStatuses: APPROVE_FROM.approval, content: { caption: post.caption, videoPublicId: post.videoPublicId } },
+      { approvalStatuses: APPROVE_FROM.approval, content: { caption: post.caption, videoPublicId: post.videoPublicId, coverPublicId: post.coverPublicId } },
     );
     if (!updated) return refused(res, 409, "changed");
     res.json(await viewOf(updated));
@@ -347,10 +393,24 @@ export function registerSocialPostRoutes(app: Express, deps: PostRouteDeps): voi
     const updated = await store.updateSocialPostIf(postId, CANCELLABLE_STATUSES, { status: "cancelled" });
     if (!updated) return refused(res, 409, "not_editable");
     await removePostVideo(post);
+    await removePostCover(post);
     res.json({ ok: true });
   }));
 
   // ─── Public video for Meta (no auth). Random id, so files can't be enumerated ─
+  app.get("/media/social/cover/:file", wrapAsync(async (req, res) => {
+    const notFound = () => res.status(404).type("text/plain").send("Not found");
+    const publicId = parseCoverFile(String(req.params.file ?? ""));
+    if (!publicId) return notFound();
+    const post = await store.getSocialPostByCoverId(publicId);
+    if (!post || post.status === "cancelled" || !insideUploads(post.coverPath)) return notFound();
+    res.sendFile(resolve(post.coverPath), {
+      headers: { "Content-Type": "image/jpeg", "Cache-Control": "public, max-age=3600" },
+    }, (err) => {
+      if (err && !res.headersSent) res.status((err as { status?: number }).status ?? 404).end();
+    });
+  }));
+
   app.get("/media/social/:file", wrapAsync(async (req, res) => {
     const notFound = () => res.status(404).type("text/plain").send("Not found");
     const parsed = parseMediaFile(String(req.params.file ?? ""));

@@ -173,6 +173,13 @@ export const socialStorage = {
     return row ?? null;
   },
 
+  async getSocialPostByCoverId(coverPublicId: string): Promise<SocialPost | null> {
+    const [row] = await db.select().from(socialPosts)
+      .where(eq(socialPosts.coverPublicId, coverPublicId))
+      .limit(1);
+    return row ?? null;
+  },
+
   async insertSocialPost(row: InsertSocialPost): Promise<SocialPost> {
     const [created] = await db.insert(socialPosts).values(row).returning();
     return created;
@@ -188,7 +195,7 @@ export const socialStorage = {
     fields: Partial<InsertSocialPost>,
     opts: {
       approvalStatuses?: ApprovalStatus[];
-      content?: { caption: string; videoPublicId: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
+      content?: { caption: string; videoPublicId: string | null; coverPublicId?: string | null; scheduledAt?: Date; shareToFeed?: boolean; isAiGenerated?: boolean };
     } = {},
   ): Promise<SocialPost | null> {
     if (allowedStatuses.length === 0) return null;
@@ -197,6 +204,7 @@ export const socialStorage = {
     if (opts.content) {
       conds.push(eq(socialPosts.caption, opts.content.caption));
       conds.push(opts.content.videoPublicId === null ? isNull(socialPosts.videoPublicId) : eq(socialPosts.videoPublicId, opts.content.videoPublicId));
+      if (opts.content.coverPublicId !== undefined) conds.push(opts.content.coverPublicId === null ? isNull(socialPosts.coverPublicId) : eq(socialPosts.coverPublicId, opts.content.coverPublicId));
       if (opts.content.scheduledAt) conds.push(eq(socialPosts.scheduledAt, opts.content.scheduledAt));
       if (opts.content.shareToFeed !== undefined) conds.push(eq(socialPosts.shareToFeed, opts.content.shareToFeed));
       if (opts.content.isAiGenerated !== undefined) conds.push(eq(socialPosts.isAiGenerated, opts.content.isAiGenerated));

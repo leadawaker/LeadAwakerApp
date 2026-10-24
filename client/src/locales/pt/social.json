@@ -15,6 +15,14 @@
       "insights": "Resultados",
       "thumbnails": "Capas"
     },
+    "rail": {
+      "home": "Sua semana num relance",
+      "posts": "Reels agendados e publicados",
+      "studio": "Roteiros e vídeos",
+      "thumbnails": "Capas e imagens",
+      "comments": "Responda comentários por DM",
+      "settings": "Conta e publicação"
+    },
     "modes": {
       "aria": "Resultados ou redes sociais",
       "work": "Redes sociais"

@@ -48,6 +48,7 @@ export function livePublisherDeps(): PublisherDeps {
       getPublishingQuotaLeft: (u, t) => getPublishingQuotaLeft(u, t, ig),
     },
     mediaUrl: (publicId, ext) => `${mediaBase()}/media/social/${publicId}.${ext}`,
+    coverUrl: (publicId) => `${mediaBase()}/media/social/cover/${publicId}.jpg`,
     notifyAgency,
     notifyAccountManagers,
   };

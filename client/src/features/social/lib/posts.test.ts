@@ -17,7 +17,7 @@ import {
 const view = (over: Partial<SocialPostView>): SocialPostView => ({
   id: 1, version: "v1", section: "needs_approval", status: "scheduled", approvalStatus: "pending", requiresApproval: true,
   caption: "Olá", scheduledAt: "2026-10-27T21:00:00.000Z", videoUrl: "/media/social/x.mp4", durationS: 58, permalink: null,
-  lastError: null, approvalNote: null, approvedByName: null, waivedByName: null, shareToFeed: true, isAiGenerated: true, ...over,
+  lastError: null, approvalNote: null, approvedByName: null, waivedByName: null, shareToFeed: true, isAiGenerated: true, coverUrl: null, coverThumbnailId: null, ...over,
 });
 
 const AGENCY = { isAgency: true, userRole: "Owner" };
@@ -90,10 +90,12 @@ test("a post's time in the account's zone, as the date and time the form sends",
 });
 
 test("an edit sends only what changed, as strings (never an ISO timestamp)", () => {
-  const original = { uploadId: "u1", caption: "a", date: "2026-10-27", time: "18:00", shareToFeed: true, isAiGenerated: true, requiresApproval: true };
+  const original = { uploadId: "u1", caption: "a", date: "2026-10-27", time: "18:00", shareToFeed: true, isAiGenerated: true, requiresApproval: true, coverThumbnailId: null };
   assert.deepEqual(editBody(original, { ...original }), {});
   assert.deepEqual(editBody(original, { ...original, caption: "b", time: "19:00" }), { caption: "b", date: "2026-10-27", time: "19:00" });
   assert.deepEqual(editBody(original, { ...original, requiresApproval: false }), { requiresApproval: false });
+  assert.deepEqual(editBody(original, { ...original, coverThumbnailId: 5 }), { coverThumbnailId: 5 });
+  assert.deepEqual(editBody({ ...original, coverThumbnailId: 5 }, { ...original, coverThumbnailId: null }), { coverThumbnailId: null });
 });
 
 test("server reasons map to translated keys, unknown ones to a generic message", () => {

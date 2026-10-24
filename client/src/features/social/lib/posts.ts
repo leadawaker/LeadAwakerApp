@@ -13,7 +13,7 @@ export type PostAction = "approve" | "reject" | "reschedule" | "edit" | "retry" 
 /** Reasons the server sends that have their own message under social.posts.errors. */
 export const KNOWN_REASONS = [
   "not_editable", "changed", "in_past", "invalid_time", "not_connected", "not_allowed", "not_failed", "not_enabled",
-  "upload_missing", "upload_used", "aborted",
+  "upload_missing", "upload_used", "cover_missing", "aborted",
   "too_long", "too_many_hashtags", "too_many_mentions",
   "format", "video_codec", "audio_codec", "audio_rate", "duration_short", "duration_long", "fps", "width", "size",
 ] as const;
@@ -87,6 +87,8 @@ export interface PostForm {
   shareToFeed: boolean;
   isAiGenerated: boolean;
   requiresApproval: boolean;
+  /** A ready thumbnail to use as the Reel cover; null for none. */
+  coverThumbnailId: number | null;
 }
 
 /** PATCH body: only the changed fields; a new date or time sends both, as the server needs. */
@@ -98,6 +100,7 @@ export function editBody(original: PostForm, form: PostForm): Partial<PostForm> 
     body.date = form.date;
     body.time = form.time;
   }
+  if (form.coverThumbnailId !== original.coverThumbnailId) body.coverThumbnailId = form.coverThumbnailId;
   for (const k of ["shareToFeed", "isAiGenerated", "requiresApproval"] as const) if (form[k] !== original[k]) body[k] = form[k];
   return body;
 }
