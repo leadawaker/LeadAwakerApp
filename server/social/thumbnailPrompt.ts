@@ -59,7 +59,9 @@ export function buildThumbnailPrompt(input: ThumbnailPromptInput): string {
       ? "Design an Instagram Reel cover image (vertical 9:16)."
       : input.format === "landscape"
         ? "Design a video thumbnail (horizontal 16:9)."
-        : `Design an Instagram post cover image (${size.ratio}).`,
+        : input.format === "post"
+          ? `Design an Instagram cover image (vertical ${size.ratio}) that works as a feed post and as a Reel cover.`
+          : `Design an Instagram post cover image (${size.ratio}).`,
   );
   lines.push(KIND_DIRECTION[input.kind]);
 

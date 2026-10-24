@@ -2,12 +2,12 @@
 // section of the Socials page). Shared by server and client: no Node-only imports.
 
 /**
- * Output formats. `reel` (9:16) is the default: a Reel cover. The profile grid shows the center 3:4
- * of it, so the prompt keeps the title and faces inside that area.
+ * Output formats. `post` (4:5) is the default: it is how a post, and a Reel cover, shows on Instagram.
+ * `reel` (9:16) keeps the title and faces inside the center 3:4 the profile grid shows.
  */
-export const THUMB_FORMATS = ["reel", "post", "square", "landscape"] as const;
+export const THUMB_FORMATS = ["post", "reel", "square", "landscape"] as const;
 export type ThumbFormat = (typeof THUMB_FORMATS)[number];
-export const DEFAULT_THUMB_FORMAT: ThumbFormat = "reel";
+export const DEFAULT_THUMB_FORMAT: ThumbFormat = "post";
 
 export const THUMB_FORMAT_SIZE: Record<ThumbFormat, { width: number; height: number; ratio: string }> = {
   reel: { width: 1080, height: 1920, ratio: "9:16" },

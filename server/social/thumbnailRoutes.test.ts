@@ -165,7 +165,7 @@ test("generate: answers 202 with generating rows, then fills them as JPEGs in th
   const res = await call("POST", `/api/social/accounts/${A}/thumbnails`, MANAGER_A, { kind: "title", title: "3 mistakes", variants: 2 });
   assert.equal(res.status, 202);
   assert.equal(res.json.length, 2);
-  assert.ok(res.json.every((t: any) => t.status === "generating" && t.format === "reel" && t.imageUrl === null));
+  assert.ok(res.json.every((t: any) => t.status === "generating" && t.format === "post" && t.imageUrl === null));
   assert.equal(res.json[0].batchId, res.json[1].batchId);
   await routes.idle();
 
@@ -181,7 +181,7 @@ test("generate: answers 202 with generating rows, then fills them as JPEGs in th
   const img = await fetch(`${base}${list.json[0].imageUrl}?download=1`, { headers: { "x-test-user": JSON.stringify(VIEWER_A) } });
   assert.equal(img.headers.get("content-type"), "image/jpeg");
   assert.match(img.headers.get("content-disposition") ?? "", /attachment; filename="thumbnail-\d+\.jpg"/);
-  assert.match(await img.text(), /^1080x1920:img/);
+  assert.match(await img.text(), /^1080x1350:img/);
 });
 
 test("generate: picked references go along, a presenter cover adds the account's person photos", async () => {
@@ -254,7 +254,7 @@ test("styles: create, list (deleted refs dropped), update, delete", async () => 
   const mia = (await addRef("person", "Mia")).json;
   const made = await call("POST", `/api/social/accounts/${A}/thumbnail-styles`, MANAGER_A, { name: "Mia cover", kind: "presenter", prompt: "warm light", refIds: [mia.id] });
   assert.equal(made.status, 201);
-  assert.deepEqual({ ...made.json, id: 0 }, { id: 0, name: "Mia cover", kind: "presenter", prompt: "warm light", format: "reel", refIds: [mia.id] });
+  assert.deepEqual({ ...made.json, id: 0 }, { id: 0, name: "Mia cover", kind: "presenter", prompt: "warm light", format: "post", refIds: [mia.id] });
   assert.equal((await call("POST", `/api/social/accounts/${A}/thumbnail-styles`, MANAGER_A, { name: "x", kind: "auto", refIds: [999] })).json.reason, "ref_missing");
 
   await call("DELETE", `/api/social/accounts/${A}/thumbnail-refs/${mia.id}`, MANAGER_A);

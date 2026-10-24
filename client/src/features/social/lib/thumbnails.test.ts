@@ -16,10 +16,10 @@ test("error keys: known reasons, else the fallback; API words are shown as they 
   assert.deepEqual(failureText(null), { key: "thumbnails.errors.failed" });
 });
 
-test("aspect ratio per format, Reel for anything unknown", () => {
+test("aspect ratio per format, Post for anything unknown", () => {
   assert.equal(aspectOf("reel"), "1080 / 1920");
   assert.equal(aspectOf("landscape"), "1920 / 1080");
-  assert.equal(aspectOf("??"), "1080 / 1920");
+  assert.equal(aspectOf("??"), "1080 / 1350");
 });
 
 test("polling and filter", () => {
@@ -30,7 +30,7 @@ test("polling and filter", () => {
 
 test("form: the default is a Reel cover, 2 variants; a style fills the look but keeps the title", () => {
   const f = { ...emptyForm(), title: "Hello", source: "script:4" };
-  assert.equal(emptyForm().format, "reel");
+  assert.equal(emptyForm().format, "post");
   const styled = applyStyle(f, { id: 9, name: "Mia", kind: "presenter", prompt: "warm", format: "post", refIds: [3] });
   assert.deepEqual(styled, { ...f, kind: "presenter", prompt: "warm", format: "post", refIds: [3], styleId: 9 });
   assert.deepEqual(toGenerateInput(styled), { kind: "presenter", format: "post", title: "Hello", prompt: "warm", refIds: [3], styleId: 9, scriptId: 4, postId: null, variants: 2 });

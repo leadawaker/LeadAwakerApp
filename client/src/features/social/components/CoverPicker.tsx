@@ -1,6 +1,6 @@
 // The Reel cover of a post: a thumbnail from the account's gallery (Thumbnails tab). Shown inside
-// PostSheet. Every ready thumbnail is offered: the ones made for this post first, then Reel-format
-// (9:16) ones; any other shape gets a note, because Instagram crops it to 9:16.
+// PostSheet. Every ready thumbnail is offered: the ones made for this post first, then the Post (4:5)
+// and Reel (9:16) shapes; square and landscape ones get a note, because they are cropped.
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -10,6 +10,9 @@ import { API_BASE } from "@/lib/apiUtils";
 import { fetchThumbnails, imageSrc, thumbnailsKey, type ThumbnailView } from "../api/thumbnailsApi";
 
 const labelStyle: React.CSSProperties = { fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5, display: "block" };
+
+/** Square and landscape do not fit the tall cover frame: they get cropped. */
+const isOddShape = (x: ThumbnailView) => x.format !== "reel" && x.format !== "post";
 
 export function CoverPicker({ accountId, postId, value, previewUrl, onChange }: {
   accountId: number;
@@ -24,7 +27,7 @@ export function CoverPicker({ accountId, postId, value, previewUrl, onChange }: 
   const { t } = useTranslation("accounts");
   const [open, setOpen] = useState(false);
   const thumbs = useQuery({ queryKey: thumbnailsKey(accountId), queryFn: () => fetchThumbnails(accountId), enabled: open });
-  const rank = (x: ThumbnailView) => (postId !== undefined && x.postId === postId ? 0 : 2) + (x.format === "reel" ? 0 : 1);
+  const rank = (x: ThumbnailView) => (postId !== undefined && x.postId === postId ? 0 : 2) + (x.format === "reel" || x.format === "post" ? 0 : 1);
   const choices = (thumbs.data ?? []).filter((x) => x.status === "ready" && !!x.imageUrl)
     .sort((a, b) => rank(a) - rank(b) || Number(b.starred) - Number(a.starred) || Date.parse(b.createdAt) - Date.parse(a.createdAt));
   const shown = value !== null && previewUrl ? (previewUrl.startsWith("/media/") ? `${API_BASE}${previewUrl}` : imageSrc(previewUrl)) : "";
@@ -69,9 +72,9 @@ export function CoverPicker({ accountId, postId, value, previewUrl, onChange }: 
                   style={{ padding: 0, border: value === x.id ? "2px solid var(--wine)" : "2px solid transparent", borderRadius: "var(--r-surface)", overflow: "hidden", cursor: "pointer", background: "none" }}
                   data-testid={`social-cover-option-${x.id}`}>
                   <img src={imageSrc(x.imageUrl!)} alt={x.title || `#${x.id}`} loading="lazy" style={{ width: "100%", aspectRatio: "9 / 16", objectFit: "cover", display: "block" }} />
-                  {(x.format !== "reel" || (postId !== undefined && x.postId === postId)) && (
+                  {(isOddShape(x) || (postId !== undefined && x.postId === postId)) && (
                     <span style={{ display: "block", padding: "3px 4px", fontSize: 9.5, lineHeight: 1.3, color: "var(--mute)", textAlign: "left" }}>
-                      {postId !== undefined && x.postId === postId ? `${t("social.posts.sheet.coverForPost")} ` : ""}{x.format !== "reel" ? t("social.posts.sheet.coverCropped") : ""}
+                      {postId !== undefined && x.postId === postId ? `${t("social.posts.sheet.coverForPost")} ` : ""}{isOddShape(x) ? t("social.posts.sheet.coverCropped") : ""}
                     </span>
                   )}
                 </button>
