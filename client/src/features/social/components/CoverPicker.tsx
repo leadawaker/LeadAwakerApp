@@ -1,6 +1,6 @@
 // The Reel cover of a post: a thumbnail from the account's gallery (Thumbnails tab). Shown inside
-// PostSheet. Every ready thumbnail is offered: the ones made for this post first, then the Post (4:5)
-// and Reel (9:16) shapes; square and landscape ones get a note, because they are cropped.
+// PostSheet. Every ready thumbnail is offered: the ones made for this post first, then the tall shapes
+// (3:4, 4:5, 9:16); square and landscape ones get a note, because they are cropped.
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,7 @@ import { fetchThumbnails, imageSrc, thumbnailsKey, type ThumbnailView } from "..
 const labelStyle: React.CSSProperties = { fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5, display: "block" };
 
 /** Square and landscape do not fit the tall cover frame: they get cropped. */
-const isOddShape = (x: ThumbnailView) => x.format !== "reel" && x.format !== "post";
+const isOddShape = (x: ThumbnailView) => x.format === "square" || x.format === "landscape";
 
 export function CoverPicker({ accountId, postId, value, previewUrl, onChange }: {
   accountId: number;
@@ -27,7 +27,7 @@ export function CoverPicker({ accountId, postId, value, previewUrl, onChange }: 
   const { t } = useTranslation("accounts");
   const [open, setOpen] = useState(false);
   const thumbs = useQuery({ queryKey: thumbnailsKey(accountId), queryFn: () => fetchThumbnails(accountId), enabled: open });
-  const rank = (x: ThumbnailView) => (postId !== undefined && x.postId === postId ? 0 : 2) + (x.format === "reel" || x.format === "post" ? 0 : 1);
+  const rank = (x: ThumbnailView) => (postId !== undefined && x.postId === postId ? 0 : 2) + (x.format === "reel" || x.format === "post" || x.format === "portrait" ? 0 : 1);
   const choices = (thumbs.data ?? []).filter((x) => x.status === "ready" && !!x.imageUrl)
     .sort((a, b) => rank(a) - rank(b) || Number(b.starred) - Number(a.starred) || Date.parse(b.createdAt) - Date.parse(a.createdAt));
   const shown = value !== null && previewUrl ? (previewUrl.startsWith("/media/") ? `${API_BASE}${previewUrl}` : imageSrc(previewUrl)) : "";

@@ -927,7 +927,7 @@
         "chooseCover": "Choose cover",
         "changeCover": "Change cover",
         "removeCover": "Remove cover",
-        "coverHelp": "Shown on Instagram as the Reel cover. Pick one from your thumbnails; Post (4:5) and Reel (9:16) shapes fit best.",
+        "coverHelp": "Shown on Instagram as the Reel cover. Pick one from your thumbnails; the tall shapes (3:4, 4:5, 9:16) fit best.",
         "coverEmpty": "No finished thumbnails yet. Make one in the Thumbnails tab first.",
         "coverForPost": "For this post.",
         "coverCropped": "Will be cropped.",

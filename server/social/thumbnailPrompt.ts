@@ -59,8 +59,8 @@ export function buildThumbnailPrompt(input: ThumbnailPromptInput): string {
       ? "Design an Instagram Reel cover image (vertical 9:16)."
       : input.format === "landscape"
         ? "Design a video thumbnail (horizontal 16:9)."
-        : input.format === "post"
-          ? `Design an Instagram cover image (vertical ${size.ratio}) that works as a feed post and as a Reel cover.`
+        : input.format === "post" || input.format === "portrait"
+          ? `Design an Instagram cover image (vertical ${size.ratio}) that works as a feed post, in the profile grid and as a Reel cover.`
           : `Design an Instagram post cover image (${size.ratio}).`,
   );
   lines.push(KIND_DIRECTION[input.kind]);
@@ -108,6 +108,7 @@ export interface GenerationPlan {
 }
 
 const MODEL_SIZE: Record<ThumbFormat, GenerationPlan["size"]> = {
+  portrait: "1024x1536",
   reel: "1024x1536",
   post: "1024x1536",
   square: "1024x1024",

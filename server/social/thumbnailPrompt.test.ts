@@ -49,7 +49,7 @@ test("sniff and decode: PNG, JPEG, WebP by their bytes; junk is refused", () => 
 
 test("generate body: defaults, limits, and script or post but not both", () => {
   const ok = parseGenerateBody({});
-  assert.ok(ok.ok && ok.value.kind === "auto" && ok.value.format === "post" && ok.value.variants === 1);
+  assert.ok(ok.ok && ok.value.kind === "auto" && ok.value.format === "portrait" && ok.value.variants === 1);
   assert.equal(parseGenerateBody({ refIds: [1, 2, 3, 4, 5, 6, 7] }).ok, false);
   assert.equal(parseGenerateBody({ scriptId: 1, postId: 2 }).ok, false);
   assert.equal(parseGenerateBody({ format: "tiktok" }).ok, false);

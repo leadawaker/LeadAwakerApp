@@ -462,6 +462,7 @@
       }
     },
     "formats": {
+      "portrait": "Post 3:4",
       "reel": "Reel 9:16",
       "post": "Post 4:5",
       "square": "Quadrado 1:1",
