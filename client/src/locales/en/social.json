@@ -436,6 +436,14 @@
       "generate": "Generate with this look",
       "makeForMeHelp": "Make it for me lets the AI pick the look. Generating takes about a minute; you can keep working meanwhile."
     },
+    "cover": {
+      "use": "Use as cover",
+      "coverOf": "Cover of: {{post}}",
+      "reel": "Reel #{{id}}",
+      "madeFor": "made for this one",
+      "noPosts": "No scheduled Reels to attach it to.",
+      "approvalNote": "If the post was approved, it goes back for approval."
+    },
     "kinds": {
       "auto": {
         "name": "Auto",

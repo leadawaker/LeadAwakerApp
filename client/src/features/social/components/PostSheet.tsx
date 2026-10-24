@@ -156,7 +156,7 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", script, in
       )}
 
       {!timeOnly && (
-        <CoverPicker accountId={accountId} value={form.coverThumbnailId} previewUrl={coverPreview}
+        <CoverPicker accountId={accountId} postId={post?.id} value={form.coverThumbnailId} previewUrl={coverPreview}
           onChange={(id, url) => { set("coverThumbnailId", id); setCoverPreview(url); }} />
       )}
 

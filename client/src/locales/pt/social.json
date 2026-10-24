@@ -436,6 +436,14 @@
       "generate": "Gerar com este estilo",
       "makeForMeHelp": "Em Faça por mim a IA escolhe o estilo. Gerar leva cerca de um minuto; você pode continuar trabalhando enquanto isso."
     },
+    "cover": {
+      "use": "Usar como capa",
+      "coverOf": "Capa de: {{post}}",
+      "reel": "Reel #{{id}}",
+      "madeFor": "feita para este",
+      "noPosts": "Nenhum Reel agendado para ligar.",
+      "approvalNote": "Se o post estava aprovado, ele volta para aprovação."
+    },
     "kinds": {
       "auto": {
         "name": "Automático",

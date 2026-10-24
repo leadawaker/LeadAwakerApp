@@ -436,6 +436,14 @@
       "generate": "Maak met deze stijl",
       "makeForMeHelp": "Bij Maak het voor mij kiest de AI de stijl. Genereren duurt ongeveer een minuut; je kunt intussen verder werken."
     },
+    "cover": {
+      "use": "Als cover gebruiken",
+      "coverOf": "Cover van: {{post}}",
+      "reel": "Reel #{{id}}",
+      "madeFor": "hiervoor gemaakt",
+      "noPosts": "Geen geplande Reels om hem aan te koppelen.",
+      "approvalNote": "Was de post al goedgekeurd, dan moet hij opnieuw goedgekeurd worden."
+    },
     "kinds": {
       "auto": {
         "name": "Automatisch",

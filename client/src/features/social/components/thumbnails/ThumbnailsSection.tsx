@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/useIsMobile";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { SocialApiError } from "../../api/socialApi";
 import {
   fetchThumbnailConfig,
@@ -23,6 +24,7 @@ import { ThumbnailGallery } from "./ThumbnailGallery";
 export function ThumbnailsSection({ accountId }: { accountId: number }) {
   const { t } = useTranslation("social");
   const stacked = useIsMobile(1024);
+  const { isAgencyUser } = useWorkspace();
   const [form, setForm] = useState<ComposerForm>(emptyForm);
   const config = useQuery({ queryKey: thumbnailConfigKey(accountId), queryFn: () => fetchThumbnailConfig(accountId), staleTime: 60_000 });
   const refs = useQuery({ queryKey: thumbnailRefsKey(accountId), queryFn: () => fetchThumbnailRefs(accountId), staleTime: 30_000 });
@@ -41,7 +43,7 @@ export function ThumbnailsSection({ accountId }: { accountId: number }) {
     document.querySelector('[data-testid="thumb-composer"]')?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
-  const gallery = <ThumbnailGallery accountId={accountId} thumbs={thumbs.data ?? []} loading={thumbs.isLoading} canEdit={canCreate} onReuse={reuse} />;
+  const gallery = <ThumbnailGallery accountId={accountId} thumbs={thumbs.data ?? []} loading={thumbs.isLoading} canEdit={canCreate} canLink={isAgencyUser} onReuse={reuse} />;
   const composer = canCreate ? (
     <ThumbnailComposer accountId={accountId} form={form} setForm={setForm} refs={refs.data ?? []} styles={styles.data ?? []} configured={config.data?.configured === true} />
   ) : null;

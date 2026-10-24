@@ -6,11 +6,12 @@ import { useTranslation } from "react-i18next";
 import { AlertTriangle, Download, Loader2, RotateCcw, Star, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { deleteThumbnail, downloadUrl, imageSrc, starThumbnail, thumbnailsKey, type ThumbnailView } from "../../api/thumbnailsApi";
+import { CoverLink } from "./CoverLink";
 import { aspectOf, failureText, galleryItems, type GalleryFilter } from "../../lib/thumbnails";
 
 const iconBtn: React.CSSProperties = { padding: "4px 7px", minHeight: 28, fontSize: 11 };
 
-function ThumbnailCard({ accountId, thumb, canEdit, onReuse }: { accountId: number; thumb: ThumbnailView; canEdit: boolean; onReuse: (t: ThumbnailView) => void }) {
+function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accountId: number; thumb: ThumbnailView; canEdit: boolean; canLink: boolean; onReuse: (t: ThumbnailView) => void }) {
   const { t } = useTranslation("social");
   const qc = useQueryClient();
   const replace = (next: ThumbnailView | null) =>
@@ -44,6 +45,7 @@ function ThumbnailCard({ accountId, thumb, canEdit, onReuse }: { accountId: numb
         </p>
         <p style={{ margin: 0, fontSize: 10.5, color: "var(--mute)" }}>{t(`thumbnails.kinds.${thumb.kind}.name`)} · {t(`thumbnails.formats.${thumb.format}`)}</p>
       </div>
+      <CoverLink accountId={accountId} thumb={thumb} canLink={canLink} />
       <div className="row" style={{ gap: 2, flexWrap: "wrap" }}>
         {thumb.status === "ready" && (
           <a className="la-btn la-btn--plain" style={iconBtn} href={downloadUrl(thumb)} title={t("thumbnails.gallery.download")} aria-label={t("thumbnails.gallery.download")} data-testid={`thumb-download-${thumb.id}`}>
@@ -74,11 +76,13 @@ function ThumbnailCard({ accountId, thumb, canEdit, onReuse }: { accountId: numb
   );
 }
 
-export function ThumbnailGallery({ accountId, thumbs, loading, canEdit, onReuse }: {
+export function ThumbnailGallery({ accountId, thumbs, loading, canEdit, canLink, onReuse }: {
   accountId: number;
   thumbs: ThumbnailView[];
   loading: boolean;
   canEdit: boolean;
+  /** May attach a thumbnail to a post as its Reel cover (agency). */
+  canLink: boolean;
   onReuse: (t: ThumbnailView) => void;
 }) {
   const { t } = useTranslation("social");
@@ -102,7 +106,7 @@ export function ThumbnailGallery({ accountId, thumbs, loading, canEdit, onReuse 
         <p style={{ margin: 0, fontSize: 12.5, color: "var(--mute)" }}>{t(filter === "starred" ? "thumbnails.gallery.emptyStarred" : "thumbnails.gallery.empty")}</p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 2, display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))", gap: 12, alignItems: "start" }}>
-          {items.map((x) => <ThumbnailCard key={x.id} accountId={accountId} thumb={x} canEdit={canEdit} onReuse={onReuse} />)}
+          {items.map((x) => <ThumbnailCard key={x.id} accountId={accountId} thumb={x} canEdit={canEdit} canLink={canLink} onReuse={onReuse} />)}
         </ul>
       )}
     </section>
