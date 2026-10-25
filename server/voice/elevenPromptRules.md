@@ -14,10 +14,11 @@ The ElevenLabs agent does not store our prompt. The engine builds it again for e
 
 ### The marks
 
-The row is plain text. Two kinds of marks stand in for what changes per call. Everything else is fixed words that anyone can edit.
+The row is plain text. Two kinds of marks stand in for what changes per call; everything else is fixed words.
 
-- `{name}` is a per-call part that the engine fills in. A line whose per-call parts are all empty this call is dropped, and so is the blank line directly above it.
+- `{name}` is a per-call part that the engine fills in. A line that has a per-call part and renders as nothing (empty, or just "-") is dropped; a line with fixed words around an empty mark is kept.
 - `{?flag}` anywhere on a line keeps the line only when the flag holds this call. `{?!flag}` keeps it only when the flag does not hold. A flag decides that a whole line exists for this call (the line for one tool, the line for a closed business).
+- Whenever a line is dropped, whether by an empty part or by a flag, the blank line directly above it goes too.
 - A mark the engine does not know stays in the text as typed, and the agent then sees the braces. A typo such as `{Agent}` or `{?closed_nwo}` shows up in the prompt. Never invent, rename or re-case a mark.
 
 Per-call parts the engine knows (`PLACEHOLDERS`): `agent`, `company`, `business`, `tone_words`, `pt_language`, `weekday`, `day`, `month`, `year`, `time`, `days`, `hours`, `appointment`, `caller_memory`, `line_language`, `caller_language`, `pronunciation`, `extra`, `intake`, `procedures`, `person`, `followup`, `handoff`, `callback_policy`, `appointment_kinds`, `booking_notice`, `intake_first`, `knowledge`.
@@ -28,7 +29,7 @@ Line conditions the engine knows (`FLAGS`): `business`, `disclose`, `open_now`, 
 
 - **Open or closed, and dates.** Worked out at the start of the call: only the rule that applies stays (`{?open_now}`, `{?closed_now}`, `{?closed}`), and today plus the next seven days are written out in `{days}` with their YYYY-MM-DD date, so the agent never works out a weekday.
 - **Tools.** Only the tools this call may use are named, each behind its own flag: the agenda tools only on a line with a real diary, the car tools only on a dealer line, `transfer_to_human` only when someone can be put through right now. A tool line without its flag makes the agent promise something it cannot do.
-- **Written by the code, not in the row.** The rule for asking for a person (`{person}`), the callback policy (`{callback_policy}`, `{handoff}`), the WhatsApp follow-up (`{followup}`), the intake questions (`{intake}`), the appointment kinds and notice period, and the knowledge procedures (`{procedures}`). Their wording lives in code: the row can move, drop or surround the line that holds the mark, but cannot reword what the mark expands to.
+- **Written by the code, not in the row.** The rule for asking for a person (`{person}`), the callback policy (`{callback_policy}`), the name of whom a caller can be put through to (`{handoff}`: the transfer target's name, or "iemand van het team" when none is set), the WhatsApp follow-up (`{followup}`), the intake questions (`{intake}`), the appointment kinds and notice period, and the knowledge procedures (`{procedures}`). Their wording lives in code: the row can move, drop or surround the line that holds the mark, but cannot reword what the mark expands to.
 - **Knowledge.** Injected per call. A titled row of two or more lines whose title does not end in a question mark becomes numbered steps ("Werkwijze bij ...") in `# Goal`; other rows go into `# Knowledge` as written. The stock list is not in the prompt: the agent asks `search_stock` and `car_details`.
 
 ### What the reviewer can and cannot see
@@ -42,8 +43,7 @@ Line conditions the engine knows (`FLAGS`): `business`, `disclose`, `open_now`, 
 Follow ElevenLabs' guide. The row has these sections in this order, each with a single `#` heading in sentence case: `# Personality` (who the agent is, what the business does, honest about being digital when asked), `# Environment` (a phone call, date and time, the coming days, opening hours, open or closed, caller memory), `# Tone` (how to speak, said once), `# Goal` (what to achieve and in which order, including intake and procedures), `# Guardrails` (the non-negotiables), `# Tools` (one line per tool), and `# Knowledge` (only when the account has some).
 
 - **Clean sections.** Separate instructions with headings and blank lines; rules from one context bleed into another when they share a paragraph. Models also pay extra attention to `# Guardrails`, so hard rules belong there and nowhere else.
-- **Short bullets, one rule per bullet.** A bullet that holds two rules is two bullets. A bullet is an action that can be checked in a transcript ("Keep answers short: one or two short sentences, then it is the caller's turn"), not filler ("Try to be as friendly and helpful as possible").
-- **Concise.** Cut filler. Say the tone once, in `# Tone`.
+- **Short bullets, one rule per bullet, no filler, tone said once.** A bullet that holds two rules is two bullets. A bullet is an action that can be checked in a transcript ("Keep answers short: one or two short sentences, then it is the caller's turn"), not "Try to be as friendly and helpful as possible".
 - **Order matters.** Who and where, then how to speak, then what to achieve, then what never to do, then the tools. A later section can point back ("close as under # Tools") but must not repeat.
 - **Rule where it is needed.** Tool behaviour in that tool's line, the booking sequence in `# Goal`, a never-rule in `# Guardrails`. A rule filed in the wrong section is followed less often.
 - **Emphasis, sparingly.** For a critical rule that keeps failing, ElevenLabs suggests "This step is important" on that one line: that exact phrase, at most one line per section, never capitals, never the same rule twice. It is never the first fix.
@@ -93,8 +93,8 @@ Turn-taking is handled by the platform, not by the prompt. The prompt shapes wha
 - **Silence.** The silence timeout on our agent is 15 seconds. When it expires the caller's turn shows up as just "..." in the transcript. That means the caller is thinking or quiet: do not ask "ben je er nog?", wait. Only after a long real silence ask once, briefly, whether they are still there. The value is an agent setting, never a prompt change.
 - **Small turns.** A sound such as "eh", "hm", "uhm", or a word broken off: say nothing and wait for the caller to go on. A "ja" or "oké" that answers the agent's own question: carry on. Never repeat the previous answer. A backchannel treated as a turn that made the agent repeat itself is an engine finding, not a missing rule.
 - **Interruptions.** Whether the caller can interrupt, and how eagerly the agent takes its turn, are agent settings (turn eagerness, for example, where ElevenLabs suggests Patient for phone numbers, addresses and e-mail). A rule such as "never get interrupted" or "wait three seconds" does nothing. What the prompt can do: keep answers short, and say that when the caller cuts in the agent answers what was said instead of restarting or repeating its previous sentence.
-- **Ending.** Close once, in one turn: (1) ask whether there is anything else, once; if yes, carry on. (2) If not, say a short goodbye once, in the language the caller speaks now. (3) In the same turn call `update_call_summary`, then `end_call` without a spoken message. A test call said goodbye in English and then `end_call` spoke "Fijne dag nog!": that second goodbye is the failure this order prevents.
-- **`end_call` only after a goodbye.** ElevenLabs' default is to end when the task is done and the caller is satisfied, or says goodbye or wants to stop. Ours is stricter: never while the caller still has a question, never in the middle of a booking, never straight after a tool result without a goodbye. The exceptions are the robocall, sales pitch and abuse guardrails below.
+- **Ending.** Close once, in one turn: (1) ask whether there is anything else, once; if yes, carry on. (2) If not, say a short goodbye once, in the language the caller speaks now. (3) In the same turn call `update_call_summary`, then `end_call` without `message_to_speak`. A test call said goodbye in English and then `end_call` spoke "Fijne dag nog!": the failure this order prevents.
+- **`end_call` only after a goodbye.** ElevenLabs' default is to end when the task is done and the caller is satisfied, or says goodbye or wants to stop. Ours is narrower. The agent's `end_call` description (an agent setting) reads "End the call right after you have said goodbye. Do not say anything else.", because the default let the model add a second goodbye through `message_to_speak`. The `end_call` line in our prompt says to call it straight after the goodbye, in the same turn, without `message_to_speak`. The exceptions are the robocall, sales pitch and abuse guardrails below.
 
 ## Guardrails
 
@@ -131,7 +131,7 @@ A change is a repair of the one line that caused a failure, never a rewrite. The
 13. **Shorter or equal.** Merge or remove a line when one is added.
 14. **Evidence and a check.** Every change carries the exact quote with its timestamp, the call ids, and the row line that applied. It ends with a scenario for the next call that can fail: which caller (with or without memory, since memory marks answers as known and hides intake bugs), the exact lines to say, and the one behaviour that must now differ.
 
-A worked example. Suppose the agent asked two intake questions in one turn, because the intake line says "ask the questions below" in the plural and does not say each in its own turn:
+A worked example, only to show the format (find, replace, why). It is an illustration, not a proposal: never propose this change, or one like it, without call evidence that shows the problem. Suppose the agent asked two intake questions in one turn, because the intake line says "ask the questions below" in the plural and does not say each in its own turn:
 
 - Find (nl): `stel dan vóór je een afspraak of terugbelmoment aanbiedt of vastlegt de vragen hieronder die nog open zijn, kort en met een reden`
 - Replace (nl): `stel dan vóór je een afspraak of terugbelmoment aanbiedt of vastlegt de vragen hieronder die nog open zijn, elk in een eigen beurt, kort en met een reden`
@@ -139,7 +139,7 @@ A worked example. Suppose the agent asked two intake questions in one turn, beca
 - Replace (en): `ask the questions below that are still open before you offer or record an appointment or a callback, each in its own turn, briefly and with a reason`
 - Why: the one-question rule sits in `# Tone`, but the intake line itself reads as "ask them together" (a plural, nothing about turns). The fix is a few words in that line, not a second copy of the rule elsewhere.
 
-A change that fails these rules: "ALWAYS ask only ONE question!!! This is VERY important" added at the end of `# Goal`. It is louder, not clearer, it repeats a rule that exists, and it leaves the line that caused the problem untouched.
+What fails these rules: adding "ALWAYS ask only ONE question!!! This is VERY important" at the end of `# Goal`. It is louder, not clearer, and leaves the line that caused the problem untouched.
 
 ## Diagnosing a call
 
@@ -170,7 +170,7 @@ The reference is the GPT Live line: an average reply delay of 0.5 s and a p90 of
 ### Cautions
 
 - **Memory effect.** On a test line the tester plays a new caller, but caller memory treats the number as a returning caller. A skipped intake question is then often a memory effect, not a model failure. Say so when the memory block lists the answers.
-- **Prompt age and patterns.** Check that the call ran on the prompt you are reading. The same failure in two or more calls, or before and after a Save, is stronger evidence than one call. Rank findings: ours first, cheapest fix first, then engine side.
+- **Prompt age and patterns.** Check that the call ran on the prompt you are reading. The same failure in two or more calls, or before and after a Save, is stronger evidence than one call. Rank: ours first, cheapest fix first, then engine side.
 
 ## What not to propose
 
