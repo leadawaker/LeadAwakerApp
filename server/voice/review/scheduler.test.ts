@@ -19,11 +19,12 @@ function deps(over: Partial<WeeklyDeps> = {}) {
   return { d, calls };
 }
 
-// One account's error is logged, not shown: keep the test output clean.
+// An account's error or a stalled-review warning is logged on purpose: keep the test output clean.
 async function quiet<T>(fn: () => Promise<T>): Promise<T> {
-  const original = console.error;
+  const { error, warn } = console;
   console.error = () => {};
-  try { return await fn(); } finally { console.error = original; }
+  console.warn = () => {};
+  try { return await fn(); } finally { console.error = error; console.warn = warn; }
 }
 
 test("tickWeeklyReviews runs the claimed account for last week and skips the one it could not claim", async () => {

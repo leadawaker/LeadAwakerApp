@@ -15,7 +15,7 @@ export interface WeeklyDeps {
   accountsWithCalls(start: Date, end: Date): Promise<number[]>;
   claim(accountId: number, week: ReviewWeek): Promise<number | null>;
   run(job: ReviewJob): Promise<"done" | "failed">;
-  /** Marks weekly reviews that stalled with every attempt used as failed, so none shows as running forever. */
+  /** Marks reviews that stalled and will not run again (manual, or weekly with every attempt used) as failed, so none shows as running forever. */
   failStalled?(): Promise<number>;
 }
 
@@ -26,7 +26,7 @@ export async function tickWeeklyReviews(deps: WeeklyDeps): Promise<number> {
   if (deps.failStalled) {
     try {
       const n = await deps.failStalled();
-      if (n > 0) console.warn(`[voice-review] ${n} stalled weekly review(s) marked failed`);
+      if (n > 0) console.warn(`[voice-review] ${n} stalled review(s) marked failed`);
     } catch (err) {
       console.error(`[voice-review] could not fail stalled reviews: ${messageOf(err)}`);
     }
@@ -66,7 +66,7 @@ function liveWeeklyDeps(): WeeklyDeps {
     accountsWithCalls: async (start, end) => (await storage()).accountsWithElevenCalls(start, end),
     claim: async (accountId, week) => (await storage()).claimWeeklyReview(accountId, week),
     run: (job) => runReview(liveReviewDeps(), job),
-    failStalled: async () => (await storage()).failStalledWeeklyReviews(),
+    failStalled: async () => (await storage()).failStalledReviews(),
   };
 }
 

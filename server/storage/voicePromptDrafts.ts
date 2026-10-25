@@ -330,6 +330,17 @@ async function rejectVoiceSuggestion(accountId: number, id: number, by: string |
   return exists ? { status: 409, reason: "not_proposed" } : { status: 404, reason: "not_found" };
 }
 
+/**
+ * Removes the cards a review made that nobody decided on (proposed or stale). A review that is run again
+ * after a failure (a weekly retry) calls this first, so the same edits are never on the list twice.
+ */
+async function clearReviewSuggestions(reviewId: number): Promise<void> {
+  await db.delete(voicePromptSuggestions).where(and(
+    eq(voicePromptSuggestions.reviewId, reviewId),
+    inArray(voicePromptSuggestions.status, ["proposed", "stale"]),
+  ));
+}
+
 /** The edits Gabriel rejected recently, newest first, so reviews and the coach do not propose them again. */
 async function recentRejectedSuggestions(accountId: number, days = 60): Promise<{ find: string; replace: string }[]> {
   const since = new Date(Date.now() - days * DAY_MS);
@@ -352,5 +363,6 @@ export const voicePromptDraftsStorage = {
   acceptVoiceSuggestion,
   rejectVoiceSuggestion,
   insertVoiceSuggestions,
+  clearReviewSuggestions,
   recentRejectedSuggestions,
 };

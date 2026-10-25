@@ -29,6 +29,8 @@ export interface ReviewStore {
   previous(accountId: number, beforeReviewId: number): Promise<ReviewDto | null>;
   livePrompts(): Promise<Partial<Record<PromptLang, { id: number; text: string }>>>;
   rejected(accountId: number): Promise<{ find: string; replace: string }[]>;
+  /** Removes the undecided cards (proposed or stale) an earlier attempt of this review left. */
+  clearReviewSuggestions(reviewId: number): Promise<void>;
   insertSuggestions(rows: NewSuggestion[]): Promise<number[]>;
   finish(reviewId: number, out: { stats: ReviewStats; report: ReviewReport; model: string | null }): Promise<void>;
   fail(reviewId: number, error: string): Promise<void>;
@@ -125,6 +127,8 @@ async function execute(deps: ReviewDeps, job: ReviewJob): Promise<"done" | "fail
       promptId: row.id, mirrorPromptId: mirror ? mirror.id : null, proposal,
     });
   }
+  // A retry of the same review (a weekly row that failed after its cards were inserted) must not list them twice.
+  await store.clearReviewSuggestions(reviewId);
   if (suggestions.length) await store.insertSuggestions(suggestions);
 
   const report: ReviewReport = {
@@ -169,6 +173,7 @@ export function liveReviewDeps(): ReviewDeps {
         return out;
       },
       rejected: async (a) => (await storage()).recentRejectedSuggestions(a),
+      clearReviewSuggestions: async (id) => (await storage()).clearReviewSuggestions(id),
       insertSuggestions: async (rows) => (await storage()).insertVoiceSuggestions(rows),
       finish: async (id, out) => (await storage()).finishVoiceReview(id, out),
       fail: async (id, error) => (await storage()).failVoiceReview(id, error),

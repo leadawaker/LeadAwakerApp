@@ -22,6 +22,8 @@ interface Log {
   finished: { id: number; stats: ReviewStats; report: ReviewReport; model: string | null }[];
   failed: { id: number; error: string }[];
   inserted: NewSuggestion[][];
+  cleared: number[];
+  order: string[];
   transcriptAsked: string[][];
   aiCalls: Parameters<AiComplete>[0][];
 }
@@ -33,7 +35,7 @@ function setup(opts: {
   store?: Partial<ReviewStore>;
   ai?: AiComplete;
 } = {}) {
-  const log: Log = { finished: [], failed: [], inserted: [], transcriptAsked: [], aiCalls: [] };
+  const log: Log = { finished: [], failed: [], inserted: [], cleared: [], order: [], transcriptAsked: [], aiCalls: [] };
   const store: ReviewStore = {
     listCalls: async () => opts.calls ?? [],
     transcripts: async (ids) => {
@@ -46,7 +48,8 @@ function setup(opts: {
     previous: async () => null,
     livePrompts: async () => ({ nl: { id: 130, text: NL }, en: { id: 131, text: EN } }),
     rejected: async () => [],
-    insertSuggestions: async (rows) => { log.inserted.push(rows); return rows.map((_, i) => 900 + i); },
+    clearReviewSuggestions: async (id) => { log.cleared.push(id); log.order.push("clear"); },
+    insertSuggestions: async (rows) => { log.inserted.push(rows); log.order.push("insert"); return rows.map((_, i) => 900 + i); },
     finish: async (id, out) => { log.finished.push({ id, ...out }); },
     fail: async (id, error) => { log.failed.push({ id, error }); },
     ...opts.store,
@@ -57,6 +60,14 @@ function setup(opts: {
   });
   const deps: ReviewDeps = { ai, rules: () => "RULES", store };
   return { deps, log };
+}
+
+// A failed review is logged on purpose: keep the test output clean.
+async function quiet<T>(fn: () => Promise<T>): Promise<T> {
+  const { error, warn } = console;
+  console.error = () => {};
+  console.warn = () => {};
+  try { return await fn(); } finally { console.error = error; console.warn = warn; }
 }
 
 const baseAnswer = (over: Record<string, unknown> = {}) => ({
@@ -190,7 +201,7 @@ test("runReview: transcripts only for the picked calls, tool events for all", as
 
 test("runReview: a model error fails the review with that text", async () => {
   const { deps, log } = setup({ calls: [call("el_x")], aiResult: { error: "timed out" } });
-  assert.equal(await runReview(deps, job), "failed");
+  assert.equal(await quiet(() => runReview(deps, job)), "failed");
   assert.deepEqual(log.failed, [{ id: 7, error: "timed out" }]);
   assert.equal(log.finished.length, 0);
   assert.equal(log.inserted.length, 0);
@@ -198,34 +209,34 @@ test("runReview: a model error fails the review with that text", async () => {
 
 test("runReview: an answer that does not parse fails the review with the reason", async () => {
   const notJson = setup({ calls: [call("el_x")], aiResult: { text: "sorry, no" } });
-  assert.equal(await runReview(notJson.deps, job), "failed");
+  assert.equal(await quiet(() => runReview(notJson.deps, job)), "failed");
   assert.deepEqual(notJson.log.failed, [{ id: 7, error: "parse: not_json" }]);
 
   const badShape = setup({ calls: [call("el_x")], aiResult: { text: JSON.stringify({ summary: 5 }) } });
-  assert.equal(await runReview(badShape.deps, job), "failed");
+  assert.equal(await quiet(() => runReview(badShape.deps, job)), "failed");
   assert.deepEqual(badShape.log.failed, [{ id: 7, error: "parse: bad_shape" }]);
   assert.equal(badShape.log.inserted.length, 0);
 });
 
 test("runReview never throws: a store, model or insert error ends in fail", async () => {
   const listBroken = setup({ store: { listCalls: async () => { throw new Error("db down"); } } });
-  assert.equal(await runReview(listBroken.deps, job), "failed");
+  assert.equal(await quiet(() => runReview(listBroken.deps, job)), "failed");
   assert.deepEqual(listBroken.log.failed, [{ id: 7, error: "db down" }]);
 
   const aiBroken = setup({ calls: [call("el_x")], ai: async () => { throw new Error("spawn failed"); } });
-  assert.equal(await runReview(aiBroken.deps, job), "failed");
+  assert.equal(await quiet(() => runReview(aiBroken.deps, job)), "failed");
   assert.deepEqual(aiBroken.log.failed, [{ id: 7, error: "spawn failed" }]);
 
   const insertBroken = setup({
     calls: [call("el_x")], answer: baseAnswer({ proposals: [proposal()] }),
     store: { insertSuggestions: async () => { throw new Error("insert failed"); } },
   });
-  assert.equal(await runReview(insertBroken.deps, job), "failed");
+  assert.equal(await quiet(() => runReview(insertBroken.deps, job)), "failed");
   assert.deepEqual(insertBroken.log.failed, [{ id: 7, error: "insert failed" }]);
   assert.equal(insertBroken.log.finished.length, 0);
 
   const notAnError = setup({ store: { listCalls: async () => { throw "plain string"; } } });
-  assert.equal(await runReview(notAnError.deps, job), "failed");
+  assert.equal(await quiet(() => runReview(notAnError.deps, job)), "failed");
   assert.deepEqual(notAnError.log.failed, [{ id: 7, error: "plain string" }]);
 });
 
@@ -234,5 +245,31 @@ test("runReview never throws even when fail itself throws", async () => {
     calls: [call("el_x")], aiResult: { error: "boom" },
     store: { fail: async () => { throw new Error("db gone"); } },
   });
-  assert.equal(await runReview(deps, job), "failed");
+  assert.equal(await quiet(() => runReview(deps, job)), "failed");
+});
+
+test("runReview clears the undecided cards of an earlier attempt before it inserts the new ones", async () => {
+  const { deps, log } = setup({ calls: [call("el_x")], answer: baseAnswer({ proposals: [proposal()] }) });
+  assert.equal(await runReview(deps, job), "done");
+  assert.deepEqual(log.cleared, [7]);
+  assert.deepEqual(log.order, ["clear", "insert"]);
+});
+
+test("runReview still clears the old cards when the retry finds nothing to propose", async () => {
+  const { deps, log } = setup({ calls: [call("el_x")], answer: baseAnswer() });
+  assert.equal(await runReview(deps, job), "done");
+  assert.deepEqual(log.cleared, [7]);
+  assert.equal(log.inserted.length, 0);
+});
+
+test("runReview leaves the earlier cards alone when the attempt fails before it has a report", async () => {
+  const { deps, log } = setup({ calls: [call("el_x")], aiResult: { error: "timed out" } });
+  await quiet(() => runReview(deps, job));
+  assert.equal(log.cleared.length, 0);
+});
+
+test("runReview does not clear cards for a period with no calls", async () => {
+  const { deps, log } = setup({ calls: [] });
+  assert.equal(await runReview(deps, job), "done");
+  assert.equal(log.cleared.length, 0);
 });
