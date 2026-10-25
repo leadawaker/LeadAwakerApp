@@ -46,6 +46,7 @@ import { registerDemoSettingsRoutes } from "./demoSettings";
 import { registerVoicePromptRoutes } from "./voicePrompts";
 import { registerVoiceElevenTestRoutes } from "./voiceElevenTest";
 import { registerVoiceAccountPromptRoutes } from "./voiceAccountPrompts";
+import { registerVoicePromptDraftRoutes } from "./voicePromptDrafts";
 import { registerDemoSocialRoutes } from "./demoSocial";
 import { registerDemoLogoRoutes } from "./demoLogos";
 import { registerPublicDemoRoutes } from "./publicDemo";
@@ -126,6 +127,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerVoicePromptRoutes(app);
   registerVoiceElevenTestRoutes(app);
   registerVoiceAccountPromptRoutes(app);
+  registerVoicePromptDraftRoutes(app);
   registerDemoSocialRoutes(app);
   registerDemoLogoRoutes(app);
   registerPublicDemoRoutes(app);

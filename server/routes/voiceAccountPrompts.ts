@@ -29,7 +29,11 @@ export function registerVoiceAccountPromptRoutes(app: Express) {
     // Only the rows this line runs on: never an arbitrary prompt by id.
     const { layer, backend, eleven } = await storage.getAccountVoicePrompts(line.locale);
     const promptId = Number(req.params.promptId);
-    if (promptId !== layer?.id && promptId !== backend?.id && promptId !== eleven?.id) {
+    // Decision 2: nothing autosaves to the ElevenLabs prompt; it is edited as a draft and saved to live on purpose.
+    if (eleven && promptId === eleven.id) {
+      return res.status(400).json({ message: "The ElevenLabs prompt is edited through its draft." });
+    }
+    if (promptId !== layer?.id && promptId !== backend?.id) {
       return res.status(400).json({ message: "Not a prompt this line uses" });
     }
     const row = await storage.saveVoicePromptText(promptId, parsed.data.promptText, req.user?.email ?? null);
