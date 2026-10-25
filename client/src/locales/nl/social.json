@@ -432,10 +432,17 @@
       "prompt": "Extra instructies",
       "promptPlaceholder": "Optioneel. Bijvoorbeeld: warme kleuren, Mia lacht, gele titel",
       "variants": "Varianten",
-      "makeForMe": "Maak het voor mij",
-      "generate": "Maak met deze stijl",
-      "makeForMeHelp": "Bij Maak het voor mij kiest de AI de stijl. Genereren duurt ongeveer een minuut; je kunt intussen verder werken."
+      "makeForMe": "Verrassing (AI kiest de stijl)",
+      "generate": "Maak met {{look}}",
+      "makeForMeHelp": "Bij Verrassing kiest de AI de stijl. Genereren duurt ongeveer een minuut; je kunt intussen verder werken."
     },
+    "titles": {
+      "suggest": "Titels voorstellen",
+      "more": "Meer ideeën",
+      "hide": "Verbergen",
+      "pick": "Kies er een voor op de cover."
+    },
+    "confirmDelete": "Tik nogmaals om te verwijderen",
     "edit": {
       "open": "Wijzigingen vragen",
       "placeholder": "Wat moet er veranderen? bv. de titel groter",
@@ -445,7 +452,8 @@
       "editedFrom": "Aangepast van #{{id}}",
       "pendingFrom": "Aanpassing van #{{id}}: wacht op jou",
       "approve": "Goedkeuren",
-      "reject": "Afkeuren"
+      "reject": "Afkeuren",
+      "confirmReject": "Tik nogmaals om af te keuren"
     },
     "cover": {
       "use": "Als cover gebruiken",
@@ -541,7 +549,10 @@
       "busy": "Nog bezig met eerdere thumbnails. Wacht even.",
       "timed_out": "Deze duurde te lang en is gestopt.",
       "no_image": "De AI gaf voor deze geen beeld terug.",
-      "save_failed": "Het beeld kon niet worden opgeslagen."
+      "save_failed": "Het beeld kon niet worden opgeslagen.",
+      "no_input": "Kies eerst een script of post, of typ een idee in de titel.",
+      "ai_failed": "De AI antwoordde niet op tijd. Probeer het zo opnieuw.",
+      "no_options": "Het antwoord van de AI was niet bruikbaar. Probeer het opnieuw."
     }
   }
 }

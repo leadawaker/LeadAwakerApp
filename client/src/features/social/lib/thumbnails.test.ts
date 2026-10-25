@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { ThumbnailView } from "../api/thumbnailsApi";
-import { anyGenerating, applyStyle, aspectOf, emptyForm, failureText, fitWithin, formFromThumbnail, galleryItems, makeItForMe, parseSource, thumbErrorKey, toggleRef, toGenerateInput } from "./thumbnails";
+import { anyGenerating, applyStyle, aspectOf, emptyForm, failureText, fitWithin, formFromThumbnail, galleryItems, makeItForMe, parseSource, thumbErrorKey, toggleRef, toGenerateInput, toTitleRequest } from "./thumbnails";
 
 const thumb = (over: Partial<ThumbnailView>): ThumbnailView => ({
   id: 1, batchId: "b", styleId: null, scriptId: null, postId: null, kind: "auto", format: "reel", title: "", prompt: "",
@@ -58,4 +58,15 @@ test("toggle refs stops at the request limit; sources parse", () => {
 test("references shrink to fit, never grow", () => {
   assert.deepEqual(fitWithin(4000, 3000, 1536), { width: 1536, height: 1152 });
   assert.deepEqual(fitWithin(800, 600, 1536), { width: 800, height: 600 });
+});
+
+test("title helper: a picked script or post wins, else the rough title; shown titles are passed to avoid", () => {
+  const form = { ...emptyForm(), title: " rough idea " };
+  assert.deepEqual(toTitleRequest(form), { about: "rough idea", avoid: [] });
+  assert.deepEqual(toTitleRequest({ ...form, source: "script:4" }, ["A"]), { scriptId: 4, avoid: ["A"] });
+  assert.deepEqual(toTitleRequest({ ...form, source: "post:9" }), { postId: 9, avoid: [] });
+});
+
+test("the new helper and confirm reasons have their own messages", () => {
+  for (const r of ["no_input", "ai_failed", "no_options"]) assert.equal(thumbErrorKey(r), `thumbnails.errors.${r}`);
 });

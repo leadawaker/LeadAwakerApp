@@ -51,6 +51,10 @@ export const THUMB_LIMITS = {
   stylesPerAccount: 30,
 } as const;
 
+/** The title helper offers this many short options, each at most this many characters. */
+export const TITLE_SUGGESTION_COUNT = 5;
+export const TITLE_SUGGESTION_MAX_CHARS = 40;
+
 /** A thumbnail still generating after this long was lost (a restart): it shows as failed. */
 export const THUMB_STALE_MS = 15 * 60_000;
 

@@ -4,7 +4,7 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { LayoutGrid, Loader2, Save, Sparkles, Trash2, Type, User, Wand2 } from "lucide-react";
+import { LayoutGrid, Loader2, Save, Sparkles, Type, User, Wand2 } from "lucide-react";
 import { THUMB_FORMATS, THUMB_KINDS, THUMB_LIMITS, type ThumbKind } from "@shared/socialThumbnails";
 import { cn } from "@/lib/utils";
 import { fetchSocialPosts, SocialApiError, socialPostsKey } from "../../api/socialApi";
@@ -22,6 +22,8 @@ import {
 } from "../../api/thumbnailsApi";
 import { applyStyle, makeItForMe, parseSource, thumbErrorKey, toGenerateInput, toggleRef, type ComposerForm } from "../../lib/thumbnails";
 import { ReferencePicker } from "./ReferencePicker";
+import { StyleChip } from "./StyleChip";
+import { TitleSuggestions } from "./TitleSuggestions";
 
 const labelStyle: React.CSSProperties = { fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5, display: "block" };
 const errStyle: React.CSSProperties = { margin: 0, fontSize: 12, color: "hsl(var(--destructive))" };
@@ -73,6 +75,8 @@ export function ThumbnailComposer({ accountId, form, setForm, refs, styles, conf
   const busy = run.isPending;
   const reason = run.error instanceof SocialApiError ? run.error.reason : run.error ? "failed" : null;
   const people = refs.filter((r) => r.kind === "person").length;
+  // The look the second button uses: the applied saved style, else the picked look.
+  const look = styles.find((x) => x.id === form.styleId)?.name ?? t(`thumbnails.kinds.${form.kind}.name`);
 
   return (
     <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }} data-testid="thumb-composer">
@@ -108,6 +112,7 @@ export function ThumbnailComposer({ accountId, form, setForm, refs, styles, conf
         <label style={labelStyle} htmlFor="thumb-title">{t("thumbnails.composer.titleLabel")}</label>
         <input id="thumb-title" className="neu-input" value={form.title} maxLength={THUMB_LIMITS.title} onChange={(e) => set({ title: e.target.value })}
           placeholder={t("thumbnails.composer.titlePlaceholder")} style={{ fontSize: 13, padding: "8px 11px", width: "100%" }} data-testid="thumb-title" />
+        <TitleSuggestions accountId={accountId} form={form} onPick={(title) => set({ title: title.slice(0, THUMB_LIMITS.title) })} />
       </div>
 
       <div>
@@ -138,18 +143,7 @@ export function ThumbnailComposer({ accountId, form, setForm, refs, styles, conf
           <span style={labelStyle}>{t("thumbnails.styles.title")}</span>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
             {styles.map((s) => (
-              <span key={s.id} className="row" style={{ gap: 0 }}>
-                <button type="button" className={cn("la-btn", form.styleId === s.id ? "la-btn--wine" : "la-btn--soft")} style={{ padding: "4px 10px", minHeight: 28, fontSize: 11.5 }}
-                  onClick={() => setForm(applyStyle(form, s))} data-testid={`thumb-style-${s.id}`}>
-                  {s.name}
-                </button>
-                {form.styleId === s.id && (
-                  <button type="button" className="la-btn la-btn--plain" style={{ padding: "4px 6px", minHeight: 28 }} disabled={dropStyle.isPending}
-                    onClick={() => dropStyle.mutate(s.id)} title={t("thumbnails.styles.delete")} aria-label={t("thumbnails.styles.delete")}>
-                    <Trash2 size={12} />
-                  </button>
-                )}
-              </span>
+              <StyleChip key={s.id} style={s} active={form.styleId === s.id} deleting={dropStyle.isPending} onApply={() => setForm(applyStyle(form, s))} onDelete={() => dropStyle.mutate(s.id)} />
             ))}
           </div>
         </div>
@@ -192,7 +186,7 @@ export function ThumbnailComposer({ accountId, form, setForm, refs, styles, conf
           {busy ? <Loader2 size={12} className="animate-spin" /> : <Wand2 size={12} />}{t("thumbnails.composer.makeForMe")}
         </button>
         <button type="button" className="la-btn la-btn--soft" disabled={!configured || busy} onClick={() => run.mutate(toGenerateInput(form))} data-testid="thumb-generate">
-          <Sparkles size={12} />{t("thumbnails.composer.generate")}
+          <Sparkles size={12} />{t("thumbnails.composer.generate", { look })}
         </button>
         {styleName === null ? (
           <button type="button" className="la-btn la-btn--plain" onClick={() => setStyleName("")} data-testid="thumb-save-style">

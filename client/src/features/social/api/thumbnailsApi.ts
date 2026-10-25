@@ -68,6 +68,10 @@ export const deleteThumbnail = (accountId: number, id: number) => sendJson<{ ok:
 export interface EditInput { instruction: string; format: ThumbFormat | null; variants: number }
 export const editThumbnail = (accountId: number, id: number, input: EditInput) => sendJson<ThumbnailView[]>(`${base(accountId)}/thumbnails/${id}/edit`, "POST", input);
 export const approveThumbnail = (accountId: number, id: number) => sendJson<ThumbnailView>(`${base(accountId)}/thumbnails/${id}`, "PATCH", { review: "approved" });
+/** Short cover titles from a script, a post or a typed idea; avoid = the ones already shown. Saves nothing. */
+export interface TitleSuggestInput { scriptId?: number; postId?: number; about?: string; avoid?: string[] }
+export const suggestThumbnailTitles = (accountId: number, input: TitleSuggestInput) =>
+  sendJson<{ options: string[] }>(`${base(accountId)}/thumbnail-titles`, "POST", input);
 export const downloadUrl = (t: ThumbnailView) => (t.imageUrl ? `${imageSrc(t.imageUrl)}?download=1` : "");
 
 export const fetchThumbnailRefs = (accountId: number) => getJson<RefView[]>(`${base(accountId)}/thumbnail-refs`);

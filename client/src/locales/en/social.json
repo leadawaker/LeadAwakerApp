@@ -432,10 +432,17 @@
       "prompt": "Extra instructions",
       "promptPlaceholder": "Optional. For example: warm colors, Mia smiling, yellow title",
       "variants": "Variants",
-      "makeForMe": "Make it for me",
-      "generate": "Generate with this look",
-      "makeForMeHelp": "Make it for me lets the AI pick the look. Generating takes about a minute; you can keep working meanwhile."
+      "makeForMe": "Surprise me (AI picks the look)",
+      "generate": "Generate with {{look}}",
+      "makeForMeHelp": "Surprise me lets the AI pick the look. Generating takes about a minute; you can keep working meanwhile."
     },
+    "titles": {
+      "suggest": "Suggest titles",
+      "more": "More ideas",
+      "hide": "Hide",
+      "pick": "Pick one to put it on the cover."
+    },
+    "confirmDelete": "Tap again to delete",
     "edit": {
       "open": "Ask for changes",
       "placeholder": "What should change? e.g. make the title bigger",
@@ -445,7 +452,8 @@
       "editedFrom": "Edited from #{{id}}",
       "pendingFrom": "Edit of #{{id}}: waiting for you",
       "approve": "Approve",
-      "reject": "Reject"
+      "reject": "Reject",
+      "confirmReject": "Tap again to reject"
     },
     "cover": {
       "use": "Use as cover",
@@ -541,7 +549,10 @@
       "busy": "Still working on earlier thumbnails. Wait a moment.",
       "timed_out": "This one took too long and was stopped.",
       "no_image": "The AI returned no image for this one.",
-      "save_failed": "The image could not be saved."
+      "save_failed": "The image could not be saved.",
+      "no_input": "Pick a script or post, or type a rough idea in the title first.",
+      "ai_failed": "The AI did not answer in time. Try again in a moment.",
+      "no_options": "The AI answer could not be used. Try again."
     }
   }
 }

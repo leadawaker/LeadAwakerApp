@@ -432,10 +432,17 @@
       "prompt": "Instruções extras",
       "promptPlaceholder": "Opcional. Por exemplo: cores quentes, Mia sorrindo, título amarelo",
       "variants": "Variações",
-      "makeForMe": "Faça por mim",
-      "generate": "Gerar com este estilo",
-      "makeForMeHelp": "Em Faça por mim a IA escolhe o estilo. Gerar leva cerca de um minuto; você pode continuar trabalhando enquanto isso."
+      "makeForMe": "Me surpreenda (a IA escolhe o estilo)",
+      "generate": "Gerar com {{look}}",
+      "makeForMeHelp": "Em Me surpreenda a IA escolhe o estilo. Gerar leva cerca de um minuto; você pode continuar trabalhando enquanto isso."
     },
+    "titles": {
+      "suggest": "Sugerir títulos",
+      "more": "Mais ideias",
+      "hide": "Esconder",
+      "pick": "Escolha um para colocar na capa."
+    },
+    "confirmDelete": "Toque de novo para apagar",
     "edit": {
       "open": "Pedir alterações",
       "placeholder": "O que deve mudar? ex.: título maior",
@@ -445,7 +452,8 @@
       "editedFrom": "Editada a partir de #{{id}}",
       "pendingFrom": "Edição de #{{id}}: aguardando você",
       "approve": "Aprovar",
-      "reject": "Rejeitar"
+      "reject": "Rejeitar",
+      "confirmReject": "Toque de novo para rejeitar"
     },
     "cover": {
       "use": "Usar como capa",
@@ -541,7 +549,10 @@
       "busy": "Ainda gerando capas anteriores. Espere um momento.",
       "timed_out": "Esta demorou demais e foi interrompida.",
       "no_image": "A IA não devolveu imagem para esta.",
-      "save_failed": "Não foi possível salvar a imagem."
+      "save_failed": "Não foi possível salvar a imagem.",
+      "no_input": "Escolha antes um roteiro ou post, ou digite uma ideia no título.",
+      "ai_failed": "A IA não respondeu a tempo. Tente de novo em instantes.",
+      "no_options": "A resposta da IA não pôde ser usada. Tente de novo."
     }
   }
 }

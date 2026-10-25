@@ -9,8 +9,11 @@ import { approveThumbnail, deleteThumbnail, downloadUrl, imageSrc, starThumbnail
 import { CoverLink } from "./CoverLink";
 import { EditThumbnail } from "./EditThumbnail";
 import { aspectOf, failureText, galleryItems, type GalleryFilter } from "../../lib/thumbnails";
+import { useTapAgain } from "../../lib/useTapAgain";
 
 const iconBtn: React.CSSProperties = { padding: "4px 7px", minHeight: 28, fontSize: 11 };
+/** A delete button waiting for its second tap. */
+const armedStyle: React.CSSProperties = { color: "hsl(var(--destructive))", fontWeight: 700 };
 
 function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accountId: number; thumb: ThumbnailView; canEdit: boolean; canLink: boolean; onReuse: (t: ThumbnailView) => void }) {
   const { t } = useTranslation("social");
@@ -21,6 +24,9 @@ function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accoun
   const remove = useMutation({ mutationFn: () => deleteThumbnail(accountId, thumb.id), onSuccess: () => replace(null) });
   const approve = useMutation({ mutationFn: () => approveThumbnail(accountId, thumb.id), onSuccess: replace });
   const [editing, setEditing] = useState(false);
+  // Deleting a cover, and rejecting an edit (which deletes it), both need a second tap.
+  const dropTap = useTapAgain(() => remove.mutate());
+  const rejectTap = useTapAgain(() => remove.mutate());
   const pending = thumb.status === "ready" && thumb.review === "pending";
   const failure = thumb.status === "failed" ? failureText(thumb.error) : null;
 
@@ -59,8 +65,8 @@ function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accoun
           <button type="button" className="la-btn la-btn--wine" style={{ ...iconBtn, flex: 1 }} disabled={approve.isPending || remove.isPending} onClick={() => approve.mutate()} data-testid={`thumb-approve-${thumb.id}`}>
             {approve.isPending ? <Loader2 size={12} className="animate-spin" /> : <Check size={12} />}{t("thumbnails.edit.approve")}
           </button>
-          <button type="button" className="la-btn la-btn--soft" style={{ ...iconBtn, flex: 1 }} disabled={approve.isPending || remove.isPending} onClick={() => remove.mutate()} data-testid={`thumb-reject-${thumb.id}`}>
-            {remove.isPending ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}{t("thumbnails.edit.reject")}
+          <button type="button" className="la-btn la-btn--soft" style={{ ...iconBtn, flex: 1, ...(rejectTap.armed ? armedStyle : null) }} disabled={approve.isPending || remove.isPending} onClick={rejectTap.tap} data-testid={`thumb-reject-${thumb.id}`}>
+            {remove.isPending ? <Loader2 size={12} className="animate-spin" /> : <X size={12} />}{t(rejectTap.armed ? "thumbnails.edit.confirmReject" : "thumbnails.edit.reject")}
           </button>
         </div>
       )}
@@ -89,9 +95,9 @@ function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accoun
               <RotateCcw size={12} />
             </button>
             {thumb.status !== "generating" && (
-              <button type="button" className="la-btn la-btn--plain" style={{ ...iconBtn, marginLeft: "auto" }} disabled={remove.isPending} onClick={() => remove.mutate()}
-                title={t("thumbnails.gallery.delete")} aria-label={t("thumbnails.gallery.delete")} data-testid={`thumb-delete-${thumb.id}`}>
-                {remove.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}
+              <button type="button" className="la-btn la-btn--plain" style={{ ...iconBtn, marginLeft: "auto", ...(dropTap.armed ? armedStyle : null) }} disabled={remove.isPending} onClick={dropTap.tap}
+                title={t(dropTap.armed ? "thumbnails.confirmDelete" : "thumbnails.gallery.delete")} aria-label={t(dropTap.armed ? "thumbnails.confirmDelete" : "thumbnails.gallery.delete")} data-testid={`thumb-delete-${thumb.id}`}>
+                {remove.isPending ? <Loader2 size={12} className="animate-spin" /> : <Trash2 size={12} />}{dropTap.armed && t("thumbnails.confirmDelete")}
               </button>
             )}
           </>

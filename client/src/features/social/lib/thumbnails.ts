@@ -1,12 +1,12 @@
 // Rules behind the Thumbnails section of the Socials page (components/thumbnails/). Pure, except
 // prepareReference, which needs a browser (canvas) and is only called from a file input.
 import { DEFAULT_THUMB_FORMAT, THUMB_FORMAT_SIZE, THUMB_LIMITS, type ThumbFormat, type ThumbKind } from "@shared/socialThumbnails";
-import type { GenerateInput, RefView, StyleView, ThumbnailView } from "../api/thumbnailsApi";
+import type { GenerateInput, RefView, StyleView, ThumbnailView, TitleSuggestInput } from "../api/thumbnailsApi";
 
 /** Reasons the thumbnail routes send that have their own message (thumbnails.errors.*). */
 export const THUMB_REASONS = [
   "not_configured", "no_person", "no_title", "ref_missing", "script_missing", "post_missing", "thumbnail_missing", "no_instruction",
-  "bad_image", "too_large", "too_many", "rate_limited", "busy", "timed_out", "no_image", "save_failed",
+  "bad_image", "too_large", "too_many", "rate_limited", "busy", "timed_out", "no_image", "save_failed", "no_input", "ai_failed", "no_options",
 ] as const;
 
 export function thumbErrorKey(reason: string | null | undefined): string {
@@ -93,7 +93,14 @@ export function toGenerateInput(form: ComposerForm): GenerateInput {
   };
 }
 
-/** "Make it for me": the model picks the look; title, source, format and references stay as set. */
+/** What the title helper writes from: the picked script or post, else the rough title typed so far. */
+export function toTitleRequest(form: ComposerForm, avoid: readonly string[] = []): TitleSuggestInput {
+  const { scriptId, postId } = parseSource(form.source);
+  const from = scriptId ? { scriptId } : postId ? { postId } : { about: form.title.trim() };
+  return { ...from, avoid: [...avoid] };
+}
+
+/** "Surprise me": the model picks the look; title, source, format and references stay as set. */
 export function makeItForMe(form: ComposerForm): GenerateInput {
   return toGenerateInput({ ...form, kind: "auto", styleId: null });
 }

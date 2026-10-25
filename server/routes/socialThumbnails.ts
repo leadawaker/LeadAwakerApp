@@ -7,12 +7,28 @@ import { dirname, resolve } from "node:path";
 import type { Express } from "express";
 import { storage } from "../storage";
 import { requireAuth } from "../auth";
+import { claudeJson } from "../aiTextHelper";
 import { registerThumbnailRoutes } from "../social/thumbnailRoutes";
+import { registerThumbnailTitleRoutes } from "../social/thumbnailTitleRoutes";
 import { imageProviderFromEnv, writeThumbnailJpeg } from "../social/thumbnailImage";
 
 export const SOCIAL_THUMBNAIL_DIR = resolve("uploads/social-thumbnails");
 
 export function registerSocialThumbnailRoutes(app: Express): void {
+  registerThumbnailTitleRoutes(app, {
+    requireAuth,
+    now: () => new Date(),
+    store: {
+      async getAccount(accountId) {
+        const a = await storage.getAccountById(accountId);
+        return a ? { timezone: a.timezone, language: a.language, socialEnabled: a.socialEnabled === true } : null;
+      },
+      getSocialSettings: (id) => storage.getSocialSettings(id),
+      getSocialScript: (accountId, scriptId) => storage.getSocialScript(accountId, scriptId),
+      getSocialPost: (accountId, postId) => storage.getSocialPost(accountId, postId),
+    },
+    ai: claudeJson,
+  });
   registerThumbnailRoutes(app, {
     requireAuth,
     now: () => new Date(),

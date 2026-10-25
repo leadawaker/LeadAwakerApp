@@ -3,11 +3,12 @@
 import { useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
-import { Check, ImagePlus, Loader2, X } from "lucide-react";
+import { Check, ImagePlus, Loader2, Trash2, X } from "lucide-react";
 import { REF_KINDS, THUMB_LIMITS, type RefKind } from "@shared/socialThumbnails";
 import { SocialApiError } from "../../api/socialApi";
 import { deleteThumbnailRef, imageSrc, thumbnailRefsKey, uploadThumbnailRef, type RefView } from "../../api/thumbnailsApi";
 import { prepareReference, thumbErrorKey } from "../../lib/thumbnails";
+import { useTapAgain } from "../../lib/useTapAgain";
 
 const labelStyle: React.CSSProperties = { fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", display: "block" };
 const TILE = 58;
@@ -19,6 +20,7 @@ function RefTile({ accountId, ref_, selected, canEdit, onToggle }: { accountId: 
     mutationFn: () => deleteThumbnailRef(accountId, ref_.id),
     onSuccess: () => qc.invalidateQueries({ queryKey: thumbnailRefsKey(accountId) }),
   });
+  const { armed, tap } = useTapAgain(() => remove.mutate());
   const name = ref_.label || t(`thumbnails.refs.kinds.${ref_.kind}`);
   return (
     <div style={{ position: "relative", width: TILE, flex: "none" }} data-testid={`thumb-ref-${ref_.id}`}>
@@ -33,12 +35,13 @@ function RefTile({ accountId, ref_, selected, canEdit, onToggle }: { accountId: 
         )}
       </button>
       {canEdit && (
-        <button type="button" onClick={() => remove.mutate()} disabled={remove.isPending} title={t("thumbnails.refs.delete")} aria-label={t("thumbnails.refs.delete")}
-          className="la-btn la-btn--plain" style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, minHeight: 20, padding: 0, borderRadius: "var(--r-pill)", display: "grid", placeItems: "center", background: "var(--bone)", border: "1px solid var(--line)" }}>
-          {remove.isPending ? <Loader2 size={10} className="animate-spin" /> : <X size={10} />}
+        <button type="button" onClick={tap} disabled={remove.isPending} title={t(armed ? "thumbnails.confirmDelete" : "thumbnails.refs.delete")} aria-label={t(armed ? "thumbnails.confirmDelete" : "thumbnails.refs.delete")}
+          className="la-btn la-btn--plain" style={{ position: "absolute", top: -6, right: -6, width: 20, height: 20, minHeight: 20, padding: 0, borderRadius: "var(--r-pill)", display: "grid", placeItems: "center", background: armed ? "hsl(var(--destructive))" : "var(--bone)", color: armed ? "var(--bone)" : undefined, border: "1px solid var(--line)" }}>
+          {remove.isPending ? <Loader2 size={10} className="animate-spin" /> : armed ? <Trash2 size={10} /> : <X size={10} />}
         </button>
       )}
-      {ref_.label && <p style={{ margin: "3px 0 0", fontSize: 10, color: "var(--mute)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ref_.label}</p>}
+      {armed && <p role="status" style={{ margin: "3px 0 0", fontSize: 10, fontWeight: 700, color: "hsl(var(--destructive))", lineHeight: 1.25 }}>{t("thumbnails.confirmDelete")}</p>}
+      {!armed && ref_.label && <p style={{ margin: "3px 0 0", fontSize: 10, color: "var(--mute)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{ref_.label}</p>}
     </div>
   );
 }
