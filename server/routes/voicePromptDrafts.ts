@@ -42,13 +42,10 @@ export function registerVoicePromptDraftRoutes(app: Express) {
     res.json(view);
   }));
 
+  // Discards both languages' drafts together (a mirror card has an edit on each); `lang` is ignored.
   app.delete("/api/accounts/:id/voice/eleven-draft", requireOwner, wrapAsync(async (req, res) => {
     if (accountIdFor(req, res) == null) return;
-    const lang = langQuery.safeParse(req.query.lang);
-    if (!lang.success) return handleZodError(res, lang.error);
-    const view = await storage.discardElevenDraft(lang.data);
-    if (!view) return res.status(404).json(DRAFT_MISSING);
-    res.json(view);
+    res.json(await storage.discardElevenDrafts());
   }));
 
   app.post("/api/accounts/:id/voice/eleven-draft/save", requireOwner, wrapAsync(async (req, res) => {

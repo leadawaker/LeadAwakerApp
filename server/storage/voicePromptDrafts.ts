@@ -153,26 +153,37 @@ async function saveElevenDraftText(lang: PromptLang, text: string, by: string | 
   });
 }
 
-/** Drop the draft; the cards it had accepted become proposals again. */
-async function discardElevenDraft(lang: PromptLang): Promise<DraftView | null> {
+/**
+ * Drop both drafts together: they are one unit, because an accepted card can carry
+ * an edit on each language (mirror). Every card either draft had accepted that is
+ * still `accepted` becomes a proposal again.
+ */
+async function discardElevenDrafts(): Promise<{ nl: DraftView | null; en: DraftView | null }> {
   return inDraftTx(async (tx) => {
-    const live = await elevenPromptRow(lang, tx);
-    if (!live) return null;
-    const [draft] = await tx.delete(voicePromptDrafts).where(eq(voicePromptDrafts.promptsId, live.id)).returning();
-    if (draft?.acceptedIds?.length) {
+    const views: Record<PromptLang, DraftView | null> = { nl: null, en: null };
+    const acceptedIds = new Set<number>();
+    for (const lang of LANGS) {
+      const live = await elevenPromptRow(lang, tx);
+      if (!live) continue;
+      const [draft] = await tx.delete(voicePromptDrafts).where(eq(voicePromptDrafts.promptsId, live.id)).returning();
+      for (const id of draft?.acceptedIds ?? []) acceptedIds.add(id);
+      views[lang] = toDraftView(lang, live, null);
+    }
+    if (acceptedIds.size) {
       await tx.update(voicePromptSuggestions)
         .set({ status: "proposed", statusNote: null, decidedBy: null, decidedAt: null, updatedAt: new Date() })
-        .where(and(inArray(voicePromptSuggestions.id, draft.acceptedIds), eq(voicePromptSuggestions.status, "accepted")));
+        .where(and(inArray(voicePromptSuggestions.id, [...acceptedIds]), eq(voicePromptSuggestions.status, "accepted")));
     }
-    return toDraftView(lang, live, null);
+    return views;
   });
 }
 
 /**
  * Save to live: the one path that writes Prompt_Library. For each eleven row with a
  * draft that differs from the live text, the live text goes to Prompt_Versions, then
- * the draft text replaces it. Drafts are dropped and their cards marked live. The
- * live text is read here, in the same transaction as the writes.
+ * the draft text replaces it. Drafts are dropped and their accepted cards marked live
+ * (`liveCardIds` are the cards promoted). The live text is read here, in the same
+ * transaction as the writes.
  */
 async function saveElevenDraftsToLive(by: string | null): Promise<{ saved: { promptId: number; language: PromptLang }[]; liveCardIds: number[] }> {
   return inDraftTx(async (tx) => {
@@ -193,9 +204,13 @@ async function saveElevenDraftsToLive(by: string | null): Promise<{ saved: { pro
     for (const u of plan.updates) {
       await tx.update(promptLibrary).set({ promptText: u.promptText, updatedAt: now }).where(eq(promptLibrary.id, u.promptId));
     }
+    let liveCardIds: number[] = [];
     if (plan.liveCardIds.length) {
-      await tx.update(voicePromptSuggestions).set({ status: "live", statusNote: null, updatedAt: now })
-        .where(inArray(voicePromptSuggestions.id, plan.liveCardIds));
+      // Only accepted cards are promoted: a card decided otherwise since (rejected) keeps its status.
+      const promoted = await tx.update(voicePromptSuggestions).set({ status: "live", statusNote: null, updatedAt: now })
+        .where(and(inArray(voicePromptSuggestions.id, plan.liveCardIds), eq(voicePromptSuggestions.status, "accepted")))
+        .returning({ id: voicePromptSuggestions.id });
+      liveCardIds = plan.liveCardIds.filter((id) => promoted.some((p) => p.id === id));
     }
     if (plan.deleteDraftPromptIds.length) {
       await tx.delete(voicePromptDrafts).where(inArray(voicePromptDrafts.promptsId, plan.deleteDraftPromptIds));
@@ -204,7 +219,7 @@ async function saveElevenDraftsToLive(by: string | null): Promise<{ saved: { pro
       const row = rows.find((r) => r.promptId === u.promptId);
       return row ? [{ promptId: u.promptId, language: row.language }] : [];
     });
-    return { saved, liveCardIds: plan.liveCardIds };
+    return { saved, liveCardIds };
   });
 }
 
@@ -331,7 +346,7 @@ async function recentRejectedSuggestions(accountId: number, days = 60): Promise<
 export const voicePromptDraftsStorage = {
   getElevenDraftView,
   saveElevenDraftText,
-  discardElevenDraft,
+  discardElevenDrafts,
   saveElevenDraftsToLive,
   listVoiceSuggestions,
   acceptVoiceSuggestion,
