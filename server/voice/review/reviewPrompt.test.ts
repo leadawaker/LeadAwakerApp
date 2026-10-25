@@ -202,9 +202,48 @@ test("parseReviewAnswer turns an empty or missing mirror into nulls", () => {
 test("parseReviewAnswer reports bad_shape and not_json", () => {
   assert.deepEqual(parseReviewAnswer(answer({ problems: "none" })), { ok: false, reason: "bad_shape" });
   assert.deepEqual(parseReviewAnswer(answer({ summary: 5 })), { ok: false, reason: "bad_shape" });
-  assert.deepEqual(parseReviewAnswer(answer({ proposals: [proposal({ language: "fr" })] })), { ok: false, reason: "bad_shape" });
-  assert.deepEqual(parseReviewAnswer(answer({ proposals: [proposal({ find: 3 })] })), { ok: false, reason: "bad_shape" });
+  assert.deepEqual(parseReviewAnswer(answer({ proposals: "none" })), { ok: false, reason: "bad_shape" });
   assert.deepEqual(parseReviewAnswer("[1,2]"), { ok: false, reason: "bad_shape" });
   assert.deepEqual(parseReviewAnswer("sorry"), { ok: false, reason: "not_json" });
   assert.deepEqual(parseReviewAnswer(""), { ok: false, reason: "not_json" });
+});
+
+test("parseReviewAnswer skips a malformed proposal, counts it in droppedProposals and keeps the rest", () => {
+  const good = proposal({ title: "Kept" });
+  const res = parseReviewAnswer(answer({
+    proposals: [proposal({ language: "fr" }), good, proposal({ find: 3 }), null, proposal({ title: undefined })],
+  }));
+  assert.ok(res.ok);
+  if (!res.ok) return;
+  assert.equal(res.proposals.length, 1);
+  assert.equal(res.proposals[0].title, "Kept");
+  assert.equal(res.report.droppedProposals, 4);
+});
+
+test("parseReviewAnswer counts no dropped proposals when every item is well formed", () => {
+  const res = parseReviewAnswer(answer({ proposals: [proposal(), proposal({ title: "Second" })] }));
+  assert.ok(res.ok);
+  if (!res.ok) return;
+  assert.equal(res.proposals.length, 2);
+  assert.equal(res.report.droppedProposals, 0);
+});
+
+test("parseReviewAnswer drops the mirror, not the proposal, when mirrorFind has no string mirrorReplace", () => {
+  for (const mirrorReplace of [undefined, null, 5]) {
+    const res = parseReviewAnswer(answer({ proposals: [proposal({ mirrorFind: "some english text", mirrorReplace })] }));
+    assert.ok(res.ok);
+    if (!res.ok) return;
+    assert.equal(res.proposals.length, 1);
+    assert.equal(res.proposals[0].mirrorFind, null);
+    assert.equal(res.proposals[0].mirrorReplace, null);
+    assert.equal(res.report.droppedProposals, 0);
+  }
+});
+
+test("parseReviewAnswer keeps a mirror whose replace is an empty string (a deletion)", () => {
+  const res = parseReviewAnswer(answer({ proposals: [proposal({ mirrorFind: "remove me", mirrorReplace: "" })] }));
+  assert.ok(res.ok);
+  if (!res.ok) return;
+  assert.equal(res.proposals[0].mirrorFind, "remove me");
+  assert.equal(res.proposals[0].mirrorReplace, "");
 });

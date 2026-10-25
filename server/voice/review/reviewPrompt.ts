@@ -196,7 +196,7 @@ const MAX_KNOWLEDGE_ITEMS = 3;
 const isObject = (v: unknown): v is Record<string, unknown> => !!v && typeof v === "object" && !Array.isArray(v);
 const str = (v: unknown): v is string => typeof v === "string";
 
-// A malformed answer never gets this far: it throws here and parseReviewAnswer reports bad_shape.
+// A malformed report never gets this far: it throws here and parseReviewAnswer reports bad_shape (a malformed proposal is only skipped).
 class BadShape extends Error {}
 const need = <T>(v: T | undefined): T => { if (v === undefined) throw new BadShape(); return v; };
 
@@ -220,8 +220,10 @@ function readProposal(o: Record<string, unknown>): ProposalInput {
   const language = need(o.language === "nl" || o.language === "en" ? o.language : undefined);
   // `find` and `mirrorFind` must match the live prompt byte for byte: never cleaned or clipped.
   const find = need(str(o.find) ? o.find : undefined);
-  const mirrorFind = str(o.mirrorFind) && o.mirrorFind !== "" ? o.mirrorFind : null;
-  const mirrorReplace = mirrorFind !== null && str(o.mirrorReplace) ? cleanKeepEdges(o.mirrorReplace) : null;
+  // A mirror needs both halves: a mirrorFind without a string mirrorReplace drops the mirror, not the proposal.
+  const hasMirror = str(o.mirrorFind) && o.mirrorFind !== "" && str(o.mirrorReplace);
+  const mirrorFind = hasMirror ? (o.mirrorFind as string) : null;
+  const mirrorReplace = hasMirror ? cleanKeepEdges(o.mirrorReplace as string) : null;
   return {
     language,
     title: clip(need(str(o.title) ? o.title : undefined), 120),
@@ -258,7 +260,17 @@ export function parseReviewAnswer(text: string): ParsedReview {
         .slice(0, MAX_KNOWLEDGE_ITEMS).map((k) => clip(k, 300)),
       droppedProposals: 0,
     };
-    const proposals = objects(o.proposals, MAX_PROPOSALS).map(readProposal);
+    // A malformed proposal is skipped and counted, never the reason to lose the whole report.
+    if (!Array.isArray(o.proposals)) throw new BadShape();
+    const proposals: ProposalInput[] = [];
+    for (const item of o.proposals.slice(0, MAX_PROPOSALS)) {
+      try {
+        proposals.push(readProposal(need(isObject(item) ? item : undefined)));
+      } catch (err) {
+        if (!(err instanceof BadShape)) throw err;
+        report.droppedProposals++;
+      }
+    }
     return { ok: true, report, proposals };
   } catch (err) {
     if (err instanceof BadShape) return { ok: false, reason: "bad_shape" };

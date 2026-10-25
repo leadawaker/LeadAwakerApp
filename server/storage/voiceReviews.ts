@@ -153,6 +153,20 @@ async function claimWeeklyReview(accountId: number, week: ReviewWeek): Promise<n
   return row ? row.id : null;
 }
 
+/**
+ * Weekly reviews that have sat in `running` for over 30 minutes with every attempt used. Nothing claims
+ * them again (the claim needs fewer than 3 attempts), so mark them failed rather than leave the UI on
+ * "running" forever. Returns how many were marked.
+ */
+async function failStalledWeeklyReviews(): Promise<number> {
+  const res = await db.execute(sql`
+    UPDATE "p2mxx34fvbf3ll6"."Voice_Reviews" SET status = 'failed', error = 'stalled'
+    WHERE kind = 'weekly' AND status = 'running' AND attempts >= 3 AND started_at < now() - interval '30 minutes'
+    RETURNING id
+  `);
+  return res.rows.length;
+}
+
 /** A manual review of [start, end). Null when this account already has a review running (started in the last 30 minutes). */
 async function createManualReview(accountId: number, start: Date, end: Date): Promise<number | null> {
   return db.transaction(async (tx) => {
@@ -245,6 +259,7 @@ export const voiceReviewsStorage = {
   loadAccountKnowledge,
   accountNameOf,
   claimWeeklyReview,
+  failStalledWeeklyReviews,
   createManualReview,
   finishVoiceReview,
   failVoiceReview,

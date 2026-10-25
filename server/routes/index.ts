@@ -47,6 +47,7 @@ import { registerVoicePromptRoutes } from "./voicePrompts";
 import { registerVoiceElevenTestRoutes } from "./voiceElevenTest";
 import { registerVoiceAccountPromptRoutes } from "./voiceAccountPrompts";
 import { registerVoicePromptDraftRoutes } from "./voicePromptDrafts";
+import { registerVoiceReviewRoutes } from "./voiceReviews";
 import { registerDemoSocialRoutes } from "./demoSocial";
 import { registerDemoLogoRoutes } from "./demoLogos";
 import { registerPublicDemoRoutes } from "./publicDemo";
@@ -68,6 +69,7 @@ import { startPublicDemoPoller } from "../publicDemo/poller";
 import { startSocialPublisher } from "../social/publisher";
 import { startSocialTokenRefresher } from "../social/tokenRefresher";
 import { startSocialInsights } from "../social/insightsCollector";
+import { startVoiceReviewScheduler } from "../voice/review/scheduler";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
@@ -128,6 +130,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerVoiceElevenTestRoutes(app);
   registerVoiceAccountPromptRoutes(app);
   registerVoicePromptDraftRoutes(app);
+  registerVoiceReviewRoutes(app);
   registerDemoSocialRoutes(app);
   registerDemoLogoRoutes(app);
   registerPublicDemoRoutes(app);
@@ -170,6 +173,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   startSocialPublisher();           // Instagram: publish due Reels (60s)
   startSocialTokenRefresher();      // Instagram: token refresh + upload cleanup (6h)
   startSocialInsights();            // Instagram: insights snapshots (1h tick; fresh posts hourly, the rest 6h)
+  startVoiceReviewScheduler();      // ElevenLabs weekly call review (1h tick, Monday 07:00 Europe/Amsterdam)
 
   return httpServer;
 }
