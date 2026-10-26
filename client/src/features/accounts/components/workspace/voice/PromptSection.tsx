@@ -1,9 +1,10 @@
 // Voice tab "Prompt & test" (Owner only): everything she is told, editable
 // next to the test call, saved as you type. The call button first, then who
 // she is (name, voice, language), this business's own text (greeting,
-// instructions), then the two prompts every client line in this language shares.
+// instructions), then the two prompts every client line in this language shares
+// (on an ElevenLabs line: the weekly review and its change cards, then the draft and the coach).
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Loader2, MessageSquareQuote, NotebookPen, ScrollText, Waves } from "lucide-react";
+import { BookOpen, Loader2, MessageSquareQuote, NotebookPen, Waves } from "lucide-react";
 import { useVoiceT } from "./voiceGender";
 import { VoiceCardShell, helpStyle, inputStyle } from "./voiceAtoms";
 import { EXTRA_INSTRUCTIONS_MAX, type VoiceLine, type VoiceLinePatch } from "./voiceApi";
@@ -15,6 +16,11 @@ import { runsOnEleven } from "./lineEngine";
 import { useAutosave } from "./useAutosave";
 import { AutosaveBadge, SharedPromptCard } from "./SharedPromptCard";
 import { useAccountVoicePrompts, useSaveVoicePrompt } from "./voicePromptsApi";
+import { CoachPanel } from "./coach/CoachPanel";
+import { ElevenDraftCard } from "./coach/ElevenDraftCard";
+import { ReviewCard } from "./coach/ReviewCard";
+import { SuggestionCards } from "./coach/SuggestionCards";
+import { promptLangOf } from "./coach/coachApi";
 import type { VoiceCard } from "./readiness";
 
 const GREETING_MAX = 500;
@@ -84,6 +90,9 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
         rows={2}
         onSave={(greeting) => onSave({ greeting })}
       />
+      {/* What the calls showed and the changes it proposes, above the draft they land in. */}
+      {onEleven && <ReviewCard accountId={line.accountId} />}
+      {onEleven && <SuggestionCards accountId={line.accountId} />}
       {/* Extra instructions are GPT Live's: the ElevenLabs prompt leaves them out. */}
       {!onEleven && <AccountTextCard
         card="promptExtra"
@@ -129,22 +138,17 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
           onSave={savePrompt}
         />
       )}
+      {/* Edits go to a draft; only its Save to live changes what calls hear. */}
       {onEleven && eleven && (
-        <SharedPromptCard
+        <ElevenDraftCard
           key={`eleven-${eleven.id}`}
-          card="promptEleven"
-          kind="eleven"
           accountId={line.accountId}
           lineId={line.number?.id}
-          approx
-          icon={<ScrollText size={17} />}
-          title={t("prompt.eleven.title")}
-          help={`${t("prompt.eleven.help")} ${t("prompt.eleven.syntax")}`}
-          sharedText={t("prompt.eleven.shared")}
-          row={eleven}
-          onSave={savePrompt}
+          defaultLang={promptLangOf(line.locale)}
         />
       )}
+      {/* Questions about the calls and the prompt: its answers add change cards, never edit the draft. */}
+      {onEleven && <CoachPanel accountId={line.accountId} lang={promptLangOf(line.locale)} />}
     </>
   );
 }

@@ -13,7 +13,8 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 import { db } from "../db";
 import { promptLibrary, promptVersions } from "@shared/schema";
-import { localeLanguage } from "./voicePersona";
+import type { PromptLang } from "@shared/voiceReview";
+import { localeLanguage, type DbLike } from "./voicePersona";
 
 const VOICE_DEMO_CAMPAIGN_ID = 60;
 const VOICE_DEMO_ACCOUNT_ID = 52;
@@ -72,14 +73,18 @@ async function backendRow(locale: string) {
   return toRow(byAccount);
 }
 
-/** Engine rule: Dutch lines use eleven_layer_nl, every other language (Portuguese too) eleven_layer_en. */
-async function elevenRow(locale: string) {
-  const lang = localeLanguage(locale) === "nl" ? "nl" : "en";
-  const [r] = await db.select().from(promptLibrary)
+/** The active `eleven_layer_{nl|en}` row, newest updated_at first (also read by the draft storage, inside its transactions). */
+export async function elevenPromptRow(lang: PromptLang, exec: DbLike = db): Promise<VoicePromptRow | null> {
+  const [r] = await exec.select().from(promptLibrary)
     .where(and(eq(promptLibrary.useCase, `eleven_layer_${lang}`), active))
     .orderBy(sql`${promptLibrary.updatedAt} DESC NULLS LAST`, desc(promptLibrary.id))
     .limit(1);
   return toRow(r);
+}
+
+/** Engine rule: Dutch lines use eleven_layer_nl, every other language (Portuguese too) eleven_layer_en. */
+async function elevenRow(locale: string) {
+  return elevenPromptRow(localeLanguage(locale) === "nl" ? "nl" : "en");
 }
 
 async function getAccountVoicePrompts(locale: string): Promise<AccountVoicePrompts> {

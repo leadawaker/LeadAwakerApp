@@ -2710,3 +2710,84 @@ export interface NumberRequestOrder {
   checkedAt: string;
 }
 export type NumberRequest = typeof numberRequests.$inferSelect;
+
+// ─── Voice review and prompt coach ───
+// Created by script/create-voice-review-tables.mjs. Weekly or manual AI reviews of an account's ElevenLabs
+// phone calls, the change cards they and the coach chat propose, one draft per prompt row, and the coach chat.
+// The Python engine reads Voice_Prompt_Drafts.use_case and draft_text by raw SQL: keep those names.
+export const voiceReviews = nocodb.table("Voice_Reviews", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  kind: text("kind").notNull(),                                // weekly | manual
+  weekKey: text("week_key"),                                   // null for manual
+  periodStart: timestamp("period_start", { withTimezone: true }).notNull(),
+  periodEnd: timestamp("period_end", { withTimezone: true }).notNull(),
+  status: text("status").notNull().default("running"),         // running | done | failed
+  attempts: integer("attempts").notNull().default(1),
+  stats: jsonb("stats").notNull().default({}),
+  report: jsonb("report"),
+  error: text("error"),
+  model: text("model"),
+  startedAt: timestamp("started_at", { withTimezone: true }).defaultNow().notNull(),
+  finishedAt: timestamp("finished_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("voice_reviews_weekly_week").on(t.accountsId, t.weekKey).where(sql`${t.kind} = 'weekly'`),
+  index("voice_reviews_account_created_idx").on(t.accountsId, t.createdAt),
+]);
+export type VoiceReviewRow = typeof voiceReviews.$inferSelect;
+
+export const voicePromptSuggestions = nocodb.table("Voice_Prompt_Suggestions", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  source: text("source").notNull(),                            // review | chat
+  reviewId: integer("review_id"),
+  coachMessageId: integer("coach_message_id"),
+  promptsId: integer("prompts_id").notNull(),                  // the Prompt_Library row the find/replace applies to
+  language: text("language").notNull(),                        // nl | en
+  title: text("title").notNull(),
+  reason: text("reason").notNull(),
+  findText: text("find_text").notNull(),
+  replaceText: text("replace_text").notNull(),
+  mirrorPromptsId: integer("mirror_prompts_id"),               // the other language's prompt row, when the change applies there too
+  mirrorFindText: text("mirror_find_text"),
+  mirrorReplaceText: text("mirror_replace_text"),
+  evidenceCallIds: text("evidence_call_ids").array().notNull().default(sql`'{}'`),
+  status: text("status").notNull().default("proposed"),        // proposed | accepted | rejected | stale | live
+  statusNote: text("status_note"),
+  decidedBy: text("decided_by"),
+  decidedAt: timestamp("decided_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("voice_prompt_suggestions_account_status_idx").on(t.accountsId, t.status),
+]);
+export type VoicePromptSuggestionRow = typeof voicePromptSuggestions.$inferSelect;
+
+export const voicePromptDrafts = nocodb.table("Voice_Prompt_Drafts", {
+  id: serial("id").primaryKey(),
+  promptsId: integer("prompts_id").notNull(),
+  useCase: text("use_case").notNull(),
+  draftText: text("draft_text").notNull(),
+  baseText: text("base_text").notNull(),                       // the live text the draft was started from
+  acceptedIds: integer("accepted_ids").array().notNull().default(sql`'{}'`), // Voice_Prompt_Suggestions ids applied to the draft
+  updatedBy: text("updated_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("voice_prompt_drafts_prompt").on(t.promptsId),
+]);
+export type VoicePromptDraftRow = typeof voicePromptDrafts.$inferSelect;
+
+export const voiceCoachMessages = nocodb.table("Voice_Coach_Messages", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  role: text("role").notNull(),                                // user | assistant
+  content: text("content").notNull(),
+  suggestionIds: integer("suggestion_ids").array().notNull().default(sql`'{}'`), // cards the assistant proposed in this message
+  createdBy: text("created_by"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("voice_coach_messages_account_created_idx").on(t.accountsId, t.createdAt),
+]);
+export type VoiceCoachMessageRow = typeof voiceCoachMessages.$inferSelect;

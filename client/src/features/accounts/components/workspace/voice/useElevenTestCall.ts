@@ -10,7 +10,7 @@ import { apiFetch } from "@/lib/apiUtils";
 import { testCallsKey } from "./voiceApi";
 import { replyDelay } from "./test/liveMetrics";
 import {
-  elevenTestReducer, errorKeyForStatus, initialElevenTestState,
+  elevenTestReducer, initialElevenTestState, startErrorKey,
   type ElevenTestLine, type ElevenTestStatus,
 } from "./elevenTestState";
 
@@ -50,7 +50,8 @@ export function useElevenTestCall(accountId: number, lineId: number): {
   rates: ElevenTestRates | null;
   /** Approximate reply delays so far (ms): the caller's last final transcript to the agent's next speech. */
   delaysMs: number[];
-  start(): Promise<void>;
+  /** `draft: true` runs the draft prompt with the engine faking every write (the prompt coach's Test draft). */
+  start(opts?: { draft?: boolean }): Promise<void>;
   hangUp(): void;
 } {
   const [state, dispatch] = useReducer(elevenTestReducer, initialElevenTestState);
@@ -103,8 +104,9 @@ export function useElevenTestCall(accountId: number, lineId: number): {
   const releasePendingRef = useRef(releasePending);
   releasePendingRef.current = releasePending;
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (opts?: { draft?: boolean }) => {
     if (busy.current || conv.current) return;
+    const draft = opts?.draft === true;
     busy.current = true;
     const run = ++runId.current;
     const stopped = () => runId.current !== run || !mounted.current;
@@ -128,7 +130,7 @@ export function useElevenTestCall(accountId: number, lineId: number): {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         // No caller number: the server rings "from" the tester's number on the Demos page.
-        body: JSON.stringify({ accountId, lineId }),
+        body: JSON.stringify({ accountId, lineId, draft }),
       });
       if (stopped()) {
         // Hung up while the engine was answering: the session it minted is never used.
@@ -136,7 +138,10 @@ export function useElevenTestCall(accountId: number, lineId: number): {
         return;
       }
       if (!res.ok) {
-        dispatch({ type: "error", error: errorKeyForStatus(res.status) });
+        // Only a draft test's 409 needs the engine's words (no saved draft, or not set up).
+        const refusal = draft && res.status === 409 ? await res.json().catch(() => null) : null;
+        if (stopped()) return;
+        dispatch({ type: "error", error: startErrorKey(res.status, refusal?.message, draft) });
         return;
       }
       const session = (await res.json()) as BrowserSession;

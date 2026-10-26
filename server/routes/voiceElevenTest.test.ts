@@ -23,6 +23,13 @@ test("schema: no agent pick is relayed (ElevenLabs always runs Realtime Max)", (
   assert.equal(r.success && "model" in r.data, false);
 });
 
+test("schema: draft is an optional boolean", () => {
+  for (const ok of [{ draft: true }, { draft: false }, {}]) {
+    assert.equal(elevenTestSchema.safeParse({ accountId: 5, lineId: 12, ...ok }).success, true, JSON.stringify(ok));
+  }
+  assert.equal(elevenTestSchema.safeParse({ accountId: 5, lineId: 12, draft: "yes" }).success, false);
+});
+
 test("schema: ids must be positive integers", () => {
   for (const bad of [{ accountId: 0, lineId: 1 }, { accountId: 1, lineId: -2 }, { accountId: 1.5, lineId: 1 }, { accountId: "1", lineId: 1 }, { accountId: 1 }]) {
     assert.equal(elevenTestSchema.safeParse(bad).success, false, JSON.stringify(bad));

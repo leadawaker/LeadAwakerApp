@@ -1,10 +1,12 @@
 // The test panel's body while a call connects, runs or ends (VoiceTestPanel): status,
 // timer, running cost, the tools as tags, what she understood and the transcript (newest
 // line on top, tools and each reply's delay inline). Reads `useVoiceTest().live`; the tools
-// come from useLiveTools (GPT Live's hook, or the polled events for ElevenLabs).
+// come from useLiveTools (GPT Live's hook, or the polled events for ElevenLabs). A Draft pill
+// marks a Test draft call (the draft prompt, writes faked).
 import { useEffect, useMemo, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Pill } from "@/components/crm/primitives";
 import { useVoiceTest } from "./VoiceTestProvider";
 import { useLiveTools } from "./useLiveTools";
 import { LiveSection, LiveToolTags, LiveTranscript } from "./LiveCallParts";
@@ -25,11 +27,13 @@ function useNow(on: boolean): number {
 }
 
 const stat = { display: "flex", flexDirection: "column", gap: 2, minWidth: 0 } as const;
+const draftPill = { fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700 } as const;
 const statValue = { fontFamily: "var(--mono)", fontSize: 18, color: "var(--ink)", fontVariantNumeric: "tabular-nums" } as const;
 
 export function LiveCallView() {
   const { t } = useTranslation("voiceTab");
-  const { phase, callEngine, live } = useVoiceTest();
+  const { t: tc } = useTranslation("voiceCoach");
+  const { phase, callEngine, callDraft, live } = useVoiceTest();
   // The clock stops when the call starts ending (the live view stays a moment after).
   const now = useNow(phase === "live" && live.startedAt !== null);
   const tools = useLiveTools();
@@ -43,10 +47,13 @@ export function LiveCallView() {
       aria-live="polite" data-testid="voice-test-live">
       <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
         <div style={stat}>
-          <span className="eyebrow eyebrow-sm" style={{ display: "flex", alignItems: "center", gap: 6 }} data-testid="voice-test-live-status">
-            {phase === "live" ? <span aria-hidden style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--wine)" }} /> : <Loader2 size={12} className="animate-spin" />}
-            {t(`test.panel.phase.${phase === "live" || phase === "ending" ? phase : "connecting"}`)}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+            <span className="eyebrow eyebrow-sm" style={{ display: "flex", alignItems: "center", gap: 6 }} data-testid="voice-test-live-status">
+              {phase === "live" ? <span aria-hidden style={{ width: 7, height: 7, borderRadius: "50%", background: "var(--wine)" }} /> : <Loader2 size={12} className="animate-spin" />}
+              {t(`test.panel.phase.${phase === "live" || phase === "ending" ? phase : "connecting"}`)}
+            </span>
+            {callDraft && <Pill color="var(--wine)" style={draftPill} data-testid="voice-test-draft-pill">{tc("testDraft.pill")}</Pill>}
+          </div>
           <span style={statValue} data-testid="voice-test-live-timer" aria-label={t("test.panel.live.time")}>{formatClock(elapsed)}</span>
         </div>
         {perMin !== null && (

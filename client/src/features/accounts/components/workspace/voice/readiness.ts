@@ -5,7 +5,7 @@ import type { ReadinessKey } from "./voiceApi";
 export type VoiceCard =
   | "number" | "persona" | "knowledge" | "agent" | "transfer" | "hours" | "extra" | "test" | "docs" | "screening" | "followUp"
   | "line" | "conversation" | "promptGreeting" | "promptExtra" | "promptLayer" | "promptBackend"
-  | "lineEngine" | "promptEleven";
+  | "lineEngine" | "promptEleven" | "promptReview" | "promptCards" | "promptCoach";
 
 /** The Voice tab's menu: each section shows its own cards, one section at a time. */
 export const VOICE_SECTIONS = ["overview", "prompt", "knowledge", "call", "after"] as const;
@@ -20,6 +20,7 @@ export const CARD_SECTION: Record<VoiceCard, VoiceSection> = {
   followUp: "after",
   promptGreeting: "prompt", promptExtra: "prompt", promptLayer: "prompt", promptBackend: "prompt",
   lineEngine: "prompt", promptEleven: "prompt",
+  promptReview: "prompt", promptCards: "prompt", promptCoach: "prompt",
 };
 
 /** The card that fixes each readiness item (voice + agent name share the Agent card). */

@@ -50,7 +50,10 @@ export interface VoiceTestValue {
   phase: TestPhase;
   /** The engine of the call in progress, or of the last one. */
   callEngine: TestEngine;
-  start(): Promise<void>;
+  /** The call in progress, or the last one, is a draft test: the ElevenLabs draft prompt, writes faked. */
+  callDraft: boolean;
+  /** `draft: true` (ElevenLabs only) tests the saved draft prompt instead of the live one. */
+  start(opts?: { draft?: boolean }): Promise<void>;
   hangup(): void;
   reviewCallId: string | null;
   openReview(callId: string): void;
@@ -172,6 +175,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
 
   // --- phase -----------------------------------------------------------------
   const [callEngine, setCallEngine] = useState<TestEngine>(engine);
+  const [callDraft, setCallDraft] = useState(false);
   const [flushing, setFlushing] = useState(false);
   const [hangingUp, setHangingUp] = useState(false);
   /** The call is over; the live view stays END_HOLD_MS before the review opens. */
@@ -222,7 +226,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
   // --- actions ---------------------------------------------------------------
   const busy = isCallBusy(phase);
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (opts?: { draft?: boolean }) => {
     if (starting.current || busy || !line.persona) return;
     if (engine === "elevenlabs" && !line.number) return;
     starting.current = true;
@@ -232,6 +236,8 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
     setReviewCallId(null);
     setHangingUp(false);
     setCallEngine(engine);
+    // A draft test exists on the ElevenLabs engine only.
+    setCallDraft(engine === "elevenlabs" && opts?.draft === true);
     runStartedAt.current = Date.now();
     try {
       // The call runs on the saved prompt: anything still being typed is saved first
@@ -239,7 +245,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
       await flushAllAutosaves();
       if (!mounted.current || cancelled.current) return;
       if (engine === "elevenlabs") {
-        const run = eleven.start();
+        const run = eleven.start(opts);
         setFlushing(false); // the hook is connecting now
         await run;
       } else {
@@ -327,6 +333,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
     elevenAvailable,
     phase,
     callEngine,
+    callDraft,
     start,
     hangup,
     reviewCallId,

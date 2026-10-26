@@ -780,8 +780,7 @@
     "eleven": {
       "title": "ElevenLabs voice prompt",
       "help": "The prompt ElevenLabs gets on every call on this line.",
-      "syntax": "{name} is filled in from the settings; a line starting with {?flag} is only kept when that setting is on; the named blocks ({person}, {callback_policy}, ...) are filled from the settings.",
-      "shared": "Shared by every ElevenLabs line in this language. A change here reaches their next call."
+      "syntax": "{name} is filled in from the settings; a line starting with {?flag} is only kept when that setting is on; the named blocks ({person}, {callback_policy}, ...) are filled from the settings."
     }
   }
 }

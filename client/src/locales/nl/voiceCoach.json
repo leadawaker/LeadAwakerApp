@@ -1,0 +1,154 @@
+{
+  "draft": {
+    "language": "Taal van de prompt",
+    "lang": {
+      "nl": "NL",
+      "en": "EN"
+    },
+    "notice": "Gedeeld door elke ElevenLabs-lijn in deze taal. Je wijzigingen gaan naar een concept: gesprekken horen daar niets van tot je op Live zetten drukt.",
+    "liveMoved": "De live {{lang}}-prompt is veranderd nadat dit concept begon. Live zetten vervangt die nieuwere tekst (die blijft als versie bewaard in de geschiedenis).",
+    "liveMovedBoth": "De live NL- en EN-prompt zijn allebei veranderd nadat de concepten begonnen. Live zetten vervangt die nieuwere teksten (die blijven als versie bewaard in de geschiedenis).",
+    "otherChanged": "Ook gewijzigd in {{lang}}: Live zetten zet beide talen live.",
+    "startOver": "Opnieuw beginnen vanaf live",
+    "missing": "Er is nog geen ElevenLabs-prompt in deze taal.",
+    "viewLabel": "Weergave",
+    "view": {
+      "edit": "Bewerken",
+      "changes": "Wijzigingen",
+      "filled": "Ingevuld"
+    },
+    "status": {
+      "same": "Gelijk aan live",
+      "changed": "+{{added}} / -{{removed}} regels t.o.v. live"
+    },
+    "noChanges": "Het concept is gelijk aan live.",
+    "unchangedLines_one": "{{count}} ongewijzigde regel",
+    "unchangedLines_other": "{{count}} ongewijzigde regels",
+    "saveToLive": "Live zetten",
+    "saveConfirm": "De concepten in beide talen (NL en EN) live zetten? Gesprekken gebruiken ze binnen 30 seconden. De huidige live teksten blijven als versie bewaard.",
+    "saveDo": "Live zetten",
+    "saved": "Live gezet. Gesprekken gebruiken het binnen 30 seconden.",
+    "savedNone": "Niets om live te zetten: de concepten zijn gelijk aan live.",
+    "saveFailed": "Live zetten is niet gelukt. Probeer het opnieuw.",
+    "discard": "Concept weggooien",
+    "discardConfirm": "Het concept in beide talen (NL en EN) weggooien? Geaccepteerde suggesties gaan terug naar de lijst. Live blijft zoals het is.",
+    "discardDo": "Beide weggooien",
+    "discarded": "Concept in beide talen weggegooid. De editor toont weer live.",
+    "discardFailed": "Weggooien is niet gelukt. Probeer het opnieuw.",
+    "syncFailed": "Het concept kon niet eerst worden opgeslagen. Er is niets veranderd. Probeer het opnieuw."
+  },
+  "versions": {
+    "history": "Geschiedenis",
+    "loadFailed": "De geschiedenis kon niet worden geladen.",
+    "none": "Nog geen eerdere versies.",
+    "noText": "Geen tekst",
+    "restore": "Terugzetten",
+    "restoreConfirm": "v{{v}} in het concept zetten? Live verandert pas als je live zet.",
+    "restoreDo": "In concept zetten",
+    "restored": "v{{v}} staat nu in het concept. Live verandert pas als je live zet."
+  },
+  "review": {
+    "title": "Wekelijkse beoordeling",
+    "help": "Elke maandag om 07:00 (Amsterdamse tijd) worden de telefoongesprekken van de week ervoor beoordeeld. Nu uitvoeren beoordeelt de laatste 7 dagen. De wijzigingen in de prompt die daaruit komen staan hieronder als kaarten.",
+    "runNow": "Nu uitvoeren",
+    "running": "De gesprekken worden beoordeeld. Dit duurt een paar minuten.",
+    "busy": "Er loopt al een beoordeling",
+    "startFailed": "De beoordeling kon niet starten. Probeer het opnieuw.",
+    "loadFailed": "De beoordelingen konden niet worden geladen. Probeer het later opnieuw.",
+    "empty": "Nog geen beoordelingen. De eerste draait maandag, of druk op Nu uitvoeren.",
+    "picker": "Bewaarde beoordelingen",
+    "weekLabel": "Week {{week}}, {{from}} t/m {{to}}",
+    "rangeLabel": "{{from}} t/m {{to}}",
+    "manualLabel": "Laatste 7 dagen, uitgevoerd {{date}}",
+    "status": {
+      "running": "bezig",
+      "failed": "mislukt"
+    },
+    "failed": "De beoordeling is mislukt: {{error}}",
+    "failedUnknown": "De beoordeling is mislukt. Probeer het opnieuw met Nu uitvoeren.",
+    "stalled": "De beoordeling is afgebroken voordat ze klaar was. Voer haar opnieuw uit met Nu uitvoeren.",
+    "seconds": "{{value}} s",
+    "figures": {
+      "calls": "Gesprekken",
+      "booked": "Geboekt",
+      "reply": "Gem. reactie",
+      "p90": "P90 reactie",
+      "cost": "Kosten",
+      "minutes": "Minuten"
+    },
+    "problems": "Problemen",
+    "worstCalls": "Slechtste gesprekken",
+    "knowledgeBase": "Kennisbank",
+    "dropped_one": "{{count}} voorstel is weggelaten",
+    "dropped_other": "{{count}} voorstellen zijn weggelaten"
+  },
+  "cards": {
+    "title": "Voorgestelde wijzigingen",
+    "help": "Elke kaart wijzigt één stuk van de gedeelde prompt. Accepteren zet de wijziging in het concept hieronder. Er gaat niets live tot je op Live zetten drukt.",
+    "tabsLabel": "Wijzigingen tonen",
+    "tabs": {
+      "open": "Open",
+      "accepted": "Geaccepteerd",
+      "done": "Afgerond"
+    },
+    "empty": {
+      "open": "Geen open wijzigingen. Nieuwe komen uit de wekelijkse beoordeling of van de coach.",
+      "accepted": "Nog niets geaccepteerd. Geaccepteerde wijzigingen wachten in het concept tot je live zet.",
+      "done": "Nog niets live of afgewezen."
+    },
+    "loadFailed": "De wijzigingen konden niet worden geladen. Probeer het later opnieuw.",
+    "source": {
+      "review": "Beoordeling",
+      "chat": "Coach"
+    },
+    "status": {
+      "proposed": "Voorgesteld",
+      "accepted": "Geaccepteerd",
+      "rejected": "Afgewezen",
+      "stale": "Verouderd",
+      "live": "Live"
+    },
+    "alsoIn": {
+      "en": "Ook in het Engels",
+      "nl": "Ook in het Nederlands"
+    },
+    "calls": "Gesprekken",
+    "accept": "Accepteren",
+    "reject": "Afwijzen",
+    "inDraft": "Staat in het concept. Gaat live met Live zetten.",
+    "stale": "De tekst die deze kaart wijzigt staat niet meer in het concept",
+    "note": {
+      "decided": "Over deze wijziging is al beslist. De lijst is ververst.",
+      "failed": "Dat is niet gelukt. Probeer het opnieuw."
+    }
+  },
+  "coach": {
+    "title": "Prompt-coach",
+    "help": "Stel vragen over je gesprekken of over de prompt. De coach antwoordt en stelt wijzigingen voor als kaarten. Hij past de prompt nooit zelf aan: een kaart verandert het concept pas als je op Accepteren drukt, en er gaat niets live tot je op Live zetten drukt.",
+    "threadLabel": "Gesprek met de coach",
+    "inputLabel": "Bericht aan de coach",
+    "placeholder": "Vraag naar een gesprek of een wijziging in de prompt",
+    "hint": "Enter verstuurt, Shift+Enter begint een nieuwe regel.",
+    "send": "Versturen",
+    "thinking": "Aan het nadenken",
+    "thinkingHint": "Dit kan een minuut of twee duren.",
+    "empty": "Nog geen berichten. Vraag waarom een gesprek misging, plak een gesprek-id of beschrijf wat er in de prompt moet veranderen.",
+    "loadFailed": "Het gesprek kon niet worden geladen. Probeer het later opnieuw.",
+    "error": {
+      "busy": "De coach is nog bezig met de vorige vraag. Verstuur dit opnieuw als hij klaar is.",
+      "failed": "De coach kon niet antwoorden. Je vraag staat hierboven, verstuur hem over een moment opnieuw.",
+      "generic": "Het antwoord kwam niet door. Laad de pagina over een minuut opnieuw: het kan zijn aangekomen."
+    }
+  },
+  "testDraft": {
+    "button": "Concept testen",
+    "note": "Bij een test van het concept draait het gesprek op de conceptprompt. Afspraken, annuleringen, terugbelverzoeken, aanpassingen van de gespreksamenvatting en doorverbindingen zijn nagebootst: er gebeurt niets echt. Vrije tijden, het bellergeheugen en het opzoeken van auto en kenteken zijn echt. Het gesprek wordt niet aan het bellergeheugen toegevoegd.",
+    "pill": "Concept",
+    "noDraft": "Er is geen opgeslagen concept om te testen. Pas eerst het concept van de prompt aan en probeer het dan opnieuw."
+  },
+  "common": {
+    "cancel": "Annuleren",
+    "loadFailed": "De prompt kon niet worden geladen. Probeer het later opnieuw.",
+    "openCall": "Gesprek {{id}} openen"
+  }
+}

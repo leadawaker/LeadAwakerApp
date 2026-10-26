@@ -780,8 +780,7 @@
     "eleven": {
       "title": "Prompt de voz da ElevenLabs",
       "help": "O prompt que a ElevenLabs recebe em cada chamada nesta linha.",
-      "syntax": "{name} é preenchido a partir das configurações; uma linha que começa com {?flag} só é mantida quando essa configuração está ativa; os blocos nomeados ({person}, {callback_policy}, ...) são preenchidos a partir das configurações.",
-      "shared": "Compartilhado por toda linha ElevenLabs neste idioma. Uma alteração aqui vale na próxima chamada delas."
+      "syntax": "{name} é preenchido a partir das configurações; uma linha que começa com {?flag} só é mantida quando essa configuração está ativa; os blocos nomeados ({person}, {callback_policy}, ...) são preenchidos a partir das configurações."
     }
   }
 }
