@@ -40,6 +40,8 @@ export interface DemoSession {
    *  /api/site-shot/:file. Empty on every typed-persona demo. */
   screenshot: string;
   websiteUrl: string;
+  /** The prospect's phone when a lead has one, to prefill a demo phone call. */
+  phone?: string;
   browser: DemoSessionSurface;
   whatsapp: DemoSessionSurface;
 }
@@ -77,6 +79,9 @@ export interface NewDemoInput {
    *  it joins. Both are bookkeeping for the Demos page; see SERVICES. */
   service?: string;
   prospectGroup?: string;
+  /** The voice demo's voice and accent, stored on the persona (voice, voice_locale). */
+  voice?: string;
+  voiceLocale?: "nl" | "en-GB" | "en-US" | "pt-BR";
 }
 
 export interface NewDemoResult {

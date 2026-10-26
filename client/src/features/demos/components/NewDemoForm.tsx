@@ -4,6 +4,7 @@ import { apiFetch } from "@/lib/apiUtils";
 import { useDemoClients, type DemoLang } from "@/features/campaigns/api/demoClientsApi";
 import { ProspectDemoPanel } from "./ProspectDemoPanel";
 import { ProviderToggle, providerLabel, useGenProvider } from "./ProviderToggle";
+import { DemoVoicePicker, demoVoiceLocale } from "./DemoVoicePicker";
 
 
 
@@ -41,6 +42,10 @@ export function NewDemoForm() {
   const [language, setLanguage] = useState<DemoLang>("en");
   const [market, setMarket] = useState<"" | "uk" | "us" | "nl">("");
   const [aiDisclosure, setAiDisclosure] = useState<"" | "off" | "opener" | "second_message">("");
+  // The voice demo's voice, per accent: a pick for one locale means nothing in another.
+  const voiceLocale = demoVoiceLocale(language, language === "en" ? market : "");
+  const [voicePick, setVoicePick] = useState<{ locale: string; voice: string }>({ locale: "", voice: "" });
+  const voice = voicePick.locale === voiceLocale ? voicePick.voice : "";
   // One id for this prospect, minted once and carried by every service link
   // created below it, which is what lets the Demos page show them as one row.
   // Services are created one button at a time during a call, so nothing
@@ -268,6 +273,16 @@ export function NewDemoForm() {
             </select>
           </Field>
         )}
+        <div className="col-span-2">
+          <Field label={t("new.voice")}>
+            <DemoVoicePicker
+              locale={voiceLocale}
+              value={voice}
+              style={inputStyle}
+              onChange={(v) => setVoicePick({ locale: voiceLocale, voice: v })}
+            />
+          </Field>
+        </div>
       </div>
 
       {error && (
@@ -306,6 +321,8 @@ export function NewDemoForm() {
           market,
           aiDisclosure,
           prospectGroup,
+          voice,
+          voiceLocale,
         }}
       />
     </div>

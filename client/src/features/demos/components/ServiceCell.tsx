@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Copy, ExternalLink, Loader2, MessageCircle, Plus } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, MessageCircle, Phone, Plus } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DemoCallControls } from "./DemoCallControls";
 import { createDemoLink, DEMO_SESSIONS_KEY, type DemoSession } from "../api/demoSessionsApi";
 import { serviceCopyUrl, serviceOpenUrl, type ServiceDef } from "../services";
 import type { ProspectRow } from "../prospectRows";
@@ -153,6 +155,25 @@ export function ServiceCell({
         <IconLink title={t("services.open")} href={serviceOpenUrl(svc, session)}>
           <ExternalLink className="h-3.5 w-3.5" />
         </IconLink>
+        {svc.voice && (
+          // The persona carries the voice and accent, so the call needs only the token and a number.
+          <Popover>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                title={t("calls.toggle")}
+                aria-label={t("calls.toggle")}
+                className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-muted"
+                style={ICON}
+              >
+                <Phone className="h-3.5 w-3.5" />
+              </button>
+            </PopoverTrigger>
+            <PopoverContent align="start" className="w-[min(320px,calc(100vw-32px))] p-3">
+              <DemoCallControls token={session.token} defaultPhone={session.phone || undefined} />
+            </PopoverContent>
+          </Popover>
+        )}
         {svc.widgetPage && row.clientNiche && <WidgetColorSwatch niche={row.clientNiche} />}
         {(svc.socialPage || svc.reviewPage) && row.clientNiche && <ClientLogoSwatch niche={row.clientNiche} />}
         {/* Voice is a browser call, not a chat thread: it has no WhatsApp side

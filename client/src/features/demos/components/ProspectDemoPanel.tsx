@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, Copy, ExternalLink, Loader2, MessageCircle } from "lucide-react";
+import { Check, Copy, ExternalLink, Loader2, MessageCircle, Phone } from "lucide-react";
+import { DemoCallControls } from "./DemoCallControls";
 import { createDemoLink, demoOpenUrl } from "../api/demoSessionsApi";
 import { SERVICES, reviewDemoUrl, socialDemoUrl, tokenFromUrl, widgetDemoUrl, type ServiceDef } from "../services";
 import type { DemoLang } from "@/features/campaigns/api/demoClientsApi";
+import type { ElevenDemoLocale } from "@/features/voiceDemo/types";
 
 /**
  * One prospect, every service, on one screen.
@@ -26,16 +28,22 @@ export interface ProspectDemoInput {
   aiDisclosure?: "" | "off" | "opener" | "second_message";
   /** Ties every link minted here into one row on the Demos page. */
   prospectGroup: string;
+  /** The voice demo's voice ("" = the settings default) and accent. Sent on the voice link only. */
+  voice?: string;
+  voiceLocale?: ElevenDemoLocale;
 }
 
 export function ProspectDemoPanel({ input }: { input: ProspectDemoInput }) {
   const { t } = useTranslation("demos");
-  const [links, setLinks] = useState<Record<string, { url: string; whatsapp?: string }>>({});
+  const [links, setLinks] = useState<Record<string, { url: string; whatsapp?: string; token?: string }>>({});
+  // The voice link's phone call controls, opened under the grid.
+  const [callsOpen, setCallsOpen] = useState(false);
   const [busy, setBusy] = useState("");
   const [copied, setCopied] = useState("");
   const [error, setError] = useState("");
 
   const ready = !!input.clientNiche && !!input.firstName.trim();
+  const voiceToken = links[SERVICES.find((s) => s.voice)?.key ?? ""]?.token;
 
   const mint = async (svc: ServiceDef) => {
     if (!svc.campaignId || !ready) return;
@@ -53,6 +61,8 @@ export function ProspectDemoPanel({ input }: { input: ProspectDemoInput }) {
         ...(input.companyName?.trim() ? { companyName: input.companyName.trim() } : {}),
         ...(input.aiDisclosure ? { aiDisclosure: input.aiDisclosure } : {}),
         ...(input.language === "en" && input.market ? { market: input.market } : {}),
+        ...(svc.voice && input.voiceLocale ? { voiceLocale: input.voiceLocale } : {}),
+        ...(svc.voice && input.voice ? { voice: input.voice } : {}),
       });
       const url = svc.widgetPage
         ? widgetDemoUrl(body.demoUrl)
@@ -66,7 +76,11 @@ export function ProspectDemoPanel({ input }: { input: ProspectDemoInput }) {
       setLinks((prev) => ({
         ...prev,
         // Voice has no WhatsApp side: it is a browser call, not a chat thread.
-        [svc.key]: { url, whatsapp: svc.voice || svc.reviewPage || svc.socialPage ? undefined : body.whatsappUrl },
+        [svc.key]: {
+          url,
+          whatsapp: svc.voice || svc.reviewPage || svc.socialPage ? undefined : body.whatsappUrl,
+          token: tokenFromUrl(body.demoUrl) || undefined,
+        },
       }));
     } catch (e) {
       setError((e as Error).message || "Failed");
@@ -130,6 +144,18 @@ export function ProspectDemoPanel({ input }: { input: ProspectDemoInput }) {
                   >
                     <ExternalLink size={14} />
                   </a>
+                  {svc.voice && link.token && (
+                    <button
+                      type="button"
+                      onClick={() => setCallsOpen((v) => !v)}
+                      title={t("calls.toggle")}
+                      aria-label={t("calls.toggle")}
+                      aria-expanded={callsOpen}
+                      style={{ color: callsOpen ? "var(--primary)" : "var(--mute)" }}
+                    >
+                      <Phone size={14} />
+                    </button>
+                  )}
                   {/* The same demo over WhatsApp. Click opens it, and a
                       long-press-free alternative is the copy above. */}
                   {link.whatsapp && (
@@ -179,6 +205,12 @@ export function ProspectDemoPanel({ input }: { input: ProspectDemoInput }) {
           );
         })}
       </div>
+
+      {callsOpen && voiceToken && (
+        <div className="mt-2 rounded-[var(--r-surface)] border border-border p-3" style={{ background: "var(--bg)" }}>
+          <DemoCallControls token={voiceToken} locale={input.voiceLocale} voice={input.voice || undefined} />
+        </div>
+      )}
 
       {error && (
         <p className="mt-2" style={{ fontSize: 11, color: "var(--danger, #b4413c)" }}>
