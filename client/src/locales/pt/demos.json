@@ -305,6 +305,26 @@
       "busy": "ocupado",
       "no_answer": "não atendeu",
       "voicemail": "caixa postal"
+    },
+    "gone": "Essa ligação não está mais ativa (o servidor de chamadas reiniciou). Você pode iniciar uma nova.",
+    "errors": {
+      "generic": "A ligação não pôde continuar.",
+      "prospect_busy": "A linha do prospect estava ocupada.",
+      "prospect_no_answer": "O prospect não atendeu.",
+      "owner_no_answer": "Seu telefone não foi atendido.",
+      "owner_busy": "Seu telefone estava ocupado.",
+      "voicemail": "A caixa postal do prospect atendeu, então a ligação foi encerrada.",
+      "sara_unavailable": "A Sara não pôde entrar: o servidor de voz está indisponível.",
+      "sara_dial_failed": "Não foi possível chamar a Sara.",
+      "sara_join_failed": "A Sara não conseguiu entrar na ligação.",
+      "sara_failed": "A linha da Sara caiu antes de ela atender.",
+      "conference_failed": "Não foi possível conectar a ligação.",
+      "time_limit": "A ligação atingiu o limite de tempo.",
+      "leg_dial_failed": "{{who}}: não foi possível discar o número.",
+      "leg_join_failed": "{{who}}: não conseguiu entrar na ligação.",
+      "leg_failed": "{{who}}: a ligação falhou.",
+      "leg_busy": "{{who}}: linha ocupada.",
+      "leg_no_answer": "{{who}}: não atendeu."
     }
   }
 }

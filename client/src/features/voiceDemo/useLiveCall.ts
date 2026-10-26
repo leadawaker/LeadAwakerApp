@@ -147,7 +147,7 @@ const GREETING_EVENT_ID = "greeting_1";
 const FAREWELL_RE =
   /\b(goodbye|bye now|take care|have a (good|great|lovely) (day|evening)|speak soon|até breve|ate breve|até logo|ate logo|até mais|ate mais|tchau|tenha um (bom|ótimo) dia|tot ziens|tot snel|fijne dag|prettige dag|hasta luego|adiós|adios|que tenga un buen día)\b/i;
 
-function browserTimezone(): string | null {
+export function browserTimezone(): string | null {
   try {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || null;
   } catch {

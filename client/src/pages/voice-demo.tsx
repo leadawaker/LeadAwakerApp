@@ -18,6 +18,7 @@ import {
   VOICE_DEMO_UNLOCK_KEY,
 } from "@/features/voiceDemo/door";
 import { ENGINE_BASE_URL, setCallLimitMinutes, useLiveCall } from "@/features/voiceDemo/useLiveCall";
+import { DEMO_TOKEN_RE } from "@/features/voiceDemo/engine";
 import { useElevenDemoCall } from "@/features/voiceDemo/useElevenDemoCall";
 import { elevenAsLiveOptions } from "@/features/voiceDemo/elevenDemoOptions";
 import type { DemoEngine, LiveSetup, VoiceLang, VoiceLocale } from "@/features/voiceDemo/types";
@@ -124,7 +125,7 @@ function isEmbedded(): boolean {
 function isDemoLink(): boolean {
   if (typeof window === "undefined") return false;
   const q = new URLSearchParams(window.location.search);
-  return q.get("start") === "1" || /^[A-Za-z0-9]{4,64}$/.test(q.get("token") || "");
+  return q.get("start") === "1" || DEMO_TOKEN_RE.test(q.get("token") || "");
 }
 
 export default function VoiceDemoPage() {
@@ -200,7 +201,7 @@ export default function VoiceDemoPage() {
    */
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token") || "";
-    if (!/^[A-Za-z0-9]{4,64}$/.test(token)) {
+    if (!DEMO_TOKEN_RE.test(token)) {
       markContext("gpt-live");
       return;
     }

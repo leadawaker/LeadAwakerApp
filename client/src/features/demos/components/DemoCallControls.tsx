@@ -2,12 +2,13 @@
 // demo number with Sara on the line; "Call me + prospect" rings Gabriel's phone
 // first (Demos settings), then the prospect, and Sara joins on "Bring Sara in".
 // Inline (ProspectDemoPanel) or inside a popover (the sessions table): never a Dialog.
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import { Loader2, PhoneCall, PhoneOff, UserMinus, UserPlus, Users } from "lucide-react";
 import { Pill } from "@/components/crm/primitives/Pill";
 import {
-  endDemoCall, isFinished, setSara, startDemoCall, useDemoCall,
+  endDemoCall, isCallGone, isFinished, setSara, startDemoCall, useDemoCall,
   type DemoCall, type DemoCallMode, type DemoLegStatus,
 } from "../api/demoCallsApi";
 
@@ -21,6 +22,15 @@ const INPUT: React.CSSProperties = {
   padding: "0 9px",
   fontSize: 13,
 };
+
+/** The engine's error code as a sentence; unknown codes get the generic line. */
+function errorText(t: TFunction, has: (key: string) => boolean, code: string): string {
+  if (has(`calls.errors.${code}`)) return t(`calls.errors.${code}`);
+  // Leg codes the engine builds as `${leg}_${outcome}` (prospect_failed, owner_busy, owner_dial_failed, ...).
+  const leg = /^(owner|prospect|sara)_(dial_failed|join_failed|failed|busy|no_answer)$/.exec(code);
+  if (leg) return t(`calls.errors.leg_${leg[2]}`, { who: t(`calls.legs.${leg[1] === "sara" ? "ai" : leg[1]}`) });
+  return t("calls.errors.generic");
+}
 
 function legColor(s: DemoLegStatus): string | undefined {
   if (s === "answered") return "var(--good)";
@@ -36,7 +46,8 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
   locale?: string;
   voice?: string;
 }) {
-  const { t } = useTranslation("demos");
+  const { t, i18n } = useTranslation("demos");
+  const hasKey = (key: string) => i18n.exists(key, { ns: "demos" });
   const [phone, setPhone] = useState(defaultPhone ?? "");
   // Kept per token for this tab, so closing the table's popover mid-call and opening it again finds the call.
   const [callId, setCallIdState] = useState<string | null>(() => {
@@ -53,8 +64,17 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
   const [error, setError] = useState("");
   // The start's answer shows until the first poll lands.
   const [started, setStarted] = useState<DemoCall | null>(null);
-  const { data: polled, refetch, isError } = useDemoCall(callId);
-  // A remembered call the engine no longer knows (restarted, or long over) is simply gone.
+  // Set when the engine forgot the call (a 404): the start form shows again with a note.
+  const [gone, setGone] = useState(false);
+  const { data: polled, refetch, isError, error: pollError } = useDemoCall(callId);
+  // React-query keeps the last data after an error, so a 404 must clear the call
+  // itself, or the stale "live" state (and the stored id) would stay forever.
+  const forget = () => { setCallId(null); setStarted(null); setGone(true); };
+  useEffect(() => {
+    if (callId && isCallGone(pollError)) forget();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pollError, callId]);
+  // Any other failure before the first answer: nothing to show yet.
   const lost = isError && !polled;
   const call = lost ? null : polled ?? started;
   const active = !!callId && !lost && !isFinished(call?.status);
@@ -65,7 +85,10 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
     try {
       await fn();
     } catch (e) {
-      setError((e as Error).message || t("calls.failed"));
+      // End or Sara on a call the engine forgot: the call is over, not an error.
+      // (A start's 404 is an unknown demo token and stays an error.)
+      if (active && isCallGone(e)) forget();
+      else setError((e as Error).message || t("calls.failed"));
     } finally {
       setBusy("");
     }
@@ -78,6 +101,7 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
         ...(locale ? { locale } : {}),
         ...(voice ? { voice } : {}),
       });
+      setGone(false);
       setStarted(c);
       setCallId(c.id);
     });
@@ -126,6 +150,7 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
               {t("calls.callMe")}
             </button>
           </div>
+          {gone && <span style={{ fontSize: 11, color: "var(--mute)" }}>{t("calls.gone")}</span>}
           <span style={{ fontSize: 11, color: "var(--mute)" }}>{t("calls.hint")}</span>
         </>
       ) : null}
@@ -142,7 +167,7 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
               </Pill>
             ))}
           </div>
-          {call.error && <span style={{ fontSize: 11, color: "hsl(var(--destructive))" }}>{call.error}</span>}
+          {call.error && <span style={{ fontSize: 11, color: "hsl(var(--destructive))" }}>{errorText(t, hasKey, call.error)}</span>}
           {active ? (
             <div className="flex flex-wrap gap-2">
               {call.mode === "bridge" && (

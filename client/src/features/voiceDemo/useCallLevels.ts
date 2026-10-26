@@ -37,7 +37,7 @@ interface Side {
   freq: Uint8Array;
 }
 
-const silent = (): SideLevel => ({ level: 0, low: 0, mid: 0, high: 0 });
+export const silent = (): SideLevel => ({ level: 0, low: 0, mid: 0, high: 0 });
 
 /** Mean of the byte spectrum between two frequencies, as 0..1. */
 function band(freq: Uint8Array, binHz: number, from: number, to: number): number {
@@ -48,7 +48,8 @@ function band(freq: Uint8Array, binHz: number, from: number, to: number): number
   return b >= a ? sum / ((b - a + 1) * 255) : 0;
 }
 
-const ease = (prev: number, next: number) => prev + (next - prev) * (next > prev ? ATTACK : DECAY);
+/** One step of the attack-fast / decay-slow smoothing. */
+export const ease = (prev: number, next: number) => prev + (next - prev) * (next > prev ? ATTACK : DECAY);
 
 export function useCallLevels() {
   const ctxRef = useRef<AudioContext | null>(null);

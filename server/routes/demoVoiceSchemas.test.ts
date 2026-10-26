@@ -51,6 +51,18 @@ test("owner number: setting pick, then defaults", () => {
   assert.equal(ownerNumberFrom({ ownerPhoneBackup: "+5511999998888", ownerPhoneUse: "backup" }), "+5511999998888");
 });
 
+test("ownerNumberFrom falls back to the other configured phone before the defaults", () => {
+  // Backup chosen but only the primary is set: ring the primary, not the hardcoded backup.
+  assert.equal(ownerNumberFrom({ ownerPhone: "+447700900123", ownerPhoneUse: "backup" }), "+447700900123");
+  // Primary chosen but only the backup is set: ring the backup.
+  assert.equal(ownerNumberFrom({ ownerPhoneBackup: "+5511999998888", ownerPhoneUse: "primary" }), "+5511999998888");
+  assert.equal(ownerNumberFrom({ ownerPhoneBackup: "+5511999998888" }), "+5511999998888");
+  // Both set: the chosen one wins.
+  assert.equal(ownerNumberFrom({ ownerPhone: "+447700900123", ownerPhoneBackup: "+5511999998888", ownerPhoneUse: "backup" }), "+5511999998888");
+  // Cleared (null) phones count as not set.
+  assert.equal(ownerNumberFrom({ ownerPhone: null, ownerPhoneBackup: null, ownerPhoneUse: "backup" }), DEFAULT_OWNER_PHONE_BACKUP);
+});
+
 test("create-link voice fields and persona stamp", () => {
   const schema = z.object(createLinkVoiceFields);
   assert.equal(schema.safeParse({ voice: "abc", voiceLocale: "en-US" }).success, true);

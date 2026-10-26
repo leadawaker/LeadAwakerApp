@@ -305,6 +305,26 @@
       "busy": "busy",
       "no_answer": "no answer",
       "voicemail": "voicemail"
+    },
+    "gone": "That call is no longer running (the call engine restarted). You can start a new one.",
+    "errors": {
+      "generic": "The call could not continue.",
+      "prospect_busy": "The prospect's line was busy.",
+      "prospect_no_answer": "The prospect did not answer.",
+      "owner_no_answer": "Your phone was not answered.",
+      "owner_busy": "Your phone was busy.",
+      "voicemail": "The prospect's voicemail picked up, so the call was ended.",
+      "sara_unavailable": "Sara could not join: the voice engine is unavailable.",
+      "sara_dial_failed": "Sara could not be dialed in.",
+      "sara_join_failed": "Sara could not join the call.",
+      "sara_failed": "Sara's line dropped before she answered.",
+      "conference_failed": "The call could not be connected.",
+      "time_limit": "The call reached its time limit.",
+      "leg_dial_failed": "{{who}}: the number could not be dialed.",
+      "leg_join_failed": "{{who}}: could not join the call.",
+      "leg_failed": "{{who}}: the call failed.",
+      "leg_busy": "{{who}}: line busy.",
+      "leg_no_answer": "{{who}}: no answer."
     }
   }
 }

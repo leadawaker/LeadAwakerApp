@@ -100,9 +100,10 @@ export function normaliseVoicePhones(data: VoiceSettingsInput): { bad: string[] 
 export function ownerNumberFrom(settings: Record<string, unknown> | undefined): string {
   const s = settings || {};
   const str = (v: unknown) => (typeof v === "string" && v ? v : null);
-  const primary = str(s.ownerPhone) ?? DEFAULT_OWNER_PHONE;
-  const backup = str(s.ownerPhoneBackup) ?? DEFAULT_OWNER_PHONE_BACKUP;
-  return s.ownerPhoneUse === "backup" ? backup : primary;
+  const primary = str(s.ownerPhone);
+  const backup = str(s.ownerPhoneBackup);
+  if (s.ownerPhoneUse === "backup") return backup ?? primary ?? DEFAULT_OWNER_PHONE_BACKUP;
+  return primary ?? backup ?? DEFAULT_OWNER_PHONE;
 }
 
 /** The per-demo voice fields of POST /api/demo/create-link. */

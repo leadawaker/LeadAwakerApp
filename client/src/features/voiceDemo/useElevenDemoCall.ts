@@ -2,9 +2,10 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { PartialOptions } from "@elevenlabs/client";
 import type { AIState } from "@/components/siriOrb/aiCore";
 import { apiFetch } from "@/lib/apiUtils";
-import { ENGINE_BASE_URL } from "./engine";
+import { ENGINE_BASE_URL, demoTokenFromUrl } from "./engine";
 import { fetchElevenDemoOptions } from "./elevenDemoOptions";
-import type { CallLevels, SideLevel } from "./useCallLevels";
+import { ease, silent, type CallLevels, type SideLevel } from "./useCallLevels";
+import { browserTimezone } from "./useLiveCall";
 import type {
   Booking, CallState, CallSummary, CrmReceipt, ElevenDemoOptions, EndedReason, LiveSetup, LiveToolRun, Turn,
 } from "./types";
@@ -43,11 +44,6 @@ interface LiveConversation {
 
 /** Only if the engine ever omits max_seconds: the minted demo default is ten minutes. */
 const FALLBACK_MAX_SECONDS = 600;
-const ATTACK = 0.35;
-const DECAY = 0.12;
-
-const silent = (): SideLevel => ({ level: 0, low: 0, mid: 0, high: 0 });
-const ease = (prev: number, next: number) => prev + (next - prev) * (next > prev ? ATTACK : DECAY);
 
 /** Mean of a slice of the byte spectrum as 0..1. The SDK's bins are not labelled in Hz, so thirds of the voice half. */
 function bands(freq: Uint8Array): { low: number; mid: number; high: number } {
@@ -59,19 +55,6 @@ function bands(freq: Uint8Array): { low: number; mid: number; high: number } {
   };
   const third = Math.floor(n / 3);
   return { low: mean(1, third), mid: mean(third, 2 * third), high: mean(2 * third, n) };
-}
-
-function browserTimezone(): string {
-  try {
-    return Intl.DateTimeFormat().resolvedOptions().timeZone || "Europe/Amsterdam";
-  } catch {
-    return "Europe/Amsterdam";
-  }
-}
-
-function tokenFromPage(): string | null {
-  const token = new URLSearchParams(window.location.search).get("token") || "";
-  return /^[A-Za-z0-9]{4,64}$/.test(token) ? token : null;
 }
 
 /** `micMessage`: what the phone says when the browser refuses the microphone, in the call's language. */
@@ -191,13 +174,13 @@ export function useElevenDemoCall(micMessage = "Microphone access is needed for 
       if (stopped()) return;
 
       const res = await post("/voice/eleven/demo/session", {
-        token: tokenFromPage(),
+        token: demoTokenFromUrl(),
         password,
         admin_pass: adminPass,
         locale: setup.locale,
         voice: setup.voice || null,
         caller_number: setup.callerNumber || null,
-        timezone: browserTimezone(),
+        timezone: browserTimezone() ?? "Europe/Amsterdam",
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

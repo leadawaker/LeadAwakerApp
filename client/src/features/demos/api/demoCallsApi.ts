@@ -21,9 +21,19 @@ export interface DemoCall {
 
 export const isFinished = (s: DemoCallStatus | undefined) => s === "ended" || s === "failed";
 
+/** A failed request, with its HTTP status (404 = the engine no longer knows the call). */
+export class DemoCallError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+  }
+}
+
+/** True when the engine has forgotten the call (restarted, or long over). */
+export const isCallGone = (e: unknown) => e instanceof DemoCallError && e.status === 404;
+
 async function json<T>(res: Response): Promise<T> {
   const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((body as { message?: string }).message || `Request failed (${res.status})`);
+  if (!res.ok) throw new DemoCallError((body as { message?: string }).message || `Request failed (${res.status})`, res.status);
   return body as T;
 }
 
@@ -54,5 +64,7 @@ export function useDemoCall(id: string | null) {
     queryFn: async () => json<DemoCall>(await apiFetch(`/api/voice/demo-calls/${encodeURIComponent(id!)}`)),
     refetchInterval: (q) => (isFinished((q.state.data as DemoCall | undefined)?.status) ? false : 1500),
     refetchIntervalInBackground: true,
+    // A forgotten call (404) will not come back: no retry delay before the UI lets it go.
+    retry: (n, e) => !isCallGone(e) && n < 3,
   });
 }
