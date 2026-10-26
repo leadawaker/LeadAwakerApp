@@ -29,6 +29,7 @@ import { nicheVocabulary } from "@shared/schema";
 import { socialSnapshotFields, isSocialBlob, clientCompanyNames, rehandleSnapshot } from "../demoSocial/snapshot";
 import { getClientSocialPost } from "../demoSocial/clientStore";
 import type { SocialLang } from "../demoSocial/types";
+import { applyVoicePick, createLinkVoiceFields } from "./demoVoiceSchemas";
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
 // personas Gabriel actually minted for a prospect (decided 2026-08-11).
@@ -571,6 +572,9 @@ export function registerDemoRoutes(app: Express): void {
     // a time over the course of a call and nothing server-side knows they belong
     // together.
     prospectGroup: z.string().trim().max(80).optional(),
+    // The voice demo's own voice and accent (createLinkVoiceFields), stored on
+    // the persona as `voice` and `voice_locale` for /voice-demo and phone demos.
+    ...createLinkVoiceFields,
   });
 
   app.post(
@@ -580,7 +584,7 @@ export function registerDemoRoutes(app: Express): void {
       const parsed = adminSchema.safeParse(req.body);
       if (!parsed.success) return handleZodError(res, parsed.error);
 
-      const { firstName, language, campaignId, niche, clientNiche, companyName, scenario, aiDisclosure, market, service, prospectGroup } = parsed.data;
+      const { firstName, language, campaignId, niche, clientNiche, companyName, scenario, aiDisclosure, market, service, prospectGroup, voice, voiceLocale } = parsed.data;
 
       if (!(await isDemoCampaign(campaignId))) {
         return res.status(400).json({
@@ -689,8 +693,8 @@ export function registerDemoRoutes(app: Express): void {
       // Bookkeeping for the Demos page, merged in after the persona is settled
       // so it rides along whichever branch above built the blob — including the
       // "send the campaign as it is" case, which has no blob of its own.
-      if (service || prospectGroup) {
-        const bookkeeping = demoNiche ? JSON.parse(demoNiche) : {};
+      if (service || prospectGroup || voice || voiceLocale) {
+        const bookkeeping = applyVoicePick(demoNiche ? JSON.parse(demoNiche) : {}, { voice, voiceLocale });
         if (service) bookkeeping.service = service;
         if (prospectGroup) bookkeeping.prospect_group = prospectGroup;
         demoNiche = JSON.stringify(bookkeeping);

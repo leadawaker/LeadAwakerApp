@@ -45,6 +45,7 @@ import { registerWidgetRoutes } from "./widget";
 import { registerDemoSettingsRoutes } from "./demoSettings";
 import { registerVoicePromptRoutes } from "./voicePrompts";
 import { registerVoiceElevenTestRoutes } from "./voiceElevenTest";
+import { registerVoiceDemoCallRoutes } from "./voiceDemoCalls";
 import { registerVoiceAccountPromptRoutes } from "./voiceAccountPrompts";
 import { registerVoicePromptDraftRoutes } from "./voicePromptDrafts";
 import { registerVoiceReviewRoutes } from "./voiceReviews";
@@ -128,6 +129,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerDemoSettingsRoutes(app);
   registerVoicePromptRoutes(app);
   registerVoiceElevenTestRoutes(app);
+  registerVoiceDemoCallRoutes(app);
   registerVoiceAccountPromptRoutes(app);
   registerVoicePromptDraftRoutes(app);
   registerVoiceReviewRoutes(app);

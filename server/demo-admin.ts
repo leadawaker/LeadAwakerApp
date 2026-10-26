@@ -236,6 +236,9 @@ export type DemoSessionRow = {
   screenshot: string;
   /** The site that screenshot came from, shown under the row. */
   websiteUrl: string;
+  /** The prospect's phone when either lead has one (a WhatsApp demo, a
+   *  verified website demo), to prefill the demo phone call. Empty otherwise. */
+  phone: string;
   /** Per surface. `opened` is whether the lead row exists at all: the browser
    *  row is created on first visit, so its absence means the link was never
    *  clicked, which is the single most useful thing this page reports. */
@@ -363,11 +366,14 @@ export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
         createdAt: (lead.createdAt as Date) ?? null,
         screenshot: str(niche.screenshot),
         websiteUrl: str(niche.website_url),
+        phone: "",
         browser: { opened: false, openedAt: null, replies: 0, lastAt: null, status: "" },
         whatsapp: { opened: false, openedAt: null, replies: 0, lastAt: null, status: "" },
       };
       byToken.set(token, row);
     }
+
+    if (!row.phone && lead.phone) row.phone = String(lead.phone);
 
     if (isWeb) {
       row.browser = surface;

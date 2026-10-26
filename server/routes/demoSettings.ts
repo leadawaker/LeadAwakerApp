@@ -18,7 +18,7 @@ import { promisify } from "util";
 import os from "os";
 import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
-import { toE164, type PhoneCountry } from "@shared/phoneE164";
+import { normaliseVoicePhones, voiceSettingsSchema } from "./demoVoiceSchemas";
 
 export const DEMO_AVATAR_DIR = path.resolve("uploads/demo-avatars");
 /** The bundled photo every widget demo uses until one is uploaded. */
@@ -213,67 +213,26 @@ export function registerDemoSettingsRoutes(app: Express) {
    * that list lives in Python, and the engine ignores an id it does not know
    * rather than passing it to OpenAI mid-call.
    */
-  const voiceSchema = z.object({
-    defaultVoices: z.record(z.string().max(40), z.string().trim().max(40)).optional(),
-    // Stored as typed. The engine casefolds and strips accents on both sides,
-    // so "Olá" and "ola" are the same word at the door.
-    passwords: z.array(z.string().trim().min(1).max(60)).max(10).optional(),
-    // null clears it back to the engine's default.
-    maxCallMinutes: z.number().int().min(1).max(30).nullable().optional(),
-    // Numbers Sara never remembers as returning callers (on every line), so a
-    // demo from your own phone always starts fresh. Stored as E.164 (see
-    // FORGET_COUNTRIES): the engine compares them with the caller's number.
-    forgetNumbers: z.array(z.string().trim().min(1).max(30)).max(20).optional(),
-    // Engine tests: a tester's own phone number gets this engine (GPT-Live,
-    // Grok or ElevenLabs), voice, prompt variant and reasoning on a conference-route line;
-    // every other caller keeps the line's setup. Read per call by the engine
-    // (src/automations/voice/voice_engines.py), which ignores a voice id the
-    // chosen engine does not have. Stored as E.164, like forgetNumbers.
-    engineTests: z.array(z.object({
-      number: z.string().trim().min(1).max(30),
-      label: z.string().trim().max(40).optional(),
-      enabled: z.boolean().optional(),
-      engine: z.enum(["gpt-live", "xai", "elevenlabs"]),
-      voice: z.string().trim().max(40).optional(),
-      prompt: z.enum(["standard", "lean"]).optional(),
-      reasoning: z.enum(["high", "none"]).optional(),
-      // Memory off, any engine: the call is heard as a first-time caller's (no
-      // memory, stored language or appointment; the booking tools see no booking)
-      // and writes no name or language back. Bookings still land on the lead.
-      freshCaller: z.boolean().optional(),
-    })).max(10).optional(),
-  });
-
-  // A number typed without +country code is read as Dutch, then British, then
-  // Brazilian: the markets the demo line serves.
-  const FORGET_COUNTRIES: PhoneCountry[] = ["NL", "GB", "BR"];
-  const forgetE164 = (raw: string) =>
-    FORGET_COUNTRIES.map((c) => toE164(raw, c)).find(Boolean) ?? null;
-
   app.put("/api/demo-settings/voice", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
-    const parsed = voiceSchema.safeParse(req.body);
+    const parsed = voiceSettingsSchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
-    if (parsed.data.forgetNumbers) {
-      const bad = parsed.data.forgetNumbers.filter((n) => !forgetE164(n));
-      if (bad.length) {
-        return res.status(400).json({
-          message: `Not a phone number: ${bad.join(", ")}. Use international format, e.g. +31612345678.`,
-        });
-      }
-      parsed.data.forgetNumbers = Array.from(new Set(parsed.data.forgetNumbers.map((n) => forgetE164(n)!)));
+    const cleaned = normaliseVoicePhones(parsed.data);
+    if ("bad" in cleaned) {
+      return res.status(400).json({
+        message: `Not a phone number: ${cleaned.bad.join(", ")}. Use international format, e.g. +31612345678.`,
+      });
     }
-    if (parsed.data.engineTests) {
-      const bad = parsed.data.engineTests.filter((t) => !forgetE164(t.number)).map((t) => t.number);
-      if (bad.length) {
-        return res.status(400).json({
-          message: `Not a phone number: ${bad.join(", ")}. Use international format, e.g. +31612345678.`,
-        });
-      }
-      parsed.data.engineTests = parsed.data.engineTests.map((t) => ({ ...t, number: forgetE164(t.number)! }));
-    }
+    const patch = cleaned.data;
     const current = await readSettings("voice");
-    const next: Record<string, unknown> = { ...current, ...parsed.data };
+    const next: Record<string, unknown> = { ...current, ...patch };
     if (next.maxCallMinutes === null) delete next.maxCallMinutes;
+    if (next.ownerPhone === null) delete next.ownerPhone;
+    if (next.ownerPhoneBackup === null) delete next.ownerPhoneBackup;
+    if (next.elevenVoices && typeof next.elevenVoices === "object") {
+      next.elevenVoices = Object.fromEntries(
+        Object.entries(next.elevenVoices as Record<string, string>).filter(([, v]) => v),
+      );
+    }
     // An empty pick means "use the engine's built-in default for that
     // language", so it is removed rather than stored as "".
     if (next.defaultVoices && typeof next.defaultVoices === "object") {

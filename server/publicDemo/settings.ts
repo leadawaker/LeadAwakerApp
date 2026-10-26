@@ -26,6 +26,8 @@ export interface PublicDemoSettings {
   callNumber: string | null;
   /** Where "Book a call instead" points; null lets the page use its own link. */
   bookingUrl: string | null;
+  /** Which engine answers the homepage voice demo (the engine reads this row). */
+  voiceEngine: "elevenlabs" | "gpt-live";
 }
 
 export const DEFAULT_PUBLIC_DEMO_SETTINGS: PublicDemoSettings = {
@@ -44,6 +46,7 @@ export const DEFAULT_PUBLIC_DEMO_SETTINGS: PublicDemoSettings = {
   costEstimates: { buildEur: 0.08, voiceMinuteEur: 0.2, chatTurnEur: 0.01 },
   callNumber: null,
   bookingUrl: null,
+  voiceEngine: "elevenlabs",
 };
 
 const TTL_MS = 30_000;
