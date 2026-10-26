@@ -47,6 +47,7 @@ export interface DemoCopy {
   endedDropped: string;
   endedCompleted: string;
   endedSilence: string;
+  micNeeded: string;
 
   booked: string;
 
@@ -113,6 +114,7 @@ const EN: DemoCopy = {
   endedDropped: "The connection dropped.",
   endedCompleted: "She finished the call.",
   endedSilence: "Nobody spoke for a while, so she rang off.",
+  micNeeded: "The call needs your microphone. Allow it in the browser and try again.",
 
   booked: "Booked",
 
@@ -180,6 +182,7 @@ const NL: DemoCopy = {
   endedDropped: "De verbinding is verbroken.",
   endedCompleted: "Ze heeft het gesprek afgerond.",
   endedSilence: "Er werd een tijd niets gezegd, dus heeft ze opgehangen.",
+  micNeeded: "Voor het gesprek is je microfoon nodig. Sta die toe in de browser en probeer het opnieuw.",
 
   booked: "Ingepland",
 
@@ -247,6 +250,7 @@ const PT: DemoCopy = {
   endedDropped: "A conexão caiu.",
   endedCompleted: "Ela encerrou a ligação.",
   endedSilence: "Ninguém falou por um tempo, então ela desligou.",
+  micNeeded: "A ligação precisa do seu microfone. Permita no navegador e tente de novo.",
 
   booked: "Agendado",
 

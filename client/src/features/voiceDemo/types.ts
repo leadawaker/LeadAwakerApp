@@ -180,3 +180,25 @@ export interface LiveSetup {
   voice: string;
   staff?: LiveStaffTest;
 }
+
+// --- ElevenLabs demos ---------------------------------------------------------
+
+/** Which engine a demo runs on (engine demo-context `engine`). Missing = GPT-Live (an older engine). */
+export type DemoEngine = "elevenlabs" | "gpt-live";
+
+/** The locales ElevenLabs demos have voices for. pt-PT uses pt-BR. */
+export type ElevenDemoLocale = "nl" | "en-GB" | "en-US" | "pt-BR";
+
+export interface ElevenDemoVoice {
+  id: string;
+  label: string;
+  gender: "female" | "male";
+  preview_url: string | null;
+}
+
+/** GET /voice/eleven/demo/options. `defaults` already applies the Demos page settings. */
+export interface ElevenDemoOptions {
+  locales: { id: ElevenDemoLocale; label: string }[];
+  voices: Partial<Record<ElevenDemoLocale, ElevenDemoVoice[]>>;
+  defaults: Partial<Record<ElevenDemoLocale, string>>;
+}

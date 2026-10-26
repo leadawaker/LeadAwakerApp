@@ -18,11 +18,15 @@ import {
   VOICE_DEMO_UNLOCK_KEY,
 } from "@/features/voiceDemo/door";
 import { ENGINE_BASE_URL, setCallLimitMinutes, useLiveCall } from "@/features/voiceDemo/useLiveCall";
-import type { LiveSetup, VoiceLang, VoiceLocale } from "@/features/voiceDemo/types";
+import { useElevenDemoCall } from "@/features/voiceDemo/useElevenDemoCall";
+import { elevenAsLiveOptions } from "@/features/voiceDemo/elevenDemoOptions";
+import type { DemoEngine, LiveSetup, VoiceLang, VoiceLocale } from "@/features/voiceDemo/types";
 import { copyFor, dateLocaleOf } from "@/features/voiceDemo/copy";
 
 /**
- * The voice receptionist demo, on GPT-Live.
+ * The voice receptionist demo, on ElevenLabs or GPT-Live: a `?token=` link
+ * runs on the engine its demo-context names (the Demos page settings); a
+ * page without one, or an engine too old to say, runs on GPT-Live.
  *
  * Before the call: one panel, and a phone in the middle of it with a green
  * button on its screen (the call's settings sit behind a gear underneath).
@@ -124,7 +128,7 @@ function isDemoLink(): boolean {
 }
 
 export default function VoiceDemoPage() {
-  const call = useLiveCall();
+  const live = useLiveCall();
   const preset = useRef(readSetupFromUrl()).current;
   const simple = useRef(isDemoLink()).current;
   const showSettings = useRef(isAppHost()).current;
@@ -139,6 +143,26 @@ export default function VoiceDemoPage() {
   const [publicDemo, setPublicDemo] = useState<boolean | null>(() =>
     /^[a-f0-9]{16}$/.test(new URLSearchParams(window.location.search).get("token") || "") ? null : false,
   );
+
+  /**
+   * Which engine this link runs on. Unknown until the demo-context answers on
+   * a token link; a call pressed before then waits for it (contextReady).
+   */
+  const [engine, setEngine] = useState<DemoEngine>("gpt-live");
+  const contextReady = useRef<{ done: boolean; wait: Promise<void>; resolve: () => void } | null>(null);
+  if (!contextReady.current) {
+    let resolve = () => {};
+    const wait = new Promise<void>((r) => { resolve = r; });
+    contextReady.current = { done: false, wait, resolve };
+  }
+  const markContext = (next: DemoEngine) => {
+    setEngine(next);
+    engineRef.current = next;
+    const c = contextReady.current!;
+    c.done = true;
+    c.resolve();
+  };
+  const engineRef = useRef<DemoEngine>("gpt-live");
 
   const [setup, setSetup] = useState<LiveSetup>(() => {
     const locale = preset?.locale ?? "en-GB";
@@ -176,17 +200,22 @@ export default function VoiceDemoPage() {
    */
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token") || "";
-    if (!/^[A-Za-z0-9]{4,64}$/.test(token)) return;
+    if (!/^[A-Za-z0-9]{4,64}$/.test(token)) {
+      markContext("gpt-live");
+      return;
+    }
     let cancelled = false;
     void (async () => {
       try {
         const res = await fetch(`${ENGINE_BASE_URL}/voice/demo-context?token=${token}`);
         if (!res.ok) {
-          if (!cancelled) setPublicDemo(false);
+          if (!cancelled) { setPublicDemo(false); markContext("gpt-live"); }
           return;
         }
         const data = await res.json();
         if (cancelled) return;
+        // No `engine` (an engine older than ElevenLabs demos) is GPT-Live, as before.
+        markContext(data?.engine === "elevenlabs" ? "elevenlabs" : "gpt-live");
         setPublicDemo(data?.public === true);
         if (data?.public === true && typeof data.max_minutes === "number") setCallLimitMinutes(data.max_minutes);
         if (!data?.found) return;
@@ -204,6 +233,8 @@ export default function VoiceDemoPage() {
           return {
             ...prev,
             locale,
+            // The voice picked when the demo was minted, unless the link names one.
+            voice: preset?.voice || (typeof data.voice === "string" ? data.voice : "") || prev.voice,
             companyName:
               !touchedRef.current && data.company_name ? data.company_name : prev.companyName,
           };
@@ -211,7 +242,7 @@ export default function VoiceDemoPage() {
       } catch {
         // A themed link that cannot reach the engine still runs as the plain
         // demo, which is a better failure than a blocked setup screen.
-        if (!cancelled) setPublicDemo(false);
+        if (!cancelled) { setPublicDemo(false); markContext("gpt-live"); }
       }
     })();
     return () => {
@@ -240,10 +271,21 @@ export default function VoiceDemoPage() {
     // No number typed or in the link: the caller gets a made-up local one, so
     // the AI hears a caller ID and the CRM files them as their own caller.
     const callerNumber = setup.callerNumber.trim() || demoCallerNumber(setup.locale);
-    void call.start({ ...setup, callerNumber }, storedVoicePassword());
+    const begin = () => {
+      const run = engineRef.current === "elevenlabs" ? eleven : live;
+      void run.start({ ...setup, callerNumber }, storedVoicePassword());
+    };
+    // Pressed before the demo-context said which engine: wait for it (a quick fetch).
+    if (contextReady.current!.done) begin();
+    else void contextReady.current!.wait.then(begin);
   };
 
   const copy = copyFor(setup.locale);
+  const eleven = useElevenDemoCall(copy.micNeeded);
+  const call = engine === "elevenlabs" ? eleven : live;
+  const callOptions = engine === "elevenlabs"
+    ? elevenAsLiveOptions(eleven.elevenOptions, live.options, setup.locale)
+    : live.options;
 
   // The phone outlives the call by a beat, so the wave can shrink back into
   // its dot before the phone fades out and the CRM fades in.
@@ -356,7 +398,8 @@ export default function VoiceDemoPage() {
                     showSettings ? (
                       <CallSettings
                         setup={setup}
-                        options={call.options}
+                        options={callOptions}
+                        namedVoices={engine === "elevenlabs"}
                         simple={simple}
                         copy={copy}
                         onSetup={updateSetup}
@@ -372,7 +415,8 @@ export default function VoiceDemoPage() {
         </div>
       </div>
 
-      <audio ref={call.audioRef} autoPlay className="hidden" />
+      {/* GPT-Live plays through this; the ElevenLabs SDK plays her itself. */}
+      <audio ref={live.audioRef} autoPlay className="hidden" />
     </div>
   );
 }

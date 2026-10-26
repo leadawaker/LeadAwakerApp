@@ -23,12 +23,15 @@ export function CallSettings({
   setup,
   options,
   simple,
+  namedVoices = false,
   copy,
   onSetup,
 }: {
   setup: LiveSetup;
   options: LiveOptions | null;
   simple: boolean;
+  /** ElevenLabs voice ids are opaque: list those voices by name only. */
+  namedVoices?: boolean;
   copy: DemoCopy;
   onSetup: (next: Partial<LiveSetup>) => void;
 }) {
@@ -115,7 +118,7 @@ export function CallSettings({
               return voices.length ? (
                 <optgroup key={gender} label={gender === "male" ? copy.voiceMale : copy.voiceFemale}>
                   {voices.map((v) => (
-                    <option key={v.id} value={v.id}>{v.id} — {v.label}</option>
+                    <option key={v.id} value={v.id}>{namedVoices ? v.label : `${v.id} — ${v.label}`}</option>
                   ))}
                 </optgroup>
               ) : null;
