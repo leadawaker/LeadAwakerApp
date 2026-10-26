@@ -5,6 +5,22 @@ Status: draft for Gabriel's approval (builder check done, its questions settled 
 `2026-10-25-voice-call-review-and-prompt-coach-design.md` (the call review, change cards, draft,
 Test draft and coach that are live in the Voice tab today).
 
+## Scope: round 1 (Gabriel, 2026-10-26)
+
+Build round 1 only. In round 1:
+- Client phone instructions (goal 1, decisions 1-5, 8, 10, 11) with the client tab's length counter.
+- Card kinds and labels (goal 2, decisions 7, 9, 12), with the rules document section (goal 4).
+- Knowledge cards apply on Accept with **Undo on the card only**: the card itself stores what it needs to
+  undo (the entry's previous title and content, or that it created the entry). No history table, no
+  History or Restore in the knowledge panel, no versioning of manual knowledge edits.
+- Setting cards apply on Accept with Undo (decision 9).
+- Remove "extra instructions" (goal 5).
+- "Since the last Save to live" in the date picker (goal 6).
+
+Deferred to round 2 (do not build now): the knowledge base history table and History/Restore UI
+(decision 6, except the card Undo above), the review being told what changed (goal 7), and "affects N
+lines" (goal 8).
+
 ## Why
 
 The ElevenLabs prompt (`Prompt_Library` rows `eleven_layer_nl` id 130 and `eleven_layer_en` id 131) is
