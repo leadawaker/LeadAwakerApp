@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { elevenTestReducer, errorKeyForStatus, initialElevenTestState as idle, type ElevenTestState } from "./elevenTestState";
+import { elevenTestReducer, errorKeyForStatus, initialElevenTestState as idle, startErrorKey, type ElevenTestState } from "./elevenTestState";
 
 const live = (over: Partial<ElevenTestState> = {}): ElevenTestState => ({ ...idle, status: "listening", ...over });
 
@@ -57,6 +57,17 @@ test("status to error key", () => {
   assert.equal(errorKeyForStatus(422), "badCaller");
   assert.equal(errorKeyForStatus(502), "eleven");
   assert.equal(errorKeyForStatus(500), "generic");
+});
+
+test("a draft test with no saved draft has its own error; every other refusal keeps its usual key", () => {
+  const noDraft = "There is no draft to test.";
+  assert.equal(startErrorKey(409, noDraft, true), "noDraft");
+  // The same 409 text on a normal test, or another 409 on a draft test, is the line not being set up.
+  assert.equal(startErrorKey(409, noDraft, false), "notSetUp");
+  assert.equal(startErrorKey(409, "This line has no persona yet.", true), "notSetUp");
+  assert.equal(startErrorKey(409, undefined, true), "notSetUp");
+  assert.equal(startErrorKey(429, noDraft, true), "busy");
+  assert.equal(startErrorKey(502, null, true), "eleven");
 });
 
 test("hang up while connecting: ends, and a late connect or mode change does not revive it", () => {

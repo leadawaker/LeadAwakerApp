@@ -1,14 +1,16 @@
 // The test panel's head: the GPT Live | ElevenLabs tab, the GPT Live pick under it
 // (Sol | Terra | Luna; ElevenLabs always runs Realtime Max), the A/B prompt switch on
-// GPT Live (agency), and the one Test button (Hang up during a call).
+// GPT Live (agency), and the Test button (Hang up during a call). On ElevenLabs a saved
+// prompt draft adds Test draft under it: the same call on the draft, with writes faked.
 // All picks are test only (testPanelPrefs); they never change the line.
 import { useTranslation } from "react-i18next";
-import { Loader2, PhoneCall, PhoneOff } from "lucide-react";
+import { FlaskConical, Loader2, PhoneCall, PhoneOff } from "lucide-react";
 import { Seg } from "@/features/demos/components/engineControls";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { FieldLabel, helpStyle } from "../voiceAtoms";
 import { LLM_KEYS, llmLabel } from "../llmOptions";
 import { TestPromptSwitch } from "../TestPromptSwitch";
+import { promptLangOf, useElevenDraft } from "../coach/coachApi";
 import type { VoiceLine, VoiceLinePatch } from "../voiceApi";
 import { TEST_ENGINES } from "./testPanelPrefs";
 import { isCallBusy, useVoiceTest } from "./VoiceTestProvider";
@@ -20,11 +22,15 @@ export function TestPanelHead({ line, canEdit, saving, onSave }: {
   line: VoiceLine; canEdit: boolean; saving: boolean; onSave: (patch: VoiceLinePatch) => Promise<boolean>;
 }) {
   const { t } = useTranslation("voiceTab");
+  const { t: tc } = useTranslation("voiceCoach");
   const { isAgencyUser } = useWorkspace();
   const test = useVoiceTest();
   const { engine, phase } = test;
   const busy = isCallBusy(phase);
   const canTest = !!line.persona;
+  // The call runs on the draft of this line's own language: no button when that one has none, or during a call.
+  const draft = useElevenDraft(line.accountId, promptLangOf(line.locale));
+  const canTestDraft = engine === "elevenlabs" && canTest && !busy && draft.data?.hasDraft === true;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }} data-testid="voice-test-head">
@@ -57,13 +63,17 @@ export function TestPanelHead({ line, canEdit, saving, onSave }: {
       )}
 
       <TestButton canTest={canTest} />
+      {canTestDraft && <TestDraftButton />}
 
       {!canTest && <p style={{ ...noteStyle, textAlign: "center" }}>{t("test.needsPersona")}</p>}
       {canTest && engine === "elevenlabs" && <p style={noteStyle}>{t("test.eleven.note")}</p>}
+      {canTestDraft && <p style={noteStyle} data-testid="voice-test-draft-note">{tc("testDraft.note")}</p>}
       {phase === "live" && <p style={{ ...noteStyle, color: "var(--ink-soft)" }} data-testid="voice-test-live-note">{t("test.panel.liveNote")}</p>}
       {test.error && (
         <p role="alert" style={{ ...noteStyle, color: "hsl(var(--destructive))" }} data-testid="voice-test-error">
-          {test.error.engine === "elevenlabs" ? t(`test.eleven.error.${test.error.key}`) : t("test.panel.error.gptLive")}
+          {test.error.engine === "elevenlabs"
+            ? (test.error.key === "noDraft" ? tc("testDraft.noDraft") : t(`test.eleven.error.${test.error.key}`))
+            : t("test.panel.error.gptLive")}
           {test.error.engine === "gpt-live" && (
             <span style={{ display: "block", fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute)", marginTop: 4 }}>{test.error.message}</span>
           )}
@@ -93,6 +103,21 @@ function TestButton({ canTest }: { canTest: boolean }) {
     >
       <PhoneCall size={16} />
       {t("test.panel.start")}
+    </button>
+  );
+}
+
+/** The same call on the saved draft prompt. */
+function TestDraftButton() {
+  const { t } = useTranslation("voiceCoach");
+  const { start } = useVoiceTest();
+  return (
+    <button
+      type="button" className="la-btn la-btn--soft" onClick={() => { void start({ draft: true }); }}
+      style={bigBtn} data-testid="voice-test-draft"
+    >
+      <FlaskConical size={16} />
+      {t("testDraft.button")}
     </button>
   );
 }

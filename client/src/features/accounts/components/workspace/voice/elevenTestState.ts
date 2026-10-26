@@ -5,8 +5,8 @@ export type ElevenTestStatus = "idle" | "connecting" | "listening" | "speaking" 
 
 export interface ElevenTestLine { role: "user" | "agent"; text: string }
 
-/** voiceTab `test.eleven.error.<key>`. */
-export type ElevenTestError = "busy" | "notEleven" | "notSetUp" | "badCaller" | "eleven" | "mic" | "dropped" | "generic";
+/** voiceTab `test.eleven.error.<key>`; `noDraft` is voiceCoach `testDraft.noDraft`. */
+export type ElevenTestError = "busy" | "notEleven" | "notSetUp" | "badCaller" | "eleven" | "mic" | "dropped" | "generic" | "noDraft";
 
 export interface ElevenTestState {
   status: ElevenTestStatus;
@@ -56,4 +56,14 @@ export function errorKeyForStatus(status: number): ElevenTestError {
     case 502: return "eleven";
     default: return "generic";
   }
+}
+
+/**
+ * The error key for a refused start. A draft test with nothing saved is the engine's 409
+ * "There is no draft to test." (relayed as the body's `message`); every other 409 is still
+ * the line not being set up.
+ */
+export function startErrorKey(status: number, message: unknown, draft: boolean): ElevenTestError {
+  if (draft && status === 409 && typeof message === "string" && /no draft/i.test(message)) return "noDraft";
+  return errorKeyForStatus(status);
 }

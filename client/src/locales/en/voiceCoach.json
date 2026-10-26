@@ -122,6 +122,30 @@
       "failed": "That did not work. Try again."
     }
   },
+  "coach": {
+    "title": "Prompt coach",
+    "help": "Ask about your calls or about the prompt. The coach answers and proposes changes as cards. It never edits the prompt itself: a card only changes the draft when you press Accept, and nothing goes live until you press Save to live.",
+    "threadLabel": "Conversation with the coach",
+    "inputLabel": "Message to the coach",
+    "placeholder": "Ask about a call or a change to the prompt",
+    "hint": "Enter sends, Shift+Enter adds a line.",
+    "send": "Send",
+    "thinking": "Thinking",
+    "thinkingHint": "This can take a minute or two.",
+    "empty": "No messages yet. Ask why a call went wrong, paste a call id, or describe what should change in the prompt.",
+    "loadFailed": "Could not load the conversation. Try again later.",
+    "error": {
+      "busy": "The coach is still answering the last question. Send this again when it is done.",
+      "failed": "The coach could not answer. Your question is kept above, so send it again in a moment.",
+      "generic": "The answer did not come through. Reload the page in a minute: it may have arrived."
+    }
+  },
+  "testDraft": {
+    "button": "Test draft",
+    "note": "In a draft test the call runs on the draft prompt. Bookings, cancellations, callback requests, call summary updates and transfers are faked: nothing really happens. Free times, caller memory and car and plate lookups are real. The call is not added to caller memory.",
+    "pill": "Draft",
+    "noDraft": "There is no saved draft to test. Change the prompt draft first, then try again."
+  },
   "common": {
     "cancel": "Cancel",
     "loadFailed": "Could not load the prompt. Try again later.",

@@ -2,7 +2,7 @@
 // next to the test call, saved as you type. The call button first, then who
 // she is (name, voice, language), this business's own text (greeting,
 // instructions), then the two prompts every client line in this language shares
-// (on an ElevenLabs line: the weekly review and its change cards, then the draft).
+// (on an ElevenLabs line: the weekly review and its change cards, then the draft and the coach).
 import { useEffect, useRef, useState } from "react";
 import { BookOpen, Loader2, MessageSquareQuote, NotebookPen, Waves } from "lucide-react";
 import { useVoiceT } from "./voiceGender";
@@ -16,6 +16,7 @@ import { runsOnEleven } from "./lineEngine";
 import { useAutosave } from "./useAutosave";
 import { AutosaveBadge, SharedPromptCard } from "./SharedPromptCard";
 import { useAccountVoicePrompts, useSaveVoicePrompt } from "./voicePromptsApi";
+import { CoachPanel } from "./coach/CoachPanel";
 import { ElevenDraftCard } from "./coach/ElevenDraftCard";
 import { ReviewCard } from "./coach/ReviewCard";
 import { SuggestionCards } from "./coach/SuggestionCards";
@@ -146,6 +147,8 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
           defaultLang={promptLangOf(line.locale)}
         />
       )}
+      {/* Questions about the calls and the prompt: its answers add change cards, never edit the draft. */}
+      {onEleven && <CoachPanel accountId={line.accountId} lang={promptLangOf(line.locale)} />}
     </>
   );
 }

@@ -122,6 +122,30 @@
       "failed": "Não funcionou. Tente de novo."
     }
   },
+  "coach": {
+    "title": "Coach do prompt",
+    "help": "Pergunte sobre suas chamadas ou sobre o prompt. O coach responde e propõe mudanças em cartões. Ele nunca edita o prompt sozinho: um cartão só muda o rascunho quando você clica em Aceitar, e nada vai ao ar até você clicar em Colocar no ar.",
+    "threadLabel": "Conversa com o coach",
+    "inputLabel": "Mensagem para o coach",
+    "placeholder": "Pergunte sobre uma chamada ou uma mudança no prompt",
+    "hint": "Enter envia, Shift+Enter cria uma nova linha.",
+    "send": "Enviar",
+    "thinking": "Pensando",
+    "thinkingHint": "Isso pode levar um ou dois minutos.",
+    "empty": "Nenhuma mensagem ainda. Pergunte por que uma chamada deu errado, cole o id de uma chamada ou descreva o que deve mudar no prompt.",
+    "loadFailed": "Não foi possível carregar a conversa. Tente de novo mais tarde.",
+    "error": {
+      "busy": "O coach ainda está respondendo à pergunta anterior. Envie de novo quando ele terminar.",
+      "failed": "O coach não conseguiu responder. Sua pergunta fica registrada acima, então envie de novo daqui a pouco.",
+      "generic": "A resposta não chegou. Recarregue a página em um minuto: ela pode ter chegado."
+    }
+  },
+  "testDraft": {
+    "button": "Testar rascunho",
+    "note": "Num teste do rascunho, a chamada roda com o prompt do rascunho. Agendamentos, cancelamentos, pedidos de retorno, atualizações do resumo da chamada e transferências são simulados: nada acontece de verdade. Horários livres, a memória de quem liga e as buscas de carro e placa são reais. A chamada não é adicionada à memória de quem liga.",
+    "pill": "Rascunho",
+    "noDraft": "Não há rascunho salvo para testar. Altere primeiro o rascunho do prompt e tente de novo."
+  },
   "common": {
     "cancel": "Cancelar",
     "loadFailed": "Não foi possível carregar o prompt. Tente mais tarde.",
