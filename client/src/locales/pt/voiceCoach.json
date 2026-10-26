@@ -6,7 +6,9 @@
       "en": "EN"
     },
     "notice": "Compartilhado por todas as linhas ElevenLabs neste idioma. Suas edições vão para um rascunho que as chamadas não ouvem até você clicar em Colocar no ar.",
-    "liveMoved": "O prompt no ar mudou depois que este rascunho começou. Colocar no ar substitui esse texto mais recente (ele fica salvo como versão no histórico).",
+    "liveMoved": "O prompt {{lang}} no ar mudou depois que este rascunho começou. Colocar no ar substitui esse texto mais recente (ele fica salvo como versão no histórico).",
+    "liveMovedBoth": "Os prompts NL e EN no ar mudaram depois que os rascunhos começaram. Colocar no ar substitui esses textos mais recentes (eles ficam salvos como versões no histórico).",
+    "otherChanged": "Também alterado em {{lang}}: Colocar no ar coloca os dois idiomas no ar.",
     "startOver": "Recomeçar a partir do texto no ar",
     "missing": "Ainda não há um prompt ElevenLabs neste idioma.",
     "viewLabel": "Visualização",

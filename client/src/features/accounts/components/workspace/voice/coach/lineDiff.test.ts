@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { diffCounts, lineDiff } from "./lineDiff";
+import { MAX_CELLS, diffCounts, lineDiff } from "./lineDiff";
 
 test("identical texts give only unchanged lines", () => {
   const lines = lineDiff("a\nb\nc", "a\nb\nc");
@@ -33,4 +33,18 @@ test("diffCounts counts added and removed lines", () => {
 test("deletions come before additions across a longer change", () => {
   const kinds = lineDiff("keep\nold1\nold2\nend", "keep\nnew1\nend").map((l) => l.kind);
   assert.deepEqual(kinds, ["same", "del", "del", "add", "same"]);
+});
+
+test("a change too big for the table shows the middle as all removed, then all added", () => {
+  const common = Array.from({ length: 2098 }, (_, i) => `line ${i}`);
+  const before = ["x", ...common, "y"].join("\n");
+  const after = ["p", ...common, "q"].join("\n");
+  assert.ok(2100 * 2100 > MAX_CELLS);
+  const lines = lineDiff(`keep\n${before}\nend`, `keep\n${after}\nend`);
+  assert.equal(lines.length, 2 + 2100 + 2100);
+  assert.deepEqual(lines[0], { kind: "same", text: "keep" });
+  assert.ok(lines.slice(1, 2101).every((l) => l.kind === "del"));
+  assert.ok(lines.slice(2101, 4201).every((l) => l.kind === "add"));
+  assert.deepEqual(lines[4201], { kind: "same", text: "end" });
+  assert.deepEqual(diffCounts(lines), { added: 2100, removed: 2100 });
 });

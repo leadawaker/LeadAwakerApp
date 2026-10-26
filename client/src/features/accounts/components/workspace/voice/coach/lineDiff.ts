@@ -3,6 +3,9 @@
 // before the added ones, so a rewritten paragraph reads as "old, then new".
 export type DiffLine = { kind: "same" | "add" | "del"; text: string };
 
+/** Above this many table cells (changed lines before x after) the diff skips the LCS. */
+export const MAX_CELLS = 4_000_000;
+
 const linesOf = (s: string): string[] => (s === "" ? [] : s.split("\n"));
 
 export function lineDiff(before: string, after: string): DiffLine[] {
@@ -16,8 +19,18 @@ export function lineDiff(before: string, after: string): DiffLine[] {
   const midA = a.slice(head, a.length - tail);
   const midB = b.slice(head, b.length - tail);
 
-  // lcs[i * w + j]: length of the LCS of midA[i..] and midB[j..].
   const n = midA.length, m = midB.length, w = m + 1;
+  // A table this big would stall the page (and take MBs): show the middle as replaced instead.
+  if (n * m > MAX_CELLS) {
+    return [
+      ...a.slice(0, head).map((text) => ({ kind: "same" as const, text })),
+      ...midA.map((text) => ({ kind: "del" as const, text })),
+      ...midB.map((text) => ({ kind: "add" as const, text })),
+      ...a.slice(a.length - tail).map((text) => ({ kind: "same" as const, text })),
+    ];
+  }
+
+  // lcs[i * w + j]: length of the LCS of midA[i..] and midB[j..].
   const lcs = new Uint32Array((n + 1) * w);
   for (let i = n - 1; i >= 0; i--) {
     for (let j = m - 1; j >= 0; j--) {

@@ -36,7 +36,11 @@ export function ElevenDraftCard({ accountId, lineId, defaultLang }: Props) {
   const { t } = useVoiceT();
   const { t: tc } = useTranslation("voiceCoach");
   const [lang, setLang] = useState<PromptLang>(defaultLang);
-  const draft = useElevenDraft(accountId, lang);
+  // Both languages: Save to live and Discard act on the two drafts together.
+  const nl = useElevenDraft(accountId, "nl");
+  const en = useElevenDraft(accountId, "en");
+  const draft = lang === "nl" ? nl : en;
+  const other = lang === "nl" ? en : nl;
 
   const langSwitch = (
     <div className="la-seg la-seg--touch" role="radiogroup" aria-label={tc("draft.language")}>
@@ -66,11 +70,19 @@ export function ElevenDraftCard({ accountId, lineId, defaultLang }: Props) {
     );
   }
   // Keyed by row and language: switching language opens the other draft fresh.
-  return <DraftEditor key={`${draft.data.promptId}-${lang}`} accountId={accountId} lineId={lineId} lang={lang} view={draft.data} langSwitch={langSwitch} />;
+  return (
+    <DraftEditor
+      key={`${draft.data.promptId}-${lang}`} accountId={accountId} lineId={lineId} lang={lang}
+      view={draft.data} other={other.data ?? null} langSwitch={langSwitch}
+    />
+  );
 }
 
-function DraftEditor({ accountId, lineId, lang, view, langSwitch }: {
-  accountId: number; lineId?: number; lang: PromptLang; view: DraftView; langSwitch: React.ReactNode;
+function DraftEditor({ accountId, lineId, lang, view, other, langSwitch }: {
+  accountId: number; lineId?: number; lang: PromptLang; view: DraftView;
+  /** The other language's draft (not on screen), or null when it has no prompt row or is loading. */
+  other: DraftView | null;
+  langSwitch: React.ReactNode;
 }) {
   const { t } = useVoiceT();
   const { t: tc } = useTranslation("voiceCoach");
@@ -86,16 +98,22 @@ function DraftEditor({ accountId, lineId, lang, view, langSwitch }: {
   const [confirm, setConfirm] = useState<{ kind: "save" | "discard"; at: "top" | "actions" } | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ text: string; bad: boolean; at: "top" | "actions" } | null>(null);
-  const state = useAutosave(text, view.draftText, (next) => saveElevenDraft(accountId, lang, next).then(Boolean));
+  // The last text the autosave sent: its own answer is never "a change from outside".
+  const sentRef = useRef<string | null>(null);
+  const state = useAutosave(text, view.draftText, (next) => {
+    sentRef.current = next;
+    return saveElevenDraft(accountId, lang, next).then(Boolean);
+  });
 
   // The server draft moves without this editor (a card accepted, a discard, Save to live):
-  // follow it unless something was typed here since the last server text.
+  // follow it unless something was typed here since the last server text. An answer to our
+  // own save is skipped: an edit made while that save was in flight (a deletion) must stay.
   const textRef = useRef(text);
   textRef.current = text;
   const seen = useRef(view.draftText);
   useEffect(() => {
     const next = view.draftText;
-    if (next !== seen.current && textRef.current === seen.current) {
+    if (next !== seen.current && next !== sentRef.current && textRef.current === seen.current) {
       setText(next);
       setRev((r) => r + 1);
     }
@@ -104,7 +122,13 @@ function DraftEditor({ accountId, lineId, lang, view, langSwitch }: {
 
   const counts = useMemo(() => diffCounts(lineDiff(view.liveText, text)), [view.liveText, text]);
   const differs = text !== view.liveText;
-  const canSave = view.hasDraft && differs;
+  const otherLang: PromptLang = lang === "nl" ? "en" : "nl";
+  const otherDiffers = !!other && other.draftText !== other.liveText;
+  // Unsaved screen text is fine: syncDraft puts it in the draft before saving.
+  const canSave = differs || otherDiffers;
+  const canDiscard = view.hasDraft || !!other?.hasDraft;
+  const langName = (l: PromptLang) => tc(`draft.lang.${l}`);
+  const movedLangs = [view.liveMoved && lang, other?.liveMoved && otherLang].filter((l): l is PromptLang => !!l);
 
   const replaceText = (next: string) => { setText(next); setRev((r) => r + 1); setMode("edit"); };
 
@@ -140,6 +164,15 @@ function DraftEditor({ accountId, lineId, lang, view, langSwitch }: {
   const run = async (kind: "save" | "discard", at: "top" | "actions") => {
     setBusy(true);
     setMessage(null);
+    try {
+      setMessage({ ...(await perform(kind)), at });
+    } finally {
+      setConfirm(null);
+      setBusy(false);
+    }
+  };
+
+  const perform = async (kind: "save" | "discard"): Promise<{ text: string; bad: boolean }> => {
     let result: { text: string; bad: boolean };
     if (kind === "discard") {
       // No save still in flight may land after the delete and bring the draft back.
@@ -155,15 +188,13 @@ function DraftEditor({ accountId, lineId, lang, view, langSwitch }: {
       const r = await actions.saveToLive();
       result = !r.ok ? { text: tc("draft.saveFailed"), bad: true } : { text: tc(r.saved ? "draft.saved" : "draft.savedNone"), bad: false };
     }
-    setConfirm(null);
-    setMessage({ ...result, at });
-    setBusy(false);
+    return result;
   };
 
-  const liveMovedNote = (where: "top" | "actions") => view.liveMoved && (
+  const liveMovedNote = (where: "top" | "actions") => movedLangs.length > 0 && (
     <div className="neu-inset-crisp" role={where === "top" ? "alert" : undefined} style={NOTE_STYLE} data-testid={`voice-draft-live-moved-${where}`}>
       <AlertTriangle size={14} style={{ color: "var(--stage-lost)", flexShrink: 0, marginTop: 2 }} />
-      <span>{tc("draft.liveMoved")}</span>
+      <span>{movedLangs.length > 1 ? tc("draft.liveMovedBoth") : tc("draft.liveMoved", { lang: langName(movedLangs[0]) })}</span>
     </div>
   );
 
@@ -191,7 +222,7 @@ function DraftEditor({ accountId, lineId, lang, view, langSwitch }: {
         <Info size={14} style={{ color: "var(--mute)", flexShrink: 0, marginTop: 2 }} />
         <span>{tc("draft.notice")}</span>
       </div>
-      {view.liveMoved && (
+      {movedLangs.length > 0 && (
         <div style={{ marginBottom: 12 }}>
           {liveMovedNote("top")}
           {confirm?.at === "top" ? confirmRow(confirm.kind, "top") : (
@@ -240,6 +271,9 @@ function DraftEditor({ accountId, lineId, lang, view, langSwitch }: {
       <div style={{ marginTop: 14 }} data-testid="voice-draft-actions">
         {/* Save overwrites a live text that changed since the draft started: say so right here too. */}
         {liveMovedNote("actions")}
+        {otherDiffers && (
+          <p style={{ ...helpStyle, margin: "0 0 8px" }} data-testid="voice-draft-other-changed">{tc("draft.otherChanged", { lang: langName(otherLang) })}</p>
+        )}
         {confirm?.at === "actions" ? confirmRow(confirm.kind, "actions") : (
           <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
             <button
@@ -249,7 +283,7 @@ function DraftEditor({ accountId, lineId, lang, view, langSwitch }: {
               <Upload size={13} />{tc("draft.saveToLive")}
             </button>
             <button
-              type="button" className="la-btn la-btn--soft" style={BTN_STYLE} disabled={!view.hasDraft || busy}
+              type="button" className="la-btn la-btn--soft" style={BTN_STYLE} disabled={!canDiscard || busy}
               onClick={() => ask("discard", "actions")} data-testid="voice-draft-discard"
             >
               <Trash2 size={13} />{tc("draft.discard")}

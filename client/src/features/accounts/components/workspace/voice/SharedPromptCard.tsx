@@ -60,17 +60,11 @@ export function FilledIn({ segments }: { segments: Segment[] }) {
   );
 }
 
-export function SharedPromptCard({ card, kind, accountId, lineId, approx, sharedText, icon, title, help, notice, row, onSave }: {
+export function SharedPromptCard({ card, kind, accountId, icon, title, help, notice, row, onSave }: {
   card: VoiceCard;
-  /** Which voice prompt this is, for the engine's preview. */
-  kind: "layer" | "backend" | "eleven";
+  /** Which GPT-Live prompt this is, for the engine's preview (the ElevenLabs one is coach/ElevenDraftCard). */
+  kind: "layer" | "backend";
   accountId: number;
-  /** kind "eleven": the line the preview is rendered for. */
-  lineId?: number;
-  /** The token count is an estimate (ElevenLabs does not use the GPT tokenizer). */
-  approx?: boolean;
-  /** Replaces the default "shared by every client line" sentence. */
-  sharedText?: string;
   icon: React.ReactNode;
   title: string;
   help: string;
@@ -96,7 +90,7 @@ export function SharedPromptCard({ card, kind, accountId, lineId, approx, shared
       const res = await apiFetch("/api/voice-prompts/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, accountId, lineId, text }),
+        body: JSON.stringify({ kind, accountId, text }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok || typeof body.text !== "string") throw new Error();
@@ -142,7 +136,7 @@ export function SharedPromptCard({ card, kind, accountId, lineId, approx, shared
       >
         <AlertTriangle size={14} style={{ color: "var(--stage-contacted)", flexShrink: 0, marginTop: 2 }} />
         <span>
-          {sharedText ?? t("prompt.shared", { useCase: row.useCase })}{" "}
+          {t("prompt.shared", { useCase: row.useCase })}{" "}
           <Link href="/platform/prompt-library" style={{ color: "var(--wine)" }}>{t("prompt.history", { id: row.id })}</Link>
         </span>
       </div>
@@ -159,7 +153,7 @@ export function SharedPromptCard({ card, kind, accountId, lineId, approx, shared
           <PromptCodeEditor key={`${row.id}-${rev}`} initialValue={text} fontSize={13} onChange={setText} />
         </div>
       )}
-      <PromptCounts text={text} resolve={{ kind, accountId, lineId }} approx={approx} />
+      <PromptCounts text={text} resolve={{ kind, accountId }} />
     </VoiceCardShell>
   );
 }

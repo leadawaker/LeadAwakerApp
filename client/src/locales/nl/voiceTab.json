@@ -780,8 +780,7 @@
     "eleven": {
       "title": "ElevenLabs stemprompt",
       "help": "De prompt die ElevenLabs bij elk gesprek op deze lijn krijgt.",
-      "syntax": "{name} wordt ingevuld uit de instellingen; een regel die met {?flag} begint blijft alleen staan als die instelling aan staat; de benoemde blokken ({person}, {callback_policy}, ...) worden uit de instellingen gevuld.",
-      "shared": "Gedeeld door elke ElevenLabs-lijn in deze taal. Een wijziging hier geldt bij hun volgende gesprek."
+      "syntax": "{name} wordt ingevuld uit de instellingen; een regel die met {?flag} begint blijft alleen staan als die instelling aan staat; de benoemde blokken ({person}, {callback_policy}, ...) worden uit de instellingen gevuld."
     }
   }
 }

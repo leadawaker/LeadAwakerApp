@@ -46,7 +46,7 @@ export function DraftVersions({ promptId, onRestore }: { promptId: number; onRes
     <div style={{ marginBottom: 12 }} data-testid="voice-draft-versions">
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
         <button
-          type="button" className={open ? "la-btn la-btn--wine" : "la-btn la-btn--soft"} style={BTN_STYLE}
+          type="button" className={`la-btn la-btn--soft${open ? " on" : ""}`} style={BTN_STYLE}
           disabled={loading} onClick={() => void toggle()} aria-expanded={open} data-testid="voice-draft-history"
         >
           {loading ? <Loader2 size={13} className="animate-spin" /> : <History size={13} />}{t("versions.history")}

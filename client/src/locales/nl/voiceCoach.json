@@ -6,7 +6,9 @@
       "en": "EN"
     },
     "notice": "Gedeeld door elke ElevenLabs-lijn in deze taal. Je wijzigingen gaan naar een concept: gesprekken horen daar niets van tot je op Live zetten drukt.",
-    "liveMoved": "De live prompt is veranderd nadat dit concept begon. Live zetten vervangt die nieuwere tekst (die blijft als versie bewaard in de geschiedenis).",
+    "liveMoved": "De live {{lang}}-prompt is veranderd nadat dit concept begon. Live zetten vervangt die nieuwere tekst (die blijft als versie bewaard in de geschiedenis).",
+    "liveMovedBoth": "De live NL- en EN-prompt zijn allebei veranderd nadat de concepten begonnen. Live zetten vervangt die nieuwere teksten (die blijven als versie bewaard in de geschiedenis).",
+    "otherChanged": "Ook gewijzigd in {{lang}}: Live zetten zet beide talen live.",
     "startOver": "Opnieuw beginnen vanaf live",
     "missing": "Er is nog geen ElevenLabs-prompt in deze taal.",
     "viewLabel": "Weergave",
