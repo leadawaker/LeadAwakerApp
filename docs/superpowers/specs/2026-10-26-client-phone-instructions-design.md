@@ -37,19 +37,37 @@ prompt.
    - **All clients**: the shared prompt (find/replace on the NL and EN rows, as today).
    - **Only this client**: the account's client instructions.
    - **Knowledge**: an account knowledge base entry (edit an entry or add one).
-   - **Setting**: a change to an account setting (for example an intake question). A note only.
+   - **Setting**: a change to an account setting (for example an intake question). Accept writes it
+     (whitelisted settings only, with Undo).
 3. **Knowledge base history with a rewind.** Every change to a knowledge base entry made through the CRM
    keeps the previous text, and any earlier version can be restored.
 4. The rules document (`server/voice/elevenPromptRules.md`) gains a section on how to pick where a change
    belongs, used by the review, the coach and the two skills.
+5. **Remove the unused "extra instructions" field** (Gabriel, 2026-10-26: "it isn't used for anything").
+   No account has any text in it. Remove the Voice tab card (`PromptSection.tsx` `promptExtra`), the
+   `extraInstructions` patch field and its read in `server/storage/voiceLines.ts` / `routes/voice-line.ts`
+   / `voiceApi.ts`, and the engine reads (`client_setup.py:222`, `client_setup_slots.py:170`). The
+   template engine keeps knowing the `extra` mark and flag (always empty) so the live shared rows, which
+   still contain `{?extra}` lines, never show braces; those dead lines can go later through a normal draft.
+6. **Review a period that matches a prompt version.** The date picker gets a one-click "since the last
+   Save to live" start (the latest `Prompt_Versions` save of the shared rows or this account's client row),
+   because calls do not record which prompt they ran on and a review across a big change mixes two prompts.
+7. **The review knows what changed.** The review prompt gets the list of prompt saves (shared and client,
+   with dates and the titles of the cards that went live with them) and knowledge or setting cards
+   accepted in or before the period, so it can say whether a change helped and does not propose it again.
+8. **Show the reach of a shared change.** "All clients" cards and the Save to live button say how many
+   ElevenLabs lines read the shared prompt (today 1). Cheap, and it keeps the shared risk visible once
+   there are more clients.
 
 ## Non-goals
 
 - Per-client copies of the whole shared prompt. Copies drift apart and a fix to one never reaches the
   others. Anti-goal: anything that lets two clients' prompts diverge silently.
 - GPT Live and Grok lines. Their "extra instructions" field stays as it is.
-- Applying setting changes from a card. A setting card is a note that names the setting and the new value;
-  Gabriel changes it himself in the Voice tab.
+- Settings outside the whitelist below (hours, transfer number, voice, live switch, follow-up, number)
+  are never written by a card: for those a setting card stays a note.
+- A per-niche layer (rules for every car dealer). Not needed with one client; the card scope is a list of
+  kinds so a "niche" kind can be added later.
 - Automatic changes of any kind. Gabriel accepts or rejects every card, and nothing reaches the shared or
   client prompt without his Save to live.
 - A per-language client text. One client instruction text per account (see below).
@@ -62,6 +80,9 @@ prompt.
 - Knowledge cards can do both: Accept writes the knowledge base entry straight away (no draft, since chat
   reads it too), and the card also shows the text so it can be copied by hand. Because Accept writes live,
   there must be a rewind (Gabriel asked for one).
+- Setting cards can be applied too, not only copied (Gabriel, 2026-10-26: "I would really like the power to
+  set the card also").
+- Remove GPT Live's unused "extra instructions" field.
 
 ### My calls (Claude), for Gabriel to check
 
@@ -111,9 +132,14 @@ prompt.
 8. **Client card operations.** Find/replace on the client text like shared cards, plus an "add" operation
    (append a new rule) so a card works when the client text is empty or the rule is new. Accepted client
    cards go into the client draft; Save to live promotes them.
-9. **Setting cards.** Fields: which setting (free text naming it, for example "Intake questions"), the
-   suggested change, the reason, the evidence calls. Actions: Done (Gabriel made the change) and Reject.
-   No automatic write.
+9. **Setting cards.** A setting card names one whitelisted setting and its full new value, typed so the
+   server can validate it with the same rules as the Voice tab's own save (`VoiceLinePatch`):
+   greeting, intake questions, pronunciation list, after-hours behaviour, and the screening switches.
+   The card shows the old and new value. Accept writes it through the existing voice line save, live at
+   once like a Voice tab edit (no draft), stores the previous value on the card, and offers Undo (which
+   asks before overwriting when the setting changed again since). Reject as usual. A proposal for any other
+   setting is shown as a note with Done / Reject. The card checks on Accept that the old value still
+   matches; if not it is stale, like a prompt card.
 10. **Draft card.** The ElevenLabs draft card (today: NL and EN tabs) gets a third tab for the client text,
     labeled with the account's name. Save to live saves the shared drafts and this account's client draft
     (never another account's). Discard drops the shared drafts and this account's client draft together.
@@ -134,10 +160,13 @@ prompt.
 
 ## Where things show in the Voice tab
 
-- **Draft card**: tabs NL, EN, and the client (for example "Robben"). Version history per tab.
+- **Draft card**: tabs NL, EN, and the client (for example "Robben"). Version history per tab. The client
+  tab shows a character counter with a soft cap (the builder picks it, around 3,000 characters): every
+  client rule makes the prompt longer, and it is already above ElevenLabs' advised size.
 - **Improve the prompt card** (folded rows, unchanged layout): each change card shows a scope pill:
   "All clients", "Only Robben", "Knowledge", "Setting". Knowledge cards show the entry title and the diff
-  (or the new entry), and after Accept an Undo. Setting cards show Done / Reject instead of Accept / Reject.
+  (or the new entry), and after Accept an Undo. Setting cards show old and new value, Accept / Reject and
+  then Undo (a note-only setting card shows Done / Reject).
 - **Knowledge section**: History per entry with Restore.
 
 ## Constraints
