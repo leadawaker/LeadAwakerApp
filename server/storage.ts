@@ -29,6 +29,7 @@ import { voiceStatsStorage } from "./storage/voiceStats";
 import { voiceAccountPromptsStorage } from "./storage/voiceAccountPrompts";
 import { voicePromptDraftsStorage } from "./storage/voicePromptDrafts";
 import { voiceReviewsStorage } from "./storage/voiceReviews";
+import { voiceCoachStorage } from "./storage/voiceCoach";
 import { siteVisitsStorage } from "./storage/siteVisits";
 import { whatsappSendersStorage } from "./storage/whatsappSenders";
 import { clientAlertsStorage } from "./storage/clientAlerts";
@@ -117,6 +118,7 @@ export const storage = {
   ...voiceAccountPromptsStorage,
   ...voicePromptDraftsStorage,
   ...voiceReviewsStorage,
+  ...voiceCoachStorage,
   ...siteVisitsStorage,
   ...whatsappSendersStorage,
   ...clientAlertsStorage,

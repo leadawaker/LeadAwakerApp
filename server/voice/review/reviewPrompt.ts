@@ -57,6 +57,22 @@ export function clipTranscript(turns: TranscriptTurn[], maxChars: number): Trans
 
 const strings = { type: "array", items: { type: "string" } };
 
+/** One proposed find and replace edit: the review and the prompt coach answer with the same shape. */
+export const PROPOSAL_ITEM_SCHEMA = {
+  type: "object", additionalProperties: false,
+  required: ["language", "title", "reason", "find", "replace", "mirrorFind", "mirrorReplace", "callIds"],
+  properties: {
+    language: { type: "string", enum: ["nl", "en"] },
+    title: { type: "string" },
+    reason: { type: "string" },
+    find: { type: "string" },
+    replace: { type: "string" },
+    mirrorFind: { type: ["string", "null"] },
+    mirrorReplace: { type: ["string", "null"] },
+    callIds: strings,
+  },
+};
+
 export const REVIEW_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -79,23 +95,7 @@ export const REVIEW_SCHEMA = {
       },
     },
     knowledgeBase: { type: "array", maxItems: 3, items: { type: "string" } },
-    proposals: {
-      type: "array", maxItems: MAX_PROPOSALS,
-      items: {
-        type: "object", additionalProperties: false,
-        required: ["language", "title", "reason", "find", "replace", "mirrorFind", "mirrorReplace", "callIds"],
-        properties: {
-          language: { type: "string", enum: ["nl", "en"] },
-          title: { type: "string" },
-          reason: { type: "string" },
-          find: { type: "string" },
-          replace: { type: "string" },
-          mirrorFind: { type: ["string", "null"] },
-          mirrorReplace: { type: ["string", "null"] },
-          callIds: strings,
-        },
-      },
-    },
+    proposals: { type: "array", maxItems: MAX_PROPOSALS, items: PROPOSAL_ITEM_SCHEMA },
   },
 };
 
@@ -126,7 +126,7 @@ const amsterdamParts = new Intl.DateTimeFormat("en-US", {
 });
 
 /** "YYYY-MM-DD HH:mm" in Europe/Amsterdam; the input unchanged when it is not a date. */
-function amsterdamTime(iso: string): string {
+export function amsterdamTime(iso: string): string {
   const at = new Date(iso);
   if (Number.isNaN(at.getTime())) return iso;
   const p: Record<string, string> = {};
@@ -134,7 +134,7 @@ function amsterdamTime(iso: string): string {
   return `${p.year}-${pad(Number(p.month))}-${pad(Number(p.day))} ${pad(Number(p.hour))}:${pad(Number(p.minute))}`;
 }
 
-const section = (title: string, body: string) => `## ${title}\n${body}`;
+export const section = (title: string, body: string) => `## ${title}\n${body}`;
 
 function previousSection(prev: ReviewDto | null): string {
   const r = prev?.report;
@@ -143,14 +143,17 @@ function previousSection(prev: ReviewDto | null): string {
   return `Period ${prev.periodStart} to ${prev.periodEnd}\nSummary: ${r.summary}\nComparison: ${r.comparison}\nProblems:\n${problems}`;
 }
 
+/** One "Caller:" or "Agent:" line per turn. */
+export function transcriptText(turns: TranscriptTurn[]): string {
+  return turns.map((t) => `${t.role === "caller" ? "Caller" : "Agent"}: ${t.text}`).join("\n");
+}
+
 function callBlock(c: ReviewCallForPrompt): string {
   const latency = c.latencyMs == null ? "unknown" : `${c.latencyMs} ms (p90 ${c.latencyP90Ms ?? "unknown"} ms)`;
   const tools = c.tools.length
     ? c.tools.map((t) => `  - ${t.tool} [${t.status ?? "no status"}]${t.error ? ` error: ${t.error}` : ""} ${t.args}`.trimEnd()).join("\n")
     : "  none";
-  const transcript = c.transcript
-    ? c.transcript.map((t) => `${t.role === "caller" ? "Caller" : "Agent"}: ${t.text}`).join("\n")
-    : "(transcript not included)";
+  const transcript = c.transcript ? transcriptText(c.transcript) : "(transcript not included)";
   return [
     `### ${c.callId}`,
     `Start: ${amsterdamTime(c.startedAt)} (Europe/Amsterdam)`,
@@ -200,7 +203,7 @@ const str = (v: unknown): v is string => typeof v === "string";
 class BadShape extends Error {}
 const need = <T>(v: T | undefined): T => { if (v === undefined) throw new BadShape(); return v; };
 
-const clip = (s: string, max: number) => cleanCopy(s).slice(0, max).trimEnd();
+export const clip = (s: string, max: number) => cleanCopy(s).slice(0, max).trimEnd();
 
 /** Em dashes become commas like cleanCopy, but the text keeps the whitespace it started and ended with. */
 function cleanKeepEdges(s: string): string {
@@ -236,6 +239,24 @@ function readProposal(o: Record<string, unknown>): ProposalInput {
   };
 }
 
+/**
+ * The valid proposal items of a model answer (the first MAX_PROPOSALS). A malformed item is skipped and
+ * counted in `dropped`, never the reason to lose the whole answer.
+ */
+export function readProposals(items: unknown[]): { proposals: ProposalInput[]; dropped: number } {
+  const proposals: ProposalInput[] = [];
+  let dropped = 0;
+  for (const item of items.slice(0, MAX_PROPOSALS)) {
+    try {
+      proposals.push(readProposal(need(isObject(item) ? item : undefined)));
+    } catch (err) {
+      if (!(err instanceof BadShape)) throw err;
+      dropped++;
+    }
+  }
+  return { proposals, dropped };
+}
+
 /** Parse the model's JSON answer. Text fields are cleaned of em dashes and cut to their limits. */
 export function parseReviewAnswer(text: string): ParsedReview {
   const json = extractJsonObject(text);
@@ -260,17 +281,9 @@ export function parseReviewAnswer(text: string): ParsedReview {
         .slice(0, MAX_KNOWLEDGE_ITEMS).map((k) => clip(k, 300)),
       droppedProposals: 0,
     };
-    // A malformed proposal is skipped and counted, never the reason to lose the whole report.
     if (!Array.isArray(o.proposals)) throw new BadShape();
-    const proposals: ProposalInput[] = [];
-    for (const item of o.proposals.slice(0, MAX_PROPOSALS)) {
-      try {
-        proposals.push(readProposal(need(isObject(item) ? item : undefined)));
-      } catch (err) {
-        if (!(err instanceof BadShape)) throw err;
-        report.droppedProposals++;
-      }
-    }
+    const { proposals, dropped } = readProposals(o.proposals);
+    report.droppedProposals = dropped;
     return { ok: true, report, proposals };
   } catch (err) {
     if (err instanceof BadShape) return { ok: false, reason: "bad_shape" };
