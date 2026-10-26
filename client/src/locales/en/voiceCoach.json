@@ -48,25 +48,23 @@
     "restored": "v{{v}} is in the draft now. Live does not change until you save to live."
   },
   "review": {
-    "title": "Weekly review",
-    "help": "Every Monday at 07:00 (Amsterdam time) the phone calls of the week before are reviewed. Run now reviews the last 7 days. The prompt changes it proposes show up as cards below.",
-    "runNow": "Run now",
+    "title": "Call review",
+    "help": "Pick the days to review, up to 92. Phone calls count; browser test calls only when you tick the box. The changes it proposes show up under Suggested changes.",
     "running": "Reviewing the calls. This takes a few minutes.",
     "busy": "A review is already running",
     "startFailed": "Could not start the review. Try again.",
     "loadFailed": "Could not load the reviews. Try again later.",
-    "empty": "No reviews yet. The first one runs on Monday, or press Run now.",
+    "empty": "No reviews yet. Pick the days and press Review these days.",
     "picker": "Stored reviews",
     "weekLabel": "Week {{week}}, {{from}} to {{to}}",
     "rangeLabel": "{{from}} to {{to}}",
-    "manualLabel": "Last 7 days, run {{date}}",
     "status": {
       "running": "running",
       "failed": "failed"
     },
     "failed": "The review failed: {{error}}",
-    "failedUnknown": "The review failed. Try again with Run now.",
-    "stalled": "The review was cut off before it finished. Run it again with Run now.",
+    "failedUnknown": "The review failed. Try again.",
+    "stalled": "The review was cut off before it finished. Run it again.",
     "seconds": "{{value}} s",
     "figures": {
       "calls": "Calls",
@@ -80,11 +78,23 @@
     "worstCalls": "Worst calls",
     "knowledgeBase": "Knowledge base",
     "dropped_one": "{{count}} proposal was dropped",
-    "dropped_other": "{{count}} proposals were dropped"
+    "dropped_other": "{{count}} proposals were dropped",
+    "run": "Review these days",
+    "callCount_one": "{{count}} call",
+    "callCount_other": "{{count}} calls",
+    "range": {
+      "from": "From",
+      "to": "To",
+      "order": "The first day is after the last day.",
+      "too_long": "Pick at most {{max}} days.",
+      "invalid": "Those days cannot be reviewed. Check the dates.",
+      "withTests": "Also count browser test calls"
+    },
+    "withTestsTag": "with tests"
   },
   "cards": {
     "title": "Suggested changes",
-    "help": "Each card changes one piece of the shared prompt. Accepting it puts the edit in the draft below. Nothing goes live until you press Save to live.",
+    "help": "Each card changes one piece of the shared prompt. Accepting it puts the edit in the draft above. Nothing goes live until you press Save to live.",
     "tabsLabel": "Show changes",
     "tabs": {
       "open": "Open",
@@ -92,7 +102,7 @@
       "done": "Done"
     },
     "empty": {
-      "open": "No open changes. New ones come from the weekly review or from the coach.",
+      "open": "No open changes. New ones come from a call review or from the coach.",
       "accepted": "Nothing accepted yet. Accepted changes wait in the draft until you save to live.",
       "done": "Nothing live or rejected yet."
     },
@@ -120,7 +130,9 @@
     "note": {
       "decided": "This change was already decided. The list is refreshed.",
       "failed": "That did not work. Try again."
-    }
+    },
+    "openCount_one": "{{count}} open",
+    "openCount_other": "{{count}} open"
   },
   "coach": {
     "title": "Prompt coach",
@@ -150,5 +162,8 @@
     "cancel": "Cancel",
     "loadFailed": "Could not load the prompt. Try again later.",
     "openCall": "Open call {{id}}"
+  },
+  "improve": {
+    "title": "Improve the prompt"
   }
 }

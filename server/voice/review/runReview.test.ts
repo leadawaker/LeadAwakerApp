@@ -273,3 +273,17 @@ test("runReview does not clear cards for a period with no calls", async () => {
   assert.equal(await runReview(deps, job), "done");
   assert.equal(log.cleared.length, 0);
 });
+
+test("a review with browser tests asks the store for them and says so in its stats", async () => {
+  const asked: boolean[] = [];
+  const { deps, log } = setup({ store: { listCalls: async (_a, _s, _e, w) => { asked.push(w); return [call("el_t1")]; } } });
+  assert.equal(await runReview(deps, { ...job, withTests: true }), "done");
+  assert.deepEqual(asked, [true]);
+  assert.equal(log.finished[0].stats.withTests, true);
+  assert.ok(log.aiCalls[0].user.includes("browser test calls"));
+
+  const plain = setup({ store: { listCalls: async (_a, _s, _e, w) => { asked.push(w); return []; } } });
+  await runReview(plain.deps, job);
+  assert.equal(asked[1], false);
+  assert.equal(plain.log.finished[0].stats.withTests, undefined);
+});

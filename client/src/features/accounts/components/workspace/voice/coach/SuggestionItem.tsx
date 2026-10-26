@@ -1,6 +1,7 @@
 // One change card: what to change in the shared ElevenLabs prompt and why, the edit as a
 // diff, the calls that show the problem, and Accept / Reject while it is open. Accepting
-// puts the edit in the draft (the draft card below follows); nothing goes live from here.
+// puts the edit in the draft (the draft card follows); nothing goes live from here.
+// In the change list it is folded to its title and status (`folded`); in the coach it is open.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AlertTriangle, Check, ChevronDown, ChevronRight, Loader2, X } from "lucide-react";
@@ -10,6 +11,7 @@ import { flushAllAutosaves } from "../autosaveRegistry";
 import { useSuggestionActions } from "./coachApi";
 import { CallChip } from "./CallChip";
 import { DraftDiff } from "./DraftDiff";
+import { Fold } from "./Fold";
 
 const PILL_STYLE = { fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0.1em", textTransform: "uppercase", fontWeight: 700 } as const;
 const BTN_STYLE = { minHeight: 36 } as const;
@@ -21,7 +23,7 @@ const COMPACT_DIFF_HEIGHT = 140;
 
 type Note = "stale" | "decided" | "failed";
 
-export function SuggestionItem({ card, accountId, compact }: { card: SuggestionDto; accountId: number; compact?: boolean }) {
+export function SuggestionItem({ card, accountId, compact, folded }: { card: SuggestionDto; accountId: number; compact?: boolean; folded?: boolean }) {
   const { t } = useTranslation("voiceCoach");
   const actions = useSuggestionActions(accountId);
   const [busy, setBusy] = useState<"accept" | "reject" | null>(null);
@@ -48,17 +50,13 @@ export function SuggestionItem({ card, accountId, compact }: { card: SuggestionD
     }
   };
 
-  return (
-    <div
-      className="neu-inset-crisp"
-      style={{ borderRadius: "var(--r-card)", padding: compact ? 12 : 14, display: "flex", flexDirection: "column", gap: compact ? 8 : 10, minWidth: 0 }}
-      data-testid="voice-suggestion" data-status={card.status}
-    >
-      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", lineHeight: 1.3, overflowWrap: "anywhere" }}>{card.title}</div>
+  const shownStatus = stale ? "stale" : card.status;
+  const details = (
+    <>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
         <Pill style={PILL_STYLE}>{t(`draft.lang.${card.language}`)}</Pill>
         {!compact && <Pill style={PILL_STYLE}>{t(`cards.source.${card.source}`)}</Pill>}
-        <Pill color={STATUS_COLOR[stale ? "stale" : card.status]} style={PILL_STYLE} data-testid="voice-suggestion-status">{t(`cards.status.${stale ? "stale" : card.status}`)}</Pill>
+        <Pill color={STATUS_COLOR[shownStatus]} style={PILL_STYLE} data-testid="voice-suggestion-status">{t(`cards.status.${shownStatus}`)}</Pill>
       </div>
       <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--ink-soft)", overflowWrap: "anywhere" }}>{card.reason}</p>
 
@@ -79,7 +77,7 @@ export function SuggestionItem({ card, accountId, compact }: { card: SuggestionD
       {card.callIds.length > 0 && (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
           <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)" }}>{t("cards.calls")}</span>
-          {card.callIds.map((id) => <CallChip key={id} callId={id} />)}
+          {card.callIds.map((id) => <CallChip key={id} accountId={accountId} callId={id} />)}
         </div>
       )}
 
@@ -112,6 +110,26 @@ export function SuggestionItem({ card, accountId, compact }: { card: SuggestionD
           </button>
         </div>
       )}
+    </>
+  );
+
+  if (folded) {
+    return (
+      <div data-testid="voice-suggestion" data-status={card.status}>
+        <Fold size="item" title={card.title} note={t(`cards.status.${shownStatus}`)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }}>{details}</div>
+        </Fold>
+      </div>
+    );
+  }
+  return (
+    <div
+      className="neu-inset-crisp"
+      style={{ borderRadius: "var(--r-card)", padding: compact ? 12 : 14, display: "flex", flexDirection: "column", gap: compact ? 8 : 10, minWidth: 0 }}
+      data-testid="voice-suggestion" data-status={card.status}
+    >
+      <div style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", lineHeight: 1.3, overflowWrap: "anywhere" }}>{card.title}</div>
+      {details}
     </div>
   );
 }

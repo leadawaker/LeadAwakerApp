@@ -1,11 +1,11 @@
 // Client side of the voice call review and prompt coach (Owner only): the ElevenLabs
-// prompt draft, the change cards, the weekly reviews and the coach chat.
+// prompt draft, the change cards, the call reviews and the coach chat.
 // Server: server/routes/voicePromptDrafts.ts, voiceReviews.ts, voiceCoach.ts.
 // Every mutation updates or invalidates the query keys it changes.
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { queryClient as qc } from "@/lib/queryClient";
-import type { CoachMessageDto, DraftView, PromptLang, ReviewDto, SuggestionDto } from "@shared/voiceReview";
+import type { CallLabelDto, CoachMessageDto, DraftView, PromptLang, ReviewDto, SuggestionDto } from "@shared/voiceReview";
 
 const base = (accountId: number) => ["/api/accounts", accountId, "voice"] as const;
 
@@ -13,6 +13,7 @@ export const draftKey = (accountId: number, lang: PromptLang) => [...base(accoun
 export const suggestionsKey = (accountId: number) => [...base(accountId), "suggestions"] as const;
 export const reviewsKey = (accountId: number) => [...base(accountId), "reviews"] as const;
 export const coachKey = (accountId: number) => [...base(accountId), "coach"] as const;
+export const callLabelsKey = (accountId: number) => [...base(accountId), "call-labels"] as const;
 
 const LANGS: PromptLang[] = ["nl", "en"];
 /** The app default never refetches a list on its own: the cards and reviews can change without this page. */
@@ -149,12 +150,26 @@ export function useReviews(accountId: number) {
   });
 }
 
-/** Starts a review of the last 7 days; `busy` when one is already running. */
-export async function runReviewNow(accountId: number): Promise<{ ok: true } | { ok: false; busy: boolean }> {
-  const res = await apiFetch(`/api/accounts/${accountId}/voice/reviews/run`, { method: "POST" }).catch(() => null);
+/** Starts a review of the picked days (YYYY-MM-DD, both included), browser tests counted on `withTests`; `busy` when one is already running. */
+export async function runReviewNow(
+  accountId: number, range: { from: string; to: string; withTests: boolean },
+): Promise<{ ok: true } | { ok: false; busy: boolean; badRange: boolean }> {
+  const res = await apiFetch(`/api/accounts/${accountId}/voice/reviews/run`, {
+    method: "POST", headers: JSON_HEADERS, body: JSON.stringify(range),
+  }).catch(() => null);
   void qc.invalidateQueries({ queryKey: reviewsKey(accountId) });
   if (res?.ok) return { ok: true };
-  return { ok: false, busy: res?.status === 409 };
+  return { ok: false, busy: res?.status === 409, badRange: res?.status === 400 };
+}
+
+/** Who each recent call was with, by call id: the call chips name the caller instead of the id. */
+export function useCallLabels(accountId: number) {
+  return useQuery({
+    queryKey: callLabelsKey(accountId),
+    queryFn: async () => new Map<string, CallLabelDto>((await getJson<CallLabelDto[]>(`/api/accounts/${accountId}/voice/call-labels`)).map((c) => [c.callId, c])),
+    enabled: accountId > 0,
+    staleTime: LIST_STALE_MS,
+  });
 }
 
 // ─── Coach ───────────────────────────────────────────────────────────────────

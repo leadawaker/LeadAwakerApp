@@ -247,3 +247,10 @@ test("parseReviewAnswer keeps a mirror whose replace is an empty string (a delet
   assert.equal(res.proposals[0].mirrorFind, "remove me");
   assert.equal(res.proposals[0].mirrorReplace, "");
 });
+
+test("a review that counts browser tests tells the model so", () => {
+  const base = { accountName: "Robben", periodStart: "a", periodEnd: "b", previous: null, rules: "R", prompts: {}, knowledge: [], rejected: [], calls: [] };
+  const stats = { calls: 0, byOutcome: {}, byEndReason: {}, latencyAvgMs: null, latencyP90Ms: null, costUsd: 0, minutes: 0 };
+  assert.ok(!buildReviewPrompt({ ...base, stats }).user.includes("browser test calls"));
+  assert.ok(buildReviewPrompt({ ...base, stats: { ...stats, withTests: true } }).user.includes("browser test calls"));
+});

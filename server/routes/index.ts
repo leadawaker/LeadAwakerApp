@@ -70,7 +70,6 @@ import { startPublicDemoPoller } from "../publicDemo/poller";
 import { startSocialPublisher } from "../social/publisher";
 import { startSocialTokenRefresher } from "../social/tokenRefresher";
 import { startSocialInsights } from "../social/insightsCollector";
-import { startVoiceReviewScheduler } from "../voice/review/scheduler";
 
 export async function registerRoutes(httpServer: Server, app: Express): Promise<Server> {
   // ── Python engine proxy (/webhook/* → port 8100) ──────────────────────
@@ -175,7 +174,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   startSocialPublisher();           // Instagram: publish due Reels (60s)
   startSocialTokenRefresher();      // Instagram: token refresh + upload cleanup (6h)
   startSocialInsights();            // Instagram: insights snapshots (1h tick; fresh posts hourly, the rest 6h)
-  startVoiceReviewScheduler();      // ElevenLabs weekly call review (1h tick, Monday 07:00 Europe/Amsterdam)
+  // The weekly ElevenLabs call review (voice/review/scheduler.ts) is off: Gabriel runs reviews by hand over a picked period.
 
   return httpServer;
 }

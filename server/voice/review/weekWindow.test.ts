@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { amsterdamToUtc, dueWeek, lastDays } from "./weekWindow";
+import { amsterdamToUtc, dayRange, dueWeek, lastDays } from "./weekWindow";
 
 test("the Monday after DST ended: week 43 is due at 07:00 Amsterdam, window spans the clock change", () => {
   const w = dueWeek(new Date("2026-10-26T06:30:00Z")); // Mon 07:30 CET
@@ -57,4 +57,28 @@ test("lastDays is a plain rolling window ending now", () => {
   assert.equal(l.periodStart.toISOString(), "2026-10-19T12:00:00.000Z");
   assert.equal(l.periodEnd.toISOString(), "2026-10-26T12:00:00.000Z");
   assert.equal(lastDays(new Date("2026-10-26T12:00:00Z"), 3).periodStart.toISOString(), "2026-10-23T12:00:00.000Z");
+});
+
+test("a picked range covers whole Amsterdam days, both ends included", () => {
+  const r = dayRange("2026-10-24", "2026-10-26", new Date("2026-10-26T10:00:00Z"));
+  assert.ok(r.ok);
+  assert.equal(r.periodStart.toISOString(), "2026-10-23T22:00:00.000Z"); // summer time
+  assert.equal(r.periodEnd.toISOString(), "2026-10-26T23:00:00.000Z"); // winter time
+});
+
+test("a single day is a range of one day", () => {
+  const r = dayRange("2026-10-24", "2026-10-24", new Date("2026-10-26T10:00:00Z"));
+  assert.ok(r.ok);
+  assert.equal(r.periodEnd.getTime() - r.periodStart.getTime(), 24 * 3_600_000);
+});
+
+test("bad ranges are refused with a reason", () => {
+  const now = new Date("2026-10-26T10:00:00Z");
+  assert.deepEqual(dayRange("2026-10-26", "2026-10-24", now), { ok: false, reason: "order" });
+  assert.deepEqual(dayRange("2026-02-30", "2026-03-02", now), { ok: false, reason: "invalid" });
+  assert.deepEqual(dayRange("26-10-2026", "2026-10-26", now), { ok: false, reason: "invalid" });
+  assert.deepEqual(dayRange(undefined, "2026-10-26", now), { ok: false, reason: "invalid" });
+  assert.deepEqual(dayRange("2026-10-28", "2026-10-29", now), { ok: false, reason: "future" });
+  assert.deepEqual(dayRange("2026-01-01", "2026-10-26", now), { ok: false, reason: "too_long" });
+  assert.ok(dayRange("2026-07-27", "2026-10-26", now).ok); // 92 days
 });

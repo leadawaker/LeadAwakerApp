@@ -65,3 +65,35 @@ export function dueWeek(now: Date): ReviewWeek {
 export function lastDays(now: Date, days = 7): { periodStart: Date; periodEnd: Date } {
   return { periodStart: new Date(now.getTime() - days * DAY_MS), periodEnd: new Date(now.getTime()) };
 }
+
+/** The longest period one review may cover, in days. */
+export const MAX_RANGE_DAYS = 92;
+const DAY_RE = /^(\d{4})-(\d{2})-(\d{2})$/;
+
+function parseDay(s: unknown): { y: number; month: number; d: number } | null {
+  const m = typeof s === "string" ? DAY_RE.exec(s) : null;
+  if (!m) return null;
+  const [y, month, d] = [Number(m[1]), Number(m[2]), Number(m[3])];
+  const check = new Date(Date.UTC(y, month - 1, d));
+  if (check.getUTCFullYear() !== y || check.getUTCMonth() !== month - 1 || check.getUTCDate() !== d) return null;
+  return { y, month, d };
+}
+
+/**
+ * A picked period of Amsterdam calendar days, both included ("2026-10-24" to "2026-10-26"):
+ * from the first day's 00:00 to the 00:00 after the last day. The first day may not be after
+ * today, and the period is at most MAX_RANGE_DAYS long.
+ */
+export function dayRange(from: unknown, to: unknown, now: Date):
+  { ok: true; periodStart: Date; periodEnd: Date } | { ok: false; reason: "invalid" | "order" | "future" | "too_long" } {
+  const a = parseDay(from);
+  const b = parseDay(to);
+  if (!a || !b) return { ok: false, reason: "invalid" };
+  const days = (Date.UTC(b.y, b.month - 1, b.d) - Date.UTC(a.y, a.month - 1, a.d)) / DAY_MS + 1;
+  if (days < 1) return { ok: false, reason: "order" };
+  if (days > MAX_RANGE_DAYS) return { ok: false, reason: "too_long" };
+  const periodStart = amsterdamToUtc(a.y, a.month, a.d, 0);
+  if (periodStart.getTime() > now.getTime()) return { ok: false, reason: "future" };
+  const end = addDays(b.y, b.month, b.d, 1);
+  return { ok: true, periodStart, periodEnd: amsterdamToUtc(end.y, end.month, end.d, 0) };
+}

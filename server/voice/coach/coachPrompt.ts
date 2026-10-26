@@ -45,7 +45,7 @@ export interface CoachPromptInput {
 
 // ─── Prompt ──────────────────────────────────────────────────────────────────
 
-const TASK = `You are Gabriel's prompt coach for the shared ElevenLabs receptionist prompt of Lead Awaker. Gabriel edits that prompt (a Dutch and an English version) in an editor next to this chat. You see the draft he is editing, the live prompt, the latest weekly call review, an index of the account's phone calls of the last 14 days, and the transcripts of some of those calls.
+const TASK = `You are Gabriel's prompt coach for the shared ElevenLabs receptionist prompt of Lead Awaker. Gabriel edits that prompt (a Dutch and an English version) in an editor next to this chat. You see the draft he is editing, the live prompt, the latest call review, an index of the account's phone calls of the last 14 days, and the transcripts of some of those calls.
 
 How you answer:
 - Answer briefly, in the language Gabriel writes in.
@@ -117,7 +117,7 @@ export function buildCoachPrompt(input: CoachPromptInput): { system: string; use
   const user = [
     section("Editor", `The editor shows the ${label(input.lineLanguage)} prompt.`),
     ...promptSections(input),
-    section("Latest weekly review", reviewSection(input.review)),
+    section("Latest call review", reviewSection(input.review)),
     section("Call index (last 14 days, times in Europe/Amsterdam)", callIndexSection(input.callIndex)),
     section("Call transcripts", transcriptsSection(input.transcripts)),
     section("Conversation so far", historySection(input.history)),

@@ -1,5 +1,5 @@
 /**
- * The weekly voice call review: the prompt for the Claude opus run and the parser for its
+ * The voice call review: the prompt for the Claude opus run and the parser for its
  * JSON answer. Pure (no db), so it is tested without a model. The data comes from
  * server/storage/voiceReviews.ts, the run itself is in the review runner.
  */
@@ -165,6 +165,8 @@ function callBlock(c: ReviewCallForPrompt): string {
   ].join("\n");
 }
 
+const TESTS_NOTE = "These calls include browser test calls: Gabriel or a colleague role-plays a caller to test the receptionist. Judge the receptionist, not the made-up caller, and do not count a test's outcome as a real booking. A test may have run on an unsaved draft of the prompt instead of the live one.";
+
 export function buildReviewPrompt(input: ReviewPromptInput): { system: string; user: string } {
   const knowledge = input.knowledge.length
     ? input.knowledge.map((k) => `### ${k.title}\n${k.content}`).join("\n\n")
@@ -174,7 +176,7 @@ export function buildReviewPrompt(input: ReviewPromptInput): { system: string; u
     : "None";
   const calls = input.calls.length ? input.calls.map(callBlock).join("\n\n") : "(no calls)";
   const user = [
-    section("Account and period", `Account: ${input.accountName}\nPeriod: ${input.periodStart} to ${input.periodEnd}`),
+    section("Account and period", `Account: ${input.accountName}\nPeriod: ${input.periodStart} to ${input.periodEnd}${input.stats.withTests ? `\n${TESTS_NOTE}` : ""}`),
     section("Stats", JSON.stringify(input.stats)),
     section("Previous review", previousSection(input.previous)),
     section("Live prompt NL", input.prompts.nl ?? "(not available)"),

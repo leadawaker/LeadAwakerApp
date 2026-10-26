@@ -11,6 +11,8 @@ export interface ReviewStats {
   latencyP90Ms: number | null;
   costUsd: number;
   minutes: number;
+  /** Browser test calls were counted too (a review run with "include browser tests"). */
+  withTests?: boolean;
 }
 
 export interface ReviewProblem { title: string; detail: string; callIds: string[] }
@@ -24,6 +26,9 @@ export interface ReviewReport {
   knowledgeBase: string[];
   droppedProposals: number;
 }
+
+/** A cited call as the page names it: the lead's name, else the caller's number, and when it started. */
+export interface CallLabelDto { callId: string; startedAt: string; name: string | null; number: string | null }
 
 export interface ReviewDto {
   id: number;

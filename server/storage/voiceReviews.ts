@@ -9,9 +9,9 @@
 import { and, asc, desc, eq, gte, inArray, lt, sql } from "drizzle-orm";
 import { db } from "../db";
 import {
-  accounts, interactions, voiceCallEvents, voiceCalls, voiceReviews, type VoiceReviewRow,
+  accounts, interactions, leads, voiceCallEvents, voiceCalls, voiceReviews, type VoiceReviewRow,
 } from "@shared/schema";
-import type { ReviewDto, ReviewKind, ReviewReport, ReviewStats, ReviewStatus } from "@shared/voiceReview";
+import type { CallLabelDto, ReviewDto, ReviewKind, ReviewReport, ReviewStats, ReviewStatus } from "@shared/voiceReview";
 import type { ReviewCallRow } from "../voice/review/reviewStats";
 import type { ReviewWeek } from "../voice/review/weekWindow";
 import { testAccountIdSql } from "./voiceCallsSql";
@@ -28,17 +28,17 @@ const REVIEW_LOCK_KEY = 4_217_002;
 
 const callOf = sql`${voiceCalls}."call_id"`;
 
-/** This account's ElevenLabs phone calls (not browser tests) that started inside [start, end). */
-const phoneCallsWhere = (start: Date, end: Date) => and(
+/** ElevenLabs phone calls (with `withTests`, browser tests too) that started inside [start, end). */
+const phoneCallsWhere = (start: Date, end: Date, withTests = false) => and(
   sql`left(${callOf}, 3) = 'el_'`,
-  sql`${testAccountIdSql} IS NULL`,
+  withTests ? undefined : sql`${testAccountIdSql} IS NULL`,
   gte(voiceCalls.startedAt, start),
   lt(voiceCalls.startedAt, end),
 );
 
 // ─── Calls ───────────────────────────────────────────────────────────────────
 
-async function listReviewCalls(accountId: number, start: Date, end: Date): Promise<ReviewCallRow[]> {
+async function listReviewCalls(accountId: number, start: Date, end: Date, withTests = false): Promise<ReviewCallRow[]> {
   const rows = await db.select({
     callId: voiceCalls.callId,
     startedAt: voiceCalls.startedAt,
@@ -53,7 +53,7 @@ async function listReviewCalls(accountId: number, start: Date, end: Date): Promi
       WHERE e.call_id = ${callOf} AND e.kind = 'tool' AND (e.error IS NOT NULL OR e.status = 'error')
     )`,
   }).from(voiceCalls)
-    .where(and(eq(voiceCalls.accountsId, accountId), phoneCallsWhere(start, end)))
+    .where(and(eq(voiceCalls.accountsId, accountId), phoneCallsWhere(start, end, withTests)))
     .orderBy(asc(voiceCalls.startedAt), asc(voiceCalls.id));
   return rows.map((r) => ({
     callId: r.callId,
@@ -65,6 +65,34 @@ async function listReviewCalls(accountId: number, start: Date, end: Date): Promi
     latencyMs: r.latencyMs,
     latencyP90Ms: r.latencyP90Ms,
     toolErrors: Number(r.toolErrors) || 0,
+  }));
+}
+
+const LABEL_DAYS = 180;
+const LABEL_LIMIT = 2000;
+
+/** The account's recent ElevenLabs calls (phone and browser) with the lead's name and the caller's number, for the call chips. */
+async function voiceCallLabels(accountId: number): Promise<CallLabelDto[]> {
+  const rows = await db.select({
+    callId: voiceCalls.callId,
+    startedAt: voiceCalls.startedAt,
+    number: voiceCalls.callerNumber,
+    firstName: leads.firstName,
+    lastName: leads.lastName,
+  }).from(voiceCalls)
+    .leftJoin(leads, eq(leads.id, voiceCalls.leadsId))
+    .where(and(
+      eq(voiceCalls.accountsId, accountId),
+      sql`left(${callOf}, 3) = 'el_'`,
+      gte(voiceCalls.startedAt, sql`now() - make_interval(days => ${LABEL_DAYS})`),
+    ))
+    .orderBy(desc(voiceCalls.startedAt))
+    .limit(LABEL_LIMIT);
+  return rows.map((r) => ({
+    callId: r.callId,
+    startedAt: r.startedAt.toISOString(),
+    name: [r.firstName, r.lastName].map((x) => x?.trim()).filter(Boolean).join(" ") || null,
+    number: r.number?.trim() || null,
   }));
 }
 
@@ -254,6 +282,7 @@ async function latestDoneVoiceReview(accountId: number): Promise<ReviewDto | nul
 
 export const voiceReviewsStorage = {
   listReviewCalls,
+  voiceCallLabels,
   accountsWithElevenCalls,
   loadReviewTranscripts,
   loadReviewToolEvents,

@@ -48,25 +48,23 @@
     "restored": "v{{v}} staat nu in het concept. Live verandert pas als je live zet."
   },
   "review": {
-    "title": "Wekelijkse beoordeling",
-    "help": "Elke maandag om 07:00 (Amsterdamse tijd) worden de telefoongesprekken van de week ervoor beoordeeld. Nu uitvoeren beoordeelt de laatste 7 dagen. De wijzigingen in de prompt die daaruit komen staan hieronder als kaarten.",
-    "runNow": "Nu uitvoeren",
+    "title": "Gesprekken beoordelen",
+    "help": "Kies de dagen om te beoordelen, maximaal 92. Telefoongesprekken tellen mee, browsertests alleen als je het vakje aanvinkt. De wijzigingen die eruit komen staan onder Voorgestelde wijzigingen.",
     "running": "De gesprekken worden beoordeeld. Dit duurt een paar minuten.",
     "busy": "Er loopt al een beoordeling",
     "startFailed": "De beoordeling kon niet starten. Probeer het opnieuw.",
     "loadFailed": "De beoordelingen konden niet worden geladen. Probeer het later opnieuw.",
-    "empty": "Nog geen beoordelingen. De eerste draait maandag, of druk op Nu uitvoeren.",
+    "empty": "Nog geen beoordelingen. Kies de dagen en druk op Deze dagen beoordelen.",
     "picker": "Bewaarde beoordelingen",
     "weekLabel": "Week {{week}}, {{from}} t/m {{to}}",
     "rangeLabel": "{{from}} t/m {{to}}",
-    "manualLabel": "Laatste 7 dagen, uitgevoerd {{date}}",
     "status": {
       "running": "bezig",
       "failed": "mislukt"
     },
     "failed": "De beoordeling is mislukt: {{error}}",
-    "failedUnknown": "De beoordeling is mislukt. Probeer het opnieuw met Nu uitvoeren.",
-    "stalled": "De beoordeling is afgebroken voordat ze klaar was. Voer haar opnieuw uit met Nu uitvoeren.",
+    "failedUnknown": "De beoordeling is mislukt. Probeer het opnieuw.",
+    "stalled": "De beoordeling is afgebroken voordat ze klaar was. Voer haar opnieuw uit.",
     "seconds": "{{value}} s",
     "figures": {
       "calls": "Gesprekken",
@@ -80,11 +78,23 @@
     "worstCalls": "Slechtste gesprekken",
     "knowledgeBase": "Kennisbank",
     "dropped_one": "{{count}} voorstel is weggelaten",
-    "dropped_other": "{{count}} voorstellen zijn weggelaten"
+    "dropped_other": "{{count}} voorstellen zijn weggelaten",
+    "run": "Deze dagen beoordelen",
+    "callCount_one": "{{count}} gesprek",
+    "callCount_other": "{{count}} gesprekken",
+    "range": {
+      "from": "Van",
+      "to": "Tot en met",
+      "order": "De eerste dag ligt na de laatste dag.",
+      "too_long": "Kies maximaal {{max}} dagen.",
+      "invalid": "Deze dagen kunnen niet beoordeeld worden. Controleer de datums.",
+      "withTests": "Browsertests ook meetellen"
+    },
+    "withTestsTag": "met tests"
   },
   "cards": {
     "title": "Voorgestelde wijzigingen",
-    "help": "Elke kaart wijzigt één stuk van de gedeelde prompt. Accepteren zet de wijziging in het concept hieronder. Er gaat niets live tot je op Live zetten drukt.",
+    "help": "Elke kaart wijzigt één stuk van de gedeelde prompt. Accepteren zet de wijziging in het concept hierboven. Er gaat niets live tot je op Live zetten drukt.",
     "tabsLabel": "Wijzigingen tonen",
     "tabs": {
       "open": "Open",
@@ -92,7 +102,7 @@
       "done": "Afgerond"
     },
     "empty": {
-      "open": "Geen open wijzigingen. Nieuwe komen uit de wekelijkse beoordeling of van de coach.",
+      "open": "Geen open wijzigingen. Nieuwe komen uit een beoordeling of van de coach.",
       "accepted": "Nog niets geaccepteerd. Geaccepteerde wijzigingen wachten in het concept tot je live zet.",
       "done": "Nog niets live of afgewezen."
     },
@@ -120,7 +130,9 @@
     "note": {
       "decided": "Over deze wijziging is al beslist. De lijst is ververst.",
       "failed": "Dat is niet gelukt. Probeer het opnieuw."
-    }
+    },
+    "openCount_one": "{{count}} open",
+    "openCount_other": "{{count}} open"
   },
   "coach": {
     "title": "Prompt-coach",
@@ -150,5 +162,8 @@
     "cancel": "Annuleren",
     "loadFailed": "De prompt kon niet worden geladen. Probeer het later opnieuw.",
     "openCall": "Gesprek {{id}} openen"
+  },
+  "improve": {
+    "title": "Prompt verbeteren"
   }
 }

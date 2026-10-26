@@ -1,4 +1,5 @@
-// The prompt coach (Voice tab, Prompt & test, Owner only): a chat under the ElevenLabs draft.
+// The prompt coach (Voice tab, Prompt & test, Owner only): a chat under the ElevenLabs draft,
+// folded to its title. The chat mounts when the row is opened, so it scrolls to the newest message.
 // Ask about the calls or the prompt; the coach answers and may attach change cards to its
 // answer, shown inline. It never edits the prompt: a card changes the draft only when
 // Accept is pressed on it (SuggestionItem), and nothing goes live except Save to live.
@@ -8,8 +9,9 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, MessagesSquare, Send } from "lucide-react";
 import type { CoachMessageDto, PromptLang, SuggestionDto } from "@shared/voiceReview";
-import { VoiceCardShell, helpStyle, inputStyle } from "../voiceAtoms";
+import { helpStyle, inputStyle } from "../voiceAtoms";
 import { sendCoachMessage, useCoachMessages, useSuggestions } from "./coachApi";
+import { Fold } from "./Fold";
 import { SuggestionItem } from "./SuggestionItem";
 
 const MESSAGE_MAX = 4000;
@@ -47,7 +49,7 @@ function AssistantMessage({ message, cards, accountId }: { message: CoachMessage
   );
 }
 
-export function CoachPanel({ accountId, lang }: { accountId: number; lang: PromptLang }) {
+function CoachChat({ accountId, lang }: { accountId: number; lang: PromptLang }) {
   const { t } = useTranslation("voiceCoach");
   const coach = useCoachMessages(accountId);
   const suggestions = useSuggestions(accountId);
@@ -103,7 +105,7 @@ export function CoachPanel({ accountId, lang }: { accountId: number; lang: Promp
   const showThread = messages.length > 0 || waiting;
 
   return (
-    <VoiceCardShell card="promptCoach" icon={<MessagesSquare size={17} />} title={t("coach.title")}>
+    <>
       <p style={helpStyle}>{t("coach.help")}</p>
 
       {coach.isLoading && (
@@ -171,6 +173,15 @@ export function CoachPanel({ accountId, lang }: { accountId: number; lang: Promp
           {t("coach.send")}
         </button>
       </div>
-    </VoiceCardShell>
+    </>
+  );
+}
+
+export function CoachPanel({ accountId, lang }: { accountId: number; lang: PromptLang }) {
+  const { t } = useTranslation("voiceCoach");
+  return (
+    <Fold title={t("coach.title")} icon={<MessagesSquare size={15} />} rememberAs={`coach-${accountId}`} testId="voice-coach">
+      <CoachChat accountId={accountId} lang={lang} />
+    </Fold>
   );
 }

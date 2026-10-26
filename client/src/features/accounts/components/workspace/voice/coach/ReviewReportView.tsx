@@ -6,6 +6,7 @@ import { Loader2 } from "lucide-react";
 import type { ReviewDto, ReviewStats } from "@shared/voiceReview";
 import { helpStyle } from "../voiceAtoms";
 import { CallChip } from "./CallChip";
+import { Fold } from "./Fold";
 
 const LABEL_STYLE: React.CSSProperties = {
   fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)",
@@ -77,11 +78,12 @@ export function ReviewReportView({ review }: { review: ReviewDto }) {
       {!!report?.problems.length && (
         <Section title={t("review.problems")}>
           {report.problems.map((p, i) => (
-            <div key={i} style={{ display: "flex", flexDirection: "column", gap: 6 }} data-testid="voice-review-problem">
-              <div style={{ fontSize: 13.5, fontWeight: 700, color: "var(--ink)", overflowWrap: "anywhere" }}>{p.title}</div>
-              <p style={TEXT_STYLE}>{p.detail}</p>
-              {p.callIds.length > 0 && <div style={ROW_STYLE}>{p.callIds.map((id) => <CallChip key={id} callId={id} />)}</div>}
-            </div>
+            <Fold key={i} size="item" title={p.title} testId="voice-review-problem">
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <p style={TEXT_STYLE}>{p.detail}</p>
+                {p.callIds.length > 0 && <div style={ROW_STYLE}>{p.callIds.map((id) => <CallChip key={id} accountId={review.accountId} callId={id} />)}</div>}
+              </div>
+            </Fold>
           ))}
         </Section>
       )}
@@ -90,7 +92,7 @@ export function ReviewReportView({ review }: { review: ReviewDto }) {
         <Section title={t("review.worstCalls")}>
           {report.worstCalls.map((c) => (
             <div key={c.callId} style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }} data-testid="voice-review-worst">
-              <CallChip callId={c.callId} />
+              <CallChip accountId={review.accountId} callId={c.callId} />
               <span style={{ ...TEXT_STYLE, flex: "1 1 220px", minWidth: 0 }}>{c.why}</span>
             </div>
           ))}

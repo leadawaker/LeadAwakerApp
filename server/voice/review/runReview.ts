@@ -21,7 +21,7 @@ import { computeStats, pickTranscriptCalls, type ReviewCallRow } from "./reviewS
 export type AiComplete = typeof import("../../aiTextHelper").claudeJson;
 
 export interface ReviewStore {
-  listCalls(accountId: number, start: Date, end: Date): Promise<ReviewCallRow[]>;
+  listCalls(accountId: number, start: Date, end: Date, withTests: boolean): Promise<ReviewCallRow[]>;
   transcripts(callIds: string[]): Promise<Map<string, TranscriptTurn[]>>;
   toolEvents(callIds: string[]): Promise<Map<string, ToolEventLite[]>>;
   knowledge(accountId: number): Promise<{ title: string; content: string }[]>;
@@ -37,7 +37,8 @@ export interface ReviewStore {
 }
 
 export interface ReviewDeps { ai: AiComplete; rules: () => string; store: ReviewStore }
-export interface ReviewJob { reviewId: number; accountId: number; periodStart: Date; periodEnd: Date }
+/** `withTests`: browser test calls count too (they ran the live prompt, or a draft on "Test draft"). */
+export interface ReviewJob { reviewId: number; accountId: number; periodStart: Date; periodEnd: Date; withTests?: boolean }
 
 const MODEL = "opus";
 const LANGS: PromptLang[] = ["nl", "en"];
@@ -78,8 +79,9 @@ async function execute(deps: ReviewDeps, job: ReviewJob): Promise<"done" | "fail
   const { store } = deps;
   const { reviewId, accountId } = job;
 
-  const calls = await store.listCalls(accountId, job.periodStart, job.periodEnd);
-  const stats = computeStats(calls);
+  const withTests = job.withTests === true;
+  const calls = await store.listCalls(accountId, job.periodStart, job.periodEnd, withTests);
+  const stats: ReviewStats = { ...computeStats(calls), ...(withTests ? { withTests } : {}) };
   if (calls.length === 0) {
     await store.finish(reviewId, { stats, report: noCallsReport(), model: null });
     return "done";
@@ -157,7 +159,7 @@ export function liveReviewDeps(): ReviewDeps {
     ai: claudeJson,
     rules: loadPromptRules,
     store: {
-      listCalls: async (a, s, e) => (await storage()).listReviewCalls(a, s, e),
+      listCalls: async (a, s, e, w) => (await storage()).listReviewCalls(a, s, e, w),
       transcripts: async (ids) => (await storage()).loadReviewTranscripts(ids),
       toolEvents: async (ids) => (await storage()).loadReviewToolEvents(ids),
       knowledge: async (a) => (await storage()).loadAccountKnowledge(a),

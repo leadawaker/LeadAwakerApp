@@ -2,7 +2,7 @@
 // next to the test call, saved as you type. The call button first, then who
 // she is (name, voice, language), this business's own text (greeting,
 // instructions), then the two prompts every client line in this language shares
-// (on an ElevenLabs line: the weekly review and its change cards, then the draft and the coach).
+// (on an ElevenLabs line: the draft, then one folded card with the call review, its change cards and the coach).
 import { useEffect, useRef, useState } from "react";
 import { BookOpen, Loader2, MessageSquareQuote, NotebookPen, Waves } from "lucide-react";
 import { useVoiceT } from "./voiceGender";
@@ -16,10 +16,8 @@ import { runsOnEleven } from "./lineEngine";
 import { useAutosave } from "./useAutosave";
 import { AutosaveBadge, SharedPromptCard } from "./SharedPromptCard";
 import { useAccountVoicePrompts, useSaveVoicePrompt } from "./voicePromptsApi";
-import { CoachPanel } from "./coach/CoachPanel";
 import { ElevenDraftCard } from "./coach/ElevenDraftCard";
-import { ReviewCard } from "./coach/ReviewCard";
-import { SuggestionCards } from "./coach/SuggestionCards";
+import { ImprovePromptCard } from "./coach/ImprovePromptCard";
 import { promptLangOf } from "./coach/coachApi";
 import type { VoiceCard } from "./readiness";
 
@@ -90,9 +88,6 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
         rows={2}
         onSave={(greeting) => onSave({ greeting })}
       />
-      {/* What the calls showed and the changes it proposes, above the draft they land in. */}
-      {onEleven && <ReviewCard accountId={line.accountId} />}
-      {onEleven && <SuggestionCards accountId={line.accountId} />}
       {/* Extra instructions are GPT Live's: the ElevenLabs prompt leaves them out. */}
       {!onEleven && <AccountTextCard
         card="promptExtra"
@@ -147,8 +142,8 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
           defaultLang={promptLangOf(line.locale)}
         />
       )}
-      {/* Questions about the calls and the prompt: its answers add change cards, never edit the draft. */}
-      {onEleven && <CoachPanel accountId={line.accountId} lang={promptLangOf(line.locale)} />}
+      {/* The call review, its change cards and the coach, folded: cards change the draft only on Accept. */}
+      {onEleven && <ImprovePromptCard accountId={line.accountId} lang={promptLangOf(line.locale)} />}
     </>
   );
 }
