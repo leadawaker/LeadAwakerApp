@@ -2743,8 +2743,18 @@ export const voicePromptSuggestions = nocodb.table("Voice_Prompt_Suggestions", {
   source: text("source").notNull(),                            // review | chat
   reviewId: integer("review_id"),
   coachMessageId: integer("coach_message_id"),
-  promptsId: integer("prompts_id").notNull(),                  // the Prompt_Library row the find/replace applies to
-  language: text("language").notNull(),                        // nl | en
+  promptsId: integer("prompts_id"),                            // the Prompt_Library row the find/replace applies to; null for client, knowledge and setting cards
+  language: text("language"),                                  // nl | en; null for client, knowledge and setting cards
+  scope: text("scope").notNull().default("shared"),            // shared | client | knowledge | setting (script/create-client-instructions-columns.mjs)
+  editOp: text("edit_op").notNull().default("replace"),        // replace | add
+  kbId: integer("kb_id"),                                      // knowledge: the entry edited, or the entry an add card created
+  kbTitle: text("kb_title"),                                   // knowledge: the entry's title when proposed, or the new title
+  kbCategory: text("kb_category"),                             // knowledge add: the new entry's category
+  kbPrevTitle: text("kb_prev_title"),                          // knowledge edit: the entry as it was right before Accept, for Undo
+  kbPrevContent: text("kb_prev_content"),
+  settingKey: text("setting_key"),                             // setting: the Voice tab setting the card changes
+  settingOld: jsonb("setting_old"),                            // the value the card was made against; also what Undo writes back
+  settingNew: jsonb("setting_new"),
   title: text("title").notNull(),
   reason: text("reason").notNull(),
   findText: text("find_text").notNull(),
