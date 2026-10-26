@@ -9,6 +9,8 @@ export interface PublicDemoSettings {
   voiceMaxMinutesPerSession: number;
   voiceMaxSessionsPerDemo: number;
   callNumber: string | null;
+  /** Which engine answers the homepage voice demo. Missing = ElevenLabs. */
+  voiceEngine?: "elevenlabs" | "gpt-live";
 }
 
 interface PublicDemoState {

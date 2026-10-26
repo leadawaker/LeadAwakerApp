@@ -100,7 +100,10 @@
     "claudeModel": "Claude-model",
     "providerHint": "OpenAI neemt het over als Claude faalt.",
     "via": "(via {{provider}})",
-    "retry": "Opnieuw"
+    "retry": "Opnieuw",
+    "voice": "Stem (AI-receptioniste-demo)",
+    "voiceDefault": "Standaardstem",
+    "voiceDefaultNamed": "Standaard ({{voice}})"
   },
   "disclosure": {
     "off": "Uit",
@@ -135,7 +138,8 @@
       "maxDemosPerDay": "Demo's per dag",
       "voiceMaxMinutesPerSession": "Minuten per spraakgesprek",
       "voiceMaxSessionsPerDemo": "Spraakgesprekken per demo",
-      "callNumber": "Nummer bij \"Of bel haar\""
+      "callNumber": "Nummer bij \"Of bel haar\"",
+      "voiceEngine": "Spraakengine"
     },
     "empty": "Nog geen instellingen voor deze dienst.",
     "rail": {
@@ -225,6 +229,25 @@
           "none": "Uit"
         }
       }
+    },
+    "eleven": {
+      "title": "ElevenLabs-demo's",
+      "hint": "Op welke engine demolinks en demo-telefoongesprekken draaien, en met welke stem elke taal spreekt.",
+      "engineTitle": "Engine voor demolinks",
+      "engineHint": "ElevenLabs klinkt het best in het Nederlands. GPT-Live is de oude engine, als reserve.",
+      "voicesTitle": "ElevenLabs-stem per taal",
+      "voicesHint": "De standaardstem per demotaal. Een stem die bij een demo zelf is gekozen, gaat voor. Druk op afspelen om hem te horen.",
+      "localeDefault": "Standaardstem",
+      "preview": "Voorbeeld afspelen",
+      "phonesTitle": "Je telefoons voor \"Bel mij + prospect\"",
+      "phonesHint": "Eerst gaat jouw telefoon, daarna wordt de prospect aan het gesprek toegevoegd. Lege velden gebruiken het getoonde nummer.",
+      "ownerPhone": "Hoofdtelefoon",
+      "ownerPhoneBackup": "Reservetelefoon",
+      "ownerPhoneUse": "Deze bellen",
+      "use": {
+        "primary": "Hoofd",
+        "backup": "Reserve"
+      }
     }
   },
   "widgetColor": {
@@ -248,5 +271,40 @@
     "remove": "Verwijderen",
     "tooLarge": "Die afbeelding is groter dan 3 MB.",
     "unreadable": "Kon dat bestand niet lezen."
+  },
+  "calls": {
+    "toggle": "Demo via telefoon",
+    "phone": "Telefoon van de prospect",
+    "phonePlaceholder": "+31 6 12345678",
+    "saraCalls": "Sara belt nu",
+    "callMe": "Bel mij + prospect",
+    "hint": "\"Sara belt nu\" belt de prospect met Sara aan de lijn. \"Bel mij + prospect\" belt eerst jou, dan hen; haal Sara erbij wanneer je klaar bent.",
+    "failed": "Het gesprek kon niet worden opgezet.",
+    "saraIn": "Haal Sara erbij",
+    "saraOut": "Haal Sara eraf",
+    "end": "Ophangen",
+    "again": "Nieuw gesprek",
+    "status": {
+      "dialing_owner": "Je telefoon gaat over…",
+      "dialing_prospect": "De prospect wordt gebeld…",
+      "live": "Gesprek loopt",
+      "ended": "Gesprek beëindigd",
+      "failed": "Gesprek mislukt"
+    },
+    "legs": {
+      "owner": "Jij",
+      "prospect": "Prospect",
+      "ai": "Sara"
+    },
+    "leg": {
+      "idle": "wacht",
+      "dialing": "gaat over",
+      "answered": "aan de lijn",
+      "ended": "opgehangen",
+      "failed": "mislukt",
+      "busy": "in gesprek",
+      "no_answer": "geen gehoor",
+      "voicemail": "voicemail"
+    }
   }
 }

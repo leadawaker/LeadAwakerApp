@@ -100,7 +100,10 @@
     "claudeModel": "Claude model",
     "providerHint": "OpenAI takes over if Claude fails.",
     "via": "(via {{provider}})",
-    "retry": "Retry"
+    "retry": "Retry",
+    "voice": "Voice (AI receptionist demo)",
+    "voiceDefault": "Default voice",
+    "voiceDefaultNamed": "Default ({{voice}})"
   },
   "disclosure": {
     "off": "Off",
@@ -135,7 +138,8 @@
       "maxDemosPerDay": "Demos built per day",
       "voiceMaxMinutesPerSession": "Minutes per voice call",
       "voiceMaxSessionsPerDemo": "Voice calls per demo",
-      "callNumber": "Number shown as \"Or call her\""
+      "callNumber": "Number shown as \"Or call her\"",
+      "voiceEngine": "Voice engine"
     },
     "empty": "No settings for this service yet.",
     "rail": {
@@ -225,6 +229,25 @@
           "none": "Off"
         }
       }
+    },
+    "eleven": {
+      "title": "ElevenLabs demos",
+      "hint": "The engine minted demo links and demo phone calls run on, and the voice each language speaks with.",
+      "engineTitle": "Engine for demo links",
+      "engineHint": "ElevenLabs sounds best in Dutch. GPT-Live is the old engine, kept as a fallback.",
+      "voicesTitle": "ElevenLabs voice per language",
+      "voicesHint": "The default voice of each demo locale. A voice picked on a demo itself wins. Press play to hear it.",
+      "localeDefault": "Default voice",
+      "preview": "Play a sample",
+      "phonesTitle": "Your phones for \"Call me + prospect\"",
+      "phonesHint": "Your phone rings first, then the prospect is added to the call. Empty fields use the number shown.",
+      "ownerPhone": "Main phone",
+      "ownerPhoneBackup": "Backup phone",
+      "ownerPhoneUse": "Ring this one",
+      "use": {
+        "primary": "Main",
+        "backup": "Backup"
+      }
     }
   },
   "widgetColor": {
@@ -248,5 +271,40 @@
     "remove": "Remove",
     "tooLarge": "That image is over 3 MB.",
     "unreadable": "Could not read that file."
+  },
+  "calls": {
+    "toggle": "Demo by phone",
+    "phone": "Prospect's phone",
+    "phonePlaceholder": "+31 6 12345678",
+    "saraCalls": "Sara calls now",
+    "callMe": "Call me + prospect",
+    "hint": "\"Sara calls now\" rings the prospect with Sara on the line. \"Call me + prospect\" rings you first, then them; bring Sara in when you are ready.",
+    "failed": "Could not place the call.",
+    "saraIn": "Bring Sara in",
+    "saraOut": "Take Sara out",
+    "end": "End call",
+    "again": "New call",
+    "status": {
+      "dialing_owner": "Ringing your phone…",
+      "dialing_prospect": "Ringing the prospect…",
+      "live": "Call live",
+      "ended": "Call ended",
+      "failed": "Call failed"
+    },
+    "legs": {
+      "owner": "You",
+      "prospect": "Prospect",
+      "ai": "Sara"
+    },
+    "leg": {
+      "idle": "waiting",
+      "dialing": "ringing",
+      "answered": "on the line",
+      "ended": "hung up",
+      "failed": "failed",
+      "busy": "busy",
+      "no_answer": "no answer",
+      "voicemail": "voicemail"
+    }
   }
 }

@@ -15,6 +15,7 @@ import { SectionHeader, SectionLayout, SectionRail, type SectionRailItem } from 
 import { SERVICES } from "../services";
 import { DemoCampaignSettings, OtherDemoCampaigns, useDemoCampaigns } from "./DemoCampaignSettings";
 import { EngineTestSettings } from "./EngineTestSettings";
+import { ElevenDemoSettings } from "./ElevenDemoSettings";
 import { PublicDemoSettings } from "./PublicDemoSettings";
 import { CommaListInput } from "./CommaListInput";
 import {
@@ -373,6 +374,7 @@ export function DemoSettingsTab() {
             ) : service === "voice" ? (
               <>
                 <VoiceSettings />
+                <ElevenDemoSettings />
                 <EngineTestSettings />
                 <PublicDemoSettings />
               </>

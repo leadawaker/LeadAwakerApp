@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Seg } from "./engineControls";
 import {
   usePublicDemoSettings,
   useSavePublicDemoSettings,
@@ -87,6 +88,16 @@ export function PublicDemoSettings() {
       )}
 
       <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+          <span style={{ flex: 1, fontSize: 13, color: "var(--ink)" }}>{t("settings.publicDemo.voiceEngine")}</span>
+          <Seg<"elevenlabs" | "gpt-live">
+            value={current.voiceEngine ?? "elevenlabs"}
+            options={["elevenlabs", "gpt-live"]}
+            ariaLabel={t("settings.publicDemo.voiceEngine")}
+            label={(o) => t(`settings.voice.engines.engine.${o}`)}
+            onChange={(voiceEngine) => setDraft({ ...draft, voiceEngine })}
+          />
+        </div>
         {FIELDS.map((f) => (
           <label key={f.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>
             <span style={{ flex: 1, fontSize: 13, color: "var(--ink)" }}>{t(`settings.publicDemo.${f.key}`)}</span>

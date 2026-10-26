@@ -1,6 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { API_BASE, apiFetch } from "@/lib/apiUtils";
 import { ENGINE_BASE_URL } from "@/features/voiceDemo/engine";
+import { fetchElevenDemoOptions } from "@/features/voiceDemo/elevenDemoOptions";
+import type { DemoEngine, ElevenDemoLocale } from "@/features/voiceDemo/types";
+
+export type { DemoEngine, ElevenDemoLocale };
 
 /** Mirrors GET /api/demo-settings (server/routes/demoSettings.ts). */
 export interface DemoSettingsResponse {
@@ -57,6 +61,29 @@ export interface VoiceDemoSettings {
   forgetNumbers?: string[];
   /** Per tester phone: which engine answers, with which voice and prompt (engine voice_engines.py). */
   engineTests?: EngineTest[];
+  /** Which engine minted demos run on. Missing = ElevenLabs. */
+  demoEngine?: DemoEngine;
+  /** The ElevenLabs voice per demo locale. Missing = that locale's default. */
+  elevenVoices?: Partial<Record<ElevenDemoLocale, string>>;
+  /** "Call me + prospect" rings one of these first (E.164; null clears on a save). */
+  ownerPhone?: string | null;
+  ownerPhoneBackup?: string | null;
+  ownerPhoneUse?: "primary" | "backup";
+}
+
+/** Gabriel's phones until the settings say otherwise (server demoVoiceSchemas.ts). */
+export const DEFAULT_OWNER_PHONE = "+31684446349";
+export const DEFAULT_OWNER_PHONE_BACKUP = "+31737044356";
+
+const ELEVEN_OPTIONS_KEY = ["voice-eleven-demo-options"];
+
+/** The ElevenLabs demo voices per locale (engine GET /voice/eleven/demo/options). */
+export function useElevenDemoOptions() {
+  return useQuery({
+    queryKey: ELEVEN_OPTIONS_KEY,
+    queryFn: fetchElevenDemoOptions,
+    staleTime: 60_000,
+  });
 }
 
 export type VoiceEngine = "gpt-live" | "xai" | "elevenlabs";
@@ -137,6 +164,7 @@ export function useSaveVoiceSettings() {
       qc.invalidateQueries({ queryKey: KEY });
       // The engine caches this row for 30s, so the pickers catch up on their own.
       qc.invalidateQueries({ queryKey: ["voice-live-options"] });
+      qc.invalidateQueries({ queryKey: ELEVEN_OPTIONS_KEY });
     },
   });
 }

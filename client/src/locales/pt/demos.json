@@ -100,7 +100,10 @@
     "claudeModel": "Modelo Claude",
     "providerHint": "A OpenAI assume se o Claude falhar.",
     "via": "(via {{provider}})",
-    "retry": "Tentar de novo"
+    "retry": "Tentar de novo",
+    "voice": "Voz (demo da recepcionista IA)",
+    "voiceDefault": "Voz padrão",
+    "voiceDefaultNamed": "Padrão ({{voice}})"
   },
   "disclosure": {
     "off": "Desligado",
@@ -135,7 +138,8 @@
       "maxDemosPerDay": "Demos criadas por dia",
       "voiceMaxMinutesPerSession": "Minutos por ligação de voz",
       "voiceMaxSessionsPerDemo": "Ligações de voz por demo",
-      "callNumber": "Número em \"Ou ligue para ela\""
+      "callNumber": "Número em \"Ou ligue para ela\"",
+      "voiceEngine": "Engine de voz"
     },
     "empty": "Ainda não há configurações para este serviço.",
     "rail": {
@@ -225,6 +229,25 @@
           "none": "Desligado"
         }
       }
+    },
+    "eleven": {
+      "title": "Demos ElevenLabs",
+      "hint": "Em qual engine rodam os links de demo e as ligações de demo, e com qual voz cada idioma fala.",
+      "engineTitle": "Engine dos links de demo",
+      "engineHint": "O ElevenLabs soa melhor em holandês. O GPT-Live é a engine antiga, mantida como reserva.",
+      "voicesTitle": "Voz ElevenLabs por idioma",
+      "voicesHint": "A voz padrão de cada idioma de demo. Uma voz escolhida na própria demo tem prioridade. Toque em play para ouvir.",
+      "localeDefault": "Voz padrão",
+      "preview": "Ouvir amostra",
+      "phonesTitle": "Seus telefones para \"Ligar para mim + prospect\"",
+      "phonesHint": "Seu telefone toca primeiro, depois o prospect entra na ligação. Campos vazios usam o número mostrado.",
+      "ownerPhone": "Telefone principal",
+      "ownerPhoneBackup": "Telefone reserva",
+      "ownerPhoneUse": "Ligar para este",
+      "use": {
+        "primary": "Principal",
+        "backup": "Reserva"
+      }
     }
   },
   "widgetColor": {
@@ -248,5 +271,40 @@
     "remove": "Remover",
     "tooLarge": "Essa imagem passa de 3 MB.",
     "unreadable": "Não foi possível ler esse arquivo."
+  },
+  "calls": {
+    "toggle": "Demo por telefone",
+    "phone": "Telefone do prospect",
+    "phonePlaceholder": "+55 11 91234 5678",
+    "saraCalls": "Sara liga agora",
+    "callMe": "Ligar para mim + prospect",
+    "hint": "\"Sara liga agora\" liga para o prospect com a Sara na linha. \"Ligar para mim + prospect\" liga primeiro para você, depois para ele; chame a Sara quando estiver pronto.",
+    "failed": "Não foi possível fazer a ligação.",
+    "saraIn": "Chamar a Sara",
+    "saraOut": "Tirar a Sara",
+    "end": "Encerrar",
+    "again": "Nova ligação",
+    "status": {
+      "dialing_owner": "Chamando seu telefone…",
+      "dialing_prospect": "Chamando o prospect…",
+      "live": "Ligação em andamento",
+      "ended": "Ligação encerrada",
+      "failed": "A ligação falhou"
+    },
+    "legs": {
+      "owner": "Você",
+      "prospect": "Prospect",
+      "ai": "Sara"
+    },
+    "leg": {
+      "idle": "aguardando",
+      "dialing": "chamando",
+      "answered": "na linha",
+      "ended": "desligou",
+      "failed": "falhou",
+      "busy": "ocupado",
+      "no_answer": "não atendeu",
+      "voicemail": "caixa postal"
+    }
   }
 }
