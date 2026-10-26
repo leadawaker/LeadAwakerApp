@@ -1,10 +1,11 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { z } from "zod";
 import { randomInt } from "crypto";
 import { storage } from "../storage";
 import { requireAgency, requireAuth, scopeToAccount } from "../auth";
 import { accountIdFor, getEngineUrl, handleZodError, wrapAsync } from "./_helpers";
 import { WhatsappSenderError } from "../storage/whatsappSenders";
+import { canManageSocial } from "../social/access";
 
 // Per-client WhatsApp on Meta's Cloud API (specs/receptionist-channels Phase 4):
 // the account's sender details and its message templates. Agency only.
@@ -168,6 +169,18 @@ function toRow(r: Record<string, any>) {
 const rowsOf = (data: Record<string, any>) => (Array.isArray(data.rows) ? data.rows.map(toRow) : undefined);
 
 
+// The sender card a client Manager uses to connect their own number at Meta:
+// read, connect and test. Saving by hand, behaviour and templates stay agency-only.
+function senderAccountFor(req: Request, res: Response): number | null {
+  const accountId = accountIdFor(req, res);
+  if (accountId == null) return null;
+  if (!canManageSocial(req.user, accountId)) {
+    res.status(403).json({ message: "Forbidden" });
+    return null;
+  }
+  return accountId;
+}
+
 export function registerWhatsappCloudRoutes(app: Express): void {
   // Chats reply box (clients): can a human reply reach a WhatsApp contact? Only
   // when the account has its own connected sender. Yes/no only, no sender details.
@@ -179,8 +192,8 @@ export function registerWhatsappCloudRoutes(app: Express): void {
     res.json({ hasOwn: !!sender && sender.status === "connected" });
   }));
 
-  app.get("/api/accounts/:id/whatsapp-sender", requireAgency, wrapAsync(async (req, res) => {
-    const accountId = accountIdFor(req, res);
+  app.get("/api/accounts/:id/whatsapp-sender", requireAuth, wrapAsync(async (req, res) => {
+    const accountId = senderAccountFor(req, res);
     if (accountId == null) return;
     res.json({ sender: await storage.getWhatsappSender(accountId) });
   }));
@@ -210,8 +223,8 @@ export function registerWhatsappCloudRoutes(app: Express): void {
   }));
 
   // Meta's Embedded Signup popup finished in the browser: no values to paste.
-  app.post("/api/accounts/:id/whatsapp-sender/connect", requireAgency, wrapAsync(async (req, res) => {
-    const accountId = accountIdFor(req, res);
+  app.post("/api/accounts/:id/whatsapp-sender/connect", requireAuth, wrapAsync(async (req, res) => {
+    const accountId = senderAccountFor(req, res);
     if (accountId == null) return;
     const parsed = connectBodySchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
@@ -228,8 +241,8 @@ export function registerWhatsappCloudRoutes(app: Express): void {
 
   // Reads the number at Meta with the saved details and marks the sender
   // connected or failed. The engine does the work; the sender is re-read here.
-  app.post("/api/accounts/:id/whatsapp-sender/test", requireAgency, wrapAsync(async (req, res) => {
-    const accountId = accountIdFor(req, res);
+  app.post("/api/accounts/:id/whatsapp-sender/test", requireAuth, wrapAsync(async (req, res) => {
+    const accountId = senderAccountFor(req, res);
     if (accountId == null) return;
     const reply = await engine("POST", `${accountId}/test-connection`);
     if (!reply.reached) return res.json(ENGINE_DOWN);

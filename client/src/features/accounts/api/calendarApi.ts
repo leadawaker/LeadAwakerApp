@@ -38,7 +38,7 @@ export const fetchCalendarConnections = async (accountId: number): Promise<Calen
 
 /** OAuth providers: full-page redirect to the provider consent screen. */
 export const startCalendarOAuth = (provider: CalendarProviderId, accountId: number) => {
-  window.location.href = `${API_BASE}/api/calendar/oauth/${provider}/authorize?accountId=${accountId}`;
+  window.location.href = `${API_BASE}/api/calendar/oauth/${provider}/authorize?accountId=${accountId}&origin=${encodeURIComponent(window.location.origin)}`;
 };
 
 /** API-key (calcom/calendly) or URL (ical) connect. */

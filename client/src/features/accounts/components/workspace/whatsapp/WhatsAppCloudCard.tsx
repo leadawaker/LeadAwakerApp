@@ -6,7 +6,8 @@
 // stores the details itself. Entering the five values by hand stays for a
 // client with their own Meta app. The two secrets are write-only: the server
 // never sends them back, so their inputs are always empty and an empty input
-// keeps the stored value.
+// keeps the stored value. A client Manager (clientMode) only gets the Meta
+// buttons: the hand-entry form is for the agency.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MessageCircle, Check, X, Loader2, RefreshCw, Link2, ChevronDown, ChevronRight, Smartphone, Bot } from "lucide-react";
@@ -33,7 +34,7 @@ function formFrom(sender: WhatsappSender | null): SenderInput {
     : EMPTY;
 }
 
-export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
+export function WhatsAppCloudCard({ accountId, clientMode = false }: { accountId: number; clientMode?: boolean }) {
   const { t } = useTranslation("whatsappCloud");
   const { sender, loading, save, test, connect } = useWhatsappSender(accountId);
   const [editing, setEditing] = useState(false);
@@ -47,7 +48,7 @@ export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
 
   const busy = save.isPending || test.isPending || connect.isPending || !!metaOpen;
   const showForm = !sender || editing;
-  const manualOpen = manual;
+  const manualOpen = manual && !clientMode;
   const errorText = (code: string | null | undefined, fallback?: string | null) =>
     t(`connect.errors.${code || "unknown"}`, { defaultValue: fallback || t("connect.errors.unknown") });
   const thrownText = (err: unknown) =>
@@ -145,7 +146,7 @@ export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
               </PanelAction>
             </div>
           )}
-          <button
+          {!clientMode && <button
             type="button"
             onClick={() => setManual(!manualOpen)}
             aria-expanded={manualOpen}
@@ -153,7 +154,7 @@ export function WhatsAppCloudCard({ accountId }: { accountId: number }) {
           >
             {manualOpen ? <ChevronDown size={13} /> : <ChevronRight size={13} />}
             {t("connect.manual")}
-          </button>
+          </button>}
           {manualOpen && <p style={{ ...EXPLAINER, margin: 0 }}>{t("connect.manualHelp")}</p>}
           {manualOpen && <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: "14px 18px" }}>
             {[...ID_FIELDS, ...SECRET_FIELDS].map((key) => {

@@ -32,6 +32,8 @@ test("agency sees every group; client users see bookings, plus social only when 
   assert.deepEqual(integrationGroupsFor({ isAgency: true, socialEnabled: false }), ["phone", "messaging", "website", "bookings", "social"]);
   assert.deepEqual(integrationGroupsFor({ isAgency: false, socialEnabled: false }), ["bookings"]);
   assert.deepEqual(integrationGroupsFor({ isAgency: false, socialEnabled: true }), ["bookings", "social"]);
+  assert.deepEqual(integrationGroupsFor({ isAgency: false, socialEnabled: false, isManager: true }), ["messaging", "bookings"]);
+  assert.deepEqual(integrationGroupsFor({ isAgency: false, socialEnabled: true, isManager: true }), ["messaging", "bookings", "social"]);
 });
 
 test("only agency and Managers act; Viewers never", () => {

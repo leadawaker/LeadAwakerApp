@@ -21,9 +21,11 @@ export function instagramTileState(status: SocialStatus | undefined): "on" | "pe
 }
 
 /** Agency sees every group. Client users see bookings, and Social once the agency switched it on. */
-export function integrationGroupsFor(p: { isAgency: boolean; socialEnabled: boolean }): IntegrationGroup[] {
+export function integrationGroupsFor(p: { isAgency: boolean; socialEnabled: boolean; isManager?: boolean }): IntegrationGroup[] {
   if (p.isAgency) return AGENCY_GROUPS;
-  return p.socialEnabled ? ["bookings", "social"] : ["bookings"];
+  // A Manager connects the account's own WhatsApp number (Meta's signup needs their login).
+  const groups: IntegrationGroup[] = p.isManager ? ["messaging", "bookings"] : ["bookings"];
+  return p.socialEnabled ? [...groups, "social"] : groups;
 }
 
 /** Connect, disconnect, approve, reject: agency, or a Manager of the account (the server checks again). */

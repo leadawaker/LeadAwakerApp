@@ -15,7 +15,8 @@ import {
   CalendarNotConfiguredError,
 } from "../calendar";
 import { provisionCaldiyForAccount, injectCalendarCredentialToCaldiy, injectCaldavCredentialToCaldiy, debouncedResyncCaldiySchedule, CALDIY_ENGINE_BASE_URL } from "../calendar/caldiy";
-import { createOAuthState, consumeOAuthState, saveSessionThen } from "../oauthState";
+import { createOAuthState, consumeOAuthStateEntry, saveSessionThen } from "../oauthState";
+import { resolveReturnOrigin } from "../social/access";
 
 const OAUTH_PROVIDERS = new Set(["google", "outlook"]);
 const calendarOAuthFlow = (provider: string) => `calendar:${provider}`;
@@ -83,7 +84,9 @@ export function registerCalendarRoutes(app: Express): void {
     if (!OAUTH_PROVIDERS.has(provider)) return res.status(400).json({ message: "Provider is not OAuth-based" });
     if (!accountId) return res.status(400).json({ message: "accountId required" });
     try {
-      const state = createOAuthState(req, calendarOAuthFlow(provider), accountId);
+      // Come back to the frontend the client started on (www on Vercel, or app.), not always FRONTEND_URL.
+      const origin = typeof req.query.origin === "string" ? req.query.origin : undefined;
+      const state = createOAuthState(req, calendarOAuthFlow(provider), accountId, resolveReturnOrigin(origin, frontendBase(req)));
       const url = getAdapter(provider).getAuthUrl!(state);
       saveSessionThen(req, () => res.redirect(url));
     } catch (err: any) {
@@ -97,7 +100,8 @@ export function registerCalendarRoutes(app: Express): void {
   // carried in `state`. Always redirects back to the Accounts integrations tab.
   app.get("/api/calendar/oauth/:provider/callback", wrapAsync(async (req, res) => {
     const { provider } = req.params;
-    const base = frontendBase(req);
+    const entry = consumeOAuthStateEntry(req, calendarOAuthFlow(provider), req.query.state);
+    const base = entry?.returnOrigin || frontendBase(req);
     const dest = (status: string, extra = "") =>
       `${base}/platform/accounts?calendar=${status}&provider=${provider}${extra}`;
 
@@ -105,7 +109,7 @@ export function registerCalendarRoutes(app: Express): void {
     if (error) return res.redirect(dest("error", `&reason=${encodeURIComponent(error)}`));
 
     const code = req.query.code as string;
-    const accountId = consumeOAuthState(req, calendarOAuthFlow(provider), req.query.state);
+    const accountId = entry?.accountId ?? null;
     if (!code) return res.redirect(dest("error", "&reason=missing_code"));
     if (!accountId) return res.redirect(dest("error", "&reason=invalid_state"));
 
