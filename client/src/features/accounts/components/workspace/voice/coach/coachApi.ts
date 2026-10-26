@@ -15,6 +15,8 @@ export const reviewsKey = (accountId: number) => [...base(accountId), "reviews"]
 export const coachKey = (accountId: number) => [...base(accountId), "coach"] as const;
 
 const LANGS: PromptLang[] = ["nl", "en"];
+/** The app default never refetches a list on its own: the cards and reviews can change without this page. */
+const LIST_STALE_MS = 30_000;
 const draftUrl = (accountId: number) => `/api/accounts/${accountId}/voice/eleven-draft`;
 const JSON_HEADERS = { "Content-Type": "application/json" };
 
@@ -108,6 +110,8 @@ export function useSuggestions(accountId: number) {
     queryKey: suggestionsKey(accountId),
     queryFn: () => getJson<SuggestionDto[]>(`/api/accounts/${accountId}/voice/suggestions`),
     enabled: accountId > 0,
+    // The weekly run adds cards while the page sits open: reopening the section looks again.
+    staleTime: LIST_STALE_MS,
   });
 }
 
@@ -139,6 +143,7 @@ export function useReviews(accountId: number) {
     queryKey: reviewsKey(accountId),
     queryFn: () => getJson<ReviewDto[]>(`/api/accounts/${accountId}/voice/reviews`),
     enabled: accountId > 0,
+    staleTime: LIST_STALE_MS,
     // A review takes minutes: poll while one is running.
     refetchInterval: (q) => ((q.state.data as ReviewDto[] | undefined)?.some((r) => r.status === "running") ? 5_000 : false),
   });

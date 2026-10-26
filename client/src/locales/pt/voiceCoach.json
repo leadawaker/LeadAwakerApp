@@ -47,8 +47,84 @@
     "restoreDo": "Colocar no rascunho",
     "restored": "A v{{v}} está no rascunho agora. O texto no ar só muda quando você colocar no ar."
   },
+  "review": {
+    "title": "Revisão semanal",
+    "help": "Toda segunda-feira às 07:00 (horário de Amsterdã) as chamadas da semana anterior são revisadas. Executar agora revisa os últimos 7 dias. As mudanças no prompt que ela propõe aparecem abaixo como cartões.",
+    "runNow": "Executar agora",
+    "running": "Revisando as chamadas. Isso leva alguns minutos.",
+    "busy": "Já existe uma revisão em andamento",
+    "startFailed": "Não foi possível iniciar a revisão. Tente de novo.",
+    "loadFailed": "Não foi possível carregar as revisões. Tente mais tarde.",
+    "empty": "Ainda não há revisões. A primeira roda na segunda-feira, ou clique em Executar agora.",
+    "picker": "Revisões salvas",
+    "weekLabel": "Semana {{week}}, {{from}} a {{to}}",
+    "rangeLabel": "{{from}} a {{to}}",
+    "manualLabel": "Últimos 7 dias, executada {{date}}",
+    "status": {
+      "running": "em andamento",
+      "failed": "falhou"
+    },
+    "failed": "A revisão falhou: {{error}}",
+    "failedUnknown": "A revisão falhou. Tente de novo com Executar agora.",
+    "stalled": "A revisão foi interrompida antes de terminar. Execute de novo com Executar agora.",
+    "seconds": "{{value}} s",
+    "figures": {
+      "calls": "Chamadas",
+      "booked": "Agendadas",
+      "reply": "Resposta média",
+      "p90": "Resposta P90",
+      "cost": "Custo",
+      "minutes": "Minutos"
+    },
+    "problems": "Problemas",
+    "worstCalls": "Piores chamadas",
+    "knowledgeBase": "Base de conhecimento",
+    "dropped_one": "{{count}} proposta foi descartada",
+    "dropped_other": "{{count}} propostas foram descartadas"
+  },
+  "cards": {
+    "title": "Mudanças sugeridas",
+    "help": "Cada cartão muda um trecho do prompt compartilhado. Aceitar coloca a edição no rascunho abaixo. Nada vai ao ar até você clicar em Colocar no ar.",
+    "tabsLabel": "Mostrar mudanças",
+    "tabs": {
+      "open": "Abertas",
+      "accepted": "Aceitas",
+      "done": "Concluídas"
+    },
+    "empty": {
+      "open": "Nenhuma mudança aberta. As novas vêm da revisão semanal ou do coach.",
+      "accepted": "Nada aceito ainda. As mudanças aceitas ficam no rascunho até você colocar no ar.",
+      "done": "Nada no ar ou rejeitado ainda."
+    },
+    "loadFailed": "Não foi possível carregar as mudanças. Tente mais tarde.",
+    "source": {
+      "review": "Revisão",
+      "chat": "Coach"
+    },
+    "status": {
+      "proposed": "Proposta",
+      "accepted": "Aceita",
+      "rejected": "Rejeitada",
+      "stale": "Desatualizada",
+      "live": "No ar"
+    },
+    "alsoIn": {
+      "en": "Também em inglês",
+      "nl": "Também em holandês"
+    },
+    "calls": "Chamadas",
+    "accept": "Aceitar",
+    "reject": "Rejeitar",
+    "inDraft": "Está no rascunho. Vai ao ar com Colocar no ar.",
+    "stale": "O texto que este cartão altera não está mais no rascunho",
+    "note": {
+      "decided": "Esta mudança já foi decidida. A lista foi atualizada.",
+      "failed": "Não funcionou. Tente de novo."
+    }
+  },
   "common": {
     "cancel": "Cancelar",
-    "loadFailed": "Não foi possível carregar o prompt. Tente mais tarde."
+    "loadFailed": "Não foi possível carregar o prompt. Tente mais tarde.",
+    "openCall": "Abrir a chamada {{id}}"
   }
 }

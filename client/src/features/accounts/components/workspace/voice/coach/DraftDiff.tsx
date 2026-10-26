@@ -33,7 +33,8 @@ const LINE_STYLE: Record<DiffLine["kind"], React.CSSProperties> = {
 };
 const MARK: Record<DiffLine["kind"], string> = { same: " ", add: "+", del: "-" };
 
-export function DraftDiff({ before, after }: { before: string; after: string }) {
+/** `maxHeight` sizes the box to its lines up to that height (a change card's edit); without it the box is the editor's height. */
+export function DraftDiff({ before, after, maxHeight }: { before: string; after: string; maxHeight?: number }) {
   const { t } = useTranslation("voiceCoach");
   const rows = useMemo(() => foldRows(lineDiff(before, after)), [before, after]);
   const changed = rows.some((r) => r.kind === "add" || r.kind === "del");
@@ -43,7 +44,8 @@ export function DraftDiff({ before, after }: { before: string; after: string }) 
       className="neu-inset-crisp"
       data-testid="voice-draft-diff"
       style={{
-        height: EDITOR_HEIGHT, overflowY: "auto", padding: 12, borderRadius: "var(--r-card)",
+        ...(maxHeight ? { maxHeight } : { height: EDITOR_HEIGHT }),
+        overflowY: "auto", padding: 12, borderRadius: "var(--r-card)",
         fontFamily: "var(--mono)", fontSize: 12.5, lineHeight: 1.6,
       }}
     >
