@@ -32,7 +32,8 @@ export function registerVoiceElevenTestRoutes(app: Express) {
     if (!parsed.success) return handleZodError(res, parsed.error);
     const { accountId, lineId, callerNumber } = parsed.data;
     const r = await relayToEngine(ENGINE_BASE, "/voice/eleven/browser-session",
-      { account_id: accountId, line_id: lineId, caller_number: callerNumber ?? await testerNumber() },
+      { account_id: accountId, line_id: lineId, caller_number: callerNumber ?? await testerNumber(),
+        draft: parsed.data.draft === true },
       process.env.INTERNAL_API_KEY || "");
     send(res, r);
   }));

@@ -14,6 +14,8 @@ export const elevenTestSchema = z.object({
   lineId: z.number().int().positive(),
   // The browser caller rings the line "from" this number: caller memory and the line's real diary.
   callerNumber: z.string().regex(E164, "callerNumber must be E.164, like +31612345678").optional(),
+  // The prompt coach's "Test draft": the unsaved draft prompt, every write tool faked by the engine.
+  draft: z.boolean().optional(),
 });
 
 export const startedSchema = z.object({
