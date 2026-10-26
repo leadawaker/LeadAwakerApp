@@ -16,12 +16,11 @@ import {
   type VoicePromptDraftRow, type VoicePromptSuggestionRow,
 } from "@shared/schema";
 import type { DraftView, PromptLang, ProposalInput, SuggestionDto, SuggestionStatus } from "@shared/voiceReview";
-import { isStale, planAccept, planSaveToLive, type CardEdit, type DraftRowState } from "../voice/review/draftPlans";
+import { planAccept, planSaveToLive, staleTransitions, STALE_NOTE, type CardEdit, type DraftRowState } from "../voice/review/draftPlans";
 import { elevenPromptRow, type VoicePromptRow } from "./voiceAccountPrompts";
 import type { DbLike, Tx } from "./voicePersona";
 
 const LANGS: PromptLang[] = ["nl", "en"];
-const STALE_NOTE = "find_text_gone";
 const DRAFT_LOCK_KEY = 4_217_001;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -260,17 +259,25 @@ async function insertVoiceSuggestions(rows: NewSuggestion[]): Promise<number[]> 
   return inserted.map((r) => r.id);
 }
 
-/** Newest first. Proposed cards whose edit no longer applies are marked stale first. */
+/**
+ * Newest first. Open cards are re-judged against the current draft first: a proposed card whose edit no
+ * longer applies goes stale, and a card that went stale only because its text was gone goes back to
+ * proposed once the text is back (a draft discarded or restored).
+ */
 async function listVoiceSuggestions(accountId: number, limit = 100): Promise<SuggestionDto[]> {
-  const proposed = await db.select().from(voicePromptSuggestions)
-    .where(and(eq(voicePromptSuggestions.accountsId, accountId), eq(voicePromptSuggestions.status, "proposed")));
-  if (proposed.length) {
+  const open = await db.select().from(voicePromptSuggestions)
+    .where(and(eq(voicePromptSuggestions.accountsId, accountId), inArray(voicePromptSuggestions.status, ["proposed", "stale"])));
+  if (open.length) {
     const { rows } = await loadElevenState(db);
-    // No eleven rows at all means nothing can be judged, not that every card is stale.
-    const goneIds = rows.length ? proposed.filter((c) => isStale(cardEditOf(c), rows)).map((c) => c.id) : [];
-    if (goneIds.length) {
-      await db.update(voicePromptSuggestions).set({ status: "stale", statusNote: STALE_NOTE, updatedAt: new Date() })
-        .where(and(inArray(voicePromptSuggestions.id, goneIds), eq(voicePromptSuggestions.status, "proposed")));
+    const { toStale, toProposed } = staleTransitions(open.map((c) => ({ ...cardEditOf(c), status: c.status, statusNote: c.statusNote })), rows);
+    const now = new Date();
+    if (toStale.length) {
+      await db.update(voicePromptSuggestions).set({ status: "stale", statusNote: STALE_NOTE, updatedAt: now })
+        .where(and(inArray(voicePromptSuggestions.id, toStale), eq(voicePromptSuggestions.status, "proposed")));
+    }
+    if (toProposed.length) {
+      await db.update(voicePromptSuggestions).set({ status: "proposed", statusNote: null, updatedAt: now })
+        .where(and(inArray(voicePromptSuggestions.id, toProposed), eq(voicePromptSuggestions.status, "stale"), eq(voicePromptSuggestions.statusNote, STALE_NOTE)));
     }
   }
   const list = await db.select().from(voicePromptSuggestions)

@@ -42,6 +42,28 @@ export function planAccept(card: CardEdit, rows: DraftRowState[]): { ok: true; w
 /** A card is stale when its edit no longer applies cleanly to the text it would be accepted into. */
 export const isStale = (card: CardEdit, rows: DraftRowState[]): boolean => !planAccept(card, rows).ok;
 
+/** The status note on a card that went stale because its find text is not in the draft (or live) text. */
+export const STALE_NOTE = "find_text_gone";
+
+export type ListedCard = CardEdit & { status: string; statusNote: string | null };
+
+/**
+ * Which open cards change status on a list fetch. A proposed card whose edit no longer applies goes
+ * stale; a card that went stale only because its text was gone (STALE_NOTE) goes back to proposed once
+ * the text is back (a draft was discarded, a version restored, a hand edit undone). With no eleven rows
+ * nothing can be judged, so nothing moves.
+ */
+export function staleTransitions(cards: ListedCard[], rows: DraftRowState[]): { toStale: number[]; toProposed: number[] } {
+  const toStale: number[] = [];
+  const toProposed: number[] = [];
+  if (!rows.length) return { toStale, toProposed };
+  for (const c of cards) {
+    if (c.status === "proposed" && isStale(c, rows)) toStale.push(c.id);
+    else if (c.status === "stale" && c.statusNote === STALE_NOTE && !isStale(c, rows)) toProposed.push(c.id);
+  }
+  return { toStale, toProposed };
+}
+
 export interface SavePlan {
   versions: { promptId: number; versionNumber: string | null; promptText: string; systemMessage: string | null; label: string }[];
   updates: { promptId: number; promptText: string }[];

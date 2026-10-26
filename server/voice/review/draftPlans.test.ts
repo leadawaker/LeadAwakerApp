@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { draftTextOf, isStale, planAccept, planSaveToLive, type CardEdit, type DraftRowState } from "./draftPlans";
+import { draftTextOf, isStale, planAccept, planSaveToLive, staleTransitions, STALE_NOTE, type CardEdit, type DraftRowState } from "./draftPlans";
 
 const nl: DraftRowState = { promptId: 130, useCase: "eleven_layer_nl", language: "nl", liveText: "A\nB", draft: null };
 const en: DraftRowState = { promptId: 131, useCase: "eleven_layer_en", language: "en", liveText: "a\nb", draft: null };
@@ -49,6 +49,42 @@ test("a card made against live is stale once the draft no longer has its text", 
   const edited: DraftRowState = { ...nl, draft: { draftText: "A\nZ", baseText: "A\nB", acceptedIds: [] } };
   assert.equal(isStale(card, [edited, en]), true);
   assert.equal(isStale(card, [nl, en]), false);
+});
+
+const open = (id: number, status: string, statusNote: string | null = null, extra: Partial<CardEdit> = {}) => ({ ...card, id, status, statusNote, ...extra });
+const editedNl: DraftRowState = { ...nl, draft: { draftText: "A\nZ", baseText: "A\nB", acceptedIds: [] } };
+
+test("staleTransitions: a proposed card whose text is gone goes stale, one that still applies stays", () => {
+  assert.deepEqual(staleTransitions([open(1, "proposed"), open(2, "proposed", null, { find: "A", replace: "A2", mirrorFind: null, mirrorReplace: null })], [editedNl, en]),
+    { toStale: [1], toProposed: [] });
+});
+
+test("staleTransitions: a card stale for find_text_gone returns to proposed once its text is back", () => {
+  assert.deepEqual(staleTransitions([open(1, "stale", STALE_NOTE)], [nl, en]), { toStale: [], toProposed: [1] });
+  // still gone (the draft is still edited): it stays stale
+  assert.deepEqual(staleTransitions([open(1, "stale", STALE_NOTE)], [editedNl, en]), { toStale: [], toProposed: [] });
+});
+
+test("staleTransitions: a mirror card needs the text back on both rows", () => {
+  const editedEn: DraftRowState = { ...en, draft: { draftText: "a\nz", baseText: "a\nb", acceptedIds: [] } };
+  assert.deepEqual(staleTransitions([open(1, "stale", STALE_NOTE)], [nl, editedEn]), { toStale: [], toProposed: [] });
+  assert.deepEqual(staleTransitions([open(1, "stale", STALE_NOTE)], [nl]), { toStale: [], toProposed: [] }, "a missing row cannot apply");
+});
+
+test("staleTransitions: a stale card without the find_text_gone note, and any other status, never moves", () => {
+  const others = [open(1, "stale", null), open(2, "stale", "something_else"), open(3, "accepted"), open(4, "rejected"), open(5, "live")];
+  assert.deepEqual(staleTransitions(others, [nl, en]), { toStale: [], toProposed: [] });
+  assert.deepEqual(staleTransitions(others, [editedNl, en]), { toStale: [], toProposed: [] });
+});
+
+test("staleTransitions: with no eleven rows nothing can be judged, so nothing moves", () => {
+  assert.deepEqual(staleTransitions([open(1, "proposed"), open(2, "stale", STALE_NOTE)], []), { toStale: [], toProposed: [] });
+});
+
+test("staleTransitions: a mixed list is sorted into both buckets", () => {
+  const other = { find: "A", replace: "A2", mirrorFind: null, mirrorReplace: null, mirrorPromptId: null };
+  const cards = [open(1, "proposed"), open(2, "stale", STALE_NOTE, other), open(3, "stale", STALE_NOTE), open(4, "proposed", null, other)];
+  assert.deepEqual(staleTransitions(cards, [editedNl, en]), { toStale: [1], toProposed: [2] });
 });
 
 test("planSaveToLive snapshots the current live text, not the base", () => {
