@@ -1,0 +1,52 @@
+{
+  "draft": {
+    "language": "Idioma do prompt",
+    "lang": {
+      "nl": "NL",
+      "en": "EN"
+    },
+    "notice": "Compartilhado por todas as linhas ElevenLabs neste idioma. Suas edições vão para um rascunho que as chamadas não ouvem até você clicar em Colocar no ar.",
+    "liveMoved": "O prompt no ar mudou depois que este rascunho começou. Colocar no ar substitui esse texto mais recente (ele fica salvo como versão no histórico).",
+    "startOver": "Recomeçar a partir do texto no ar",
+    "missing": "Ainda não há um prompt ElevenLabs neste idioma.",
+    "viewLabel": "Visualização",
+    "view": {
+      "edit": "Editar",
+      "changes": "Alterações",
+      "filled": "Preenchido"
+    },
+    "status": {
+      "same": "Igual ao texto no ar",
+      "changed": "+{{added}} / -{{removed}} linhas em relação ao texto no ar"
+    },
+    "noChanges": "O rascunho é igual ao texto no ar.",
+    "unchangedLines_one": "{{count}} linha sem alteração",
+    "unchangedLines_other": "{{count}} linhas sem alteração",
+    "saveToLive": "Colocar no ar",
+    "saveConfirm": "Colocar os rascunhos no ar nos dois idiomas (NL e EN)? As chamadas passam a usá-los em até 30 segundos. Os textos que estão no ar agora ficam salvos como versões.",
+    "saveDo": "Colocar no ar",
+    "saved": "Está no ar. As chamadas passam a usar em até 30 segundos.",
+    "savedNone": "Nada para colocar no ar: os rascunhos são iguais ao texto no ar.",
+    "saveFailed": "Não foi possível colocar no ar. Tente de novo.",
+    "discard": "Descartar rascunho",
+    "discardConfirm": "Descartar o rascunho nos dois idiomas (NL e EN)? As sugestões aceitas voltam para a lista. O texto no ar continua igual.",
+    "discardDo": "Descartar os dois",
+    "discarded": "Rascunho descartado nos dois idiomas. O editor mostra de novo o texto no ar.",
+    "discardFailed": "Não foi possível descartar o rascunho. Tente de novo.",
+    "syncFailed": "Não foi possível salvar o rascunho antes. Nada mudou. Tente de novo."
+  },
+  "versions": {
+    "history": "Histórico",
+    "loadFailed": "Não foi possível carregar o histórico.",
+    "none": "Ainda não há versões anteriores.",
+    "noText": "Sem texto",
+    "restore": "Restaurar",
+    "restoreConfirm": "Colocar a v{{v}} no rascunho? O texto no ar só muda quando você colocar no ar.",
+    "restoreDo": "Colocar no rascunho",
+    "restored": "A v{{v}} está no rascunho agora. O texto no ar só muda quando você colocar no ar."
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "loadFailed": "Não foi possível carregar o prompt. Tente mais tarde."
+  }
+}

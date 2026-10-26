@@ -1,0 +1,52 @@
+{
+  "draft": {
+    "language": "Prompt language",
+    "lang": {
+      "nl": "NL",
+      "en": "EN"
+    },
+    "notice": "Shared by every ElevenLabs line in this language. Your edits go to a draft that calls never hear until you press Save to live.",
+    "liveMoved": "The live prompt changed after this draft started. Save to live replaces that newer text (it is kept as a version in the history).",
+    "startOver": "Start over from live",
+    "missing": "There is no ElevenLabs prompt in this language yet.",
+    "viewLabel": "View",
+    "view": {
+      "edit": "Edit",
+      "changes": "Changes",
+      "filled": "Filled in"
+    },
+    "status": {
+      "same": "Same as live",
+      "changed": "+{{added}} / -{{removed}} lines against live"
+    },
+    "noChanges": "The draft is the same as live.",
+    "unchangedLines_one": "{{count}} unchanged line",
+    "unchangedLines_other": "{{count}} unchanged lines",
+    "saveToLive": "Save to live",
+    "saveConfirm": "Put the drafts live in both languages (NL and EN)? Calls use them within 30 seconds. The current live texts are kept as versions.",
+    "saveDo": "Save to live",
+    "saved": "Saved to live. Calls use it within 30 seconds.",
+    "savedNone": "Nothing to save: the drafts are the same as live.",
+    "saveFailed": "Could not save to live. Try again.",
+    "discard": "Discard draft",
+    "discardConfirm": "Discard the draft in both languages (NL and EN)? Accepted suggestions go back to the list. Live stays as it is.",
+    "discardDo": "Discard both",
+    "discarded": "Draft discarded in both languages. The editor shows live again.",
+    "discardFailed": "Could not discard the draft. Try again.",
+    "syncFailed": "The draft could not be saved first. Nothing changed. Try again."
+  },
+  "versions": {
+    "history": "History",
+    "loadFailed": "Could not load the history.",
+    "none": "No earlier versions yet.",
+    "noText": "No text",
+    "restore": "Restore",
+    "restoreConfirm": "Put v{{v}} in the draft? Live does not change until you save to live.",
+    "restoreDo": "Put in draft",
+    "restored": "v{{v}} is in the draft now. Live does not change until you save to live."
+  },
+  "common": {
+    "cancel": "Cancel",
+    "loadFailed": "Could not load the prompt. Try again later."
+  }
+}

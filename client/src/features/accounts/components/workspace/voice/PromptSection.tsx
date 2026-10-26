@@ -3,7 +3,7 @@
 // she is (name, voice, language), this business's own text (greeting,
 // instructions), then the two prompts every client line in this language shares.
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, Loader2, MessageSquareQuote, NotebookPen, ScrollText, Waves } from "lucide-react";
+import { BookOpen, Loader2, MessageSquareQuote, NotebookPen, Waves } from "lucide-react";
 import { useVoiceT } from "./voiceGender";
 import { VoiceCardShell, helpStyle, inputStyle } from "./voiceAtoms";
 import { EXTRA_INSTRUCTIONS_MAX, type VoiceLine, type VoiceLinePatch } from "./voiceApi";
@@ -15,6 +15,8 @@ import { runsOnEleven } from "./lineEngine";
 import { useAutosave } from "./useAutosave";
 import { AutosaveBadge, SharedPromptCard } from "./SharedPromptCard";
 import { useAccountVoicePrompts, useSaveVoicePrompt } from "./voicePromptsApi";
+import { ElevenDraftCard } from "./coach/ElevenDraftCard";
+import { promptLangOf } from "./coach/coachApi";
 import type { VoiceCard } from "./readiness";
 
 const GREETING_MAX = 500;
@@ -129,20 +131,13 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
           onSave={savePrompt}
         />
       )}
+      {/* Edits go to a draft; only its Save to live changes what calls hear. */}
       {onEleven && eleven && (
-        <SharedPromptCard
+        <ElevenDraftCard
           key={`eleven-${eleven.id}`}
-          card="promptEleven"
-          kind="eleven"
           accountId={line.accountId}
           lineId={line.number?.id}
-          approx
-          icon={<ScrollText size={17} />}
-          title={t("prompt.eleven.title")}
-          help={`${t("prompt.eleven.help")} ${t("prompt.eleven.syntax")}`}
-          sharedText={t("prompt.eleven.shared")}
-          row={eleven}
-          onSave={savePrompt}
+          defaultLang={promptLangOf(line.locale)}
         />
       )}
     </>

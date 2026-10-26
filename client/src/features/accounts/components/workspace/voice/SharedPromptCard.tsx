@@ -16,7 +16,7 @@ import { PromptCounts } from "./PromptCounts";
 import type { VoicePromptRow } from "./voicePromptsApi";
 import type { VoiceCard } from "./readiness";
 
-const EDITOR_HEIGHT = 460;
+export const EDITOR_HEIGHT = 460;
 
 export function AutosaveBadge({ state }: { state: AutosaveState }) {
   const { t } = useVoiceT();
@@ -38,7 +38,7 @@ const SEGMENT_STYLE: Record<Segment["kind"], React.CSSProperties> = {
   added: { color: "var(--mute)" },
 };
 
-function FilledIn({ segments }: { segments: Segment[] }) {
+export function FilledIn({ segments }: { segments: Segment[] }) {
   const { t } = useVoiceT();
   return (
     <>

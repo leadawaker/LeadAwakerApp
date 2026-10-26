@@ -35,6 +35,7 @@ import enSetup from "./locales/en/setup.json";
 import enCommunicationProfile from "./locales/en/communicationProfile.json";
 import enSpeedToLead from "./locales/en/speedToLead.json";
 import enVoiceTab from "./locales/en/voiceTab.json";
+import enVoiceCoach from "./locales/en/voiceCoach.json";
 import enChatTab from "./locales/en/chatTab.json";
 import enWhatsappCloud from "./locales/en/whatsappCloud.json";
 import enClientAlerts from "./locales/en/clientAlerts.json";
@@ -70,6 +71,7 @@ import ptSetup from "./locales/pt/setup.json";
 import ptCommunicationProfile from "./locales/pt/communicationProfile.json";
 import ptSpeedToLead from "./locales/pt/speedToLead.json";
 import ptVoiceTab from "./locales/pt/voiceTab.json";
+import ptVoiceCoach from "./locales/pt/voiceCoach.json";
 import ptChatTab from "./locales/pt/chatTab.json";
 import ptWhatsappCloud from "./locales/pt/whatsappCloud.json";
 import ptClientAlerts from "./locales/pt/clientAlerts.json";
@@ -105,6 +107,7 @@ import nlSetup from "./locales/nl/setup.json";
 import nlCommunicationProfile from "./locales/nl/communicationProfile.json";
 import nlSpeedToLead from "./locales/nl/speedToLead.json";
 import nlVoiceTab from "./locales/nl/voiceTab.json";
+import nlVoiceCoach from "./locales/nl/voiceCoach.json";
 import nlChatTab from "./locales/nl/chatTab.json";
 import nlWhatsappCloud from "./locales/nl/whatsappCloud.json";
 import nlClientAlerts from "./locales/nl/clientAlerts.json";
@@ -142,6 +145,7 @@ const resources = {
     communicationProfile: enCommunicationProfile,
     speedToLead: enSpeedToLead,
     voiceTab: enVoiceTab,
+    voiceCoach: enVoiceCoach,
     chatTab: enChatTab,
     whatsappCloud: enWhatsappCloud,
     clientAlerts: enClientAlerts,
@@ -178,6 +182,7 @@ const resources = {
     communicationProfile: ptCommunicationProfile,
     speedToLead: ptSpeedToLead,
     voiceTab: ptVoiceTab,
+    voiceCoach: ptVoiceCoach,
     chatTab: ptChatTab,
     whatsappCloud: ptWhatsappCloud,
     clientAlerts: ptClientAlerts,
@@ -214,6 +219,7 @@ const resources = {
     communicationProfile: nlCommunicationProfile,
     speedToLead: nlSpeedToLead,
     voiceTab: nlVoiceTab,
+    voiceCoach: nlVoiceCoach,
     chatTab: nlChatTab,
     whatsappCloud: nlWhatsappCloud,
     clientAlerts: nlClientAlerts,
@@ -261,6 +267,7 @@ i18n
       "communicationProfile",
       "speedToLead",
       "voiceTab",
+      "voiceCoach",
       "chatTab",
       "whatsappCloud",
       "clientAlerts",

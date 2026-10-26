@@ -1,0 +1,52 @@
+{
+  "draft": {
+    "language": "Taal van de prompt",
+    "lang": {
+      "nl": "NL",
+      "en": "EN"
+    },
+    "notice": "Gedeeld door elke ElevenLabs-lijn in deze taal. Je wijzigingen gaan naar een concept: gesprekken horen daar niets van tot je op Live zetten drukt.",
+    "liveMoved": "De live prompt is veranderd nadat dit concept begon. Live zetten vervangt die nieuwere tekst (die blijft als versie bewaard in de geschiedenis).",
+    "startOver": "Opnieuw beginnen vanaf live",
+    "missing": "Er is nog geen ElevenLabs-prompt in deze taal.",
+    "viewLabel": "Weergave",
+    "view": {
+      "edit": "Bewerken",
+      "changes": "Wijzigingen",
+      "filled": "Ingevuld"
+    },
+    "status": {
+      "same": "Gelijk aan live",
+      "changed": "+{{added}} / -{{removed}} regels t.o.v. live"
+    },
+    "noChanges": "Het concept is gelijk aan live.",
+    "unchangedLines_one": "{{count}} ongewijzigde regel",
+    "unchangedLines_other": "{{count}} ongewijzigde regels",
+    "saveToLive": "Live zetten",
+    "saveConfirm": "De concepten in beide talen (NL en EN) live zetten? Gesprekken gebruiken ze binnen 30 seconden. De huidige live teksten blijven als versie bewaard.",
+    "saveDo": "Live zetten",
+    "saved": "Live gezet. Gesprekken gebruiken het binnen 30 seconden.",
+    "savedNone": "Niets om live te zetten: de concepten zijn gelijk aan live.",
+    "saveFailed": "Live zetten is niet gelukt. Probeer het opnieuw.",
+    "discard": "Concept weggooien",
+    "discardConfirm": "Het concept in beide talen (NL en EN) weggooien? Geaccepteerde suggesties gaan terug naar de lijst. Live blijft zoals het is.",
+    "discardDo": "Beide weggooien",
+    "discarded": "Concept in beide talen weggegooid. De editor toont weer live.",
+    "discardFailed": "Weggooien is niet gelukt. Probeer het opnieuw.",
+    "syncFailed": "Het concept kon niet eerst worden opgeslagen. Er is niets veranderd. Probeer het opnieuw."
+  },
+  "versions": {
+    "history": "Geschiedenis",
+    "loadFailed": "De geschiedenis kon niet worden geladen.",
+    "none": "Nog geen eerdere versies.",
+    "noText": "Geen tekst",
+    "restore": "Terugzetten",
+    "restoreConfirm": "v{{v}} in het concept zetten? Live verandert pas als je live zet.",
+    "restoreDo": "In concept zetten",
+    "restored": "v{{v}} staat nu in het concept. Live verandert pas als je live zet."
+  },
+  "common": {
+    "cancel": "Annuleren",
+    "loadFailed": "De prompt kon niet worden geladen. Probeer het later opnieuw."
+  }
+}
