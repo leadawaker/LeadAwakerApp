@@ -20,6 +20,7 @@ import { planAccept, planSaveToLive, staleTransitions, STALE_NOTE, type CardEdit
 import { elevenPromptRow, type VoicePromptRow } from "./voiceAccountPrompts";
 import type { DbLike, Tx } from "./voicePersona";
 
+// The drafted rows. eleven_layer_pt has no draft: review and coach mirror nl and en, and the pt row is edited on the row itself.
 const LANGS: PromptLang[] = ["nl", "en"];
 const DRAFT_LOCK_KEY = 4_217_001;
 const DAY_MS = 24 * 60 * 60 * 1000;

@@ -8,8 +8,8 @@ Sources: ElevenLabs' prompting guide (https://elevenlabs.io/docs/eleven-agents/b
 
 The ElevenLabs agent does not store our prompt. The engine builds it again for every call and sends it along with the call. Saving the prompt row in the CRM is what makes a change live, within about 30 seconds (the engine reads the rows through a 30 second cache), with no restart.
 
-- **The rows.** The prompt is the text of two `Prompt_Library` rows: `eleven_layer_nl` (Dutch) and `eleven_layer_en` (English). Portuguese callers read the `en` row, and the engine adds one code-written line that says which Portuguese to speak. So the rows cannot carry Portuguese-only wording.
-- **Shared.** Both rows are shared by every ElevenLabs line. Nothing in them may be specific to one client: no business names, phone numbers, prices, addresses, brands or cars. Client facts come from the account's knowledge base at call time.
+- **The rows.** The prompt is the text of three `Prompt_Library` rows: `eleven_layer_nl` (Dutch), `eleven_layer_en` (English) and `eleven_layer_pt` (Portuguese, written natively in Brazilian Portuguese). pt-BR and pt-PT callers both read the `pt` row; for pt-PT the engine adds one code-written line (`{pt_language}`) that says to speak European Portuguese. The review and the coach propose edits for the `nl` and `en` rows only; the `pt` row is edited by hand.
+- **Shared.** The rows are shared by every ElevenLabs line. Nothing in them may be specific to one client: no business names, phone numbers, prices, addresses, brands or cars. Client facts come from the account's knowledge base at call time.
 - **Fallback.** If a row is missing, archived or empty, or fills in to fewer than 200 characters, the call silently gets the code copy of the prompt (`eleven_prompt_copy.py`, the same words the rows were seeded from). A change that guts a row does not break calls: it quietly switches itself off.
 
 ### The marks
@@ -123,7 +123,7 @@ A change is a repair of the one line that caused a failure, never a rewrite. The
 5. **Remove a conflicting line instead of adding a louder one.** When two lines contradict, delete or reword the weaker one. Never add emphasis, capitals or a repeated rule on top. A rule that is present, explicit and still ignored is an engine-side cause: report it, do not pile on text.
 6. **Keep one question per turn intact.** Never ask the agent to put two questions, or a question and an offer, in one turn.
 7. **Objections.** For objection handling give two reframes before a fallback, not one.
-8. **Mirror Dutch and English.** When the rule exists in both rows, propose the matching edit in both, in the same words as far as the languages allow. Portuguese reads the English row, so nothing Portuguese-specific goes in it.
+8. **Mirror Dutch and English.** When the rule exists in both rows, propose the matching edit in both, in the same words as far as the languages allow. Portuguese has its own row (`eleven_layer_pt`), so nothing Portuguese-specific goes in the English row.
 9. **Keep every mark.** A `{mark}` or `{?flag}` in the find text stays in the replacement exactly as typed, on the same line. If the rule goes, the whole line goes with its marks. Never add a mark that is not in the lists above, and never turn a conditional line into an unconditional one (it would promise a tool or a state the call does not have).
 10. **A colon before a mark.** `{callback_policy}` expands to text that starts in lower case because it follows a colon ("declined, failed or unavailable: ..."). Keep that punctuation as it is.
 11. **No client facts in the shared rows**, and no em dashes in the replacement text. A rule that is true for one business only is a knowledge base recommendation.
@@ -183,6 +183,6 @@ This system changes the prompt rows only, and only through a card that Gabriel a
 - **A louder copy of an existing rule.** No capitals, exclamation marks, repeated rules or "VERY important". If a rule exists and is clear, the cause is not the prompt.
 - **A change without evidence.** The weekly review never proposes a change without a quote from a call. The coach may suggest an improvement when Gabriel asks for one, and then says plainly that no call shows the problem.
 - **A card that was rejected before**, unless calls after the rejection give new evidence, and the card then says what is new.
-- **Client facts or Portuguese-only wording in the shared rows**, and any change to the marks: no new, renamed or removed marks, no conditional line made unconditional.
+- **Client facts in the shared rows, or Portuguese-only wording in the `nl` or `en` row**, and any change to the marks: no new, renamed or removed marks, no conditional line made unconditional.
 - **Shrinking the prompt toward the fallback.** A change that removes large parts of a row is out: under 200 characters the call silently falls back to the code copy.
 - **Em dashes** in any proposed text.

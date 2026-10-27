@@ -33,7 +33,7 @@ export interface AccountVoicePrompts {
   locale: string;
   layer: VoicePromptRow | null;
   backend: VoicePromptRow | null;
-  /** The ElevenLabs prompt (`eleven_layer_{nl|en}`), shared by every ElevenLabs line. */
+  /** The ElevenLabs prompt (`eleven_layer_{nl|en|pt}`), shared by every ElevenLabs line in that language. */
   eleven: VoicePromptRow | null;
 }
 
@@ -73,8 +73,11 @@ async function backendRow(locale: string) {
   return toRow(byAccount);
 }
 
-/** The active `eleven_layer_{nl|en}` row, newest updated_at first (also read by the draft storage, inside its transactions). */
-export async function elevenPromptRow(lang: PromptLang, exec: DbLike = db): Promise<VoicePromptRow | null> {
+/** The ElevenLabs row languages: the review and coach drafts (PromptLang) cover nl and en; pt is edited on the row itself. */
+export type ElevenLang = PromptLang | "pt";
+
+/** The active `eleven_layer_{nl|en|pt}` row, newest updated_at first (also read by the draft storage, inside its transactions). */
+export async function elevenPromptRow(lang: ElevenLang, exec: DbLike = db): Promise<VoicePromptRow | null> {
   const [r] = await exec.select().from(promptLibrary)
     .where(and(eq(promptLibrary.useCase, `eleven_layer_${lang}`), active))
     .orderBy(sql`${promptLibrary.updatedAt} DESC NULLS LAST`, desc(promptLibrary.id))
@@ -82,9 +85,14 @@ export async function elevenPromptRow(lang: PromptLang, exec: DbLike = db): Prom
   return toRow(r);
 }
 
-/** Engine rule: Dutch lines use eleven_layer_nl, every other language (Portuguese too) eleven_layer_en. */
+/** Engine rule (eleven_template.template_lang): Dutch lines use eleven_layer_nl, Portuguese (pt-BR, pt-PT) eleven_layer_pt, everything else eleven_layer_en. */
+export function elevenLangOf(locale: string): ElevenLang {
+  const lang = localeLanguage(locale);
+  return lang === "nl" || lang === "pt" ? lang : "en";
+}
+
 async function elevenRow(locale: string) {
-  return elevenPromptRow(localeLanguage(locale) === "nl" ? "nl" : "en");
+  return elevenPromptRow(elevenLangOf(locale));
 }
 
 async function getAccountVoicePrompts(locale: string): Promise<AccountVoicePrompts> {
