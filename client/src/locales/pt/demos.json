@@ -282,5 +282,28 @@
       "leg_busy": "{{who}}: linha ocupada.",
       "leg_no_answer": "{{who}}: não atendeu."
     }
+  },
+  "personas": {
+    "allNiches": "Todos os nichos",
+    "sourceLabel": "Filtrar por origem",
+    "sourceAll": "Todas",
+    "sourceWebsite": "Site",
+    "sourceManual": "Manual",
+    "noMatchesFilters": "Nenhuma persona corresponde a estes filtros.",
+    "clearFilters": "Limpar filtros",
+    "translate": "Traduzir {{from}} para {{to}}",
+    "translateFrom": "Traduzir de",
+    "translateHint": "Ainda não há nada em {{to}}. Isto preenche os campos {{to}} vazios a partir do texto salvo. Revise o resultado: ele é salvo enquanto você digita.",
+    "translating": "Traduzindo...",
+    "translateFailed": "Não foi possível traduzir agora. Tente de novo.",
+    "products": "Produtos ({{lang}})",
+    "productsHint": "A demo lê esta lista, a página de estoque e a cidade quando conversa com um lead.",
+    "stockUrl": "URL da página de estoque",
+    "city": "Cidade",
+    "phone": "Telefone",
+    "deleteLiveWarning_one": "{{count}} link de demo ativo ainda usa esta persona. Excluir mesmo assim?",
+    "deleteLiveWarning_other": "{{count}} links de demo ativos ainda usam esta persona. Excluir mesmo assim?",
+    "deleteAnyway": "Excluir mesmo assim",
+    "deleteFailed": "Não foi possível excluir esta persona."
   }
 }

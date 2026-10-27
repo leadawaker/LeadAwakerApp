@@ -282,5 +282,28 @@
       "leg_busy": "{{who}}: line busy.",
       "leg_no_answer": "{{who}}: no answer."
     }
+  },
+  "personas": {
+    "allNiches": "All niches",
+    "sourceLabel": "Filter by source",
+    "sourceAll": "All",
+    "sourceWebsite": "Website",
+    "sourceManual": "Manual",
+    "noMatchesFilters": "No personas match these filters.",
+    "clearFilters": "Clear filters",
+    "translate": "Translate {{from}} to {{to}}",
+    "translateFrom": "Translate from",
+    "translateHint": "Nothing in {{to}} yet. This fills the empty {{to}} fields from the saved copy. Review the result: it saves as you type.",
+    "translating": "Translating...",
+    "translateFailed": "Could not translate right now. Try again.",
+    "products": "Products ({{lang}})",
+    "productsHint": "The demo reads this list, the stock page and the city when it talks to a lead.",
+    "stockUrl": "Stock page URL",
+    "city": "City",
+    "phone": "Phone",
+    "deleteLiveWarning_one": "{{count}} live demo link still uses this persona. Delete it anyway?",
+    "deleteLiveWarning_other": "{{count}} live demo links still use this persona. Delete it anyway?",
+    "deleteAnyway": "Delete anyway",
+    "deleteFailed": "Could not delete this persona."
   }
 }

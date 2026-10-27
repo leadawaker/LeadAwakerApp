@@ -3,6 +3,7 @@
  * comes from ClientEditor's draft and every change goes back through its
  * setters, so autosave sees one draft no matter which section was typed in.
  */
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { BookOpenText, Languages, MessageSquareQuote, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -44,32 +45,17 @@ function LangSlot({ lang, label, value, onChange, rows }: {
   );
 }
 
-/** Where the persona is filed in the library and the emoji it is listed with. */
-export function IdentitySection({ category, emoji, onCategory, onEmoji }: {
+/** Where the persona is filed in the library. */
+export function IdentitySection({ category, onCategory }: {
   category: string;
-  emoji: string;
   onCategory: (value: string) => void;
-  onEmoji: (value: string) => void;
 }) {
   const { t } = useTranslation("campaigns");
   return (
     <ClientSection icon={Tag} title={t("clients.identityTitle")} blurb={t("clients.identityHint")}>
-      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-        <div style={{ flex: "1 1 220px", maxWidth: 300 }}>
-          <label className="dp-label">{t("clients.categoryLabel", "Category")}</label>
-          <CategorySelect value={category} onChange={onCategory} />
-        </div>
-        <div style={{ width: 90 }}>
-          <label className="dp-label" htmlFor="dp-emoji">{t("clients.emojiLabel", "Emoji")}</label>
-          <input
-            id="dp-emoji"
-            className="la-input dp-input"
-            value={emoji}
-            onChange={(e) => onEmoji(e.target.value)}
-            maxLength={8}
-            placeholder="🍳"
-          />
-        </div>
+      <div style={{ maxWidth: 300 }}>
+        <label className="dp-label">{t("clients.categoryLabel", "Category")}</label>
+        <CategorySelect value={category} onChange={onCategory} />
       </div>
     </ClientSection>
   );
@@ -157,11 +143,15 @@ export function OpenerSection({ text, onChange }: {
 const PERSONA_GROUPS: PersonaGroup[] = ["business", "lead", "conversation"];
 
 /** Everything the model reads: one language at a time. */
-export function PersonaSection({ text, lang, onLang, onChange }: {
+export function PersonaSection({ text, lang, onLang, onChange, emptyLangSlot, afterKb }: {
   text: Draft["text"];
   lang: DemoLang;
   onLang: (lang: DemoLang) => void;
   onChange: (field: ClientTextField, lang: DemoLang, value: string) => void;
+  /** Shown above the boxes while the chosen language has no text yet (the translate button). */
+  emptyLangSlot?: ReactNode;
+  /** Closes "The business" group, right after the knowledge base (what it sells, stock page, city). */
+  afterKb?: ReactNode;
 }) {
   const { t } = useTranslation("campaigns");
   const withContent = filledLangs(TEXT_FIELDS.map(({ field }) => text[field]));
@@ -209,6 +199,7 @@ export function PersonaSection({ text, lang, onLang, onChange }: {
         </div>
       }
     >
+      {!withContent.includes(lang) && emptyLangSlot}
       {PERSONA_GROUPS.map((group) => {
         const fields = TEXT_FIELDS.filter((f) => f.group === group);
         const short = fields.filter((f) => f.rows === undefined);
@@ -219,6 +210,7 @@ export function PersonaSection({ text, lang, onLang, onChange }: {
             <div className="dp-fields">
               {short.length > 0 && <div className="dp-trio" style={{ alignItems: "start" }}>{short.map(box)}</div>}
               {long.map(box)}
+              {group === "business" && afterKb}
             </div>
           </div>
         );

@@ -48,6 +48,7 @@
 .dp-shell.is-open .dp-filters .la-seg-btn { padding: 6px 11px; }
 .dp-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
 .dp-search { flex: 1; min-width: 110px; display: flex; justify-content: flex-end; }
+.dp-filters .dp-cat-filter { width: auto; min-width: 150px; max-width: 220px; }
 .dp-back { display: none; }
 
 /* Too narrow for both: the editor takes the whole view, with a way back. */
@@ -95,16 +96,15 @@
 .dp-dot--hollow { background: transparent; box-shadow: inset 0 0 0 2px var(--dp-dot); }
 
 /* ── rows ───────────────────────────────────────────────────────────── */
-.am-row.dp-row { grid-template-columns: 36px minmax(0, 1fr) 84px 72px 40px 16px; }
+.am-row.dp-row { grid-template-columns: minmax(0, 1fr) 84px 72px 40px 16px; }
 .dp-captions {
   display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) 84px 72px 40px 16px;
+  grid-template-columns: minmax(0, 1fr) 84px 72px 40px 16px;
   gap: 14px;
   padding: 0 18px;
   margin-bottom: -8px;
 }
 .dp-captions span { font-family: var(--mono); font-size: 10px; color: var(--mute-2); white-space: nowrap; }
-.dp-emoji { font-size: 17px; line-height: 1; }
 .dp-title-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .dp-title-line .am-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .dp-live {
@@ -134,12 +134,12 @@
 }
 
 @container dp-list (max-width: 640px) {
-  .am-row.dp-row { grid-template-columns: 36px minmax(0, 1fr) 84px 16px; }
+  .am-row.dp-row { grid-template-columns: minmax(0, 1fr) 84px 16px; }
   .dp-row .dp-col-when, .dp-row .dp-col-id, .dp-captions { display: none; }
 }
 /* The rail and phones: languages move under the name. */
 @container dp-list (max-width: 440px) {
-  .am-row.dp-row { grid-template-columns: 36px minmax(0, 1fr) 16px; gap: 12px; padding: 12px 14px; }
+  .am-row.dp-row { grid-template-columns: minmax(0, 1fr) 16px; gap: 12px; padding: 12px 14px; }
   .dp-row .dp-col-langs { display: none; }
   .dp-langs--inline { display: inline-flex; gap: 6px; margin-right: 8px; font-size: 10.5px; }
   .dp-list .am-section-head { padding: 12px 14px; }
@@ -157,7 +157,6 @@
 }
 /* Two classes on purpose: these adjust `.am-*` rules, and must win whichever stylesheet loads last. */
 .am-icon-tile.dp-head-tile { width: 44px; height: 44px; }
-.dp-head-tile .dp-emoji { font-size: 21px; }
 .dp-panel-title { font-size: 22px; line-height: 1.2; color: var(--ink); overflow-wrap: anywhere; }
 /* A scraped persona's niche can be a whole sentence: two lines, then cut. */
 .dp-panel-sub {
@@ -234,6 +233,22 @@ textarea.dp-input {
 .dp-terms { display: grid; grid-template-columns: 104px repeat(3, minmax(0, 1fr)); gap: 10px 12px; align-items: center; }
 .dp-term-label { font-size: 13px; font-weight: 600; color: var(--ink-soft); }
 
+/* Two inputs side by side (stock URL, city). */
+.dp-pair { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+
+/* The translate offer shown while the chosen language is still empty. */
+.dp-translate {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 12px 14px;
+  border-radius: var(--r-surface);
+  background: var(--bg);
+  box-shadow: var(--sh-inset-super-crisp);
+}
+.dp-translate-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+
 .dp-media { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 18px; }
 .dp-thumb {
   flex-shrink: 0;
@@ -255,7 +270,7 @@ textarea.dp-input {
   .dp-panel-head { padding: 14px 16px 12px; }
   .am-icon-tile.dp-head-tile { display: none; }
   .dp-panel-inner { padding: 14px 12px 40px; }
-  .dp-trio { grid-template-columns: minmax(0, 1fr); }
+  .dp-trio, .dp-pair { grid-template-columns: minmax(0, 1fr); }
   .dp-terms { grid-template-columns: minmax(0, 1fr); gap: 8px; }
   .dp-term-label { margin-top: 10px; }
   .dp-term-label:first-child { margin-top: 0; }
@@ -279,6 +294,20 @@ textarea.dp-input {
 .dp-menu-item:focus-visible { outline: 2px solid hsl(var(--ring)); outline-offset: -2px; }
 .dp-menu-item--danger { color: hsl(var(--destructive)); }
 .dp-menu-item--danger:hover { background: hsl(var(--destructive) / 0.1); color: hsl(var(--destructive)); }
+
+/* Phones: every tap target on the personas page is at least 44px (desktop is untouched). */
+@media (max-width: 767px) {
+  .dp-touch,
+  .dp-filters .la-seg-btn,
+  .dp-panel-head .la-seg-btn,
+  .dp-panel-body .la-seg-btn,
+  .dp-filters .dp-cat-filter,
+  .dp-menu-item,
+  .am-row.dp-row { min-height: 44px; }
+  .dp-filters .dp-search [role="search"] { height: 44px; }
+  .dp-panel-head .icon-circle-lg { width: 44px; height: 44px; }
+  .la-input.dp-input { min-height: max(44px, calc(var(--dp-rows, 1) * 1.5em + 18px)); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .dp-coverage-fill { animation: none; }

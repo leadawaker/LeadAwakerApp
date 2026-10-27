@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { apiRequest } from "@/lib/queryClient";
 import type { DemoProduct, ProductsByLang } from "@shared/demoProducts";
+import type { TermGroup } from "./termGroups";
 
 export type DemoLang = "en" | "nl" | "pt";
 
@@ -46,13 +47,7 @@ export const CLIENT_TEXT_FIELDS = [
 
 export type ClientTextField = (typeof CLIENT_TEXT_FIELDS)[number];
 
-/**
- * The five term groups. Unlike the text fields these MUST exist per language:
- * they are substituted verbatim into the opener with no model in the loop, so
- * an English term on a Dutch demo goes out as "je staircase".
- */
-export const TERM_GROUPS = ["project", "proposal", "decision", "advisor", "visit"] as const;
-export type TermGroup = (typeof TERM_GROUPS)[number];
+export { TERM_GROUPS, type TermGroup } from "./termGroups";
 
 export interface DemoClientSummary {
   id: number;
@@ -112,7 +107,6 @@ export interface DemoClientPatch {
   terms?: Partial<Record<TermGroup, Partial<Record<DemoLang, string[]>>>>;
   bookingModeCall?: boolean;
   category?: string | null;
-  emoji?: string | null;
   /** Replaced per language sent; languages not in the patch stay. */
   products?: ProductsByLang;
   stockUrl?: string | null;

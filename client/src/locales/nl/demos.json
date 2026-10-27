@@ -282,5 +282,28 @@
       "leg_busy": "{{who}}: in gesprek.",
       "leg_no_answer": "{{who}}: niet opgenomen."
     }
+  },
+  "personas": {
+    "allNiches": "Alle niches",
+    "sourceLabel": "Filter op bron",
+    "sourceAll": "Alle",
+    "sourceWebsite": "Website",
+    "sourceManual": "Handmatig",
+    "noMatchesFilters": "Geen persona's passen bij deze filters.",
+    "clearFilters": "Filters wissen",
+    "translate": "Vertaal {{from}} naar {{to}}",
+    "translateFrom": "Vertaal vanuit",
+    "translateHint": "Nog niets in {{to}}. Dit vult de lege {{to}}-velden vanuit de opgeslagen tekst. Controleer het resultaat: het wordt opgeslagen terwijl je typt.",
+    "translating": "Vertalen...",
+    "translateFailed": "Vertalen lukt nu niet. Probeer het opnieuw.",
+    "products": "Producten ({{lang}})",
+    "productsHint": "De demo leest deze lijst, de voorraadpagina en de plaats als hij met een lead praat.",
+    "stockUrl": "URL van de voorraadpagina",
+    "city": "Plaats",
+    "phone": "Telefoon",
+    "deleteLiveWarning_one": "{{count}} live demolink gebruikt deze persona nog. Toch verwijderen?",
+    "deleteLiveWarning_other": "{{count}} live demolinks gebruiken deze persona nog. Toch verwijderen?",
+    "deleteAnyway": "Toch verwijderen",
+    "deleteFailed": "Deze persona kon niet worden verwijderd."
   }
 }

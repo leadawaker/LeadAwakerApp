@@ -3,7 +3,8 @@ import { useTranslation } from "react-i18next";
 import { MoreHorizontal, Copy, Trash2, ChevronLeft } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { IconBtn } from "@/components/ui/icon-btn";
-import { useDemoClient, useDuplicateDemoClient, useDeleteDemoClient } from "../../api/demoClientsApi";
+import { DeleteClientError, useDemoClient, useDuplicateDemoClient, useDeleteDemoClient } from "../../api/demoClientsApi";
+import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
 import "./clients.css";
 
 export function ClientActionsMenu({
@@ -19,6 +20,7 @@ export function ClientActionsMenu({
   variant?: "topbar" | "panel";
 }) {
   const { t } = useTranslation("campaigns");
+  const { t: td } = useTranslation("demos");
   const { data: client } = useDemoClient(niche);
   const duplicate = useDuplicateDemoClient();
   const remove = useDeleteDemoClient();
@@ -28,6 +30,10 @@ export function ClientActionsMenu({
   const [newNiche, setNewNiche] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
+  // Set when the server answers 409 live_tokens: the dialog then warns and the
+  // confirm button retries with force.
+  const [liveCount, setLiveCount] = useState<number | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Curated niche packs are listed and editable but not deletable: real
   // campaigns read their word lists. Duplicating one is still fine (it always
@@ -62,11 +68,25 @@ export function ClientActionsMenu({
     );
   };
 
+  const closeDelete = () => {
+    setConfirmDelete(false);
+    setLiveCount(null);
+    setDeleteError(null);
+  };
+
   const handleDelete = () => {
-    remove.mutate({ niche }, {
+    setDeleteError(null);
+    remove.mutate({ niche, force: liveCount !== null }, {
       onSuccess: () => {
-        setConfirmDelete(false);
+        closeDelete();
         onDeleted();
+      },
+      onError: (err: unknown) => {
+        if (err instanceof DeleteClientError && err.code === "live_tokens") {
+          setLiveCount(err.count);
+          return;
+        }
+        setDeleteError(err instanceof Error ? err.message : td("personas.deleteFailed"));
       },
     });
   };
@@ -86,7 +106,7 @@ export function ClientActionsMenu({
               <MoreHorizontal className="h-4 w-4" />
             </IconBtn>
           ) : (
-            <button className="la-btn la-btn--soft la-btn--icon" title={t("clients.moreActions", "More actions")}>
+            <button className="la-btn la-btn--soft la-btn--icon dp-touch" title={t("clients.moreActions", "More actions")}>
               <MoreHorizontal className="h-4 w-4" />
             </button>
           )}
@@ -163,56 +183,15 @@ export function ClientActionsMenu({
       </Popover>
 
       {confirmDelete && (
-        <ConfirmDelete
+        <ConfirmDeleteDialog
           niche={niche}
+          liveCount={liveCount}
+          error={deleteError}
           pending={remove.isPending}
-          onCancel={() => setConfirmDelete(false)}
+          onCancel={closeDelete}
           onConfirm={handleDelete}
         />
       )}
     </>
-  );
-}
-
-/** Destructive confirmation. Moved here from ClientEditor.tsx: deletion now
- *  triggers from this topbar menu, not from the editor's own header. */
-function ConfirmDelete({
-  niche,
-  pending,
-  onCancel,
-  onConfirm,
-}: {
-  niche: string;
-  pending: boolean;
-  onCancel: () => void;
-  onConfirm: () => void;
-}) {
-  const { t } = useTranslation("campaigns");
-  return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      onClick={onCancel}
-    >
-      <div
-        className="neu-raised"
-        style={{ background: "var(--card)", padding: 26, borderRadius: "var(--r-card)", maxWidth: 380, margin: 16 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="serif" style={{ fontSize: 20, color: "var(--ink)", marginBottom: 8 }}>
-          {t("clients.confirmDeleteTitle", "Delete this persona?")}
-        </div>
-        <p style={{ fontSize: 13, color: "var(--mute)", lineHeight: 1.5, marginBottom: 18 }}>
-          {t("clients.confirmDeleteBody", { niche })}
-        </p>
-        <div style={{ display: "flex", gap: 8, justifyContent: "flex-end" }}>
-          <button className="la-btn la-btn--soft" onClick={onCancel}>
-            {t("clients.cancel", "Cancel")}
-          </button>
-          <button className="la-btn la-btn--wine" onClick={onConfirm} disabled={pending}>
-            {pending ? t("clients.deleting", "Deleting...") : t("clients.delete", "Delete")}
-          </button>
-        </div>
-      </div>
-    </div>
   );
 }

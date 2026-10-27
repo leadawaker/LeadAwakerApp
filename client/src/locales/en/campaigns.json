@@ -757,7 +757,6 @@
     "duplicateNamePrompt": "Name for the new persona",
     "duplicateFailed": "Could not duplicate this persona.",
     "categoryLabel": "Category",
-    "emojiLabel": "Emoji",
     "noCategory": "Uncategorized",
     "newCategory": "New category…",
     "newCategoryPlaceholder": "e.g. Wellness & Leisure",
@@ -834,7 +833,7 @@
       "media": "Media"
     },
     "identityTitle": "In the library",
-    "identityHint": "Where this persona is filed and the emoji it is listed with.",
+    "identityHint": "Where this persona is filed in the library.",
     "companyNameHint": "A default. You can override it per prospect when you send the link.",
     "filledIn": "Filled in: {{langs}}",
     "nothingFilled": "Nothing filled in yet",
