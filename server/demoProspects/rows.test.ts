@@ -1,7 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { DemoProspectRow } from "@shared/schema";
-import { normalizeSettings, prospectDto, settingsFromLeads, tokensInGroup } from "./rows";
+import type { DemoLeadLite } from "../demoSessionsFold";
+import { normalizeSettings, prospectDto, remintSource, settingsFromLeads, tokensInGroup } from "./rows";
 
 const leads = [
   { channelIdentifier: "wa-demo:aaaa1111", firstName: "Johan", language: "nl", demoNiche: JSON.stringify({ prospect_group: "g1", company_name: "Meure" }) },
@@ -102,4 +103,58 @@ test("prospectDto: no Client reads as empty strings, dates are ISO", () => {
   assert.equal(dto.notes, "Called back Tuesday");
   assert.equal(prospectDto(row({ createdAt: null as unknown as Date }), null).createdAt, null);
   assert.equal(prospectDto(row(), { screenshotPath: null, websiteUrl: null }).screenshot, "");
+});
+
+const wa: DemoLeadLite = {
+  id: 1,
+  channelIdentifier: "wa-demo:t",
+  firstName: "Jo",
+  language: "nl",
+  demoNiche: "{\"a\":1}",
+  demoInvited: true,
+  source: "WhatsApp Demo",
+  phone: null,
+  campaignsId: 67,
+  createdAt: new Date("2026-10-01"),
+  conversionStatus: "New",
+  demoRevokedAt: null,
+};
+const web: DemoLeadLite = { ...wa, id: 2, channelIdentifier: "web-demo:t", source: "Web Demo", demoNiche: "{\"a\":2}", createdAt: new Date("2026-10-02") };
+
+test("remintSource: the browser row's persona wins, the campaign comes from the mint row", () => {
+  assert.equal(remintSource([wa, web])!.demoNiche, "{\"a\":2}");
+  assert.equal(remintSource([web, wa])!.demoNiche, "{\"a\":2}");
+  assert.equal(remintSource([wa, web])!.campaignId, 67);
+  assert.equal(remintSource([wa, web])!.language, "nl");
+});
+
+test("remintSource: an orphan browser row still re-mints, as a WhatsApp demo", () => {
+  const s = remintSource([web])!;
+  assert.equal(s.invited, true);
+  assert.equal(s.campaignId, 67);
+  assert.equal(s.source, "WhatsApp Demo");
+});
+
+test("remintSource: the mint row's source and invited flag are kept", () => {
+  const s = remintSource([{ ...wa, demoInvited: false, source: "Some Source" }, web])!;
+  assert.equal(s.source, "Some Source");
+  assert.equal(s.invited, false);
+});
+
+test("remintSource: a row without a persona blob falls back to the one that has it", () => {
+  assert.equal(remintSource([wa, { ...web, demoNiche: null }])!.demoNiche, "{\"a\":1}");
+  assert.equal(remintSource([wa, { ...web, demoNiche: "not json" }])!.demoNiche, "{\"a\":1}");
+  assert.equal(remintSource([{ ...wa, demoNiche: null }])!.demoNiche, "");
+});
+
+test("remintSource: the name falls back to the other row", () => {
+  assert.equal(remintSource([{ ...wa, firstName: "" }, { ...web, firstName: "Sam" }])!.firstName, "Sam");
+  assert.equal(remintSource([{ ...wa, firstName: null, language: null }])!.firstName, "");
+  assert.equal(remintSource([{ ...wa, language: null }])!.language, "en");
+});
+
+test("remintSource: no campaign on any row means nothing to re-mint", () => {
+  assert.equal(remintSource([{ ...wa, campaignsId: null }]), null);
+  assert.equal(remintSource([]), null);
+  assert.equal(remintSource([{ ...wa, campaignsId: null }, web])!.campaignId, 67);
 });

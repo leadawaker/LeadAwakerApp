@@ -6,7 +6,7 @@
 
 import { db } from "../db";
 import { demoProspects, leads, nicheVocabulary, type DemoProspectRow } from "@shared/schema";
-import { eq, or, like, desc } from "drizzle-orm";
+import { eq, or, like, desc, inArray } from "drizzle-orm";
 import type { DemoProspectDto, DemoProspectSettings } from "@shared/demoProspects";
 import type { DemoLeadLite } from "../demoSessionsFold";
 import { prospectDto } from "./rows";
@@ -96,6 +96,22 @@ export async function deleteProspectRow(group: string): Promise<number> {
   return removed.length;
 }
 
+/** The columns of a demo lead that the Demos page folds over. */
+const demoLeadColumns = {
+  id: leads.id,
+  channelIdentifier: leads.channelIdentifier,
+  firstName: leads.firstName,
+  language: leads.language,
+  demoNiche: leads.demoNiche,
+  demoInvited: leads.demoInvited,
+  source: leads.source,
+  phone: leads.phone,
+  campaignsId: leads.campaignsId,
+  createdAt: leads.createdAt,
+  conversionStatus: leads.conversionStatus,
+  demoRevokedAt: leads.demoRevokedAt,
+};
+
 /**
  * Every demo lead (both surfaces of every token) with the columns the Demos
  * page folds over, newest first. Shared by the sessions list, settings, delete
@@ -104,24 +120,21 @@ export async function deleteProspectRow(group: string): Promise<number> {
  */
 export async function loadDemoLeadsLite(limit?: number): Promise<DemoLeadLite[]> {
   const query = db
-    .select({
-      id: leads.id,
-      channelIdentifier: leads.channelIdentifier,
-      firstName: leads.firstName,
-      language: leads.language,
-      demoNiche: leads.demoNiche,
-      demoInvited: leads.demoInvited,
-      source: leads.source,
-      phone: leads.phone,
-      campaignsId: leads.campaignsId,
-      createdAt: leads.createdAt,
-      conversionStatus: leads.conversionStatus,
-      demoRevokedAt: leads.demoRevokedAt,
-    })
+    .select(demoLeadColumns)
     .from(leads)
     .where(or(like(leads.channelIdentifier, "wa-demo:%"), like(leads.channelIdentifier, "web-demo:%")))
     .orderBy(desc(leads.id))
     .$dynamic();
   const rows = await (limit ? query.limit(limit) : query);
+  return rows.map((r) => ({ ...r, id: r.id as number }));
+}
+
+/** The lead rows (WhatsApp and browser) of one token; none when the token is unknown. */
+export async function loadTokenLeads(token: string): Promise<DemoLeadLite[]> {
+  const rows = await db
+    .select(demoLeadColumns)
+    .from(leads)
+    .where(inArray(leads.channelIdentifier, [`wa-demo:${token}`, `web-demo:${token}`]))
+    .orderBy(desc(leads.id));
   return rows.map((r) => ({ ...r, id: r.id as number }));
 }

@@ -8,6 +8,9 @@ import { z } from "zod";
 /** A prospect group key: a uuid, or `token:<token>` for a legacy ungrouped link. */
 export const PROSPECT_GROUP_RE = /^[A-Za-z0-9:_-]{4,80}$/;
 
+/** A demo link token: letters and digits only (the mint writes 16 hex characters). */
+export const DEMO_TOKEN_RE = /^[A-Za-z0-9]{4,64}$/;
+
 const field = {
   firstName: z.string().trim().min(1).max(80),
   companyName: z.string().trim().max(120),

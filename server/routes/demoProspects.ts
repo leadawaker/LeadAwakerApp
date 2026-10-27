@@ -1,13 +1,15 @@
-// The Demos page's prospect rows: list them, add one from the create panel, and
-// edit one (a settings edit is rewritten into every link it owns).
-// Notes-only and delete come in the routes that follow.
+// The Demos page's prospect rows: list them, add one from the create panel, edit
+// one (a settings edit is rewritten into every link it owns), delete one, and
+// delete or re-mint a single link. There is no standalone revoke route: a link
+// is revoked only as part of re-minting it (or removed by a delete).
 import type { Express } from "express";
 import { wrapAsync, handleZodError } from "./_helpers";
 import { requireAgency } from "../auth";
 import { createProspect, listProspects } from "../demoProspects/store";
 import { normalizeSettings } from "../demoProspects/rows";
 import { applyProspectSettings } from "../demoProspects/applySettings";
-import { PROSPECT_GROUP_RE, prospectCreateSchema, prospectPatchSchema } from "./demoProspectSchemas";
+import { deleteLink, deleteProspect, remintToken } from "../demoProspects/linkOps";
+import { DEMO_TOKEN_RE, PROSPECT_GROUP_RE, prospectCreateSchema, prospectPatchSchema } from "./demoProspectSchemas";
 
 export function registerDemoProspectRoutes(app: Express) {
   app.get(
@@ -56,6 +58,51 @@ export function registerDemoProspectRoutes(app: Express) {
 
       const outcome = await applyProspectSettings(group, parsed.data);
       if (!outcome.ok) return res.status(outcome.status).json({ message: outcome.message });
+      res.json(outcome.result);
+    }),
+  );
+
+  // Delete a prospect: every link it owns (both lead rows and their messages,
+  // the same hard delete as the nightly purge), then its own row.
+  app.delete(
+    "/api/demo/prospects/:group",
+    requireAgency,
+    wrapAsync(async (req, res) => {
+      const group = String(req.params.group || "");
+      if (!PROSPECT_GROUP_RE.test(group)) return res.status(400).json({ message: "Bad prospect key." });
+      res.json(await deleteProspect(group));
+    }),
+  );
+
+  // Delete one link. Allowed for a public website demo too.
+  app.delete(
+    "/api/demo/links/:token",
+    requireAgency,
+    wrapAsync(async (req, res) => {
+      const token = String(req.params.token || "");
+      if (!DEMO_TOKEN_RE.test(token)) return res.status(400).json({ message: "Bad link token." });
+      const result = await deleteLink(token);
+      if (!result) return res.status(404).json({ message: "No link with that token." });
+      res.json(result);
+    }),
+  );
+
+  // Replace a link: a fresh token with the same persona, the old one revoked
+  // (its conversation stays). A public website demo is the visitor's own, so it
+  // refuses with 409 `public_demo`.
+  app.post(
+    "/api/demo/links/:token/remint",
+    requireAgency,
+    wrapAsync(async (req, res) => {
+      const token = String(req.params.token || "");
+      if (!DEMO_TOKEN_RE.test(token)) return res.status(400).json({ message: "Bad link token." });
+      const outcome = await remintToken(token);
+      if (!outcome.ok) {
+        if (outcome.reason === "public_demo") {
+          return res.status(409).json({ code: "public_demo", message: "A public website demo cannot be re-minted." });
+        }
+        return res.status(404).json({ message: "No link with that token." });
+      }
       res.json(outcome.result);
     }),
   );

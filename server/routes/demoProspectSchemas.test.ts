@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { PROSPECT_GROUP_RE, prospectCreateSchema, prospectPatchSchema } from "./demoProspectSchemas";
+import { DEMO_TOKEN_RE, PROSPECT_GROUP_RE, prospectCreateSchema, prospectPatchSchema } from "./demoProspectSchemas";
 
 test("create: a minimal body passes and takes the defaults", () => {
   const r = prospectCreateSchema.safeParse({ prospectGroup: "3f2a-uuid-like", firstName: "Anna" });
@@ -58,4 +58,12 @@ test("patch: a single field passes and no defaults are filled in", () => {
   assert.equal(r.success, true);
   if (r.success) assert.deepEqual(r.data, { notes: "Called back Tuesday" });
   assert.equal(prospectPatchSchema.safeParse({ market: "de" }).success, false);
+});
+
+test("DEMO_TOKEN_RE: 4 to 64 letters and digits, nothing else", () => {
+  assert.equal(DEMO_TOKEN_RE.test("aaaa1111bbbb2222"), true);
+  assert.equal(DEMO_TOKEN_RE.test("abc"), false);
+  assert.equal(DEMO_TOKEN_RE.test("a".repeat(65)), false);
+  assert.equal(DEMO_TOKEN_RE.test("token:abcd"), false);
+  assert.equal(DEMO_TOKEN_RE.test("ab cd"), false);
 });

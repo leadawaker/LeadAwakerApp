@@ -14,6 +14,7 @@ import type {
   ProspectLang,
 } from "@shared/demoProspects";
 import { parseDemoNiche } from "../demoNicheBlob";
+import type { DemoLeadLite } from "../demoSessionsFold";
 
 const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
 
@@ -136,5 +137,51 @@ export function prospectDto(
     screenshot: client?.screenshotPath || "",
     createdAt: iso(row.createdAt),
     updatedAt: iso(row.updatedAt),
+  };
+}
+
+const isWebRow = (l: DemoLeadLite) => (l.channelIdentifier ?? "").startsWith("web-demo:");
+const hasBlob = (l: DemoLeadLite) => Object.keys(parseDemoNiche(l.demoNiche)).length > 0;
+const timeOf = (l: DemoLeadLite) => l.createdAt?.getTime() ?? 0;
+
+/** What a replacement link is minted from, read off the old token's rows. */
+export interface RemintSource {
+  firstName: string;
+  language: string;
+  campaignId: number;
+  demoNiche: string;
+  invited: boolean;
+  source: string;
+}
+
+/**
+ * What to mint a replacement link from, given the rows of one token.
+ *
+ * The persona (and so the name and language) comes from the newest row that
+ * carries one, the browser row first: that is the surface the panel steers, so
+ * its blob is what the demo currently is. The campaign, the invited flag and
+ * the source come from the WhatsApp (mint) row, else the browser row. A browser
+ * row's own source is "Web Demo", which describes the surface, not the mint, so
+ * a mint row built from an orphan browser row is a plain "WhatsApp Demo".
+ * Null when no row has a campaign: nothing to mint into.
+ */
+export function remintSource(rows: DemoLeadLite[]): RemintSource | null {
+  const wa = rows.find((l) => !isWebRow(l) && l.campaignsId != null);
+  const base = wa ?? rows.find((l) => isWebRow(l) && l.campaignsId != null);
+  if (!base || base.campaignsId == null) return null;
+
+  const persona = rows
+    .filter(hasBlob)
+    .sort((a, b) => Number(isWebRow(b)) - Number(isWebRow(a)) || timeOf(b) - timeOf(a))[0];
+  const named = (pick: (l: DemoLeadLite) => string | null) =>
+    [persona, wa, ...rows].map((l) => (l ? str(pick(l)) : "")).find(Boolean) ?? "";
+
+  return {
+    firstName: named((l) => l.firstName),
+    language: named((l) => l.language) || "en",
+    campaignId: base.campaignsId,
+    demoNiche: persona?.demoNiche ?? "",
+    invited: !!base.demoInvited,
+    source: (wa && str(wa.source)) || "WhatsApp Demo",
   };
 }
