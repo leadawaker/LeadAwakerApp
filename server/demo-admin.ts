@@ -100,8 +100,9 @@ export async function getDemoNiche(token: string): Promise<Record<string, unknow
  *
  * `replaceNiche` is the client-switch path, where replacing wholesale is the
  * intent: a different Client is a different business, not an edit to this one.
- * Each row still keeps its own mint-time `service` and `prospect_group`, which
- * are bookkeeping about the link rather than part of the Client.
+ * Each row still keeps its own mint-time bookkeeping (BOOKKEEPING_KEYS:
+ * service, prospect_group, voice, voice_locale), which is about the link rather
+ * than part of the Client. All the token's rows are written in one transaction.
  *
  * Returns how many lead rows were updated; zero means no such token.
  */
@@ -122,18 +123,22 @@ export async function updateDemoConfig(
     patch.companyName !== undefined ||
     patch.aiDisclosure !== undefined;
 
-  for (const lead of rows) {
-    const values: Record<string, unknown> = { updatedAt: new Date() };
-    if (patch.firstName !== undefined) values.firstName = patch.firstName;
-    if (patch.language !== undefined) values.language = patch.language;
+  // One transaction: the two surfaces are one link, so a failure on the second
+  // row must not leave the first one edited.
+  await db.transaction(async (tx) => {
+    for (const lead of rows) {
+      const values: Record<string, unknown> = { updatedAt: new Date() };
+      if (patch.firstName !== undefined) values.firstName = patch.firstName;
+      if (patch.language !== undefined) values.language = patch.language;
 
-    if (wantsNicheEdit) {
-      const niche = mergeDemoNiche(parseDemoNiche(lead.demoNiche), patch);
-      values.demoNiche = JSON.stringify(niche);
+      if (wantsNicheEdit) {
+        const niche = mergeDemoNiche(parseDemoNiche(lead.demoNiche), patch);
+        values.demoNiche = JSON.stringify(niche);
+      }
+
+      await tx.update(leads).set(values as any).where(eq(leads.id, lead.id));
     }
-
-    await db.update(leads).set(values as any).where(eq(leads.id, lead.id));
-  }
+  });
   return rows.length;
 }
 

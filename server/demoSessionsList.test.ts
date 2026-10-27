@@ -95,6 +95,14 @@ test("a chat link is live inside seven days and when opened inside seven days", 
   assert.equal(foldDemoLeads([wa("cccccccc", "2026-10-24T12:00:00Z")], new Map(), opts)[0].expired, false);
 });
 
+test("a voice link is live for 14 days: ten days old and never opened is not expired", () => {
+  const voice = (token: string, createdAt: string) =>
+    lead({ id: 30, channelIdentifier: `wa-demo:${token}`, createdAt: new Date(createdAt), demoNiche: JSON.stringify({ service: "voice" }) });
+  // Same age as the chat link above that expired, but the service reaches isLinkExpired.
+  assert.equal(foldDemoLeads([voice("ffffffff", "2026-10-17T12:00:00Z")], new Map(), opts)[0].expired, false);
+  assert.equal(foldDemoLeads([voice("99999999", "2026-10-12T12:00:00Z")], new Map(), opts)[0].expired, true);
+});
+
 test("a lone browser row counts its first open as the mint (older than seven days is expired)", () => {
   const only = lead({
     id: 12,

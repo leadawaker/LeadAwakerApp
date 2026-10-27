@@ -31,6 +31,7 @@ import { getClientSocialPost } from "../demoSocial/clientStore";
 import type { SocialLang } from "../demoSocial/types";
 import { applyVoicePick, createLinkVoiceFields } from "./demoVoiceSchemas";
 import { productPatchShape } from "../demoClientProducts";
+import { clientSupportsLanguage, repickPersona, resolveRepickClient } from "../demoPersonaRepick";
 import { cleanStockUrl, scanFieldsFromScrape } from "../demoSiteFacts";
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
@@ -50,27 +51,9 @@ import {
   type DemoLang,
 } from "../demo-clients";
 
-/**
- * Can this Client be demoed in this language?
- *
- * A Client stores its opener (and the phrases substituted into it) per
- * language, and only the languages someone actually generated or typed. Running
- * one in a language it lacks used to fall back across languages and splice, for
- * example, a Portuguese noun phrase into an English opener. See clientLanguages().
- *
- * Every caller here does something different with a "no" — the admin mint says
- * so, the VIP command regenerates, the public page uses its own template — so
- * this returns the answer rather than a response.
- */
-export function clientSupportsLanguage(
-  row: Parameters<typeof clientLanguages>[0],
-  language: DemoLang,
-): boolean {
-  const langs = clientLanguages(row);
-  // Empty means unrestricted: the curated niche packs have word lists but no
-  // opener in any language, so there is nothing to splice.
-  return langs.length === 0 || langs.includes(language);
-}
+// Moved to demoPersonaRepick.ts (the /config re-pick and the prospect settings
+// rewrite share it); still importable from here for demoSocial.ts.
+export { clientSupportsLanguage };
 
 /**
  * Is this request Gabriel (or anyone else who runs the agency)?
@@ -987,71 +970,41 @@ export function registerDemoRoutes(app: Express): void {
         // The language the persona is built in is the one being switched TO
         // when both change in the same call, not the one already on the lead.
         const lang = (language || current.language || "en") as DemoLang;
-        const row = await getDemoClient(targetClientNiche);
-        if (!row) {
+        const found = await resolveRepickClient(targetClientNiche, lang);
+        if (!found.ok) {
           // Only a hard failure for an explicit switch; a stale or renamed
-          // current.clientNiche on a language-only patch must not block a
-          // language change the admin never asked to combine with a Client swap.
-          // Except on the Instagram demo, where the post would stay in the old
-          // language under a lead that now reads in the new one.
-          if (clientNiche || social) return res.status(404).json({ message: `No saved Client named "${targetClientNiche}".` });
-        } else if (!clientSupportsLanguage(row, lang)) {
-          // The Instagram demo fails a language-only patch too: its post and
-          // opener are per language, so "change the language, keep the
-          // persona" would leave a post the prospect cannot read.
+          // current.clientNiche, or a Client without this language, on a
+          // language-only patch must not block a language change the admin
+          // never asked to combine with a Client swap: the language field
+          // changes and the persona text stays. Except on the Instagram demo,
+          // where the post and opener are per language, so "change the
+          // language, keep the persona" would leave a post the prospect
+          // cannot read. The messages name the fix, so they go out verbatim.
           if (clientNiche || social) {
-            // Same two checks the mint path runs (see /api/demo/create-link).
-            // Their messages name the fix, so they are surfaced verbatim
-            // rather than flattened into a generic failure.
-            const have = clientLanguages(row).map((l) => l.toUpperCase()).join(", ");
-            return res.status(409).json({
-              message: `"${row.niche}" has no ${lang.toUpperCase()} version. It only exists in ${have}. Add the ${lang.toUpperCase()} opener fields on the Clients tab, or switch this demo to ${have}.`,
-            });
+            return res.status(found.reason === "no_client" ? 404 : 409).json({ message: found.message });
           }
-          // Language-only patch and the Client just doesn't have this
-          // language: let the language field change and leave the persona
-          // text as-is rather than blocking a change nobody asked to fail.
         } else {
-          const ctx = demoClientToContext(row, lang, scenario);
-          if (ctx) {
-            // Remembered so the picker reopens showing this Client as current
-            // instead of falling back to "Campaign default". Inert to the
-            // engine: _overlay_demo_niche_onto_campaign copies an explicit key
-            // list onto the campaign dict, so a key it does not name is
-            // simply ignored.
-            (ctx as Record<string, unknown>).client_niche = row.niche;
-            // A language-only repick is not a Client switch: it is the same
-            // business, re-picked in a different language, so a company-name
-            // override typed into the panel earlier survives it. An explicit
-            // clientNiche switch intentionally does NOT carry this over — a
-            // different Client is a different business.
-            const carried = !clientNiche && current.companyName ? current.companyName : undefined;
-            if (social) {
-              // Exactly what create-link does, from the Client's own context
-              // (so a generated post never saves a prospect's company to the
-              // shared row). The company this lead ends up with decides the
-              // handle: an explicit one in this same patch wins, as it does in
-              // updateDemoConfig.
-              try {
-                const finalCompany = companyName !== undefined ? companyName : carried;
-                Object.assign(ctx, await socialSnapshotFields(row, lang as SocialLang, { ...ctx }, finalCompany));
-              } catch (err) {
-                console.error("[social-demo] post generation failed", row.niche, (err as Error).message);
-                return res.status(502).json({ message: "Could not write the Instagram post. Try again." });
-              }
-            }
-            if (carried) ctx.company_name = carried;
-            // Mint-time bookkeeping (which service, which prospect) is not
-            // part of the Client; keep it, or the next switch no longer knows
-            // this is an Instagram demo.
-            for (const k of ["service", "prospect_group"]) {
-              if (currentBlob[k] !== undefined) (ctx as Record<string, unknown>)[k] = currentBlob[k];
-            }
-            replaceNiche = ctx as Record<string, unknown>;
+          // A language-only repick is not a Client switch: it is the same
+          // business, re-picked in a different language, so a company-name
+          // override typed into the panel earlier survives it. An explicit
+          // clientNiche switch intentionally does NOT carry this over: a
+          // different Client is a different business. An explicit company in
+          // this same patch wins either way (it decides the Instagram handle).
+          const carried = !clientNiche && current.companyName ? current.companyName : undefined;
+          const picked = await repickPersona({
+            row: found.row,
+            lang,
+            scenario,
+            social,
+            companyName: companyName !== undefined ? companyName : carried,
+            carry: currentBlob,
+          });
+          if (picked.ok) {
+            replaceNiche = picked.ctx;
+          } else if (picked.reason === "social") {
+            return res.status(502).json({ message: picked.message });
           } else if (clientNiche) {
-            return res.status(409).json({
-              message: `"${clientNiche}" has no saved persona yet. Generate one for this niche instead.`,
-            });
+            return res.status(409).json({ message: picked.message });
           }
         }
       }

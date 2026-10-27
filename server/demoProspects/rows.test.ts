@@ -20,6 +20,18 @@ test("tokensInGroup: a legacy ungrouped token is addressed as token:<token>", ()
   assert.deepEqual(tokensInGroup(leads, "token:cccc3333"), ["cccc3333"]);
 });
 
+test("tokensInGroup: token:<token> never reaches a token that has a group", () => {
+  // aaaa1111 is stamped g1 on both rows, so it is not the legacy token:aaaa1111.
+  assert.deepEqual(tokensInGroup(leads, "token:aaaa1111"), []);
+  // The mint row's stamp decides when only it carries one.
+  const wa = { channelIdentifier: "wa-demo:gggg7777", demoNiche: JSON.stringify({ prospect_group: "g2" }) };
+  const web = { channelIdentifier: "web-demo:gggg7777", demoNiche: "{}" };
+  assert.deepEqual(tokensInGroup([web, wa], "g2"), ["gggg7777"]);
+  assert.deepEqual(tokensInGroup([web, wa], "token:gggg7777"), []);
+  // An unstamped token with a browser row is still the legacy token.
+  assert.deepEqual(tokensInGroup([web], "token:gggg7777"), ["gggg7777"]);
+});
+
 test("tokensInGroup: rows without a demo channel identifier are skipped", () => {
   const odd = [
     { channelIdentifier: null, demoNiche: JSON.stringify({ prospect_group: "g1" }) },

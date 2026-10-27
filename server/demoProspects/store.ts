@@ -98,11 +98,12 @@ export async function deleteProspectRow(group: string): Promise<number> {
 
 /**
  * Every demo lead (both surfaces of every token) with the columns the Demos
- * page folds over. Shared by the sessions list, settings, delete and the
- * persona and script tooling, so each reads links the same way.
+ * page folds over, newest first. Shared by the sessions list, settings, delete
+ * and the persona and script tooling, so each reads links the same way.
+ * `limit` caps the rows (the sessions list wants the newest N tokens).
  */
-export async function loadDemoLeadsLite(): Promise<DemoLeadLite[]> {
-  const rows = await db
+export async function loadDemoLeadsLite(limit?: number): Promise<DemoLeadLite[]> {
+  const query = db
     .select({
       id: leads.id,
       channelIdentifier: leads.channelIdentifier,
@@ -119,6 +120,8 @@ export async function loadDemoLeadsLite(): Promise<DemoLeadLite[]> {
     })
     .from(leads)
     .where(or(like(leads.channelIdentifier, "wa-demo:%"), like(leads.channelIdentifier, "web-demo:%")))
-    .orderBy(desc(leads.id));
+    .orderBy(desc(leads.id))
+    .$dynamic();
+  const rows = await (limit ? query.limit(limit) : query);
   return rows.map((r) => ({ ...r, id: r.id as number }));
 }

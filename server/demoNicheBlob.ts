@@ -58,13 +58,21 @@ export function pickConfigRow<T extends { channelIdentifier: string | null; crea
 }
 
 /**
+ * The blob keys that describe the LINK rather than the Client: which service it
+ * demos, which prospect it belongs to, and a voice link's chosen voice and
+ * locale. A Client or language switch replaces the persona but keeps these, or
+ * the next switch no longer knows what kind of link it is editing.
+ */
+export const BOOKKEEPING_KEYS = ["service", "prospect_group", "voice", "voice_locale"] as const;
+
+/**
  * One lead row's next `demo_niche` blob for a panel edit.
  *
  * Without `replaceNiche` the edit merges into the row's own blob. With it the
  * blob is replaced wholesale (a different Client is a different business), but
- * the row keeps its own mint-time `service` and `prospect_group`: those are
- * bookkeeping about the link, not part of the Client. `aiDisclosure` "" is a
- * real value: it clears the override back to the campaign's own setting.
+ * the row keeps its own BOOKKEEPING_KEYS: those are about the link, not part of
+ * the Client. `aiDisclosure` "" is a real value: it clears the override back to
+ * the campaign's own setting.
  */
 export function mergeDemoNiche(
   own: Record<string, unknown>,
@@ -72,7 +80,7 @@ export function mergeDemoNiche(
 ): Record<string, unknown> {
   const niche: Record<string, unknown> = patch.replaceNiche ? { ...patch.replaceNiche } : { ...own };
   if (patch.replaceNiche) {
-    for (const k of ["service", "prospect_group"]) {
+    for (const k of BOOKKEEPING_KEYS) {
       if (own[k] !== undefined) niche[k] = own[k];
     }
   }

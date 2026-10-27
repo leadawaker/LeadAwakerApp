@@ -61,3 +61,12 @@ test("mergeDemoNiche replaces the persona but keeps the row's own service and pr
   assert.equal(mergeDemoNiche({}, { replaceNiche: replace, companyName: "Mine" }).company_name, "Mine");
   assert.equal(replace.service, "dbr"); // the shared replacement is not mutated
 });
+
+test("mergeDemoNiche keeps a voice link's voice and locale through a Client or language switch", () => {
+  const own = { service: "voice", prospect_group: "g1", voice: "abc123", voice_locale: "nl-NL" };
+  const out = mergeDemoNiche(own, { replaceNiche: { company_name: "Bakery", voice: "from-client" } });
+  assert.equal(out.voice, "abc123");
+  assert.equal(out.voice_locale, "nl-NL");
+  // A row that never had a voice takes none from the replacement's bookkeeping.
+  assert.equal(mergeDemoNiche({ service: "dbr" }, { replaceNiche: { company_name: "Bakery" } }).voice, undefined);
+});

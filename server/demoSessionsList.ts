@@ -5,10 +5,11 @@
  */
 
 import { db } from "./db";
-import { leads, interactions } from "@shared/schema";
-import { eq, and, or, like, desc, inArray, count, max, min } from "drizzle-orm";
+import { interactions } from "@shared/schema";
+import { eq, and, inArray, count, max, min } from "drizzle-orm";
 import { buildDemoPageLink, buildWhatsAppLink } from "./demo-session";
-import { foldDemoLeads, type DemoLeadLite, type DemoSessionRow, type ReplyCounts } from "./demoSessionsFold";
+import { foldDemoLeads, type DemoSessionRow, type ReplyCounts } from "./demoSessionsFold";
+import { loadDemoLeadsLite } from "./demoProspects/store";
 
 export type { DemoSessionRow, DemoSurfaceRow } from "./demoSessionsFold";
 
@@ -19,36 +20,13 @@ export type { DemoSessionRow, DemoSurfaceRow } from "./demoSessionsFold";
  * lookup: at 200 tokens the naive version is 400 round trips.
  */
 export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
-  const rows = await db
-    .select({
-      id: leads.id,
-      channelIdentifier: leads.channelIdentifier,
-      firstName: leads.firstName,
-      language: leads.language,
-      demoNiche: leads.demoNiche,
-      demoInvited: leads.demoInvited,
-      source: leads.source,
-      phone: leads.phone,
-      campaignsId: leads.campaignsId,
-      createdAt: leads.createdAt,
-      conversionStatus: leads.conversionStatus,
-      demoRevokedAt: leads.demoRevokedAt,
-    })
-    .from(leads)
-    .where(
-      or(
-        like(leads.channelIdentifier, "wa-demo:%"),
-        like(leads.channelIdentifier, "web-demo:%"),
-      ),
-    )
-    .orderBy(desc(leads.id))
-    // Two surfaces per token, so the row budget is double the token budget.
-    .limit(limit * 2);
+  // Two surfaces per token, so the row budget is double the token budget.
+  const rows = await loadDemoLeadsLite(limit * 2);
 
   if (!rows.length) return [];
 
   const replyCounts: ReplyCounts = new Map();
-  const ids = rows.map((r) => r.id as number);
+  const ids = rows.map((r) => r.id);
   const counted = await db
     .select({
       leadsId: interactions.leadsId,
@@ -69,8 +47,7 @@ export async function listDemoSessions(limit = 200): Promise<DemoSessionRow[]> {
     });
   }
 
-  const lite: DemoLeadLite[] = rows.map((r) => ({ ...r, id: r.id as number }));
-  return foldDemoLeads(lite, replyCounts, {
+  return foldDemoLeads(rows, replyCounts, {
     now: Date.now(),
     linksFor: (token) => ({
       demoUrl: buildDemoPageLink({ token }),

@@ -30,29 +30,38 @@ const asDisclosure = (v: unknown): AiDisclosure => (DISCLOSURES.includes(str(v))
 const asMarket = (v: unknown): DemoMarket => (MARKETS.includes(str(v)) ? (str(v) as DemoMarket) : "");
 
 /** The token behind a demo lead's channel identifier, "" for any other lead. */
-function tokenOf(channelIdentifier: string | null): string {
+export function tokenOf(channelIdentifier: string | null): string {
   const m = /^(?:wa|web)-demo:(.+)$/.exec(channelIdentifier ?? "");
   return m ? m[1] : "";
 }
 
 /**
- * The tokens that belong to a prospect group, once each, in input order.
+ * The tokens that belong to a prospect group, once each, in first-seen order.
  *
- * A lead belongs when the group stamped in its blob matches. A link minted
- * before groups existed has no stamp; the Demos page keys it `token:<token>`
- * (see prospectRows.ts), so that key finds it here too.
+ * A token's group is the one stamped in its blob: the mint (WhatsApp) row's
+ * stamp when it has one, else the browser row's, the same precedence the Demos
+ * page applies (demoSessionsFold.ts). A link minted before groups existed has
+ * no stamp; the page keys it `token:<token>` (see prospectRows.ts), and only an
+ * unstamped token answers to that key, so editing a legacy link never reaches a
+ * grouped token of the same name.
  */
 export function tokensInGroup(
   leads: { channelIdentifier: string | null; demoNiche: string | null }[],
   group: string,
 ): string[] {
-  const tokens = new Set<string>();
+  const stamps = new Map<string, { wa: string; web: string }>();
   for (const lead of leads) {
     const token = tokenOf(lead.channelIdentifier);
     if (!token) continue;
-    if (parseDemoNiche(lead.demoNiche).prospect_group === group || group === `token:${token}`) tokens.add(token);
+    const stamp = stamps.get(token) ?? { wa: "", web: "" };
+    const own = str(parseDemoNiche(lead.demoNiche).prospect_group);
+    if ((lead.channelIdentifier ?? "").startsWith("wa-demo:")) stamp.wa = own;
+    else stamp.web = own;
+    stamps.set(token, stamp);
   }
-  return Array.from(tokens);
+  return Array.from(stamps)
+    .filter(([token, s]) => (s.wa || s.web || `token:${token}`) === group)
+    .map(([token]) => token);
 }
 
 /**
