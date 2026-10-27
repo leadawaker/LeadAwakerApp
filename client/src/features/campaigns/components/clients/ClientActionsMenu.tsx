@@ -63,7 +63,7 @@ export function ClientActionsMenu({
   };
 
   const handleDelete = () => {
-    remove.mutate(niche, {
+    remove.mutate({ niche }, {
       onSuccess: () => {
         setConfirmDelete(false);
         onDeleted();

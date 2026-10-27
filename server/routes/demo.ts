@@ -45,6 +45,7 @@ import {
   deleteDemoClient,
   duplicateDemoClient,
   isLiveClient,
+  liveTokenCounts,
   LIVE_CLIENT_MESSAGE,
   type DemoLang,
 } from "../demo-clients";
@@ -407,8 +408,23 @@ export function registerDemoRoutes(app: Express): void {
     "/api/demo/clients/:niche",
     requireAgency,
     wrapAsync(async (req, res) => {
-      if (await isLiveClient(String(req.params.niche))) return res.status(409).json({ message: LIVE_CLIENT_MESSAGE });
-      const result = await deleteDemoClient(String(req.params.niche));
+      const niche = String(req.params.niche);
+      if (await isLiveClient(niche)) return res.status(409).json({ message: LIVE_CLIENT_MESSAGE });
+      // Links minted on this persona stay open for days, so deleting it needs a
+      // second, explicit go-ahead (?force=1). Curated and missing rows skip the
+      // check and get deleteDemoClient's own answer below.
+      if (req.query.force !== "1") {
+        const row = await getDemoClient(niche);
+        const count = row?.isDemoClient ? ((await liveTokenCounts()).get(niche) ?? 0) : 0;
+        if (count > 0) {
+          return res.status(409).json({
+            code: "live_tokens",
+            count,
+            message: `${count} live demo ${count === 1 ? "link uses" : "links use"} this persona. Delete it anyway?`,
+          });
+        }
+      }
+      const result = await deleteDemoClient(niche);
       if (result === "missing") return res.status(404).json({ message: "No such Client." });
       if (result === "curated") {
         return res.status(409).json({

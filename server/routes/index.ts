@@ -52,6 +52,7 @@ import { registerVoiceReviewRoutes } from "./voiceReviews";
 import { registerVoiceCoachRoutes } from "./voiceCoach";
 import { registerDemoSocialRoutes } from "./demoSocial";
 import { registerDemoLogoRoutes } from "./demoLogos";
+import { registerDemoPersonaRoutes } from "./demoPersonas";
 import { registerPublicDemoRoutes } from "./publicDemo";
 import { registerReportOptinRoutes } from "./reportOptin";
 import { registerTopaWebhookRoutes } from "./topaWebhook";
@@ -136,6 +137,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerVoiceCoachRoutes(app);
   registerDemoSocialRoutes(app);
   registerDemoLogoRoutes(app);
+  registerDemoPersonaRoutes(app);
   registerPublicDemoRoutes(app);
   registerReportOptinRoutes(app);
   registerTopaWebhookRoutes(app);
