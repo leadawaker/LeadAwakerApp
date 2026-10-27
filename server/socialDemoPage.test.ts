@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { isTokenExpired, pickPostImage, renderSocialDemoHtml, TOKEN_TTL_DAYS } from "./socialDemoPage";
+import { isTokenExpired, pickPostImage, renderSocialDemoHtml, socialLinkExpired, TOKEN_TTL_DAYS } from "./socialDemoPage";
 
 const post = { handle: "dak", caption: "</script><b>x</b>", keyword: "DAK", cta_line: "Reageer DAK", offer: "o", likes: 3 };
 
@@ -38,4 +38,30 @@ test("the expired page carries the flag and no persona", () => {
   const boot = JSON.parse(html.match(/window.__SOCIAL__ = (.*?);<\/script>/)![1]);
   assert.equal(boot.expired, true);
   assert.equal(boot.post, null);
+});
+
+test("a revoked token is expired at any age", () => {
+  const now = Date.parse("2026-10-27T12:00:00Z");
+  assert.equal(isTokenExpired(new Date(now - 86_400_000), now, new Date(now)), true);
+  assert.equal(isTokenExpired(new Date(now - 86_400_000), now, null), false);
+  assert.equal(isTokenExpired(null, now, new Date(now)), true);
+});
+
+test("social link expiry reads the mint, the first open and the revoke marker", () => {
+  const now = Date.parse("2026-10-27T12:00:00Z");
+  const ago = (d: number) => new Date(now - d * 86_400_000);
+  const wa = (d: number, revoked: Date | null = null) => ({ channel_identifier: "wa-demo:abcd1234", created_at: ago(d), demo_revoked_at: revoked });
+  const web = (d: number, revoked: Date | null = null) => ({ channel_identifier: "web-demo:abcd1234", created_at: ago(d), demo_revoked_at: revoked });
+  assert.equal(socialLinkExpired([wa(2)], now), false);
+  assert.equal(socialLinkExpired([wa(9)], now), true);
+  // Minted 12 days ago but opened in a browser 6 days ago: still live.
+  assert.equal(socialLinkExpired([web(6), wa(12)], now), false);
+  assert.equal(socialLinkExpired([web(8), wa(12)], now), true);
+  // A lone web-demo row counts its first open as the mint.
+  assert.equal(socialLinkExpired([web(3)], now), false);
+  assert.equal(socialLinkExpired([web(9)], now), true);
+  // The revoke marker on either row expires a young link.
+  assert.equal(socialLinkExpired([wa(1), web(0, ago(0))], now), true);
+  assert.equal(socialLinkExpired([wa(1, ago(0)), web(0)], now), true);
+  assert.equal(socialLinkExpired([], now), false);
 });

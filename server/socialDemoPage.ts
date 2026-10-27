@@ -1,6 +1,7 @@
 import { statSync } from "fs";
 import path from "path";
 import type { PublicSocialPost } from "./demoSocial/types";
+import { TOKEN_TTL_DAYS, isLinkExpired } from "@shared/demoTokenTtl";
 
 export interface SocialBoot {
   token: string;
@@ -16,16 +17,51 @@ export interface SocialBoot {
   logoUrl?: string | null;
 }
 
-// The engine's token lifetime (TOKEN_TTL_DAYS in automations
-// src/webhooks/web_demo_routes.py): _find_lead and _find_wa_lead only match a
-// lead created within it. Past it every engine call 404s, so the page says so
-// up front instead of letting a comment open a DM that can never load.
-export const TOKEN_TTL_DAYS = 7;
+// The engine's token lifetime (src/automations/demo_token_ttl.py in
+// automations, kept in step by shared/demoTokenTtl.ts): _find_lead and
+// _find_wa_lead only match a lead created within it. Past it every engine call
+// 404s, so the page says so up front instead of letting a comment open a DM
+// that can never load. A revoked token is expired at any age.
+export { TOKEN_TTL_DAYS };
 
-export function isTokenExpired(createdAt: Date | string | null | undefined, now = Date.now()): boolean {
-  if (!createdAt) return false;
-  const t = new Date(createdAt).getTime();
-  return Number.isFinite(t) && now - t > TOKEN_TTL_DAYS * 86_400_000;
+export function isTokenExpired(
+  createdAt: Date | string | null | undefined,
+  now = Date.now(),
+  revokedAt: Date | string | null = null,
+): boolean {
+  return isLinkExpired({ service: "socials", mintedAt: createdAt ?? null, revokedAt }, now);
+}
+
+/** The columns of a token's two Leads rows (wa-demo and web-demo) that decide its lifetime. */
+export interface TokenLeadRow {
+  channel_identifier: string;
+  created_at: Date | string | null;
+  demo_revoked_at?: Date | string | null;
+}
+
+function oldestCreated(rows: TokenLeadRow[], prefix: string): Date | string | null {
+  let best: { t: number; value: Date | string } | null = null;
+  for (const r of rows) {
+    if (!r.channel_identifier.startsWith(prefix) || !r.created_at) continue;
+    const t = new Date(r.created_at).getTime();
+    if (Number.isFinite(t) && (!best || t < best.t)) best = { t, value: r.created_at };
+  }
+  return best ? best.value : null;
+}
+
+/**
+ * Whether the social link is past its life: the wa-demo row's date is the mint,
+ * the web-demo row's date is the first browser open, and a lone web-demo row
+ * counts its first open as the mint. Either row's revoke marker expires it.
+ */
+export function socialLinkExpired(rows: TokenLeadRow[], now = Date.now()): boolean {
+  const opened = oldestCreated(rows, "web-demo:");
+  return isLinkExpired({
+    service: "socials",
+    mintedAt: oldestCreated(rows, "wa-demo:") ?? opened,
+    openedAt: opened,
+    revokedAt: rows.find((r) => r.demo_revoked_at)?.demo_revoked_at ?? null,
+  }, now);
 }
 
 const SHOT = /^[a-f0-9]{16}\.webp$/;

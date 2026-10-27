@@ -20,6 +20,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
+import type { ProductsByLang } from "./demoProducts";
 
 // NocoDB schema
 const nocodb = pgSchema("p2mxx34fvbf3ll6");
@@ -502,7 +503,7 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   // the demo prompts. The stock page URL, city and phone are not per language.
   // Written by the persona editor and the website scan review.
   products: jsonb("products")
-    .$type<Partial<Record<"en" | "nl" | "pt", { name: string; detail: string; price: string }[]>>>()
+    .$type<ProductsByLang>()
     .notNull()
     .default({}),
   stockUrl: text("stock_url"),

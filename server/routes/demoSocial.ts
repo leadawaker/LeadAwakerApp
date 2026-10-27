@@ -6,7 +6,7 @@ import { db, pool } from "../db";
 import { nicheVocabulary } from "@shared/schema";
 import { wrapAsync } from "./_helpers";
 import { requireAuth, requireAgency } from "../auth";
-import { isTokenExpired, pickPostImage, renderSocialDemoHtml } from "../socialDemoPage";
+import { pickPostImage, renderSocialDemoHtml, socialLinkExpired } from "../socialDemoPage";
 import { logoUrlFor } from "../clientLogo";
 import { getDemoClient, demoClientToEditable, demoClientToContext, clientLanguages } from "../demo-clients";
 import { clientSupportsLanguage } from "./demo";
@@ -19,22 +19,25 @@ const INTERACTIONS_TABLE = '"p2mxx34fvbf3ll6"."Interactions"';
 const LANGS = new Set(["en", "nl", "pt"]);
 
 export async function loadPersona(token: string) {
-  // Newest first: the browser lead is cloned from the wa-demo one after it,
-  // so the newest row is the one the engine would still match, or neither is.
+  // Both rows of the token: the wa-demo one is the mint, the web-demo one (cloned
+  // from it on the first browser open) the open, and either can carry the revoke
+  // marker. Persona and language come from the newest row that has a persona.
+  // "Source" is selected too so a public website demo can be told apart.
   const { rows } = await pool.query(
-    `SELECT demo_niche, language, created_at FROM ${LEADS_TABLE}
-      WHERE channel_identifier IN ($1, $2) AND demo_niche IS NOT NULL
-      ORDER BY created_at DESC NULLS LAST LIMIT 1`,
+    `SELECT demo_niche, language, created_at, demo_revoked_at, channel_identifier, "Source" FROM ${LEADS_TABLE}
+      WHERE channel_identifier IN ($1, $2)
+      ORDER BY created_at DESC NULLS LAST`,
     [`web-demo:${token}`, `wa-demo:${token}`],
   );
+  const row = rows.find((r) => r.demo_niche != null);
   let persona: Record<string, any> = {};
-  try { persona = JSON.parse(String(rows[0]?.demo_niche || "{}")) || {}; } catch { /* none */ }
-  const lang = String(rows[0]?.language || "en");
+  try { persona = JSON.parse(String(row?.demo_niche || "{}")) || {}; } catch { /* none */ }
+  const lang = String(row?.language || "en");
   return {
     persona,
     language: (LANGS.has(lang) ? lang : "en") as "en" | "nl" | "pt",
-    found: rows.length > 0,
-    expired: rows.length > 0 && isTokenExpired(rows[0].created_at),
+    found: !!row,
+    expired: !!row && socialLinkExpired(rows),
   };
 }
 
