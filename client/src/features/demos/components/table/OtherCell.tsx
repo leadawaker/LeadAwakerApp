@@ -5,9 +5,8 @@ import { toast } from "@/hooks/use-toast";
 import { demoOpenUrl, type DemoSession } from "../../api/demoSessionsApi";
 import { serviceOf } from "../../serviceOf";
 import { SERVICES, serviceCopyUrl, serviceOpenUrl } from "../../services";
+import { TOUCH } from "../../touchTargets";
 import { copyText } from "./linkActions";
-
-const TOUCH = "max-md:h-11 max-md:w-11";
 
 /** Links with no service column to sit in: an older duplicate, or a link on a campaign that is not one of the services. Rare, and never dropped. */
 export function OtherCell({ sessions }: { sessions: DemoSession[] }) {

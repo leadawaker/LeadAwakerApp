@@ -27,8 +27,8 @@ export function useMintLink(row: ProspectRow, svc: ServiceDef) {
     try {
       await create.mutateAsync(mintInputForRow(row, svc));
       return true;
-    } catch (e) {
-      toast({ variant: "destructive", title: t("new.failed"), description: e instanceof Error ? e.message : undefined });
+    } catch {
+      toast({ variant: "destructive", title: t("new.failed") });
       return false;
     }
   };

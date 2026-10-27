@@ -6,6 +6,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { TOUCH_ROW } from "../touchTargets";
 
 /** The one destructive confirm on the Demos page (a hard delete, so an AlertDialog and not a popover). */
 export function DeleteConfirmDialog({ open, onOpenChange, title, body, confirmLabel, onConfirm, pending }: {
@@ -26,10 +27,10 @@ export function DeleteConfirmDialog({ open, onOpenChange, title, body, confirmLa
           <AlertDialogDescription>{body}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>{t("common.cancel")}</AlertDialogCancel>
+          <AlertDialogCancel disabled={pending} className={TOUCH_ROW}>{t("common.cancel")}</AlertDialogCancel>
           <AlertDialogAction
             disabled={pending}
-            className={cn(buttonVariants({ variant: "destructive" }))}
+            className={cn(buttonVariants({ variant: "destructive" }), TOUCH_ROW)}
             // Radix closes the dialog on any action click; the caller closes it once the delete has finished.
             onClick={(e) => {
               e.preventDefault();

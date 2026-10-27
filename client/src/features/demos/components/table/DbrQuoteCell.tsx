@@ -6,10 +6,9 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import type { ProspectRow } from "../../prospectRows";
 import { SERVICES, type ServiceDef } from "../../services";
 import { LINK_COLUMNS } from "../../tableColumns";
+import { TOUCH } from "../../touchTargets";
 import { LinkCell } from "./LinkCell";
 import { useMintLink } from "./linkActions";
-
-const TOUCH = "max-md:h-11 max-md:w-11";
 
 const DBR_QUOTE: ServiceDef[] = (LINK_COLUMNS.find((c) => c.key === "dbrQuote")?.services ?? []).flatMap((key) =>
   SERVICES.filter((s) => s.key === key),

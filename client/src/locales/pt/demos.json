@@ -3,9 +3,39 @@
   "subtitle": "Todos os links de demo que você gerou, e até onde cada prospect chegou.",
   "tabs": {
     "sessions": "Sessões",
-    "new": "Nova demo",
     "clients": "Personas de demo",
     "settings": "Configurações"
+  },
+  "sessions": {
+    "searchPlaceholder": "Buscar prospects...",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "viewTable": "Visualização em tabela",
+    "viewFolders": "Visualização em pastas",
+    "newDemo": "Nova demo",
+    "groups": {
+      "activity": "Atividade",
+      "client": "Client",
+      "type": "Tipo de demo"
+    },
+    "activity": {
+      "all": "Todas",
+      "opened": "Abertas",
+      "replied": "Com resposta",
+      "never": "Nunca abertas"
+    },
+    "expired": "Só expiradas",
+    "anyClient": "Qualquer client",
+    "anyType": "Qualquer tipo de demo",
+    "sortBy": {
+      "newest": "Mais recentes",
+      "prospect": "Prospect",
+      "company": "Empresa",
+      "activity": "Última atividade"
+    },
+    "noMatches": "Nenhum prospect encontrado",
+    "clearFilters": "Limpar filtros",
+    "expiredHidden": "Links expirados ficam ocultos. Ative Só expiradas no filtro para vê-los."
   },
   "table": {
     "site": "Site",
@@ -83,7 +113,7 @@
   },
   "empty": {
     "title": "Nenhuma demo ainda",
-    "body": "Gere uma na aba Nova demo, ou pelo painel de compartilhamento de uma campanha."
+    "body": "Adicione um prospect com + Nova demo e depois gere os links pela tabela."
   },
   "error": {
     "load": "Não foi possível carregar as sessões de demo."

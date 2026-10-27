@@ -6,11 +6,10 @@ import { toast } from "@/hooks/use-toast";
 import type { DemoSession } from "../../api/demoSessionsApi";
 import type { ProspectRow } from "../../prospectRows";
 import { serviceCopyUrl, type ServiceDef } from "../../services";
+import { TOUCH } from "../../touchTargets";
 import { LinkActionsPopover } from "./LinkActionsPopover";
 import { copyText, useMintLink } from "./linkActions";
 import { LinkStatusPill, useActivityDate } from "./LinkStatusPill";
-
-const TOUCH = "max-md:h-11 max-md:w-11";
 
 /** No link yet: mint one on this row's prospect. Socials need a client persona first. */
 function MintButton({ row, svc }: { row: ProspectRow; svc: ServiceDef }) {

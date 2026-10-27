@@ -3,9 +3,39 @@
   "subtitle": "Every demo link you have minted, and how far each prospect got.",
   "tabs": {
     "sessions": "Sessions",
-    "new": "New demo",
     "clients": "Demo personas",
     "settings": "Settings"
+  },
+  "sessions": {
+    "searchPlaceholder": "Search prospects...",
+    "filter": "Filter",
+    "sort": "Sort",
+    "viewTable": "Table view",
+    "viewFolders": "Folder view",
+    "newDemo": "New demo",
+    "groups": {
+      "activity": "Activity",
+      "client": "Client",
+      "type": "Demo type"
+    },
+    "activity": {
+      "all": "All",
+      "opened": "Opened",
+      "replied": "Replied",
+      "never": "Never opened"
+    },
+    "expired": "Expired only",
+    "anyClient": "Any client",
+    "anyType": "Any demo type",
+    "sortBy": {
+      "newest": "Newest",
+      "prospect": "Prospect",
+      "company": "Company",
+      "activity": "Last activity"
+    },
+    "noMatches": "No prospects match",
+    "clearFilters": "Clear filters",
+    "expiredHidden": "Expired links are hidden. Switch on Expired only in the filter to see them."
   },
   "table": {
     "site": "Site",
@@ -83,7 +113,7 @@
   },
   "empty": {
     "title": "No demos yet",
-    "body": "Mint one from the New demo tab, or from a campaign's share panel."
+    "body": "Add a prospect with + New demo, then mint links from the table."
   },
   "error": {
     "load": "Could not load demo sessions."
