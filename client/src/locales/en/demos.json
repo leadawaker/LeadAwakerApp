@@ -181,7 +181,7 @@
     },
     "eleven": {
       "voicesTitle": "Engine and voice per language",
-      "hint": "Demo links and the website demo run on the engine set for their language. Phone demos (Sara calls) always use ElevenLabs.",
+      "hint": "Demo links, phone demos and the website demo run on the engine set for their language.",
       "engineFor": "Engine for {{language}}",
       "voiceFor": "Voice",
       "localeDefault": "Default voice",

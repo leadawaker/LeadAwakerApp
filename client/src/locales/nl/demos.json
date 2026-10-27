@@ -181,7 +181,7 @@
     },
     "eleven": {
       "voicesTitle": "Engine en stem per taal",
-      "hint": "Demolinks en de websitedemo draaien op de engine die voor hun taal is gekozen. Telefoondemo's (Sara belt) gebruiken altijd ElevenLabs.",
+      "hint": "Demolinks, telefoondemo's en de websitedemo draaien op de engine die voor hun taal is gekozen.",
       "engineFor": "Engine voor {{language}}",
       "voiceFor": "Stem",
       "localeDefault": "Standaardstem",

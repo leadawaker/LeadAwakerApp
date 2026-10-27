@@ -35,6 +35,7 @@ import {
 import { getPublicDemoSettings, savePublicDemoSettings, PUBLIC_DEMO_SOURCE } from "../publicDemo/settings";
 import { verifyTurnstile } from "../publicDemo/turnstile";
 import { buildPublicDemo } from "../publicDemo/build";
+import { visitorCountry } from "../publicDemo/country";
 
 const REQ = `"p2mxx34fvbf3ll6"."Public_Demo_Requests"`;
 const LEADS = `"p2mxx34fvbf3ll6"."Leads"`;
@@ -188,9 +189,11 @@ export function registerPublicDemoRoutes(app: Express): void {
       source: PUBLIC_DEMO_SOURCE,
     });
     await pool.query(
-      `INSERT INTO ${REQ} (token, status, website_url, domain, language, ip_hash, user_agent, consent_at, lead_id)
-       VALUES ($1, 'awaiting_phone', $2, $3, $4, $5, $6, now(), $7)`,
-      [token, site.url, site.domain, language, ipHash, String(req.headers["user-agent"] || "").slice(0, 300), leadId],
+      `INSERT INTO ${REQ} (token, status, website_url, domain, language, ip_hash, user_agent, consent_at, lead_id, country)
+       VALUES ($1, 'awaiting_phone', $2, $3, $4, $5, $6, now(), $7, $8)`,
+      [token, site.url, site.domain, language, ipHash, String(req.headers["user-agent"] || "").slice(0, 300), leadId,
+       // The engine picks the homepage demo's voice by it (public_demo_voice.visitor_voice).
+       visitorCountry(req)],
     );
 
     const whatsappUrl = buildWhatsAppLink({ token });

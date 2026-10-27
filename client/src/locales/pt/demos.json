@@ -181,7 +181,7 @@
     },
     "eleven": {
       "voicesTitle": "Motor e voz por idioma",
-      "hint": "Os links de demo e a demo do site usam o motor definido para o idioma deles. As demos por telefone (Sara liga) usam sempre ElevenLabs.",
+      "hint": "Os links de demo, as demos por telefone e a demo do site usam o motor definido para o idioma deles.",
       "engineFor": "Motor para {{language}}",
       "voiceFor": "Voz",
       "localeDefault": "Voz padrão",

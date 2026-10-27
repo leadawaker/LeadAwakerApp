@@ -2264,6 +2264,7 @@ export const publicDemoRequests = nocodb.table("Public_Demo_Requests", {
   language: text("language").notNull(),              // en | nl | pt
   ipHash: text("ip_hash").notNull(),
   userAgent: text("user_agent"),
+  country: text("country"),                          // Cloudflare's cf-ipcountry (GB, NL, ...): the homepage demo's voice
   consentAt: timestamp("consent_at", { withTimezone: true }).notNull(),
   phone: text("phone"),                              // E.164 once verified
   leadId: integer("lead_id"),
