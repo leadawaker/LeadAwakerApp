@@ -34,6 +34,7 @@ import { registerMessagingRoutes } from "./messaging";
 import { registerEmailSenderRoutes } from "./emailSender";
 import { registerMissedCallRoutes } from "./missedCall";
 import { registerDemoRoutes } from "./demo";
+import { registerDemoProspectRoutes } from "./demoProspects";
 import { registerVoiceCallsRoutes } from "./voice-calls";
 import { registerVoiceCallReviewRoutes } from "./voiceCallReview";
 import { registerVoiceLineRoutes } from "./voice-line";
@@ -118,6 +119,8 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerMessagingRoutes(app);
   registerEmailSenderRoutes(app);
   registerMissedCallRoutes(app);
+  // Before registerDemoRoutes, so no /api/demo/:token/... route can shadow /api/demo/prospects.
+  registerDemoProspectRoutes(app);
   registerDemoRoutes(app);
   registerVoiceCallsRoutes(app);
   registerVoiceCallReviewRoutes(app);
