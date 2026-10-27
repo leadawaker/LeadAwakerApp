@@ -31,6 +31,7 @@ import { getClientSocialPost } from "../demoSocial/clientStore";
 import type { SocialLang } from "../demoSocial/types";
 import { applyVoicePick, createLinkVoiceFields } from "./demoVoiceSchemas";
 import { productPatchShape } from "../demoClientProducts";
+import { cleanStockUrl, scanFieldsFromScrape } from "../demoSiteFacts";
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
 // personas Gabriel actually minted for a prospect (decided 2026-08-11).
@@ -293,7 +294,10 @@ export function registerDemoRoutes(app: Express): void {
       if (!primary.ok) return res.status(primary.status).json(primary.body);
       const { scraped, ctx, providerUsed, nicheKey } = primary;
 
-      const saved = await saveDemoClient(nicheKey, language as DemoLang, ctx);
+      // Each save also carries that language's scan: products, stock page,
+      // city and phone land on the Client in the same write.
+      const scan = scanFieldsFromScrape(scraped);
+      const saved = await saveDemoClient(nicheKey, language as DemoLang, ctx, scan);
       // Saved after the primary, never alongside it: saveDemoClient reads the
       // row and merges this language's slots in, so two at once would race.
       // Keyed on the primary's name, so both languages land on one Client.
@@ -303,7 +307,7 @@ export function registerDemoRoutes(app: Express): void {
       for (let i = 1; i < results.length; i++) {
         const r = results[i];
         if (r.ok) {
-          await saveDemoClient(nicheKey, languages[i], r.ctx);
+          await saveDemoClient(nicheKey, languages[i], r.ctx, scanFieldsFromScrape(r.scraped));
           builtLanguages.push(languages[i]);
         } else {
           console.error(`[demo-website] ${languages[i]} pass failed`, r.status, r.body.message);
@@ -363,6 +367,10 @@ export function registerDemoRoutes(app: Express): void {
         pages_scraped: scraped.pages_scraped ?? [],
         city: scraped.city || "",
         phone: scraped.phone || "",
+        // What the review step edits: the summary, the products and the stock page.
+        business_description: ctx.business_description || "",
+        products: scan.products,
+        stock_url: scan.stockUrl,
         languages: builtLanguages,
       });
     }),
@@ -387,6 +395,8 @@ export function registerDemoRoutes(app: Express): void {
     category: z.string().trim().max(60).nullable().optional(),
     emoji: z.string().trim().max(8).nullable().optional(),
     ...productPatchShape,
+    // The engine fetches this address later: only a full public http(s) URL is kept.
+    stockUrl: productPatchShape.stockUrl.refine((v) => !v || cleanStockUrl(v) !== "", "Stock page must be a full http(s) URL."),
   });
 
   app.patch(

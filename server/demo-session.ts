@@ -4,6 +4,7 @@ import { leads, campaigns, promptLibrary, nicheVocabulary } from "@shared/schema
 import { eq, isNotNull } from "drizzle-orm";
 import { runJson, type ClaudeModel, type GenProvider } from "./demoGenerator/providers";
 import type { DemoProduct } from "@shared/demoProducts";
+import { siteFactsBlock, type SiteFacts } from "./demoSiteFacts";
 
 export const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
 // The WhatsApp receptionist ("Speed to Lead Demo"): answers whoever writes in,
@@ -412,6 +413,10 @@ export interface GenerateOptions {
   claudeModel?: ClaudeModel;
   /** OpenAI key override: the public website demo bills its own capped project. */
   openaiApiKey?: string;
+  /** What the business's own website says (internal scan only). The generator
+   *  is told to use it, so the enquiry context, opener, scoping ladder and
+   *  objections name real items instead of generic ones. */
+  siteFacts?: SiteFacts;
 }
 
 /** Row 91 (or its in-file copy) plus the language, market and category lines. */
@@ -420,6 +425,7 @@ async function buildNicheGeneratorPrompt(
   language: "en" | "nl" | "pt",
   scenario: DemoScenario,
   market?: DemoMarket,
+  siteFacts?: SiteFacts,
 ): Promise<{ system: string; user: string }> {
   // "Brazilian Portuguese", not bare "Portuguese": asking for "Portuguese"
   // reliably yields EUROPEAN Portuguese ("esta a pensar", "paragens", "cabina"),
@@ -481,7 +487,9 @@ async function buildNicheGeneratorPrompt(
     deciding: "The lead already received a quote/proposal and is actively deciding between options.",
   }[scenario];
 
-  const user = `Business niche: ${niche}\nOutput language: ${langLabel}\nTarget market: ${profile.name} (${profile.currency})\nLead scenario: ${scenarioHint}`;
+  const user =
+    `Business niche: ${niche}\nOutput language: ${langLabel}\nTarget market: ${profile.name} (${profile.currency})\nLead scenario: ${scenarioHint}` +
+    siteFactsBlock(siteFacts);
   return { system, user };
 }
 
@@ -613,7 +621,7 @@ export async function generateNicheContextStrict(
   market?: DemoMarket,
   opts: GenerateOptions = {},
 ): Promise<{ ctx: NicheContext; providerUsed: string }> {
-  const { system, user } = await buildNicheGeneratorPrompt(niche, language, scenario, market);
+  const { system, user } = await buildNicheGeneratorPrompt(niche, language, scenario, market, opts.siteFacts);
   const { data, providerUsed } = await runJson({
     system,
     user,

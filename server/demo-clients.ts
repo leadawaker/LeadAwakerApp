@@ -27,6 +27,7 @@ import { nicheVocabulary, type NicheText, type SocialPostByLang } from "@shared/
 import { eq, ne, asc } from "drizzle-orm";
 import type { ProductsByLang } from "@shared/demoProducts";
 import { contextProductFields, productPatchValues, type ProductPatch } from "./demoClientProducts";
+import { planScanFieldUpdate, type ScanFields } from "./demoSiteFacts";
 import {
   applyDemoDefaults,
   buildGenericScopingLadder,
@@ -281,6 +282,9 @@ export async function saveDemoClient(
   niche: string,
   language: DemoLang,
   ctx: NicheContext,
+  /** A website scan of this language: its products, stock page, city and phone
+   *  are saved in the same write (a fresh scan, so they replace older values). */
+  scan?: ScanFields,
 ): Promise<{ saved: boolean; niche: string }> {
   const key = niche.trim();
   if (!key || key === DEFAULT_NICHE) return { saved: false, niche: key };
@@ -328,6 +332,7 @@ export async function saveDemoClient(
     // fresh generation returns.
     if (!existing?.category && ctx.category) values.category = ctx.category.trim();
     if (!existing?.emoji && ctx.emoji) values.emoji = ctx.emoji.trim();
+    if (scan) Object.assign(values, planScanFieldUpdate(storedScanFields(existing), language, scan, true));
 
     if (existing) {
       // isDemoClient is deliberately NOT set here. Minting a demo whose niche
@@ -347,6 +352,33 @@ export async function saveDemoClient(
     console.error(`[demo-clients] failed to save Client "${key}":`, err);
     return { saved: false, niche: key };
   }
+}
+
+/** The Client's current products, stock page, city and phone, as planScanFieldUpdate reads them. */
+function storedScanFields(row: ClientRow | undefined) {
+  return {
+    products: (row?.products as ProductsByLang | null | undefined) ?? null,
+    stockUrl: row?.stockUrl ?? null,
+    city: row?.city ?? null,
+    phone: row?.phone ?? null,
+  };
+}
+
+/**
+ * Save a later scan's products, stock page, city and phone onto an existing
+ * Client. `overwrite` true is a fresh scan (every non-empty value replaces the
+ * old one); false is the backfill of a Client that already has data, which only
+ * fills what is empty today. Never writes an empty value. True when something
+ * was written. Unlike saveDemoClient this throws: its callers are scripts and
+ * routes that report the failure.
+ */
+export async function saveScanFields(niche: string, lang: DemoLang, scan: ScanFields, overwrite: boolean): Promise<boolean> {
+  const existing = await getDemoClient(niche.trim());
+  if (!existing) return false;
+  const values = planScanFieldUpdate(storedScanFields(existing), lang, scan, overwrite);
+  if (Object.keys(values).length === 0) return false;
+  await db.update(nicheVocabulary).set({ ...values, updatedAt: new Date() }).where(eq(nicheVocabulary.id, existing.id));
+  return true;
 }
 
 /** The text fields the Clients tab edits, mapped to their columns. */

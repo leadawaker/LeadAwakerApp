@@ -5,6 +5,7 @@
 import { generateNicheContextStrict, type DemoScenario, type NicheContext } from "./demo-session";
 import { GenerationError } from "./demoGenerator/providers";
 import type { DemoLang } from "./demo-clients";
+import { scanFieldsFromScrape, siteFactsFrom } from "./demoSiteFacts";
 
 /**
  * The language a country domain implies, or null for a generic one.
@@ -84,6 +85,12 @@ export async function buildClientFromSite(opts: {
     return { ok: false, status: 422, body: { message: "Could not determine a name for this Client. Pass `niche` explicitly." } };
   }
 
+  // The internal scan's facts (summary, products, city) go into the generator
+  // so its enquiry context, opener, ladder and objections name real items. The
+  // public scan stays as it was (decision 10d).
+  const scan = isPublic ? undefined : scanFieldsFromScrape(scraped);
+  const siteFacts = isPublic ? undefined : siteFactsFrom(scraped);
+
   // No template fallback here: a failed generation used to save the generic
   // template as if it were the Client (65 and 67 were saved that way).
   // Now it fails loudly and saves nothing, and the page offers a retry.
@@ -92,7 +99,7 @@ export async function buildClientFromSite(opts: {
   try {
     ({ ctx, providerUsed } = await generateNicheContextStrict(
       nicheForGeneration, language, scenario, market,
-      { provider, claudeModel, openaiApiKey: isPublic ? process.env.OPENAI_PUBLIC_DEMO_API_KEY || undefined : undefined },
+      { provider, claudeModel, siteFacts, openaiApiKey: isPublic ? process.env.OPENAI_PUBLIC_DEMO_API_KEY || undefined : undefined },
     ));
   } catch (err) {
     return {
@@ -118,6 +125,13 @@ export async function buildClientFromSite(opts: {
   ];
   for (const [field, value] of overlay) {
     if (typeof value === "string" && value.trim()) (ctx as Record<string, unknown>)[field] = value.trim();
+  }
+  // What the site sells, its stock page and city travel on the context like the
+  // rest of the persona. Empty values are left off, as contextProductFields does.
+  if (scan) {
+    if (scan.products.length > 0) ctx.products = scan.products;
+    if (scan.stockUrl) ctx.stock_url = scan.stockUrl;
+    if (scan.city) ctx.city = scan.city;
   }
 
   return { ok: true, scraped, ctx, providerUsed, nicheKey };
