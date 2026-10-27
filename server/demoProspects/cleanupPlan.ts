@@ -3,7 +3,8 @@
  * over lead rows. No db import: script/demo-links-cleanup.ts loads the rows
  * (loadDemoLeadsLite plus an inbound count per lead) and the campaign ids.
  *
- * A token is deleted only when nobody ever answered it AND it is dead: past its
+ * A token is deleted only when nobody ever answered it (no inbound message, no
+ * voice call on either row) AND it is dead: past its
  * channel's lifetime (shared/demoTokenTtl.ts), pointing at a campaign that no
  * longer exists, or a browser row whose mint row is gone. Public website demos
  * and anything with a reply are always kept.
@@ -15,6 +16,8 @@ import type { DemoLeadLite } from "../demoSessionsFold";
 export interface CleanupLead extends DemoLeadLite {
   /** Inbound Interactions on this lead row. */
   inbound: number;
+  /** Voice_Calls rows on this lead row: a call is an answer too. */
+  voiceCalls: number;
 }
 
 export type CleanupReason = "expired" | "deleted_campaign" | "orphan_web";
@@ -68,7 +71,7 @@ export function planDeadLinkCleanup(leads: CleanupLead[], campaignIds: Set<numbe
       plan.kept.public++;
       continue;
     }
-    if (rows.all.some((r) => r.inbound > 0)) {
+    if (rows.all.some((r) => r.inbound > 0 || r.voiceCalls > 0)) {
       plan.kept.replied++;
       continue;
     }

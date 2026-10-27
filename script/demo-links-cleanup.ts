@@ -8,7 +8,7 @@
 // server/demoProspects/purge.ts (mirrors the engine's demo_data_purge.py).
 import { pool } from "../server/db";
 import { loadDemoLeadsLite } from "../server/demoProspects/store";
-import { countStatements } from "../server/demoProspects/purge";
+import { DEMO_SCHEMA, countStatements } from "../server/demoProspects/purge";
 import {
   executeGate,
   parseCleanupArgs,
@@ -18,7 +18,6 @@ import {
   type CleanupReason,
 } from "../server/demoProspects/cleanupPlan";
 
-const SCHEMA = "p2mxx34fvbf3ll6";
 const LIST_LIMIT = 50;
 const REASONS: CleanupReason[] = ["expired", "deleted_campaign", "orphan_web"];
 
@@ -27,10 +26,10 @@ async function inboundCounts(leadIds: number[]): Promise<Map<number, number>> {
   if (leadIds.length === 0) return new Map();
   const { rows } = await pool.query(
     `SELECT lead, count(*)::int AS n FROM (
-       SELECT "Leads_id"::int AS lead FROM "${SCHEMA}"."Interactions"
+       SELECT "Leads_id"::int AS lead FROM "${DEMO_SCHEMA}"."Interactions"
         WHERE direction = 'inbound' AND "Leads_id" = ANY($1::int[])
        UNION ALL
-       SELECT "lead_id"::int AS lead FROM "${SCHEMA}"."Interactions"
+       SELECT "lead_id"::int AS lead FROM "${DEMO_SCHEMA}"."Interactions"
         WHERE direction = 'inbound' AND "lead_id" = ANY($1::int[]) AND "Leads_id" IS DISTINCT FROM "lead_id"
      ) replies GROUP BY lead`,
     [leadIds],
@@ -38,8 +37,19 @@ async function inboundCounts(leadIds: number[]): Promise<Map<number, number>> {
   return new Map(rows.map((r: { lead: number; n: number }) => [Number(r.lead), Number(r.n)]));
 }
 
+/** Voice_Calls rows per lead id: a call to a demo number is an answer, so its token stays. */
+async function voiceCallCounts(leadIds: number[]): Promise<Map<number, number>> {
+  if (leadIds.length === 0) return new Map();
+  const { rows } = await pool.query(
+    `SELECT leads_id::int AS lead, count(*)::int AS n FROM "${DEMO_SCHEMA}"."Voice_Calls"
+      WHERE leads_id = ANY($1::int[]) GROUP BY leads_id`,
+    [leadIds],
+  );
+  return new Map(rows.map((r: { lead: number; n: number }) => [Number(r.lead), Number(r.n)]));
+}
+
 async function existingCampaignIds(): Promise<Set<number>> {
-  const { rows } = await pool.query(`SELECT id FROM "${SCHEMA}"."Campaigns"`);
+  const { rows } = await pool.query(`SELECT id FROM "${DEMO_SCHEMA}"."Campaigns"`);
   return new Set(rows.map((r: { id: number }) => Number(r.id)));
 }
 
@@ -51,8 +61,22 @@ async function main(): Promise<number> {
   }
 
   const lite = await loadDemoLeadsLite();
-  const [inbound, campaignIds] = await Promise.all([inboundCounts(lite.map((l) => l.id)), existingCampaignIds()]);
-  const leads: CleanupLead[] = lite.map((l) => ({ ...l, inbound: inbound.get(l.id) ?? 0 }));
+  const ids = lite.map((l) => l.id);
+  const [inbound, calls, campaignIds] = await Promise.all([inboundCounts(ids), voiceCallCounts(ids), existingCampaignIds()]);
+  // With no campaigns at all every token would read as a deleted campaign, so a
+  // wrong database or schema must stop here rather than plan a wipe.
+  if (campaignIds.size === 0) {
+    console.error(
+      "Aborting: the Campaigns table returned no rows, so every token would be planned as a deleted campaign. " +
+        "Check DATABASE_URL and the schema before running this again. Nothing was deleted.",
+    );
+    return 1;
+  }
+  const leads: CleanupLead[] = lite.map((l) => ({
+    ...l,
+    inbound: inbound.get(l.id) ?? 0,
+    voiceCalls: calls.get(l.id) ?? 0,
+  }));
   const plan = planDeadLinkCleanup(leads, campaignIds, Date.now());
 
   const leadIds = plan.tokens.flatMap((t) => t.leadIds);
@@ -66,7 +90,7 @@ async function main(): Promise<number> {
 
   if (leadIds.length > 0) {
     console.log("rows per table:");
-    for (const { table, sql } of countStatements(SCHEMA)) {
+    for (const { table, sql } of countStatements()) {
       const { rows } = await pool.query(sql, [leadIds]);
       console.log(`  ${table}: ${rows[0]?.n ?? 0}`);
     }

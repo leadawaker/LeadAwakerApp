@@ -30,6 +30,7 @@ function lead(ident: string, days: number, over: Partial<CleanupLead> & { blob?:
     conversionStatus: null,
     demoRevokedAt: null,
     inbound: 0,
+    voiceCalls: 0,
     ...rest,
   };
 }
@@ -80,6 +81,32 @@ test("both rows of a token go together, and a reply on either row keeps the toke
   const kept = planDeadLinkCleanup([wa, { ...web, inbound: 1 }], CAMPAIGNS, now);
   assert.deepEqual(kept.tokens, []);
   assert.equal(kept.kept.replied, 1);
+});
+
+test("a voice call on either row keeps the token, like a reply", () => {
+  const wa = lead("wa-demo:call0001", 20, { blob: { service: "voice" } });
+  const web = lead("web-demo:call0001", 19);
+  const onWa = planDeadLinkCleanup([{ ...wa, voiceCalls: 1 }, web], CAMPAIGNS, now);
+  assert.deepEqual(onWa.tokens, []);
+  assert.deepEqual(onWa.kept, { replied: 1, public: 0, live: 0 });
+
+  const onWeb = planDeadLinkCleanup([wa, { ...web, voiceCalls: 2 }], CAMPAIGNS, now);
+  assert.deepEqual(onWeb.tokens, []);
+  assert.equal(onWeb.kept.replied, 1);
+
+  // Beats a deleted campaign and a lone browser row, the same as an inbound message.
+  const gone = planDeadLinkCleanup([lead("wa-demo:call0002", 40, { campaignsId: 999, voiceCalls: 1 })], CAMPAIGNS, now);
+  assert.deepEqual(gone.tokens, []);
+  const orphan = planDeadLinkCleanup([lead("web-demo:call0003", 40, { voiceCalls: 1 })], CAMPAIGNS, now);
+  assert.deepEqual(orphan.tokens, []);
+});
+
+test("a realistic public demo pair is kept: wa row public, web row not", () => {
+  const wa = lead("wa-demo:pubr0001", 30, { source: PUBLIC_DEMO_SOURCE, phone: "+31600000000" });
+  const web = lead("web-demo:pubr0001", 29, { source: "Web Demo" });
+  const plan = planDeadLinkCleanup([wa, web], CAMPAIGNS, now);
+  assert.deepEqual(plan.tokens, []);
+  assert.deepEqual(plan.kept, { replied: 0, public: 1, live: 0 });
 });
 
 test("a chat link opened inside the window is still live, an old open is not", () => {
