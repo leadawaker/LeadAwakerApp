@@ -4,9 +4,9 @@
  * The first visit opens on `fallback` (each page passes its own default tab). Storage can be missing or throw
  * (private windows, blocked site data), so every access is guarded.
  */
-type Store = Pick<Storage, "getItem" | "setItem">;
+export type Store = Pick<Storage, "getItem" | "setItem">;
 
-function store(): Store | null {
+export function store(): Store | null {
   try {
     return typeof window !== "undefined" ? window.localStorage : null;
   } catch {
@@ -14,7 +14,7 @@ function store(): Store | null {
   }
 }
 
-function currentUserKey(s: Store | null): string {
+export function currentUserKey(s: Store | null): string {
   try {
     return s?.getItem("leadawaker_user_id") || s?.getItem("leadawaker_user_email") || "anon";
   } catch {
