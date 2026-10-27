@@ -139,7 +139,7 @@
       "voiceMaxMinutesPerSession": "Minutos por ligação de voz",
       "voiceMaxSessionsPerDemo": "Ligações de voz por demo",
       "callNumber": "Número em \"Ou ligue para ela\"",
-      "voiceEngine": "Engine de voz"
+      "voiceEngineHint": "A demo de voz usa o motor definido por idioma em Recepcionista IA."
     },
     "empty": "Nada para configurar aqui: esta demo roda na configuração de demo compartilhada.",
     "rail": {
@@ -180,8 +180,10 @@
       }
     },
     "eleven": {
-      "engineTitle": "Engine dos links de demo",
-      "voicesTitle": "Voz por idioma",
+      "voicesTitle": "Motor e voz por idioma",
+      "hint": "Os links de demo e a demo do site usam o motor definido para o idioma deles. As demos por telefone (Sara liga) usam sempre ElevenLabs.",
+      "engineFor": "Motor para {{language}}",
+      "voiceFor": "Voz",
       "localeDefault": "Voz padrão",
       "preview": "Ouvir amostra"
     },

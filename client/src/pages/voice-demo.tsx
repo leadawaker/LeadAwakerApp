@@ -20,14 +20,16 @@ import {
 import { ENGINE_BASE_URL, setCallLimitMinutes, useLiveCall } from "@/features/voiceDemo/useLiveCall";
 import { DEMO_TOKEN_RE } from "@/features/voiceDemo/engine";
 import { useElevenDemoCall } from "@/features/voiceDemo/useElevenDemoCall";
-import { elevenAsLiveOptions } from "@/features/voiceDemo/elevenDemoOptions";
-import type { DemoEngine, LiveSetup, VoiceLang, VoiceLocale } from "@/features/voiceDemo/types";
+import { elevenAsLiveOptions, elevenLocaleOf } from "@/features/voiceDemo/elevenDemoOptions";
+import type { DemoEngine, ElevenDemoLocale, LiveSetup, VoiceLang, VoiceLocale } from "@/features/voiceDemo/types";
 import { copyFor, dateLocaleOf } from "@/features/voiceDemo/copy";
 
 /**
  * The voice receptionist demo, on ElevenLabs or GPT-Live: a `?token=` link
- * runs on the engine its demo-context names (the Demos page settings); a
- * page without one, or an engine too old to say, runs on GPT-Live.
+ * runs on the engine its demo-context names for the call's language (the
+ * Demos page sets one per language), so a language picked on the gear brings
+ * its own engine. A page without a token, or an engine too old to say, runs
+ * on GPT-Live.
  *
  * Before the call: one panel, and a phone in the middle of it with a green
  * button on its screen (the call's settings sit behind a gear underneath).
@@ -39,7 +41,39 @@ import { copyFor, dateLocaleOf } from "@/features/voiceDemo/copy";
  * toggle, so the demo can be shown in either.
  */
 
-const LOCALES: VoiceLocale[] = ["en-GB", "en-US", "nl", "pt-BR", "pt-PT"];
+/** The demo locales. European Portuguese left the demos: an old pt-PT link opens in pt-BR. */
+const LOCALES: VoiceLocale[] = ["en-GB", "en-US", "nl", "pt-BR"];
+const DEMO_LOCALE_FALLBACK: Partial<Record<string, VoiceLocale>> = { "pt-PT": "pt-BR" };
+const asDemoLocale = (raw: unknown): VoiceLocale | null => {
+  if (typeof raw !== "string") return null;
+  const locale = DEMO_LOCALE_FALLBACK[raw] ?? raw;
+  return LOCALES.includes(locale as VoiceLocale) ? (locale as VoiceLocale) : null;
+};
+
+/** What the demo-context says about engines: one per language, and the persona's own. */
+interface EngineContext {
+  engines: Partial<Record<ElevenDemoLocale, DemoEngine>>;
+  engine: DemoEngine;
+}
+const GPT_LIVE_ONLY: EngineContext = { engines: {}, engine: "gpt-live" };
+const asEngine = (v: unknown): DemoEngine | null => (v === "elevenlabs" || v === "gpt-live" ? v : null);
+
+/** The engine a call in this locale runs on: its language's, else the persona's, else GPT-Live. */
+function engineFor(ctx: EngineContext, locale: VoiceLocale): DemoEngine {
+  return ctx.engines[elevenLocaleOf(locale)] ?? ctx.engine;
+}
+
+/** demo-context's `engines` and `engine`. Missing (an older engine) is GPT-Live. */
+function readEngineContext(data: { engine?: unknown; engines?: unknown } | null): EngineContext {
+  const engines: EngineContext["engines"] = {};
+  if (data?.engines && typeof data.engines === "object") {
+    for (const [loc, value] of Object.entries(data.engines as Record<string, unknown>)) {
+      const engine = asEngine(value);
+      if (engine) engines[elevenLocaleOf(loc)] = engine;
+    }
+  }
+  return { engines, engine: asEngine(data?.engine) ?? "gpt-live" };
+}
 
 /**
  * Old links carry `?lang=en|nl|pt`, which predates locales. They still work,
@@ -65,18 +99,13 @@ const LANG_TO_LOCALE: Record<VoiceLang, VoiceLocale> = {
 function readSetupFromUrl() {
   if (typeof window === "undefined") return null;
   const q = new URLSearchParams(window.location.search);
-  const rawLocale = q.get("locale") as VoiceLocale | null;
+  const rawLocale = q.get("locale");
   const rawLang = q.get("lang") as VoiceLang | null;
   const company = q.get("company");
   const phone = q.get("phone");
   const voice = q.get("voice");
   if (!rawLocale && !rawLang && !company && !phone && !voice) return null;
-  const locale =
-    rawLocale && LOCALES.includes(rawLocale)
-      ? rawLocale
-      : rawLang && LANG_TO_LOCALE[rawLang]
-        ? LANG_TO_LOCALE[rawLang]
-        : null;
+  const locale = asDemoLocale(rawLocale) ?? (rawLang && LANG_TO_LOCALE[rawLang]) ?? null;
   return {
     locale,
     companyName: company?.trim() || null,
@@ -147,24 +176,25 @@ export default function VoiceDemoPage() {
   );
 
   /**
-   * Which engine this link runs on. Unknown until the demo-context answers on
-   * a token link; a call pressed before then waits for it (contextReady).
+   * Which engines this link runs on, per language. Unknown until the
+   * demo-context answers on a token link; a call pressed before then waits
+   * for it (contextReady).
    */
-  const [engine, setEngine] = useState<DemoEngine>("gpt-live");
+  const [engineCtx, setEngineCtx] = useState<EngineContext>(GPT_LIVE_ONLY);
   const contextReady = useRef<{ done: boolean; wait: Promise<void>; resolve: () => void } | null>(null);
   if (!contextReady.current) {
     let resolve = () => {};
     const wait = new Promise<void>((r) => { resolve = r; });
     contextReady.current = { done: false, wait, resolve };
   }
-  const markContext = (next: DemoEngine) => {
-    setEngine(next);
+  const markContext = (next: EngineContext) => {
+    setEngineCtx(next);
     engineRef.current = next;
     const c = contextReady.current!;
     c.done = true;
     c.resolve();
   };
-  const engineRef = useRef<DemoEngine>("gpt-live");
+  const engineRef = useRef<EngineContext>(GPT_LIVE_ONLY);
 
   const [setup, setSetup] = useState<LiveSetup>(() => {
     const locale = preset?.locale ?? "en-GB";
@@ -203,7 +233,7 @@ export default function VoiceDemoPage() {
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("token") || "";
     if (!DEMO_TOKEN_RE.test(token)) {
-      markContext("gpt-live");
+      markContext(GPT_LIVE_ONLY);
       return;
     }
     let cancelled = false;
@@ -211,13 +241,12 @@ export default function VoiceDemoPage() {
       try {
         const res = await fetch(`${ENGINE_BASE_URL}/voice/demo-context?token=${token}`);
         if (!res.ok) {
-          if (!cancelled) { setPublicDemo(false); markContext("gpt-live"); }
+          if (!cancelled) { setPublicDemo(false); markContext(GPT_LIVE_ONLY); }
           return;
         }
         const data = await res.json();
         if (cancelled) return;
-        // No `engine` (an engine older than ElevenLabs demos) is GPT-Live, as before.
-        markContext(data?.engine === "elevenlabs" ? "elevenlabs" : "gpt-live");
+        markContext(readEngineContext(data));
         setPublicDemo(data?.public === true || data?.open === true);
         if (data?.public === true && typeof data.max_minutes === "number") setCallLimitMinutes(data.max_minutes);
         if (!data?.found) return;
@@ -227,9 +256,7 @@ export default function VoiceDemoPage() {
           // the language's default. A dealership in the Azores is "pt" like
           // every other Portuguese client, and only `voice_locale` can say it
           // should not sound Brazilian.
-          const fromPersona = LOCALES.includes(data.voice_locale as VoiceLocale)
-            ? (data.voice_locale as VoiceLocale)
-            : null;
+          const fromPersona = asDemoLocale(data.voice_locale);
           const locale =
             preset?.locale ?? fromPersona ?? (lang && LANG_TO_LOCALE[lang]) ?? prev.locale;
           return {
@@ -244,7 +271,7 @@ export default function VoiceDemoPage() {
       } catch {
         // A themed link that cannot reach the engine still runs as the plain
         // demo, which is a better failure than a blocked setup screen.
-        if (!cancelled) { setPublicDemo(false); markContext("gpt-live"); }
+        if (!cancelled) { setPublicDemo(false); markContext(GPT_LIVE_ONLY); }
       }
     })();
     return () => {
@@ -274,7 +301,7 @@ export default function VoiceDemoPage() {
     // the AI hears a caller ID and the CRM files them as their own caller.
     const callerNumber = setup.callerNumber.trim() || demoCallerNumber(setup.locale);
     const begin = () => {
-      const run = engineRef.current === "elevenlabs" ? eleven : live;
+      const run = engineFor(engineRef.current, setup.locale) === "elevenlabs" ? eleven : live;
       void run.start({ ...setup, callerNumber }, storedVoicePassword());
     };
     // Pressed before the demo-context said which engine: wait for it (a quick fetch).
@@ -284,6 +311,7 @@ export default function VoiceDemoPage() {
 
   const copy = copyFor(setup.locale);
   const eleven = useElevenDemoCall(copy.micNeeded);
+  const engine = engineFor(engineCtx, setup.locale);
   const call = engine === "elevenlabs" ? eleven : live;
   const callOptions = engine === "elevenlabs"
     ? elevenAsLiveOptions(eleven.elevenOptions, live.options, setup.locale)

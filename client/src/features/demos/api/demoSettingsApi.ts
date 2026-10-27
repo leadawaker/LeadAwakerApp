@@ -61,14 +61,26 @@ export interface VoiceDemoSettings {
   forgetNumbers?: string[];
   /** Per tester phone: which engine answers, with which voice and prompt (engine voice_engines.py). */
   engineTests?: EngineTest[];
-  /** Which engine minted demos run on. Missing = ElevenLabs. */
-  demoEngine?: DemoEngine;
+  /** The engine per demo locale, minted and homepage demos alike. Missing = DEFAULT_DEMO_ENGINES. */
+  engines?: Partial<Record<ElevenDemoLocale, DemoEngine>>;
   /** The ElevenLabs voice per demo locale. Missing = that locale's default. */
   elevenVoices?: Partial<Record<ElevenDemoLocale, string>>;
   /** "Call me + prospect" rings one of these first (E.164; null clears on a save). */
   ownerPhone?: string | null;
   ownerPhoneBackup?: string | null;
   ownerPhoneUse?: "primary" | "backup";
+}
+
+/** The engine per demo locale when nothing is saved (engine demo_settings.DEFAULT_ENGINES):
+ *  ElevenLabs only wins in Dutch. */
+export const DEFAULT_DEMO_ENGINES: Record<ElevenDemoLocale, DemoEngine> = {
+  nl: "elevenlabs", "en-GB": "gpt-live", "en-US": "gpt-live", "pt-BR": "gpt-live",
+};
+
+/** The engine a demo in this locale runs on, from the saved voice settings. */
+export function demoEngineFor(settings: VoiceDemoSettings | undefined, locale: ElevenDemoLocale): DemoEngine {
+  const saved = settings?.engines?.[locale];
+  return saved === "elevenlabs" || saved === "gpt-live" ? saved : DEFAULT_DEMO_ENGINES[locale];
 }
 
 /** Gabriel's phones until the settings say otherwise (server demoVoiceSchemas.ts). */

@@ -8,7 +8,7 @@ import {
 
 test("voice settings: the new demo fields pass", () => {
   const r = voiceSettingsSchema.safeParse({
-    demoEngine: "elevenlabs",
+    engines: { nl: "elevenlabs", "en-GB": "gpt-live", "pt-BR": "gpt-live" },
     elevenVoices: { nl: "PWSsuWP2rj5xoCLT1qsQ", "en-GB": "", "pt-BR": "RGymW84CSmfVugnA5tvA" },
     ownerPhone: "+31684446349",
     ownerPhoneBackup: null,
@@ -18,14 +18,15 @@ test("voice settings: the new demo fields pass", () => {
 });
 
 test("voice settings: engine and locale keys are whitelisted", () => {
-  assert.equal(voiceSettingsSchema.safeParse({ demoEngine: "xai" }).success, false);
+  assert.equal(voiceSettingsSchema.safeParse({ engines: { nl: "xai" } }).success, false);
+  assert.equal(voiceSettingsSchema.safeParse({ engines: { "pt-PT": "gpt-live" } }).success, false);
   assert.equal(voiceSettingsSchema.safeParse({ elevenVoices: { "pt-PT": "x" } }).success, false);
   assert.equal(voiceSettingsSchema.safeParse({ ownerPhoneUse: "both" }).success, false);
 });
 
 test("voice settings: unknown keys are dropped", () => {
   const r = voiceSettingsSchema.safeParse({ demoEngine: "gpt-live", secret: 1 });
-  assert.equal(r.success && "secret" in r.data, false);
+  assert.equal(r.success && ("secret" in r.data || "demoEngine" in r.data), false);
 });
 
 test("phones: owner numbers become E.164, empty clears, bad ones are named", () => {

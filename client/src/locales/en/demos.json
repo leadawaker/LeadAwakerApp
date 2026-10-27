@@ -139,7 +139,7 @@
       "voiceMaxMinutesPerSession": "Minutes per voice call",
       "voiceMaxSessionsPerDemo": "Voice calls per demo",
       "callNumber": "Number shown as \"Or call her\"",
-      "voiceEngine": "Voice engine"
+      "voiceEngineHint": "The voice demo uses the engine set per language under AI receptionist."
     },
     "empty": "Nothing to set here: this demo runs on the shared demo setup.",
     "rail": {
@@ -180,8 +180,10 @@
       }
     },
     "eleven": {
-      "engineTitle": "Engine for demo links",
-      "voicesTitle": "Voice per language",
+      "voicesTitle": "Engine and voice per language",
+      "hint": "Demo links and the website demo run on the engine set for their language. Phone demos (Sara calls) always use ElevenLabs.",
+      "engineFor": "Engine for {{language}}",
+      "voiceFor": "Voice",
       "localeDefault": "Default voice",
       "preview": "Play a sample"
     },

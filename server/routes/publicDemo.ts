@@ -32,7 +32,6 @@ import {
   phoneRecentDemo,
   spendToday,
 } from "../publicDemo/limits";
-import { DEMO_ENGINES } from "./demoVoiceSchemas";
 import { getPublicDemoSettings, savePublicDemoSettings, PUBLIC_DEMO_SOURCE } from "../publicDemo/settings";
 import { verifyTurnstile } from "../publicDemo/turnstile";
 import { buildPublicDemo } from "../publicDemo/build";
@@ -138,7 +137,6 @@ const settingsSchema = z
     callNumber: z.string().regex(/^\+\d{8,15}$/).nullable(),
     bookingUrl: z.string().url().max(500).nullable(),
     feedbackMessage: z.object({ enabled: z.boolean(), delayMinutes: z.number().int().min(10).max(1440) }),
-    voiceEngine: z.enum(DEMO_ENGINES),
   })
   .partial();
 

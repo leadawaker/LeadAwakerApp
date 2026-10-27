@@ -1,9 +1,11 @@
 // +New Demo: which voice the prospect's AI receptionist demo speaks with. Lists
-// the ElevenLabs voices of the demo's locale, or the GPT-Live ones when the
-// Demos settings run minted demos on GPT-Live. Empty = the settings default.
+// the voices of the engine the demo's locale runs on (Demos settings, per
+// language): ElevenLabs' own for that locale, or GPT-Live's. Empty = the
+// settings default.
 import { useTranslation } from "react-i18next";
 import type { DemoLang } from "@/features/campaigns/api/demoClientsApi";
 import {
+  demoEngineFor,
   useDemoSettings,
   useElevenDemoOptions,
   useEngineVoiceOptions,
@@ -27,7 +29,7 @@ export function DemoVoicePicker({ locale, value, onChange, style }: {
 }) {
   const { t } = useTranslation("demos");
   const { data: settings } = useDemoSettings();
-  const engine = ((settings?.settings?.voice || {}) as VoiceDemoSettings).demoEngine ?? "elevenlabs";
+  const engine = demoEngineFor((settings?.settings?.voice || {}) as VoiceDemoSettings, locale);
   const eleven = useElevenDemoOptions();
   const live = useEngineVoiceOptions();
 

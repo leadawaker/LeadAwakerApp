@@ -139,7 +139,7 @@
       "voiceMaxMinutesPerSession": "Minuten per spraakgesprek",
       "voiceMaxSessionsPerDemo": "Spraakgesprekken per demo",
       "callNumber": "Nummer bij \"Of bel haar\"",
-      "voiceEngine": "Spraakengine"
+      "voiceEngineHint": "De stemdemo gebruikt de engine die per taal is ingesteld bij AI-receptionist."
     },
     "empty": "Hier valt niets in te stellen: deze demo draait op de gedeelde demo-opzet.",
     "rail": {
@@ -180,8 +180,10 @@
       }
     },
     "eleven": {
-      "engineTitle": "Engine voor demolinks",
-      "voicesTitle": "Stem per taal",
+      "voicesTitle": "Engine en stem per taal",
+      "hint": "Demolinks en de websitedemo draaien op de engine die voor hun taal is gekozen. Telefoondemo's (Sara belt) gebruiken altijd ElevenLabs.",
+      "engineFor": "Engine voor {{language}}",
+      "voiceFor": "Stem",
       "localeDefault": "Standaardstem",
       "preview": "Voorbeeld afspelen"
     },

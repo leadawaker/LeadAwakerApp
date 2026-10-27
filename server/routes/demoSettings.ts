@@ -228,6 +228,8 @@ export function registerDemoSettingsRoutes(app: Express) {
     if (next.maxCallMinutes === null) delete next.maxCallMinutes;
     if (next.ownerPhone === null) delete next.ownerPhone;
     if (next.ownerPhoneBackup === null) delete next.ownerPhoneBackup;
+    // One locale's switch at a time keeps the others as saved.
+    if (patch.engines) next.engines = { ...((current.engines as Record<string, string>) || {}), ...patch.engines };
     if (next.elevenVoices && typeof next.elevenVoices === "object") {
       next.elevenVoices = Object.fromEntries(
         Object.entries(next.elevenVoices as Record<string, string>).filter(([, v]) => v),

@@ -7,11 +7,14 @@
 import { z } from "zod";
 import { toE164, type PhoneCountry } from "@shared/phoneE164";
 
-/** The locales ElevenLabs demos have voices for (engine eleven_voices.LOCALE_VOICES). pt-PT uses pt-BR. */
+/**
+ * The locales a demo speaks, on either engine (engine demo_settings.DEMO_LOCALES).
+ * European Portuguese left the demos; an old pt-PT persona is heard in pt-BR.
+ */
 export const ELEVEN_DEMO_LOCALES = ["nl", "en-GB", "en-US", "pt-BR"] as const;
 export type ElevenDemoLocale = (typeof ELEVEN_DEMO_LOCALES)[number];
 
-/** Which engine answers a demo call. Missing in the row means ElevenLabs. */
+/** Which engine answers a demo call, chosen per locale (voice.engines). */
 export const DEMO_ENGINES = ["elevenlabs", "gpt-live"] as const;
 export type DemoEngine = (typeof DEMO_ENGINES)[number];
 
@@ -58,8 +61,10 @@ export const voiceSettingsSchema = z.object({
     // and writes no name or language back. Bookings still land on the lead.
     freshCaller: z.boolean().optional(),
   })).max(10).optional(),
-  // Which engine minted demos (/voice-demo?token= and demo phone calls) run on.
-  demoEngine: z.enum(DEMO_ENGINES).optional(),
+  // Which engine each demo locale's browser demos run on, minted and homepage
+  // alike (engine demo_settings.demo_engines; a missing locale keeps its
+  // default). Demo phone calls stay on ElevenLabs.
+  engines: z.record(z.enum(ELEVEN_DEMO_LOCALES), z.enum(DEMO_ENGINES)).optional(),
   // The ElevenLabs voice per demo locale; an empty pick is removed (the
   // locale's female default then answers).
   elevenVoices: z.record(z.enum(ELEVEN_DEMO_LOCALES), z.string().trim().max(40)).optional(),
@@ -108,8 +113,9 @@ export function ownerNumberFrom(settings: Record<string, unknown> | undefined): 
 
 /** The per-demo voice fields of POST /api/demo/create-link. */
 export const createLinkVoiceFields = {
-  // An engine voice id (ElevenLabs or GPT-Live, whichever demoEngine is); the
-  // engine ignores one it does not know. Empty = the settings default.
+  // An engine voice id (ElevenLabs or GPT-Live, whichever engine the demo's
+  // locale runs on); the engine ignores one it does not know. Empty = the
+  // settings default.
   voice: z.string().trim().max(40).optional(),
   voiceLocale: z.enum(ELEVEN_DEMO_LOCALES).optional(),
 };

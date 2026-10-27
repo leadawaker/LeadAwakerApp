@@ -1,13 +1,15 @@
-// Demos > Settings > AI receptionist: which engine minted demos run on, then
-// the voice per language for that engine only (ElevenLabs with a preview, or
-// GPT-Live). Saves only its own fields: the server merges them into the voice
-// row, so the Calls card is untouched.
+// Demos > Settings > AI receptionist: per demo language, which engine its
+// browser demos run on (minted links and the homepage demo alike) and that
+// engine's default voice (ElevenLabs with a preview, or GPT-Live). Saves only
+// its own fields: the server merges them into the voice row, so the Calls card
+// is untouched. Phone demos stay on ElevenLabs.
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Play, Square } from "lucide-react";
 import { IconBtn } from "@/components/ui/icon-btn";
 import type { ElevenDemoVoice } from "@/features/voiceDemo/types";
 import {
+  demoEngineFor,
   useDemoSettings,
   useElevenDemoOptions,
   useEngineVoiceOptions,
@@ -16,14 +18,18 @@ import {
   type ElevenDemoLocale,
   type VoiceDemoSettings,
 } from "../api/demoSettingsApi";
-import { ENGINE_INPUT, SaveBar, Seg, SETTINGS_CARD, SETTINGS_LABEL, SETTINGS_RULE, SETTINGS_TITLE } from "./engineControls";
+import { ENGINE_INPUT, SaveBar, Seg, SETTINGS_CARD, SETTINGS_HINT, SETTINGS_LABEL, SETTINGS_TITLE } from "./engineControls";
 
-/** Shown until the engine answers, so the card is never empty. */
 const LOCALES: ElevenDemoLocale[] = ["nl", "en-GB", "en-US", "pt-BR"];
+/** Language names in their own language; the engine's labels win once loaded. */
+const LOCALE_NAMES: Record<ElevenDemoLocale, string> = {
+  nl: "Nederlands", "en-GB": "English (UK)", "en-US": "English (US)", "pt-BR": "Português (BR)",
+};
 const ENGINES: DemoEngine[] = ["elevenlabs", "gpt-live"];
 const ROW = "flex items-center gap-2 max-sm:flex-wrap";
+const SELECT_W: React.CSSProperties = { width: 170, maxWidth: "100%" };
 
-type Draft = Pick<VoiceDemoSettings, "demoEngine" | "elevenVoices" | "defaultVoices">;
+type Draft = Pick<VoiceDemoSettings, "engines" | "elevenVoices" | "defaultVoices">;
 
 export function ElevenDemoSettings() {
   const { t } = useTranslation("demos");
@@ -33,13 +39,15 @@ export function ElevenDemoSettings() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const current: Draft = draft ?? saved;
   const patch = (next: Partial<Draft>) => setDraft({ ...current, ...next });
-  const engine = current.demoEngine ?? "elevenlabs";
+  const eleven = useElevenDemoOptions();
+  const live = useEngineVoiceOptions();
+  const preview = usePreview();
 
   const onSave = async () => {
     if (!draft) return;
     try {
       await save.mutateAsync({
-        demoEngine: engine,
+        engines: Object.fromEntries(LOCALES.map((l) => [l, demoEngineFor(current, l)])),
         elevenVoices: current.elevenVoices ?? {},
         defaultVoices: current.defaultVoices ?? {},
       });
@@ -51,25 +59,42 @@ export function ElevenDemoSettings() {
 
   return (
     <div className="neu-raised" style={SETTINGS_CARD} data-testid="eleven-demo-settings">
-      <div className={ROW}>
-        <span style={{ ...SETTINGS_TITLE, flex: 1 }}>{t("settings.eleven.engineTitle")}</span>
-        <Seg<DemoEngine>
-          value={engine}
-          options={ENGINES}
-          ariaLabel={t("settings.eleven.engineTitle")}
-          label={(o) => t(`settings.voice.engines.engine.${o}`)}
-          onChange={(demoEngine) => patch({ demoEngine })}
-        />
+      <span style={SETTINGS_TITLE}>{t("settings.eleven.voicesTitle")}</span>
+      <span style={SETTINGS_HINT}>{t("settings.eleven.hint")}</span>
+      <EngineState loading={eleven.isLoading || live.isLoading} error={eleven.error || live.error} />
+      <div style={{ display: "grid", gap: 10, marginTop: 4 }}>
+        {LOCALES.map((loc) => {
+          const engine = demoEngineFor(current, loc);
+          const label = eleven.data?.locales?.find((l) => l.id === loc)?.label ?? LOCALE_NAMES[loc];
+          const onEngine = (next: DemoEngine) => patch({ engines: { ...(current.engines ?? {}), [loc]: next } });
+          return (
+            <div key={loc} className={ROW} data-testid={`demo-language-${loc}`}>
+              <span style={SETTINGS_LABEL}>{label}</span>
+              <Seg<DemoEngine>
+                value={engine}
+                options={ENGINES}
+                ariaLabel={t("settings.eleven.engineFor", { language: label })}
+                label={(o) => t(`settings.voice.engines.engine.${o}`)}
+                onChange={onEngine}
+              />
+              {engine === "elevenlabs" ? (
+                <ElevenVoiceRow
+                  locale={loc}
+                  value={current.elevenVoices ?? {}}
+                  onChange={(elevenVoices) => patch({ elevenVoices })}
+                  preview={preview}
+                />
+              ) : (
+                <LiveVoiceRow
+                  locale={loc}
+                  value={current.defaultVoices ?? {}}
+                  onChange={(defaultVoices) => patch({ defaultVoices })}
+                />
+              )}
+            </div>
+          );
+        })}
       </div>
-
-      <div style={SETTINGS_RULE} />
-
-      <span style={{ ...SETTINGS_TITLE, fontSize: 13, marginBottom: 8 }}>{t("settings.eleven.voicesTitle")}</span>
-      {engine === "elevenlabs" ? (
-        <ElevenVoices value={current.elevenVoices ?? {}} onChange={(elevenVoices) => patch({ elevenVoices })} />
-      ) : (
-        <LiveVoices value={current.defaultVoices ?? {}} onChange={(defaultVoices) => patch({ defaultVoices })} />
-      )}
 
       <SaveBar
         dirty={!!draft}
@@ -89,80 +114,75 @@ function EngineState({ loading, error }: { loading: boolean; error: unknown }) {
   return null;
 }
 
-/** The ElevenLabs voice per demo locale, each with a sample to play. */
-function ElevenVoices({ value, onChange }: {
-  value: Partial<Record<ElevenDemoLocale, string>>; onChange: (v: Partial<Record<ElevenDemoLocale, string>>) => void;
+/** One locale's ElevenLabs voice, with a sample to play. */
+function ElevenVoiceRow({ locale, value, onChange, preview }: {
+  locale: ElevenDemoLocale;
+  value: Partial<Record<ElevenDemoLocale, string>>;
+  onChange: (v: Partial<Record<ElevenDemoLocale, string>>) => void;
+  preview: ReturnType<typeof usePreview>;
 }) {
   const { t } = useTranslation("demos");
-  const { data: options, isLoading, error } = useElevenDemoOptions();
-  const preview = usePreview();
-  const locales = options?.locales?.length ? options.locales : LOCALES.map((id) => ({ id, label: id }));
+  const { data: options } = useElevenDemoOptions();
+  const voices = options?.voices?.[locale] ?? [];
+  const chosen = value[locale] ?? "";
+  const defaultId = options?.defaults?.[locale];
+  const effective = chosen || defaultId || "";
+  const playable = voices.find((v) => v.id === effective)?.preview_url ?? null;
+  const defaultName = voices.find((v) => v.id === defaultId)?.label;
   return (
-    <div style={{ display: "grid", gap: 8 }}>
-      <EngineState loading={isLoading} error={error} />
-      {locales.map((l) => {
-        const voices = options?.voices?.[l.id] ?? [];
-        const chosen = value[l.id] ?? "";
-        const effective = chosen || options?.defaults?.[l.id] || "";
-        const playable = voices.find((v) => v.id === effective)?.preview_url ?? null;
-        const defaultName = voices.find((v) => v.id === options?.defaults?.[l.id])?.label;
-        return (
-          <div key={l.id} className={ROW}>
-            <span style={SETTINGS_LABEL}>{l.label}</span>
-            <div style={{ width: 210, maxWidth: "100%" }} className="max-sm:flex-1">
-              <ElevenVoiceSelect
-                voices={voices}
-                value={chosen}
-                emptyLabel={defaultName ? t("settings.voice.engineDefault", { voice: defaultName }) : t("settings.eleven.localeDefault")}
-                onChange={(v) => onChange({ ...value, [l.id]: v })}
-              />
-            </div>
-            <IconBtn
-              aria-label={t("settings.eleven.preview")}
-              title={t("settings.eleven.preview")}
-              disabled={!playable}
-              active={preview.playing === playable && !!playable}
-              onClick={() => playable && preview.toggle(playable)}
-            >
-              {preview.playing === playable && playable ? <Square size={13} /> : <Play size={14} />}
-            </IconBtn>
-          </div>
-        );
-      })}
-    </div>
+    <>
+      <div style={SELECT_W} className="max-sm:flex-1">
+        <ElevenVoiceSelect
+          voices={voices}
+          value={chosen}
+          emptyLabel={defaultName ? t("settings.voice.engineDefault", { voice: defaultName }) : t("settings.eleven.localeDefault")}
+          onChange={(v) => onChange({ ...value, [locale]: v })}
+        />
+      </div>
+      <IconBtn
+        aria-label={t("settings.eleven.preview")}
+        title={t("settings.eleven.preview")}
+        disabled={!playable}
+        active={preview.playing === playable && !!playable}
+        onClick={() => playable && preview.toggle(playable)}
+      >
+        {preview.playing === playable && playable ? <Square size={13} /> : <Play size={14} />}
+      </IconBtn>
+    </>
   );
 }
 
-/** The GPT-Live voice per locale. Languages and voices come from the engine,
- *  so a voice added in Python shows up without a second edit. */
-function LiveVoices({ value, onChange }: { value: Record<string, string>; onChange: (v: Record<string, string>) => void }) {
+/** One locale's GPT-Live voice. Voices come from the engine, so a voice added
+ *  in Python shows up without a second edit. */
+function LiveVoiceRow({ locale, value, onChange }: {
+  locale: ElevenDemoLocale; value: Record<string, string>; onChange: (v: Record<string, string>) => void;
+}) {
   const { t } = useTranslation("demos");
-  const { data: engine, isLoading, error } = useEngineVoiceOptions();
+  const { data: engine } = useEngineVoiceOptions();
+  const builtIn = engine?.locales?.find((l) => l.id === locale)?.voice ?? "";
   return (
-    <div style={{ display: "grid", gap: 8 }}>
-      <EngineState loading={isLoading} error={error} />
-      {(engine?.locales ?? []).map((l) => (
-        <label key={l.id} className={ROW}>
-          <span style={SETTINGS_LABEL}>{l.label}</span>
-          <select
-            style={{ ...ENGINE_INPUT, width: 210, maxWidth: "100%" }}
-            value={value[l.id] ?? ""}
-            onChange={(e) => onChange({ ...value, [l.id]: e.target.value })}
-          >
-            {/* Empty is the engine's own default, named so nobody has to guess it. */}
-            <option value="">{t("settings.voice.engineDefault", { voice: l.voice })}</option>
-            {(["female", "male"] as const).map((gender) => {
-              const voices = (engine?.voices ?? []).filter((v) => (v.gender ?? "female") === gender);
-              return voices.length ? (
-                <optgroup key={gender} label={t(`settings.voice.engines.gender.${gender}`)}>
-                  {voices.map((v) => <option key={v.id} value={v.id}>{v.id} ({v.label})</option>)}
-                </optgroup>
-              ) : null;
-            })}
-          </select>
-        </label>
-      ))}
-    </div>
+    <>
+      <select
+        style={{ ...ENGINE_INPUT, ...SELECT_W }}
+        className="max-sm:flex-1"
+        aria-label={t("settings.eleven.voiceFor")}
+        value={value[locale] ?? ""}
+        onChange={(e) => onChange({ ...value, [locale]: e.target.value })}
+      >
+        {/* Empty is the engine's own default, named so nobody has to guess it. */}
+        <option value="">{t("settings.voice.engineDefault", { voice: builtIn })}</option>
+        {(["female", "male"] as const).map((gender) => {
+          const voices = (engine?.voices ?? []).filter((v) => (v.gender ?? "female") === gender);
+          return voices.length ? (
+            <optgroup key={gender} label={t(`settings.voice.engines.gender.${gender}`)}>
+              {voices.map((v) => <option key={v.id} value={v.id}>{v.id} ({v.label})</option>)}
+            </optgroup>
+          ) : null;
+        })}
+      </select>
+      {/* Keeps the rows aligned: GPT-Live voices have no sample to play. */}
+      <span aria-hidden style={{ width: 36, flexShrink: 0 }} className="max-sm:hidden" />
+    </>
   );
 }
 

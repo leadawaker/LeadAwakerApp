@@ -183,10 +183,10 @@ export interface LiveSetup {
 
 // --- ElevenLabs demos ---------------------------------------------------------
 
-/** Which engine a demo runs on (engine demo-context `engine`). Missing = GPT-Live (an older engine). */
+/** Which engine a demo runs on (engine demo-context `engines` per locale, or `engine`). Missing = GPT-Live. */
 export type DemoEngine = "elevenlabs" | "gpt-live";
 
-/** The locales ElevenLabs demos have voices for. pt-PT uses pt-BR. */
+/** The demo locales, on either engine. An old pt-PT demo is heard in pt-BR. */
 export type ElevenDemoLocale = "nl" | "en-GB" | "en-US" | "pt-BR";
 
 export interface ElevenDemoVoice {
