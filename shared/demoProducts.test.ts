@@ -65,3 +65,12 @@ test("putProducts returns a normalized copy and leaves other languages alone", (
   assert.notEqual(out, input);
   assert.deepEqual(putProducts(null, "pt", [{ name: "C", detail: "", price: "" }]), { pt: [{ name: "C", detail: "", price: "" }] });
 });
+
+test("pickProducts returns a copy, never the stored array or its items", () => {
+  const stored = { nl: [{ name: "A", detail: "", price: "" }] };
+  const out = pickProducts(stored, "nl");
+  assert.notEqual(out, stored.nl);
+  assert.notEqual(out[0], stored.nl[0]);
+  out[0].name = "changed";
+  assert.equal(stored.nl[0].name, "A");
+});

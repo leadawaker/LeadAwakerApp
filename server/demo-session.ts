@@ -3,6 +3,7 @@ import { db } from "./db";
 import { leads, campaigns, promptLibrary, nicheVocabulary } from "@shared/schema";
 import { eq, isNotNull } from "drizzle-orm";
 import { runJson, type ClaudeModel, type GenProvider } from "./demoGenerator/providers";
+import type { DemoProduct } from "@shared/demoProducts";
 
 export const UNIVERSAL_DEMO_CAMPAIGN_ID = 60;
 // The WhatsApp receptionist ("Speed to Lead Demo"): answers whoever writes in,
@@ -34,6 +35,12 @@ export interface NicheContext {
   // is what makes an extra field here safe.
   screenshot?: string;
   website_url?: string;
+  // What the business sells, its stock page and its city (Demos redesign).
+  // Products are the link language's list, picked at mint time; the prompts read
+  // all three, so a persona without them behaves as before.
+  products?: DemoProduct[];
+  stock_url?: string;
+  city?: string;
   niche_label: string;
   company_name: string;
   service_name: string;

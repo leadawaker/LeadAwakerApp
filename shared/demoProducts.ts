@@ -40,12 +40,12 @@ export function normalizeProducts(raw: unknown): DemoProduct[] {
   return out;
 }
 
-/** The link language's list when it has items, else the first non-empty of en, nl, pt, else none. */
+/** The link language's list when it has items, else the first non-empty of en, nl, pt, else none. A copy, never the stored array. */
 export function pickProducts(byLang: ProductsByLang | null | undefined, lang: ProductLang): DemoProduct[] {
   if (!byLang) return [];
   for (const l of [lang, ...LANG_ORDER]) {
     const list = byLang[l];
-    if (Array.isArray(list) && list.length > 0) return list;
+    if (Array.isArray(list) && list.length > 0) return list.map((p) => ({ ...p }));
   }
   return [];
 }

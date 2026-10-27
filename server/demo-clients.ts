@@ -25,6 +25,8 @@
 import { db } from "./db";
 import { nicheVocabulary, type NicheText, type SocialPostByLang } from "@shared/schema";
 import { eq, ne, asc } from "drizzle-orm";
+import type { ProductsByLang } from "@shared/demoProducts";
+import { contextProductFields, productPatchValues, type ProductPatch } from "./demoClientProducts";
 import {
   applyDemoDefaults,
   buildGenericScopingLadder,
@@ -193,6 +195,8 @@ export interface DemoClientSummary {
   niche: string;
   label: string;
   companyName: string;
+  /** The business's own site, set when the Client was built from a URL. */
+  websiteUrl: string | null;
   /** Null until set by hand or by the generator's category preference. */
   category: string | null;
   /** Null until set by hand or by the generator. */
@@ -230,6 +234,7 @@ export async function listDemoClients(): Promise<DemoClientSummary[]> {
       niche: r.niche,
       label: pick(r.nicheLabel as NicheText, "en") || r.niche,
       companyName: pick(r.companyNameTemplate as NicheText, "en"),
+      websiteUrl: r.websiteUrl ?? null,
       category: r.category ?? null,
       emoji: r.emoji ?? null,
       languages,
@@ -371,7 +376,7 @@ export type ClientTextField = keyof typeof CLIENT_TEXT_FIELDS;
 export const TERM_GROUPS = ["project", "proposal", "decision", "advisor", "visit"] as const;
 export type TermGroup = (typeof TERM_GROUPS)[number];
 
-export interface ClientPatch {
+export interface ClientPatch extends ProductPatch {
   /** Text slots to merge, per field, per language. */
   text?: Partial<Record<ClientTextField, Partial<Record<DemoLang, string>>>>;
   /** Term lists to REPLACE, per group, per language. */
@@ -430,6 +435,7 @@ export async function updateDemoClient(niche: string, patch: ClientPatch): Promi
   if (patch.bookingModeCall !== undefined) values.bookingModeCall = patch.bookingModeCall;
   if (patch.category !== undefined) values.category = (patch.category ?? "").trim() || null;
   if (patch.emoji !== undefined) values.emoji = (patch.emoji ?? "").trim() || null;
+  Object.assign(values, productPatchValues(existing.products ?? null, patch));
 
   await db.update(nicheVocabulary).set(values).where(eq(nicheVocabulary.id, existing.id));
   return true;
@@ -523,6 +529,13 @@ export function demoClientToEditable(row: ClientRow) {
     updatedAt: row.updatedAt ?? null,
     socialPost: (row.socialPost as SocialPostByLang | null) ?? null,
     socialImage: row.socialImagePath || null,
+    // Raw per-language lists (no fallback), like the text and terms: the editor
+    // must show what is stored. City, phone and stock URL are not per language.
+    products: (row.products as ProductsByLang | null) ?? {},
+    stockUrl: row.stockUrl ?? null,
+    city: row.city ?? null,
+    phone: row.phone ?? null,
+    websiteUrl: row.websiteUrl ?? null,
     text,
     terms,
   };
@@ -568,6 +581,7 @@ export function demoClientToContext(
     // renders a plain backdrop without it.
     screenshot: (row as { screenshotPath?: string | null }).screenshotPath || undefined,
     website_url: (row as { websiteUrl?: string | null }).websiteUrl || undefined,
+    ...contextProductFields(row, language),
     niche_label: label,
     company_name: pick(row.companyNameTemplate as NicheText, language),
     service_name: pick(row.serviceName as NicheText, language),

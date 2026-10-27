@@ -7,6 +7,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { apiRequest } from "@/lib/queryClient";
+import type { ProductsByLang } from "@shared/demoProducts";
 
 export type DemoLang = "en" | "nl" | "pt";
 
@@ -58,6 +59,8 @@ export interface DemoClientSummary {
   niche: string;
   label: string;
   companyName: string;
+  /** The business's own site, when the Client was built from a URL. */
+  websiteUrl: string | null;
   category: string | null;
   emoji: string | null;
   languages: DemoLang[];
@@ -88,6 +91,12 @@ export interface EditableDemoClient {
   screenshot: string | null;
   socialPost: Partial<Record<DemoLang, SocialPostFields>> | null;
   socialImage: string | null;
+  /** What the business sells, per language as stored (no fallback). */
+  products: ProductsByLang;
+  stockUrl: string | null;
+  city: string | null;
+  phone: string | null;
+  websiteUrl: string | null;
   text: Record<ClientTextField, NicheText>;
   terms: Record<TermGroup, Record<DemoLang, string[]>>;
 }
@@ -100,6 +109,11 @@ export interface DemoClientPatch {
   bookingModeCall?: boolean;
   category?: string | null;
   emoji?: string | null;
+  /** Replaced per language sent; languages not in the patch stay. */
+  products?: ProductsByLang;
+  stockUrl?: string | null;
+  city?: string | null;
+  phone?: string | null;
 }
 
 export const CLIENTS_KEY = ["/api/demo/clients"];

@@ -30,6 +30,7 @@ import { socialSnapshotFields, isSocialBlob, clientCompanyNames, rehandleSnapsho
 import { getClientSocialPost } from "../demoSocial/clientStore";
 import type { SocialLang } from "../demoSocial/types";
 import { applyVoicePick, createLinkVoiceFields } from "./demoVoiceSchemas";
+import { productPatchShape } from "../demoClientProducts";
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
 // personas Gabriel actually minted for a prospect (decided 2026-08-11).
@@ -385,6 +386,7 @@ export function registerDemoRoutes(app: Express): void {
     bookingModeCall: z.boolean().optional(),
     category: z.string().trim().max(60).nullable().optional(),
     emoji: z.string().trim().max(8).nullable().optional(),
+    ...productPatchShape,
   });
 
   app.patch(
