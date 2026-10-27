@@ -34,7 +34,7 @@ export function cleanCopy(s: string): string {
 export type ProposalProblem = "empty" | "no_change" | "too_long" | "not_found" | "ambiguous" | "new_mark"
   | "mirror_not_found" | "mirror_ambiguous" | "mirror_new_mark" | "rejected_before";
 
-const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
+export const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
 const other = (l: PromptLang): PromptLang => (l === "nl" ? "en" : "nl");
 
 function checkEdit(text: string | undefined, find: string, replace: string): "not_found" | "ambiguous" | "new_mark" | null {
