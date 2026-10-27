@@ -496,6 +496,18 @@ export const nicheVocabulary = nocodb.table("Niche_Vocabulary", {
   // created by the engine migration, not declared here).
   accountsId: integer("accounts_id"),
   isLive: boolean("is_live").notNull().default(false),
+  // Demos redesign (script/create-demos-redesign-columns.mjs). Products the
+  // business sells, per language ({ en?, nl?, pt? }, each a list of
+  // { name, detail, price }, max 20), edited in the persona editor and read by
+  // the demo prompts. The stock page URL, city and phone are not per language.
+  // Written by the persona editor and the website scan review.
+  products: jsonb("products")
+    .$type<Partial<Record<"en" | "nl" | "pt", { name: string; detail: string; price: string }[]>>>()
+    .notNull()
+    .default({}),
+  stockUrl: text("stock_url"),
+  city: text("city"),
+  phone: text("phone"),
 }, (t) => [
   uniqueIndex("niche_vocabulary_niche_idx").on(t.niche),
 ]);
@@ -1113,6 +1125,10 @@ export const leads = nocodb.table("Leads", {
   aiNotesGeneratedAt: timestamp("ai_notes_generated_at", { withTimezone: true }),
   abVariant: text("ab_variant"),
   demoNiche: text("demo_niche"),
+  // Demo link revoke marker (script/create-demos-redesign-columns.mjs). Set by
+  // the CRM on both rows of a token when the link is re-minted or deleted;
+  // every token lookup (CRM and engine) treats a set value as an expired link.
+  demoRevokedAt: timestamp("demo_revoked_at", { withTimezone: true }),
   // Reputation: when the customer's service was completed (entry trigger),
   // and when the feedback ask was sent (idempotency gate).
   serviceCompletedAt: timestamp("service_completed_at", { withTimezone: true }),
@@ -2711,6 +2727,28 @@ export interface NumberRequestOrder {
   checkedAt: string;
 }
 export type NumberRequest = typeof numberRequests.$inferSelect;
+
+// ─── Demos page prospects ───
+// Created by script/create-demos-redesign-columns.mjs. One row of settings per prospect group (the key the
+// Demos page already groups links by): who the demo greets, the language, the AI disclosure line and the notes
+// the demo prompts carry. Written by the Demos page (create panel and prospect settings), read by demo minting.
+export const demoProspects = nocodb.table("Demo_Prospects", {
+  id: serial("id").primaryKey(),
+  prospectGroup: text("prospect_group").notNull(),
+  firstName: text("first_name").notNull(),
+  companyName: text("company_name").notNull().default(""),
+  clientNiche: text("client_niche").notNull().default(""),
+  language: text("language").notNull().default("en"),         // en | nl | pt
+  aiDisclosure: text("ai_disclosure").notNull().default(""),
+  market: text("market").notNull().default(""),
+  notes: text("notes").notNull().default(""),
+  websiteUrl: text("website_url").notNull().default(""),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+}, (t) => [
+  uniqueIndex("demo_prospects_group_idx").on(t.prospectGroup),
+]);
+export type DemoProspectRow = typeof demoProspects.$inferSelect;
 
 // ─── Voice review and prompt coach ───
 // Created by script/create-voice-review-tables.mjs. Weekly or manual AI reviews of an account's ElevenLabs
