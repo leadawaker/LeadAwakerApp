@@ -162,6 +162,16 @@ export function translateSources(
 }
 
 /**
+ * A translation is slow, so the persona that asked for it may no longer be the
+ * open one when it arrives (the tab swaps `niche` in place, no remount). Merging
+ * it then would write one persona's copy into another's draft, and that draft's
+ * autosave would persist it. Apply it only to the persona that requested it.
+ */
+export function shouldApplyTranslation(requestedNiche: string, currentNiche: string): boolean {
+  return requestedNiche === currentNiche;
+}
+
+/**
  * Put a translation into the draft's `to` slots. Only EMPTY slots are filled:
  * what Gabriel already typed (or an earlier translation he kept) is never
  * overwritten. Terms join with ", " as the editor shows them; autosave then

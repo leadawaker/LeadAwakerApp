@@ -21,7 +21,8 @@ import { translateSources } from "./clientDraft";
 export function TranslateSlotButton({ client, to, onTranslated }: {
   client: EditableDemoClient;
   to: DemoLang;
-  onTranslated: (translation: ClientTranslation) => void;
+  /** `niche` is the persona that asked, captured when the button was pressed. */
+  onTranslated: (translation: ClientTranslation, niche: string) => void;
 }) {
   const { t } = useTranslation("demos");
   const sources = translateSources(client, to);
@@ -33,10 +34,12 @@ export function TranslateSlotButton({ client, to, onTranslated }: {
   const from = sources.includes(picked) ? picked : sources[0];
 
   const run = async () => {
+    // Captured now: the answer can arrive after another persona was opened.
+    const requested = client.niche;
     setBusy(true);
     setFailed(false);
     try {
-      onTranslated(await translateDemoClient(client.niche, { from, to }));
+      onTranslated(await translateDemoClient(requested, { from, to }), requested);
     } catch {
       setFailed(true);
     } finally {

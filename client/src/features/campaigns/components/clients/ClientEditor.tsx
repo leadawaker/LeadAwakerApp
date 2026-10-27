@@ -46,7 +46,15 @@ import { TranslateSlotButton } from "./TranslateSlotButton";
 import { SocialPostSection } from "./SocialPostSection";
 import { LiveClientView } from "./LiveClientView";
 import { LANGS } from "./clientDisplay";
-import { TEXT_FIELDS, buildDraft, buildPatch, draftsEqual, mergeTranslation, type Draft } from "./clientDraft";
+import {
+  TEXT_FIELDS,
+  buildDraft,
+  buildPatch,
+  draftsEqual,
+  mergeTranslation,
+  shouldApplyTranslation,
+  type Draft,
+} from "./clientDraft";
 
 type View = "persona" | "wording" | "media";
 const VIEWS: View[] = ["persona", "wording", "media"];
@@ -194,8 +202,12 @@ export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
     setDraft((d) => (d ? { ...d, ...patch } : d));
 
   // A translation fills the empty slots of its language in the draft; autosave persists it.
-  const applyTranslation = (to: DemoLang, translation: ClientTranslation) =>
+  // `nicheRef` is the persona open NOW: an answer for a persona that was closed
+  // while the call ran is dropped, not merged into whichever one is open.
+  const applyTranslation = (to: DemoLang, translation: ClientTranslation, forNiche: string) => {
+    if (!shouldApplyTranslation(forNiche, nicheRef.current)) return;
     setDraft((d) => (d ? mergeTranslation(d, to, translation) : d));
+  };
 
   if (isLoading || !client || !draft) {
     return (
@@ -260,7 +272,12 @@ export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
             onLang={setPersonaLang}
             onChange={setTextSlot}
             emptyLangSlot={
-              <TranslateSlotButton client={client} to={personaLang} onTranslated={(tr) => applyTranslation(personaLang, tr)} />
+              <TranslateSlotButton
+                key={`translate-${client.niche}`}
+                client={client}
+                to={personaLang}
+                onTranslated={(tr, forNiche) => applyTranslation(personaLang, tr, forNiche)}
+              />
             }
             afterKb={
               <ProductsSection

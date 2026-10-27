@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { EditableDemoClient } from "../../api/demoClientsApi";
-import { buildDraft, buildPatch, draftsEqual, mergeTranslation, translateSources } from "./clientDraft";
+import { buildDraft, buildPatch, draftsEqual, mergeTranslation, shouldApplyTranslation, translateSources } from "./clientDraft";
 
 const emptyText = { en: "", nl: "", pt: "" };
 const FIELDS = [
@@ -136,4 +136,10 @@ test("mergeTranslation ignores blank answers and leaves the draft untouched", ()
   const next = mergeTranslation(d, "pt", { text: { usp: "  " }, terms: { project: [] }, products: [] });
   assert.equal(draftsEqual(d, next), true);
   assert.equal(next.products.pt, undefined);
+});
+
+test("shouldApplyTranslation: only while the persona that asked is still the one open", () => {
+  assert.equal(shouldApplyTranslation("Meure Auto", "Meure Auto"), true);
+  assert.equal(shouldApplyTranslation("Meure Auto", "Kitchens"), false);
+  assert.equal(shouldApplyTranslation("Meure Auto", ""), false);
 });
