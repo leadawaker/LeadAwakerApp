@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { BOOKKEEPING_KEYS, needsRebuild, planTokenRewrites, rewriteBlob, settingsChanged } from "./personaRewrite";
+import { BOOKKEEPING_KEYS, needsRebuild, planTokenRewrites, rewriteBlob, settingsChanged, settingsToSave } from "./personaRewrite";
 
 const prev = { firstName: "Johan", companyName: "Meure", clientNiche: "Meure Auto", language: "nl", aiDisclosure: "", market: "" } as const;
 
@@ -68,4 +68,13 @@ test("planTokenRewrites: each row is rewritten from its own blob", () => {
   assert.equal(wa.opener, "dbr");
   assert.equal(wa.prospect_group, "g1");
   assert.equal(JSON.parse(plan[1].demoNiche).opener, "none");
+});
+
+test("settingsToSave: a failed token keeps the old settings on the row so the same edit can be retried", () => {
+  const next = { ...prev, language: "en" } as const;
+  // Every link written: the row takes the new settings.
+  assert.deepEqual(settingsToSave(prev, next, 0), next);
+  // Any link failed: the row keeps the old settings, so repeating the PATCH sees a change again.
+  assert.deepEqual(settingsToSave(prev, next, 1), prev);
+  assert.equal(settingsChanged(settingsToSave(prev, next, 2), next), true);
 });

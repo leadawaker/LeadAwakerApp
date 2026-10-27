@@ -15,7 +15,7 @@ import type { ClientRow } from "../demo-clients";
 import { parseDemoNiche, resolveDemoScenario } from "../demoNicheBlob";
 import { repickPersona, resolveRepickClient, type RepickResult } from "../demoPersonaRepick";
 import { isSocialBlob } from "../demoSocial/snapshot";
-import { needsRebuild, planTokenRewrites, settingsChanged, type LeadRewrite } from "./personaRewrite";
+import { needsRebuild, planTokenRewrites, settingsChanged, settingsToSave, type LeadRewrite } from "./personaRewrite";
 import { normalizeSettings, settingsFromLeads, tokenOf, tokensInGroup } from "./rows";
 import { getProspect, loadDemoLeadsLite, upsertProspect } from "./store";
 
@@ -73,8 +73,9 @@ async function writeTokenRows(rows: LeadRewrite[]): Promise<void> {
  * Client, language or market rebuilds each link's persona from the Client, which
  * must exist and speak the language; any other edit changes only what it names.
  * A link whose persona cannot be rebuilt (the Instagram post failed) is listed
- * in `failedTokens` and left as it was. The prospect's row is always saved, so
- * a legacy group gains its row and notes alone save.
+ * in `failedTokens` and left as it was, and then the row keeps its OLD settings
+ * so repeating the same edit retries them. The row is always saved, so a legacy
+ * group gains its row and notes alone save.
  */
 export async function applyProspectSettings(group: string, patch: ProspectPatch): Promise<ApplyProspectResult> {
   const demoLeads = await loadDemoLeadsLite();
@@ -152,6 +153,12 @@ export async function applyProspectSettings(group: string, patch: ProspectPatch)
     }
   }
 
-  const prospect = await upsertProspect(group, { ...next, notes: patch.notes, websiteUrl: patch.websiteUrl });
+  // Notes and website always save. The settings only when every link took them
+  // (see settingsToSave), so a failed link can be retried by repeating the edit.
+  const prospect = await upsertProspect(group, {
+    ...settingsToSave(prev, next, failedTokens.length),
+    notes: patch.notes,
+    websiteUrl: patch.websiteUrl,
+  });
   return { ok: true, result: { prospect, updatedTokens, failedTokens } };
 }

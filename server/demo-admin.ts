@@ -157,16 +157,20 @@ export async function updateDemoIdentity(
 ): Promise<number> {
   const rows = await findDemoLeads(token);
 
-  for (const lead of rows) {
-    const values: Record<string, unknown> = { updatedAt: new Date() };
-    if (patch.firstName !== undefined) values.firstName = patch.firstName;
-    if (patch.companyName !== undefined) {
-      // Merged, never replaced: the blob is the whole persona.
-      const niche = parseDemoNiche(lead.demoNiche);
-      niche.company_name = patch.companyName;
-      values.demoNiche = JSON.stringify(niche);
+  // One transaction: a failure on the second surface must not leave the first
+  // one renamed.
+  await db.transaction(async (tx) => {
+    for (const lead of rows) {
+      const values: Record<string, unknown> = { updatedAt: new Date() };
+      if (patch.firstName !== undefined) values.firstName = patch.firstName;
+      if (patch.companyName !== undefined) {
+        // Merged, never replaced: the blob is the whole persona.
+        const niche = parseDemoNiche(lead.demoNiche);
+        niche.company_name = patch.companyName;
+        values.demoNiche = JSON.stringify(niche);
+      }
+      await tx.update(leads).set(values as any).where(eq(leads.id, lead.id));
     }
-    await db.update(leads).set(values as any).where(eq(leads.id, lead.id));
-  }
+  });
   return rows.length;
 }

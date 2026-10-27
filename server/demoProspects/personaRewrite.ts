@@ -37,6 +37,21 @@ export function needsRebuild(prev: DemoProspectSettings, next: DemoProspectSetti
 }
 
 /**
+ * What the prospect's row records after an edit. When any link failed to take
+ * it, the row keeps the OLD settings: the same edit repeated then still differs
+ * from the row, so it retries every link (rewriting one that already took it is
+ * harmless). Recording the new settings would make the retry look like a no-op
+ * and leave the failed links on the old persona for good.
+ */
+export function settingsToSave(
+  prev: DemoProspectSettings,
+  next: DemoProspectSettings,
+  failedTokenCount: number,
+): DemoProspectSettings {
+  return failedTokenCount > 0 ? prev : next;
+}
+
+/**
  * One lead row's next blob. `rebuilt` is the persona freshly built from the
  * Client (null when the edit did not need one), and replaces the row's persona
  * wholesale while the row keeps its own link bookkeeping. The company name is
