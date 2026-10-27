@@ -94,25 +94,3 @@ function CampaignBody({ campaign: row, onSave }: {
     </div>
   );
 }
-
-/** The demo campaigns no service tile claims, with a picker when there is more than one. */
-export function OtherDemoCampaigns({ campaigns, value, onChange }: {
-  campaigns: DemoCampaignRow[]; value: number | undefined; onChange: (id: number) => void;
-}) {
-  const { t } = useTranslation("demos");
-  if (campaigns.length === 0) return <Note>{t("settings.campaigns.none")}</Note>;
-  const current = campaigns.find((c) => c.id === value) ?? campaigns[0]!;
-  return (
-    <>
-      {campaigns.length > 1 && (
-        <label style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13, color: "var(--ink)" }}>
-          <span style={{ fontWeight: 600 }}>{t("settings.campaigns.pick")}</span>
-          <select className="la-input" style={{ maxWidth: 320 }} value={current.id} onChange={(e) => onChange(Number(e.target.value))} data-testid="demo-campaign-picker">
-            {campaigns.map((c) => <option key={c.id} value={c.id}>{c.name || `#${c.id}`}</option>)}
-          </select>
-        </label>
-      )}
-      <DemoCampaignSettings campaignId={current.id} />
-    </>
-  );
-}

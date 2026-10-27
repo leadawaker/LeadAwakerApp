@@ -132,7 +132,7 @@
   "settings": {
     "publicDemo": {
       "title": "Website demo on leadawaker.com",
-      "hint": "Visitors type their website, verify their phone on WhatsApp, and talk to Sara as their own receptionist. Turn it off and the page shows \"book a call\" instead.",
+      "hint": "Visitors talk to Sara as their own receptionist. Off shows \"book a call\" instead.",
       "today": "Today: €{{eur}} of €{{budget}} estimated, {{built}} of {{cap}} demos built.",
       "dailyBudgetEur": "Daily budget (€)",
       "maxDemosPerDay": "Demos built per day",
@@ -141,12 +141,11 @@
       "callNumber": "Number shown as \"Or call her\"",
       "voiceEngine": "Voice engine"
     },
-    "empty": "No settings for this service yet.",
+    "empty": "Nothing to set here: this demo runs on the shared demo setup.",
     "rail": {
       "label": "Services",
-      "voice": "Voices, password, call limit",
-      "none": "No settings yet",
-      "shared": "Runs on the {{service}} campaign"
+      "voice": "Engine, voices, calls",
+      "shared": "Shared demo setup"
     },
     "campaign": {
       "help": "The campaign this demo runs on. Changes save on their own.",
@@ -154,15 +153,7 @@
       "meta": "#{{id}} · {{status}}",
       "saving": "Saving...",
       "pending": "Saving in a moment",
-      "saved": "All changes saved",
-      "sharedHelp": "{{service}} runs on the same campaign as {{owner}} ({{campaign}}), so its settings are under {{owner}}.",
-      "openShared": "Open {{service}}"
-    },
-    "campaigns": {
-      "label": "Demo campaigns",
-      "help": "Demo campaigns that no service above runs on.",
-      "none": "No other demo campaigns",
-      "pick": "Campaign"
+      "saved": "All changes saved"
     },
     "widget": {
       "avatarTitle": "Agent photo",
@@ -172,82 +163,45 @@
       "avatarError": "That image could not be read. Try a PNG, JPG or WebP."
     },
     "voice": {
-      "voicesTitle": "Voice per language",
-      "voicesHint": "Which voice answers the phone in each language. Changes reach the next call, not one already running.",
       "engineDefault": "Default ({{voice}})",
-      "female": "Female",
-      "male": "Male",
       "loading": "Loading the engine's voices…",
       "engineDown": "Could not reach the voice engine, so these cannot be edited right now.",
-      "passwordTitle": "Demo password",
-      "passwordHint": "Extra words that open the demo page, separated by commas. The built-in ones keep working.",
-      "passwordPlaceholder": "e.g. solar, demo2026",
-      "forgetTitle": "Never remember these numbers",
-      "forgetHint": "Sara greets these numbers as a new caller every time, on every line (clients' lines too), so a demo from your own phone always starts fresh. Separate with commas.",
-      "forgetPlaceholder": "e.g. +31 6 12345678, 06-87654321",
-      "limitTitle": "Call limit (minutes)",
-      "limitHint": "How long one demo call may run before it ends itself.",
       "save": "Save",
       "cancel": "Cancel",
       "engines": {
-        "title": "Engine tests",
-        "hint": "Calls from these numbers to the demo line are answered by the engine, voice and prompt you pick here. Every other caller keeps the line's own setup. Takes effect within 30 seconds.",
-        "retired": "Grok is retired: calls from this number are answered by GPT-Live. Pick an engine to change that.",
-        "xaiReady": "Grok is set up for {{numbers}}.",
-        "xaiMissing": "Grok is not set up yet (missing {{missing}}): these calls stay on GPT-Live until it is.",
-        "elevenReady": "ElevenLabs is set up for {{numbers}}.",
-        "elevenMissing": "ElevenLabs is not set up yet (missing {{missing}}): these calls stay on GPT-Live until it is.",
-        "number": "Phone number",
-        "numberPlaceholder": "+31 6 12345678",
-        "label": "Name",
-        "labelPlaceholder": "Name (optional)",
-        "enabled": "Test on",
-        "freshCaller": "Memory off (sounds like a first-time caller)",
-        "freshCallerHint": "This number's earlier calls, name, language and appointments are hidden from the AI. Bookings still go to the diary.",
-        "remove": "Remove",
-        "add": "Add a tester",
-        "lineVoice": "The line's own voice",
         "engine": {
           "gpt-live": "GPT-Live",
-          "xai": "Grok",
           "elevenlabs": "ElevenLabs"
         },
         "gender": {
           "female": "Female",
-          "male": "Male",
-          "neutral": "Neutral",
-          "other": "Other voices"
-        },
-        "prompt": "Prompt",
-        "promptOption": {
-          "standard": "Same as GPT-Live",
-          "lean": "Lean (xAI style)"
-        },
-        "reasoning": "Reasoning",
-        "reasoningOption": {
-          "high": "On",
-          "none": "Off"
+          "male": "Male"
         }
       }
     },
     "eleven": {
-      "title": "ElevenLabs demos",
-      "hint": "The engine minted demo links and demo phone calls run on, and the voice each language speaks with.",
       "engineTitle": "Engine for demo links",
-      "engineHint": "ElevenLabs sounds best in Dutch. GPT-Live is the old engine, kept as a fallback.",
-      "voicesTitle": "ElevenLabs voice per language",
-      "voicesHint": "The default voice of each demo locale. A voice picked on a demo itself wins. Press play to hear it.",
+      "voicesTitle": "Voice per language",
       "localeDefault": "Default voice",
-      "preview": "Play a sample",
-      "phonesTitle": "Your phones for \"Call me + prospect\"",
-      "phonesHint": "Your phone rings first, then the prospect is added to the call. Empty fields use the number shown.",
+      "preview": "Play a sample"
+    },
+    "calls": {
+      "title": "Calls",
+      "limit": "Call limit (minutes)",
+      "forget": "Numbers without memory",
+      "forgetHint": "Sara greets these as a new caller every time, on every line.",
+      "forgetPlaceholder": "e.g. +31 6 12345678",
+      "phones": "Your phones for \"Call me + prospect\"",
+      "phonesHint": "Your phone rings first, then the prospect joins. Empty uses the number shown.",
       "ownerPhone": "Main phone",
       "ownerPhoneBackup": "Backup phone",
       "ownerPhoneUse": "Ring this one",
       "use": {
         "primary": "Main",
         "backup": "Backup"
-      }
+      },
+      "password": "Password for the demo page without a link",
+      "passwordPlaceholder": "e.g. solar, demo2026"
     }
   },
   "widgetColor": {

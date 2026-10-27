@@ -132,7 +132,7 @@
   "settings": {
     "publicDemo": {
       "title": "Websitedemo op leadawaker.com",
-      "hint": "Bezoekers vullen hun website in, verifiëren hun nummer via WhatsApp en praten met Sara als hun eigen receptioniste. Zet je het uit, dan toont de pagina \"plan een gesprek\".",
+      "hint": "Bezoekers praten met Sara als hun eigen receptionist. Uit toont \"plan een gesprek\".",
       "today": "Vandaag: €{{eur}} van €{{budget}} geschat, {{built}} van {{cap}} demo's gebouwd.",
       "dailyBudgetEur": "Dagbudget (€)",
       "maxDemosPerDay": "Demo's per dag",
@@ -141,12 +141,11 @@
       "callNumber": "Nummer bij \"Of bel haar\"",
       "voiceEngine": "Spraakengine"
     },
-    "empty": "Nog geen instellingen voor deze dienst.",
+    "empty": "Hier valt niets in te stellen: deze demo draait op de gedeelde demo-opzet.",
     "rail": {
       "label": "Diensten",
-      "voice": "Stemmen, wachtwoord, gesprekslimiet",
-      "none": "Nog geen instellingen",
-      "shared": "Draait op de campagne van {{service}}"
+      "voice": "Engine, stemmen, gesprekken",
+      "shared": "Gedeelde demo-opzet"
     },
     "campaign": {
       "help": "De campagne waarop deze demo draait. Wijzigingen worden vanzelf opgeslagen.",
@@ -154,15 +153,7 @@
       "meta": "#{{id}} · {{status}}",
       "saving": "Opslaan...",
       "pending": "Zo meteen opgeslagen",
-      "saved": "Alle wijzigingen opgeslagen",
-      "sharedHelp": "{{service}} draait op dezelfde campagne als {{owner}} ({{campaign}}), dus de instellingen staan onder {{owner}}.",
-      "openShared": "Open {{service}}"
-    },
-    "campaigns": {
-      "label": "Democampagnes",
-      "help": "Democampagnes waarop geen van de diensten hierboven draait.",
-      "none": "Geen andere democampagnes",
-      "pick": "Campagne"
+      "saved": "Alle wijzigingen opgeslagen"
     },
     "widget": {
       "avatarTitle": "Foto van de medewerker",
@@ -172,82 +163,45 @@
       "avatarError": "Deze afbeelding kon niet worden gelezen. Probeer een PNG, JPG of WebP."
     },
     "voice": {
-      "voicesTitle": "Stem per taal",
-      "voicesHint": "Welke stem in welke taal opneemt. Een wijziging geldt vanaf het volgende gesprek, niet tijdens een lopend gesprek.",
       "engineDefault": "Standaard ({{voice}})",
-      "female": "Vrouwelijk",
-      "male": "Mannelijk",
       "loading": "Stemmen van de engine laden…",
       "engineDown": "De voice-engine is niet bereikbaar, dus dit is nu niet te wijzigen.",
-      "passwordTitle": "Demowachtwoord",
-      "passwordHint": "Extra woorden die de demopagina openen, gescheiden door komma's. De ingebouwde woorden blijven werken.",
-      "passwordPlaceholder": "bijv. zon, demo2026",
-      "forgetTitle": "Deze nummers nooit onthouden",
-      "forgetHint": "Sara begroet deze nummers altijd als nieuwe beller, op elke lijn (ook die van klanten), zodat een demo vanaf je eigen telefoon steeds fris begint. Scheid ze met komma's.",
-      "forgetPlaceholder": "bijv. +31 6 12345678, 06-87654321",
-      "limitTitle": "Gesprekslimiet (minuten)",
-      "limitHint": "Hoe lang een demogesprek mag duren voordat het zichzelf beëindigt.",
       "save": "Opslaan",
       "cancel": "Annuleren",
       "engines": {
-        "title": "Engine-tests",
-        "hint": "Gesprekken vanaf deze nummers naar de demolijn worden beantwoord door de engine, stem en prompt die je hier kiest. Iedere andere beller houdt de instellingen van de lijn. Binnen 30 seconden actief.",
-        "retired": "Grok is gestopt: gesprekken van dit nummer worden door GPT-Live beantwoord. Kies een engine om dat te wijzigen.",
-        "xaiReady": "Grok is ingesteld voor {{numbers}}.",
-        "xaiMissing": "Grok is nog niet ingesteld (ontbreekt: {{missing}}): deze gesprekken blijven op GPT-Live tot dat klaar is.",
-        "elevenReady": "ElevenLabs is ingesteld voor {{numbers}}.",
-        "elevenMissing": "ElevenLabs is nog niet ingesteld (ontbreekt: {{missing}}): deze gesprekken blijven op GPT-Live tot dat klaar is.",
-        "number": "Telefoonnummer",
-        "numberPlaceholder": "+31 6 12345678",
-        "label": "Naam",
-        "labelPlaceholder": "Naam (optioneel)",
-        "enabled": "Test aan",
-        "freshCaller": "Geheugen uit (klinkt als een nieuwe beller)",
-        "freshCallerHint": "Eerdere gesprekken, naam, taal en afspraken van dit nummer blijven verborgen voor de AI. Boekingen komen nog steeds in de agenda.",
-        "remove": "Verwijderen",
-        "add": "Tester toevoegen",
-        "lineVoice": "De eigen stem van de lijn",
         "engine": {
           "gpt-live": "GPT-Live",
-          "xai": "Grok",
           "elevenlabs": "ElevenLabs"
         },
         "gender": {
           "female": "Vrouw",
-          "male": "Man",
-          "neutral": "Neutraal",
-          "other": "Overige stemmen"
-        },
-        "prompt": "Prompt",
-        "promptOption": {
-          "standard": "Zelfde als GPT-Live",
-          "lean": "Kort (xAI-stijl)"
-        },
-        "reasoning": "Redeneren",
-        "reasoningOption": {
-          "high": "Aan",
-          "none": "Uit"
+          "male": "Man"
         }
       }
     },
     "eleven": {
-      "title": "ElevenLabs-demo's",
-      "hint": "Op welke engine demolinks en demo-telefoongesprekken draaien, en met welke stem elke taal spreekt.",
       "engineTitle": "Engine voor demolinks",
-      "engineHint": "ElevenLabs klinkt het best in het Nederlands. GPT-Live is de oude engine, als reserve.",
-      "voicesTitle": "ElevenLabs-stem per taal",
-      "voicesHint": "De standaardstem per demotaal. Een stem die bij een demo zelf is gekozen, gaat voor. Druk op afspelen om hem te horen.",
+      "voicesTitle": "Stem per taal",
       "localeDefault": "Standaardstem",
-      "preview": "Voorbeeld afspelen",
-      "phonesTitle": "Je telefoons voor \"Bel mij + prospect\"",
-      "phonesHint": "Eerst gaat jouw telefoon, daarna wordt de prospect aan het gesprek toegevoegd. Lege velden gebruiken het getoonde nummer.",
+      "preview": "Voorbeeld afspelen"
+    },
+    "calls": {
+      "title": "Gesprekken",
+      "limit": "Gesprekslimiet (minuten)",
+      "forget": "Nummers zonder geheugen",
+      "forgetHint": "Sara begroet deze nummers elke keer als nieuwe beller, op elke lijn.",
+      "forgetPlaceholder": "bijv. +31 6 12345678",
+      "phones": "Jouw telefoons voor \"Bel mij + prospect\"",
+      "phonesHint": "Jouw telefoon gaat eerst, daarna komt de prospect erbij. Leeg gebruikt het getoonde nummer.",
       "ownerPhone": "Hoofdtelefoon",
       "ownerPhoneBackup": "Reservetelefoon",
       "ownerPhoneUse": "Deze bellen",
       "use": {
         "primary": "Hoofd",
         "backup": "Reserve"
-      }
+      },
+      "password": "Wachtwoord voor de demopagina zonder link",
+      "passwordPlaceholder": "bijv. solar, demo2026"
     }
   },
   "widgetColor": {

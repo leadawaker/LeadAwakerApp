@@ -137,12 +137,13 @@ export default function VoiceDemoPage() {
 
   const [unlocked, setUnlocked] = useState(() => isValidVoicePassword(storedVoicePassword()));
   /**
-   * A verified visitor of the landing page's website demo: their token is the
-   * key, so the password door never shows. Until the context answers we do
-   * not know, so a public link waits instead of flashing the door.
+   * A token that opens the page by itself: a verified visitor of the landing
+   * page's website demo (`public`) or a valid minted prospect link (`open`).
+   * Either way the password door never shows. Until the context answers we do
+   * not know, so a token link waits instead of flashing the door.
    */
   const [publicDemo, setPublicDemo] = useState<boolean | null>(() =>
-    /^[a-f0-9]{16}$/.test(new URLSearchParams(window.location.search).get("token") || "") ? null : false,
+    DEMO_TOKEN_RE.test(new URLSearchParams(window.location.search).get("token") || "") ? null : false,
   );
 
   /**
@@ -217,7 +218,7 @@ export default function VoiceDemoPage() {
         if (cancelled) return;
         // No `engine` (an engine older than ElevenLabs demos) is GPT-Live, as before.
         markContext(data?.engine === "elevenlabs" ? "elevenlabs" : "gpt-live");
-        setPublicDemo(data?.public === true);
+        setPublicDemo(data?.public === true || data?.open === true);
         if (data?.public === true && typeof data.max_minutes === "number") setCallLimitMinutes(data.max_minutes);
         if (!data?.found) return;
         setSetup((prev) => {

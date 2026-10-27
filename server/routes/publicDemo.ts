@@ -121,6 +121,9 @@ const eventSchema = z.object({
   seconds: z.number().int().min(0).max(4 * 3600).optional(),
   feedback: z.string().max(2000).nullable().optional(),
   phone: z.string().max(20).optional(),
+  // The engine's measured cost of the call (ElevenLabs reports it); without
+  // it the spend falls back to minutes times the per-minute estimate.
+  costEur: z.number().min(0).max(50).optional(),
 });
 
 const settingsSchema = z
@@ -295,7 +298,7 @@ export function registerPublicDemoRoutes(app: Express): void {
     if (!internalKeyOk(req)) return res.status(401).json({ message: "invalid internal key" });
     const parsed = eventSchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
-    const { token, type, seconds, feedback, phone } = parsed.data;
+    const { token, type, seconds, feedback, phone, costEur } = parsed.data;
     const { costEstimates } = await getPublicDemoSettings();
 
     if (type === "voice_ended") {
@@ -306,7 +309,7 @@ export function registerPublicDemoRoutes(app: Express): void {
                 feedback = COALESCE($2, feedback) WHERE token = $3`,
         [secs, fb, token],
       );
-      await addSpend((secs / 60) * costEstimates.voiceMinuteEur, { token });
+      await addSpend(costEur ?? (secs / 60) * costEstimates.voiceMinuteEur, { token });
     } else if (type === "chat_turn") {
       await pool.query(`UPDATE ${REQ} SET chat_turns = chat_turns + 1 WHERE token = $1`, [token]);
       await addSpend(costEstimates.chatTurnEur, { token });

@@ -1,7 +1,7 @@
-// Small controls shared by the engine pickers: Demos > Settings > Engine tests
-// and the account Voice tab's line engine card.
+// Small controls shared by Demos > Settings and the account Voice tab's line
+// engine card: inputs, the segmented switch, the card frame and its save bar.
 import { useTranslation } from "react-i18next";
-import type { EngineVoice } from "../api/demoSettingsApi";
+import { Loader2 } from "lucide-react";
 
 export const ENGINE_INPUT: React.CSSProperties = {
   height: 34,
@@ -13,7 +13,6 @@ export const ENGINE_INPUT: React.CSSProperties = {
   fontSize: 13,
 };
 const SEG_BTN: React.CSSProperties = { padding: "6px 11px", fontSize: 11, letterSpacing: "0.08em" };
-const GENDERS = ["female", "male", "neutral", null] as const;
 
 export function Seg<T extends string>({ value, options, label, ariaLabel, onChange, disabledOptions, describedBy }: {
   value: T; options: T[]; label: (o: T) => string; ariaLabel?: string; onChange: (o: T) => void; disabledOptions?: T[];
@@ -33,22 +32,34 @@ export function Seg<T extends string>({ value, options, label, ariaLabel, onChan
   );
 }
 
-/** An engine voice list grouped by gender; the empty option is `emptyLabel`. */
-export function VoiceSelect({ voices, value, emptyLabel, onChange }: {
-  voices: EngineVoice[]; value: string; emptyLabel: string; onChange: (v: string) => void;
+export const SETTINGS_CARD: React.CSSProperties = {
+  borderRadius: "var(--r-card)",
+  background: "var(--bone)",
+  padding: "20px 22px",
+  maxWidth: 560,
+};
+export const SETTINGS_TITLE: React.CSSProperties = { display: "block", fontSize: 14, fontWeight: 600, color: "var(--ink)" };
+export const SETTINGS_LABEL: React.CSSProperties = { flex: 1, minWidth: 90, fontSize: 13, color: "var(--ink)" };
+export const SETTINGS_HINT: React.CSSProperties = { display: "block", fontSize: 12, color: "var(--mute)", margin: "2px 0 8px" };
+export const SETTINGS_RULE: React.CSSProperties = { height: 1, background: "var(--line)", margin: "18px 0" };
+
+/** Save and cancel under a settings card with a draft; the error sits beside them. */
+export function SaveBar({ dirty, pending, error, onSave, onCancel }: {
+  dirty: boolean; pending: boolean; error?: Error | null; onSave: () => void; onCancel: () => void;
 }) {
   const { t } = useTranslation("demos");
   return (
-    <select style={{ ...ENGINE_INPUT, width: "100%" }} value={value} onChange={(e) => onChange(e.target.value)}>
-      <option value="">{emptyLabel}</option>
-      {GENDERS.map((g) => {
-        const group = voices.filter((v) => v.gender === g);
-        return group.length ? (
-          <optgroup key={g ?? "other"} label={t(`settings.voice.engines.gender.${g ?? "other"}`)}>
-            {group.map((v) => <option key={v.id} value={v.id}>{v.label === v.id ? v.id : `${v.label} (${v.id})`}</option>)}
-          </optgroup>
-        ) : null;
-      })}
-    </select>
+    <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 18, flexWrap: "wrap" }}>
+      <button type="button" className="la-btn la-btn--primary" disabled={!dirty || pending} onClick={onSave}>
+        {pending && <Loader2 size={13} className="animate-spin" />}
+        {t("settings.voice.save")}
+      </button>
+      {dirty && (
+        <button type="button" className="la-btn la-btn--soft" onClick={onCancel}>
+          {t("settings.voice.cancel")}
+        </button>
+      )}
+      {error && <span style={{ fontSize: 12, color: "hsl(var(--destructive))" }}>{error.message}</span>}
+    </div>
   );
 }
