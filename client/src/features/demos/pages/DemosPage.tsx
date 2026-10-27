@@ -1,11 +1,15 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { List, Plus, RefreshCw, Settings, Users } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useLastTab } from "@/hooks/useLastTab";
 import { cn } from "@/lib/utils";
+import { useDemoProspects } from "../api/demoProspectsApi";
 import { useDemoSessions } from "../api/demoSessionsApi";
-import { DemoSessionsTable, DemosLoading } from "../components/DemoSessionsTable";
+import { DemosLoading } from "../components/DemosLoading";
+import { SessionsTable } from "../components/table/SessionsTable";
+import { buildProspectRows } from "../prospectRows";
+import { DEFAULT_FILTERS, visibleRows } from "../sessionsView";
 import { NewDemoForm } from "../components/NewDemoForm";
 import { DemoSettingsTab } from "../components/DemoSettingsTab";
 // The Clients library lives here rather than on the Campaigns page: a Client is
@@ -20,7 +24,18 @@ function DemosContent() {
   // Reopens on the tab used last.
   const [tab, setTab] = useLastTab<Tab>("demos", TABS, "sessions");
   const [selectedClientNiche, setSelectedClientNiche] = useState<string | null>(null);
-  const { data: sessions, isLoading, error, refetch, isFetching } = useDemoSessions();
+  const { data: sessions, isLoading: sessionsLoading, error, refetch, isFetching } = useDemoSessions();
+  const { data: prospects, isLoading: prospectsLoading } = useDemoProspects();
+  const isLoading = sessionsLoading || prospectsLoading;
+  const rows = useMemo(
+    () => visibleRows(buildProspectRows(prospects ?? [], sessions ?? []), DEFAULT_FILTERS, "", "newest"),
+    [prospects, sessions],
+  );
+
+  const openClient = (niche: string) => {
+    setSelectedClientNiche(niche);
+    setTab("clients");
+  };
 
   const tabs: Array<{ key: Tab; Icon: typeof List }> = [
     { key: "sessions", Icon: List },
@@ -94,7 +109,7 @@ function DemosContent() {
           <div className="flex flex-1 items-center justify-center" style={{ fontSize: 13, color: "var(--mute)" }}>
             {t("error.load")}
           </div>
-        ) : !sessions?.length ? (
+        ) : !rows.length ? (
           <div className="flex flex-1 flex-col items-center justify-center gap-1">
             <span className="serif" style={{ fontSize: 16, color: "var(--ink)" }}>
               {t("empty.title")}
@@ -104,7 +119,8 @@ function DemosContent() {
         ) : (
           <div className="h-full min-h-0 overflow-hidden" style={{ padding: "14px 24px 0" }}>
             <div className="la-page-center flex h-full min-h-0 flex-col">
-              <DemoSessionsTable sessions={sessions} />
+              {/* The prospect detail panel arrives with the sessions body; until then a name has nothing to open. */}
+              <SessionsTable rows={rows} highlightKey={null} onOpenRow={() => {}} onOpenClient={openClient} />
             </div>
           </div>
         )}

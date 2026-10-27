@@ -22,7 +22,11 @@
     "editHint": "Klik om te bewerken",
     "websitePill": "Website",
     "websitePillHint": "Gestart door een bezoeker op leadawaker.com",
+    "none": "-",
+    "lastActivity": "Laatste activiteit",
+    "sent": "Verstuurd",
     "svc": {
+      "dbrQuote": "DBR / Offerte",
       "dbr": "DBR",
       "quote": "Offerte",
       "speed": "Speed",
@@ -41,7 +45,8 @@
     "opened": "Geopend",
     "replies_one": "{{count}} reactie",
     "replies_other": "{{count}} reacties",
-    "never": "—"
+    "never": "-",
+    "expired": "Verlopen"
   },
   "actions": {
     "open": "Openen",
@@ -49,6 +54,32 @@
     "copyWhatsapp": "WhatsApp-link kopiëren",
     "copied": "Gekopieerd",
     "refresh": "Vernieuwen"
+  },
+  "links": {
+    "copy": "Link kopiëren",
+    "open": "Openen",
+    "whatsapp": "Delen via WhatsApp",
+    "copyWhatsapp": "WhatsApp-link kopiëren",
+    "call": "Demo via telefoon",
+    "remint": "Nieuwe link maken",
+    "remintDone": "Nieuwe link klaar. De oude werkt niet meer.",
+    "delete": "Link verwijderen",
+    "deleteTitle": "Deze link verwijderen?",
+    "deleteBody": "De link werkt niet meer voor de prospect. Dit kan niet ongedaan worden gemaakt.",
+    "deleted": "Link verwijderd",
+    "pickDbrQuote": "DBR- of offertelink toevoegen",
+    "socialsNeedsClient": "Kies eerst een Client voor deze prospect",
+    "copied": "Gekopieerd",
+    "actions": "Linkacties",
+    "actionFailed": "Dat is niet gelukt. Probeer het opnieuw."
+  },
+  "site": {
+    "preview": "Voorbeeld van de site",
+    "openLive": "Live site openen"
+  },
+  "common": {
+    "cancel": "Annuleren",
+    "retry": "Opnieuw proberen"
   },
   "empty": {
     "title": "Nog geen demo's",
@@ -62,11 +93,11 @@
     "firstName": "Voornaam van de prospect",
     "firstNamePlaceholder": "Verplicht",
     "company": "Hun bedrijf",
-    "companyPlaceholder": "Optioneel — de AI stelt zich onder deze naam voor",
+    "companyPlaceholder": "Optioneel - de AI stelt zich onder deze naam voor",
     "client": "Client",
     "clientNone": "Standaard van de campagne",
     "niche": "Of beschrijf een nieuwe niche",
-    "nichePlaceholder": "Optioneel — overschrijft de Client en genereert een nieuwe persona",
+    "nichePlaceholder": "Optioneel - overschrijft de Client en genereert een nieuwe persona",
     "language": "Taal",
     "market": "Markt",
     "marketDefault": "Standaard",

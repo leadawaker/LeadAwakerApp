@@ -167,6 +167,3 @@ export function buildProspectRows(prospects: DemoProspectDto[], sessions: DemoSe
   }
   return Array.from(linksByKey, ([key, links]) => buildRow(key, records.get(key), links));
 }
-
-/** Rows from sessions alone. Kept until the last caller moves to buildProspectRows. */
-export const groupProspects = (sessions: DemoSession[]): ProspectRow[] => buildProspectRows([], sessions);

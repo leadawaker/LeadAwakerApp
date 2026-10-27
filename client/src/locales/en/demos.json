@@ -22,7 +22,11 @@
     "editHint": "Click to edit",
     "websitePill": "Website",
     "websitePillHint": "Started by a visitor on leadawaker.com",
+    "none": "-",
+    "lastActivity": "Last activity",
+    "sent": "Sent",
     "svc": {
+      "dbrQuote": "DBR / Quote",
       "dbr": "DBR",
       "quote": "Quote",
       "speed": "Speed",
@@ -41,7 +45,8 @@
     "opened": "Opened",
     "replies_one": "{{count}} reply",
     "replies_other": "{{count}} replies",
-    "never": "—"
+    "never": "-",
+    "expired": "Expired"
   },
   "actions": {
     "open": "Open",
@@ -49,6 +54,32 @@
     "copyWhatsapp": "Copy WhatsApp link",
     "copied": "Copied",
     "refresh": "Refresh"
+  },
+  "links": {
+    "copy": "Copy link",
+    "open": "Open",
+    "whatsapp": "Share on WhatsApp",
+    "copyWhatsapp": "Copy WhatsApp link",
+    "call": "Demo by phone",
+    "remint": "Make a new link",
+    "remintDone": "New link ready. The old one no longer works.",
+    "delete": "Delete link",
+    "deleteTitle": "Delete this link?",
+    "deleteBody": "The link stops working for the prospect. This cannot be undone.",
+    "deleted": "Link deleted",
+    "pickDbrQuote": "Add a DBR or Quote link",
+    "socialsNeedsClient": "Pick a client for this prospect first",
+    "copied": "Copied",
+    "actions": "Link actions",
+    "actionFailed": "That did not work. Try again."
+  },
+  "site": {
+    "preview": "Site preview",
+    "openLive": "Open live site"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "retry": "Retry"
   },
   "empty": {
     "title": "No demos yet",
@@ -62,11 +93,11 @@
     "firstName": "Prospect's first name",
     "firstNamePlaceholder": "Required",
     "company": "Their company",
-    "companyPlaceholder": "Optional — the AI introduces itself in this name",
+    "companyPlaceholder": "Optional - the AI introduces itself in this name",
     "client": "Client",
     "clientNone": "Campaign default",
     "niche": "Or describe a new niche",
-    "nichePlaceholder": "Optional — overrides the Client and generates a new persona",
+    "nichePlaceholder": "Optional - overrides the Client and generates a new persona",
     "language": "Language",
     "market": "Market",
     "marketDefault": "Default",

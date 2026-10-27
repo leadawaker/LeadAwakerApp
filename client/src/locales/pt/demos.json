@@ -22,7 +22,11 @@
     "editHint": "Clique para editar",
     "websitePill": "Site",
     "websitePillHint": "Iniciada por um visitante em leadawaker.com",
+    "none": "-",
+    "lastActivity": "Última atividade",
+    "sent": "Enviado",
     "svc": {
+      "dbrQuote": "DBR / Orçamento",
       "dbr": "DBR",
       "quote": "Orçamento",
       "speed": "Speed",
@@ -41,7 +45,8 @@
     "opened": "Abriu",
     "replies_one": "{{count}} resposta",
     "replies_other": "{{count}} respostas",
-    "never": "—"
+    "never": "-",
+    "expired": "Expirado"
   },
   "actions": {
     "open": "Abrir",
@@ -49,6 +54,32 @@
     "copyWhatsapp": "Copiar link do WhatsApp",
     "copied": "Copiado",
     "refresh": "Atualizar"
+  },
+  "links": {
+    "copy": "Copiar link",
+    "open": "Abrir",
+    "whatsapp": "Compartilhar no WhatsApp",
+    "copyWhatsapp": "Copiar link do WhatsApp",
+    "call": "Demo por telefone",
+    "remint": "Gerar novo link",
+    "remintDone": "Novo link pronto. O antigo deixou de funcionar.",
+    "delete": "Excluir link",
+    "deleteTitle": "Excluir este link?",
+    "deleteBody": "O link deixa de funcionar para o prospect. Isso não pode ser desfeito.",
+    "deleted": "Link excluído",
+    "pickDbrQuote": "Adicionar link de DBR ou Orçamento",
+    "socialsNeedsClient": "Escolha primeiro um Client para este prospect",
+    "copied": "Copiado",
+    "actions": "Ações do link",
+    "actionFailed": "Não deu certo. Tente de novo."
+  },
+  "site": {
+    "preview": "Prévia do site",
+    "openLive": "Abrir o site ao vivo"
+  },
+  "common": {
+    "cancel": "Cancelar",
+    "retry": "Tentar de novo"
   },
   "empty": {
     "title": "Nenhuma demo ainda",
@@ -62,11 +93,11 @@
     "firstName": "Primeiro nome do prospect",
     "firstNamePlaceholder": "Obrigatório",
     "company": "A empresa dele",
-    "companyPlaceholder": "Opcional — a IA se apresenta com esse nome",
+    "companyPlaceholder": "Opcional - a IA se apresenta com esse nome",
     "client": "Client",
     "clientNone": "Padrão da campanha",
     "niche": "Ou descreva um novo nicho",
-    "nichePlaceholder": "Opcional — substitui o Client e gera uma nova persona",
+    "nichePlaceholder": "Opcional - substitui o Client e gera uma nova persona",
     "language": "Idioma",
     "market": "Mercado",
     "marketDefault": "Padrão",

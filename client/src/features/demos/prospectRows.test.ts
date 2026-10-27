@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import type { DemoProspectDto } from "@shared/demoProspects";
-import { buildProspectRows, groupProspects, lastActivity, linkChannel, linkStatus } from "./prospectRows";
+import { buildProspectRows, lastActivity, linkChannel, linkStatus } from "./prospectRows";
 import { session, surface } from "./demoTestFixtures";
 
 const p: DemoProspectDto = {
@@ -102,10 +102,6 @@ test("a record row and a legacy row can sit side by side; the screenshot falls b
 
 test("a public website demo marks its row", () => {
   assert.equal(buildProspectRows([], [session({ publicDemo: true })])[0].publicDemo, true);
-});
-
-test("groupProspects stays as an alias that builds rows from sessions alone", () => {
-  assert.equal(groupProspects([session({ prospectGroup: "g9" })])[0].key, "g9");
 });
 
 test("linkStatus: expired wins, then replies, then opened on either surface, else never", () => {
