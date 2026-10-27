@@ -2,8 +2,9 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { apiRequest } from "@/lib/queryClient";
 import type { DemoLang } from "@/features/campaigns/api/demoClientsApi";
+import type { AiDisclosure, DemoMarket } from "@shared/demoProspects";
 
-/** One demo link. Mirrors DemoSessionRow in server/demo-admin.ts. */
+/** One demo link. Mirrors DemoSessionRow in server/demoSessionsFold.ts. */
 export interface DemoSessionSurface {
   /** Whether the lead row exists at all. The browser row is created on first
    *  visit, so `false` means the link was never clicked. */
@@ -31,11 +32,19 @@ export interface DemoSession {
    *  Both empty on links minted before the page grouped by prospect. */
   service: string;
   prospectGroup: string;
+  /** The AI disclosure override; "" = the campaign default. */
+  aiDisclosure: AiDisclosure;
+  /** The EN market; "" = the language default. */
+  market: DemoMarket;
   invited: boolean;
   /** Started by a visitor on the landing page's website demo. */
   publicDemo?: boolean;
   campaignId: number | null;
   createdAt: string | null;
+  /** When the link was revoked (re-minted or deleted); null while it is live. */
+  revokedAt: string | null;
+  /** Revoked, or past its lifetime (shared/demoTokenTtl.ts). */
+  expired: boolean;
   /** Homepage screenshot file for demos built from a website URL; served by
    *  /api/site-shot/:file. Empty on every typed-persona demo. */
   screenshot: string;
@@ -100,7 +109,7 @@ export function useDemoSessions() {
   return useQuery<DemoSession[]>({
     queryKey: SESSIONS_KEY,
     queryFn: async () => {
-      const res = await apiFetch("/api/demo/sessions");
+      const res = await apiFetch("/api/demo/sessions?limit=500");
       if (!res.ok) throw new Error("Failed to load demo sessions");
       return (await res.json()).sessions ?? [];
     },

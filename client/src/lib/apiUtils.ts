@@ -1,5 +1,8 @@
-/** Base URL for API calls — set via VITE_API_URL in Vercel, empty locally */
-export const API_BASE = import.meta.env.VITE_API_URL ?? "";
+/** Base URL for API calls: set via VITE_API_URL in Vercel, empty locally.
+ *  Written as `import.meta.env.VITE_API_URL` so Vite inlines it at build time
+ *  (an optional-chained read is NOT replaced and would always give ""). The
+ *  typeof guard only matters where there is no Vite (unit tests under tsx). */
+export const API_BASE = (typeof import.meta.env !== "undefined" ? import.meta.env.VITE_API_URL : undefined) ?? "";
 
 /**
  * Authenticated fetch helper. Prefixes URL with API_BASE for cross-origin
