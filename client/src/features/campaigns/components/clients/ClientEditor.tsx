@@ -34,16 +34,27 @@ import {
   useDemoClients,
   useUpdateDemoClient,
   type ClientTextField,
+  type ClientTranslation,
   type DemoLang,
   type TermGroup,
 } from "../../api/demoClientsApi";
 import { ClientPanelHeader } from "./ClientPanelHeader";
 import { IdentitySection, OpenerSection, PersonaSection, WordsSection } from "./ClientEditorSections";
 import { ClientScreenshot } from "./ClientScreenshot";
+import { ProductsSection } from "./ProductsSection";
+import { TranslateSlotButton } from "./TranslateSlotButton";
 import { SocialPostSection } from "./SocialPostSection";
 import { LiveClientView } from "./LiveClientView";
 import { LANGS } from "./clientDisplay";
-import { TEXT_FIELDS, buildDraft, buildPatch, draftsEqual, type Draft } from "./clientDraft";
+import {
+  TEXT_FIELDS,
+  buildDraft,
+  buildPatch,
+  draftsEqual,
+  mergeTranslation,
+  shouldApplyTranslation,
+  type Draft,
+} from "./clientDraft";
 
 type View = "persona" | "wording" | "media";
 const VIEWS: View[] = ["persona", "wording", "media"];
@@ -186,7 +197,17 @@ export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
   };
 
   const setCategory = (value: string) => setDraft((d) => (d ? { ...d, category: value } : d));
-  const setEmoji = (value: string) => setDraft((d) => (d ? { ...d, emoji: value } : d));
+
+  const setBusiness = (patch: Partial<Pick<Draft, "products" | "stockUrl" | "city">>) =>
+    setDraft((d) => (d ? { ...d, ...patch } : d));
+
+  // A translation fills the empty slots of its language in the draft; autosave persists it.
+  // `nicheRef` is the persona open NOW: an answer for a persona that was closed
+  // while the call ran is dropped, not merged into whichever one is open.
+  const applyTranslation = (to: DemoLang, translation: ClientTranslation, forNiche: string) => {
+    if (!shouldApplyTranslation(forNiche, nicheRef.current)) return;
+    setDraft((d) => (d ? mergeTranslation(d, to, translation) : d));
+  };
 
   if (isLoading || !client || !draft) {
     return (
@@ -210,7 +231,7 @@ export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
   return (
     <>
       <ClientPanelHeader
-        client={{ ...client, emoji: draft.emoji.trim() || null }}
+        client={client}
         category={draft.category}
         actions={actions}
         onBack={onBack}
@@ -244,8 +265,30 @@ export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
       <div className="dp-panel-body" ref={bodyRef}>
         {/* ── Everything the model reads, and where the persona is filed ── */}
         <div className="dp-panel-inner" hidden={view !== "persona"}>
-          <IdentitySection category={draft.category} emoji={draft.emoji} onCategory={setCategory} onEmoji={setEmoji} />
-          <PersonaSection text={draft.text} lang={personaLang} onLang={setPersonaLang} onChange={setTextSlot} />
+          <IdentitySection category={draft.category} onCategory={setCategory} />
+          <PersonaSection
+            text={draft.text}
+            lang={personaLang}
+            onLang={setPersonaLang}
+            onChange={setTextSlot}
+            emptyLangSlot={
+              <TranslateSlotButton
+                key={`translate-${client.niche}`}
+                client={client}
+                to={personaLang}
+                onTranslated={(tr, forNiche) => applyTranslation(personaLang, tr, forNiche)}
+              />
+            }
+            afterKb={
+              <ProductsSection
+                lang={personaLang}
+                products={draft.products}
+                stockUrl={draft.stockUrl}
+                city={draft.city}
+                onChange={setBusiness}
+              />
+            }
+          />
         </div>
 
         {/* ── Pasted as typed, so one slot per language ── */}

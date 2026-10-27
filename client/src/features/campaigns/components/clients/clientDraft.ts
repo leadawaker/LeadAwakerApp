@@ -3,14 +3,15 @@
  * and how it becomes the PATCH that autosave sends. Kept apart from
  * ClientEditor.tsx so the save logic and the form sections can both read it.
  */
-import {
-  TERM_GROUPS,
-  type ClientTextField,
-  type DemoLang,
-  type DemoClientPatch,
-  type EditableDemoClient,
-  type TermGroup,
+import type { ProductsByLang } from "@shared/demoProducts";
+import type {
+  ClientTextField,
+  ClientTranslation,
+  DemoLang,
+  DemoClientPatch,
+  EditableDemoClient,
 } from "../../api/demoClientsApi";
+import { TERM_GROUPS, type TermGroup } from "../../api/termGroups";
 
 export type PersonaGroup = "business" | "lead" | "conversation";
 
@@ -58,12 +59,31 @@ export const OPENER_FIELDS: TextFieldDef[] = [
   { field: "quoteWhen", labelKey: "clients.fields.quoteWhen" },
 ];
 
-/** Everything ClientEditor autosaves, as one flat draft object. */
+/**
+ * Everything ClientEditor autosaves, as one flat draft object. `phone` rides
+ * along unseen: the editor does not show it (R8), but the patch must send back
+ * what was stored or an autosave would clear it.
+ */
 export interface Draft {
   text: Partial<Record<ClientTextField, Partial<Record<DemoLang, string>>>>;
   terms: Partial<Record<TermGroup, Partial<Record<DemoLang, string>>>>;
   category: string;
-  emoji: string;
+  products: ProductsByLang;
+  stockUrl: string;
+  city: string;
+  phone: string;
+}
+
+const LANG_KEYS: DemoLang[] = ["en", "nl", "pt"];
+
+/** The product lists, copied row by row so editing the draft never touches the loaded Client. */
+function copyProducts(products: ProductsByLang | null | undefined): ProductsByLang {
+  const out: ProductsByLang = {};
+  for (const l of LANG_KEYS) {
+    const list = products?.[l];
+    if (Array.isArray(list)) out[l] = list.map((p) => ({ ...p }));
+  }
+  return out;
 }
 
 export function buildDraft(client: EditableDemoClient): Draft {
@@ -79,7 +99,10 @@ export function buildDraft(client: EditableDemoClient): Draft {
     text: client.text,
     terms,
     category: client.category ?? "",
-    emoji: client.emoji ?? "",
+    products: copyProducts(client.products),
+    stockUrl: client.stockUrl ?? "",
+    city: client.city ?? "",
+    phone: client.phone ?? "",
   };
 }
 
@@ -96,7 +119,10 @@ export function buildPatch(d: Draft): DemoClientPatch {
     text: d.text as DemoClientPatch["text"],
     terms: {},
     category: d.category.trim() || null,
-    emoji: d.emoji.trim() || null,
+    products: d.products,
+    stockUrl: d.stockUrl.trim() || null,
+    city: d.city.trim() || null,
+    phone: d.phone.trim() || null,
   };
   for (const group of TERM_GROUPS) {
     patch.terms![group] = {
@@ -111,4 +137,63 @@ export function buildPatch(d: Draft): DemoClientPatch {
 export function draftsEqual(a: Draft | null, b: Draft | null): boolean {
   if (!a || !b) return a === b;
   return JSON.stringify(a) === JSON.stringify(b);
+}
+
+/** The source languages the translate button can read from. */
+const TRANSLATE_FROM: Array<"en" | "nl"> = ["en", "nl"];
+
+/** A language slot holds something: any text field, any term list or any product. */
+function slotHasContent(client: Pick<EditableDemoClient, "text" | "terms" | "products">, lang: DemoLang): boolean {
+  if (Object.values(client.text ?? {}).some((slot) => (slot?.[lang] ?? "").trim())) return true;
+  if (Object.values(client.terms ?? {}).some((group) => (group?.[lang] ?? []).some((w) => w.trim()))) return true;
+  return (client.products?.[lang] ?? []).length > 0;
+}
+
+/**
+ * The languages the server can translate `to` from: English and Dutch, whichever
+ * hold content in the saved Client, never the target itself. Empty means there
+ * is nothing to translate from, so the button stays away.
+ */
+export function translateSources(
+  client: Pick<EditableDemoClient, "text" | "terms" | "products">,
+  to: DemoLang,
+): Array<"en" | "nl"> {
+  return TRANSLATE_FROM.filter((l) => l !== to && slotHasContent(client, l));
+}
+
+/**
+ * A translation is slow, so the persona that asked for it may no longer be the
+ * open one when it arrives (the tab swaps `niche` in place, no remount). Merging
+ * it then would write one persona's copy into another's draft, and that draft's
+ * autosave would persist it. Apply it only to the persona that requested it.
+ */
+export function shouldApplyTranslation(requestedNiche: string, currentNiche: string): boolean {
+  return requestedNiche === currentNiche;
+}
+
+/**
+ * Put a translation into the draft's `to` slots. Only EMPTY slots are filled:
+ * what Gabriel already typed (or an earlier translation he kept) is never
+ * overwritten. Terms join with ", " as the editor shows them; autosave then
+ * persists the result like any other edit.
+ */
+export function mergeTranslation(d: Draft, to: DemoLang, tr: ClientTranslation): Draft {
+  const text: Draft["text"] = { ...d.text };
+  for (const [field, value] of Object.entries(tr.text ?? {}) as Array<[ClientTextField, string | undefined]>) {
+    const clean = (value ?? "").trim();
+    if (!clean || (text[field]?.[to] ?? "").trim()) continue;
+    text[field] = { ...(text[field] ?? {}), [to]: clean };
+  }
+  const terms: Draft["terms"] = { ...d.terms };
+  for (const [group, words] of Object.entries(tr.terms ?? {}) as Array<[TermGroup, string[] | undefined]>) {
+    const joined = (words ?? []).map((w) => w.trim()).filter(Boolean).join(", ");
+    if (!joined || (terms[group]?.[to] ?? "").trim()) continue;
+    terms[group] = { ...(terms[group] ?? {}), [to]: joined };
+  }
+  const incoming = tr.products ?? [];
+  const products =
+    incoming.length > 0 && (d.products[to] ?? []).length === 0
+      ? { ...d.products, [to]: incoming.map((p) => ({ ...p })) }
+      : d.products;
+  return { ...d, text, terms, products };
 }

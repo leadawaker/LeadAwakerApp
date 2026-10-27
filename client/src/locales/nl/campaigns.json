@@ -757,7 +757,6 @@
     "duplicateNamePrompt": "Naam voor de nieuwe persona",
     "duplicateFailed": "Kon deze persona niet dupliceren.",
     "categoryLabel": "Categorie",
-    "emojiLabel": "Emoji",
     "noCategory": "Zonder categorie",
     "newCategory": "Nieuwe categorie…",
     "newCategoryPlaceholder": "bijv. Wellness & Vrije tijd",
@@ -834,7 +833,7 @@
       "media": "Media"
     },
     "identityTitle": "In de bibliotheek",
-    "identityHint": "Waar deze persona is ingedeeld en met welke emoji ze in de lijst staat.",
+    "identityHint": "Waar deze persona in de bibliotheek is ingedeeld.",
     "companyNameHint": "Een standaardwaarde. Je kunt hem per prospect overschrijven bij het versturen van de link.",
     "filledIn": "Ingevuld: {{langs}}",
     "nothingFilled": "Nog niets ingevuld",

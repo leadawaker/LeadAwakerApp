@@ -7,7 +7,8 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { apiRequest } from "@/lib/queryClient";
-import type { ProductsByLang } from "@shared/demoProducts";
+import type { DemoProduct, ProductsByLang } from "@shared/demoProducts";
+import type { TermGroup } from "./termGroups";
 
 export type DemoLang = "en" | "nl" | "pt";
 
@@ -46,13 +47,7 @@ export const CLIENT_TEXT_FIELDS = [
 
 export type ClientTextField = (typeof CLIENT_TEXT_FIELDS)[number];
 
-/**
- * The five term groups. Unlike the text fields these MUST exist per language:
- * they are substituted verbatim into the opener with no model in the loop, so
- * an English term on a Dutch demo goes out as "je staircase".
- */
-export const TERM_GROUPS = ["project", "proposal", "decision", "advisor", "visit"] as const;
-export type TermGroup = (typeof TERM_GROUPS)[number];
+export { TERM_GROUPS, type TermGroup } from "./termGroups";
 
 export interface DemoClientSummary {
   id: number;
@@ -70,6 +65,10 @@ export interface DemoClientSummary {
   isLive?: boolean;
   /** The account a live persona belongs to. */
   accountsId?: number | null;
+  /** Built from the business's own site, or written by hand / from a niche. */
+  source: "website" | "manual";
+  /** Demo links on this persona that are not revoked or past their lifetime. */
+  liveTokens: number;
   updatedAt: string | null;
   /** Filename of the widget demo's backdrop, or null. Served by /api/site-shot/. */
   screenshot: string | null;
@@ -108,7 +107,6 @@ export interface DemoClientPatch {
   terms?: Partial<Record<TermGroup, Partial<Record<DemoLang, string[]>>>>;
   bookingModeCall?: boolean;
   category?: string | null;
-  emoji?: string | null;
   /** Replaced per language sent; languages not in the patch stay. */
   products?: ProductsByLang;
   stockUrl?: string | null;
@@ -223,12 +221,37 @@ export function useUpdateDemoClient() {
   });
 }
 
+/**
+ * The server's 409 when a persona still has live demo links (`code` is
+ * "live_tokens", `count` the number of links). Retry with `force: true` after
+ * the user confirms; any other failure carries the server's message.
+ */
+export class DeleteClientError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly code: string | null,
+    readonly count: number,
+  ) {
+    super(message);
+    this.name = "DeleteClientError";
+  }
+}
+
 export function useDeleteDemoClient() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (niche: string) =>
-      apiRequest("DELETE", `/api/demo/clients/${encodeURIComponent(niche)}`).then((r) => r.json()),
-    onSuccess: (_data, niche) => {
+    mutationFn: async ({ niche, force }: { niche: string; force?: boolean }) => {
+      const res = await apiFetch(`/api/demo/clients/${encodeURIComponent(niche)}${force ? "?force=1" : ""}`, {
+        method: "DELETE",
+      });
+      const body = (await res.json().catch(() => ({}))) as { message?: string; code?: string; count?: number };
+      if (!res.ok) {
+        throw new DeleteClientError(body.message || "Could not delete this persona.", res.status, body.code ?? null, body.count ?? 0);
+      }
+      return body;
+    },
+    onSuccess: (_data, { niche }) => {
       // `exact: true`: a bare prefix match would also invalidate every other
       // already-cached single-Client query ([...CLIENTS_KEY, otherNiche]).
       // The deleted niche's own query is removed outright rather than
@@ -254,4 +277,33 @@ export function useDuplicateDemoClient() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: CLIENTS_KEY }),
   });
+}
+
+/** One language's copy, as the translate endpoint returns it (nothing is saved). */
+export interface ClientTranslation {
+  text: Partial<Record<ClientTextField, string>>;
+  terms: Partial<Record<TermGroup, string[]>>;
+  products: DemoProduct[];
+}
+
+export interface TranslateBody {
+  from: "en" | "nl";
+  to: DemoLang;
+  provider?: "claude" | "openai";
+  claudeModel?: "opus" | "sonnet";
+}
+
+/**
+ * Ask the server to translate the `from` slots of a persona into `to`. The
+ * editor fills its empty `to` slots with the answer and lets autosave persist it.
+ */
+export async function translateDemoClient(niche: string, body: TranslateBody): Promise<ClientTranslation> {
+  const res = await apiFetch(`/api/demo/clients/${encodeURIComponent(niche)}/translate`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  const json = (await res.json().catch(() => ({}))) as { translation?: ClientTranslation; message?: string };
+  if (!res.ok || !json.translation) throw new Error(json.message || "Could not translate this persona.");
+  return json.translation;
 }

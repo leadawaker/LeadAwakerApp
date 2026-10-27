@@ -668,7 +668,6 @@
     "duplicateNamePrompt": "Nome da nova persona",
     "duplicateFailed": "Não foi possível duplicar esta persona.",
     "categoryLabel": "Categoria",
-    "emojiLabel": "Emoji",
     "noCategory": "Sem categoria",
     "newCategory": "Nova categoria…",
     "newCategoryPlaceholder": "ex.: Bem-estar e Lazer",
@@ -695,7 +694,7 @@
       "media": "Mídia"
     },
     "identityTitle": "Na biblioteca",
-    "identityHint": "Onde esta persona fica arquivada e o emoji com que aparece na lista.",
+    "identityHint": "Onde esta persona fica arquivada na biblioteca.",
     "companyNameHint": "Um padrão. Você pode trocar por prospect ao enviar o link.",
     "filledIn": "Preenchido: {{langs}}",
     "nothingFilled": "Nada preenchido ainda",

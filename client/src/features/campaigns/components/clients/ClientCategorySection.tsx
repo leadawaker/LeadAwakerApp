@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ChevronRight, FolderOpen, UserRound } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { SectionCard } from "@/components/crm/primitives";
 import type { DemoClientSummary } from "../../api/demoClientsApi";
 import { LANGS, clientNames } from "./clientDisplay";
@@ -19,7 +19,7 @@ function LangMarks({ client, inline = false }: { client: DemoClientSummary; inli
   );
 }
 
-/** One persona as a table-like row: who it plays, its languages, when it last changed. */
+/** One persona as a table-like row: who it plays, its languages, when it last changed. No icon or emoji per persona. */
 function ClientRow({ client, selected, formatDate, onClick }: {
   client: DemoClientSummary;
   selected: boolean;
@@ -38,9 +38,6 @@ function ClientRow({ client, selected, formatDate, onClick }: {
       data-niche={client.niche}
       data-testid={`persona-row-${client.id}`}
     >
-      <span className="am-icon-tile" aria-hidden>
-        {client.emoji ? <span className="dp-emoji">{client.emoji}</span> : <UserRound className="h-4 w-4" />}
-      </span>
       <div style={{ minWidth: 0 }}>
         <div className="dp-title-line">
           <span className="am-name">{title}</span>
@@ -71,10 +68,6 @@ export function ClientCategorySection({ label, uncategorized, items, selectedNic
   onSelect: (niche: string) => void;
 }) {
   const { t } = useTranslation("campaigns");
-  // The category's own picture: the emoji most of its personas carry.
-  const tally = new Map<string, number>();
-  for (const c of items) if (c.emoji) tally.set(c.emoji, (tally.get(c.emoji) ?? 0) + 1);
-  const emoji = uncategorized ? null : Array.from(tally.entries()).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null;
   const blurb = uncategorized
     ? t("clients.uncategorizedBlurb")
     : Array.from(new Set(items.map((c) => (c.label || c.niche).trim()).filter(Boolean))).join(", ");
@@ -82,9 +75,6 @@ export function ClientCategorySection({ label, uncategorized, items, selectedNic
   return (
     <SectionCard padded={false} className="overflow-hidden">
       <div className="am-section-head">
-        <span className="am-icon-tile" aria-hidden>
-          {emoji ? <span className="dp-emoji">{emoji}</span> : <FolderOpen className="h-4 w-4" />}
-        </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="am-section-title">{label}</div>
           <div className="dp-section-blurb" title={blurb}>{blurb}</div>

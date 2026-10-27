@@ -7,7 +7,7 @@ import { clientNames } from "./clientDisplay";
 import "@/features/automation/automation.css";
 import "./clients.css";
 
-type HeaderClient = Pick<DemoClientSummary, "id" | "niche" | "label" | "companyName" | "emoji" | "isLive">;
+type HeaderClient = Pick<DemoClientSummary, "id" | "niche" | "label" | "companyName" | "isLive">;
 
 /**
  * Top of the persona panel, shared by the editor and the read-only live view:
@@ -36,7 +36,7 @@ export function ClientPanelHeader({ client, category, status, actions, onBack, c
           <ArrowLeft className="h-4 w-4" />
         </IconBtn>
         <span className="am-icon-tile dp-head-tile" aria-hidden>
-          {client.emoji ? <span className="dp-emoji">{client.emoji}</span> : <UserRound className="h-4 w-4" />}
+          <UserRound className="h-4 w-4" />
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="dp-title-line" style={{ flexWrap: "wrap", rowGap: 4 }}>

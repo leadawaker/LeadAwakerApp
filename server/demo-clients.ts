@@ -28,6 +28,8 @@ import { eq, ne, asc } from "drizzle-orm";
 import type { ProductsByLang } from "@shared/demoProducts";
 import { contextProductFields, productPatchValues, type ProductPatch } from "./demoClientProducts";
 import { planScanFieldUpdate, type ScanFields } from "./demoSiteFacts";
+import { clientSource, liveTokensByClient } from "./demoProspects/clientUsage";
+import { loadDemoLeadsLite } from "./demoProspects/store";
 import {
   applyDemoDefaults,
   buildGenericScopingLadder,
@@ -210,7 +212,16 @@ export interface DemoClientSummary {
   isLive: boolean;
   /** The owning Account for a live persona, else null. */
   accountsId: number | null;
+  /** Built from the business's own site ("website") or by hand / from a niche ("manual"). */
+  source: "website" | "manual";
+  /** Demo links on this persona that are neither revoked nor past their lifetime. */
+  liveTokens: number;
   updatedAt: Date | null;
+}
+
+/** Live demo links per persona niche (see demoProspects/clientUsage.ts). */
+export async function liveTokenCounts(now: number = Date.now()): Promise<Map<string, number>> {
+  return liveTokensByClient(await loadDemoLeadsLite(), now);
 }
 
 /**
@@ -218,6 +229,12 @@ export interface DemoClientSummary {
  * row rather than a persona anyone would demo.
  */
 export async function listDemoClients(): Promise<DemoClientSummary[]> {
+  // The live-link count is a badge on the list, not the list itself: if the
+  // lead query fails the personas still load, with no count.
+  const live = await liveTokenCounts().catch((err) => {
+    console.error("[demo-clients] could not count live links:", err);
+    return new Map<string, number>();
+  });
   const rows = await db
     .select()
     .from(nicheVocabulary)
@@ -242,6 +259,8 @@ export async function listDemoClients(): Promise<DemoClientSummary[]> {
       isDemoClient: r.isDemoClient ?? false,
       isLive: r.isLive ?? false,
       accountsId: r.accountsId ?? null,
+      source: clientSource(r),
+      liveTokens: live.get(r.niche) ?? 0,
       updatedAt: r.updatedAt ?? null,
     };
   });

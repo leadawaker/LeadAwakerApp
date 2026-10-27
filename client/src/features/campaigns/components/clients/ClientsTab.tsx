@@ -15,21 +15,26 @@
  * and that topbar is a sibling of this tab's body. The Demos page has no such
  * topbar slot, so it passes `showActions` and the menu sits in the panel header.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { SearchX, UsersRound } from "lucide-react";
-import { SearchPill } from "@/components/ui/search-pill";
 import { cn } from "@/lib/utils";
-import { useDemoClients, type DemoClientSummary, type DemoLang } from "../../api/demoClientsApi";
+import { useDemoClients, type DemoClientSummary } from "../../api/demoClientsApi";
 import { ClientActionsMenu } from "./ClientActionsMenu";
 import { ClientCategorySection } from "./ClientCategorySection";
 import { ClientEditor } from "./ClientEditor";
+import { ClientsFilters } from "./ClientsFilters";
 import { ClientsHero } from "./ClientsHero";
-import { LANGS } from "./clientDisplay";
+import {
+  DEFAULT_PERSONA_FILTERS,
+  hasActiveFilters,
+  languageCounts,
+  personaCategories,
+  personaMatches,
+  type PersonaFilters,
+} from "./personaFilters";
 import "@/features/automation/automation.css";
 import "./clients.css";
-
-type LangFilter = "all" | DemoLang;
 
 export function ClientsTab({
   selectedNiche,
@@ -42,32 +47,15 @@ export function ClientsTab({
   showActions?: boolean;
 }) {
   const { t, i18n } = useTranslation("campaigns");
+  const { t: td } = useTranslation("demos");
   const { data: clients, isLoading } = useDemoClients();
-  const [search, setSearch] = useState("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [lang, setLang] = useState<LangFilter>("all");
+  const [filters, setFilters] = useState<PersonaFilters>(DEFAULT_PERSONA_FILTERS);
   const listRef = useRef<HTMLDivElement>(null);
 
   const all = clients ?? [];
-  const langCounts = useMemo(() => {
-    const counts: Record<LangFilter, number> = { all: all.length, en: 0, nl: 0, pt: 0 };
-    for (const c of all) for (const l of c.languages) counts[l] += 1;
-    return counts;
-  }, [clients]);
-
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return all.filter((c) => {
-      if (lang !== "all" && !c.languages.includes(lang)) return false;
-      if (!q) return true;
-      return (
-        c.niche.toLowerCase().includes(q) ||
-        c.label.toLowerCase().includes(q) ||
-        c.companyName.toLowerCase().includes(q) ||
-        (c.category ?? "").toLowerCase().includes(q)
-      );
-    });
-  }, [clients, search, lang]);
+  const langCounts = useMemo(() => languageCounts(all), [clients]);
+  const categories = useMemo(() => personaCategories(all), [clients]);
+  const filtered = useMemo(() => all.filter((c) => personaMatches(c, filters)), [clients, filters]);
 
   // Grouped by category, alphabetical, "Uncategorized" last. `key` is a
   // stable, collision-proof group identity separate from the display `label`:
@@ -130,27 +118,29 @@ export function ClientsTab({
               <>
                 <ClientsHero clients={all} categories={categoryCount} />
 
-                <div className="dp-filters">
-                  <div className="la-seg la-seg--pill" role="tablist" aria-label={t("clients.filterLabel")}>
-                    {(["all", ...LANGS] as LangFilter[]).map((f) => (
-                      <button key={f} type="button" role="tab" aria-selected={lang === f} className={cn("la-seg-btn", lang === f && "on")} onClick={() => setLang(f)} data-testid={`personas-filter-${f}`}>
-                        {f === "all" ? t("clients.filterAll") : f.toUpperCase()} <span className="dp-seg-count" style={{ opacity: 0.7 }}>{langCounts[f]}</span>
-                      </button>
-                    ))}
-                  </div>
-                  <div className="dp-search">
-                    <SearchPill value={search} onChange={setSearch} open={searchOpen || !!search} onOpenChange={setSearchOpen} placeholder={t("clients.searchPlaceholder", "Search personas...")} />
-                  </div>
-                </div>
+                <ClientsFilters filters={filters} onChange={setFilters} categories={categories} counts={langCounts} />
 
                 {groups.length > 0 && (
                   <div className="dp-captions" aria-hidden>
-                    <span /><span>{t("clients.captions.persona")}</span><span>{t("clients.captions.languages")}</span>
+                    <span>{t("clients.captions.persona")}</span><span>{t("clients.captions.languages")}</span>
                     <span style={{ textAlign: "right" }}>{t("clients.captions.updated")}</span><span style={{ textAlign: "right" }}>{t("clients.captions.id")}</span><span />
                   </div>
                 )}
                 {groups.length === 0 && (
-                  <EmptyState icon={SearchX} title={t("clients.noMatchesTitle")} body={search.trim() ? t("clients.noMatches") : t("clients.noMatchesLanguage")} />
+                  <EmptyState
+                    icon={SearchX}
+                    title={t("clients.noMatchesTitle")}
+                    body={
+                      filters.category || filters.source !== "all"
+                        ? td("personas.noMatchesFilters")
+                        : filters.search.trim() ? t("clients.noMatches") : t("clients.noMatchesLanguage")
+                    }
+                    action={hasActiveFilters(filters) ? (
+                      <button type="button" className="la-btn la-btn--soft dp-touch" onClick={() => setFilters(DEFAULT_PERSONA_FILTERS)}>
+                        {td("personas.clearFilters")}
+                      </button>
+                    ) : undefined}
+                  />
                 )}
                 {groups.map((g) => (
                   <ClientCategorySection
@@ -189,12 +179,13 @@ export function ClientsTab({
   );
 }
 
-function EmptyState({ icon: Icon, title, body }: { icon: typeof UsersRound; title: string; body: string }) {
+function EmptyState({ icon: Icon, title, body, action }: { icon: typeof UsersRound; title: string; body: string; action?: ReactNode }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, padding: "64px 12px" }}>
       <span className="am-icon-tile" style={{ width: 48, height: 48, color: "var(--mute)" }}><Icon className="h-5 w-5" /></span>
       <div className="serif" style={{ fontSize: 20, color: "var(--ink)" }}>{title}</div>
       <p style={{ fontSize: 13.5, color: "var(--mute)", maxWidth: 380, lineHeight: 1.55, margin: 0 }}>{body}</p>
+      {action}
     </div>
   );
 }
