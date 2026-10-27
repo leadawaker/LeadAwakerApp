@@ -124,9 +124,9 @@ export async function runCoachTurn(
   for (const p of parsed.proposals) {
     // The model may cite a call that is not in the index: keep only real ids.
     const proposal: ProposalInput = { ...p, callIds: p.callIds.filter((id) => known.has(id)) };
-    const row = drafts[p.language];
+    const row = p.language ? drafts[p.language] : undefined;
     // A valid mirror edit means the other language's draft exists, so `mirror` is set whenever there is one.
-    const mirror = proposal.mirrorFind ? drafts[otherLang(p.language)] : undefined;
+    const mirror = proposal.mirrorFind && p.language ? drafts[otherLang(p.language)] : undefined;
     if (!row || !validateProposal(proposal, draftTexts, rejected).ok) continue;
     rows.push({
       accountId, source: "chat", reviewId: null, coachMessageId: assistant.id,

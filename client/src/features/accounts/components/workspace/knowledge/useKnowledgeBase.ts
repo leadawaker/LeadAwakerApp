@@ -1,19 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { apiFetch } from "@/lib/apiUtils";
+import { KB_CATEGORIES } from "@shared/knowledgeBase";
 import type { KBEntryData, KBScope, KBInject, KBCampaign } from "../types";
 
-// Category order for grouping / display.
-export const KB_CATEGORIES = [
-  "pricing",
-  "services",
-  "faq",
-  "objections",
-  "team",
-  "hours",
-  "location",
-  "policies",
-  "testimonials",
-] as const;
+// Category order for grouping / display: shared with the knowledge change cards.
+export { KB_CATEGORIES };
 
 export type KBFormPayload = {
   category: string;

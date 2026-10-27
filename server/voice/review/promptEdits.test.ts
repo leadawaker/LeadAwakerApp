@@ -52,6 +52,10 @@ test("validateProposal accepts a proposal without a mirror even when the other l
   assert.deepEqual(validateProposal({ ...p, mirrorFind: "" }, { nl: texts.nl }, []), { ok: true });
 });
 
+test("validateProposal: a card without a language has no shared prompt to edit", () => {
+  assert.deepEqual(validateProposal({ ...p, language: null }, texts, []), { ok: false, reason: "not_found" });
+});
+
 test("validateProposal: empty find or title", () => {
   assert.deepEqual(validateProposal({ ...p, find: "" }, texts, []), { ok: false, reason: "empty" });
   assert.deepEqual(validateProposal({ ...p, title: "" }, texts, []), { ok: false, reason: "empty" });

@@ -120,8 +120,8 @@ async function execute(deps: ReviewDeps, job: ReviewJob): Promise<"done" | "fail
   let dropped = parsed.report.droppedProposals;
   for (const p of parsed.proposals) {
     const proposal: ProposalInput = { ...p, callIds: known(p.callIds) };
-    const row = live[p.language];
-    const mirror = proposal.mirrorFind ? live[otherLang(p.language)] : undefined;
+    const row = p.language ? live[p.language] : undefined;
+    const mirror = proposal.mirrorFind && p.language ? live[otherLang(p.language)] : undefined;
     // A valid mirror edit means the other language's prompt exists, so `mirror` is set whenever there is one.
     if (!row || !validateProposal(proposal, texts, rejected).ok) { dropped++; continue; }
     suggestions.push({

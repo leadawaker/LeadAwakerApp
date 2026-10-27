@@ -23,12 +23,13 @@ import {
   type DbLike, type Tx,
 } from "./voicePersona";
 import { normalizeIntake } from "@shared/voiceIntake";
+import { AFTER_HOURS } from "@shared/voiceSettings";
 import {
   CLIENT_ELEVEN_ALLOWED, DETACHED_LINE, ELEVEN_LLM_SUPPORTED, lineFieldsOf, type LineEngineFields,
 } from "./voiceLineEngine";
 
 export const VOICE_LOCALES = ["nl", "en-GB", "en-US", "pt-BR"] as const;
-export const AFTER_HOURS = ["message", "callback", "ringHot"] as const;
+export { AFTER_HOURS };
 /** What a caller hears while a screened transfer rings the owner. */
 export const TRANSFER_WAITING = ["sara", "hold"] as const;
 /** The hold music tracks: the ids of HOLD_TRACKS in the engine's hold_music.py, which serves the files. */
