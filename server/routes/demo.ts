@@ -19,7 +19,7 @@ import {
   type DemoScenario,
 } from "../demo-session";
 import { mintVoiceDemoPass } from "../voice-demo-pass";
-import { getWebDemoConfig, getWebDemoNiche, updateWebDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
+import { getDemoConfig, getDemoNiche, updateDemoConfig, updateDemoIdentity, listDemoSessions } from "../demo-admin";
 import { captureSiteShot, shotExists, isPublicHttpUrl, normalizeUrl } from "../siteShot";
 import { refreshSiteLogo } from "../clientLogo";
 import { buildClientFromSite, languageFromDomain } from "../demoWebsiteClient";
@@ -895,11 +895,10 @@ export function registerDemoRoutes(app: Express): void {
       const token = String(req.params.token || "");
       if (!DEMO_TOKEN_RE.test(token)) return res.status(400).json({ message: "Bad token." });
 
-      const config = await getWebDemoConfig(token);
-      // The engine creates the browser lead on first open, so "no row" means
-      // the page has never been opened rather than a bad link. Either way there
-      // is nothing to configure yet.
-      if (!config) return res.status(404).json({ message: "This demo has not been opened yet." });
+      // Reads the browser row when the page was opened, else the WhatsApp row,
+      // so "no config" now only means neither row exists: no such link.
+      const config = await getDemoConfig(token);
+      if (!config) return res.status(404).json({ message: "No demo with that link." });
       res.json(config);
     }),
   );
@@ -947,8 +946,8 @@ export function registerDemoRoutes(app: Express): void {
       if (!parsed.success) return handleZodError(res, parsed.error);
       const { firstName, language, companyName, aiDisclosure, clientNiche, scenario: scenarioInput } = parsed.data;
 
-      const current = await getWebDemoConfig(token);
-      if (!current) return res.status(404).json({ message: "This demo has not been opened yet." });
+      const current = await getDemoConfig(token);
+      if (!current) return res.status(404).json({ message: "No demo with that link." });
 
       // An omitted scenario keeps whatever the demo is already on, exactly
       // like the `language` fallback just below — never the zod default,
@@ -958,7 +957,7 @@ export function registerDemoRoutes(app: Express): void {
       const scenario = (scenarioInput ?? current.scenario) as DemoScenario;
       // The Instagram demo's post, opener and source live in the blob, not in
       // the Client's context, so a rebuild must re-add them (see below).
-      const currentBlob = await getWebDemoNiche(token);
+      const currentBlob = await getDemoNiche(token);
       const social = isSocialBlob(currentBlob);
 
       let replaceNiche: Record<string, unknown> | undefined;
@@ -1020,7 +1019,7 @@ export function registerDemoRoutes(app: Express): void {
               // (so a generated post never saves a prospect's company to the
               // shared row). The company this lead ends up with decides the
               // handle: an explicit one in this same patch wins, as it does in
-              // updateWebDemoConfig.
+              // updateDemoConfig.
               try {
                 const finalCompany = companyName !== undefined ? companyName : carried;
                 Object.assign(ctx, await socialSnapshotFields(row, lang as SocialLang, { ...ctx }, finalCompany));
@@ -1056,18 +1055,18 @@ export function registerDemoRoutes(app: Express): void {
         }
       }
 
-      const ok = await updateWebDemoConfig(token, {
+      const updated = await updateDemoConfig(token, {
         firstName,
         language,
         companyName,
         aiDisclosure,
         replaceNiche,
       });
-      if (!ok) return res.status(404).json({ message: "This demo has not been opened yet." });
+      if (!updated) return res.status(404).json({ message: "No demo with that link." });
 
       // The updated config, so the panel re-syncs immediately instead of
       // waiting on the next poll to discover what it just wrote.
-      res.json(await getWebDemoConfig(token));
+      res.json(await getDemoConfig(token));
     }),
   );
 
