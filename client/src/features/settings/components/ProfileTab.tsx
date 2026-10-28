@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Clock } from "lucide-react";
 import { hapticSave } from "@/lib/haptics";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiUtils";
+import { mergeProfileIntoMe } from "@/lib/userIdentity";
 import { cn } from "@/lib/utils";
 import { SectionCard } from "@/components/crm/primitives";
 import type { UserProfile } from "../types";
@@ -31,6 +33,7 @@ export function ProfileTab({
 }) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const [name, setName] = useState(profile.fullName1 ?? "");
   const [email, setEmail] = useState(profile.email ?? "");
@@ -62,12 +65,9 @@ export function ProfileTab({
       setPhone(updated.phone ?? "");
       setAvatarUrl(updated.avatarUrl ?? "");
 
-      // Update localStorage so the nav bar reflects changes immediately
-      if (updated.fullName1) localStorage.setItem("leadawaker_user_name", updated.fullName1);
-      if (updated.email) localStorage.setItem("leadawaker_user_email", updated.email);
-      if (updated.avatarUrl) localStorage.setItem("leadawaker_user_avatar", updated.avatarUrl);
-      else localStorage.removeItem("leadawaker_user_avatar");
-      window.dispatchEvent(new Event("leadawaker-avatar-changed"));
+      // The nav bar reads the signed-in user from /api/auth/me: patch it now, then refetch.
+      queryClient.setQueryData(["/api/auth/me"], (me: any) => mergeProfileIntoMe(me, updated));
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/me"] });
 
       hapticSave();
       toast({ variant: "success", title: t("profile.profileSaved"), description: t("profile.profileSavedDescription") });

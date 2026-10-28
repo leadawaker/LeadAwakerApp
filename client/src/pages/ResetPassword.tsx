@@ -144,7 +144,7 @@ export default function ResetPassword() {
     <div className={SHELL}>
       <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="w-full max-w-md">
         <div className="flex justify-center mb-8">
-          <img src="/premium/logo-v2.svg" alt="Lead Awaker" className="h-10 object-contain" style={{ background: "var(--logo-plate)", borderRadius: 10, padding: "2px 8px" }} />
+          <img src="/premium/logo-v2-outline.svg" alt="Lead Awaker" className="h-10 object-contain" />
         </div>
         <div className={CARD}>
           <h1 className="text-2xl font-bold font-heading tracking-tight text-center mb-2">{t("resetPassword.title")}</h1>

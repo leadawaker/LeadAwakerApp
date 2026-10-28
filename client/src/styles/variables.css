@@ -104,7 +104,6 @@
 
   /* Lines (warm brown at low alpha) */
   --line: hsl(40 26% 34% / 0.14);
-  --logo-plate: #B5A88E;   /* sand bar behind the nav logo (light only) */
   --line-strong: hsl(40 26% 34% / 0.24);
 
   /* ── Ink ── */
@@ -269,7 +268,6 @@
   --paper: #221D19;
   --popover: 30 12% 14%;
 
-  --logo-plate: transparent;
   --line: rgba(225, 208, 178, 0.10);
   --line-strong: rgba(225, 208, 178, 0.20);
 
