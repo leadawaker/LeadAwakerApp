@@ -28,7 +28,6 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { RefreshCw } from "lucide-react";
-import { cn } from "@/lib/utils";
 import {
   useDemoClient,
   useDemoClients,
@@ -39,6 +38,7 @@ import {
   type TermGroup,
 } from "../../api/demoClientsApi";
 import { ClientPanelHeader } from "./ClientPanelHeader";
+import { EditorViewSwitch } from "./EditorViewSwitch";
 import { IdentitySection, OpenerSection, PersonaSection, WordsSection } from "./ClientEditorSections";
 import { ClientScreenshot } from "./ClientScreenshot";
 import { ProductsSection } from "./ProductsSection";
@@ -57,6 +57,7 @@ import {
 } from "./clientDraft";
 
 type View = "persona" | "wording" | "media";
+type EditorView = "lead" | View;
 const VIEWS: View[] = ["persona", "wording", "media"];
 
 interface ClientEditorProps {
@@ -64,9 +65,11 @@ interface ClientEditorProps {
   onBack: () => void;
   /** The "..." menu, when the parent wants it in the panel header. */
   actions?: ReactNode;
+  /** A first view before Persona / Wording / Media (the Demos page's "Demos" tab). Selected whenever a persona opens. */
+  leadingView?: { label: string; content: ReactNode };
 }
 
-export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
+export function ClientEditor({ niche, onBack, actions, leadingView }: ClientEditorProps) {
   const { t } = useTranslation("campaigns");
   const { data: client, isLoading } = useDemoClient(niche);
   // The list is already cached, so the header can name the persona while its detail loads.
@@ -81,7 +84,8 @@ export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
   // below whenever a different Client loads, defaulting to whichever
   // language its content actually lives in.
   const [personaLang, setPersonaLang] = useState<DemoLang>("en");
-  const [view, setView] = useState<View>("persona");
+  const [view, setView] = useState<EditorView>(leadingView ? "lead" : "persona");
+  useEffect(() => { if (leadingView) setView("lead"); }, [niche]);
   // The three views share one scroll area: each view, and each persona, starts at its top.
   const bodyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -226,7 +230,7 @@ export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
   // A live client's persona is managed in Account > Voice, never edited here.
   // Rendered after every hook above so the early return cannot change hook order.
   // The server also refuses PATCH/DELETE/duplicate on a live persona (409).
-  if (client.isLive) return <LiveClientView client={client} onBack={onBack} actions={actions} />;
+  if (client.isLive) return <LiveClientView client={client} onBack={onBack} actions={actions} leadingView={leadingView} />;
 
   return (
     <>
@@ -246,23 +250,19 @@ export function ClientEditor({ niche, onBack, actions }: ClientEditorProps) {
           )
         }
       >
-        <div className="la-seg la-seg--fill" role="tablist" aria-label={t("clients.viewsLabel")} style={{ maxWidth: 420 }}>
-          {VIEWS.map((v) => (
-            <button
-              key={v}
-              type="button"
-              role="tab"
-              aria-selected={view === v}
-              className={cn("la-seg-btn", view === v && "on")}
-              onClick={() => setView(v)}
-            >
-              {t(`clients.views.${v}`)}
-            </button>
-          ))}
-        </div>
+        <EditorViewSwitch
+          views={[
+            ...(leadingView ? [{ id: "lead" as const, label: leadingView.label }] : []),
+            ...VIEWS.map((v) => ({ id: v, label: t(`clients.views.${v}`) })),
+          ]}
+          value={view}
+          onChange={setView}
+          label={t("clients.viewsLabel")}
+        />
       </ClientPanelHeader>
 
       <div className="dp-panel-body" ref={bodyRef}>
+        {leadingView && <div className="dp-panel-inner dp-panel-inner--wide" hidden={view !== "lead"}>{leadingView.content}</div>}
         {/* ── Everything the model reads, and where the persona is filed ── */}
         <div className="dp-panel-inner" hidden={view !== "persona"}>
           <IdentitySection category={draft.category} onCategory={setCategory} />

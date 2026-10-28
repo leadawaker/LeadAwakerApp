@@ -205,7 +205,7 @@ export function PersonaSection({ text, lang, onLang, onChange, emptyLangSlot, af
         const short = fields.filter((f) => f.rows === undefined);
         const long = fields.filter((f) => f.rows !== undefined);
         return (
-          <div key={group} className="dp-group">
+          <div key={group} className="dp-field-group">
             <div className="dp-group-title">{t(`clients.groups.${group}`)}</div>
             <div className="dp-fields">
               {short.length > 0 && <div className="dp-trio" style={{ alignItems: "start" }}>{short.map(box)}</div>}
