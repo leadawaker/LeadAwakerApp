@@ -1,6 +1,6 @@
 /**
  * The demo persona library (specs/demo-persona-library/plan.md, phase 1),
- * shown as the "Demo personas" tab of the Demos page and as the Clients tab
+ * shown as the "Personas" tab of the Demos page and as the Clients tab
  * of the Campaigns page.
  *
  * The personas in category (or date) sections, newest first inside each, as small
@@ -16,6 +16,12 @@
  * and that topbar is a sibling of this tab's body. The Demos page has no such
  * topbar slot, so it passes `showActions` and the menu sits in the panel header.
  *
+ * The Demos page also owns what the open panel holds (`renderPanel`: a persona's Demos
+ * tab and the special No persona / Website visitors panels), what each card shows besides
+ * the persona itself (`decorate`: prospect count, activity dot), a group of its own after
+ * the personas (`trailing`) and a "needs follow-up" narrowing (`onlyNiches`). The
+ * Campaigns page passes none of these and gets the plain list and editor.
+ *
  * The filters and the grouping follow the same split: the Demos page owns them
  * (`view`) and shows them in its topbar (ClientsTopbarActions); with no `view`,
  * as on the Campaigns page, the tab keeps its own and shows the inline filter bar.
@@ -24,7 +30,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { SearchX, UsersRound } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDemoClients } from "../../api/demoClientsApi";
+import { useDemoClients, type DemoClientSummary } from "../../api/demoClientsApi";
 import { ClientActionsMenu } from "./ClientActionsMenu";
 import { ClientEditor } from "./ClientEditor";
 import { ClientGroupSection } from "./ClientGroupSection";
@@ -32,6 +38,8 @@ import { ClientsFilters } from "./ClientsFilters";
 import { ClientsHero } from "./ClientsHero";
 import { GroupBySwitch } from "./GroupBySwitch";
 import { PersonaDeleteDialog } from "./PersonaDeleteDialog";
+import { PersonaEmptyState } from "./PersonaEmptyState";
+import type { PersonaDecoration } from "./personaDecoration";
 import {
   DEFAULT_PERSONA_FILTERS,
   hasActiveFilters,
@@ -39,7 +47,7 @@ import {
   personaCategories,
   personaMatches,
 } from "./personaFilters";
-import { formatPersonaDate, groupPersonas, listLayout } from "./personaView";
+import { formatPersonaDate, groupPersonas, listLayout, type ListLayout } from "./personaView";
 import { usePersonaView, type PersonaView } from "./usePersonaView";
 import "@/features/automation/automation.css";
 import "./clients.css";
@@ -49,6 +57,11 @@ export function ClientsTab({
   onSelectNiche,
   showActions = false,
   view,
+  decorate,
+  onlyNiches,
+  onlyNichesEmpty,
+  trailing,
+  renderPanel,
 }: {
   selectedNiche: string | null;
   onSelectNiche: (niche: string | null) => void;
@@ -56,6 +69,16 @@ export function ClientsTab({
   showActions?: boolean;
   /** The filters and grouping, owned by a parent that shows them in its topbar. Omit for the inline filter bar. */
   view?: PersonaView;
+  /** Demos page: per-persona meta line and activity dot. */
+  decorate?: (c: DemoClientSummary) => PersonaDecoration | undefined;
+  /** Demos page "Needs follow-up": when set, only these niches show. The open persona always stays. */
+  onlyNiches?: ReadonlySet<string> | null;
+  /** The no-match body while `onlyNiches` hides every persona and no filter is active. */
+  onlyNichesEmpty?: string;
+  /** Rendered after the groups, in both layouts (the Demos page's No persona / Website visitors group). Return null for nothing. */
+  trailing?: (layout: ListLayout) => ReactNode;
+  /** Replaces the default panel content (ClientEditor + ClientActionsMenu). `close` calls onSelectNiche(null). */
+  renderPanel?: (niche: string, close: () => void) => ReactNode;
 }) {
   const { t, i18n } = useTranslation("campaigns");
   const { t: td } = useTranslation("demos");
@@ -69,11 +92,21 @@ export function ClientsTab({
   const all = clients ?? [];
   const langCounts = useMemo(() => languageCounts(all), [clients]);
   const categories = useMemo(() => personaCategories(all), [clients]);
-  const filtered = useMemo(() => all.filter((c) => personaMatches(c, filters)), [clients, filters]);
+  const filtered = useMemo(
+    () => all.filter((c) => personaMatches(c, filters) && (!onlyNiches || onlyNiches.has(c.niche) || c.niche === selectedNiche)),
+    [clients, filters, onlyNiches, selectedNiche],
+  );
   const groups = useMemo(() => groupPersonas(filtered, groupBy, { locale: i18n.language }), [filtered, groupBy, i18n.language]);
 
   const categoryCount = categories.length;
   const layout = listLayout(selectedNiche);
+  const tail = trailing?.(layout) ?? null;
+  const noMatchBody =
+    onlyNiches && !hasActiveFilters(filters) && onlyNichesEmpty
+      ? onlyNichesEmpty
+      : filters.category || filters.source !== "all"
+        ? td("personas.noMatchesFilters")
+        : filters.search.trim() ? t("clients.noMatches") : t("clients.noMatchesLanguage");
 
   const formatDate = useMemo(() => {
     const now = new Date();
@@ -108,7 +141,10 @@ export function ClientsTab({
                 {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-[220px] bg-primary/10 rounded-xl animate-pulse" />)}
               </>
             ) : all.length === 0 ? (
-              <EmptyState icon={UsersRound} title={t("clients.emptyTitle")} body={t("clients.emptyBody")} />
+              <>
+                <PersonaEmptyState icon={UsersRound} title={t("clients.emptyTitle")} body={t("clients.emptyBody")} />
+                {tail}
+              </>
             ) : (
               <>
                 <ClientsHero clients={all} categories={categoryCount} />
@@ -129,15 +165,11 @@ export function ClientsTab({
                     <span style={{ textAlign: "right" }}>{td("personaList.captions.added")}</span><span /><span />
                   </div>
                 )}
-                {groups.length === 0 && (
-                  <EmptyState
+                {groups.length === 0 && tail === null && (
+                  <PersonaEmptyState
                     icon={SearchX}
                     title={t("clients.noMatchesTitle")}
-                    body={
-                      filters.category || filters.source !== "all"
-                        ? td("personas.noMatchesFilters")
-                        : filters.search.trim() ? t("clients.noMatches") : t("clients.noMatchesLanguage")
-                    }
+                    body={noMatchBody}
                     action={hasActiveFilters(filters) ? (
                       <button type="button" className="la-btn la-btn--soft dp-touch" onClick={() => setFilters(DEFAULT_PERSONA_FILTERS)}>
                         {td("personas.clearFilters")}
@@ -154,8 +186,10 @@ export function ClientsTab({
                     formatDate={formatDate}
                     onSelect={onSelectNiche}
                     onDelete={setDeleting}
+                    decorate={decorate}
                   />
                 ))}
+                {tail}
               </>
             )}
           </div>
@@ -163,18 +197,20 @@ export function ClientsTab({
 
         {selectedNiche && (
           <div className="dp-panel" data-testid="persona-panel">
-            <ClientEditor
-              niche={selectedNiche}
-              onBack={() => onSelectNiche(null)}
-              actions={showActions ? (
-                <ClientActionsMenu
-                  variant="panel"
-                  niche={selectedNiche}
-                  onDeleted={() => onSelectNiche(null)}
-                  onDuplicated={(newNiche) => onSelectNiche(newNiche)}
-                />
-              ) : undefined}
-            />
+            {renderPanel ? renderPanel(selectedNiche, () => onSelectNiche(null)) : (
+              <ClientEditor
+                niche={selectedNiche}
+                onBack={() => onSelectNiche(null)}
+                actions={showActions ? (
+                  <ClientActionsMenu
+                    variant="panel"
+                    niche={selectedNiche}
+                    onDeleted={() => onSelectNiche(null)}
+                    onDuplicated={(newNiche) => onSelectNiche(newNiche)}
+                  />
+                ) : undefined}
+              />
+            )}
           </div>
         )}
       </div>
@@ -187,17 +223,6 @@ export function ClientsTab({
           onDeleted={() => { if (deleting === selectedNiche) onSelectNiche(null); }}
         />
       )}
-    </div>
-  );
-}
-
-function EmptyState({ icon: Icon, title, body, action }: { icon: typeof UsersRound; title: string; body: string; action?: ReactNode }) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", textAlign: "center", gap: 10, padding: "64px 12px" }}>
-      <span className="am-icon-tile" style={{ width: 48, height: 48, color: "var(--mute)" }}><Icon className="h-5 w-5" /></span>
-      <div className="serif" style={{ fontSize: 20, color: "var(--ink)" }}>{title}</div>
-      <p style={{ fontSize: 13.5, color: "var(--mute)", maxWidth: 380, lineHeight: 1.55, margin: 0 }}>{body}</p>
-      {action}
     </div>
   );
 }

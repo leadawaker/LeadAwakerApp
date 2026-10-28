@@ -3,6 +3,7 @@ import { ChevronRight, Trash2 } from "lucide-react";
 import type { DemoClientSummary } from "../../api/demoClientsApi";
 import { ClientThumb } from "./ClientThumb";
 import { LANGS, clientNames } from "./clientDisplay";
+import type { PersonaDecoration } from "./personaDecoration";
 import { canDeletePersona, personaDate, type ListLayout } from "./personaView";
 import "./personaRows.css";
 import "./personaCards.css";
@@ -34,7 +35,7 @@ function LangMarks({ client, inline = false }: { client: DemoClientSummary; inli
  * button): the name is the button, stretched over the whole row by `.dp-open::after`,
  * and Delete sits above that layer.
  */
-export function ClientRow({ client, layout, selected, showCategory, formatDate, onOpen, onDelete }: {
+export function ClientRow({ client, layout, selected, showCategory, formatDate, onOpen, onDelete, decoration }: {
   client: DemoClientSummary;
   layout: ListLayout;
   selected: boolean;
@@ -43,6 +44,8 @@ export function ClientRow({ client, layout, selected, showCategory, formatDate, 
   formatDate: (iso: string) => string;
   onOpen: () => void;
   onDelete: (niche: string) => void;
+  /** The Demos page's extras: a meta line under the sub line and an activity dot. */
+  decoration?: PersonaDecoration;
 }) {
   const { t } = useTranslation("campaigns");
   const { t: td } = useTranslation("demos");
@@ -69,12 +72,16 @@ export function ClientRow({ client, layout, selected, showCategory, formatDate, 
             <span className="am-name dp-name">{title}</span>
           </button>
           {client.isLive && <span className="dp-live">{t("clients.live.badge")}</span>}
+          {decoration?.dot && (
+            <span className={`dp-dot dp-dot--${decoration.dot}`} role="img" aria-label={decoration.dotLabel} title={decoration.dotLabel} />
+          )}
         </div>
         <div className="am-desc dp-sub" title={sub || undefined}>
           <LangMarks client={client} inline />
           {showCategory && category && <span className="dp-cat-tag">{category}</span>}
           {sub}
         </div>
+        {decoration?.meta && <div className="dp-meta">{decoration.meta}</div>}
       </div>
 
       <div className="dp-col-langs"><LangMarks client={client} /></div>

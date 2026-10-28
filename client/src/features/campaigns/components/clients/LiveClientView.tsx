@@ -6,14 +6,15 @@
  * read-only (instead of hiding it) lets Gabriel see which personas are live
  * without a demo edit being able to change a client's calls.
  */
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { receptionistSettingsHref } from "@/features/accounts/components/workspace/receptionist/settingsLink";
-import type { ReactNode } from "react";
 import { BookOpenText, ExternalLink, Lock } from "lucide-react";
 import { SectionCard } from "@/components/crm/primitives";
 import type { EditableDemoClient } from "../../api/demoClientsApi";
 import { ClientPanelHeader } from "./ClientPanelHeader";
+import { EditorViewSwitch } from "./EditorViewSwitch";
 import { ClientSection } from "./ClientSection";
 import { LANGS } from "./clientDisplay";
 
@@ -31,21 +32,35 @@ export function useOpenAccountVoice(accountsId?: number | null) {
   return () => navigate(receptionistSettingsHref("voice", { accountId: accountsId ?? undefined }));
 }
 
-export function LiveClientView({ client, onBack, actions }: {
+export function LiveClientView({ client, onBack, actions, leadingView }: {
   client: EditableDemoClient;
   onBack: () => void;
   actions?: ReactNode;
+  /** A first view before the read-only persona (the Demos page's "Demos" tab). Selected whenever a persona opens. */
+  leadingView?: { label: string; content: ReactNode };
 }) {
   const { t } = useTranslation("campaigns");
+  const [view, setView] = useState<"lead" | "persona">(leadingView ? "lead" : "persona");
+  useEffect(() => { if (leadingView) setView("lead"); }, [client.niche]);
   const openVoice = useOpenAccountVoice(client.accountsId);
   const lang = LANGS.find((l) => FIELDS.some(({ field }) => (client.text[field]?.[l] ?? "").trim())) ?? "en";
 
   return (
     <>
-      <ClientPanelHeader client={client} category={client.category} actions={actions} onBack={onBack} />
+      <ClientPanelHeader client={client} category={client.category} actions={actions} onBack={onBack}>
+        {leadingView && (
+          <EditorViewSwitch
+            views={[{ id: "lead" as const, label: leadingView.label }, { id: "persona" as const, label: t("clients.views.persona") }]}
+            value={view}
+            onChange={setView}
+            label={t("clients.viewsLabel")}
+          />
+        )}
+      </ClientPanelHeader>
 
       <div className="dp-panel-body" data-testid="live-client-view">
-        <div className="dp-panel-inner">
+        {leadingView && <div className="dp-panel-inner dp-panel-inner--wide" hidden={view !== "lead"}>{leadingView.content}</div>}
+        <div className="dp-panel-inner" hidden={!!leadingView && view !== "persona"}>
           <SectionCard style={{ padding: "16px 18px", display: "flex", gap: 14, alignItems: "flex-start", flexWrap: "wrap" }}>
             <span className="am-icon-tile"><Lock className="h-4 w-4" /></span>
             <div style={{ flex: 1, minWidth: 220 }}>

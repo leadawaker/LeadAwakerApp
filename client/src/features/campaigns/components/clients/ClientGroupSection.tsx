@@ -3,6 +3,7 @@ import { SectionCard } from "@/components/crm/primitives";
 import type { DemoClientSummary } from "../../api/demoClientsApi";
 import { ClientRow } from "./ClientRow";
 import { sectionEmoji } from "./categoryEmoji";
+import type { PersonaDecoration } from "./personaDecoration";
 import type { ListLayout, PersonaGroup } from "./personaView";
 import "./personaCards.css";
 
@@ -14,13 +15,15 @@ const RELATIVE = new Set(["today", "yesterday", "thisWeek", "lastWeek", "unknown
  * category, none for a date), what is filed under it in a line, then its personas, as small
  * cards in a wrapping grid or, with a persona open, as a vertical list.
  */
-export function ClientGroupSection({ group, layout, selectedNiche, formatDate, onSelect, onDelete }: {
+export function ClientGroupSection({ group, layout, selectedNiche, formatDate, onSelect, onDelete, decorate }: {
   group: PersonaGroup;
   layout: ListLayout;
   selectedNiche: string | null;
   formatDate: (iso: string) => string;
   onSelect: (niche: string) => void;
   onDelete: (niche: string) => void;
+  /** The Demos page's per-persona meta line and activity dot. */
+  decorate?: (c: DemoClientSummary) => PersonaDecoration | undefined;
 }) {
   const { t } = useTranslation("campaigns");
   const { t: td } = useTranslation("demos");
@@ -36,7 +39,7 @@ export function ClientGroupSection({ group, layout, selectedNiche, formatDate, o
     : Array.from(new Set(items.map((c) => (c.label || c.niche).trim()).filter(Boolean))).join(", ");
 
   return (
-    <SectionCard padded={false} className="overflow-hidden" data-testid={`persona-group-${group.key}`}>
+    <SectionCard padded={false} className="overflow-hidden dp-group" data-testid={`persona-group-${group.key}`}>
       <div className="am-section-head">
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="am-section-title">
@@ -58,6 +61,7 @@ export function ClientGroupSection({ group, layout, selectedNiche, formatDate, o
             formatDate={formatDate}
             onOpen={() => onSelect(c.niche)}
             onDelete={onDelete}
+            decoration={decorate?.(c)}
           />
         ))}
       </div>

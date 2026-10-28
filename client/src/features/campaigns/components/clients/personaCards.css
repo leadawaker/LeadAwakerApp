@@ -30,11 +30,13 @@
   padding: 14px 14px 10px;
   border: 1px solid var(--line-strong);
   border-radius: var(--r-surface);
-  background: transparent;
+  background: var(--card);
   cursor: pointer;
   transition: background-color 150ms ease;
 }
 .dp-card:hover { background: var(--wine-tint); }
+/* A card for a group of prospects that is not a persona (No persona, Website visitors). */
+.dp-card--special { border-style: dashed; }
 .dp-card:has(.dp-open:focus-visible) { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 
 .dp-card .dp-thumb-box { grid-area: thumb; align-self: start; width: 44px; height: 44px; }
@@ -46,6 +48,10 @@
 /* The name is the prominent line and may take two; the line under it likewise. */
 .dp-card .dp-title-line { align-items: flex-start; gap: 6px; }
 .dp-card .dp-live { margin-top: 3px; }
+/* Activity dot in the corner; the name keeps clear of it. */
+.dp-card .dp-dot { position: absolute; top: 12px; right: 12px; }
+.dp-card:has(.dp-dot) .dp-who { padding-right: 14px; }
+.dp-card .dp-meta { margin-top: 6px; }
 .dp-card .dp-open .dp-name {
   display: -webkit-box;
   -webkit-box-orient: vertical;

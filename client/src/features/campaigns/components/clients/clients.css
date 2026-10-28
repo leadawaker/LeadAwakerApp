@@ -41,6 +41,8 @@
   background: var(--bg);
   border-left: 1px solid var(--line);
 }
+/* Each section of the list is a raised card with a hairline, so it reads against the page. */
+.dp-group { border: 1px solid var(--line); }
 /* A persona is open: the list steps aside into a rail, the editor gets the room. */
 .dp-shell.is-open .dp-list { flex: 0 0 340px; }
 .dp-shell.is-open .dp-list-inner { padding: 16px 14px 32px; gap: 14px; }
@@ -129,6 +131,8 @@
   padding: 20px 24px 48px;
 }
 .dp-panel-inner[hidden] { display: none; }
+/* A view that is a wide table or list (the Demos page's "Demos" tab) is not held to the form's width. */
+.dp-panel-inner--wide { max-width: none; }
 .dp-card-body { padding: 18px; }
 .am-section-head.dp-card-head { flex-wrap: wrap; }
 .dp-verdict { font-size: 12.5px; font-weight: 600; color: var(--mute); white-space: nowrap; }
@@ -160,7 +164,7 @@ textarea.dp-input {
   max-height: 480px;
 }
 .la-input.dp-input:focus-visible { box-shadow: var(--sh-inset-crisp), 0 0 0 2px hsl(var(--ring) / 0.45); }
-.dp-group + .dp-group { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
+.dp-field-group + .dp-field-group { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
 .dp-group-title { margin-bottom: 14px; font-size: 13.5px; font-weight: 700; color: var(--ink-soft); }
 .dp-fields { display: flex; flex-direction: column; gap: 16px; }
 .dp-trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
