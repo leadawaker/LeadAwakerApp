@@ -38,7 +38,9 @@ export function ProspectSettingsForm({ row }: { row: ProspectRow }) {
       const result = await update.mutateAsync({ group: row.key, patch });
       const messages = failedMessages(result.failedTokens ?? []);
       if (messages.length === 0) {
-        toast({ variant: "success", title: t("detail.settingsSaved", { count: result.updatedTokens.length }) });
+        // A prospect with no links (or none that changed) has nothing to count.
+        const count = result.updatedTokens.length;
+        toast({ variant: "success", title: count === 0 ? t("detail.settingsSavedPlain") : t("detail.settingsSaved", { count }) });
         return;
       }
       setFailures(messages);

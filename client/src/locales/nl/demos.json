@@ -39,17 +39,21 @@
   },
   "folders": {
     "noClient": "Nog geen client",
-    "noLinks": "Nog geen links"
+    "noLinks": "Nog geen links",
+    "otherLinks_one": "+{{count}} andere link",
+    "otherLinks_other": "+{{count}} andere links"
   },
   "detail": {
     "title": "Prospect",
     "links": "Demolinks",
+    "otherLinks": "Andere links",
     "history": "Linkgeschiedenis",
     "counts": "Links verstuurd: {{links}} · Geopend: {{opened}} · Reacties: {{replies}}",
     "settings": "Instellingen",
     "save": "Instellingen opslaan",
     "settingsSaved_one": "Instellingen opgeslagen. {{count}} link bijgewerkt.",
     "settingsSaved_other": "Instellingen opgeslagen. {{count}} links bijgewerkt.",
+    "settingsSavedPlain": "Instellingen opgeslagen",
     "settingsFailed": "Niet alle links zijn bijgewerkt. Sla opnieuw op om het nog eens te proberen.",
     "saveFailed": "Kon de instellingen niet opslaan.",
     "notes": "Notities",

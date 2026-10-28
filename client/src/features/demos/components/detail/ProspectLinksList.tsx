@@ -5,6 +5,7 @@ import { SERVICES } from "../../services";
 import { serviceOf } from "../../serviceOf";
 import { formatSent } from "../../tableColumns";
 import { LinkCell } from "../table/LinkCell";
+import { OtherLinks } from "./OtherLinks";
 import { SectionTitle } from "./SectionTitle";
 
 /** A revoked link: read-only, with when it was sent and how many replies it got. */
@@ -26,8 +27,9 @@ function HistoryItem({ session }: { session: DemoSession }) {
 /**
  * Every service in pitch order with the prospect's link for it: the status pill (which opens the
  * link's actions: open, WhatsApp, copy, re-mint, delete), a copy button, and "+" where there is
- * none yet. Revoked links follow as read-only history. LinkCell is the table's own cell, so a
- * link behaves the same in both places (re-mint is disabled while it runs, a double click mints once).
+ * none yet. Links in no service line (older duplicates, other campaigns) follow, then revoked
+ * links as read-only history. LinkCell is the table's own cell, so a link behaves the same in
+ * both places (re-mint is disabled while it runs, a double click mints once).
  */
 export function ProspectLinksList({ row }: { row: ProspectRow }) {
   const { t } = useTranslation("demos");
@@ -49,6 +51,13 @@ export function ProspectLinksList({ row }: { row: ProspectRow }) {
           );
         })}
       </ul>
+
+      {row.extra.length > 0 && (
+        <div>
+          <SectionTitle>{t("detail.otherLinks")}</SectionTitle>
+          <OtherLinks row={row} />
+        </div>
+      )}
 
       {row.history.length > 0 && (
         <div>

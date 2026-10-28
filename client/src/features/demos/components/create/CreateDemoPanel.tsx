@@ -10,6 +10,7 @@ import { TOUCH_ROW } from "../../touchTargets";
 import { FormField } from "../form/FormField";
 import { ExistingClientFields } from "./ExistingClientFields";
 import { WebsiteScanFields } from "./WebsiteScanFields";
+import "../panelTouch.css";
 
 /**
  * The "+ New demo" side panel: who the demo is for, and which Client it wears. It adds a

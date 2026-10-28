@@ -39,17 +39,21 @@
   },
   "folders": {
     "noClient": "No client yet",
-    "noLinks": "No links yet"
+    "noLinks": "No links yet",
+    "otherLinks_one": "+{{count}} other link",
+    "otherLinks_other": "+{{count}} other links"
   },
   "detail": {
     "title": "Prospect",
     "links": "Demo links",
+    "otherLinks": "Other links",
     "history": "Link history",
     "counts": "Links sent: {{links}} · Opened: {{opened}} · Replies: {{replies}}",
     "settings": "Settings",
     "save": "Save settings",
     "settingsSaved_one": "Settings saved. {{count}} link updated.",
     "settingsSaved_other": "Settings saved. {{count}} links updated.",
+    "settingsSavedPlain": "Settings saved",
     "settingsFailed": "Some links were not updated. Save again to retry.",
     "saveFailed": "Could not save the settings.",
     "notes": "Notes",

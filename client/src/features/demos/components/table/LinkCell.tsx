@@ -27,7 +27,8 @@ function MintButton({ row, svc }: { row: ProspectRow; svc: ServiceDef }) {
   );
 }
 
-function LinkEntry({ row, svc, session, caption }: { row: ProspectRow; svc: ServiceDef; session: DemoSession; caption?: string }) {
+/** A live link: its status pill (which opens the link's actions), the date, and a copy button. */
+export function LinkEntry({ row, svc, session, caption }: { row: ProspectRow; svc: ServiceDef; session: DemoSession; caption?: string }) {
   const { t } = useTranslation("demos");
   const date = useActivityDate(session);
   const [copied, setCopied] = useState(false);

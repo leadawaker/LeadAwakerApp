@@ -67,23 +67,24 @@ export function ProspectCard({ row, onOpen, highlighted }: { row: ProspectRow; o
             </span>
           )}
           <span className="flex flex-wrap gap-1 pt-0.5">
-            {links.length === 0 ? (
+            {links.map((svc) => {
+              const session = row.byService[svc.key]!;
+              const status = linkStatus(session);
+              return (
+                <Pill
+                  key={svc.key}
+                  color={STATUS_COLOR[status]}
+                  title={`${t(svc.labelKey)}: ${linkStatusLabel(t, session)}`}
+                  style={status === "expired" ? { opacity: 0.6 } : undefined}
+                >
+                  {t(`table.svc.${svc.key}`)}
+                </Pill>
+              );
+            })}
+            {/* Links in no service line: a neutral chip, since they have no service to name or colour by. */}
+            {row.extra.length > 0 && <Pill title={t("detail.otherLinks")}>{t("folders.otherLinks", { count: row.extra.length })}</Pill>}
+            {links.length === 0 && row.extra.length === 0 && (
               <span style={{ fontSize: 11.5, color: "var(--mute-2)" }}>{t("folders.noLinks")}</span>
-            ) : (
-              links.map((svc) => {
-                const session = row.byService[svc.key]!;
-                const status = linkStatus(session);
-                return (
-                  <Pill
-                    key={svc.key}
-                    color={STATUS_COLOR[status]}
-                    title={`${t(svc.labelKey)}: ${linkStatusLabel(t, session)}`}
-                    style={status === "expired" ? { opacity: 0.6 } : undefined}
-                  >
-                    {t(`table.svc.${svc.key}`)}
-                  </Pill>
-                );
-              })
             )}
           </span>
         </span>

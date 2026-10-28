@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, Trash2 } from "lucide-react";
 import { RightPanel } from "@/components/crm/primitives/RightPanel";
 import { toast } from "@/hooks/use-toast";
 import { useDeleteProspect } from "../../api/demoProspectsApi";
+import type { NotesSaver } from "../../notesSaver";
 import { prospectCounts } from "../../prospectDetail";
 import type { ProspectRow } from "../../prospectRows";
 import { TOUCH_ROW } from "../../touchTargets";
@@ -12,6 +13,7 @@ import { ProspectLinksList } from "./ProspectLinksList";
 import { ProspectNotes } from "./ProspectNotes";
 import { ProspectSettingsForm } from "./ProspectSettingsForm";
 import { SectionTitle } from "./SectionTitle";
+import "../panelTouch.css";
 
 const SECTION = "border-t pt-4";
 
@@ -25,6 +27,9 @@ export function ProspectDetailPanel({ rowKey, rows, onClose }: { rowKey: string;
   const { t } = useTranslation("demos");
   const deleteProspect = useDeleteProspect();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  // Covers the wait for the notes save as well as the DELETE itself.
+  const [deleting, setDeleting] = useState(false);
+  const notes = useRef<NotesSaver | null>(null);
   const row = rows.find((r) => r.key === rowKey);
 
   // The prospect is gone (deleted elsewhere, or by this panel): nothing is left to show.
@@ -37,6 +42,12 @@ export function ProspectDetailPanel({ rowKey, rows, onClose }: { rowKey: string;
   const subtitle = [row.companyName, row.clientNiche].filter(Boolean).join(" · ");
 
   const doDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    // A note still on its way would reach the server after the DELETE and recreate a legacy prospect's row,
+    // so it lands first; the field then stops saving, since the prospect is about to go.
+    await notes.current?.save();
+    notes.current?.discard();
     try {
       await deleteProspect.mutateAsync({ group: row.key });
       setConfirmOpen(false);
@@ -45,6 +56,8 @@ export function ProspectDetailPanel({ rowKey, rows, onClose }: { rowKey: string;
     } catch (e) {
       setConfirmOpen(false);
       toast({ variant: "destructive", title: t("links.actionFailed"), description: e instanceof Error ? e.message : undefined });
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -70,7 +83,7 @@ export function ProspectDetailPanel({ rowKey, rows, onClose }: { rowKey: string;
 
       <section className={SECTION} style={{ borderColor: "var(--line)" }}>
         <SectionTitle>{t("detail.notes")}</SectionTitle>
-        <ProspectNotes row={row} />
+        <ProspectNotes row={row} saver={notes} />
       </section>
 
       <section className={SECTION} style={{ borderColor: "var(--line)" }}>
@@ -81,7 +94,7 @@ export function ProspectDetailPanel({ rowKey, rows, onClose }: { rowKey: string;
           // Inline: .la-btn sets its own colour, which a utility class cannot override.
           style={{ color: "hsl(var(--destructive))" }}
         >
-          {deleteProspect.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+          {deleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
           {t("detail.deleteProspect")}
         </button>
       </section>
@@ -93,7 +106,7 @@ export function ProspectDetailPanel({ rowKey, rows, onClose }: { rowKey: string;
         body={t("detail.deleteBody")}
         confirmLabel={t("detail.deleteProspect")}
         onConfirm={() => void doDelete()}
-        pending={deleteProspect.isPending}
+        pending={deleting}
       />
     </RightPanel>
   );
