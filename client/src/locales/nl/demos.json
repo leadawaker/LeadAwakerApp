@@ -166,7 +166,6 @@
     "noClientMatches": "Geen clients gevonden.",
     "clientMissingLang": "Nog geen {{language}}-versie van deze client.",
     "language": "Taal",
-    "moreOptions": "Meer opties",
     "disclosure": "AI-vermelding",
     "disclosureDefault": "Standaard van de campagne",
     "market": "Markt",
@@ -200,6 +199,11 @@
     "addToTable": "Aan tabel toevoegen",
     "added": "Aan de tabel toegevoegd",
     "addFailed": "Kon de prospect niet toevoegen."
+  },
+  "createPanel": {
+    "clientPlaceholder": "Kies een client",
+    "clientNone": "Geen client",
+    "marketEnglishOnly": "De markt geldt alleen voor Engelse demo's."
   },
   "new": {
     "provider": "Gebouwd door",

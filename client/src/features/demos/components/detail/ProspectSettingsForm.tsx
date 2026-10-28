@@ -9,9 +9,9 @@ import { changedSettings, failedMessages, settingsOf } from "../../prospectDetai
 import type { ProspectRow } from "../../prospectRows";
 import { TOUCH_ROW } from "../../touchTargets";
 import { ClientPicker } from "../form/ClientPicker";
+import { DisclosureMarketFields } from "../form/DisclosureMarketFields";
 import { FormField } from "../form/FormField";
 import { LanguageSeg } from "../form/LanguageSeg";
-import { MoreOptions } from "../form/MoreOptions";
 
 /**
  * Edit a prospect after its links were sent: name, company, Client, language, and the AI
@@ -24,7 +24,6 @@ export function ProspectSettingsForm({ row }: { row: ProspectRow }) {
   const ids = useId();
   const update = useUpdateProspect();
   const [draft, setDraft] = useState(() => settingsOf(row));
-  const [moreOpen, setMoreOpen] = useState(() => row.aiDisclosure !== "" || row.market !== "");
   const [failures, setFailures] = useState<string[]>([]);
 
   const set = (p: Partial<DemoProspectSettings>) => setDraft((d) => ({ ...d, ...p }));
@@ -76,18 +75,10 @@ export function ProspectSettingsForm({ row }: { row: ProspectRow }) {
         <LanguageSeg value={draft.language} onChange={(language) => set({ language })} ariaLabel={t("create.language")} />
       </FormField>
       <FormField label={t("create.client")}>
-        {/* The server refuses to clear a prospect's Client, so picking the selected one again is ignored rather than sent. */}
-        <ClientPicker
-          value={draft.clientNiche}
-          onChange={(clientNiche) => {
-            if (clientNiche) set({ clientNiche });
-          }}
-          language={draft.language}
-        />
+        {/* The server refuses to clear a prospect's Client, so the picker offers no "No client" row. */}
+        <ClientPicker value={draft.clientNiche} onChange={(clientNiche) => set({ clientNiche })} language={draft.language} clearable={false} />
       </FormField>
-      <MoreOptions
-        open={moreOpen}
-        onOpenChange={setMoreOpen}
+      <DisclosureMarketFields
         language={draft.language}
         aiDisclosure={draft.aiDisclosure}
         market={draft.market}

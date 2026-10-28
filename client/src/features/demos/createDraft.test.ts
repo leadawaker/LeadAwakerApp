@@ -26,14 +26,14 @@ test("the key is per user", () => {
   assert.equal(draftKey("7"), KEY);
 });
 
-test("an empty draft starts on Existing client in English with a fresh prospect group", () => {
+test("an empty draft starts on New from website in English with a fresh prospect group", () => {
   const d = emptyDraft("g1");
   assert.equal(d.v, 1);
-  assert.equal(d.mode, "existing");
+  assert.equal(d.mode, "website");
   assert.equal(d.language, "en");
   assert.equal(d.prospectGroup, "g1");
   assert.equal(d.review, null);
-  assert.equal(d.moreOpen, false);
+  assert.equal("moreOpen" in d, false, "Disclosure and Market are always visible: nothing to fold");
   assert.equal(d.foldOpen, false);
   assert.equal(d.firstName, "");
   assert.equal(d.notes, "");
@@ -42,7 +42,7 @@ test("an empty draft starts on Existing client in English with a fresh prospect 
 test("a missing or throwing storage reads as an empty draft", () => {
   const id = counter();
   assert.equal(readDraft(id, null).prospectGroup, "id-1");
-  assert.equal(readDraft(id, throwing()).mode, "existing");
+  assert.equal(readDraft(id, throwing()).mode, "website");
   assert.equal(readDraft(id, memory(user)).firstName, "");
 });
 
@@ -165,4 +165,22 @@ test("a late result is applied only to the prospect it was started for", () => {
   assert.equal(patchIfSameGroup(cleared, "g1", { mode: "website" }), null);
   const added = afterAdd(d, counter());
   assert.equal(patchIfSameGroup(added, "g1", { clientNiche: "Old scan" }), null);
+});
+
+test("a draft saved before the default changed keeps its mode, and its old fold flag is dropped", () => {
+  const id = counter();
+  const saved = { ...emptyDraft("g1"), mode: "existing", firstName: "Anna", clientNiche: "Bakery", moreOpen: true };
+  const s = memory({ ...user, [KEY]: JSON.stringify(saved) });
+  const d = readDraft(id, s);
+  assert.equal(d.mode, "existing");
+  assert.equal(d.clientNiche, "Bakery");
+  assert.equal(d.firstName, "Anna");
+  assert.equal(d.prospectGroup, "g1");
+  assert.equal("moreOpen" in d, false);
+});
+
+test("a draft saved without the fold flag reads fine", () => {
+  const id = counter();
+  const s = memory({ ...user, [KEY]: JSON.stringify({ ...emptyDraft("g1"), firstName: "Anna" }) });
+  assert.equal(readDraft(id, s).firstName, "Anna");
 });

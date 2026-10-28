@@ -6,10 +6,10 @@ import { PageTopbar, TopbarTabs, type TopbarTab } from "@/components/crm/primiti
 import { useLastTab } from "@/hooks/useLastTab";
 import { SessionsBody } from "../components/sessions/SessionsBody";
 import { SessionsTopbarActions } from "../components/sessions/SessionsTopbarActions";
-import { SessionsViewSwitch } from "../components/sessions/SessionsViewSwitch";
 import { useSessionsData } from "../components/sessions/useSessionsData";
 import { useSessionsState } from "../components/sessions/useSessionsState";
 import { DemoSettingsTab } from "../components/DemoSettingsTab";
+import { DemosViewSwitch } from "../components/DemosViewSwitch";
 import { useDemoDraft } from "../useDemoDraft";
 // The Clients library lives here rather than on the Campaigns page: a Client is
 // a demo persona, not a campaign setting, and this is where demos are made.
@@ -51,7 +51,7 @@ function DemosContent() {
         left={
           <>
             <TopbarTabs tabs={tabs} value={tab} onChange={setTab} className="max-md:[&_.la-seg-btn]:min-h-11" />
-            {tab === "sessions" && <SessionsViewSwitch view={state.view} onView={state.setView} />}
+            <DemosViewSwitch tab={tab} sessions={state} personas={personaView} />
           </>
         }
         right={

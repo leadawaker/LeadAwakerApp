@@ -27,7 +27,6 @@ export interface DemoDraft {
   language: DemoLang;
   aiDisclosure: AiDisclosure;
   market: DemoMarket;
-  moreOpen: boolean;
   websiteUrl: string;
   foldOpen: boolean;
   nicheText: string;
@@ -42,7 +41,7 @@ const DISCLOSURES: readonly AiDisclosure[] = ["", "off", "opener", "second_messa
 const MARKETS: readonly DemoMarket[] = ["", "uk", "us", "nl"];
 
 const STRING_FIELDS = ["firstName", "companyName", "clientNiche", "websiteUrl", "nicheText", "notes"] as const;
-const BOOLEAN_FIELDS = ["moreOpen", "foldOpen"] as const;
+const BOOLEAN_FIELDS = ["foldOpen"] as const;
 
 export function draftKey(user: string): string {
   return `la.demoDraft.${user}`;
@@ -51,14 +50,14 @@ export function draftKey(user: string): string {
 export function emptyDraft(prospectGroup: string): DemoDraft {
   return {
     v: 1,
-    mode: "existing",
+    // New from website is the usual start; a draft saved as Existing client keeps that (see parseDraft).
+    mode: "website",
     firstName: "",
     companyName: "",
     clientNiche: "",
     language: "en",
     aiDisclosure: "",
     market: "",
-    moreOpen: false,
     websiteUrl: "",
     foldOpen: false,
     nicheText: "",
@@ -104,7 +103,9 @@ function parseDraft(raw: unknown, newId: () => string): DemoDraft | null {
   if (group !== undefined && typeof group !== "string") return null;
   const review = raw.review;
   if (review !== null && !isReview(review)) return null;
-  return { ...(raw as unknown as DemoDraft), prospectGroup: group || newId(), review };
+  // `moreOpen` (the retired More options fold) may still sit in a saved draft: drop it.
+  const { moreOpen: _retired, ...rest } = raw as Record<string, unknown>;
+  return { ...(rest as unknown as DemoDraft), prospectGroup: group || newId(), review };
 }
 
 /** Missing, throwing, unreadable or older-shaped storage all read as an empty draft. */

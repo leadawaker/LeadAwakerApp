@@ -166,7 +166,6 @@
     "noClientMatches": "Nenhum client encontrado.",
     "clientMissingLang": "Este client ainda não tem versão em {{language}}.",
     "language": "Idioma",
-    "moreOptions": "Mais opções",
     "disclosure": "Aviso de IA",
     "disclosureDefault": "Padrão da campanha",
     "market": "Mercado",
@@ -200,6 +199,11 @@
     "addToTable": "Adicionar à tabela",
     "added": "Adicionado à tabela",
     "addFailed": "Não foi possível adicionar o prospect."
+  },
+  "createPanel": {
+    "clientPlaceholder": "Escolha um client",
+    "clientNone": "Sem client",
+    "marketEnglishOnly": "O mercado vale só para demos em inglês."
   },
   "new": {
     "provider": "Gerado por",

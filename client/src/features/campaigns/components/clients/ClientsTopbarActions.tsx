@@ -5,15 +5,15 @@ import { DropdownMenu, DropdownMenuTrigger } from "@/components/ui/dropdown-menu
 import { ExpandingSearch, TopbarIconButton } from "@/components/crm/primitives";
 import { TOUCH_TOPBAR } from "@/features/demos/touchTargets";
 import { useDemoClients } from "../../api/demoClientsApi";
-import { GroupBySwitch } from "./GroupBySwitch";
 import { PersonaFilterMenu } from "./PersonaFilterMenu";
 import { hasMenuFilters, languageCounts, personaCategories } from "./personaFilters";
 import type { PersonaView } from "./usePersonaView";
 
 /**
  * The Demo personas tab's part of the Demos PageTopbar `right` slot, in the order the
- * Sessions tab uses: search, the Filter menu, then the Category | Date switch.
- * `view` is the page's one usePersonaView() call, shared with the list.
+ * Sessions tab uses: search, then the Filter menu. The Category | Date switch is not here:
+ * it sits in the left group after the tabs, where the Sessions tab keeps its view switch
+ * (DemosViewSwitch). `view` is the page's one usePersonaView() call, shared with the list.
  */
 export function ClientsTopbarActions({ view }: { view: PersonaView }) {
   const { t } = useTranslation("campaigns");
@@ -40,8 +40,6 @@ export function ClientsTopbarActions({ view }: { view: PersonaView }) {
         </DropdownMenuTrigger>
         <PersonaFilterMenu filters={filters} onChange={setFilters} categories={categories} counts={counts} />
       </DropdownMenu>
-
-      <GroupBySwitch value={view.groupBy} onChange={view.setGroupBy} />
     </>
   );
 }

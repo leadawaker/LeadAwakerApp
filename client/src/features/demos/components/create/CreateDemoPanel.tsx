@@ -7,6 +7,7 @@ import { toast } from "@/hooks/use-toast";
 import type { CreateMode, DemoDraft } from "../../createDraft";
 import { DemoApiError, useCreateProspect } from "../../api/demoProspectsApi";
 import { TOUCH_ROW } from "../../touchTargets";
+import { DisclosureMarketFields } from "../form/DisclosureMarketFields";
 import { FormField } from "../form/FormField";
 import { ExistingClientFields } from "./ExistingClientFields";
 import { WebsiteScanFields } from "./WebsiteScanFields";
@@ -35,9 +36,10 @@ export function CreateDemoPanel({ draft, update, updateIf, isCurrent, clear, mar
   const pending = createProspect.isPending;
   const nameOk = draft.firstName.trim() !== "";
 
+  // New from website leads: it is the usual way to start (and the default of a fresh draft).
   const modes: PillSwitchItem<CreateMode>[] = [
-    { id: "existing", label: t("create.modeExisting"), icon: Users, color: "var(--wine)" },
     { id: "website", label: t("create.modeWebsite"), icon: Globe, color: "var(--wine)" },
+    { id: "existing", label: t("create.modeExisting"), icon: Users, color: "var(--wine)" },
   ];
 
   // Only the first name is needed: a row without a Client is allowed (its cells then mint the campaign's own persona).
@@ -141,6 +143,9 @@ export function CreateDemoPanel({ draft, update, updateIf, isCurrent, clear, mar
           onBuilt={(client) => update({ mode: "existing", clientNiche: client, review: null })}
         />
       )}
+
+      {/* Always on show, in both modes: the market also steers what a scan builds. */}
+      <DisclosureMarketFields language={draft.language} aiDisclosure={draft.aiDisclosure} market={draft.market} onChange={update} />
     </RightPanel>
   );
 }
