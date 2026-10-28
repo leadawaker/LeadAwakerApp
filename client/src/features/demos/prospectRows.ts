@@ -30,6 +30,16 @@ function newer(a: string | null, b: string | null): string | null {
   return time(b) > time(a) ? b : a;
 }
 
+/** The newest `lastAt` of a surface that has replies (a surface with none has no reply time), or null. */
+function lastReply(s: DemoSession): string | null {
+  return [s.browser, s.whatsapp].reduce<string | null>((acc, x) => (x.replies > 0 ? newer(acc, x.lastAt) : acc), null);
+}
+
+/** The newest first open over both surfaces, or null. */
+function lastOpen(s: DemoSession): string | null {
+  return [s.browser.openedAt, s.whatsapp.openedAt].reduce<string | null>(newer, null);
+}
+
 /** The newest of both surfaces' last message and first open, or null. */
 export function lastActivity(s: DemoSession): string | null {
   return [s.browser.lastAt, s.browser.openedAt, s.whatsapp.lastAt, s.whatsapp.openedAt].reduce<string | null>(newer, null);
@@ -82,6 +92,10 @@ export interface ProspectRow {
   createdAt: string | null;
   /** Newest reply or first open over every link, history included. */
   lastActivityAt: string | null;
+  /** Newest `lastAt` of a surface that has replies (replies > 0), over every link; null when nobody replied. */
+  lastReplyAt: string | null;
+  /** Newest `openedAt` over both surfaces of every link; null when never opened. */
+  lastOpenAt: string | null;
   /** Every token in the row, history included, so an edit reaches all of them. */
   tokens: string[];
   /** The newest non-revoked link per service. */
@@ -137,6 +151,8 @@ function buildRow(key: string, record: DemoProspectDto | undefined, links: DemoS
     publicDemo: ordered.some((s) => s.publicDemo),
     createdAt: sorted[0]?.createdAt ?? record?.createdAt ?? null,
     lastActivityAt: ordered.reduce<string | null>((acc, s) => newer(acc, lastActivity(s)), null),
+    lastReplyAt: ordered.reduce<string | null>((acc, s) => newer(acc, lastReply(s)), null),
+    lastOpenAt: ordered.reduce<string | null>((acc, s) => newer(acc, lastOpen(s)), null),
     tokens: ordered.map((s) => s.token),
     byService,
     extra,

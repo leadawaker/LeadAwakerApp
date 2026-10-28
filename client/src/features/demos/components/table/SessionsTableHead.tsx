@@ -12,7 +12,6 @@ const LEAD_COLS = [
   { key: "site", width: 72, sortKey: null },
   { key: "prospect", width: 140, sortKey: "prospect" },
   { key: "company", width: 150, sortKey: "company" },
-  { key: "client", width: 140, sortKey: "client" },
 ] as const;
 const LINK_WIDTH = 128;
 // Two pills stacked, and the longest header ("DBR / Quote") with its icon and sort arrow.

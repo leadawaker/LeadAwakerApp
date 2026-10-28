@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Pill } from "@/components/crm/primitives/Pill";
 import type { ProspectRow } from "../../prospectRows";
 import { SERVICES } from "../../services";
 import { formatSent, LINK_COLUMNS } from "../../tableColumns";
@@ -12,7 +11,7 @@ import { SiteThumb } from "./SiteThumb";
 const HIGHLIGHT_MS = 4000;
 const HIGHLIGHT_BG = "color-mix(in srgb, var(--wine) 8%, transparent)";
 
-/** A name that opens the prospect's detail panel (or the client's, for the client column). */
+/** A name that opens the prospect's detail panel. */
 function NameButton({ onClick, title, style, children }: { onClick: () => void; title: string; style: React.CSSProperties; children: React.ReactNode }) {
   return (
     <button
@@ -27,13 +26,12 @@ function NameButton({ onClick, title, style, children }: { onClick: () => void; 
   );
 }
 
-export function ProspectTableRow({ row, highlighted, showOther = false, onOpenRow, onOpenClient }: {
+export function ProspectTableRow({ row, highlighted, showOther = false, onOpenRow }: {
   row: ProspectRow;
   highlighted: boolean;
   /** The table has an Other column (some row holds a link that fits no service column). */
   showOther?: boolean;
   onOpenRow: (key: string) => void;
-  onOpenClient: (niche: string) => void;
 }) {
   const { t, i18n } = useTranslation("demos");
   const ref = useRef<HTMLTableRowElement>(null);
@@ -69,19 +67,6 @@ export function ProspectTableRow({ row, highlighted, showOther = false, onOpenRo
       </td>
       <td className="truncate px-3 py-1" title={row.companyName} style={{ fontSize: 12.5, color: "var(--ink)" }}>
         {row.companyName || none}
-      </td>
-      <td className="px-2 py-1">
-        {row.clientNiche ? (
-          <NameButton title={row.clientNiche} onClick={() => onOpenClient(row.clientNiche)} style={{ fontSize: 12, color: "var(--mute)" }}>
-            {row.clientNiche}
-          </NameButton>
-        ) : row.publicDemo ? (
-          <Pill color="var(--wine)" title={t("table.websitePillHint")}>
-            {t("table.websitePill")}
-          </Pill>
-        ) : (
-          <span style={{ fontSize: 12, color: "var(--mute)" }}>{none}</span>
-        )}
       </td>
       {LINK_COLUMNS.map((col) => {
         const svc = SERVICES.find((s) => s.key === col.services[0]);

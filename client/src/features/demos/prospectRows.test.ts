@@ -129,4 +129,39 @@ test("lastActivity is the newest of both lastAt and openedAt on both surfaces", 
   );
 });
 
+test("lastReplyAt is the newest lastAt of a surface that has replies; a surface with none is ignored", () => {
+  const r = buildProspectRows([], [session({
+    prospectGroup: "g1",
+    browser: { ...surf(), replies: 2, lastAt: "2026-10-27T10:00:00Z" },
+    whatsapp: { ...surf(), replies: 0, lastAt: "2026-10-28T10:00:00Z" },
+  })])[0];
+  assert.equal(r.lastReplyAt, "2026-10-27T10:00:00Z");
+});
+
+test("lastReplyAt takes the newest time over every link", () => {
+  const a = session({ token: "aaa00001", prospectGroup: "g1", createdAt: "2026-10-20T00:00:00Z", browser: { ...surf(), replies: 1, lastAt: "2026-10-26T10:00:00Z" } });
+  const b = session({ token: "bbb00001", prospectGroup: "g1", createdAt: "2026-10-25T00:00:00Z", whatsapp: { ...surf(), replies: 3, lastAt: "2026-10-22T10:00:00Z" } });
+  assert.equal(buildProspectRows([], [a, b])[0].lastReplyAt, "2026-10-26T10:00:00Z");
+});
+
+test("lastOpenAt is the newest openedAt over both surfaces", () => {
+  const r = buildProspectRows([], [session({
+    prospectGroup: "g1",
+    browser: { ...surf(), opened: true, openedAt: "2026-10-26T08:00:00Z" },
+    whatsapp: { ...surf(), opened: true, openedAt: "2026-10-27T08:00:00Z" },
+  })])[0];
+  assert.equal(r.lastOpenAt, "2026-10-27T08:00:00Z");
+});
+
+test("a revoked link with a reply still counts for lastReplyAt", () => {
+  const dead = session({ token: "dead0001", prospectGroup: "g1", revokedAt: "2026-10-26T00:00:00Z", whatsapp: { ...surf(), replies: 1, lastAt: "2026-10-24T10:00:00Z" } });
+  assert.equal(buildProspectRows([], [dead])[0].lastReplyAt, "2026-10-24T10:00:00Z");
+});
+
+test("a prospect with no links has no reply or open time", () => {
+  const r = buildProspectRows([p], [])[0];
+  assert.equal(r.lastReplyAt, null);
+  assert.equal(r.lastOpenAt, null);
+});
+
 function surf() { return { ...surface }; }

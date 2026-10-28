@@ -1,6 +1,6 @@
 import { GroupHeader } from "@/components/crm/primitives/GroupHeader";
 import { ProspectCard } from "./ProspectCard";
-import type { LabelledGroup } from "../sessions/useDateGroups";
+import type { LabelledGroup } from "../table/useDateGroups";
 
 /**
  * The cards view: one group per date (already ordered, newest first), a wrapping grid of small

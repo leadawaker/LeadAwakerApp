@@ -1,7 +1,7 @@
 import { Fragment } from "react";
 import type { ProspectRow } from "../../prospectRows";
 import type { SessionSort, SortKey } from "../../sessionsView";
-import type { LabelledGroup } from "../sessions/useDateGroups";
+import type { LabelledGroup } from "./useDateGroups";
 import { DateGroupRow } from "./DateGroupRow";
 import { ProspectTableRow } from "./ProspectTableRow";
 import { columnWidths, SessionsTableHead } from "./SessionsTableHead";
@@ -10,14 +10,13 @@ import { columnWidths, SessionsTableHead } from "./SessionsTableHead";
  * The Demos table: one row per prospect, one column per service. Rows arrive filtered and sorted;
  * `groups` (when sorted by Sent) lays them under date headings, else the list is flat.
  */
-export function SessionsTable({ rows, groups, sort, onSort, highlightKey, onOpenRow, onOpenClient }: {
+export function SessionsTable({ rows, groups, sort, onSort, highlightKey, onOpenRow }: {
   rows: ProspectRow[];
   groups: LabelledGroup[] | null;
   sort: SessionSort;
   onSort: (key: SortKey) => void;
   highlightKey: string | null;
   onOpenRow: (key: string) => void;
-  onOpenClient: (niche: string) => void;
 }) {
   // The column only earns its width when some link has no column of its own.
   const showOther = rows.some((r) => r.extra.length > 0);
@@ -31,7 +30,6 @@ export function SessionsTable({ rows, groups, sort, onSort, highlightKey, onOpen
       highlighted={row.key === highlightKey}
       showOther={showOther}
       onOpenRow={onOpenRow}
-      onOpenClient={onOpenClient}
     />
   );
 

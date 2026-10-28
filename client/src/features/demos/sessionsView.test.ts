@@ -90,15 +90,13 @@ test("Last activity sorts by date, a missing date last in either direction", () 
 });
 
 test("text columns sort A to Z or Z to A, an empty value last in either direction", () => {
-  const a = row({ key: "a", firstName: "Zoe", companyName: "Acme", clientNiche: "Bakery" });
-  const b = row({ key: "b", firstName: "adam", companyName: "", clientNiche: "" });
-  const c = row({ key: "c", firstName: "Mia", companyName: "Mid", clientNiche: "Alpha" });
+  const a = row({ key: "a", firstName: "Zoe", companyName: "Acme" });
+  const b = row({ key: "b", firstName: "adam", companyName: "" });
+  const c = row({ key: "c", firstName: "Mia", companyName: "Mid" });
   assert.deepEqual(order([a, b, c], asc("prospect")), ["b", "c", "a"]);
   assert.deepEqual(order([a, b, c], desc("prospect")), ["a", "c", "b"]);
   assert.deepEqual(order([a, b, c], asc("company")), ["a", "c", "b"]);
   assert.deepEqual(order([a, b, c], desc("company")), ["c", "a", "b"]);
-  assert.deepEqual(order([a, b, c], asc("client")), ["c", "a", "b"]);
-  assert.deepEqual(order([a, b, c], desc("client")), ["a", "c", "b"]);
 });
 
 const opened = { ...surface, opened: true, openedAt: "2026-10-02T00:00:00Z" };
@@ -131,7 +129,7 @@ test("equal values fall back to the newest sent first, whatever the direction", 
 
 test("nextSort: a new column starts text A to Z and dates, link columns newest or furthest first; the same column flips", () => {
   assert.deepEqual(nextSort(DEFAULT_SORT, "prospect"), asc("prospect"));
-  assert.deepEqual(nextSort(DEFAULT_SORT, "client"), asc("client"));
+  assert.deepEqual(nextSort(DEFAULT_SORT, "company"), asc("company"));
   assert.deepEqual(nextSort(asc("prospect"), "lastActivity"), desc("lastActivity"));
   assert.deepEqual(nextSort(asc("prospect"), "voice"), desc("voice"));
   assert.deepEqual(nextSort(asc("prospect"), "prospect"), desc("prospect"));
@@ -148,7 +146,7 @@ test("withSortKey keeps the direction of the sorted column and gives a new one i
 test("ariaSort names the direction on the sorted column and none elsewhere", () => {
   assert.equal(ariaSort(asc("company"), "company"), "ascending");
   assert.equal(ariaSort(desc("company"), "company"), "descending");
-  assert.equal(ariaSort(desc("company"), "client"), "none");
+  assert.equal(ariaSort(desc("company"), "prospect"), "none");
 });
 
 test("visibleRows filters then sorts, flat", () => {

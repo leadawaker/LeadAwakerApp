@@ -10,7 +10,7 @@ import { CreateDemoPanel } from "../create/CreateDemoPanel";
 import { ProspectDetailPanel } from "../detail/ProspectDetailPanel";
 import { ProspectCards } from "../cards/ProspectCards";
 import { SessionsTable } from "../table/SessionsTable";
-import { useDateGroups } from "./useDateGroups";
+import { useDateGroups } from "../table/useDateGroups";
 import type { SessionsState } from "./useSessionsState";
 
 /** A centred message with an optional action: the empty, no-match and error states share it. */
@@ -121,7 +121,6 @@ export function SessionsBody({ state, draft, rows, isLoading, error, onRetry, on
         onSort={onSort}
         highlightKey={state.highlightKey}
         onOpenRow={openRow}
-        onOpenClient={onOpenClient}
       />
     );
   }

@@ -17,7 +17,7 @@ export interface SessionFilters {
 export const DEFAULT_FILTERS: SessionFilters = { activity: "all", expired: false, client: "", service: "" };
 
 /** A sortable column: the lead columns, the two dates, and one per link column. */
-export type SortKey = "sent" | "prospect" | "company" | "client" | "lastActivity" | LinkColumn["key"];
+export type SortKey = "sent" | "prospect" | "company" | "lastActivity" | LinkColumn["key"];
 export type SortDir = "asc" | "desc";
 export interface SessionSort {
   key: SortKey;
@@ -28,7 +28,7 @@ export interface SessionSort {
 export const DEFAULT_SORT: SessionSort = { key: "sent", dir: "desc" };
 
 /** The keys the topbar Sort menu lists (the link columns sort from their headers only). */
-export const MENU_SORT_KEYS: readonly SortKey[] = ["sent", "prospect", "company", "client", "lastActivity"];
+export const MENU_SORT_KEYS: readonly SortKey[] = ["sent", "prospect", "company", "lastActivity"];
 
 export function isFilterActive(f: SessionFilters): boolean {
   return f.activity !== "all" || f.expired || f.client !== "" || f.service !== "";
@@ -52,7 +52,7 @@ export function rowMatches(row: ProspectRow, f: SessionFilters, search: string):
   return [row.firstName, row.companyName, row.clientNiche].some((v) => v.toLowerCase().includes(q));
 }
 
-const TEXT_KEYS: readonly SortKey[] = ["prospect", "company", "client"];
+const TEXT_KEYS: readonly SortKey[] = ["prospect", "company"];
 
 /** Where a column starts when first clicked: text A to Z, dates and link progress furthest or newest first. */
 function firstDir(key: SortKey): SortDir {
@@ -102,8 +102,6 @@ function sortValue(row: ProspectRow, key: SortKey): string | number | null {
       return row.firstName || null;
     case "company":
       return row.companyName || null;
-    case "client":
-      return row.clientNiche || null;
     default: {
       const column = LINK_COLUMNS.find((c) => c.key === key);
       return column ? linkRank(row, column) : null;

@@ -47,6 +47,8 @@ export function row(over: Partial<ProspectRow> = {}): ProspectRow {
     publicDemo: false,
     createdAt: null,
     lastActivityAt: null,
+    lastReplyAt: null,
+    lastOpenAt: null,
     tokens: [],
     byService: {},
     extra: [],
