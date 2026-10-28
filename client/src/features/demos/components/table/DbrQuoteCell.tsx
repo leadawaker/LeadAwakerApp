@@ -62,8 +62,8 @@ function PickerButton({ row, missing }: { row: ProspectRow; missing: ServiceDef[
 export function DbrQuoteCell({ row }: { row: ProspectRow }) {
   const { t } = useTranslation("demos");
   const present = DBR_QUOTE.filter((s) => row.byService[s.key]);
-  // A service with no campaign cannot be minted, so it is never offered.
-  const missing = DBR_QUOTE.filter((s) => !row.byService[s.key] && s.campaignId != null);
+  // A service with no campaign cannot be minted, so it is never offered; nor can anything be minted into a public website demo.
+  const missing = row.publicDemo ? [] : DBR_QUOTE.filter((s) => !row.byService[s.key] && s.campaignId != null);
   if (!present.length && !missing.length) return <span style={{ fontSize: 12, color: "var(--mute)" }}>{t("table.none")}</span>;
   return (
     <div className="flex flex-col items-start gap-1">

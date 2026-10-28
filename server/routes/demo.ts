@@ -33,6 +33,8 @@ import { applyVoicePick, createLinkVoiceFields } from "./demoVoiceSchemas";
 import { productPatchShape } from "../demoClientProducts";
 import { clientSupportsLanguage, repickPersona, resolveRepickClient } from "../demoPersonaRepick";
 import { cleanStockUrl, scanFieldsFromScrape } from "../demoSiteFacts";
+import { PUBLIC_DEMO_MESSAGES, groupHoldsPublicDemo } from "../demoProspects/linkGuards";
+import { loadDemoLeadsLite } from "../demoProspects/store";
 // The Clients library. Deliberately NOT wired into /create-session: that form
 // is anonymous public traffic, and one row per curious visitor would bury the
 // personas Gabriel actually minted for a prospect (decided 2026-08-11).
@@ -379,7 +381,7 @@ export function registerDemoRoutes(app: Express): void {
     category: z.string().trim().max(60).nullable().optional(),
     emoji: z.string().trim().max(8).nullable().optional(),
     ...productPatchShape,
-    // The engine fetches this address later: only a full public http(s) URL is kept.
+    // The engine quotes this address in prompts (it never fetches it): only a full public http(s) URL is kept.
     stockUrl: productPatchShape.stockUrl.refine((v) => !v || cleanStockUrl(v) !== "", "Stock page must be a full http(s) URL."),
   });
 
@@ -596,6 +598,11 @@ export function registerDemoRoutes(app: Express): void {
       if (!parsed.success) return handleZodError(res, parsed.error);
 
       const { firstName, language, campaignId, niche, clientNiche, companyName, scenario, aiDisclosure, market, service, prospectGroup, voice, voiceLocale } = parsed.data;
+
+      // A visitor's own website demo takes no new links (delete only, like re-mint and settings).
+      if (prospectGroup && groupHoldsPublicDemo(await loadDemoLeadsLite(), prospectGroup)) {
+        return res.status(409).json({ code: "public_demo", message: PUBLIC_DEMO_MESSAGES.mint });
+      }
 
       if (!(await isDemoCampaign(campaignId))) {
         return res.status(400).json({

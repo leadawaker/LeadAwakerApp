@@ -1,7 +1,7 @@
 // A minted voice demo, by phone: "Sara calls now" rings the prospect from the
 // demo number with Sara on the line; "Call me + prospect" rings Gabriel's phone
 // first (Demos settings), then the prospect, and Sara joins on "Bring Sara in".
-// Inline (ProspectDemoPanel) or inside a popover (the sessions table): never a Dialog.
+// Inside a popover (the sessions table link actions): never a Dialog.
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";

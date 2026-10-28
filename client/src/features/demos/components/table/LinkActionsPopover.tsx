@@ -6,7 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import type { DemoSession } from "../../api/demoSessionsApi";
-import { useDeleteLink, useRemintLink } from "../../api/demoProspectsApi";
+import { DemoApiError, useDeleteLink, useRemintLink } from "../../api/demoProspectsApi";
 import type { ProspectRow } from "../../prospectRows";
 import { serviceCopyUrl, serviceOpenUrl, type ServiceDef } from "../../services";
 import { TOUCH } from "../../touchTargets";
@@ -77,8 +77,10 @@ export function LinkActionsPopover({ row, svc, session, trigger }: {
       const res = await remint.mutateAsync({ token: session.token });
       const url = serviceCopyUrl(svc, { ...session, demoUrl: res.demoUrl });
       toast({ variant: "success", title: t("links.remintDone"), description: (await copyText(url)) ? t("links.copied") : url });
-    } catch {
-      toast({ variant: "destructive", title: t("links.actionFailed") });
+    } catch (e) {
+      // `revoked`: this link was already replaced (the list was stale, or a second click raced the first).
+      const replaced = e instanceof DemoApiError && e.code === "revoked";
+      toast({ variant: "destructive", title: t(replaced ? "links.remintRevoked" : "links.actionFailed") });
     }
   };
 

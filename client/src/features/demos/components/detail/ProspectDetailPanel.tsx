@@ -78,7 +78,12 @@ export function ProspectDetailPanel({ rowKey, rows, onClose }: { rowKey: string;
 
       <section className={SECTION} style={{ borderColor: "var(--line)" }}>
         <SectionTitle>{t("detail.settings")}</SectionTitle>
-        <ProspectSettingsForm row={row} />
+        {/* A visitor's own website demo keeps its settings (the server answers 409 public_demo); notes and delete stay. */}
+        {row.publicDemo ? (
+          <p style={{ fontSize: 12.5, color: "var(--mute)" }}>{t("detail.publicDemoNote")}</p>
+        ) : (
+          <ProspectSettingsForm row={row} />
+        )}
       </section>
 
       <section className={SECTION} style={{ borderColor: "var(--line)" }}>

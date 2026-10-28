@@ -16,16 +16,15 @@ import { parseDemoNiche, resolveDemoScenario } from "../demoNicheBlob";
 import { repickPersona, resolveRepickClient, type RepickResult } from "../demoPersonaRepick";
 import { isSocialBlob } from "../demoSocial/snapshot";
 import { needsRebuild, planTokenRewrites, settingsChanged, settingsToSave, type LeadRewrite } from "./personaRewrite";
+import { PUBLIC_DEMO_MESSAGES, SETTING_KEYS, editsPublicDemoSettings, holdsPublicDemo, type SettingsPatch } from "./linkGuards";
 import { normalizeSettings, settingsFromLeads, tokenOf, tokensInGroup } from "./rows";
 import { getProspect, loadDemoLeadsLite, upsertProspect } from "./store";
 
-export type ProspectPatch = Partial<DemoProspectSettings> & { notes?: string; websiteUrl?: string };
+export type ProspectPatch = SettingsPatch;
 
 export type ApplyProspectResult =
   | { ok: true; result: ProspectSettingsResult }
-  | { ok: false; status: 404 | 409; message: string };
-
-const SETTING_KEYS = ["firstName", "companyName", "clientNiche", "language", "aiDisclosure", "market"] as const;
+  | { ok: false; status: 404 | 409; message: string; code?: "public_demo" };
 
 const settingsOf = (s: DemoProspectSettings | DemoProspectDto): DemoProspectSettings => ({
   firstName: s.firstName,
@@ -76,6 +75,9 @@ async function writeTokenRows(rows: LeadRewrite[]): Promise<void> {
  * in `failedTokens` and left as it was, and then the row keeps its OLD settings
  * so repeating the same edit retries them. The row is always saved, so a legacy
  * group gains its row and notes alone save.
+ *
+ * A group that holds a public website demo takes notes only: any other change
+ * is refused with 409 `public_demo` before anything is read or written.
  */
 export async function applyProspectSettings(group: string, patch: ProspectPatch): Promise<ApplyProspectResult> {
   const demoLeads = await loadDemoLeadsLite();
@@ -87,6 +89,9 @@ export async function applyProspectSettings(group: string, patch: ProspectPatch)
   if (!existing && !groupLeads.length) return { ok: false, status: 404, message: "No prospect with that key." };
 
   const prev = existing ? settingsOf(existing) : settingsFromLeads(groupLeads);
+  if (holdsPublicDemo(groupLeads) && editsPublicDemoSettings(prev, patch, existing?.websiteUrl ?? "")) {
+    return { ok: false, status: 409, code: "public_demo", message: PUBLIC_DEMO_MESSAGES.edit };
+  }
   const next = mergeSettings(prev, patch);
 
   const rebuild = needsRebuild(prev, next);

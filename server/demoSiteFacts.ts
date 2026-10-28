@@ -34,10 +34,10 @@ function cut(s: string, max: number): string {
 
 /**
  * The stock page URL to store, or "" when the value is not one. Only an
- * absolute http(s) URL on a public host is accepted: the engine fetches this
- * address later, so a relative path, another scheme or an internal address must
- * never be stored. Returned in the canonical form normalizeUrl gives (no
- * fragment).
+ * absolute http(s) URL on a public host is accepted: the engine quotes this
+ * address in prompts (it never fetches it), so a relative path, another scheme
+ * or an internal address must never be stored. Returned in the canonical form
+ * normalizeUrl gives (no fragment).
  */
 export function cleanStockUrl(raw: unknown): string {
   const value = str(raw);
@@ -115,7 +115,7 @@ export function planScanFieldUpdate(
     out.products = putProducts(existing.products, lang, scan.products);
   }
 
-  // The last gate before the database: the engine fetches this address later.
+  // The last gate before the database: the engine quotes this address in prompts.
   const stockUrl = cleanStockUrl(scan.stockUrl);
   if (stockUrl && (overwrite || isEmpty(existing.stockUrl))) out.stockUrl = stockUrl;
   const city = scan.city.trim();

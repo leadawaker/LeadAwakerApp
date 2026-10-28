@@ -5,7 +5,7 @@ import { PillSwitch, RightPanel, type PillSwitchItem } from "@/components/crm/pr
 import { Input } from "@/components/ui/input";
 import { toast } from "@/hooks/use-toast";
 import type { CreateMode, DemoDraft } from "../../createDraft";
-import { useCreateProspect } from "../../api/demoProspectsApi";
+import { DemoApiError, useCreateProspect } from "../../api/demoProspectsApi";
 import { TOUCH_ROW } from "../../touchTargets";
 import { FormField } from "../form/FormField";
 import { ExistingClientFields } from "./ExistingClientFields";
@@ -43,9 +43,16 @@ export function CreateDemoPanel({ draft, update, updateIf, isCurrent, clear, mar
   // Only the first name is needed: a row without a Client is allowed (its cells then mint the campaign's own persona).
   const submit = async () => {
     if (!nameOk || pending) return;
+    const group = draft.prospectGroup;
+    const added = () => {
+      toast({ variant: "success", title: t("create.added") });
+      onAdded(group);
+      markAdded();
+      onClose();
+    };
     try {
-      const prospect = await createProspect.mutateAsync({
-        prospectGroup: draft.prospectGroup,
+      await createProspect.mutateAsync({
+        prospectGroup: group,
         firstName: draft.firstName.trim(),
         companyName: draft.companyName.trim(),
         clientNiche: draft.clientNiche,
@@ -54,11 +61,13 @@ export function CreateDemoPanel({ draft, update, updateIf, isCurrent, clear, mar
         market: draft.market,
         websiteUrl: draft.websiteUrl.trim(),
       });
-      toast({ variant: "success", title: t("create.added") });
-      onAdded(prospect.prospectGroup);
-      markAdded();
-      onClose();
+      added();
     } catch (e) {
+      // `exists` for this draft's own group: an earlier add landed but its response was lost, so the row is there.
+      if (e instanceof DemoApiError && e.code === "exists") {
+        added();
+        return;
+      }
       toast({ variant: "destructive", title: t("create.addFailed"), description: e instanceof Error ? e.message : undefined });
     }
   };

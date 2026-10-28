@@ -7,7 +7,7 @@ import { DEMO_SESSIONS_KEY } from "./demoSessionsApi";
 
 export const PROSPECTS_KEY = ["/api/demo/prospects"];
 
-/** An API failure: the server's `message`, plus its `code` (`exists`, `public_demo`) when it sent one. */
+/** An API failure: the server's `message`, plus its `code` (`exists`, `public_demo`, `revoked`) when it sent one. */
 export class DemoApiError extends Error {
   code?: string;
   constructor(message: string, code?: string) {
@@ -40,12 +40,15 @@ export function useDemoProspects() {
   });
 }
 
-/** Every mutation changes what both lists show, so both are refetched before it settles. */
+/**
+ * Every mutation changes what both lists show, so both are refetched before it settles. A failure
+ * refetches too: a refusal (`revoked`, `exists`) means the lists were stale.
+ */
 function useProspectMutation<V, R>(call: (vars: V) => Promise<R>) {
   const qc = useQueryClient();
   return useMutation<R, Error, V>({
     mutationFn: call,
-    onSuccess: () =>
+    onSettled: () =>
       Promise.all([
         qc.invalidateQueries({ queryKey: PROSPECTS_KEY }),
         qc.invalidateQueries({ queryKey: DEMO_SESSIONS_KEY }),

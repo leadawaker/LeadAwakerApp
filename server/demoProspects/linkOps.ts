@@ -13,13 +13,13 @@
 
 import { pool } from "../db";
 import type { DemoDeleteResult, RemintResult } from "@shared/demoProspects";
-import { PUBLIC_DEMO_SOURCE } from "@shared/demoTokenTtl";
 import { buildDemoPageLink, buildWhatsAppLink, createPendingDemoLead, generateToken } from "../demo-session";
+import { holdsPublicDemo, remintRefusal } from "./linkGuards";
 import { DEMO_SCHEMA, purgeStatements, toDeleteResult } from "./purge";
 import { remintSource, tokenOf, tokensInGroup } from "./rows";
 import { deleteProspectRow, loadDemoLeadsLite, loadTokenLeads } from "./store";
 
-export type LinkRefusal = { ok: false; reason: "missing" | "public_demo" };
+export type LinkRefusal = { ok: false; reason: "missing" | "public_demo" | "revoked" };
 
 /**
  * Hard-delete these lead rows and everything that hangs off them, in one
@@ -81,7 +81,7 @@ export async function deleteProspect(group: string): Promise<DemoDeleteResult> {
 export async function revokeToken(token: string): Promise<{ ok: true; revoked: number } | LinkRefusal> {
   const rows = await loadTokenLeads(token);
   if (!rows.length) return { ok: false, reason: "missing" };
-  if (rows.some((r) => r.source === PUBLIC_DEMO_SOURCE)) return { ok: false, reason: "public_demo" };
+  if (holdsPublicDemo(rows)) return { ok: false, reason: "public_demo" };
 
   // One statement: both rows change together.
   const res = await pool.query(
@@ -99,11 +99,16 @@ export async function revokeToken(token: string): Promise<{ ok: true; revoked: n
  * The new link is made first, so a failure never leaves the prospect with no
  * working link; if the revoke then fails, the unused new rows are removed again
  * so no live link is left that nobody was told about.
+ *
+ * A link that was already replaced is refused (`revoked`): minting from it
+ * again would leave a second live link nobody was told about. A second
+ * re-mint racing the first loses at the revoke (it marks no rows) and is
+ * refused the same way, its new rows removed.
  */
 export async function remintToken(token: string): Promise<{ ok: true; result: RemintResult } | LinkRefusal> {
   const rows = await loadTokenLeads(token);
-  if (!rows.length) return { ok: false, reason: "missing" };
-  if (rows.some((r) => r.source === PUBLIC_DEMO_SOURCE)) return { ok: false, reason: "public_demo" };
+  const refusal = remintRefusal(rows);
+  if (refusal) return { ok: false, reason: refusal };
 
   const source = remintSource(rows);
   if (!source) return { ok: false, reason: "missing" };
@@ -134,6 +139,10 @@ export async function remintToken(token: string): Promise<{ ok: true; result: Re
   if (!revoked.ok) {
     await discardFresh();
     return revoked;
+  }
+  if (revoked.revoked === 0) {
+    await discardFresh();
+    return { ok: false, reason: "revoked" };
   }
 
   return {

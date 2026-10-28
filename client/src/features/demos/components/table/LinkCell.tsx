@@ -80,10 +80,11 @@ export function LinkEntry({ row, svc, session, caption }: { row: ProspectRow; sv
 }
 
 /**
- * One prospect's link for one service: a dash when the service has no campaign,
- * "+" to mint when there is no link yet, else the status pill (which opens the
- * link's actions) and a copy button. `caption` names the service when the
- * column holds more than one (DBR / Quote).
+ * One prospect's link for one service: a dash when the service has no campaign
+ * (or when the row is a public website demo, which takes no new links), "+" to
+ * mint when there is no link yet, else the status pill (which opens the link's
+ * actions) and a copy button. `caption` names the service when the column holds
+ * more than one (DBR / Quote).
  */
 export function LinkCell({ row, svc, session, caption }: { row: ProspectRow; svc: ServiceDef; session?: DemoSession; caption?: string }) {
   const { t } = useTranslation("demos");
@@ -94,6 +95,12 @@ export function LinkCell({ row, svc, session, caption }: { row: ProspectRow; svc
       </span>
     );
   }
-  if (!session) return <MintButton row={row} svc={svc} />;
+  if (!session) {
+    return row.publicDemo ? (
+      <span style={{ fontSize: 12, color: "var(--mute)" }}>{t("table.none")}</span>
+    ) : (
+      <MintButton row={row} svc={svc} />
+    );
+  }
   return <LinkEntry row={row} svc={svc} session={session} caption={caption} />;
 }

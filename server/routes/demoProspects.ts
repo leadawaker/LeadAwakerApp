@@ -9,6 +9,7 @@ import { createProspect, listProspects } from "../demoProspects/store";
 import { normalizeSettings } from "../demoProspects/rows";
 import { applyProspectSettings } from "../demoProspects/applySettings";
 import { deleteLink, deleteProspect, remintToken } from "../demoProspects/linkOps";
+import { PUBLIC_DEMO_MESSAGES } from "../demoProspects/linkGuards";
 import { DEMO_TOKEN_RE, PROSPECT_GROUP_RE, prospectCreateSchema, prospectPatchSchema } from "./demoProspectSchemas";
 
 export function registerDemoProspectRoutes(app: Express) {
@@ -57,7 +58,9 @@ export function registerDemoProspectRoutes(app: Express) {
       if (!parsed.success) return handleZodError(res, parsed.error);
 
       const outcome = await applyProspectSettings(group, parsed.data);
-      if (!outcome.ok) return res.status(outcome.status).json({ message: outcome.message });
+      if (!outcome.ok) {
+        return res.status(outcome.status).json({ ...(outcome.code ? { code: outcome.code } : {}), message: outcome.message });
+      }
       res.json(outcome.result);
     }),
   );
@@ -89,7 +92,8 @@ export function registerDemoProspectRoutes(app: Express) {
 
   // Replace a link: a fresh token with the same persona, the old one revoked
   // (its conversation stays). A public website demo is the visitor's own, so it
-  // refuses with 409 `public_demo`.
+  // refuses with 409 `public_demo`; a link that was already replaced refuses
+  // with 409 `revoked`.
   app.post(
     "/api/demo/links/:token/remint",
     requireAgency,
@@ -99,7 +103,10 @@ export function registerDemoProspectRoutes(app: Express) {
       const outcome = await remintToken(token);
       if (!outcome.ok) {
         if (outcome.reason === "public_demo") {
-          return res.status(409).json({ code: "public_demo", message: "A public website demo cannot be re-minted." });
+          return res.status(409).json({ code: "public_demo", message: PUBLIC_DEMO_MESSAGES.remint });
+        }
+        if (outcome.reason === "revoked") {
+          return res.status(409).json({ code: "revoked", message: "This link was already replaced. Use its newer link." });
         }
         return res.status(404).json({ message: "No link with that token." });
       }
