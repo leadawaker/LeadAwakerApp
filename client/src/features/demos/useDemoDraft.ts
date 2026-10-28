@@ -1,5 +1,5 @@
 import { useCallback, useRef, useState } from "react";
-import { afterAdd, clearDraft, readDraft, writeDraft, type DemoDraft } from "./createDraft";
+import { afterAdd, clearDraft, patchIfSameGroup, readDraft, writeDraft, type DemoDraft } from "./createDraft";
 
 const newId = () => crypto.randomUUID();
 
@@ -10,6 +10,10 @@ const newId = () => crypto.randomUUID();
 export function useDemoDraft(): {
   draft: DemoDraft;
   update: (patch: Partial<DemoDraft>) => void;
+  /** `update`, but only while the draft is still prospect `group`. False (and nothing written) after Clear or an add. */
+  updateIf: (group: string, patch: Partial<DemoDraft>) => boolean;
+  /** Whether the draft is still prospect `group`: a request started for it may still report its result. */
+  isCurrent: (group: string) => boolean;
   clear: () => void;
   markAdded: () => void;
 } {
@@ -24,8 +28,18 @@ export function useDemoDraft(): {
   }, []);
 
   const update = useCallback((patch: Partial<DemoDraft>) => commit({ ...latest.current, ...patch }), [commit]);
+  const updateIf = useCallback(
+    (group: string, patch: Partial<DemoDraft>) => {
+      const next = patchIfSameGroup(latest.current, group, patch);
+      if (!next) return false;
+      commit(next);
+      return true;
+    },
+    [commit],
+  );
+  const isCurrent = useCallback((group: string) => latest.current.prospectGroup === group, []);
   const clear = useCallback(() => commit(clearDraft(newId)), [commit]);
   const markAdded = useCallback(() => commit(afterAdd(latest.current, newId)), [commit]);
 
-  return { draft, update, clear, markAdded };
+  return { draft, update, updateIf, isCurrent, clear, markAdded };
 }

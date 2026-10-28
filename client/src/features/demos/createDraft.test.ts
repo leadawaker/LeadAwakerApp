@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { afterAdd, clearDraft, draftKey, emptyDraft, readDraft, writeDraft, type DemoDraft } from "./createDraft";
+import { afterAdd, clearDraft, draftKey, emptyDraft, patchIfSameGroup, readDraft, writeDraft, type DemoDraft } from "./createDraft";
 
 function memory(init: Record<string, string> = {}) {
   const m = new Map(Object.entries(init));
@@ -150,4 +150,19 @@ test("clear with a throwing storage still returns an empty draft", () => {
   const c = clearDraft(counter(), throwing());
   assert.equal(c.firstName, "");
   assert.equal(c.prospectGroup, "id-1");
+});
+
+test("a late result is applied only to the prospect it was started for", () => {
+  const d = emptyDraft("g1");
+  const applied = patchIfSameGroup(d, "g1", { websiteUrl: "https://a.nl" });
+  assert.equal(applied?.websiteUrl, "https://a.nl");
+  assert.equal(applied?.prospectGroup, "g1");
+  assert.equal(d.websiteUrl, "", "the draft passed in is not changed");
+
+  // After Clear or an add the draft has a new group: the old request's result is dropped.
+  const cleared = clearDraft(counter(), null);
+  assert.notEqual(cleared.prospectGroup, "g1");
+  assert.equal(patchIfSameGroup(cleared, "g1", { mode: "website" }), null);
+  const added = afterAdd(d, counter());
+  assert.equal(patchIfSameGroup(added, "g1", { clientNiche: "Old scan" }), null);
 });

@@ -140,3 +140,12 @@ export function clearDraft(newId: () => string, s: Store | null = store()): Demo
 export function afterAdd(d: DemoDraft, newId: () => string): DemoDraft {
   return { ...d, prospectGroup: newId() };
 }
+
+/**
+ * `patch` applied to `d`, but only while `d` is still the prospect `group` (the one a request
+ * was started for). Clear and an add both give the draft a new group, so a scan or build that
+ * resolves afterwards gets null and is dropped instead of landing in the next prospect's draft.
+ */
+export function patchIfSameGroup(d: DemoDraft, group: string, patch: Partial<DemoDraft>): DemoDraft | null {
+  return d.prospectGroup === group ? { ...d, ...patch } : null;
+}

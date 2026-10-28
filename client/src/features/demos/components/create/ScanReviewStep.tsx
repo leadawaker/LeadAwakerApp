@@ -41,7 +41,7 @@ export function ScanReviewStep({ review, onChange, onSave, saving }: {
       </FormField>
 
       <FormField label={t("create.products")}>
-        <ProductListEditor value={review.products} onChange={(products) => set({ products })} />
+        <ProductListEditor value={review.products} onChange={(products) => set({ products })} disabled={saving} />
       </FormField>
 
       <FormField label={t("create.city")} htmlFor={`${id}-city`}>

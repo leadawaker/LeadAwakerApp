@@ -35,6 +35,8 @@ function PanelSlot({ state, draft }: { state: SessionsState; draft: ReturnType<t
       <CreateDemoPanel
         draft={draft.draft}
         update={draft.update}
+        updateIf={draft.updateIf}
+        isCurrent={draft.isCurrent}
         clear={draft.clear}
         markAdded={draft.markAdded}
         onClose={close}

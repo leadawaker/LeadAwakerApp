@@ -16,9 +16,12 @@ import { WebsiteScanFields } from "./WebsiteScanFields";
  * prospect row to the table and never mints a link (links are minted from the table). The
  * fields live in `draft` (owned by DemosPage), so closing the panel or switching tabs keeps them.
  */
-export function CreateDemoPanel({ draft, update, clear, markAdded, onClose, onAdded }: {
+export function CreateDemoPanel({ draft, update, updateIf, isCurrent, clear, markAdded, onClose, onAdded }: {
   draft: DemoDraft;
   update: (patch: Partial<DemoDraft>) => void;
+  /** For results of requests that can outlive Clear (see useDemoDraft): written only while the prospect group matches. */
+  updateIf: (group: string, patch: Partial<DemoDraft>) => boolean;
+  isCurrent: (group: string) => boolean;
   clear: () => void;
   markAdded: () => void;
   onClose: () => void;
@@ -120,7 +123,13 @@ export function CreateDemoPanel({ draft, update, clear, markAdded, onClose, onAd
       {draft.mode === "existing" ? (
         <ExistingClientFields draft={draft} update={update} />
       ) : (
-        <WebsiteScanFields draft={draft} update={update} onBuilt={(client) => update({ mode: "existing", clientNiche: client, review: null })} />
+        <WebsiteScanFields
+          draft={draft}
+          update={update}
+          updateIf={updateIf}
+          isCurrent={isCurrent}
+          onBuilt={(client) => update({ mode: "existing", clientNiche: client, review: null })}
+        />
       )}
     </RightPanel>
   );

@@ -32,9 +32,12 @@ const detailOf = (e: unknown): string | undefined => (e instanceof Error && e.me
  * saved onto the Client; a typed niche is saved by the server and goes straight to the picker.
  * Results land in the draft (`update`), so they survive the panel being closed mid-request.
  */
-export function WebsiteScanFields({ draft, update, onBuilt }: {
+export function WebsiteScanFields({ draft, update, updateIf, isCurrent, onBuilt }: {
   draft: DemoDraft;
   update: (patch: Partial<DemoDraft>) => void;
+  /** `update` for a request's result: applied only while the draft is still the prospect the request started for. */
+  updateIf: (group: string, patch: Partial<DemoDraft>) => boolean;
+  isCurrent: (group: string) => boolean;
   /** A Client is ready to use: select it and switch to Existing client. */
   onBuilt: (client: string) => void;
 }) {
@@ -52,36 +55,43 @@ export function WebsiteScanFields({ draft, update, onBuilt }: {
     ...(gen.provider === "claude" ? { claudeModel: gen.claudeModel } : {}),
   });
 
-  const finishScan = (language: DemoDraft["language"], r: ScanResult) => {
+  const finishScan = (group: string, language: DemoDraft["language"], r: ScanResult) => {
     if (!r.saved) {
       setFailure({ message: t("create.scanFailed"), retry: null });
       return;
     }
-    update({
+    updateIf(group, {
       review: { client: r.client, language, summary: r.business_description, products: r.products, city: r.city, stockUrl: r.stock_url },
     });
   };
 
   const run = async (action: Action) => {
     const language = draft.language;
+    // A request outlives Clear and the panel being closed. Clear (and an add) give the draft a new
+    // prospect group, so a result for the old group is dropped: no draft write, no error, no onBuilt.
+    const group = draft.prospectGroup;
     setFailure(null);
     setBusy({ action, startedAt: Date.now() });
     try {
       if (action === "scan") {
-        finishScan(language, await scanWebsite({ ...generateOptions(), url: draft.websiteUrl.trim() }));
+        const r = await scanWebsite({ ...generateOptions(), url: draft.websiteUrl.trim() });
+        if (isCurrent(group)) finishScan(group, language, r);
       } else if (action === "notes") {
-        finishScan(language, await scanWebsite({ ...generateOptions(), text: draft.notes.trim() }));
+        const r = await scanWebsite({ ...generateOptions(), text: draft.notes.trim() });
+        if (isCurrent(group)) finishScan(group, language, r);
       } else if (action === "niche") {
         const r = await buildFromNiche({ ...generateOptions(), niche: draft.nicheText.trim() });
+        if (!isCurrent(group)) return;
         // Nothing was stored: keep the draft and say so, rather than selecting a Client that is not there.
         if (r.saved) onBuilt(r.client);
         else setFailure({ message: t("create.scanFailed"), retry: null });
       } else if (action === "save" && draft.review) {
         const { client, language: lang, summary, products, city, stockUrl } = draft.review;
         await saveScanReview(client, lang, { summary, products, city, stockUrl });
-        onBuilt(client);
+        if (isCurrent(group)) onBuilt(client);
       }
     } catch (e) {
+      if (!isCurrent(group)) return;
       setFailure({
         message: t(action === "save" ? "create.saveFailed" : "create.scanFailed"),
         detail: detailOf(e),
