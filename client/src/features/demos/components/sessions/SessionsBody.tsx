@@ -2,11 +2,13 @@ import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import type { ProspectRow } from "../../prospectRows";
-import { DEFAULT_FILTERS, isFilterActive, visibleRows } from "../../sessionsView";
+import { DEFAULT_FILTERS, folderGroups, isFilterActive, visibleRows } from "../../sessionsView";
 import type { useDemoDraft } from "../../useDemoDraft";
 import { TOUCH_ROW } from "../../touchTargets";
 import { DemosLoading } from "../DemosLoading";
 import { CreateDemoPanel } from "../create/CreateDemoPanel";
+import { ProspectDetailPanel } from "../detail/ProspectDetailPanel";
+import { ProspectFolders } from "../folders/ProspectFolders";
 import { SessionsTable } from "../table/SessionsTable";
 import type { SessionsState } from "./useSessionsState";
 
@@ -26,9 +28,9 @@ function StateMessage({ title, body, children }: { title?: string; body?: string
 /**
  * The right-hand column (R10): one panel at a time, mounted beside the content so the
  * full-height chain stays intact. `create` renders CreateDemoPanel with the draft DemosPage
- * owns (R22); Task 17 renders ProspectDetailPanel for `detail`.
+ * owns (R22); `detail` renders ProspectDetailPanel over every row, so a filter never closes it.
  */
-function PanelSlot({ state, draft }: { state: SessionsState; draft: ReturnType<typeof useDemoDraft> }) {
+function PanelSlot({ state, draft, rows }: { state: SessionsState; draft: ReturnType<typeof useDemoDraft>; rows: ProspectRow[] }) {
   const close = () => state.setPanel(null);
   if (state.panel?.kind === "create") {
     return (
@@ -43,6 +45,10 @@ function PanelSlot({ state, draft }: { state: SessionsState; draft: ReturnType<t
         onAdded={state.flash}
       />
     );
+  }
+  if (state.panel?.kind === "detail") {
+    // Keyed by prospect: the panel's forms hold edits that must not carry over to the next one.
+    return <ProspectDetailPanel key={state.panel.key} rowKey={state.panel.key} rows={rows} onClose={close} />;
   }
   return null;
 }
@@ -62,6 +68,11 @@ export function SessionsBody({ state, draft, rows, isLoading, error, onRetry, on
   const { t } = useTranslation("demos");
   const { search, filters, sort } = state;
   const visible = useMemo(() => visibleRows(rows, filters, search, sort), [rows, filters, search, sort]);
+  const groups = useMemo(
+    () => (state.view === "folders" ? folderGroups(rows, filters, search, sort) : null),
+    [state.view, rows, filters, search, sort],
+  );
+  const openRow = (key: string) => state.setPanel({ kind: "detail", key });
   const narrowed = isFilterActive(filters) || search.trim() !== "";
   const clearFilters = () => {
     state.setSearch("");
@@ -99,16 +110,10 @@ export function SessionsBody({ state, draft, rows, isLoading, error, onRetry, on
       </StateMessage>
     );
   } else {
-    // The folder view arrives with the prospect detail panel (Task 17); until then both views show the table.
-    content = (
-      <SessionsTable
-        rows={visible}
-        highlightKey={state.highlightKey}
-        // Task 17 opens the detail panel here: `state.setPanel({ kind: "detail", key })`. Until then a name has nothing to open,
-        // and setting it would only close a create form that is still being filled in.
-        onOpenRow={() => {}}
-        onOpenClient={onOpenClient}
-      />
+    content = groups ? (
+      <ProspectFolders groups={groups} highlightKey={state.highlightKey} onOpenRow={openRow} />
+    ) : (
+      <SessionsTable rows={visible} highlightKey={state.highlightKey} onOpenRow={openRow} onOpenClient={onOpenClient} />
     );
   }
 
@@ -117,7 +122,7 @@ export function SessionsBody({ state, draft, rows, isLoading, error, onRetry, on
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden" style={{ padding: "14px 24px 0" }}>
         <div className="la-page-center flex h-full min-h-0 flex-col">{content}</div>
       </div>
-      <PanelSlot state={state} draft={draft} />
+      <PanelSlot state={state} draft={draft} rows={rows} />
     </div>
   );
 }

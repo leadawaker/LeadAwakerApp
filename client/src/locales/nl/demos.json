@@ -37,6 +37,28 @@
     "clearFilters": "Filters wissen",
     "expiredHidden": "Verlopen links zijn verborgen. Zet Alleen verlopen aan in het filter om ze te zien."
   },
+  "folders": {
+    "noClient": "Nog geen client",
+    "noLinks": "Nog geen links"
+  },
+  "detail": {
+    "title": "Prospect",
+    "links": "Demolinks",
+    "history": "Linkgeschiedenis",
+    "counts": "Links verstuurd: {{links}} · Geopend: {{opened}} · Reacties: {{replies}}",
+    "settings": "Instellingen",
+    "save": "Instellingen opslaan",
+    "settingsSaved_one": "Instellingen opgeslagen. {{count}} link bijgewerkt.",
+    "settingsSaved_other": "Instellingen opgeslagen. {{count}} links bijgewerkt.",
+    "settingsFailed": "Niet alle links zijn bijgewerkt. Sla opnieuw op om het nog eens te proberen.",
+    "saveFailed": "Kon de instellingen niet opslaan.",
+    "notes": "Notities",
+    "notesPlaceholder": "Alles wat het onthouden waard is over deze prospect...",
+    "deleteProspect": "Prospect verwijderen",
+    "deleteTitle": "Deze prospect verwijderen?",
+    "deleteBody": "Alle links van deze prospect werken niet meer en hun gesprekken worden verwijderd. Dit kan niet ongedaan worden gemaakt.",
+    "deleted": "Prospect verwijderd"
+  },
   "table": {
     "site": "Site",
     "prospect": "Prospect",

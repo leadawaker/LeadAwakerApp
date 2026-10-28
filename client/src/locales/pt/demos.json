@@ -37,6 +37,28 @@
     "clearFilters": "Limpar filtros",
     "expiredHidden": "Links expirados ficam ocultos. Ative Só expiradas no filtro para vê-los."
   },
+  "folders": {
+    "noClient": "Sem client ainda",
+    "noLinks": "Nenhum link ainda"
+  },
+  "detail": {
+    "title": "Prospect",
+    "links": "Links de demo",
+    "history": "Histórico de links",
+    "counts": "Links enviados: {{links}} · Abertos: {{opened}} · Respostas: {{replies}}",
+    "settings": "Configurações",
+    "save": "Salvar configurações",
+    "settingsSaved_one": "Configurações salvas. {{count}} link atualizado.",
+    "settingsSaved_other": "Configurações salvas. {{count}} links atualizados.",
+    "settingsFailed": "Alguns links não foram atualizados. Salve de novo para tentar outra vez.",
+    "saveFailed": "Não foi possível salvar as configurações.",
+    "notes": "Anotações",
+    "notesPlaceholder": "Qualquer coisa que valha lembrar sobre este prospect...",
+    "deleteProspect": "Excluir prospect",
+    "deleteTitle": "Excluir este prospect?",
+    "deleteBody": "Todos os links dele deixam de funcionar e as conversas são apagadas. Isso não pode ser desfeito.",
+    "deleted": "Prospect excluído"
+  },
   "table": {
     "site": "Site",
     "prospect": "Prospect",

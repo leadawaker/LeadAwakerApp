@@ -37,6 +37,28 @@
     "clearFilters": "Clear filters",
     "expiredHidden": "Expired links are hidden. Switch on Expired only in the filter to see them."
   },
+  "folders": {
+    "noClient": "No client yet",
+    "noLinks": "No links yet"
+  },
+  "detail": {
+    "title": "Prospect",
+    "links": "Demo links",
+    "history": "Link history",
+    "counts": "Links sent: {{links}} · Opened: {{opened}} · Replies: {{replies}}",
+    "settings": "Settings",
+    "save": "Save settings",
+    "settingsSaved_one": "Settings saved. {{count}} link updated.",
+    "settingsSaved_other": "Settings saved. {{count}} links updated.",
+    "settingsFailed": "Some links were not updated. Save again to retry.",
+    "saveFailed": "Could not save the settings.",
+    "notes": "Notes",
+    "notesPlaceholder": "Anything worth remembering about this prospect...",
+    "deleteProspect": "Delete prospect",
+    "deleteTitle": "Delete this prospect?",
+    "deleteBody": "Every link they hold stops working and their conversations are removed. This cannot be undone.",
+    "deleted": "Prospect deleted"
+  },
   "table": {
     "site": "Site",
     "prospect": "Prospect",
