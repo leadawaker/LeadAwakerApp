@@ -4,6 +4,7 @@ import {
   canDeletePersona,
   formatPersonaDate,
   groupPersonas,
+  listLayout,
   parseGroupBy,
   personaDate,
   sortNewest,
@@ -97,4 +98,11 @@ test("only a saved, non-live persona can be deleted from the list", () => {
   assert.equal(canDeletePersona(mk("pack", { isDemoClient: false })), false);
   assert.equal(canDeletePersona(mk("live", { isLive: true })), false);
   assert.equal(canDeletePersona({ ...mk("old"), isDemoClient: undefined }), false);
+});
+
+test("the list is cards side by side until a persona is open, then a vertical list beside the editor", () => {
+  assert.equal(listLayout(null), "cards");
+  assert.equal(listLayout("dental-clinic"), "rows");
+  // An empty string is no persona (the editor needs a real niche to open).
+  assert.equal(listLayout(""), "cards");
 });

@@ -7,6 +7,7 @@
 .am-row.dp-row { padding: 16px 20px; min-height: 80px; }
 .dp-captions { display: grid; padding: 0 20px; margin-bottom: -8px; }
 .dp-captions span { font-family: var(--mono); font-size: 10px; color: var(--mute-2); white-space: nowrap; }
+.dp-who { min-width: 0; }
 .dp-title-line { display: flex; align-items: center; gap: 8px; min-width: 0; }
 /* The name is the row's button: stretched over the whole row, under Delete. */
 .dp-open {

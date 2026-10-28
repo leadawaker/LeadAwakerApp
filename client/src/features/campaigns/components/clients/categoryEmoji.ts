@@ -4,11 +4,10 @@
  * any name), so this reads the NAME: a few keywords per emoji, English first
  * with the Dutch and Portuguese words the library also uses. The first rule
  * that matches wins, so the order below is part of the behaviour. Pure.
+ * Only service types get one: date sections are plain text.
  */
 export const UNCATEGORIZED_EMOJI = "📁";
 export const FALLBACK_EMOJI = "✨";
-/** Date sections (grouping by date) all share one. */
-export const DATE_EMOJI = "📅";
 
 interface Rule {
   emoji: string;
@@ -61,4 +60,9 @@ export function categoryEmoji(category: string | null | undefined): string {
   const name = normalise(category ?? "");
   if (!name) return UNCATEGORIZED_EMOJI;
   return MATCHERS.find((m) => m.re.test(name))?.emoji ?? FALLBACK_EMOJI;
+}
+
+/** The emoji in front of a section title: the category's for a category section, none for a date section. */
+export function sectionEmoji(group: { kind: "category" | "date"; category: string | null }): string | null {
+  return group.kind === "date" ? null : categoryEmoji(group.category);
 }

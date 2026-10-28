@@ -11,6 +11,13 @@ export type GroupBy = "category" | "date";
 /** Key of the synthetic bucket for personas with no category. Not a label, so a real category may be named "Uncategorized". */
 export const UNCATEGORIZED_KEY = "__uncategorized__";
 
+/** Nothing open: small cards side by side. A persona open: the vertical list, narrowed beside its editor. */
+export type ListLayout = "cards" | "rows";
+
+export function listLayout(selectedNiche: string | null): ListLayout {
+  return selectedNiche ? "rows" : "cards";
+}
+
 export function parseGroupBy(raw: string | null | undefined): GroupBy {
   return raw === "date" ? "date" : "category";
 }

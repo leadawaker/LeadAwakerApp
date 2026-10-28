@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { DATE_EMOJI, FALLBACK_EMOJI, UNCATEGORIZED_EMOJI, categoryEmoji } from "./categoryEmoji";
+import { FALLBACK_EMOJI, UNCATEGORIZED_EMOJI, categoryEmoji, sectionEmoji } from "./categoryEmoji";
 
 test("every category in the library today has its own fitting emoji", () => {
   const expected: Record<string, string> = {
@@ -55,5 +55,10 @@ test("unknown names get the fallback, a missing or blank category the folder", (
   assert.equal(categoryEmoji(null), UNCATEGORIZED_EMOJI);
   assert.equal(categoryEmoji(undefined), UNCATEGORIZED_EMOJI);
   assert.equal(categoryEmoji("   "), UNCATEGORIZED_EMOJI);
-  assert.equal(DATE_EMOJI, "📅");
+});
+
+test("a category section carries its category's emoji, a date section none", () => {
+  assert.equal(sectionEmoji({ kind: "category", category: "Automotive" }), "🚗");
+  assert.equal(sectionEmoji({ kind: "category", category: null }), UNCATEGORIZED_EMOJI);
+  assert.equal(sectionEmoji({ kind: "date", category: null }), null);
 });
