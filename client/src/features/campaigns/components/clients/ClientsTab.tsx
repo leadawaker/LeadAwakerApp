@@ -3,11 +3,12 @@
  * shown as the "Demo personas" tab of the Demos page and as the Clients tab
  * of the Campaigns page.
  *
- * A list of personas in category (or date) sections, newest first inside each;
- * opening one puts its editor beside the list (the list narrows to a rail), or
- * over it when there is no room for both. That switch is a container query in
- * clients.css, not a viewport check, because the Campaigns page gives this tab
- * far less width than the Demos page does on the same screen.
+ * The personas in category (or date) sections, newest first inside each, as small
+ * cards side by side while none is open. Opening one puts its editor beside the
+ * list, which turns into a vertical rail of rows, or over it when there is no room
+ * for both. That switch is a container query in clients.css, not a viewport check,
+ * because the Campaigns page gives this tab far less width than the Demos page does
+ * on the same screen.
  *
  * "Which Client is open" is controlled by the parent (selectedNiche /
  * onSelectNiche), not local state here: on the Campaigns page the topbar's
@@ -38,7 +39,7 @@ import {
   personaCategories,
   personaMatches,
 } from "./personaFilters";
-import { formatPersonaDate, groupPersonas } from "./personaView";
+import { formatPersonaDate, groupPersonas, listLayout } from "./personaView";
 import { usePersonaView, type PersonaView } from "./usePersonaView";
 import "@/features/automation/automation.css";
 import "./clients.css";
@@ -72,20 +73,28 @@ export function ClientsTab({
   const groups = useMemo(() => groupPersonas(filtered, groupBy, { locale: i18n.language }), [filtered, groupBy, i18n.language]);
 
   const categoryCount = categories.length;
+  const layout = listLayout(selectedNiche);
 
   const formatDate = useMemo(() => {
     const now = new Date();
     return (iso: string) => formatPersonaDate(iso, now, i18n.language);
   }, [i18n.language]);
 
-  // Opening a persona narrows the list to a rail, which moves every row:
-  // bring the open one back into view.
+  // Opening a persona turns the cards into a rail of rows, and closing it turns them
+  // back: either moves every item, so bring that persona back into view. On close the
+  // editor (where focus was) is gone, so hand focus to the persona's own card.
+  const wasOpen = useRef<string | null>(null);
   useEffect(() => {
-    if (!selectedNiche) return;
-    const row = Array.from(listRef.current?.querySelectorAll<HTMLElement>("[data-niche]") ?? []).find(
-      (el) => el.dataset.niche === selectedNiche,
+    const niche = selectedNiche ?? wasOpen.current;
+    wasOpen.current = selectedNiche;
+    if (!niche) return;
+    const item = Array.from(listRef.current?.querySelectorAll<HTMLElement>("[data-niche]") ?? []).find(
+      (el) => el.dataset.niche === niche,
     );
-    row?.scrollIntoView({ block: "nearest" });
+    item?.scrollIntoView({ block: "nearest" });
+    if (!selectedNiche && (!document.activeElement || document.activeElement === document.body)) {
+      item?.querySelector<HTMLElement>(".dp-open")?.focus({ preventScroll: true });
+    }
   }, [selectedNiche]);
 
   return (
@@ -114,7 +123,7 @@ export function ClientsTab({
                   />
                 )}
 
-                {groups.length > 0 && (
+                {groups.length > 0 && layout === "rows" && (
                   <div className="dp-captions" aria-hidden>
                     <span /><span>{t("clients.captions.persona")}</span><span>{t("clients.captions.languages")}</span>
                     <span style={{ textAlign: "right" }}>{td("personaList.captions.added")}</span><span /><span />
@@ -140,6 +149,7 @@ export function ClientsTab({
                   <ClientGroupSection
                     key={`${g.kind}:${g.key}`}
                     group={g}
+                    layout={layout}
                     selectedNiche={selectedNiche}
                     formatDate={formatDate}
                     onSelect={onSelectNiche}

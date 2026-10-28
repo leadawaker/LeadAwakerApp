@@ -1,0 +1,85 @@
+/* The persona list with nothing open (Demos page "Demo personas" tab, and the Campaigns
+   page's Clients tab): each section holds its personas as small bordered cards side by
+   side, in a grid that wraps. The cards are fixed-width, never stretched to fill the row.
+
+   A card is the same element and children as a row (ClientRow.tsx), under `.dp-card`
+   instead of `.dp-row`, so personaRows.css and its container queries never touch it.
+   Shared pieces (`.dp-open` stretched over the card, `.dp-del`, `.dp-live`, `.dp-langs`,
+   `.dp-thumb-box`) come from there; the rules below only reshape them, and are written
+   one class deeper so they win whichever stylesheet loads last. Tokens only, so dark
+   mode follows. */
+
+.dp-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 250px);
+  justify-content: start;
+  gap: 12px;
+  padding: 16px 18px 18px;
+}
+
+/* picture and who on top; languages, date and Delete along the bottom */
+.dp-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto auto;
+  grid-template-rows: auto 1fr;
+  grid-template-areas:
+    "thumb who who who"
+    "langs langs when del";
+  gap: 10px 12px;
+  padding: 14px 14px 10px;
+  border: 1px solid var(--line-strong);
+  border-radius: var(--r-surface);
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.dp-card:hover { background: var(--wine-tint); }
+.dp-card:has(.dp-open:focus-visible) { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
+
+.dp-card .dp-thumb-box { grid-area: thumb; align-self: start; width: 44px; height: 44px; }
+.dp-card .dp-who { grid-area: who; align-self: start; }
+.dp-card .dp-col-langs { grid-area: langs; align-self: center; }
+.dp-card .dp-col-when { grid-area: when; align-self: center; }
+.dp-card .dp-col-del { grid-area: del; align-self: center; justify-content: flex-end; }
+
+/* The name is the prominent line and may take two; the line under it likewise. */
+.dp-card .dp-title-line { align-items: flex-start; gap: 6px; }
+.dp-card .dp-live { margin-top: 3px; }
+.dp-card .dp-open .dp-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 15px;
+  font-weight: 700;
+}
+.dp-card .am-desc.dp-sub {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  margin-top: 4px;
+  font-size: 12.5px;
+}
+
+/* Languages are chips, only the ones the persona has (the row's dimmed slots are for its column). */
+.dp-card .dp-langs { gap: 4px; }
+.dp-card .dp-langs span { padding: 1px 7px; border: 1px solid var(--line-strong); border-radius: var(--r-pill); font-size: 10.5px; }
+.dp-card .dp-langs .off, .dp-card .dp-langs--inline { display: none; }
+.dp-card .dp-date { font-size: 12px; color: var(--mute); }
+.dp-card .dp-id { display: none; }
+/* The Delete circle sits partly in the card's padding rather than making the bottom row taller;
+   its slot keeps its width when a persona has none (a live one), so the dates line up. */
+.dp-card .dp-del { margin: -6px -6px -6px 0; }
+.dp-card .dp-col-del { min-width: 30px; }
+@media (max-width: 767px) {
+  .dp-card .dp-col-del { min-width: 38px; }
+}
+
+/* A narrow list (a phone, or the Campaigns tab): one card per line, using the width. */
+@container dp-list (max-width: 540px) {
+  .dp-cards { grid-template-columns: minmax(0, 1fr); padding: 12px 14px 14px; }
+}
