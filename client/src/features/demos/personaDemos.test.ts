@@ -6,14 +6,17 @@ import {
   WEBSITE_KEY,
   activityDot,
   activityDots,
+  followUpCount,
   isSpecialKey,
   prospectSummary,
+  prospectTexts,
   rowsForKey,
   splitRowsByPersona,
   visibleSpecialKeys,
   type ActivityDot,
 } from "./personaDemos";
 import { row } from "./demoTestFixtures";
+import { DEFAULT_PERSONA_FILTERS } from "../campaigns/components/clients/personaFilters";
 
 const now = Date.parse("2026-10-28T12:00:00Z");
 const HOUR = 60 * 60 * 1000;
@@ -144,7 +147,7 @@ const specialSplit = (noPersona: number, website: number) =>
     ["robben"],
   );
 const dotMap = (entries: [string, ActivityDot][]) => new Map<string, ActivityDot>(entries);
-const plain = { filtersActive: false, followUp: false, selected: null };
+const plain = { filters: DEFAULT_PERSONA_FILTERS, followUp: false, selected: null };
 
 test("visibleSpecialKeys: No persona first, then Website visitors, each only with rows", () => {
   assert.deepEqual(visibleSpecialKeys(specialSplit(2, 1), dotMap([]), plain), [NO_PERSONA_KEY, WEBSITE_KEY]);
@@ -153,13 +156,28 @@ test("visibleSpecialKeys: No persona first, then Website visitors, each only wit
   assert.deepEqual(visibleSpecialKeys(specialSplit(0, 0), dotMap([]), plain), []);
 });
 
-test("visibleSpecialKeys: an active persona filter hides both (they have no language or category)", () => {
-  assert.deepEqual(visibleSpecialKeys(specialSplit(2, 1), dotMap([]), { ...plain, filtersActive: true }), []);
+test("visibleSpecialKeys: a language, source or category filter hides both (they have none of those)", () => {
+  const split = specialSplit(2, 1);
+  for (const f of [{ lang: "nl" }, { source: "manual" }, { category: "Automotive" }]) {
+    assert.deepEqual(visibleSpecialKeys(split, dotMap([]), { ...plain, filters: { ...DEFAULT_PERSONA_FILTERS, ...f } as any }), []);
+  }
+});
+
+test("visibleSpecialKeys: a search keeps only the cards with a prospect whose name or company matches", () => {
+  const split = splitRowsByPersona(
+    [row({ key: "n", clientNiche: "", firstName: "Anna" }), row({ key: "w", publicDemo: true, companyName: "Acme" })],
+    ["robben"],
+  );
+  const search = (q: string) => ({ ...plain, filters: { ...DEFAULT_PERSONA_FILTERS, search: q } });
+  assert.deepEqual(visibleSpecialKeys(split, dotMap([]), search(" ann ")), [NO_PERSONA_KEY]);
+  assert.deepEqual(visibleSpecialKeys(split, dotMap([]), search("ACME")), [WEBSITE_KEY]);
+  assert.deepEqual(visibleSpecialKeys(split, dotMap([]), search("zzz")), []);
+  assert.deepEqual(visibleSpecialKeys(split, dotMap([]), search("   ")), [NO_PERSONA_KEY, WEBSITE_KEY]);
 });
 
 test("visibleSpecialKeys: Needs follow-up keeps the cards with an unseen dot and the open one", () => {
   const split = specialSplit(2, 1);
-  const on = { filtersActive: false, followUp: true, selected: null as string | null };
+  const on = { filters: DEFAULT_PERSONA_FILTERS, followUp: true, selected: null as string | null };
   assert.deepEqual(visibleSpecialKeys(split, dotMap([[WEBSITE_KEY, "open"]]), on), [WEBSITE_KEY]);
   assert.deepEqual(visibleSpecialKeys(split, dotMap([]), on), []);
   assert.deepEqual(visibleSpecialKeys(split, dotMap([]), { ...on, selected: NO_PERSONA_KEY }), [NO_PERSONA_KEY]);
@@ -171,4 +189,46 @@ test("visibleSpecialKeys: Needs follow-up keeps the cards with an unseen dot and
 
 test("visibleSpecialKeys: an open card with no rows left stays hidden", () => {
   assert.deepEqual(visibleSpecialKeys(specialSplit(0, 0), dotMap([]), { ...plain, selected: NO_PERSONA_KEY }), []);
+});
+
+test("prospectTexts: first names and companies of the rows, blanks left out", () => {
+  assert.deepEqual(prospectTexts([row({ firstName: "Anna", companyName: "Smit" }), row({ firstName: "", companyName: "Acme" })]), ["Anna", "Smit", "Acme"]);
+  assert.deepEqual(prospectTexts([]), []);
+});
+
+// followUpCount: the topbar's number is what the list would show with the page's search and filters.
+const persona = (niche: string, over: object = {}) =>
+  ({ niche, label: niche, companyName: "", category: null, languages: ["en"], source: "manual", liveTokens: 0, ...over }) as any;
+const countSplit = splitRowsByPersona(
+  [
+    row({ key: "r", clientNiche: "robben", firstName: "Anna" }),
+    row({ key: "b", clientNiche: "bakkerij", firstName: "Bo" }),
+    row({ key: "n", clientNiche: "", firstName: "Cas" }),
+    row({ key: "w", publicDemo: true, companyName: "Acme" }),
+  ],
+  ["robben", "bakkerij"],
+);
+const allDots = dotMap([["robben", "reply"], ["bakkerij", "open"], [NO_PERSONA_KEY, "open"], [WEBSITE_KEY, "reply"]]);
+const clients = [persona("robben", { languages: ["nl"] }), persona("bakkerij")];
+
+test("followUpCount: every card with an unseen dot when nothing is filtered", () => {
+  assert.equal(followUpCount(clients, countSplit, allDots, DEFAULT_PERSONA_FILTERS), 4);
+  assert.equal(followUpCount(clients, countSplit, dotMap([["robben", "reply"]]), DEFAULT_PERSONA_FILTERS), 1);
+  assert.equal(followUpCount(clients, countSplit, dotMap([]), DEFAULT_PERSONA_FILTERS), 0);
+});
+
+test("followUpCount: a language filter drops the other personas and both special cards", () => {
+  assert.equal(followUpCount(clients, countSplit, allDots, { ...DEFAULT_PERSONA_FILTERS, lang: "nl" }), 1);
+});
+
+test("followUpCount: a search counts the personas and special cards it would show, prospects included", () => {
+  const search = (q: string) => ({ ...DEFAULT_PERSONA_FILTERS, search: q });
+  assert.equal(followUpCount(clients, countSplit, allDots, search("anna")), 1);
+  assert.equal(followUpCount(clients, countSplit, allDots, search("cas")), 1);
+  assert.equal(followUpCount(clients, countSplit, allDots, search("acme")), 1);
+  assert.equal(followUpCount(clients, countSplit, allDots, search("zzz")), 0);
+});
+
+test("followUpCount: a persona that is not in the list does not count", () => {
+  assert.equal(followUpCount([persona("robben")], countSplit, dotMap([["gone", "reply"]]), DEFAULT_PERSONA_FILTERS), 0);
 });

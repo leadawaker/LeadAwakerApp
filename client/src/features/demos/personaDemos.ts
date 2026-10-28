@@ -1,3 +1,5 @@
+import type { DemoClientSummary } from "../campaigns/api/demoClientsApi";
+import { hasMenuFilters, personaMatches, type PersonaFilters } from "../campaigns/components/clients/personaFilters";
 import type { ProspectRow } from "./prospectRows";
 import type { SeenMap } from "./personaSeen";
 
@@ -97,19 +99,47 @@ export function prospectSummary(rows: ProspectRow[]): ProspectSummary {
   return { prospects: rows.length, replied, opened: rows.filter((r) => r.opened && r.replies === 0).length };
 }
 
+/** What the persona search also looks in for a card: its prospects' first names and companies. */
+export function prospectTexts(rows: readonly ProspectRow[]): string[] {
+  return rows.flatMap((r) => [r.firstName, r.companyName]).filter(Boolean);
+}
+
 /**
- * The special cards the list shows, No persona first. A card needs rows; the persona filters
- * (search, category, language, source) hide both, since neither card has those traits; with
- * Needs follow-up on, a card needs an unseen dot, or to be the one that is open.
+ * The special cards the list shows, No persona first. A card needs rows. A language, source or
+ * category filter hides both (neither card has those traits). A search keeps a card only when
+ * one of its prospects matches it (first name or company), like a persona found through its
+ * prospects. With Needs follow-up on, a card needs an unseen dot, or to be the one that is open.
  */
 export function visibleSpecialKeys(
   split: PersonaRowSplit,
   dots: ReadonlyMap<string, ActivityDot>,
-  opts: { filtersActive: boolean; followUp: boolean; selected: string | null },
+  opts: { filters: PersonaFilters; followUp: boolean; selected: string | null },
 ): SpecialKey[] {
-  if (opts.filtersActive) return [];
+  if (hasMenuFilters(opts.filters)) return [];
+  const q = opts.filters.search.trim().toLowerCase();
   const keys: SpecialKey[] = [NO_PERSONA_KEY, WEBSITE_KEY];
-  return keys.filter(
-    (key) => rowsForKey(split, key).length > 0 && (!opts.followUp || dots.has(key) || opts.selected === key),
-  );
+  return keys.filter((key) => {
+    const rows = rowsForKey(split, key);
+    if (rows.length === 0) return false;
+    if (q && !prospectTexts(rows).some((v) => v.toLowerCase().includes(q))) return false;
+    return !opts.followUp || dots.has(key) || opts.selected === key;
+  });
+}
+
+/**
+ * The number on the Needs follow-up toggle: the cards with an unseen dot that the list shows
+ * under `filters` (personas through personaMatches, prospects' names included; the special
+ * cards through visibleSpecialKeys), so the number equals the cards you get by switching it on.
+ */
+export function followUpCount(
+  clients: readonly DemoClientSummary[],
+  split: PersonaRowSplit,
+  dots: ReadonlyMap<string, ActivityDot>,
+  filters: PersonaFilters,
+): number {
+  const personas = clients.filter(
+    (c) => dots.has(c.niche) && personaMatches(c, filters, prospectTexts(rowsForKey(split, c.niche))),
+  ).length;
+  const specials = visibleSpecialKeys(split, dots, { filters, followUp: true, selected: null }).length;
+  return personas + specials;
 }

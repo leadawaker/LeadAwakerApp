@@ -408,8 +408,8 @@
     "meta": {
       "prospects_one": "{{count}} prospect",
       "prospects_other": "{{count}} prospects",
-      "replied_one": "{{count}} respondeu",
-      "replied_other": "{{count}} responderam",
+      "replies_one": "{{count}} resposta",
+      "replies_other": "{{count}} respostas",
       "opened_one": "{{count}} abriu",
       "opened_other": "{{count}} abriram"
     },

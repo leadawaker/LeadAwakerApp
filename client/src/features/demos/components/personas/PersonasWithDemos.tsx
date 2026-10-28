@@ -1,16 +1,17 @@
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import type { DemoClientSummary } from "@/features/campaigns/api/demoClientsApi";
 import { ClientActionsMenu } from "@/features/campaigns/components/clients/ClientActionsMenu";
 import { ClientEditor } from "@/features/campaigns/components/clients/ClientEditor";
 import { ClientsTab } from "@/features/campaigns/components/clients/ClientsTab";
 import type { PersonaDecoration } from "@/features/campaigns/components/clients/personaDecoration";
-import { hasActiveFilters } from "@/features/campaigns/components/clients/personaFilters";
 import type { PersonaView } from "@/features/campaigns/components/clients/usePersonaView";
 import {
   NO_PERSONA_KEY,
   WEBSITE_KEY,
   isSpecialKey,
   prospectSummary,
+  prospectTexts,
   rowsForKey,
   visibleSpecialKeys,
 } from "../../personaDemos";
@@ -52,8 +53,11 @@ export function PersonasWithDemos({ state, view, data, activity, select, onAddPr
     };
   };
 
+  // The topbar search also finds a persona through its prospects' first names and companies.
+  const searchExtra = useMemo(() => (c: DemoClientSummary) => prospectTexts(rowsForKey(split, c.niche)), [split]);
+
   const special = visibleSpecialKeys(split, dots, {
-    filtersActive: hasActiveFilters(view.filters),
+    filters: view.filters,
     followUp: state.followUp,
     selected: state.selected,
   }).map((key) => ({ key, rows: rowsForKey(split, key), dot: dots.get(key) ?? null }));
@@ -103,6 +107,7 @@ export function PersonasWithDemos({ state, view, data, activity, select, onAddPr
       decorate={decorate}
       onlyNiches={state.followUp ? followUp : null}
       onlyNichesEmpty={t("merge.followUpEmpty")}
+      searchExtra={searchExtra}
       // null (not an empty element) when there is nothing: an element would hide ClientsTab's no-match state.
       trailing={(layout) =>
         special.length === 0 ? null : (

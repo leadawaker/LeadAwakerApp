@@ -41,6 +41,17 @@ test("search covers niche, label, company and category, ignoring case and paddin
   assert.equal(personaMatches(c, { ...DEFAULT_PERSONA_FILTERS, search: "bakery" }), false);
 });
 
+test("extra texts (a persona's prospects) also match the search, and only the search", () => {
+  const search = (q: string) => ({ ...DEFAULT_PERSONA_FILTERS, search: q });
+  assert.equal(personaMatches(c, search("anna"), ["Anna", "Smit Dental"]), true);
+  assert.equal(personaMatches(c, search("  SMIT "), ["Anna", "Smit Dental"]), true);
+  assert.equal(personaMatches(c, search("zoe"), ["Anna", "Smit Dental"]), false);
+  assert.equal(personaMatches(c, search("meure"), ["Anna"]), true);
+  assert.equal(personaMatches(c, DEFAULT_PERSONA_FILTERS, ["Anna"]), true);
+  // Language, source and category still apply to a persona found through a prospect.
+  assert.equal(personaMatches(c, { ...search("anna"), lang: "en" }, ["Anna"]), false);
+});
+
 test("all four filters combine", () => {
   const f = { search: "meure", category: "Automotive", lang: "nl", source: "website" } as const;
   assert.equal(personaMatches(c, f), true);

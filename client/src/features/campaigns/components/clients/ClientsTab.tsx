@@ -19,8 +19,9 @@
  * The Demos page also owns what the open panel holds (`renderPanel`: a persona's Demos
  * tab and the special No persona / Website visitors panels), what each card shows besides
  * the persona itself (`decorate`: prospect count, activity dot), a group of its own after
- * the personas (`trailing`) and a "needs follow-up" narrowing (`onlyNiches`). The
- * Campaigns page passes none of these and gets the plain list and editor.
+ * the personas (`trailing`), a "needs follow-up" narrowing (`onlyNiches`) and what the search
+ * also looks in (`searchExtra`: a persona's prospects). The Campaigns page passes none of
+ * these and gets the plain list and editor.
  *
  * The filters and the grouping follow the same split: the Demos page owns them
  * (`view`) and shows them in its topbar (ClientsTopbarActions); with no `view`,
@@ -60,6 +61,7 @@ export function ClientsTab({
   decorate,
   onlyNiches,
   onlyNichesEmpty,
+  searchExtra,
   trailing,
   renderPanel,
 }: {
@@ -75,6 +77,8 @@ export function ClientsTab({
   onlyNiches?: ReadonlySet<string> | null;
   /** The no-match body while `onlyNiches` hides every persona and no filter is active. */
   onlyNichesEmpty?: string;
+  /** More text the search matches for a persona (the Demos page: its prospects' names). Must be memoized: it is a memo dependency. */
+  searchExtra?: (c: DemoClientSummary) => readonly string[];
   /** Rendered after the groups, in both layouts (the Demos page's No persona / Website visitors group). Return null for nothing. */
   trailing?: (layout: ListLayout) => ReactNode;
   /** Replaces the default panel content (ClientEditor + ClientActionsMenu). `close` calls onSelectNiche(null). */
@@ -92,9 +96,15 @@ export function ClientsTab({
   const all = clients ?? [];
   const langCounts = useMemo(() => languageCounts(all), [clients]);
   const categories = useMemo(() => personaCategories(all), [clients]);
+  const searching = filters.search.trim() !== "";
   const filtered = useMemo(
-    () => all.filter((c) => personaMatches(c, filters) && (!onlyNiches || onlyNiches.has(c.niche) || c.niche === selectedNiche)),
-    [clients, filters, onlyNiches, selectedNiche],
+    () =>
+      all.filter(
+        (c) =>
+          personaMatches(c, filters, searching ? searchExtra?.(c) : undefined) &&
+          (!onlyNiches || onlyNiches.has(c.niche) || c.niche === selectedNiche),
+      ),
+    [clients, filters, searching, searchExtra, onlyNiches, selectedNiche],
   );
   const groups = useMemo(() => groupPersonas(filtered, groupBy, { locale: i18n.language }), [filtered, groupBy, i18n.language]);
 

@@ -120,16 +120,19 @@ export interface DemoClientPatch {
 
 export const CLIENTS_KEY = ["/api/demo/clients"];
 
+/** The persona list's query, shared by the hook and by callers that must fetch it now (queryClient.fetchQuery). */
+export const demoClientsQuery = {
+  queryKey: CLIENTS_KEY,
+  queryFn: async (): Promise<DemoClientSummary[]> => {
+    const res = await apiFetch("/api/demo/clients");
+    if (!res.ok) throw new Error("Failed to load Clients");
+    return (await res.json()).clients ?? [];
+  },
+  staleTime: 60 * 1000,
+};
+
 export function useDemoClients() {
-  return useQuery<DemoClientSummary[]>({
-    queryKey: CLIENTS_KEY,
-    queryFn: async () => {
-      const res = await apiFetch("/api/demo/clients");
-      if (!res.ok) throw new Error("Failed to load Clients");
-      return (await res.json()).clients ?? [];
-    },
-    staleTime: 60 * 1000,
-  });
+  return useQuery<DemoClientSummary[]>(demoClientsQuery);
 }
 
 export function useDemoClient(niche: string | null) {

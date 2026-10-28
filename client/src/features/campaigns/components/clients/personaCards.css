@@ -51,8 +51,8 @@
 .dp-card .dp-title-line { align-items: flex-start; gap: 6px; }
 .dp-card .dp-live { margin-top: 3px; }
 /* Activity dot in the corner; the name keeps clear of it. */
-.dp-card .dp-dot { position: absolute; top: 12px; right: 12px; }
-.dp-card:has(.dp-dot) .dp-who { padding-right: 14px; }
+.dp-card .dp-dot--reply, .dp-card .dp-dot--open { position: absolute; top: 12px; right: 12px; }
+.dp-card:has(.dp-dot--reply, .dp-dot--open) .dp-who { padding-right: 14px; }
 .dp-card .dp-meta { margin-top: 6px; }
 .dp-card .dp-open .dp-name {
   display: -webkit-box;

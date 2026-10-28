@@ -19,7 +19,11 @@ export interface PersonaFilters {
 
 export const DEFAULT_PERSONA_FILTERS: PersonaFilters = { search: "", category: "", lang: "all", source: "all" };
 
-export function personaMatches(c: DemoClientSummary, f: PersonaFilters): boolean {
+/**
+ * `extraTexts` is more text the search also looks in (the Demos page passes a persona's
+ * prospects: first names and companies). The other filters ignore it.
+ */
+export function personaMatches(c: DemoClientSummary, f: PersonaFilters, extraTexts: readonly string[] = []): boolean {
   if (f.lang !== "all" && !c.languages.includes(f.lang)) return false;
   if (f.source !== "all" && c.source !== f.source) return false;
   if (f.category && (c.category ?? "").trim() !== f.category) return false;
@@ -29,7 +33,8 @@ export function personaMatches(c: DemoClientSummary, f: PersonaFilters): boolean
     c.niche.toLowerCase().includes(q) ||
     c.label.toLowerCase().includes(q) ||
     c.companyName.toLowerCase().includes(q) ||
-    (c.category ?? "").toLowerCase().includes(q)
+    (c.category ?? "").toLowerCase().includes(q) ||
+    extraTexts.some((v) => v.toLowerCase().includes(q))
   );
 }
 

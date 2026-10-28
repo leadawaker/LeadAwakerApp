@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { CLIENTS_KEY } from "@/features/campaigns/api/demoClientsApi";
 import type { DemoDraft } from "../../createDraft";
 import { buildFromNiche, saveScanReview, scanWebsite, type ScanResult } from "../../api/demoScanApi";
 import { TOUCH_ROW } from "../../touchTargets";
@@ -43,6 +45,7 @@ export function WebsiteScanFields({ draft, update, updateIf, isCurrent, onBuilt 
 }) {
   const { t } = useTranslation("demos");
   const gen = useGenProvider();
+  const qc = useQueryClient();
   const [busy, setBusy] = useState<{ action: Action; startedAt: number } | null>(null);
   const [failure, setFailure] = useState<Failure | null>(null);
   const working = busy !== null;
@@ -54,6 +57,10 @@ export function WebsiteScanFields({ draft, update, updateIf, isCurrent, onBuilt 
     provider: gen.provider,
     ...(gen.provider === "claude" ? { claudeModel: gen.claudeModel } : {}),
   });
+
+  // A scan, a niche build and a review save all create or change a persona: the cached list (60s) would
+  // not show it, so the picker and the Demos page would miss it. Done whatever happens to the draft meanwhile.
+  const personaChanged = () => void qc.invalidateQueries({ queryKey: CLIENTS_KEY });
 
   const finishScan = (group: string, language: DemoDraft["language"], r: ScanResult) => {
     if (!r.saved) {
@@ -75,12 +82,15 @@ export function WebsiteScanFields({ draft, update, updateIf, isCurrent, onBuilt 
     try {
       if (action === "scan") {
         const r = await scanWebsite({ ...generateOptions(), url: draft.websiteUrl.trim() });
+        if (r.saved) personaChanged();
         if (isCurrent(group)) finishScan(group, language, r);
       } else if (action === "notes") {
         const r = await scanWebsite({ ...generateOptions(), text: draft.notes.trim() });
+        if (r.saved) personaChanged();
         if (isCurrent(group)) finishScan(group, language, r);
       } else if (action === "niche") {
         const r = await buildFromNiche({ ...generateOptions(), niche: draft.nicheText.trim() });
+        if (r.saved) personaChanged();
         if (!isCurrent(group)) return;
         // Nothing was stored: keep the draft and say so, rather than selecting a Client that is not there.
         if (r.saved) onBuilt(r.client);
@@ -88,6 +98,7 @@ export function WebsiteScanFields({ draft, update, updateIf, isCurrent, onBuilt 
       } else if (action === "save" && draft.review) {
         const { client, language: lang, summary, products, city, stockUrl } = draft.review;
         await saveScanReview(client, lang, { summary, products, city, stockUrl });
+        personaChanged();
         if (isCurrent(group)) onBuilt(client);
       }
     } catch (e) {

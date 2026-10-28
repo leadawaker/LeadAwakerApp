@@ -1,9 +1,10 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Settings, Users } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { PageTopbar, TopbarTabs, type TopbarTab } from "@/components/crm/primitives";
 import { useLastTab } from "@/hooks/useLastTab";
-import { useDemoClients } from "@/features/campaigns/api/demoClientsApi";
+import { demoClientsQuery, useDemoClients } from "@/features/campaigns/api/demoClientsApi";
 // The persona library lives here rather than on the Campaigns page: a persona is
 // a demo persona, not a campaign setting, and this is where demos are made.
 import { usePersonaView } from "@/features/campaigns/components/clients/usePersonaView";
@@ -33,8 +34,9 @@ function DemosContent() {
   const data = useProspectData();
   const personaView = usePersonaView();
   const seen = usePersonaSeen();
-  const { data: clients } = useDemoClients();
-  const activity = usePersonaActivity(data.rows, clients, seen.seen);
+  const qc = useQueryClient();
+  const { data: clients, isLoading: clientsLoading } = useDemoClients();
+  const activity = usePersonaActivity(data.rows, clients, seen.seen, personaView.filters, clientsLoading);
 
   // Opening a card clears its dot; closing it too, so activity that came in while it was open counts as seen.
   const select = (key: string | null) => {
@@ -46,10 +48,16 @@ function DemosContent() {
     draft.update({ mode: "existing", clientNiche });
     state.setPanel({ kind: "create" });
   };
-  // The new row's card opens with the row highlighted; a persona that no longer exists files it under No persona.
-  const onAdded = (group: string, clientNiche: string) => {
+  // The new row's card opens with the row highlighted. A persona the create flow just built may not be in
+  // the cached list yet: fetch the list first, so the row is not filed under No persona. A persona that
+  // is still missing after that (deleted meanwhile) files the row under No persona.
+  const onAdded = async (group: string, clientNiche: string) => {
     state.flash(group, FLASH_WAIT_MS);
-    select(clientNiche && clients?.some((c) => c.niche === clientNiche) ? clientNiche : NO_PERSONA_KEY);
+    let list = clients;
+    if (clientNiche && !list?.some((c) => c.niche === clientNiche)) {
+      list = await qc.fetchQuery({ ...demoClientsQuery, staleTime: 0 }).catch(() => list);
+    }
+    select(clientNiche && list?.some((c) => c.niche === clientNiche) ? clientNiche : NO_PERSONA_KEY);
   };
 
   const tabs: TopbarTab<Tab>[] = [
@@ -73,7 +81,7 @@ function DemosContent() {
             <DemosTopbarActions
               view={personaView}
               followUp={state.followUp}
-              followUpCount={activity.followUp.size}
+              followUpCount={activity.followUpCount}
               onFollowUp={state.setFollowUp}
               onNewDemo={() => state.setPanel({ kind: "create" })}
             />
