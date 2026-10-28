@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import { IconBtn } from "@/components/ui/icon-btn";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useSetWidgetColor, useWidgetColors } from "../api/demoSettingsApi";
 
@@ -39,14 +40,9 @@ export function WidgetColorSwatch({ niche }: { niche: string }) {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          title={t("widgetColor.title")}
-          aria-label={t("widgetColor.title")}
-          className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-muted"
-        >
-          {set.isPending ? <Loader2 className="h-3 w-3 animate-spin" style={{ color: "var(--mute-2)" }} /> : <Dot color={current} size={13} />}
-        </button>
+        <IconBtn title={t("widgetColor.title")} aria-label={t("widgetColor.title")} className="max-md:h-11 max-md:w-11">
+          {set.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "var(--mute-2)" }} /> : <Dot color={current} size={16} />}
+        </IconBtn>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[220px] p-3">
         <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}>{t("widgetColor.title")}</div>

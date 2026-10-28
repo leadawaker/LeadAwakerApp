@@ -7,6 +7,7 @@
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import { IconBtn } from "@/components/ui/icon-btn";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Switch } from "@/components/ui/switch";
 import { businessInitials } from "@/lib/businessInitials";
@@ -84,14 +85,9 @@ export function ClientLogoSwatch({ niche }: { niche: string }) {
   return (
     <Popover open={open} onOpenChange={(o) => { setOpen(o); if (!o) setError(""); }}>
       <PopoverTrigger asChild>
-        <button
-          type="button"
-          title={t("clientLogo.title")}
-          aria-label={t("clientLogo.title")}
-          className="inline-flex h-6 w-6 items-center justify-center rounded hover:bg-muted"
-        >
-          {busy ? <Loader2 className="h-3 w-3 animate-spin" style={{ color: "var(--mute-2)" }} /> : <Avatar logo={shown} name={name} size={15} />}
-        </button>
+        <IconBtn title={t("clientLogo.title")} aria-label={t("clientLogo.title")} className="max-md:h-11 max-md:w-11">
+          {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" style={{ color: "var(--mute-2)" }} /> : <Avatar logo={shown} name={name} size={20} />}
+        </IconBtn>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-[260px] p-3">
         <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)" }}>{t("clientLogo.title")}</div>

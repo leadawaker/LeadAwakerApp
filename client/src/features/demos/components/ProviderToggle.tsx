@@ -40,14 +40,6 @@ export function useGenProvider() {
   };
 }
 
-/** "via Claude Sonnet" / "via OpenAI", from the server's provider_used. */
-export function providerLabel(used: string | undefined): string {
-  if (used === "claude-opus") return "Claude Opus";
-  if (used === "claude-sonnet") return "Claude Sonnet";
-  if (used === "openai") return "OpenAI";
-  return "";
-}
-
 const segBtn = (active: boolean): React.CSSProperties => ({
   height: 26,
   padding: "0 10px",
@@ -64,7 +56,7 @@ const segBtn = (active: boolean): React.CSSProperties => ({
 export function ProviderToggle({ gen, disabled }: { gen: ReturnType<typeof useGenProvider>; disabled?: boolean }) {
   const { t } = useTranslation("demos");
   return (
-    <div className="flex items-center gap-2" style={{ opacity: disabled ? 0.5 : 1 }}>
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-1.5" style={{ opacity: disabled ? 0.5 : 1 }}>
       <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mute)" }}>{t("new.provider")}</span>
       <div
         role="radiogroup"

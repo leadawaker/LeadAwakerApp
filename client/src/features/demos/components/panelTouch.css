@@ -1,0 +1,13 @@
+/*
+ * RightPanel's close button is a 36px IconBtn, and the primitive passes no class to it. On a
+ * phone it renders full screen in a portal and ignores `className` entirely, so a class on the
+ * panel cannot reach it. These two Demos panels are matched by their test id instead: the header
+ * is the shell's first child and the close button is its direct child. Phones only (below 768px).
+ */
+@media (width < 48rem) {
+  [data-testid="create-demo-panel"] > div:first-child > button,
+  [data-testid="prospect-detail-panel"] > div:first-child > button {
+    height: 2.75rem;
+    width: 2.75rem;
+  }
+}
