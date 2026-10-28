@@ -108,12 +108,12 @@ async function main(): Promise<number> {
     console.log(`  ${t.row.niche} | ${t.row.websiteUrl} | languages: ${langs} | empty: ${describeGaps(t.gaps)}`);
   }
 
-  if (!args.execute) return 0;
-
   console.warn(
-    "WARNING: this needs the Task 6 engine change live first (the /api/site-kb answer must carry products, " +
+    "WARNING: --execute needs the Task 6 engine change live first (the /api/site-kb answer must carry products, " +
       "stock_url and city). Each scan costs a site fetch and model calls; Clients with nothing empty are skipped.",
   );
+  if (!args.execute) return 0;
+
   if (args.confirm !== targets.length) {
     console.error(`Refusing to re-scan: ${targets.length} clients are planned, so pass --execute --confirm=${targets.length}.`);
     return 1;
