@@ -1,20 +1,7 @@
-// The Demos page's filter, sort and group rules. Pure: no React, no api imports.
-import { buildEntityRows } from "@/components/crm/entityList/buildEntityRows";
+// The Demos tab table's sort and group rules. Pure: no React, no api imports.
 import { groupByDate, type DateGroup } from "@/features/voiceCalls/dateGroups";
 import { linkStatus, type LinkStatus, type ProspectRow } from "./prospectRows";
 import { LINK_COLUMNS, type LinkColumn } from "./tableColumns";
-
-export type ActivityFilter = "all" | "opened" | "replied" | "never";
-
-/** "" means any. */
-export interface SessionFilters {
-  activity: ActivityFilter;
-  expired: boolean;
-  client: string;
-  service: string;
-}
-
-export const DEFAULT_FILTERS: SessionFilters = { activity: "all", expired: false, client: "", service: "" };
 
 /** A sortable column: the lead columns, the two dates, and one per link column. */
 export type SortKey = "sent" | "prospect" | "company" | "lastActivity" | LinkColumn["key"];
@@ -27,31 +14,6 @@ export interface SessionSort {
 /** Newest sent first: the order the page opens in, and the one date groups belong to. */
 export const DEFAULT_SORT: SessionSort = { key: "sent", dir: "desc" };
 
-/** The keys the topbar Sort menu lists (the link columns sort from their headers only). */
-export const MENU_SORT_KEYS: readonly SortKey[] = ["sent", "prospect", "company", "lastActivity"];
-
-export function isFilterActive(f: SessionFilters): boolean {
-  return f.activity !== "all" || f.expired || f.client !== "" || f.service !== "";
-}
-
-/**
- * Builder decision 14: by default a row whose links are all expired is hidden;
- * the Expired filter shows only those. A row with no links yet always shows
- * (unless the Expired filter is on), and "never opened" means a link was sent
- * and not opened.
- */
-export function rowMatches(row: ProspectRow, f: SessionFilters, search: string): boolean {
-  if (f.expired ? !row.expired : row.expired) return false;
-  if (f.activity === "opened" && !row.opened) return false;
-  if (f.activity === "replied" && row.replies === 0) return false;
-  if (f.activity === "never" && !(row.hasLinks && !row.opened)) return false;
-  if (f.client && row.clientNiche !== f.client) return false;
-  if (f.service && !row.byService[f.service]) return false;
-  const q = search.trim().toLowerCase();
-  if (!q) return true;
-  return [row.firstName, row.companyName, row.clientNiche].some((v) => v.toLowerCase().includes(q));
-}
-
 const TEXT_KEYS: readonly SortKey[] = ["prospect", "company"];
 
 /** Where a column starts when first clicked: text A to Z, dates and link progress furthest or newest first. */
@@ -63,11 +25,6 @@ function firstDir(key: SortKey): SortDir {
 export function nextSort(current: SessionSort, key: SortKey): SessionSort {
   if (current.key === key) return { key, dir: current.dir === "asc" ? "desc" : "asc" };
   return { key, dir: firstDir(key) };
-}
-
-/** Picking a column from the Sort menu: the column that is already sorted keeps its direction, a new one starts in its natural one. */
-export function withSortKey(current: SessionSort, key: SortKey): SessionSort {
-  return current.key === key ? current : { key, dir: firstDir(key) };
 }
 
 export function ariaSort(sort: SessionSort, key: SortKey): "ascending" | "descending" | "none" {
@@ -129,20 +86,7 @@ export function compareRows(sort: SessionSort): (a: ProspectRow, b: ProspectRow)
   };
 }
 
-/** The table's rows: filtered and sorted, flat. */
-export function visibleRows(rows: ProspectRow[], f: SessionFilters, search: string, sort: SessionSort): ProspectRow[] {
-  return buildEntityRows<ProspectRow, ProspectRow>({
-    items: rows,
-    predicate: (r) => rowMatches(r, f, search),
-    comparator: compareRows(sort),
-    makeHeader: () => {
-      throw new Error("a flat list has no group headers");
-    },
-    makeItem: (r) => r,
-  });
-}
-
-/** The table shows date groups only while sorted by Sent; any other column shows a flat list. The cards always group. */
+/** The table shows date groups only while sorted by Sent; any other column shows a flat list. */
 export function groupsByDate(sort: SessionSort): boolean {
   return sort.key === "sent";
 }

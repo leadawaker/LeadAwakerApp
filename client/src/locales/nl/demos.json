@@ -2,47 +2,13 @@
   "title": "Demo's",
   "subtitle": "Elke demolink die je hebt aangemaakt, en hoe ver elke prospect kwam.",
   "tabs": {
-    "sessions": "Sessies",
-    "clients": "Demo-persona's",
     "personas": "Persona's",
     "settings": "Instellingen"
   },
   "sessions": {
-    "searchPlaceholder": "Zoek prospects...",
-    "filter": "Filter",
-    "sort": "Sorteren",
-    "newDemo": "Nieuwe demo",
-    "groups": {
-      "activity": "Activiteit",
-      "client": "Client",
-      "type": "Demotype"
-    },
-    "activity": {
-      "all": "Alles",
-      "opened": "Geopend",
-      "replied": "Gereageerd",
-      "never": "Nooit geopend"
-    },
-    "expired": "Alleen verlopen",
-    "anyClient": "Elke client",
-    "anyType": "Elk demotype",
-    "noMatches": "Geen prospects gevonden",
-    "clearFilters": "Filters wissen",
-    "expiredHidden": "Verlopen links zijn verborgen. Zet Alleen verlopen aan in het filter om ze te zien."
-  },
-  "folders": {
-    "noLinks": "Nog geen links",
-    "otherLinks_one": "+{{count}} andere link",
-    "otherLinks_other": "+{{count}} andere links"
+    "newDemo": "Nieuwe demo"
   },
   "listView": {
-    "switchAria": "Weergave",
-    "table": "Tabel",
-    "cards": "Kaarten",
-    "direction": {
-      "asc": "Oplopend",
-      "desc": "Aflopend"
-    },
     "groups": {
       "today": "Vandaag",
       "yesterday": "Gisteren",
@@ -76,7 +42,6 @@
     "site": "Site",
     "prospect": "Prospect",
     "company": "Bedrijf",
-    "client": "Client",
     "language": "Taal",
     "mode": "Scenario",
     "browser": "Browser",
@@ -86,7 +51,6 @@
     "other": "Overig",
     "editHint": "Klik om te bewerken",
     "websitePill": "Website",
-    "websitePillHint": "Gestart door een bezoeker op leadawaker.com",
     "none": "-",
     "lastActivity": "Laatste activiteit",
     "sent": "Verstuurd",
@@ -145,10 +109,6 @@
   "common": {
     "cancel": "Annuleren",
     "retry": "Opnieuw proberen"
-  },
-  "empty": {
-    "title": "Nog geen demo's",
-    "body": "Voeg een prospect toe met + Nieuwe demo en maak daarna links aan vanuit de tabel."
   },
   "error": {
     "load": "Kon de demosessies niet laden."

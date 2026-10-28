@@ -2,47 +2,13 @@
   "title": "Demos",
   "subtitle": "Todos os links de demo que você gerou, e até onde cada prospect chegou.",
   "tabs": {
-    "sessions": "Sessões",
-    "clients": "Personas de demo",
     "personas": "Personas",
     "settings": "Configurações"
   },
   "sessions": {
-    "searchPlaceholder": "Buscar prospects...",
-    "filter": "Filtrar",
-    "sort": "Ordenar",
-    "newDemo": "Nova demo",
-    "groups": {
-      "activity": "Atividade",
-      "client": "Client",
-      "type": "Tipo de demo"
-    },
-    "activity": {
-      "all": "Todas",
-      "opened": "Abertas",
-      "replied": "Com resposta",
-      "never": "Nunca abertas"
-    },
-    "expired": "Só expiradas",
-    "anyClient": "Qualquer client",
-    "anyType": "Qualquer tipo de demo",
-    "noMatches": "Nenhum prospect encontrado",
-    "clearFilters": "Limpar filtros",
-    "expiredHidden": "Links expirados ficam ocultos. Ative Só expiradas no filtro para vê-los."
-  },
-  "folders": {
-    "noLinks": "Nenhum link ainda",
-    "otherLinks_one": "+{{count}} outro link",
-    "otherLinks_other": "+{{count}} outros links"
+    "newDemo": "Nova demo"
   },
   "listView": {
-    "switchAria": "Visualização",
-    "table": "Tabela",
-    "cards": "Cards",
-    "direction": {
-      "asc": "Crescente",
-      "desc": "Decrescente"
-    },
     "groups": {
       "today": "Hoje",
       "yesterday": "Ontem",
@@ -76,7 +42,6 @@
     "site": "Site",
     "prospect": "Prospect",
     "company": "Empresa",
-    "client": "Client",
     "language": "Idioma",
     "mode": "Cenário",
     "browser": "Navegador",
@@ -86,7 +51,6 @@
     "other": "Outros",
     "editHint": "Clique para editar",
     "websitePill": "Site",
-    "websitePillHint": "Iniciada por um visitante em leadawaker.com",
     "none": "-",
     "lastActivity": "Última atividade",
     "sent": "Enviado",
@@ -145,10 +109,6 @@
   "common": {
     "cancel": "Cancelar",
     "retry": "Tentar de novo"
-  },
-  "empty": {
-    "title": "Nenhuma demo ainda",
-    "body": "Adicione um prospect com + Nova demo e depois gere os links pela tabela."
   },
   "error": {
     "load": "Não foi possível carregar as sessões de demo."

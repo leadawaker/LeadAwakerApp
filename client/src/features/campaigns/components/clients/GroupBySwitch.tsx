@@ -7,7 +7,7 @@ import type { GroupBy } from "./personaView";
  * Category | Date: how the persona list is sectioned. The same pill switch as the
  * Calls page's Live | Demo; below 768px its items grow to the page's 44px target.
  * `compact` (default on) is the 30px track; the Demos topbar passes it off on a desktop
- * so this switch is the same size as the Sessions tab's Table | Cards.
+ * for the regular-size track.
  */
 export function GroupBySwitch({ value, onChange, compact = true }: { value: GroupBy; onChange: (next: GroupBy) => void; compact?: boolean }) {
   const { t } = useTranslation("demos");

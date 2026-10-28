@@ -69,6 +69,7 @@ export function PersonasWithDemos({ state, view, data, activity, select, onAddPr
         sort={state.sort}
         onSort={(k) => state.setSort(nextSort(state.sort, k))}
         highlightKey={state.highlightKey}
+        onHighlightShown={state.flash}
         onOpenRow={(rowKey) => state.setPanel({ kind: "detail", key: rowKey })}
         onAddProspect={website ? undefined : () => onAddProspect(key === NO_PERSONA_KEY ? "" : key)}
         emptyText={website ? t("merge.demosTab.emptyWebsite") : t("merge.demosTab.empty")}

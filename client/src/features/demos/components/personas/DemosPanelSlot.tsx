@@ -12,7 +12,7 @@ import type { DemosPanel } from "./useDemosPageState";
 export function DemosPanelSlot({ panel, onClose, draft, rows, onAdded }: {
   panel: DemosPanel;
   onClose: () => void;
-  /** The page's one useDemoDraft() result (R22). */
+  /** The page's one useDemoDraft result (R22). */
   draft: ReturnType<typeof useDemoDraft>;
   /** Every prospect row: ProspectDetailPanel looks its row up here. */
   rows: ProspectRow[];

@@ -1,4 +1,4 @@
-import { useMemo, type ReactNode } from "react";
+import { useEffect, useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import { SectionCard } from "@/components/crm/primitives";
@@ -24,7 +24,7 @@ function Message({ text, children }: { text: string; children?: ReactNode }) {
  * the Demos table, with "+ Add prospect". All rows show, expired ones too (their link pills say
  * so). Searching and filtering the cards happens on the list, not here.
  */
-export function PersonaDemosTab({ rows, isLoading, error, onRetry, sort, onSort, highlightKey, onOpenRow, onAddProspect, emptyText }: {
+export function PersonaDemosTab({ rows, isLoading, error, onRetry, sort, onSort, highlightKey, onHighlightShown, onOpenRow, onAddProspect, emptyText }: {
   /** This card's rows, unsorted. */
   rows: ProspectRow[];
   isLoading: boolean;
@@ -33,6 +33,8 @@ export function PersonaDemosTab({ rows, isLoading, error, onRetry, sort, onSort,
   sort: SessionSort;
   onSort: (key: SortKey) => void;
   highlightKey: string | null;
+  /** Called when the highlighted row is in the table, so the page can start the highlight timer from then. */
+  onHighlightShown?: (rowKey: string) => void;
   onOpenRow: (rowKey: string) => void;
   /** Omit for Website visitors: visitors start those demos themselves. */
   onAddProspect?: () => void;
@@ -41,6 +43,13 @@ export function PersonaDemosTab({ rows, isLoading, error, onRetry, sort, onSort,
   const { t } = useTranslation("demos");
   const sorted = useMemo(() => [...rows].sort(compareRows(sort)), [rows, sort]);
   const groups = useDateGroups(sorted, sort, groupsByDate(sort));
+
+  // A row just added: the card may have opened before its table (persona skeleton, refetch), so the highlight clock starts here.
+  const highlightShown = highlightKey !== null && !isLoading && !error && rows.some((r) => r.key === highlightKey);
+  useEffect(() => {
+    if (highlightShown && highlightKey) onHighlightShown?.(highlightKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [highlightShown, highlightKey]);
 
   const addButton = onAddProspect && (
     <button

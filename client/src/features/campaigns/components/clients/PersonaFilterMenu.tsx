@@ -24,7 +24,7 @@ const ANY_CATEGORY = "__any__";
 
 /**
  * The Filter menu of the Demos topbar for the persona list: language, source and
- * category, in the shape of the Sessions page's menu. The trigger is the caller's.
+ * category, as a dropdown menu. The trigger is the caller's.
  */
 export function PersonaFilterMenu({ filters, onChange, categories, counts }: {
   filters: PersonaFilters;

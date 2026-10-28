@@ -10,10 +10,10 @@ import { hasMenuFilters, languageCounts, personaCategories } from "./personaFilt
 import type { PersonaView } from "./usePersonaView";
 
 /**
- * The Demo personas tab's part of the Demos PageTopbar `right` slot, in the order the
- * Sessions tab uses: search, then the Filter menu. The Category | Date switch is not here:
- * it sits in the left group after the tabs, where the Sessions tab keeps its view switch
- * (DemosViewSwitch). `view` is the page's one usePersonaView() call, shared with the list.
+ * The Personas tab's part of the Demos PageTopbar `right` slot: search, then the Filter menu
+ * (the page adds Needs follow-up before them and + New Demo after). The Category | Date switch
+ * is not here: it sits in the left group after the tabs (DemosViewSwitch). `view` is the
+ * page's one usePersonaView() call, shared with the list.
  */
 export function ClientsTopbarActions({ view }: { view: PersonaView }) {
   const { t } = useTranslation("campaigns");
