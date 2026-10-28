@@ -5,6 +5,8 @@ import { apiFetch } from "@/lib/apiUtils";
 
 export interface ScanResult {
   client: string;
+  /** False when the server could not store the Client (the review step would then have nothing to save onto). */
+  saved: boolean;
   languages: DemoLang[];
   pages_scraped: string[];
   provider_used: string;
@@ -50,6 +52,7 @@ export async function scanWebsite(body: GenerateOptions & { url?: string; text?:
   const d = await call("POST", "/api/demo/clients/from-website", body);
   return {
     client: text(d.client),
+    saved: d.saved !== false,
     languages: list<DemoLang>(d.languages),
     pages_scraped: list<string>(d.pages_scraped),
     provider_used: text(d.provider_used),
@@ -62,10 +65,10 @@ export async function scanWebsite(body: GenerateOptions & { url?: string; text?:
   };
 }
 
-/** Generate and save a Client from a typed niche. */
-export async function buildFromNiche(body: GenerateOptions & { niche: string }): Promise<{ client: string }> {
+/** Generate and save a Client from a typed niche. `saved` is false when the server answered but stored nothing. */
+export async function buildFromNiche(body: GenerateOptions & { niche: string }): Promise<{ client: string; saved: boolean }> {
   const d = await call("POST", "/api/demo/clients/from-niche", body);
-  return { client: text(d.client) };
+  return { client: text(d.client), saved: d.saved === true };
 }
 
 /** The review step's "Save client": the edited summary, products, city and stock URL onto the saved Client. */

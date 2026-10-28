@@ -1,13 +1,12 @@
 import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
-import { RightPanel } from "@/components/crm/primitives";
 import type { ProspectRow } from "../../prospectRows";
 import { DEFAULT_FILTERS, isFilterActive, visibleRows } from "../../sessionsView";
 import type { useDemoDraft } from "../../useDemoDraft";
 import { TOUCH_ROW } from "../../touchTargets";
 import { DemosLoading } from "../DemosLoading";
-import { NewDemoForm } from "../NewDemoForm";
+import { CreateDemoPanel } from "../create/CreateDemoPanel";
 import { SessionsTable } from "../table/SessionsTable";
 import type { SessionsState } from "./useSessionsState";
 
@@ -26,19 +25,21 @@ function StateMessage({ title, body, children }: { title?: string; body?: string
 
 /**
  * The right-hand column (R10): one panel at a time, mounted beside the content so the
- * full-height chain stays intact. Task 16 renders CreateDemoPanel for `create` (with
- * `draft`, R22) and Task 17 renders ProspectDetailPanel for `detail`; both replace the
- * branches below.
+ * full-height chain stays intact. `create` renders CreateDemoPanel with the draft DemosPage
+ * owns (R22); Task 17 renders ProspectDetailPanel for `detail`.
  */
-function PanelSlot({ state }: { state: SessionsState; draft: ReturnType<typeof useDemoDraft> }) {
-  const { t } = useTranslation("demos");
+function PanelSlot({ state, draft }: { state: SessionsState; draft: ReturnType<typeof useDemoDraft> }) {
   const close = () => state.setPanel(null);
   if (state.panel?.kind === "create") {
-    // Temporary until Task 16: the existing form keeps its input in local state, so Escape must not close it.
     return (
-      <RightPanel title={t("sessions.newDemo")} onClose={close} footer={null} closeOnEscape={false} className="w-[480px]">
-        <NewDemoForm />
-      </RightPanel>
+      <CreateDemoPanel
+        draft={draft.draft}
+        update={draft.update}
+        clear={draft.clear}
+        markAdded={draft.markAdded}
+        onClose={close}
+        onAdded={state.flash}
+      />
     );
   }
   return null;

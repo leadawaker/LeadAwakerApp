@@ -116,7 +116,7 @@ export function RightPanel({
           {icon && <div className="shrink-0 mt-0.5">{icon}</div>}
           <div className="min-w-0">
             <h2 className="text-xl font-bold text-foreground font-heading leading-tight truncate">{title}</h2>
-            {subtitle && <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>}
+            {subtitle && <div className="text-xs text-muted-foreground mt-1">{subtitle}</div>}
           </div>
         </div>
         <IconBtn onClick={onClose} aria-label={t("actions.close")} title={t("actions.close")}>

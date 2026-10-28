@@ -44,7 +44,7 @@ function DemosContent() {
       <PageTopbar
         title={t("title")}
         scroll
-        left={<TopbarTabs tabs={tabs} value={tab} onChange={setTab} />}
+        left={<TopbarTabs tabs={tabs} value={tab} onChange={setTab} className="max-md:[&_.la-seg-btn]:min-h-11" />}
         right={
           tab === "sessions" ? (
             <SessionsTopbarActions state={state} clients={data.clients} onRefresh={data.refresh} refreshing={data.refreshing} />

@@ -38,11 +38,20 @@ test("a failed scan throws the server's message with retryable copied on", async
   await assert.rejects(scanWebsite({ language: "en", provider: "claude" }), /Request failed \(500\)/);
 });
 
-test("buildFromNiche posts to from-niche and returns the client key", async () => {
+test("buildFromNiche posts to from-niche and returns the client key and whether it was stored", async () => {
   const calls = stubFetch(200, { client: "Dog groomer", saved: true, provider_used: "claude" });
-  assert.deepEqual(await buildFromNiche({ niche: "Dog groomer", language: "en", market: "uk", provider: "claude" }), { client: "Dog groomer" });
+  assert.deepEqual(await buildFromNiche({ niche: "Dog groomer", language: "en", market: "uk", provider: "claude" }), { client: "Dog groomer", saved: true });
   assert.equal(calls[0].url, "/api/demo/clients/from-niche");
   assert.equal(JSON.parse(String(calls[0].init.body)).market, "uk");
+  stubFetch(200, { client: "Dog groomer", saved: false });
+  assert.equal((await buildFromNiche({ niche: "Dog groomer", language: "en", provider: "claude" })).saved, false);
+});
+
+test("scanWebsite reports saved unless the server said it stored nothing", async () => {
+  stubFetch(200, { client: "A" });
+  assert.equal((await scanWebsite({ url: "https://a.nl", language: "nl", provider: "claude" })).saved, true);
+  stubFetch(200, { client: "A", saved: false });
+  assert.equal((await scanWebsite({ url: "https://a.nl", language: "nl", provider: "claude" })).saved, false);
 });
 
 test("saveScanReview patches the summary, products, city and stock URL for one language", async () => {
