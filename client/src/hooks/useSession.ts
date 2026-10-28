@@ -4,6 +4,7 @@ import { clearServicePageToggles, hydrateServicePageToggles } from "@/hooks/useS
 import { clearLandingPage, hydrateLandingPage } from "@/lib/landingPage";
 import { hydrateUserLanguage } from "@/lib/userLanguage";
 import { syncAccountFromStorage } from "@/hooks/useWorkspace";
+import { AVATAR_CHANGED_EVENT, clearIdentityCache, syncIdentityCache } from "@/lib/userIdentity";
 
 export type SessionUser = {
   id: number;
@@ -40,14 +41,9 @@ export function useSession(): SessionState {
           setState({ status: "authenticated", user });
           // Keep localStorage in sync for backward-compat hooks
           localStorage.setItem("leadawaker_auth", "session");
-          localStorage.setItem("leadawaker_user_id", String(user.id ?? ""));
-          localStorage.setItem("leadawaker_user_email", user.email ?? "");
           localStorage.setItem("leadawaker_user_role", user.role ?? "Viewer");
-          if (user.fullName1) {
-            localStorage.setItem("leadawaker_user_name", user.fullName1);
-          }
-          localStorage.setItem("leadawaker_user_avatar", user.avatarUrl ?? "");
-          window.dispatchEvent(new Event("leadawaker-avatar-changed"));
+          // Id, name, email and photo mirror this user and replace the previous user's.
+          if (syncIdentityCache(localStorage, user)) window.dispatchEvent(new Event(AVATAR_CHANGED_EVENT));
           // Owner-only preference: whether the outreach pages (Inbox/Prospects/Cadence) show in the nav
           // Also mirrors the Owner service-page toggles and every user's landing page.
           let prefs: Record<string, unknown> = {};
@@ -96,7 +92,7 @@ export function useSession(): SessionState {
 export async function logout(): Promise<void> {
   await fetch(`${API_BASE}/api/auth/logout`, { method: "POST", credentials: "include" }).catch(() => {});
   localStorage.removeItem("leadawaker_auth");
-  localStorage.removeItem("leadawaker_user_email");
+  if (clearIdentityCache(localStorage)) window.dispatchEvent(new Event(AVATAR_CHANGED_EVENT));
   localStorage.removeItem("leadawaker_user_role");
   localStorage.removeItem("leadawaker_current_account_id");
   localStorage.removeItem("leadawaker_account_explicitly_selected");

@@ -166,7 +166,7 @@ export default function AcceptInvite() {
       >
         {/* Logo */}
         <div className="flex justify-center mb-8">
-          <img src="/premium/logo-v2.svg" alt="Lead Awaker" className="h-10 object-contain" style={{ background: "var(--logo-plate)", borderRadius: 10, padding: "2px 8px" }} />
+          <img src="/premium/logo-v2-outline.svg" alt="Lead Awaker" className="h-10 object-contain" />
         </div>
 
         {/* Card */}

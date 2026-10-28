@@ -35,6 +35,8 @@ import { APP_LANGUAGES } from "@/lib/languages";
 import { agencyBottomBar, clientMoreItems, clientNavLabelKey, isSameRoute, CLIENT_NAV_HREF } from "@/components/crm/navGates";
 import { NAV_ICON } from "@/components/crm/navIcons";
 import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
+import { useCurrentUserIdentity } from "@/hooks/useCurrentUserIdentity";
+import { displayName, initialsFor } from "@/lib/userIdentity";
 
 const THEME_CYCLE: { mode: ThemeMode; icon: LucideIcon; labelKey: string }[] = [
   { mode: "light", icon: Sun, labelKey: "sidebar.themeLight" },
@@ -117,10 +119,11 @@ export function MobileMorePage({
 
   const prefix = "/platform";
 
-  const userName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_user_email") || "User";
-  const userAvatar = localStorage.getItem("leadawaker_user_avatar") || "";
+  const identity = useCurrentUserIdentity();
+  const userName = displayName(identity);
+  const userAvatar = identity?.avatar ?? "";
   const userRole = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  const userInitials = userName.split(" ").map((w) => w[0]).filter(Boolean).slice(0, 2).join("").toUpperCase() || "U";
+  const userInitials = initialsFor(userName);
 
   const currentLang = i18n.language?.split("-")[0] || "en";
   const currentLanguage = APP_LANGUAGES.find((l) => l.code === currentLang) ?? APP_LANGUAGES[0];
@@ -200,9 +203,9 @@ export function MobileMorePage({
       >
         <h1 style={{ flex: 1, minWidth: 0, margin: 0, display: "flex" }} aria-label={t("sidebar.more")}>
           <img
-            src={isDark ? "/premium/logo-v2-dark.svg" : "/premium/logo-v2.svg"}
+            src={isDark ? "/premium/logo-v2-dark.svg" : "/premium/logo-v2-outline.svg"}
             alt="Lead Awaker"
-            style={{ height: 38, ...(isDark ? null : { background: "var(--logo-plate)", borderRadius: "var(--r-button)", padding: "3px 10px" }) }}
+            style={{ height: 38 }}
             data-testid="mobile-more-logo"
           />
         </h1>

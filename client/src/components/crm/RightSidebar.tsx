@@ -58,6 +58,8 @@ import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { useWorkspace } from "@/hooks/useWorkspace";
+import { useCurrentUserIdentity } from "@/hooks/useCurrentUserIdentity";
+import { displayName, initialsFor, shortName } from "@/lib/userIdentity";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -203,16 +205,11 @@ export function RightSidebar({
   const [langOpen, setLangOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
 
-  // Read current user info from localStorage
-  const userName = localStorage.getItem("leadawaker_user_name") || localStorage.getItem("leadawaker_user_email") || "User";
-  const userEmail = localStorage.getItem("leadawaker_user_email") || "";
-  const [userAvatar, setUserAvatar] = useState<string>(() => localStorage.getItem("leadawaker_user_avatar") || "");
+  // Photo and name come from the signed-in user's server record, not the browser's localStorage.
+  const identity = useCurrentUserIdentity();
+  const userName = displayName(identity);
+  const userAvatar = identity?.avatar ?? "";
   const userRole = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  useEffect(() => {
-    const handler = () => setUserAvatar(localStorage.getItem("leadawaker_user_avatar") || "");
-    window.addEventListener("leadawaker-avatar-changed", handler);
-    return () => window.removeEventListener("leadawaker-avatar-changed", handler);
-  }, []);
 
   // Role, impersonation, outreach pref, voice capabilities and the Owner's service
   // page toggles: the same context the mobile More page and landing picker use.
@@ -237,23 +234,8 @@ export function RightSidebar({
     return () => window.removeEventListener("leadawaker-voice-note-result", handler);
   }, [toast, t]);
   const formatVoiceTimer = (secs: number) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
-  const userInitials = userName
-    .split(" ")
-    .map((w) => w[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join("")
-    .toUpperCase() || "U";
-
-  const formatDisplayName = (fullName: string): string => {
-    const parts = fullName.trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "User";
-    if (parts.length === 1) return parts[0];
-    const firstName = parts[0];
-    const initials = parts.slice(1).map(p => p[0].toUpperCase() + ".").join(" ");
-    return `${firstName} ${initials}`;
-  };
-  const displayName = formatDisplayName(userName);
+  const userInitials = initialsFor(userName);
+  const shownName = shortName(userName);
 
   /** Switch the scoped account. The URL no longer changes — only data scope. */
   const handleAccountSelect = (id: number) => {
@@ -489,7 +471,7 @@ export function RightSidebar({
           borderBottom: "1px solid var(--line)",
           cursor: "pointer",
         }}>
-          <img src={isDark ? "/premium/logo-v2-dark.svg" : "/premium/logo-v2.svg"} alt="Lead Awaker" style={{ height: 34, marginTop: 4, ...(isDark ? null : { background: "var(--logo-plate)", borderRadius: 10, padding: "2px 8px" }) }} />
+          <img src={isDark ? "/premium/logo-v2-dark.svg" : "/premium/logo-v2-outline.svg"} alt="Lead Awaker" style={{ height: 34, marginTop: 4 }} />
         </a>
 
         {/* ── Nav (scrolls) ── */}
@@ -836,7 +818,7 @@ export function RightSidebar({
                 }
               </span>
               <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--ink-soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{displayName}</span>
+                <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--ink-soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{shownName}</span>
                 <span style={{ display: "block", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--muted-foreground)" }}>{userRole}</span>
               </span>
               <span style={{ display: "flex", transform: profileOpen ? "rotate(-90deg)" : "rotate(90deg)", transition: "transform 160ms", color: "var(--muted-foreground)" }}>

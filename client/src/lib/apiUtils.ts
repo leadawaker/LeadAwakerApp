@@ -1,3 +1,5 @@
+import { clearIdentityCache } from "./userIdentity";
+
 /** Base URL for API calls: set via VITE_API_URL in Vercel, empty locally.
  *  Written as `import.meta.env.VITE_API_URL` so Vite inlines it at build time
  *  (an optional-chained read is NOT replaced and would always give ""). The
@@ -21,6 +23,7 @@ export async function apiFetch(url: string, options?: RequestInit): Promise<Resp
 
   if (res.status === 401 && !url.includes("/api/auth/")) {
     localStorage.removeItem("leadawaker_auth");
+    clearIdentityCache(localStorage);
     window.location.href = "/login";
   }
 
