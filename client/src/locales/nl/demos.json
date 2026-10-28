@@ -4,6 +4,7 @@
   "tabs": {
     "sessions": "Sessies",
     "clients": "Demo-persona's",
+    "personas": "Persona's",
     "settings": "Instellingen"
   },
   "sessions": {
@@ -435,5 +436,35 @@
     "deleteLiveWarning_other": "{{count}} live demolinks gebruiken deze persona nog. Toch verwijderen?",
     "deleteAnyway": "Toch verwijderen",
     "deleteFailed": "Deze persona kon niet worden verwijderd."
+  },
+  "merge": {
+    "followUp": "Opvolgen ({{count}})",
+    "followUpHint": "Persona's met een reactie of opening in de afgelopen 7 dagen die je nog niet hebt bekeken",
+    "followUpEmpty": "Er hoeft nu niets opgevolgd te worden.",
+    "dot": {
+      "reply": "Nieuwe reactie in de afgelopen 7 dagen",
+      "open": "Geopend in de afgelopen 7 dagen"
+    },
+    "meta": {
+      "prospects_one": "{{count}} prospect",
+      "prospects_other": "{{count}} prospects",
+      "replied_one": "{{count}} gereageerd",
+      "replied_other": "{{count}} gereageerd",
+      "opened_one": "{{count}} geopend",
+      "opened_other": "{{count}} geopend"
+    },
+    "special": {
+      "groupTitle": "Overige demo's",
+      "noPersona": "Geen persona",
+      "noPersonaSub": "Prospects toegevoegd zonder persona",
+      "website": "Websitebezoekers",
+      "websiteSub": "Demo's gestart op leadawaker.com"
+    },
+    "demosTab": {
+      "label": "Demo's",
+      "addProspect": "Prospect toevoegen",
+      "empty": "Nog geen demo's voor deze persona.",
+      "emptyWebsite": "Nog geen websitebezoekers."
+    }
   }
 }

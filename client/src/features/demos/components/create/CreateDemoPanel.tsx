@@ -27,8 +27,8 @@ export function CreateDemoPanel({ draft, update, updateIf, isCurrent, clear, mar
   clear: () => void;
   markAdded: () => void;
   onClose: () => void;
-  /** The new row's group key, so the table can flash it. */
-  onAdded: (prospectGroup: string) => void;
+  /** The new row's group key (so the table can flash it) and the persona it was filed under ("" = none), so the page can open that persona. */
+  onAdded: (prospectGroup: string, clientNiche: string) => void;
 }) {
   const { t } = useTranslation("demos");
   const createProspect = useCreateProspect();
@@ -46,9 +46,10 @@ export function CreateDemoPanel({ draft, update, updateIf, isCurrent, clear, mar
   const submit = async () => {
     if (!nameOk || pending) return;
     const group = draft.prospectGroup;
+    const niche = draft.clientNiche;
     const added = () => {
       toast({ variant: "success", title: t("create.added") });
-      onAdded(group);
+      onAdded(group, niche);
       markAdded();
       onClose();
     };

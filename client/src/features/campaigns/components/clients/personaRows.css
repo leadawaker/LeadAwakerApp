@@ -40,8 +40,9 @@
 }
 /* Recent unseen activity on a persona: wine for a reply, sand for an open. Never takes the click. */
 .dp-dot { display: inline-block; width: 9px; height: 9px; border-radius: var(--r-pill); flex: none; pointer-events: none; }
-.dp-dot--reply { background: var(--wine); }
-.dp-dot--open { background: var(--sand); }
+/* Two classes: clients.css also has a `.dp-dot` (the hero legend's, filled from --dp-dot), and these must win whichever sheet loads last. */
+.dp-dot.dp-dot--reply { background: var(--wine); }
+.dp-dot.dp-dot--open { background: var(--sand); }
 .dp-meta { font-size: 11.5px; color: var(--mute); }
 /* A rail row for a group of prospects that is not a persona: outlined where a persona row has only a divider. */
 .am-row.dp-row.dp-row--special { width: auto; margin: 8px 10px; border: 1px dashed var(--line-strong); border-radius: var(--r-surface); }

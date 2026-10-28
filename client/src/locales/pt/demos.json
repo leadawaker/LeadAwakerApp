@@ -4,6 +4,7 @@
   "tabs": {
     "sessions": "Sessões",
     "clients": "Personas de demo",
+    "personas": "Personas",
     "settings": "Configurações"
   },
   "sessions": {
@@ -435,5 +436,35 @@
     "deleteLiveWarning_other": "{{count}} links de demo ativos ainda usam esta persona. Excluir mesmo assim?",
     "deleteAnyway": "Excluir mesmo assim",
     "deleteFailed": "Não foi possível excluir esta persona."
+  },
+  "merge": {
+    "followUp": "Precisa de follow-up ({{count}})",
+    "followUpHint": "Personas com uma resposta ou abertura nos últimos 7 dias que você ainda não viu",
+    "followUpEmpty": "Nada precisa de follow-up agora.",
+    "dot": {
+      "reply": "Nova resposta nos últimos 7 dias",
+      "open": "Aberto nos últimos 7 dias"
+    },
+    "meta": {
+      "prospects_one": "{{count}} prospect",
+      "prospects_other": "{{count}} prospects",
+      "replied_one": "{{count}} respondeu",
+      "replied_other": "{{count}} responderam",
+      "opened_one": "{{count}} abriu",
+      "opened_other": "{{count}} abriram"
+    },
+    "special": {
+      "groupTitle": "Outras demos",
+      "noPersona": "Sem persona",
+      "noPersonaSub": "Prospects adicionados sem persona",
+      "website": "Visitantes do site",
+      "websiteSub": "Demos iniciadas em leadawaker.com"
+    },
+    "demosTab": {
+      "label": "Demos",
+      "addProspect": "Adicionar prospect",
+      "empty": "Ainda não há demos para esta persona.",
+      "emptyWebsite": "Ainda não há visitantes do site."
+    }
   }
 }

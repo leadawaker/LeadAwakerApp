@@ -10,6 +10,8 @@ import {
   prospectSummary,
   rowsForKey,
   splitRowsByPersona,
+  visibleSpecialKeys,
+  type ActivityDot,
 } from "./personaDemos";
 import { row } from "./demoTestFixtures";
 
@@ -130,4 +132,43 @@ test("activityDots: a seen card loses its dot", () => {
 test("prospectSummary counts prospects, repliers, and opened without a reply", () => {
   assert.deepEqual(prospectSummary([row({ replies: 2, opened: true }), row({ opened: true }), row()]), { prospects: 3, replied: 1, opened: 1 });
   assert.deepEqual(prospectSummary([]), { prospects: 0, replied: 0, opened: 0 });
+});
+
+// visibleSpecialKeys: which of the two special cards the list shows.
+const specialSplit = (noPersona: number, website: number) =>
+  splitRowsByPersona(
+    [
+      ...Array.from({ length: noPersona }, (_, i) => row({ key: `n${i}`, clientNiche: "" })),
+      ...Array.from({ length: website }, (_, i) => row({ key: `w${i}`, publicDemo: true })),
+    ],
+    ["robben"],
+  );
+const dotMap = (entries: [string, ActivityDot][]) => new Map<string, ActivityDot>(entries);
+const plain = { filtersActive: false, followUp: false, selected: null };
+
+test("visibleSpecialKeys: No persona first, then Website visitors, each only with rows", () => {
+  assert.deepEqual(visibleSpecialKeys(specialSplit(2, 1), dotMap([]), plain), [NO_PERSONA_KEY, WEBSITE_KEY]);
+  assert.deepEqual(visibleSpecialKeys(specialSplit(0, 1), dotMap([]), plain), [WEBSITE_KEY]);
+  assert.deepEqual(visibleSpecialKeys(specialSplit(2, 0), dotMap([]), plain), [NO_PERSONA_KEY]);
+  assert.deepEqual(visibleSpecialKeys(specialSplit(0, 0), dotMap([]), plain), []);
+});
+
+test("visibleSpecialKeys: an active persona filter hides both (they have no language or category)", () => {
+  assert.deepEqual(visibleSpecialKeys(specialSplit(2, 1), dotMap([]), { ...plain, filtersActive: true }), []);
+});
+
+test("visibleSpecialKeys: Needs follow-up keeps the cards with an unseen dot and the open one", () => {
+  const split = specialSplit(2, 1);
+  const on = { filtersActive: false, followUp: true, selected: null as string | null };
+  assert.deepEqual(visibleSpecialKeys(split, dotMap([[WEBSITE_KEY, "open"]]), on), [WEBSITE_KEY]);
+  assert.deepEqual(visibleSpecialKeys(split, dotMap([]), on), []);
+  assert.deepEqual(visibleSpecialKeys(split, dotMap([]), { ...on, selected: NO_PERSONA_KEY }), [NO_PERSONA_KEY]);
+  assert.deepEqual(
+    visibleSpecialKeys(split, dotMap([[NO_PERSONA_KEY, "reply"], [WEBSITE_KEY, "open"]]), on),
+    [NO_PERSONA_KEY, WEBSITE_KEY],
+  );
+});
+
+test("visibleSpecialKeys: an open card with no rows left stays hidden", () => {
+  assert.deepEqual(visibleSpecialKeys(specialSplit(0, 0), dotMap([]), { ...plain, selected: NO_PERSONA_KEY }), []);
 });

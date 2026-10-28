@@ -96,3 +96,20 @@ export function prospectSummary(rows: ProspectRow[]): ProspectSummary {
   const replied = rows.filter((r) => r.replies > 0).length;
   return { prospects: rows.length, replied, opened: rows.filter((r) => r.opened && r.replies === 0).length };
 }
+
+/**
+ * The special cards the list shows, No persona first. A card needs rows; the persona filters
+ * (search, category, language, source) hide both, since neither card has those traits; with
+ * Needs follow-up on, a card needs an unseen dot, or to be the one that is open.
+ */
+export function visibleSpecialKeys(
+  split: PersonaRowSplit,
+  dots: ReadonlyMap<string, ActivityDot>,
+  opts: { filtersActive: boolean; followUp: boolean; selected: string | null },
+): SpecialKey[] {
+  if (opts.filtersActive) return [];
+  const keys: SpecialKey[] = [NO_PERSONA_KEY, WEBSITE_KEY];
+  return keys.filter(
+    (key) => rowsForKey(split, key).length > 0 && (!opts.followUp || dots.has(key) || opts.selected === key),
+  );
+}

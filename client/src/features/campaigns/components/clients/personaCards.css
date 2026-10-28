@@ -37,6 +37,8 @@
 .dp-card:hover { background: var(--wine-tint); }
 /* A card for a group of prospects that is not a persona (No persona, Website visitors). */
 .dp-card--special { border-style: dashed; }
+/* It has no languages, date or Delete row, so no empty row (and its gap) under the name. */
+.dp-card.dp-card--special { grid-template-areas: "thumb who who who"; grid-template-rows: auto; padding-bottom: 14px; }
 .dp-card:has(.dp-open:focus-visible) { outline: 2px solid hsl(var(--ring)); outline-offset: 2px; }
 
 .dp-card .dp-thumb-box { grid-area: thumb; align-self: start; width: 44px; height: 44px; }

@@ -43,7 +43,7 @@ function PanelSlot({ state, draft, rows }: { state: SessionsState; draft: Return
         clear={draft.clear}
         markAdded={draft.markAdded}
         onClose={close}
-        onAdded={state.flash}
+        onAdded={(group) => state.flash(group)}
       />
     );
   }
