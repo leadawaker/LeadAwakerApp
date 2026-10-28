@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { DEFAULT_FILTERS, type SessionFilters, type SessionSort } from "../../sessionsView";
+import { DEFAULT_FILTERS, DEFAULT_SORT, type SessionFilters, type SessionSort } from "../../sessionsView";
 
-export type SessionsView = "table" | "folders";
+export type SessionsView = "table" | "cards";
 
 /** The one right-hand panel the Sessions tab can have open: the create flow, or a prospect's detail. */
 export type SessionsPanel = { kind: "create" } | { kind: "detail"; key: string } | null;
@@ -19,9 +19,9 @@ export function useSessionsState() {
   const isPhone = useIsMobile(768);
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<SessionFilters>(DEFAULT_FILTERS);
-  const [sort, setSort] = useState<SessionSort>("newest");
-  // Folders suit a phone (cards, not a wide table); the table suits everything else.
-  const [view, setView] = useState<SessionsView>(() => (isPhone ? "folders" : "table"));
+  const [sort, setSort] = useState<SessionSort>(DEFAULT_SORT);
+  // Cards suit a phone (not a wide table); the table suits everything else.
+  const [view, setView] = useState<SessionsView>(() => (isPhone ? "cards" : "table"));
   const [panel, setPanel] = useState<SessionsPanel>(null);
   const [highlightKey, setHighlightKey] = useState<string | null>(null);
 

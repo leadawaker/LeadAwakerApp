@@ -58,7 +58,10 @@ function PickerButton({ row, missing }: { row: ProspectRow; missing: ServiceDef[
   );
 }
 
-/** DBR and Quote share a column: the links the prospect has, stacked, and a "+" for the missing one(s). */
+/**
+ * DBR and Quote share a column: the pills of the links the prospect has, DBR on top, and a "+" for the
+ * missing one(s). Pills only: the service is in the tooltip and the date is in the Last activity column.
+ */
 export function DbrQuoteCell({ row }: { row: ProspectRow }) {
   const { t } = useTranslation("demos");
   const present = DBR_QUOTE.filter((s) => row.byService[s.key]);
@@ -68,7 +71,7 @@ export function DbrQuoteCell({ row }: { row: ProspectRow }) {
   return (
     <div className="flex flex-col items-start gap-1">
       {present.map((svc) => (
-        <LinkCell key={svc.key} row={row} svc={svc} session={row.byService[svc.key]} caption={t(`table.svc.${svc.key}`)} />
+        <LinkCell key={svc.key} row={row} svc={svc} session={row.byService[svc.key]} caption={t(`table.svc.${svc.key}`)} pillOnly />
       ))}
       {missing.length > 0 && <PickerButton row={row} missing={missing} />}
     </div>

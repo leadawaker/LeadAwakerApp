@@ -59,10 +59,10 @@ export function LinkActionsPopover({ row, svc, session, trigger }: {
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
-  const copyWhatsapp = async () => {
+  const copyUrl = async (url: string) => {
     setOpen(false);
     toast(
-      (await copyText(session.whatsappUrl))
+      (await copyText(url))
         ? { variant: "success", title: t("links.copied") }
         : { variant: "destructive", title: t("links.actionFailed") },
     );
@@ -108,12 +108,15 @@ export function LinkActionsPopover({ row, svc, session, trigger }: {
           <ActionRow label={t("links.open")} onClick={() => openUrl(serviceOpenUrl(svc, session))}>
             <IconBtn aria-label={t("links.open")} className={TOUCH}><ExternalLink className="h-4 w-4" /></IconBtn>
           </ActionRow>
+          <ActionRow label={t("links.copy")} onClick={() => void copyUrl(serviceCopyUrl(svc, session))}>
+            <IconBtn aria-label={t("links.copy")} className={TOUCH}><Copy className="h-4 w-4" /></IconBtn>
+          </ActionRow>
           {hasWhatsapp && (
             <>
               <ActionRow label={t("links.whatsapp")} onClick={() => openUrl(session.whatsappUrl)}>
                 <IconBtn aria-label={t("links.whatsapp")} className={TOUCH}><MessageCircle className="h-4 w-4" /></IconBtn>
               </ActionRow>
-              <ActionRow label={t("links.copyWhatsapp")} onClick={() => void copyWhatsapp()}>
+              <ActionRow label={t("links.copyWhatsapp")} onClick={() => void copyUrl(session.whatsappUrl)}>
                 <IconBtn aria-label={t("links.copyWhatsapp")} className={TOUCH}><Copy className="h-4 w-4" /></IconBtn>
               </ActionRow>
             </>

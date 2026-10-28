@@ -1,45 +1,39 @@
-import { useTranslation } from "react-i18next";
+import { Fragment } from "react";
 import type { ProspectRow } from "../../prospectRows";
-import { SERVICES } from "../../services";
-import { LINK_COLUMNS } from "../../tableColumns";
+import type { SessionSort, SortKey } from "../../sessionsView";
+import type { LabelledGroup } from "../sessions/useDateGroups";
+import { DateGroupRow } from "./DateGroupRow";
 import { ProspectTableRow } from "./ProspectTableRow";
+import { columnWidths, SessionsTableHead } from "./SessionsTableHead";
 
-// Fixed column widths: with table-layout fixed the header and the body always line up.
-const LEAD_COLS = [
-  // The homepage thumbnail is an identifier, not content: a row of sites is far faster to scan than a row of names.
-  { key: "site", width: 72 },
-  { key: "prospect", width: 140 },
-  { key: "company", width: 150 },
-  { key: "client", width: 140 },
-] as const;
-const LINK_WIDTH = 128;
-const OTHER_WIDTH = 92;
-const TAIL_COLS = [
-  { key: "lastActivity", width: 100 },
-  { key: "sent", width: 84 },
-] as const;
-
-// Sticky with an opaque background: with borderSpacing the rows would otherwise show through the gaps as they pass behind it.
-const HEAD = "sticky top-0 z-10 select-none whitespace-nowrap border-b border-border/20 bg-muted px-3 py-2 text-left text-[10px] font-bold uppercase tracking-wider text-foreground/50";
-
-/** The Demos table: one row per prospect, one column per service. Rows arrive filtered and sorted. */
-export function SessionsTable({ rows, highlightKey, onOpenRow, onOpenClient }: {
+/**
+ * The Demos table: one row per prospect, one column per service. Rows arrive filtered and sorted;
+ * `groups` (when sorted by Sent) lays them under date headings, else the list is flat.
+ */
+export function SessionsTable({ rows, groups, sort, onSort, highlightKey, onOpenRow, onOpenClient }: {
   rows: ProspectRow[];
+  groups: LabelledGroup[] | null;
+  sort: SessionSort;
+  onSort: (key: SortKey) => void;
   highlightKey: string | null;
   onOpenRow: (key: string) => void;
   onOpenClient: (niche: string) => void;
 }) {
-  const { t } = useTranslation("demos");
   // The column only earns its width when some link has no column of its own.
   const showOther = rows.some((r) => r.extra.length > 0);
-
-  const widths = [
-    ...LEAD_COLS.map((c) => c.width),
-    ...LINK_COLUMNS.map(() => LINK_WIDTH),
-    ...(showOther ? [OTHER_WIDTH] : []),
-    ...TAIL_COLS.map((c) => c.width),
-  ];
+  const widths = columnWidths(showOther);
   const minWidth = widths.reduce((n, w) => n + w, 0);
+
+  const renderRow = (row: ProspectRow) => (
+    <ProspectTableRow
+      key={row.key}
+      row={row}
+      highlighted={row.key === highlightKey}
+      showOther={showOther}
+      onOpenRow={onOpenRow}
+      onOpenClient={onOpenClient}
+    />
+  );
 
   return (
     <div className="min-h-0 flex-1 overflow-auto">
@@ -49,43 +43,16 @@ export function SessionsTable({ rows, highlightKey, onOpenRow, onOpenClient }: {
             <col key={i} style={{ width: w, minWidth: w }} />
           ))}
         </colgroup>
-        <thead>
-          <tr>
-            {LEAD_COLS.map((c) => (
-              <th key={c.key} className={HEAD}>
-                {t(`table.${c.key}`)}
-              </th>
-            ))}
-            {LINK_COLUMNS.map((c) => {
-              const Icon = SERVICES.find((s) => s.key === c.services[0])?.icon;
-              return (
-                <th key={c.key} className={HEAD}>
-                  <span className="flex items-center gap-1">
-                    {Icon && <Icon size={11} />}
-                    {t(c.labelKey)}
-                  </span>
-                </th>
-              );
-            })}
-            {showOther && <th className={HEAD}>{t("table.other")}</th>}
-            {TAIL_COLS.map((c) => (
-              <th key={c.key} className={HEAD}>
-                {t(`table.${c.key}`)}
-              </th>
-            ))}
-          </tr>
-        </thead>
+        <SessionsTableHead showOther={showOther} sort={sort} onSort={onSort} />
         <tbody>
-          {rows.map((row) => (
-            <ProspectTableRow
-              key={row.key}
-              row={row}
-              highlighted={row.key === highlightKey}
-              showOther={showOther}
-              onOpenRow={onOpenRow}
-              onOpenClient={onOpenClient}
-            />
-          ))}
+          {groups
+            ? groups.map((g) => (
+                <Fragment key={g.key}>
+                  <DateGroupRow label={g.label} count={g.rows.length} span={widths.length} />
+                  {g.rows.map(renderRow)}
+                </Fragment>
+              ))
+            : rows.map(renderRow)}
         </tbody>
       </table>
     </div>

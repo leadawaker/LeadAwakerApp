@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { ArrowUpDown, Filter, LayoutGrid, Plus, RefreshCw, Table2 } from "lucide-react";
+import { ArrowUpDown, Filter, Plus } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,32 +10,45 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ExpandingSearch, TopbarIconButton } from "@/components/crm/primitives";
-import { cn } from "@/lib/utils";
-import { isFilterActive, type SessionSort } from "../../sessionsView";
+import {
+  DEFAULT_SORT,
+  MENU_SORT_KEYS,
+  isFilterActive,
+  withSortKey,
+  type SortDir,
+  type SortKey,
+} from "../../sessionsView";
 import { TOUCH_ROW, TOUCH_TOPBAR } from "../../touchTargets";
 import { SessionsFilterMenu } from "./SessionsFilterMenu";
 import type { SessionsState } from "./useSessionsState";
 
-const SORTS: SessionSort[] = ["newest", "prospect", "company", "activity"];
+const DIRS: SortDir[] = ["asc", "desc"];
 
 /**
- * The Sessions tab's part of the PageTopbar `right` slot, in order: search, filter, sort,
- * the table / folders switch, refresh, and the wine + New demo last.
+ * The Sessions tab's part of the PageTopbar `right` slot, in order: the labelled wine + New Demo,
+ * search, filter and sort. The Sort menu and the table's column headers drive the same sort, so
+ * the cards view (which has no headers) can be sorted too. The Table | Cards switch sits in the
+ * left group (SessionsViewSwitch).
  */
-export function SessionsTopbarActions({ state, clients, onRefresh, refreshing }: {
+export function SessionsTopbarActions({ state, clients }: {
   state: SessionsState;
   clients: { niche: string; label: string }[];
-  onRefresh: () => void;
-  refreshing: boolean;
 }) {
   const { t } = useTranslation("demos");
-  const views = [
-    { id: "table", label: t("sessions.viewTable"), Icon: Table2 },
-    { id: "folders", label: t("sessions.viewFolders"), Icon: LayoutGrid },
-  ] as const;
+  const { sort, setSort } = state;
 
   return (
     <>
+      <button
+        type="button"
+        className={`la-btn la-btn--wine h-8 shrink-0 ${TOUCH_ROW}`}
+        onClick={() => state.setPanel({ kind: "create" })}
+        data-testid="sessions-new-demo"
+      >
+        <Plus size={14} />
+        {t("sessions.newDemo")}
+      </button>
+
       <ExpandingSearch value={state.search} onChange={state.setSearch} placeholder={t("sessions.searchPlaceholder")} />
 
       <DropdownMenu>
@@ -49,42 +62,34 @@ export function SessionsTopbarActions({ state, clients, onRefresh, refreshing }:
 
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <TopbarIconButton label={t("sessions.sort")} active={state.sort !== "newest"} className={TOUCH_TOPBAR}>
+          <TopbarIconButton
+            label={t("sessions.sort")}
+            active={sort.key !== DEFAULT_SORT.key || sort.dir !== DEFAULT_SORT.dir}
+            className={TOUCH_TOPBAR}
+          >
             <ArrowUpDown className="h-4 w-4 shrink-0" />
           </TopbarIconButton>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-48">
           <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("sessions.sort")}</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuRadioGroup value={state.sort} onValueChange={(v) => state.setSort(v as SessionSort)}>
-            {SORTS.map((s) => (
-              <DropdownMenuRadioItem key={s} value={s} className={`text-[12px] ${TOUCH_ROW}`}>
-                {t(`sessions.sortBy.${s}`)}
+          <DropdownMenuRadioGroup value={sort.key} onValueChange={(k) => setSort(withSortKey(sort, k as SortKey))}>
+            {MENU_SORT_KEYS.map((k) => (
+              <DropdownMenuRadioItem key={k} value={k} className={`text-[12px] ${TOUCH_ROW}`}>
+                {t(`table.${k}`)}
+              </DropdownMenuRadioItem>
+            ))}
+          </DropdownMenuRadioGroup>
+          <DropdownMenuSeparator />
+          <DropdownMenuRadioGroup value={sort.dir} onValueChange={(d) => setSort({ ...sort, dir: d as SortDir })}>
+            {DIRS.map((d) => (
+              <DropdownMenuRadioItem key={d} value={d} className={`text-[12px] ${TOUCH_ROW}`}>
+                {t(`listView.direction.${d}`)}
               </DropdownMenuRadioItem>
             ))}
           </DropdownMenuRadioGroup>
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {views.map(({ id, label, Icon }) => (
-        <TopbarIconButton
-          key={id}
-          label={label}
-          aria-pressed={state.view === id}
-          className={cn(TOUCH_TOPBAR, state.view === id && "on")}
-          onClick={() => state.setView(id)}
-        >
-          <Icon className="h-4 w-4 shrink-0" />
-        </TopbarIconButton>
-      ))}
-
-      <TopbarIconButton label={t("actions.refresh")} className={TOUCH_TOPBAR} onClick={onRefresh}>
-        <RefreshCw className={cn("h-4 w-4 shrink-0", refreshing && "animate-spin")} />
-      </TopbarIconButton>
-
-      <TopbarIconButton label={t("sessions.newDemo")} primary className={TOUCH_TOPBAR} onClick={() => state.setPanel({ kind: "create" })}>
-        <Plus className="h-4 w-4 shrink-0" />
-      </TopbarIconButton>
     </>
   );
 }

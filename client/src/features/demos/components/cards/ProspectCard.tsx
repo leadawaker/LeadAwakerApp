@@ -11,7 +11,7 @@ const HIGHLIGHT_BG = "color-mix(in srgb, var(--wine) 8%, transparent)";
 
 // A plain image: the card is itself a button, and a button cannot hold SiteThumb's preview button.
 function Thumb({ row }: { row: ProspectRow }) {
-  const box = "h-9 w-14 shrink-0 rounded border";
+  const box = "h-20 w-full rounded border";
   if (!row.screenshot) return <span className={`block ${box}`} style={{ borderColor: "var(--line)", background: "var(--paper)" }} aria-hidden />;
   return (
     <img
@@ -25,9 +25,10 @@ function Thumb({ row }: { row: ProspectRow }) {
 }
 
 /**
- * One prospect in the folder view: the site, who they are, and a chip per link they hold (the
- * service, coloured by how far that link got). Opens the detail panel. The list card's own
- * minimum height is already above the 44px touch size, so no phone override is needed.
+ * One prospect as a compact block: the site, who they are, the client, and a chip per link they
+ * hold (the service, coloured by how far that link got). Opens the detail panel. The block's
+ * raised surface is the wrapper's on a desktop; on a phone the list card brings its own. The
+ * list card's own minimum height is already above the 44px touch size, so no phone override is needed.
  */
 export function ProspectCard({ row, onOpen, highlighted }: { row: ProspectRow; onOpen: () => void; highlighted: boolean }) {
   const { t } = useTranslation("demos");
@@ -43,30 +44,33 @@ export function ProspectCard({ row, onOpen, highlighted }: { row: ProspectRow; o
   const client = row.clientNiche || (row.publicDemo ? t("table.websitePill") : "");
 
   return (
-    <ListCard
-      as="button"
-      ref={ref}
-      onClick={onOpen}
-      className="w-full scroll-mt-10 text-left"
-      style={highlighted ? { background: HIGHLIGHT_BG } : undefined}
-    >
-      <span className="flex items-start gap-3">
-        <Thumb row={row} />
-        <span className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="truncate" style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
-            {row.firstName || t("table.none")}
+    <div className="min-w-0 rounded-[var(--list-card-radius)] md:[background:var(--surface)] md:[box-shadow:var(--sh-raised-crisp)]">
+      <ListCard
+        as="button"
+        ref={ref}
+        onClick={onOpen}
+        className="h-full w-full scroll-mt-10 text-left"
+        // A button centres its content vertically; the cards of one row share a height, so top-align instead.
+        style={{ display: "flex", flexDirection: "column", justifyContent: "flex-start", ...(highlighted ? { background: HIGHLIGHT_BG } : null) }}
+      >
+        <span className="flex w-full min-w-0 flex-col gap-2">
+          <Thumb row={row} />
+          <span className="flex min-w-0 flex-col gap-0.5">
+            <span className="truncate" style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>
+              {row.firstName || t("table.none")}
+            </span>
+            {row.companyName && (
+              <span className="truncate" style={{ fontSize: 12, color: "var(--ink)" }}>
+                {row.companyName}
+              </span>
+            )}
+            {client && (
+              <span className="truncate" style={{ fontSize: 11.5, color: "var(--mute)" }}>
+                {client}
+              </span>
+            )}
           </span>
-          {row.companyName && (
-            <span className="truncate" style={{ fontSize: 12, color: "var(--ink)" }}>
-              {row.companyName}
-            </span>
-          )}
-          {client && (
-            <span className="truncate" style={{ fontSize: 11.5, color: "var(--mute)" }}>
-              {client}
-            </span>
-          )}
-          <span className="flex flex-wrap gap-1 pt-0.5">
+          <span className="flex flex-wrap gap-1">
             {links.map((svc) => {
               const session = row.byService[svc.key]!;
               const status = linkStatus(session);
@@ -88,7 +92,7 @@ export function ProspectCard({ row, onOpen, highlighted }: { row: ProspectRow; o
             )}
           </span>
         </span>
-      </span>
-    </ListCard>
+      </ListCard>
+    </div>
   );
 }

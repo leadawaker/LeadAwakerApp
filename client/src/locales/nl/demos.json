@@ -10,8 +10,6 @@
     "searchPlaceholder": "Zoek prospects...",
     "filter": "Filter",
     "sort": "Sorteren",
-    "viewTable": "Tabelweergave",
-    "viewFolders": "Mapweergave",
     "newDemo": "Nieuwe demo",
     "groups": {
       "activity": "Activiteit",
@@ -27,21 +25,30 @@
     "expired": "Alleen verlopen",
     "anyClient": "Elke client",
     "anyType": "Elk demotype",
-    "sortBy": {
-      "newest": "Nieuwste",
-      "prospect": "Prospect",
-      "company": "Bedrijf",
-      "activity": "Laatste activiteit"
-    },
     "noMatches": "Geen prospects gevonden",
     "clearFilters": "Filters wissen",
     "expiredHidden": "Verlopen links zijn verborgen. Zet Alleen verlopen aan in het filter om ze te zien."
   },
   "folders": {
-    "noClient": "Nog geen client",
     "noLinks": "Nog geen links",
     "otherLinks_one": "+{{count}} andere link",
     "otherLinks_other": "+{{count}} andere links"
+  },
+  "listView": {
+    "switchAria": "Weergave",
+    "table": "Tabel",
+    "cards": "Kaarten",
+    "direction": {
+      "asc": "Oplopend",
+      "desc": "Aflopend"
+    },
+    "groups": {
+      "today": "Vandaag",
+      "yesterday": "Gisteren",
+      "thisWeek": "Deze week",
+      "lastWeek": "Vorige week",
+      "unknown": "Geen datum"
+    }
   },
   "detail": {
     "title": "Prospect",
@@ -109,8 +116,7 @@
     "open": "Openen",
     "copyBrowser": "Browserlink kopiëren",
     "copyWhatsapp": "WhatsApp-link kopiëren",
-    "copied": "Gekopieerd",
-    "refresh": "Vernieuwen"
+    "copied": "Gekopieerd"
   },
   "links": {
     "copy": "Link kopiëren",

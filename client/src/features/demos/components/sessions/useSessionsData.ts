@@ -45,7 +45,7 @@ export function useSessionsData() {
     // Blocks only while there is nothing to show: sessions still loading, or no rows yet and prospects still loading.
     isLoading: !error && (sessionsQ.isLoading || (prospectsQ.isLoading && rows.length === 0)),
     error,
+    // Only the error state's Retry: react-query and the SSE stream keep the data fresh otherwise.
     refresh,
-    refreshing: sessionsQ.isFetching || prospectsQ.isFetching,
   };
 }

@@ -2,14 +2,15 @@ import { useMemo, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus } from "lucide-react";
 import type { ProspectRow } from "../../prospectRows";
-import { DEFAULT_FILTERS, folderGroups, isFilterActive, visibleRows } from "../../sessionsView";
+import { DEFAULT_FILTERS, groupsByDate, isFilterActive, nextSort, visibleRows, type SortKey } from "../../sessionsView";
 import type { useDemoDraft } from "../../useDemoDraft";
 import { TOUCH_ROW } from "../../touchTargets";
 import { DemosLoading } from "../DemosLoading";
 import { CreateDemoPanel } from "../create/CreateDemoPanel";
 import { ProspectDetailPanel } from "../detail/ProspectDetailPanel";
-import { ProspectFolders } from "../folders/ProspectFolders";
+import { ProspectCards } from "../cards/ProspectCards";
 import { SessionsTable } from "../table/SessionsTable";
+import { useDateGroups } from "./useDateGroups";
 import type { SessionsState } from "./useSessionsState";
 
 /** A centred message with an optional action: the empty, no-match and error states share it. */
@@ -53,7 +54,7 @@ function PanelSlot({ state, draft, rows }: { state: SessionsState; draft: Return
   return null;
 }
 
-/** The Sessions tab: the table (or its loading, error, empty and no-match states) and the right-hand panel. */
+/** The Sessions tab: the table or the cards (or the loading, error, empty and no-match states) and the right-hand panel. */
 export function SessionsBody({ state, draft, rows, isLoading, error, onRetry, onOpenClient }: {
   state: SessionsState;
   /** The create panel's draft, owned by DemosPage (R22): tab switches unmount this component. */
@@ -68,10 +69,10 @@ export function SessionsBody({ state, draft, rows, isLoading, error, onRetry, on
   const { t } = useTranslation("demos");
   const { search, filters, sort } = state;
   const visible = useMemo(() => visibleRows(rows, filters, search, sort), [rows, filters, search, sort]);
-  const groups = useMemo(
-    () => (state.view === "folders" ? folderGroups(rows, filters, search, sort) : null),
-    [state.view, rows, filters, search, sort],
-  );
+  // The cards always sit under date headings; the table only while it is sorted by Sent.
+  const cards = state.view === "cards";
+  const groups = useDateGroups(visible, sort, cards || groupsByDate(sort));
+  const onSort = (key: SortKey) => state.setSort(nextSort(sort, key));
   const openRow = (key: string) => state.setPanel({ kind: "detail", key });
   const narrowed = isFilterActive(filters) || search.trim() !== "";
   const clearFilters = () => {
@@ -110,10 +111,18 @@ export function SessionsBody({ state, draft, rows, isLoading, error, onRetry, on
       </StateMessage>
     );
   } else {
-    content = groups ? (
-      <ProspectFolders groups={groups} highlightKey={state.highlightKey} onOpenRow={openRow} />
+    content = cards ? (
+      <ProspectCards groups={groups ?? []} highlightKey={state.highlightKey} onOpenRow={openRow} />
     ) : (
-      <SessionsTable rows={visible} highlightKey={state.highlightKey} onOpenRow={openRow} onOpenClient={onOpenClient} />
+      <SessionsTable
+        rows={visible}
+        groups={groups}
+        sort={sort}
+        onSort={onSort}
+        highlightKey={state.highlightKey}
+        onOpenRow={openRow}
+        onOpenClient={onOpenClient}
+      />
     );
   }
 

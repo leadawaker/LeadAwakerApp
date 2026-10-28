@@ -6,6 +6,7 @@ import { PageTopbar, TopbarTabs, type TopbarTab } from "@/components/crm/primiti
 import { useLastTab } from "@/hooks/useLastTab";
 import { SessionsBody } from "../components/sessions/SessionsBody";
 import { SessionsTopbarActions } from "../components/sessions/SessionsTopbarActions";
+import { SessionsViewSwitch } from "../components/sessions/SessionsViewSwitch";
 import { useSessionsData } from "../components/sessions/useSessionsData";
 import { useSessionsState } from "../components/sessions/useSessionsState";
 import { DemoSettingsTab } from "../components/DemoSettingsTab";
@@ -44,12 +45,13 @@ function DemosContent() {
       <PageTopbar
         title={t("title")}
         scroll
-        left={<TopbarTabs tabs={tabs} value={tab} onChange={setTab} className="max-md:[&_.la-seg-btn]:min-h-11" />}
-        right={
-          tab === "sessions" ? (
-            <SessionsTopbarActions state={state} clients={data.clients} onRefresh={data.refresh} refreshing={data.refreshing} />
-          ) : undefined
+        left={
+          <>
+            <TopbarTabs tabs={tabs} value={tab} onChange={setTab} className="max-md:[&_.la-seg-btn]:min-h-11" />
+            {tab === "sessions" && <SessionsViewSwitch view={state.view} onView={state.setView} />}
+          </>
         }
+        right={tab === "sessions" ? <SessionsTopbarActions state={state} clients={data.clients} /> : undefined}
       />
 
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>

@@ -10,9 +10,7 @@
     "searchPlaceholder": "Search prospects...",
     "filter": "Filter",
     "sort": "Sort",
-    "viewTable": "Table view",
-    "viewFolders": "Folder view",
-    "newDemo": "New demo",
+    "newDemo": "New Demo",
     "groups": {
       "activity": "Activity",
       "client": "Client",
@@ -27,21 +25,30 @@
     "expired": "Expired only",
     "anyClient": "Any client",
     "anyType": "Any demo type",
-    "sortBy": {
-      "newest": "Newest",
-      "prospect": "Prospect",
-      "company": "Company",
-      "activity": "Last activity"
-    },
     "noMatches": "No prospects match",
     "clearFilters": "Clear filters",
     "expiredHidden": "Expired links are hidden. Switch on Expired only in the filter to see them."
   },
   "folders": {
-    "noClient": "No client yet",
     "noLinks": "No links yet",
     "otherLinks_one": "+{{count}} other link",
     "otherLinks_other": "+{{count}} other links"
+  },
+  "listView": {
+    "switchAria": "View",
+    "table": "Table",
+    "cards": "Cards",
+    "direction": {
+      "asc": "Ascending",
+      "desc": "Descending"
+    },
+    "groups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This week",
+      "lastWeek": "Last week",
+      "unknown": "No date"
+    }
   },
   "detail": {
     "title": "Prospect",
@@ -109,8 +116,7 @@
     "open": "Open",
     "copyBrowser": "Copy browser link",
     "copyWhatsapp": "Copy WhatsApp link",
-    "copied": "Copied",
-    "refresh": "Refresh"
+    "copied": "Copied"
   },
   "links": {
     "copy": "Copy link",
