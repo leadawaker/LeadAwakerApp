@@ -3,36 +3,43 @@
  * shown as the "Demo personas" tab of the Demos page and as the Clients tab
  * of the Campaigns page.
  *
- * A list of personas grouped by category; opening one puts its editor beside
- * the list (the list narrows to a rail), or over it when there is no room
- * for both. That switch is a container query in clients.css, not a viewport
- * check, because the Campaigns page gives this tab far less width than the
- * Demos page does on the same screen.
+ * A list of personas in category (or date) sections, newest first inside each;
+ * opening one puts its editor beside the list (the list narrows to a rail), or
+ * over it when there is no room for both. That switch is a container query in
+ * clients.css, not a viewport check, because the Campaigns page gives this tab
+ * far less width than the Demos page does on the same screen.
  *
  * "Which Client is open" is controlled by the parent (selectedNiche /
  * onSelectNiche), not local state here: on the Campaigns page the topbar's
  * "..." menu (ClientActionsMenu.tsx) needs to know which Client is open too,
  * and that topbar is a sibling of this tab's body. The Demos page has no such
  * topbar slot, so it passes `showActions` and the menu sits in the panel header.
+ *
+ * The filters and the grouping follow the same split: the Demos page owns them
+ * (`view`) and shows them in its topbar (ClientsTopbarActions); with no `view`,
+ * as on the Campaigns page, the tab keeps its own and shows the inline filter bar.
  */
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { SearchX, UsersRound } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDemoClients, type DemoClientSummary } from "../../api/demoClientsApi";
+import { useDemoClients } from "../../api/demoClientsApi";
 import { ClientActionsMenu } from "./ClientActionsMenu";
-import { ClientCategorySection } from "./ClientCategorySection";
 import { ClientEditor } from "./ClientEditor";
+import { ClientGroupSection } from "./ClientGroupSection";
 import { ClientsFilters } from "./ClientsFilters";
 import { ClientsHero } from "./ClientsHero";
+import { GroupBySwitch } from "./GroupBySwitch";
+import { PersonaDeleteDialog } from "./PersonaDeleteDialog";
 import {
   DEFAULT_PERSONA_FILTERS,
   hasActiveFilters,
   languageCounts,
   personaCategories,
   personaMatches,
-  type PersonaFilters,
 } from "./personaFilters";
+import { formatPersonaDate, groupPersonas } from "./personaView";
+import { usePersonaView, type PersonaView } from "./usePersonaView";
 import "@/features/automation/automation.css";
 import "./clients.css";
 
@@ -40,56 +47,35 @@ export function ClientsTab({
   selectedNiche,
   onSelectNiche,
   showActions = false,
+  view,
 }: {
   selectedNiche: string | null;
   onSelectNiche: (niche: string | null) => void;
   /** Put the duplicate/delete menu in the panel header (for a parent with no topbar slot for it). */
   showActions?: boolean;
+  /** The filters and grouping, owned by a parent that shows them in its topbar. Omit for the inline filter bar. */
+  view?: PersonaView;
 }) {
   const { t, i18n } = useTranslation("campaigns");
   const { t: td } = useTranslation("demos");
   const { data: clients, isLoading } = useDemoClients();
-  const [filters, setFilters] = useState<PersonaFilters>(DEFAULT_PERSONA_FILTERS);
+  const own = usePersonaView();
+  const { filters, setFilters, groupBy, setGroupBy } = view ?? own;
   const listRef = useRef<HTMLDivElement>(null);
+  // The persona whose Delete confirmation is open (from a row's trash button).
+  const [deleting, setDeleting] = useState<string | null>(null);
 
   const all = clients ?? [];
   const langCounts = useMemo(() => languageCounts(all), [clients]);
   const categories = useMemo(() => personaCategories(all), [clients]);
   const filtered = useMemo(() => all.filter((c) => personaMatches(c, filters)), [clients, filters]);
+  const groups = useMemo(() => groupPersonas(filtered, groupBy, { locale: i18n.language }), [filtered, groupBy, i18n.language]);
 
-  // Grouped by category, alphabetical, "Uncategorized" last. `key` is a
-  // stable, collision-proof group identity separate from the display `label`:
-  // a user can freely name a real category "Uncategorized" via
-  // CategorySelect's free-text create without colliding with the synthetic
-  // uncategorized bucket's React key.
-  const groups = useMemo(() => {
-    const byCategory = new Map<string, DemoClientSummary[]>();
-    for (const c of filtered) {
-      const key = (c.category ?? "").trim();
-      if (!byCategory.has(key)) byCategory.set(key, []);
-      byCategory.get(key)!.push(c);
-    }
-    const named = Array.from(byCategory.keys())
-      .filter((k) => k !== "")
-      .sort((a, b) => a.localeCompare(b))
-      .map((label) => ({ key: label, label, uncategorized: false, items: byCategory.get(label)! }));
-    const uncategorized = byCategory.get("");
-    if (uncategorized?.length) {
-      named.push({
-        key: "__uncategorized__",
-        label: t("clients.noCategory", "Uncategorized"),
-        uncategorized: true,
-        items: uncategorized,
-      });
-    }
-    return named;
-  }, [filtered, t]);
-
-  const categoryCount = useMemo(() => new Set(all.map((c) => (c.category ?? "").trim()).filter(Boolean)).size, [clients]);
+  const categoryCount = categories.length;
 
   const formatDate = useMemo(() => {
-    const fmt = new Intl.DateTimeFormat(i18n.language, { day: "numeric", month: "short" });
-    return (iso: string) => fmt.format(new Date(iso));
+    const now = new Date();
+    return (iso: string) => formatPersonaDate(iso, now, i18n.language);
   }, [i18n.language]);
 
   // Opening a persona narrows the list to a rail, which moves every row:
@@ -118,12 +104,20 @@ export function ClientsTab({
               <>
                 <ClientsHero clients={all} categories={categoryCount} />
 
-                <ClientsFilters filters={filters} onChange={setFilters} categories={categories} counts={langCounts} />
+                {!view && (
+                  <ClientsFilters
+                    filters={filters}
+                    onChange={setFilters}
+                    categories={categories}
+                    counts={langCounts}
+                    trailing={<GroupBySwitch value={groupBy} onChange={setGroupBy} />}
+                  />
+                )}
 
                 {groups.length > 0 && (
                   <div className="dp-captions" aria-hidden>
-                    <span>{t("clients.captions.persona")}</span><span>{t("clients.captions.languages")}</span>
-                    <span style={{ textAlign: "right" }}>{t("clients.captions.updated")}</span><span style={{ textAlign: "right" }}>{t("clients.captions.id")}</span><span />
+                    <span /><span>{t("clients.captions.persona")}</span><span>{t("clients.captions.languages")}</span>
+                    <span style={{ textAlign: "right" }}>{td("personaList.captions.added")}</span><span /><span />
                   </div>
                 )}
                 {groups.length === 0 && (
@@ -143,14 +137,13 @@ export function ClientsTab({
                   />
                 )}
                 {groups.map((g) => (
-                  <ClientCategorySection
-                    key={g.key}
-                    label={g.label}
-                    uncategorized={g.uncategorized}
-                    items={g.items}
+                  <ClientGroupSection
+                    key={`${g.kind}:${g.key}`}
+                    group={g}
                     selectedNiche={selectedNiche}
                     formatDate={formatDate}
                     onSelect={onSelectNiche}
+                    onDelete={setDeleting}
                   />
                 ))}
               </>
@@ -175,6 +168,15 @@ export function ClientsTab({
           </div>
         )}
       </div>
+
+      {deleting && (
+        <PersonaDeleteDialog
+          niche={deleting}
+          onClose={() => setDeleting(null)}
+          // Deleting the persona that is open closes its editor too.
+          onDeleted={() => { if (deleting === selectedNiche) onSelectNiche(null); }}
+        />
+      )}
     </div>
   );
 }

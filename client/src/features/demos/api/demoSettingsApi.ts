@@ -89,12 +89,13 @@ export const DEFAULT_OWNER_PHONE_BACKUP = "+31737044356";
 
 const ELEVEN_OPTIONS_KEY = ["voice-eleven-demo-options"];
 
-/** The ElevenLabs demo voices per locale (engine GET /voice/eleven/demo/options). */
-export function useElevenDemoOptions() {
+/** The ElevenLabs demo voices per locale (engine GET /voice/eleven/demo/options). `enabled: false` skips the request. */
+export function useElevenDemoOptions(enabled = true) {
   return useQuery({
     queryKey: ELEVEN_OPTIONS_KEY,
     queryFn: fetchElevenDemoOptions,
     staleTime: 60_000,
+    enabled,
   });
 }
 

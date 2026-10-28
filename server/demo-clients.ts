@@ -24,10 +24,11 @@
  */
 import { db } from "./db";
 import { nicheVocabulary, type NicheText, type SocialPostByLang } from "@shared/schema";
-import { eq, ne, asc } from "drizzle-orm";
+import { eq, ne, asc, sql } from "drizzle-orm";
 import type { ProductsByLang } from "@shared/demoProducts";
 import { contextProductFields, productPatchValues, type ProductPatch } from "./demoClientProducts";
 import { planScanFieldUpdate, type ScanFields } from "./demoSiteFacts";
+import { clientThumbFiles } from "./demoClientThumb";
 import { clientSource, liveTokensByClient } from "./demoProspects/clientUsage";
 import { loadDemoLeadsLite } from "./demoProspects/store";
 import {
@@ -216,7 +217,13 @@ export interface DemoClientSummary {
   source: "website" | "manual";
   /** Demo links on this persona that are neither revoked nor past their lifetime. */
   liveTokens: number;
+  /** When the persona was saved; null on a few old curated rows. */
+  createdAt: Date | null;
   updatedAt: Date | null;
+  /** Logo file (served by /api/site-shot/), only while the Client's logo switch is on. */
+  logo: string | null;
+  /** Website screenshot file (served by /api/site-shot/): the thumbnail when there is no logo. */
+  screenshot: string | null;
 }
 
 /** Live demo links per persona niche (see demoProspects/clientUsage.ts). */
@@ -239,7 +246,8 @@ export async function listDemoClients(): Promise<DemoClientSummary[]> {
     .select()
     .from(nicheVocabulary)
     .where(ne(nicheVocabulary.niche, DEFAULT_NICHE))
-    .orderBy(asc(nicheVocabulary.niche));
+    // Newest first; rows with no created_at (old curated packs) last, by name.
+    .orderBy(sql`${nicheVocabulary.createdAt} desc nulls last`, asc(nicheVocabulary.niche));
 
   return rows.map((r) => {
     // The same helper the create-link guard uses, so the badge can never
@@ -261,7 +269,9 @@ export async function listDemoClients(): Promise<DemoClientSummary[]> {
       accountsId: r.accountsId ?? null,
       source: clientSource(r),
       liveTokens: live.get(r.niche) ?? 0,
+      createdAt: r.createdAt ?? null,
       updatedAt: r.updatedAt ?? null,
+      ...clientThumbFiles(r),
     };
   });
 }

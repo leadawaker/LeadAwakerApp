@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   DEFAULT_PERSONA_FILTERS,
   hasActiveFilters,
+  hasMenuFilters,
   languageCounts,
   personaCategories,
   personaMatches,
@@ -58,4 +59,12 @@ test("hasActiveFilters ignores padding in the search", () => {
   assert.equal(hasActiveFilters(DEFAULT_PERSONA_FILTERS), false);
   assert.equal(hasActiveFilters({ ...DEFAULT_PERSONA_FILTERS, search: "  " }), false);
   assert.equal(hasActiveFilters({ ...DEFAULT_PERSONA_FILTERS, source: "manual" }), true);
+});
+
+test("the Filter button's dot ignores the search, which has its own field", () => {
+  assert.equal(hasMenuFilters(DEFAULT_PERSONA_FILTERS), false);
+  assert.equal(hasMenuFilters({ ...DEFAULT_PERSONA_FILTERS, search: "meure" }), false);
+  assert.equal(hasMenuFilters({ ...DEFAULT_PERSONA_FILTERS, lang: "nl" }), true);
+  assert.equal(hasMenuFilters({ ...DEFAULT_PERSONA_FILTERS, category: "Automotive" }), true);
+  assert.equal(hasMenuFilters({ ...DEFAULT_PERSONA_FILTERS, source: "website" }), true);
 });

@@ -241,12 +241,12 @@
       "voiceMaxMinutesPerSession": "Minutos por ligação de voz",
       "voiceMaxSessionsPerDemo": "Ligações de voz por demo",
       "callNumber": "Número em \"Ou ligue para ela\"",
-      "voiceEngineHint": "A demo de voz usa o motor definido por idioma em Recepcionista IA."
+      "voiceEngineHint": "A demo de voz usa o GPT-Live, com a voz definida por idioma em Recepcionista IA."
     },
     "empty": "Nada para configurar aqui: esta demo roda na configuração de demo compartilhada.",
     "rail": {
       "label": "Serviços",
-      "voice": "Engine, vozes, ligações",
+      "voice": "Vozes, ligações",
       "shared": "Configuração de demo compartilhada"
     },
     "campaign": {
@@ -282,8 +282,8 @@
       }
     },
     "eleven": {
-      "voicesTitle": "Motor e voz por idioma",
-      "hint": "Os links de demo, as demos por telefone e a demo do site usam o motor definido para o idioma deles.",
+      "voicesTitle": "Voz por idioma",
+      "hint": "Os links de demo, as demos por telefone e a demo do site usam todos o GPT-Live. Escolha a voz de cada idioma.",
       "engineFor": "Motor para {{language}}",
       "voiceFor": "Voz",
       "localeDefault": "Voz padrão",
@@ -384,6 +384,30 @@
       "leg_busy": "{{who}}: linha ocupada.",
       "leg_no_answer": "{{who}}: não atendeu."
     }
+  },
+  "personaList": {
+    "groupBy": {
+      "label": "Agrupar por",
+      "category": "Categoria",
+      "date": "Data"
+    },
+    "filter": {
+      "button": "Filtrar",
+      "language": "Idioma"
+    },
+    "dateGroups": {
+      "today": "Hoje",
+      "yesterday": "Ontem",
+      "thisWeek": "Esta semana",
+      "lastWeek": "Semana passada",
+      "unknown": "Sem data"
+    },
+    "captions": {
+      "added": "Adicionada"
+    },
+    "addedOn": "Adicionada em {{date}}",
+    "updatedOn": "Atualizada em {{date}}",
+    "delete": "Excluir {{name}}"
   },
   "personas": {
     "allNiches": "Todos os nichos",

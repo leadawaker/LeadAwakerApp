@@ -14,6 +14,8 @@ import { useDemoDraft } from "../useDemoDraft";
 // The Clients library lives here rather than on the Campaigns page: a Client is
 // a demo persona, not a campaign setting, and this is where demos are made.
 import { ClientsTab } from "@/features/campaigns/components/clients/ClientsTab";
+import { ClientsTopbarActions } from "@/features/campaigns/components/clients/ClientsTopbarActions";
+import { usePersonaView } from "@/features/campaigns/components/clients/usePersonaView";
 
 type Tab = "sessions" | "clients" | "settings";
 // A remembered tab outside this list (the retired "new") opens Sessions.
@@ -28,6 +30,7 @@ function DemosContent() {
   const state = useSessionsState();
   const draft = useDemoDraft();
   const data = useSessionsData();
+  const personaView = usePersonaView();
 
   const openClient = (niche: string) => {
     setSelectedClientNiche(niche);
@@ -51,7 +54,11 @@ function DemosContent() {
             {tab === "sessions" && <SessionsViewSwitch view={state.view} onView={state.setView} />}
           </>
         }
-        right={tab === "sessions" ? <SessionsTopbarActions state={state} clients={data.clients} /> : undefined}
+        right={
+          tab === "sessions" ? (
+            <SessionsTopbarActions state={state} clients={data.clients} />
+          ) : tab === "clients" ? <ClientsTopbarActions view={personaView} /> : undefined
+        }
       />
 
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden" }}>
@@ -59,7 +66,7 @@ function DemosContent() {
           <DemoSettingsTab />
         ) : tab === "clients" ? (
           <div className="h-full min-h-0 overflow-hidden">
-            <ClientsTab selectedNiche={selectedClientNiche} onSelectNiche={setSelectedClientNiche} showActions />
+            <ClientsTab selectedNiche={selectedClientNiche} onSelectNiche={setSelectedClientNiche} showActions view={personaView} />
           </div>
         ) : (
           <SessionsBody
