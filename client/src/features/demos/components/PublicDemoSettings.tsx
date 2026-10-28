@@ -87,7 +87,7 @@ export function PublicDemoSettings() {
       )}
 
       <div style={{ display: "grid", gap: 10, marginTop: 16 }}>
-        {/* The engine follows the visitor's language (AI receptionist card). */}
+        {/* The GPT-Live voice follows the visitor's language (AI receptionist card). */}
         <span style={{ fontSize: 12, color: "var(--mute)" }}>{t("settings.publicDemo.voiceEngineHint")}</span>
         {FIELDS.map((f) => (
           <label key={f.key} style={{ display: "flex", alignItems: "center", gap: 10 }}>

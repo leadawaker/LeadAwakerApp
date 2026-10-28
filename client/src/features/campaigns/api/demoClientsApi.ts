@@ -69,9 +69,13 @@ export interface DemoClientSummary {
   source: "website" | "manual";
   /** Demo links on this persona that are not revoked or past their lifetime. */
   liveTokens: number;
+  /** When the persona was saved (ISO); null on a few old curated rows. */
+  createdAt: string | null;
   updatedAt: string | null;
   /** Filename of the widget demo's backdrop, or null. Served by /api/site-shot/. */
   screenshot: string | null;
+  /** Filename of the logo, or null (none, or its switch is off). Served by /api/site-shot/. */
+  logo: string | null;
 }
 
 export interface EditableDemoClient {

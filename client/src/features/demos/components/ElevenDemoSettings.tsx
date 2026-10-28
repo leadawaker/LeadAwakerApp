@@ -2,7 +2,12 @@
 // browser demos run on (minted links and the homepage demo alike) and that
 // engine's default voice (ElevenLabs with a preview, or GPT-Live). Saves only
 // its own fields: the server merges them into the voice row, so the Calls card
-// is untouched. Phone demos stay on ElevenLabs.
+// is untouched.
+//
+// ElevenLabs is hidden (SHOW_ELEVEN): every demo and line runs on GPT-Live now,
+// so the card shows only the GPT-Live voice per language and saves GPT-Live as
+// the engine of every language. The engine switch and the ElevenLabs voice
+// rows below are kept, so flipping the constant brings them back.
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Play, Square } from "lucide-react";
@@ -26,6 +31,8 @@ const LOCALE_NAMES: Record<ElevenDemoLocale, string> = {
   nl: "Nederlands", "en-GB": "English (UK)", "en-US": "English (US)", "pt-BR": "Português (BR)",
 };
 const ENGINES: DemoEngine[] = ["elevenlabs", "gpt-live"];
+/** Off: no engine switch and no ElevenLabs voices, GPT-Live for every language. */
+const SHOW_ELEVEN = false;
 const ROW = "flex items-center gap-2 max-sm:flex-wrap";
 const SELECT_W: React.CSSProperties = { width: 170, maxWidth: "100%" };
 
@@ -39,15 +46,17 @@ export function ElevenDemoSettings() {
   const [draft, setDraft] = useState<Draft | null>(null);
   const current: Draft = draft ?? saved;
   const patch = (next: Partial<Draft>) => setDraft({ ...current, ...next });
-  const eleven = useElevenDemoOptions();
+  const eleven = useElevenDemoOptions(SHOW_ELEVEN);
   const live = useEngineVoiceOptions();
   const preview = usePreview();
+  // Language names as the shown engine words them (the fixed names below until it answers).
+  const engineLocales: { id: string; label: string }[] = (SHOW_ELEVEN ? eleven.data?.locales : live.data?.locales) ?? [];
 
   const onSave = async () => {
     if (!draft) return;
     try {
       await save.mutateAsync({
-        engines: Object.fromEntries(LOCALES.map((l) => [l, demoEngineFor(current, l)])),
+        engines: Object.fromEntries(LOCALES.map((l) => [l, SHOW_ELEVEN ? demoEngineFor(current, l) : "gpt-live"])),
         elevenVoices: current.elevenVoices ?? {},
         defaultVoices: current.defaultVoices ?? {},
       });
@@ -64,19 +73,21 @@ export function ElevenDemoSettings() {
       <EngineState loading={eleven.isLoading || live.isLoading} error={eleven.error || live.error} />
       <div style={{ display: "grid", gap: 10, marginTop: 4 }}>
         {LOCALES.map((loc) => {
-          const engine = demoEngineFor(current, loc);
-          const label = eleven.data?.locales?.find((l) => l.id === loc)?.label ?? LOCALE_NAMES[loc];
+          const engine: DemoEngine = SHOW_ELEVEN ? demoEngineFor(current, loc) : "gpt-live";
+          const label = engineLocales.find((l) => l.id === loc)?.label ?? LOCALE_NAMES[loc];
           const onEngine = (next: DemoEngine) => patch({ engines: { ...(current.engines ?? {}), [loc]: next } });
           return (
             <div key={loc} className={ROW} data-testid={`demo-language-${loc}`}>
               <span style={SETTINGS_LABEL}>{label}</span>
-              <Seg<DemoEngine>
-                value={engine}
-                options={ENGINES}
-                ariaLabel={t("settings.eleven.engineFor", { language: label })}
-                label={(o) => t(`settings.voice.engines.engine.${o}`)}
-                onChange={onEngine}
-              />
+              {SHOW_ELEVEN && (
+                <Seg<DemoEngine>
+                  value={engine}
+                  options={ENGINES}
+                  ariaLabel={t("settings.eleven.engineFor", { language: label })}
+                  label={(o) => t(`settings.voice.engines.engine.${o}`)}
+                  onChange={onEngine}
+                />
+              )}
               {engine === "elevenlabs" ? (
                 <ElevenVoiceRow
                   locale={loc}

@@ -235,12 +235,12 @@
       "voiceMaxMinutesPerSession": "Minuten per spraakgesprek",
       "voiceMaxSessionsPerDemo": "Spraakgesprekken per demo",
       "callNumber": "Nummer bij \"Of bel haar\"",
-      "voiceEngineHint": "De stemdemo gebruikt de engine die per taal is ingesteld bij AI-receptionist."
+      "voiceEngineHint": "De stemdemo draait op GPT-Live, met de stem die per taal is ingesteld bij AI-receptionist."
     },
     "empty": "Hier valt niets in te stellen: deze demo draait op de gedeelde demo-opzet.",
     "rail": {
       "label": "Diensten",
-      "voice": "Engine, stemmen, gesprekken",
+      "voice": "Stemmen, gesprekken",
       "shared": "Gedeelde demo-opzet"
     },
     "campaign": {
@@ -276,8 +276,8 @@
       }
     },
     "eleven": {
-      "voicesTitle": "Engine en stem per taal",
-      "hint": "Demolinks, telefoondemo's en de websitedemo draaien op de engine die voor hun taal is gekozen.",
+      "voicesTitle": "Stem per taal",
+      "hint": "Demolinks, telefoondemo's en de websitedemo draaien allemaal op GPT-Live. Kies per taal de stem.",
       "engineFor": "Engine voor {{language}}",
       "voiceFor": "Stem",
       "localeDefault": "Standaardstem",
@@ -378,6 +378,30 @@
       "leg_busy": "{{who}}: in gesprek.",
       "leg_no_answer": "{{who}}: niet opgenomen."
     }
+  },
+  "personaList": {
+    "groupBy": {
+      "label": "Groeperen op",
+      "category": "Categorie",
+      "date": "Datum"
+    },
+    "filter": {
+      "button": "Filteren",
+      "language": "Taal"
+    },
+    "dateGroups": {
+      "today": "Vandaag",
+      "yesterday": "Gisteren",
+      "thisWeek": "Deze week",
+      "lastWeek": "Vorige week",
+      "unknown": "Zonder datum"
+    },
+    "captions": {
+      "added": "Toegevoegd"
+    },
+    "addedOn": "Toegevoegd op {{date}}",
+    "updatedOn": "Bijgewerkt op {{date}}",
+    "delete": "{{name}} verwijderen"
   },
   "personas": {
     "allNiches": "Alle niches",

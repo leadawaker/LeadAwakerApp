@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { SearchPill } from "@/components/ui/search-pill";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
@@ -14,13 +14,17 @@ const ANY_CATEGORY = "__any__";
 /**
  * The persona list's filter row: language, niche (category), source and search.
  * Controlled by the tab, which owns the state and applies `personaMatches`.
+ * Only the Campaigns page's Clients tab shows this bar; on the Demos page the same
+ * filters live in the topbar (ClientsTopbarActions).
  */
-export function ClientsFilters({ filters, onChange, categories, counts }: {
+export function ClientsFilters({ filters, onChange, categories, counts, trailing }: {
   filters: PersonaFilters;
   onChange: (next: PersonaFilters) => void;
   categories: string[];
   /** How many personas each language filter keeps. */
   counts: Record<LangFilter, number>;
+  /** Extra control at the end of the row (the Category | Date switch). */
+  trailing?: ReactNode;
 }) {
   const { t } = useTranslation("campaigns");
   const { t: td } = useTranslation("demos");
@@ -92,6 +96,8 @@ export function ClientsFilters({ filters, onChange, categories, counts }: {
           placeholder={t("clients.searchPlaceholder", "Search personas...")}
         />
       </div>
+
+      {trailing}
     </div>
   );
 }

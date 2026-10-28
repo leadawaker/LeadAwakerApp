@@ -3,8 +3,8 @@ import { useTranslation } from "react-i18next";
 import { MoreHorizontal, Copy, Trash2, ChevronLeft } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { IconBtn } from "@/components/ui/icon-btn";
-import { DeleteClientError, useDemoClient, useDuplicateDemoClient, useDeleteDemoClient } from "../../api/demoClientsApi";
-import { ConfirmDeleteDialog } from "./ConfirmDeleteDialog";
+import { useDemoClient, useDuplicateDemoClient } from "../../api/demoClientsApi";
+import { PersonaDeleteDialog } from "./PersonaDeleteDialog";
 import "./clients.css";
 
 export function ClientActionsMenu({
@@ -20,20 +20,14 @@ export function ClientActionsMenu({
   variant?: "topbar" | "panel";
 }) {
   const { t } = useTranslation("campaigns");
-  const { t: td } = useTranslation("demos");
   const { data: client } = useDemoClient(niche);
   const duplicate = useDuplicateDemoClient();
-  const remove = useDeleteDemoClient();
 
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"menu" | "duplicate">("menu");
   const [newNiche, setNewNiche] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  // Set when the server answers 409 live_tokens: the dialog then warns and the
-  // confirm button retries with force.
-  const [liveCount, setLiveCount] = useState<number | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   // Curated niche packs are listed and editable but not deletable: real
   // campaigns read their word lists. Duplicating one is still fine (it always
@@ -66,29 +60,6 @@ export function ClientActionsMenu({
         },
       },
     );
-  };
-
-  const closeDelete = () => {
-    setConfirmDelete(false);
-    setLiveCount(null);
-    setDeleteError(null);
-  };
-
-  const handleDelete = () => {
-    setDeleteError(null);
-    remove.mutate({ niche, force: liveCount !== null }, {
-      onSuccess: () => {
-        closeDelete();
-        onDeleted();
-      },
-      onError: (err: unknown) => {
-        if (err instanceof DeleteClientError && err.code === "live_tokens") {
-          setLiveCount(err.count);
-          return;
-        }
-        setDeleteError(err instanceof Error ? err.message : td("personas.deleteFailed"));
-      },
-    });
   };
 
   return (
@@ -183,14 +154,7 @@ export function ClientActionsMenu({
       </Popover>
 
       {confirmDelete && (
-        <ConfirmDeleteDialog
-          niche={niche}
-          liveCount={liveCount}
-          error={deleteError}
-          pending={remove.isPending}
-          onCancel={closeDelete}
-          onConfirm={handleDelete}
-        />
+        <PersonaDeleteDialog niche={niche} onClose={() => setConfirmDelete(false)} onDeleted={onDeleted} />
       )}
     </>
   );

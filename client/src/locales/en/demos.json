@@ -235,12 +235,12 @@
       "voiceMaxMinutesPerSession": "Minutes per voice call",
       "voiceMaxSessionsPerDemo": "Voice calls per demo",
       "callNumber": "Number shown as \"Or call her\"",
-      "voiceEngineHint": "The voice demo uses the engine set per language under AI receptionist."
+      "voiceEngineHint": "The voice demo runs on GPT-Live, with the voice set per language under AI receptionist."
     },
     "empty": "Nothing to set here: this demo runs on the shared demo setup.",
     "rail": {
       "label": "Services",
-      "voice": "Engine, voices, calls",
+      "voice": "Voices, calls",
       "shared": "Shared demo setup"
     },
     "campaign": {
@@ -276,8 +276,8 @@
       }
     },
     "eleven": {
-      "voicesTitle": "Engine and voice per language",
-      "hint": "Demo links, phone demos and the website demo run on the engine set for their language.",
+      "voicesTitle": "Voice per language",
+      "hint": "Demo links, phone demos and the website demo all run on GPT-Live. Pick its voice for each language.",
       "engineFor": "Engine for {{language}}",
       "voiceFor": "Voice",
       "localeDefault": "Default voice",
@@ -378,6 +378,30 @@
       "leg_busy": "{{who}}: line busy.",
       "leg_no_answer": "{{who}}: no answer."
     }
+  },
+  "personaList": {
+    "groupBy": {
+      "label": "Group by",
+      "category": "Category",
+      "date": "Date"
+    },
+    "filter": {
+      "button": "Filter",
+      "language": "Language"
+    },
+    "dateGroups": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "thisWeek": "This week",
+      "lastWeek": "Last week",
+      "unknown": "No date"
+    },
+    "captions": {
+      "added": "Added"
+    },
+    "addedOn": "Added {{date}}",
+    "updatedOn": "Updated {{date}}",
+    "delete": "Delete {{name}}"
   },
   "personas": {
     "allNiches": "All niches",

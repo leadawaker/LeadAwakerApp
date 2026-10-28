@@ -38,6 +38,11 @@ export function hasActiveFilters(f: PersonaFilters): boolean {
   return Boolean(f.search.trim()) || f.category !== "" || f.lang !== "all" || f.source !== "all";
 }
 
+/** True when a filter other than the search narrows the list: the dot on the topbar's Filter button (the search field shows its own query). */
+export function hasMenuFilters(f: PersonaFilters): boolean {
+  return f.category !== "" || f.lang !== "all" || f.source !== "all";
+}
+
 /** The category names in use, sorted, without blanks: the options of the category select. */
 export function personaCategories(clients: DemoClientSummary[]): string[] {
   const names = new Set(clients.map((c) => (c.category ?? "").trim()).filter(Boolean));
