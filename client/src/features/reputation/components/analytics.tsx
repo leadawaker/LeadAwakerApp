@@ -83,7 +83,7 @@ function RepRatingChart({ series }: { series: Overview["ratingSeries"] }) {
     <div className="neu-raised" style={{ flex: "2 1 460px", minWidth: 0, borderRadius: "var(--r-card)", background: "var(--card)", padding: "20px 22px", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 14 }}>
         <div className="eyebrow eyebrow-sm">Rating over time</div>
-        <div className="la-seg">
+        <div className="la-seg la-seg--main la-seg--soft la-seg--compact" role="tablist">
           {RANGES.map((r) => <button key={r.k} onClick={() => setRange(r.k)} className={`la-seg-btn${range === r.k ? " on" : ""}`}>{r.l}</button>)}
         </div>
       </div>

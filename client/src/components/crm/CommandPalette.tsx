@@ -35,7 +35,7 @@ import {
   Building2,
   User,
   ArrowRight,
-  ChartColumn,
+  House,
   AudioLines,
   ClipboardList,
   Settings,
@@ -81,7 +81,7 @@ export function CommandPalette() {
 
   // Navigation items
   const allNavItems: NavItem[] = useMemo(() => [
-    { href: `${prefix}/home`, labelKey: "sidebar.home", icon: ChartColumn, keywords: "stats statistics statistieken estatísticas métricas home dashboard receptionist overview" },
+    { href: `${prefix}/home`, labelKey: "sidebar.home", icon: House, keywords: "stats statistics statistieken estatísticas métricas home dashboard receptionist overview" },
     // Speed to Lead, Missed calls and Cadence are hidden until finished (list in RightSidebar.tsx).
     { href: `${prefix}/reputation`, labelKey: "sidebar.reputation", icon: Star, keywords: "reputation reviews google ratings", serviceKey: "reputation" },
     { href: `${prefix}/voice-calls`, labelKey: "sidebar.voiceCalls", icon: AudioLines, keywords: "voice calls phone receptionist recordings transcripts callers", voiceCallsOnly: true },

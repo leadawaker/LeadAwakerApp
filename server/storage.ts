@@ -36,6 +36,7 @@ import { clientAlertsStorage } from "./storage/clientAlerts";
 import { numberRequestsStorage } from "./storage/numberRequests";
 import { homeServicesStorage } from "./storage/homeServices";
 import { homeOverviewStorage } from "./storage/homeOverview";
+import { homeAttentionStorage } from "./storage/homeAttention";
 import { homePhoneStorage } from "./storage/homePhone";
 import { homeMessagingStorage } from "./storage/homeMessaging";
 import { homeWebsiteStorage } from "./storage/homeWebsite";
@@ -125,6 +126,7 @@ export const storage = {
   ...numberRequestsStorage,
   ...homeServicesStorage,
   ...homeOverviewStorage,
+  ...homeAttentionStorage,
   ...homePhoneStorage,
   ...homeMessagingStorage,
   ...homeWebsiteStorage,

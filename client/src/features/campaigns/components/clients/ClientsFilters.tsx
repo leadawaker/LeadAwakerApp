@@ -35,7 +35,7 @@ export function ClientsFilters({ filters, onChange, categories, counts, trailing
 
   return (
     <div className="dp-filters">
-      <div className="la-seg la-seg--pill" role="tablist" aria-label={t("clients.filterLabel")}>
+      <div className="la-seg la-seg--main la-seg--soft la-seg--compact" role="tablist" aria-label={t("clients.filterLabel")}>
         {LANG_OPTIONS.map((f) => (
           <button
             key={f}
@@ -71,7 +71,7 @@ export function ClientsFilters({ filters, onChange, categories, counts, trailing
         </SelectContent>
       </Select>
 
-      <div className="la-seg la-seg--pill" role="tablist" aria-label={td("personas.sourceLabel")}>
+      <div className="la-seg la-seg--main la-seg--soft la-seg--compact" role="tablist" aria-label={td("personas.sourceLabel")}>
         {SOURCE_OPTIONS.map((s) => (
           <button
             key={s}

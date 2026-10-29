@@ -3,9 +3,12 @@
 // right, with its preview beside it by default (Ctrl+P toggles it).
 // Parts live in ./promptList/.
 import { useState, useEffect, useRef, useMemo } from "react";
+import { ListPanelFooter, ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import { useTranslation } from "react-i18next";
-import { Plus, Trash2, PanelLeft, PanelLeftClose } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { useListPanelState } from "@/hooks/useListPanelState";
+import { useListPanelFold } from "@/hooks/useListPanelFold";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useLastTab } from "@/hooks/useLastTab";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { usePersistedSelection } from "@/hooks/usePersistedSelection";
@@ -66,10 +69,13 @@ export function PromptsListView(props: PromptsListViewProps) {
   const { t } = useTranslation("prompts");
   const { toast } = useToast();
   const [mobileView, setMobileView] = useState<"list" | "detail">("list");
-  const { state: listPanelState, cycle: cyclePanel } = useListPanelState();
+  const { state: listPanelState } = useListPanelState();
 
   // Area tab, reopening on the one used last.
   const [listTab, setListTab] = useLastTab<PromptListTab>("prompts", LIST_TABS, "chat");
+  // List fold button (lg+, where the list panel sits beside the editor; not on Niche).
+  const belowLg = useIsMobile(1024);
+  useListPanelFold(!belowLg && listTab !== "niche");
   const [showDemo, setShowDemo] = usePersistedState<boolean>("prompts-show-demo", true, (v) => typeof v === "boolean");
 
   const [showSystemMessage, setShowSystemMessage] = useState(false);
@@ -248,25 +254,14 @@ export function PromptsListView(props: PromptsListViewProps) {
     <div className="flex flex-col h-full" data-testid="prompts-list-view">
       <PageTopbar
         title={t("page.title")}
-        left={<>
-          <PromptCategoryTabs value={listTab} onChange={setListTab} counts={tabCounts} />
-          <div className="hidden lg:flex items-center" style={{ flexShrink: 0 }}>
-            <button
-              type="button"
-              className="la-btn la-btn--soft la-btn--icon"
-              onClick={cyclePanel}
-              title={listPanelState === "full" ? t("toolbar.compactPanel") : listPanelState === "compact" ? t("toolbar.hidePanel") : t("toolbar.showPanel")}
-            >
-              {listPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            </button>
-          </div>
-        </>}
+        shrinkLeft
+        left={<PromptCategoryTabs value={listTab} onChange={setListTab} counts={tabCounts} />}
         right={listTab === "niche" ? null : (
           <div className="hidden lg:flex items-center gap-1.5">
             {visiblePrompt && (MODEL_OPTIONS.includes(visiblePrompt.model) ? (
               <select
-                className="text-[11px] font-mono outline-none cursor-pointer shrink-0 neu-inset-crisp"
-                style={{ background: "var(--bg)", color: "var(--mute)", borderRadius: "var(--r-pill)", padding: "6px 12px", height: 34, border: "none" }}
+                className="text-[12px] font-mono outline-none cursor-pointer shrink-0 neu-inset-crisp"
+                style={{ background: "var(--bg)", color: "var(--mute)", borderRadius: "var(--r-pill)", padding: "0 14px", height: 38, border: "none" }}
                 value={visiblePrompt.model}
                 onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
                 aria-label={t("labels.model")}
@@ -275,8 +270,8 @@ export function PromptsListView(props: PromptsListViewProps) {
               </select>
             ) : (
               <span
-                className="text-[11px] font-mono shrink-0 neu-inset-crisp"
-                style={{ background: "var(--bg)", color: "var(--mute-2)", borderRadius: "var(--r-pill)", padding: "6px 12px", height: 34, lineHeight: "22px" }}
+                className="text-[12px] font-mono shrink-0 neu-inset-crisp"
+                style={{ background: "var(--bg)", color: "var(--mute-2)", borderRadius: "var(--r-pill)", padding: "0 14px", height: 38, lineHeight: "38px" }}
               >
                 {t("toolbar.hardcodedModel")}
               </span>
@@ -311,10 +306,12 @@ export function PromptsListView(props: PromptsListViewProps) {
             <button
               type="button"
               onClick={() => onOpenCreate(createCategory)}
-              className="la-btn la-btn--wine"
-              style={{ display: "inline-flex", alignItems: "center", gap: 6, height: 32, padding: "0 14px", fontSize: 12, flexShrink: 0 }}
+              className="la-btn la-btn--wine max-2xl:!w-[var(--tb-ctl)] max-2xl:!px-0"
+              style={{ flexShrink: 0 }}
+              title={t("toolbar.create")}
+              aria-label={t("toolbar.create")}
             >
-              <Plus size={13} /> {t("toolbar.create")}
+              <Plus size={16} /> <span className="max-2xl:hidden">{t("toolbar.create")}</span>
             </button>
           </div>
         )}
@@ -327,7 +324,9 @@ export function PromptsListView(props: PromptsListViewProps) {
       ) : (
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* ── Left: the prompt list ─────────────────────────────────── */}
-          {listPanelState === "hidden" ? null : listPanelState === "compact" ? (
+          {listPanelState === "hidden" ? (
+            <div className="hidden lg:flex"><ListPanelUnfoldButton /></div>
+          ) : listPanelState === "compact" ? (
             <div className="hidden lg:flex">
               <CompactPromptRail
                 items={tabFilteredPrompts}
@@ -377,6 +376,8 @@ export function PromptsListView(props: PromptsListViewProps) {
                   )
                 )}
               </div>
+              {/* Bottom bar: the list fold button at the right end */}
+              <ListPanelFooter />
             </div>
           )}
 

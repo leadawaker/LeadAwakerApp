@@ -36,6 +36,7 @@ function ToggleButton({ on, highlight, onClick, title, children }: {
         color: highlight ? "var(--wine)" : on ? "var(--ink)" : "var(--mute-2)",
       }}
       title={title}
+      aria-label={title}
       aria-pressed={on}
     >
       {children}
@@ -190,26 +191,28 @@ export function PromptDetailHeader({
       </div>
 
       <div className="flex items-center gap-2 shrink-0">
-        <span style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", whiteSpace: "nowrap" }}>
+        {/* Below 1440px (no page zoom since 2026-10-29) the size estimate hides and the
+            toggles show only their icon, so the prompt name keeps its room. */}
+        <span className="max-[1439px]:hidden" style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", whiteSpace: "nowrap" }}>
           {t("detail.sizeEstimate", { tokens: tokenEstimate, chars: (chars / 1000).toFixed(1) })}
         </span>
-        <div style={{ width: 1, height: 22, background: "var(--line)" }} />
+        <div className="max-[1439px]:hidden" style={{ width: 1, height: 22, background: "var(--line)" }} />
         <ToggleButton
           on={showSystemMessage}
           highlight={!!(prompt.systemMessage || prompt.system_message)}
           onClick={onToggleSystemMessage}
           title={t("detail.toggleSystemMessage")}
         >
-          <EyeOff size={13} /> {t("detail.systemMsg")}
+          <EyeOff size={13} /> <span className="max-[1439px]:hidden">{t("detail.systemMsg")}</span>
         </ToggleButton>
         <ToggleButton on={showNotes} highlight={!!prompt.notes} onClick={onToggleNotes} title={t("detail.toggleNotes")}>
-          <EyeOff size={13} /> {t("detail.notes")}
+          <EyeOff size={13} /> <span className="max-[1439px]:hidden">{t("detail.notes")}</span>
         </ToggleButton>
         <ToggleButton on={showSidebar} onClick={onToggleSidebar} title={t("detail.toggleSidebar")}>
-          {showSidebar ? <Eye size={13} /> : <EyeOff size={13} />} {t("detail.sidebar")}
+          {showSidebar ? <Eye size={13} /> : <EyeOff size={13} />} <span className="max-[1439px]:hidden">{t("detail.sidebar")}</span>
         </ToggleButton>
         <ToggleButton on={previewOpen} onClick={onTogglePreview} title={t("detail.togglePreview")}>
-          {previewOpen ? <EyeOff size={13} /> : <Eye size={13} />} {t("detail.preview")}
+          {previewOpen ? <EyeOff size={13} /> : <Eye size={13} />} <span className="max-[1439px]:hidden">{t("detail.preview")}</span>
         </ToggleButton>
       </div>
     </div>

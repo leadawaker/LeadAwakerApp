@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { ListPanelFooter, ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import {
   ArrowUpDown, ArrowUp, ArrowDown, Filter, Plus, Check,
   Clock, Layers, MapPin, Building2, MoreVertical, Search, X,
@@ -20,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { PageTopbar, TopbarTabs, TopbarIconButton, ExpandingSearch } from "@/components/crm/primitives";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useListPanelState } from "@/hooks/useListPanelState";
+import { useListPanelFold } from "@/hooks/useListPanelFold";
 import { ProspectDetailViewEmpty } from "./ProspectDetailView";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { ProspectCreatePanel } from "./ProspectCreatePanel";
@@ -155,6 +157,8 @@ export function ProspectListView({
   const [groupDirection, setGroupDirection] = useState<"asc" | "desc">("asc");
   // Shared global list-panel state (Prospects/Leads/Campaigns/Chats all cycle together).
   const { state: leftPanelState, setState: setLeftPanelState } = useListPanelState();
+  // List fold button (panel header): full → compact → hidden.
+  useListPanelFold(!isNarrow);
 
   // Auto-squeeze to compact when right panel is narrow (only if user hasn't explicitly hidden).
   const isCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
@@ -579,7 +583,6 @@ export function ProspectListView({
             ? cn("w-[65px] shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
             : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
       )}>
-
         {/* Scrollable prospect list */}
         <div ref={scrollContainerRef} className="la-list-area">
           {listLoading ? (
@@ -671,6 +674,8 @@ export function ProspectListView({
             </div>
           )}
         </div>
+        {/* Bottom bar: the list fold button at the right end (centered in the rail) */}
+        <ListPanelFooter compact={isCompact} />
       </div>
 
       {/* ── COMPACT HOVER CARD OVERLAY ───────────── */}
@@ -688,6 +693,13 @@ export function ProspectListView({
             hideAvatar
           />
         </CompactHoverCardPortal>
+      )}
+
+      {/* Hidden list: the slim strip that brings it back */}
+      {isHidden && (
+        <div className="flex rounded-lg overflow-hidden shadow-[var(--card-glow)]">
+          <ListPanelUnfoldButton />
+        </div>
       )}
 
       {/* ── RIGHT PANEL ──────────────────────────────────────────────── */}

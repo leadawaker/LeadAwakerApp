@@ -3,7 +3,7 @@
   "loadFailed": "De chatinstellingen konden niet worden geladen.",
   "empty": {
     "title": "Nog geen chatassistent",
-    "help": "Dit account heeft geen campagne die de websitechat of WhatsApp beantwoordt. Maak een receptiecampagne aan op de pagina Campagnes en koppel de websitechat en inkomende WhatsApp daaraan op Integraties.",
+    "help": "Dit account heeft geen campagne die de webchat of WhatsApp beantwoordt. Maak een receptiecampagne aan op de pagina Campagnes en koppel de webchat en inkomende WhatsApp daaraan op Integraties.",
     "helpClient": "Je chatassistent is nog niet ingesteld. Lead Awaker zet hem voor je klaar.",
     "openCampaigns": "Open Campagnes"
   },
@@ -22,7 +22,7 @@
     "greeting": {
       "label": "Begroeting",
       "help": "Hoe een chat begint op de website en op WhatsApp.",
-      "none": "Geen websitebegroeting"
+      "none": "Geen webchatbegroeting"
     },
     "behaviour": {
       "label": "Gedrag",
@@ -52,7 +52,7 @@
   },
   "overview": {
     "thisMonth": "Deze maand",
-    "websiteChats": "Websitechats",
+    "websiteChats": "Webchats",
     "whatsappChats": "WhatsApp-chats",
     "bookings": "Afspraken",
     "handedOff": "Doorgezet naar een mens",
@@ -60,7 +60,7 @@
     "unknownName": "Onbekende bezoeker",
     "noChats": "Nog geen chats.",
     "channel": {
-      "website": "Websitechat",
+      "website": "Webchat",
       "whatsapp": "WhatsApp"
     },
     "channels": "Kanalen",
@@ -72,16 +72,16 @@
     "widgetNone": "Niet ingesteld",
     "senderOn": "Nummer gekoppeld",
     "senderOff": "Geen WhatsApp-nummer gekoppeld",
-    "wiringHelp": "De websitechat installeren en het WhatsApp-nummer koppelen doe je op Integraties.",
+    "wiringHelp": "De webchat installeren en het WhatsApp-nummer koppelen doe je op Integraties.",
     "openIntegrations": "Open Integraties"
   },
   "greeting": {
-    "websiteTitle": "Websitechat",
+    "websiteTitle": "Webchat",
     "websiteHelp": "De eerste regel die bezoekers zien als ze de chat op de website openen.",
     "websiteLabel": "Begroeting",
     "websitePlaceholder": "Hoi, waarmee kan ik je helpen?",
-    "noWidget": "Dit account heeft nog geen websitechat. Voeg er een toe op Integraties.",
-    "agencyOnly": "De websitebegroeting wordt beheerd door Lead Awaker.",
+    "noWidget": "Dit account heeft nog geen webchat. Voeg er een toe op Integraties.",
+    "agencyOnly": "De webchatbegroeting wordt beheerd door Lead Awaker.",
     "saving": "Opslaan...",
     "saved": "Opgeslagen",
     "failed": "De begroeting kon niet worden opgeslagen.",

@@ -1,6 +1,8 @@
 import { useMemo, useState } from "react";
 import { CrmShell } from "@/components/crm/CrmShell";
+import { ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import { useLastTab } from "@/hooks/useLastTab";
+import { useListPanelFold } from "@/hooks/useListPanelFold";
 import { cn } from "@/lib/utils";
 import { mockSpeedToLeadCampaigns } from "../data/mockMetrics";
 import { SpeedToLeadListPanel } from "../components/SpeedToLeadListPanel";
@@ -13,6 +15,8 @@ function SpeedToLeadContent() {
   const [tab, setTab] = useLastTab<SpeedToLeadTab>("speedToLead", TABS, "performance");
   const [search, setSearch] = useState("");
   const [listHidden, setListHidden] = useState(false);
+  // List fold button (panel header): shows / hides this page's own list.
+  useListPanelFold(true, { hidden: listHidden, onToggle: () => setListHidden((v) => !v) });
   const [selectedId, setSelectedId] = useState<number>(mockSpeedToLeadCampaigns[0]?.id ?? 0);
 
   const filtered = useMemo(() => {
@@ -33,8 +37,6 @@ function SpeedToLeadContent() {
         onTabChange={setTab}
         search={search}
         onSearchChange={setSearch}
-        listHidden={listHidden}
-        onToggleList={() => setListHidden((v) => !v)}
       />
 
       <div className="flex flex-1 min-h-0 overflow-hidden">
@@ -45,6 +47,8 @@ function SpeedToLeadContent() {
             onSelect={setSelectedId}
           />
         </div>
+        {/* Hidden list: the slim strip that brings it back */}
+        <ListPanelUnfoldButton />
 
         <div className="flex-1 flex flex-col overflow-hidden min-h-0">
           {selected ? (

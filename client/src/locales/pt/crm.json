@@ -23,7 +23,12 @@
   "sidebar": {
     "skipToMain": "Ir para o conteúdo",
     "menu": "Menu",
-    "home": "Métricas",
+    "home": "Início",
+    "listPanelCompact": "Lista compacta",
+    "listPanelHide": "Ocultar lista",
+    "listPanelShow": "Mostrar lista",
+    "listPanelMinimize": "Minimizar lista",
+    "listPanelExpand": "Expandir lista",
     "calls": "Chamadas",
     "myReceptionist": "Minha conta",
     "myReceptionistShort": "Conta",

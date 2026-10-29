@@ -2,11 +2,20 @@
   "chatsTabs": {
     "chats": "Chats",
     "settings": "Configurações",
-    "aria": "Visualização"
+    "aria": "Visualização",
+    "openSettings": "Configurações do chat",
+    "back": "Chats",
+    "settingsTitle": "Configurações do chat",
+    "reactivationSettings": "Configurações de reativação"
+  },
+  "presenting": {
+    "on": "Identidades ocultas",
+    "off": "Identidades visíveis",
+    "tooltip": "Oculta nomes e números de telefone dos leads, também nas mensagens."
   },
   "chatChannel": {
     "all": "Todos os chats",
-    "website": "Site",
+    "website": "Webchat",
     "whatsapp": "WhatsApp"
   },
   "chatRecap": {
@@ -25,7 +34,7 @@
     "messageCounts": "{{received}} recebidas, {{sent}} enviadas",
     "bookingChannel": {
       "whatsapp": "WhatsApp",
-      "website": "site",
+      "website": "webchat",
       "booking_page": "página de agendamento",
       "phone": "telefone",
       "sms": "SMS"
@@ -33,11 +42,13 @@
   },
   "conversationType": {
     "label": "Canal",
-    "widget": "Chat do site",
+    "widget": "Webchat",
     "voice": "Telefone",
     "dbr": "Reativação / Orçamentos",
     "instagram": "Instagram",
-    "other": "Outros"
+    "other": "Outros",
+    "reactivationBadge": "Reativação",
+    "aiPrefix": "IA"
   },
   "page": {
     "chatsTitle": "Chats",
@@ -609,7 +620,7 @@
     "record": "Gravar mensagem de voz",
     "aiResumeBody": "O assistente retoma esta conversa. Você pode assumir de novo a qualquer momento.",
     "sendFailed": "Não foi possível enviar a mensagem. Tente de novo.",
-    "unreachable": "Uma resposta daqui não chega a esta pessoa: ela não escreveu pelo chat do seu site e sua conta ainda não tem um número de WhatsApp próprio. Peça ao Gabriel para conectar um.",
+    "unreachable": "Uma resposta daqui não chega a esta pessoa: ela não escreveu pelo webchat e sua conta ainda não tem um número de WhatsApp próprio. Peça ao Gabriel para conectar um.",
     "title": "Chat",
     "noMessages": "Nenhuma mensagem ainda",
     "noMessagesHint": "Mensagens aparecerão aqui quando o contato começar",
@@ -706,7 +717,7 @@
     "noLeads": "Nenhum lead encontrado"
   },
   "leadChannel": {
-    "website": "Chat do site",
+    "website": "Webchat",
     "whatsapp": "WhatsApp",
     "phone": "Ligou",
     "email": "E-mail",
@@ -714,7 +725,7 @@
   },
   "channelFilter": {
     "all": "Todos os canais",
-    "website": "Site",
+    "website": "Webchat",
     "whatsapp": "WhatsApp",
     "phone": "Telefone"
   },

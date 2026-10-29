@@ -156,7 +156,7 @@ export function NicheVocabularyPanel() {
     <div className="flex flex-col gap-3 px-5 py-5 h-full min-h-0">
       <p className="text-sm text-muted-foreground max-w-[680px]">{t("vocabulary.intro")}</p>
 
-      <div className="la-seg shrink-0" role="tablist" aria-label={t("vocabulary.title")}>
+      <div className="la-seg la-seg--main la-seg--soft self-start shrink-0" role="tablist" aria-label={t("vocabulary.title")}>
         {(["nl", "en"] as const).map((l) => (
           <button
             key={l}

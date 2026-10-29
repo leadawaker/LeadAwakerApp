@@ -397,7 +397,6 @@
         "delaysHint": "Aproximado: calculado pelos horários da transcrição.",
         "tools": "Ferramentas",
         "unknown": "Desconhecido",
-        "noTools": "Nenhuma ferramenta foi usada",
         "recording": "Gravação",
         "recordingLoading": "Carregando a gravação",
         "noRecording": "Esta ligação não tem gravação: os marcadores mostram quando as ferramentas rodaram.",
@@ -407,6 +406,7 @@
         "back": "Voltar 10 segundos",
         "forward": "Avançar 10 segundos",
         "speed": "Velocidade de reprodução",
+        "zoom": "Zoom",
         "zoomIn": "Aumentar zoom",
         "zoomOut": "Diminuir zoom",
         "download": "Baixar a gravação",
@@ -427,6 +427,37 @@
         "outcome": "Resultado"
       }
     },
+    "facts": {
+      "foundCount": "{{n}} encontrados",
+      "noneFound": "Nada encontrado",
+      "notInStock": "Fora de estoque",
+      "freeCount": "{{n}} horários livres",
+      "nothingFree": "Nada livre",
+      "booked": "Agendado",
+      "moved": "Remarcado",
+      "notBooked": "Não foi possível agendar",
+      "cancelled": "Cancelado",
+      "noAppointment": "Nenhum agendamento encontrado",
+      "callback": "Retorno solicitado",
+      "notes": "Anotações",
+      "ended": "Chamada encerrada",
+      "transferring": "Transferindo",
+      "transferFailed": "Ninguém livre",
+      "plateNone": "Não encontrada",
+      "plateInvalid": "Placa inválida",
+      "more": "+{{n}} mais",
+      "row": {
+        "name": "Nome",
+        "when": "Quando",
+        "type": "Tipo",
+        "reason": "Motivo",
+        "number": "Número"
+      },
+      "kind": {
+        "visit": "Visita",
+        "callback": "Retorno"
+      }
+    },
     "tools": {
       "search_stock": "Buscar estoque",
       "car_details": "Dados do carro",
@@ -436,6 +467,8 @@
       "request_callback": "Pedido de retorno",
       "update_call_summary": "Notas da ligação",
       "end_call": "Encerrar ligação",
+      "transfer_to_human": "Transferir para uma pessoa",
+      "rdw_plate_lookup": "Consulta de placa",
       "other": "Ferramenta",
       "running": "Em andamento"
     }

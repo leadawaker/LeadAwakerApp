@@ -1,0 +1,69 @@
+/* ─── Phone type scale and phone-only shell bits (below 768px) ─────────────
+   Gabriel reads the CRM on his phone a lot, so body, list, card-title and meta
+   text runs about 2px larger there. One place, no per-page hacks: the common
+   Tailwind sizes (text-xs, text-sm, text-base) and the arbitrary text-[Npx]
+   utilities up to 16px map up. Small labels land at 11px or more. Tiny text
+   inside a fixed tiny box (counter badges: h-3 to h-5, w-3 to w-5, min-w-4)
+   gets 1px less so it stays inside the box. Titles of 17px and up keep their
+   size. Inline style font sizes (StatusPill, the bottom bar, the More page) are
+   set by their own components and are not touched here.
+   An element that already sets its own phone size (a max-md:text-* class)
+   keeps it. Desktop is untouched.
+   SWITCH: the bump only applies while <html> has the class la-phone-type
+   (client/index.html). Remove that class to get the plain type scale on phones.
+   The bottom bar, More page and MobileListHeader set their own larger sizes
+   inline (RightSidebar.tsx, MobileMorePage.tsx, MobileListHeader.tsx); those are
+   not behind the switch. Since 2026-10-29 phones render at 100% (no 0.75 zoom),
+   so with the bump on, phone text is about a third larger than before. */
+@media (max-width: 767px) {
+  /* Tailwind's named sizes also set a tight line-height; loosen it for the
+     larger size unless a leading-* class set one (--tw-leading). */
+  :root.la-phone-type .text-xs:not([class*="max-md:text-"])          { font-size: 14px; line-height: var(--tw-leading, 1.35); }
+  :root.la-phone-type .text-sm:not([class*="max-md:text-"])          { font-size: 16px; line-height: var(--tw-leading, 1.4); }
+  :root.la-phone-type .text-base:not([class*="max-md:text-"])        { font-size: 18px; line-height: var(--tw-leading, 1.45); }
+
+  :root.la-phone-type .text-\[8px\]:not([class*="max-md:text-"]),
+  :root.la-phone-type .text-\[8\.5px\]:not([class*="max-md:text-"]),
+  :root.la-phone-type .text-\[9px\]:not([class*="max-md:text-"]),
+  :root.la-phone-type .text-\[9\.5px\]:not([class*="max-md:text-"])  { font-size: 11px; }
+  :root.la-phone-type .text-\[10px\]:not([class*="max-md:text-"])    { font-size: 11.5px; }
+  :root.la-phone-type .text-\[10\.5px\]:not([class*="max-md:text-"]) { font-size: 12px; }
+  :root.la-phone-type .text-\[11px\]:not([class*="max-md:text-"])    { font-size: 12.5px; }
+  :root.la-phone-type .text-\[11\.5px\]:not([class*="max-md:text-"]) { font-size: 13px; }
+  :root.la-phone-type .text-\[12px\]:not([class*="max-md:text-"])    { font-size: 14px; }
+  :root.la-phone-type .text-\[12\.5px\]:not([class*="max-md:text-"]) { font-size: 14.5px; }
+  :root.la-phone-type .text-\[13px\]:not([class*="max-md:text-"])    { font-size: 15px; }
+  :root.la-phone-type .text-\[13\.5px\]:not([class*="max-md:text-"]) { font-size: 15.5px; }
+  :root.la-phone-type .text-\[14px\]:not([class*="max-md:text-"])    { font-size: 16px; }
+  :root.la-phone-type .text-\[15px\]:not([class*="max-md:text-"])    { font-size: 17px; }
+  :root.la-phone-type .text-\[16px\]:not([class*="max-md:text-"])    { font-size: 18px; }
+
+  /* Counter badges and initials in a fixed tiny box: one step smaller so the
+     text stays inside (10px for the tiniest, 11px for 10 to 10.5px). */
+  :root.la-phone-type :is(.text-\[8px\], .text-\[8\.5px\], .text-\[9px\], .text-\[9\.5px\]):is(
+    [class~="h-3"], [class~="h-3.5"], [class~="h-4"], [class~="h-5"], [class~="h-[14px]"], [class~="h-[16px]"],
+    [class~="w-3"], [class~="w-3.5"], [class~="w-4"], [class~="w-5"], [class~="min-w-4"], [class~="min-w-[14px]"], [class~="min-w-[16px]"]
+  ):not([class*="max-md:text-"]) { font-size: 10px; }
+  :root.la-phone-type :is(.text-\[10px\], .text-\[10\.5px\]):is(
+    [class~="h-3"], [class~="h-3.5"], [class~="h-4"], [class~="h-5"], [class~="h-[14px]"], [class~="h-[16px]"], [class~="h-[18px]"],
+    [class~="w-3"], [class~="w-3.5"], [class~="w-4"], [class~="w-5"], [class~="w-[16px]"], [class~="w-[18px]"], [class~="min-w-4"]
+  ):not([class*="max-md:text-"]) { font-size: 11px; }
+
+  /* More page: section headings, rows inside a grouped panel and the flat utility buttons. */
+  .la-more-heading { font-size: 13px; font-weight: 600; letter-spacing: 0.14em; padding: 2px 6px; }
+  .la-more-row { transition: background-color 120ms; -webkit-tap-highlight-color: transparent; }
+  .la-more-row:active { background: color-mix(in srgb, var(--ink) 6%, transparent); }
+  .la-more-util { transition: background-color 120ms; -webkit-tap-highlight-color: transparent; }
+  .la-more-util:active,
+  .la-more-util[data-state="open"] { background: color-mix(in srgb, var(--wine) 10%, transparent); }
+
+  /* Page topbars (.la-page-header) at native phone width (no zoom since 2026-10-29):
+     the main tab strip shows icons only (the title names the page), and a bar that
+     is still too wide scrolls sideways instead of clipping its last buttons. */
+  .la-page-header { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .la-page-header::-webkit-scrollbar { display: none; }
+  .la-page-header .la-seg--main .la-seg-btn:has(> svg) { font-size: 0; gap: 0; padding: 0 11px; }
+  /* .la-seg--collapse (a title-row tab strip, e.g. Billing): idle tabs show only their
+     icon and take their own width; the selected tab keeps its label and the rest. */
+  .la-seg--collapse .la-seg-btn:not(.on):has(> svg) { font-size: 0; gap: 0; padding: 0 12px; flex: 0 0 auto; }
+}

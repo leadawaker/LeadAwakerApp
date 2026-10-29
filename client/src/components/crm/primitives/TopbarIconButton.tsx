@@ -1,6 +1,7 @@
 // Icon-only action button for the PageTopbar (Filter, Sort, Group, Fields, the
 // list fold, ...). The soft raised la-btn with a wine dot underneath when the
 // menu it opens holds a non-default value. Works as a DropdownMenuTrigger child.
+// In a topbar it is 38px with a 16px icon (design-system.css "Topbar scale").
 import * as React from "react";
 import { cn } from "@/lib/utils";
 

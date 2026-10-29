@@ -57,6 +57,7 @@ const THEME_CYCLE: { mode: ThemeMode; icon: typeof Sun; labelKey: string }[] = [
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
+import { notificationsUrl, notificationsView } from "@/lib/phoneNotifications";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useCurrentUserIdentity } from "@/hooks/useCurrentUserIdentity";
 import { displayName, initialsFor, shortName } from "@/lib/userIdentity";
@@ -175,9 +176,9 @@ export function RightSidebar({
 
   // Notification unread count for the bell badge
   const { data: notifCountData } = useQuery<{ unreadCount: number }>({
-    queryKey: ["/api/notifications/count"],
+    queryKey: ["/api/notifications/count", notificationsView()],
     queryFn: async () => {
-      const res = await apiFetch("/api/notifications/count");
+      const res = await apiFetch(notificationsUrl("/api/notifications/count"));
       if (!res.ok) return { unreadCount: 0 };
       return res.json();
     },
@@ -234,6 +235,26 @@ export function RightSidebar({
     return () => window.removeEventListener("leadawaker-voice-note-result", handler);
   }, [toast, t]);
   const formatVoiceTimer = (secs: number) => `${Math.floor(secs / 60)}:${String(secs % 60).padStart(2, "0")}`;
+  const voiceNoteLabel = voiceState.transcribing
+    ? t("voiceNote.transcribing")
+    : voiceState.recording
+    ? `${t("voiceNote.stop")} (${formatVoiceTimer(voiceState.elapsedSeconds)})`
+    : t("voiceNote.start");
+  // Icon-only: the label lives in the tooltip (with the timer while recording).
+  const voiceNoteBtn = (
+    <button
+      type="button"
+      className="la-profile-menu-item"
+      style={{ width: 36, height: 36, padding: 0, flex: "none", justifyContent: "center", ...(voiceState.recording ? { background: "var(--wine-tint)", color: "var(--wine)" } : {}) }}
+      title={voiceNoteLabel}
+      aria-label={voiceNoteLabel}
+      data-testid="nav-voice-note"
+      onClick={toggleVoiceRecording}
+      disabled={voiceState.transcribing}
+    >
+      <Mic size={14} className={voiceState.recording || voiceState.transcribing ? "animate-pulse" : undefined} style={voiceState.recording ? { color: "var(--wine)" } : undefined} />
+    </button>
+  );
   const userInitials = initialsFor(userName);
   const shownName = shortName(userName);
 
@@ -355,14 +376,15 @@ export function RightSidebar({
   // Unselected: muted ink on the sand. Selected: a filled wine pill, bone icon + label.
   const barTabStyle = (active: boolean): React.CSSProperties => ({
     borderRadius: "var(--r-card)",
-    color: active ? "var(--on-wine)" : "var(--chrome-deep-ink)",
-    background: active ? "var(--wine)" : "transparent",
-    transition: "background-color 160ms, color 160ms",
+    color: active ? "var(--wine)" : "var(--chrome-deep-ink)",
+    background: active ? "var(--card)" : "transparent",
+    boxShadow: active ? "var(--sh-raised-crisp)" : "none",
+    transition: "background-color 160ms, color 160ms, box-shadow 160ms",
   });
   const barLabelStyle = (active: boolean): React.CSSProperties => ({
     fontFamily: "var(--mono)",
-    fontSize: 10,
-    letterSpacing: "0.04em",
+    fontSize: 11,
+    letterSpacing: "0.02em",
     textTransform: "uppercase",
     color: "inherit",
     fontWeight: active ? 700 : 500,
@@ -393,7 +415,7 @@ export function RightSidebar({
         />
       </div>
 
-      {/* MOBILE BOTTOM BAR — deep sand; the selected tab is a filled wine pill.
+      {/* MOBILE BOTTOM BAR: deep sand; the selected tab is a raised card with a wine icon and label.
           Clients: Stats, Calls, Calendar, Chats (or Leads), More.
           Agency: Stats, Calls, Chats, Tasks, More. */}
       <div
@@ -666,33 +688,6 @@ export function RightSidebar({
           padding: "12px 12px 14px",
           borderTop: "1px solid var(--line)",
         }}>
-          {/* Voice memo mic — Owner only. Records, then copies the transcription to clipboard. */}
-          {isOwner && (
-            <button
-              type="button"
-              className="la-notif-btn"
-              style={{ marginBottom: 6, ...(voiceState.recording ? { background: "var(--wine-tint)", color: "var(--wine)" } : {}) }}
-              title={voiceState.recording ? t("voiceNote.stop") : t("voiceNote.start")}
-              data-testid="nav-voice-note"
-              onClick={toggleVoiceRecording}
-              disabled={voiceState.transcribing}
-            >
-              <Mic size={14} className={voiceState.recording ? "animate-pulse" : undefined} />
-              <span style={{ flex: 1, textAlign: "left", fontSize: 12, fontWeight: 600 }}>
-                {voiceState.transcribing
-                  ? t("voiceNote.transcribing")
-                  : voiceState.recording
-                  ? t("voiceNote.recording")
-                  : t("voiceNote.title")}
-              </span>
-              {voiceState.recording && (
-                <span style={{ fontSize: 11, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>
-                  {formatVoiceTimer(voiceState.elapsedSeconds)}
-                </span>
-              )}
-            </button>
-          )}
-
           {/* Notifications button — full-width pill with bell + label + badge */}
           <Popover open={notifOpen} onOpenChange={setNotifOpen}>
             <PopoverTrigger asChild>
@@ -725,8 +720,10 @@ export function RightSidebar({
             </PopoverContent>
           </Popover>
 
-          {/* Profile card */}
-          <div style={{ position: "relative", marginTop: 8 }}>
+          {/* Profile row: [profile card | voice memo mic while it records or transcribes] */}
+          {/* The row is the positioning box so the profile menu keeps the full footer width. */}
+          <div style={{ position: "relative", display: "flex", alignItems: "center", gap: 6, marginTop: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
             {profileOpen && (
               <div className="la-profile-menu">
                 {/* One way into Settings: Profile, Preferences and the rest are its own tabs. */}
@@ -734,11 +731,16 @@ export function RightSidebar({
                   data-testid="nav-settings">
                   <Settings size={14} />{t("sidebar.settings")}
                 </button>
+                {/* Owner only: Lead Awaker AI, and beside it the icon-only voice memo mic
+                    (records, then copies the transcription to the clipboard). */}
                 {isOwner && (
-                  <button className="la-profile-menu-item" onClick={() => { setProfileOpen(false); onOpenAi?.(); }}
-                    data-testid="nav-ai">
-                    <Bot size={14} />Lead Awaker AI
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <button className="la-profile-menu-item" style={{ flex: 1, minWidth: 0 }} onClick={() => { setProfileOpen(false); onOpenAi?.(); }}
+                      data-testid="nav-ai">
+                      <Bot size={14} />Lead Awaker AI
+                    </button>
+                    {voiceNoteBtn}
+                  </div>
                 )}
                 <button className="la-profile-menu-item" onClick={cycleTheme} data-testid="nav-theme-cycle">
                   <activeTheme.icon size={14} />
@@ -825,6 +827,9 @@ export function RightSidebar({
                 <ChevronRight size={12} />
               </span>
             </button>
+          </div>
+          {/* A running memo stays reachable with the menu closed. */}
+          {isOwner && (voiceState.recording || voiceState.transcribing) && voiceNoteBtn}
           </div>
         </div>
       </aside>

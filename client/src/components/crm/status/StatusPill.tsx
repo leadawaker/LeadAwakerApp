@@ -7,9 +7,10 @@ export * from "./statusPill";
 /**
  * The one status pill for calls, people and chats. A light wash of the stage
  * colour with a faint ring; the quiet statuses (hung up) sit recessed instead.
- * `detail` rides inside the pill ("Booked · Thu 14:30").
+ * `detail` rides inside the pill ("Booked · Thu 14:30"). `bare`: no dot and
+ * smaller text, for dense list cards (the Calls list).
  */
-export function StatusPill({ status, detail, small, prefix }: { status: StatusKey; detail?: string | null; small?: boolean; prefix?: string }) {
+export function StatusPill({ status, detail, small, prefix, bare }: { status: StatusKey; detail?: string | null; small?: boolean; prefix?: string; bare?: boolean }) {
   const { t } = useTranslation("crm");
   const tone = STATUS_TONE[status];
   const text = tone ? `color-mix(in srgb, ${tone} 78%, var(--ink))` : "var(--mute)";
@@ -18,16 +19,16 @@ export function StatusPill({ status, detail, small, prefix }: { status: StatusKe
       data-testid="status-pill"
       data-status={status}
       style={{
-        gap: 6, flexShrink: 0,
+        gap: bare ? 4 : 6, flexShrink: 0,
         background: tone ? `color-mix(in srgb, ${tone} 13%, transparent)` : "var(--bg)",
         color: text,
         boxShadow: tone ? `inset 0 0 0 1px color-mix(in srgb, ${tone} 35%, transparent)` : "var(--sh-inset-super-crisp)",
-        fontFamily: "var(--mono)", fontSize: small ? 9 : 10, fontWeight: 700,
-        letterSpacing: "0.1em", textTransform: "uppercase",
-        padding: small ? "4px 8px" : "5px 10px",
+        fontFamily: "var(--mono)", fontSize: bare ? 8 : small ? 9 : 10, fontWeight: 700,
+        letterSpacing: bare ? "0.08em" : "0.1em", textTransform: "uppercase",
+        padding: bare ? "3px 7px" : small ? "4px 8px" : "5px 10px",
       }}
     >
-      <span style={{ width: 6, height: 6, borderRadius: "50%", background: text, flexShrink: 0 }} />
+      {!bare && <span style={{ width: 6, height: 6, borderRadius: "50%", background: text, flexShrink: 0 }} />}
       {prefix && <span>{`${prefix} ·`}</span>}
       {t(`statusPill.${status}`)}
       {detail && <span style={{ fontWeight: 600, letterSpacing: "0.04em" }}>{`· ${detail}`}</span>}

@@ -149,7 +149,7 @@ export function PromptVersionHistory({ v, promptVersion }: { v: PromptVersionsSt
         <button
           type="button"
           className="la-btn la-btn--soft text-[11px] font-mono shrink-0"
-          style={{ height: 32, minWidth: 32, padding: "0 8px", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--mute)" }}
+          style={{ height: 32, minWidth: 32, padding: "0 10px", display: "inline-flex", alignItems: "center", justifyContent: "center", color: "var(--mute)", fontFamily: "var(--mono)", fontSize: 11, whiteSpace: "nowrap" }}
           disabled={v.versionsLoading}
           title={t("versions.history")}
         >

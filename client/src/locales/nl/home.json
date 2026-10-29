@@ -1,15 +1,9 @@
 {
   "stats": {
-    "recentChannel": "Kanaal voor recente activiteit",
-    "recentTabs": {
-      "phone": "Gesprekken",
-      "whatsapp": "WhatsApp",
-      "website": "Website"
-    },
     "waiting_one": "{{count}} wacht",
     "waiting_other": "{{count}} wachten"
   },
-  "title": "Stats",
+  "title": "Home",
   "greeting": {
     "morning": "Goedemorgen",
     "afternoon": "Goedemiddag",
@@ -18,31 +12,33 @@
   "tabs": {
     "phone": "Telefoon",
     "whatsapp": "WhatsApp",
-    "website": "Website",
+    "website": "Webchat",
     "reactivation": "Reactivatie",
     "reputation": "Reputatie",
     "social": "Social"
   },
   "period": {
     "label": "Periode",
+    "all": "Altijd",
+    "year": "Dit jaar",
     "month": "Deze maand",
-    "7d": "Laatste 7 dagen",
-    "30d": "Laatste 30 dagen",
-    "last_month": "Vorige maand"
+    "week": "Deze week",
+    "today": "Vandaag"
   },
   "vs": {
+    "year": "t.o.v. vorig jaar",
     "month": "t.o.v. vorige maand",
-    "7d": "t.o.v. de 7 dagen ervoor",
-    "30d": "t.o.v. de 30 dagen ervoor",
-    "last_month": "t.o.v. de maand ervoor"
+    "week": "t.o.v. vorige week",
+    "today": "t.o.v. gisteren"
   },
   "channel": {
     "phone": "Telefoon",
     "whatsapp": "WhatsApp",
     "sms": "SMS",
-    "website": "Website",
+    "website": "Webchat",
     "booking_page": "Boekingspagina",
-    "unknown": "Onbekend"
+    "unknown": "Onbekend",
+    "other": "Overig"
   },
   "allAccounts": "Alle accounts",
   "loading": "Laden",
@@ -59,8 +55,8 @@
     "byChannel": "Per kanaal",
     "conversations": "Gesprekken",
     "bookings": "Boekingen",
+    "otherNote": "chats en boekingen zonder chat- of belkanaal: ongeclassificeerde berichten, de boekingspagina, handmatig of geïmporteerd",
     "smsNote": "berichten verstuurd, alleen als terugvaloptie",
-    "perDay": "Gesprekken per dag",
     "attention": "Aandacht nodig",
     "attentionEmpty": "Niemand wacht op jou.",
     "attentionKind": {
@@ -71,7 +67,24 @@
     "activity": "Recente activiteit",
     "activityEmpty": "In deze periode is er nog geen activiteit.",
     "unknownCaller": "Onbekende beller",
-    "visitor": "Websitebezoeker"
+    "visitor": "Websitebezoeker",
+    "all": "Alle kanalen",
+    "perBucket": {
+      "month": "Gesprekken per maand",
+      "day": "Gesprekken per dag",
+      "hour": "Gesprekken per uur"
+    },
+    "attentionTag": {
+      "callback": "Terugbellen",
+      "transfer_failed": "Doorverbinden mislukt",
+      "handoff": "Wacht op een mens"
+    },
+    "markHandled": "Markeren als afgehandeld",
+    "clearAll": "Alles wissen",
+    "handled_one": "Gemarkeerd als afgehandeld",
+    "handled_other": "{{count}} gemarkeerd als afgehandeld",
+    "undo": "Ongedaan maken",
+    "handledFailed": "Markeren als afgehandeld is mislukt. Probeer het opnieuw."
   },
   "phone": {
     "tiles": {
@@ -99,7 +112,7 @@
       "contacts": "Contacten vastgelegd",
       "bookings": "Afspraken"
     },
-    "recentEmpty": "Nog geen websitechats in deze periode."
+    "recentEmpty": "In deze periode nog geen webchats."
   },
   "reactivation": {
     "tiles": {
@@ -123,7 +136,7 @@
     "close": "Sluiten",
     "welcome": "Welkom, {{firstName}}. {{agentName}} neemt de telefoon op voor {{company}}.",
     "welcomeNoName": "Welkom. {{agentName}} neemt de telefoon op voor {{company}}.",
-    "where1": "Gesprekken, chats en afspraken vind je onder {{calls}}, {{chats}} en {{calendar}}. De cijfers en het overzicht staan op deze Stats-pagina.",
+    "where1": "Gesprekken, chats en afspraken vind je onder {{calls}}, {{chats}} en {{calendar}}. De cijfers en het overzicht staan op deze Home-pagina.",
     "where2": "Je krijgt een dagelijks overzicht en directe meldingen zodra je jezelf daarvoor toevoegt.",
     "guide": "Lees de handleiding",
     "done": "Klaar",
@@ -137,7 +150,6 @@
     }
   },
   "cards": {
-    "open": "Openen",
     "noTrend": "Nog niets om mee te vergelijken",
     "phone": {
       "main": "Opgenomen gesprekken"

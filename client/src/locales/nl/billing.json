@@ -9,7 +9,8 @@
     "expenses": "Uitgaven",
     "contracts": "Contracten",
     "list": "Lijst",
-    "table": "Tabel"
+    "table": "Tabel",
+    "view": "Weergave"
   },
   "toolbar": {
     "newInvoice": "Nieuwe factuur",

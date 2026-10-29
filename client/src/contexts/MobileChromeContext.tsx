@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
+import { notificationsUrl, notificationsView } from "@/lib/phoneNotifications";
 import { MobileNotificationsPanel } from "@/components/crm/MobileNotificationsPanel";
 
 /**
@@ -32,9 +33,9 @@ export function MobileChromeProvider({ children }: { children: React.ReactNode }
   // Lightweight poll for the badge count (shared react-query cache with the
   // desktop topbar bell, so this does not double-fetch).
   const { data: countData } = useQuery<{ unreadCount: number }>({
-    queryKey: ["/api/notifications/count"],
+    queryKey: ["/api/notifications/count", notificationsView()],
     queryFn: async () => {
-      const res = await apiFetch("/api/notifications/count");
+      const res = await apiFetch(notificationsUrl("/api/notifications/count"));
       if (!res.ok) return { unreadCount: 0 };
       return res.json() as Promise<{ unreadCount: number }>;
     },

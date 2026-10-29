@@ -67,6 +67,10 @@
     "new_photo": {
       "label": "Nova foto",
       "help": "Um cliente enviou uma foto pelo WhatsApp ou pelo chat do site, com o que ela mostra. Por e-mail (foto em anexo) e no CRM, não pelo WhatsApp."
+    },
+    "caller_hung_up": {
+      "label": "Quem ligou desligou na hora",
+      "help": "Um WhatsApp quando alguém liga e desliga antes de dizer qualquer coisa. Desativado por padrão."
     }
   },
   "quiet": {
@@ -98,15 +102,19 @@
   },
   "test": {
     "title": "Enviar um teste",
-    "help": "Envia um exemplo com dados inventados para os destinatários desta conta, pelo caminho real.",
+    "help": "Envia um exemplo com dados inventados pelo caminho real: para todos os destinatários desta conta, ou só para você.",
     "type": "O que enviar",
     "email": "Enviar e-mail de teste",
     "whatsapp": "Enviar WhatsApp de teste",
+    "emailMe": "E-mail de teste só para mim",
+    "whatsappMe": "WhatsApp de teste só para mim",
+    "sentMe": "Teste enviado só para você.",
     "sent_one": "Teste enviado para {{count}} destinatário.",
     "sent_other": "Teste enviado para {{count}} destinatários.",
     "failed": "O teste não foi enviado: {{error}}",
     "errors": {
       "no_recipients": "Adicione um destinatário primeiro (no WhatsApp, a caixa de consentimento precisa estar marcada).",
+      "owner_not_listed": "Você não está na lista de destinatários desta conta, então não há nada para enviar só para você.",
       "engine_unavailable": "O motor de automação não respondeu. Tente de novo em um minuto.",
       "engine_not_restarted": "O motor de automação ainda não foi reiniciado com esta função."
     }

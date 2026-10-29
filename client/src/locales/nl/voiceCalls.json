@@ -17,12 +17,14 @@
   "pageTabs": {
     "aria": "Gesprekkenpagina",
     "calls": "Gesprekken",
-    "settings": "Instellingen"
+    "settings": "Instellingen",
+    "callSettings": "Belinstellingen"
   },
   "title": "Gesprekken",
   "webCaller": "Webbeller",
   "booked": "Geboekt",
   "empty": "Nog geen spraakgesprekken. Gesprekken via de spraakdemo verschijnen hier.",
+  "emptyTest": "Nog geen testgesprekken. Gesprekken die je maakt met Testgesprek starten op het Voice-tabblad van een account verschijnen hier.",
   "selectCall": "Selecteer een gesprek om te zien wat er gebeurde.",
   "notFound": "Dit gesprek is niet gevonden.",
   "callLoadError": "Dit gesprek kon niet worden geladen.",
@@ -153,6 +155,7 @@
   "playbackFailed": "Deze opname kon niet worden afgespeeld. Probeer hem te downloaden.",
   "scope": {
     "live": "Live",
+    "test": "Tests",
     "demo": "Demo",
     "aria": "Gesprekbron"
   },
@@ -163,6 +166,7 @@
     "booked": "Geboekt",
     "avgLength": "Gem. duur",
     "last7Days": "Laatste 7 dagen",
+    "window": "7 dagen",
     "noValue": "–"
   },
   "outcomes": {
@@ -172,10 +176,9 @@
     "hungUp": "Opgehangen",
     "other": "Beantwoord"
   },
-  "testData": {
-    "label": "Testdata (verborgen voor de klant)"
-  },
   "presenting": {
+    "hide": "Identiteiten verbergen",
+    "show": "Identiteiten tonen",
     "label": "Presenteren",
     "on": "Identiteiten verborgen",
     "off": "Identiteiten zichtbaar",
@@ -200,10 +203,12 @@
     },
     "callCount_one": "{{count}} gesprek",
     "callCount_other": "{{count}} gesprekken",
+    "peopleCount_one": "{{count}} persoon",
+    "peopleCount_other": "{{count}} personen",
     "lead": "Lead",
     "booked": "Geboekt",
     "callBack": "Terugbellen",
-    "whatsapp": "Bericht via WhatsApp",
+    "whatsapp": "WhatsApp",
     "callAnyway": "Toch bellen",
     "warnDnd": "Deze persoon wil niet benaderd worden.",
     "warnOutOfHours": "Het is nu buiten de openingstijden van dit account.",

@@ -49,8 +49,8 @@ export function TrafficPage() {
     <CrmShell>
       <div className="la-page" style={{ background: "var(--bg)" }} data-testid="page-traffic">
         <div className="la-page-header">
-          <span className="serif" style={{ fontSize: 20, color: "var(--ink)" }}>{t("page.title")}</span>
-          <span style={{ fontSize: 12.5, color: "var(--mute)" }} className="max-md:hidden">{t("page.subtitle")}</span>
+          <span className="la-page-title">{t("page.title")}</span>
+          <span style={{ fontSize: 13.5, color: "var(--mute)" }} className="max-md:hidden">{t("page.subtitle")}</span>
           <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 8 }}>
             <div className="la-seg la-seg--pill" role="tablist" aria-label={t("page.period")}>
               {TRAFFIC_PERIODS.map((d) => (

@@ -81,6 +81,7 @@
      desktop nav rail (--chrome). One value, used everywhere below 768px. */
   --chrome-deep: var(--chrome);
   --chrome-deep-ink: #5A5244;                 /* muted ink on the sand: 5.5:1, AA at 10px */
+  --wine-deep: hsl(var(--brand-h) 45% 15%);   /* very dark wine: AI bubbles (chats, call transcript) */
   --on-wine: #FBF8F2;                         /* bone icon + label on a filled wine pill */
   --sidebar-bg: var(--ground-panel);          /* topbar chrome */
   --panel-list-bg: var(--ground-panel);       /* page toolbars (sticky header rows) */
@@ -235,6 +236,7 @@
   --brand-soft-yellow: var(--brand-h) 40% calc(var(--brand-l) + 9%);
   --wine-soft: hsl(var(--brand-h) 45% calc(var(--brand-l) + 7%));
   --wine-tint: hsl(var(--brand) / 0.18);
+  --wine-deep: hsl(var(--brand-h) 38% 22%);
   --wine-glow: hsl(var(--brand) / 0.32);
   --wine-grad: linear-gradient(145deg,
     hsl(var(--brand)),

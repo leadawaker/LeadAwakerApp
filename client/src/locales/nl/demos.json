@@ -270,7 +270,14 @@
         "backup": "Reserve"
       },
       "password": "Wachtwoord voor de demopagina zonder link",
-      "passwordPlaceholder": "bijv. solar, demo2026"
+      "passwordPlaceholder": "bijv. solar, demo2026",
+      "style": "Hoe Sara meedoet bij \"Bel mij + prospect\"",
+      "styleHint": "Overdragen: Sara neemt de prospect over terwijl jij in de wacht staat en meeleest, met het helderste geluid. Drieweg: jullie drie op één lijn, waarbij Sara's stem kan haperen.",
+      "styles": {
+        "handoff": "Overdragen",
+        "barge": "Drieweg (barge)",
+        "conference": "Drieweg (conferentie)"
+      }
     }
   },
   "widgetColor": {
@@ -327,7 +334,8 @@
       "failed": "mislukt",
       "busy": "in gesprek",
       "no_answer": "geen gehoor",
-      "voicemail": "voicemail"
+      "voicemail": "voicemail",
+      "on_hold": "in de wacht"
     },
     "gone": "Dit gesprek loopt niet meer (de belserver is herstart). Je kunt een nieuw gesprek starten.",
     "errors": {
@@ -347,7 +355,30 @@
       "leg_join_failed": "{{who}}: kon niet aan het gesprek deelnemen.",
       "leg_failed": "{{who}}: het gesprek is mislukt.",
       "leg_busy": "{{who}}: in gesprek.",
-      "leg_no_answer": "{{who}}: niet opgenomen."
+      "leg_no_answer": "{{who}}: niet opgenomen.",
+      "take_back_failed": "Het gesprek kon niet aan jou worden teruggegeven."
+    },
+    "handTo": "Geef aan Sara",
+    "takeBack": "Neem het gesprek terug",
+    "transcript": "Gesprek van Sara",
+    "transcriptEmpty": "Wat Sara en de prospect zeggen, verschijnt hier terwijl ze praten.",
+    "ring": {
+      "label": "Bel mij op",
+      "phone": "Mijn telefoon",
+      "browser": "Deze browser"
+    },
+    "browser": {
+      "label": "Browser",
+      "mute": "Dempen",
+      "unmute": "Dempen uit",
+      "micDenied": "Toegang tot de microfoon is geweigerd. Sta het toe voor deze site en probeer opnieuw.",
+      "loginFailed": "Deze browser kon geen verbinding maken met de telefoonlijn. Probeer opnieuw of laat je telefoon bellen.",
+      "state": {
+        "idle": "verbroken",
+        "connecting": "verbinden",
+        "waiting": "wacht op de oproep",
+        "active": "in gesprek"
+      }
     }
   },
   "personaList": {

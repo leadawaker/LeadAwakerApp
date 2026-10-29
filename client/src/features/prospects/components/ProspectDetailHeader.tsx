@@ -17,7 +17,6 @@ import {
 import { SignalBars } from "./ProspectListCards";
 import { OUTREACH_HEX, OUTREACH_LABELS, OUTREACH_STATUSES, type OutreachStatus } from "./OutreachPipelineView";
 import { ProspectAvatar } from "./ProspectAvatar";
-import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 
 interface ProspectDetailHeaderProps {
   selectedProspect: ProspectRow;
@@ -100,9 +99,6 @@ export function ProspectDetailHeader({
                 <ArrowLeft className="h-4 w-4" />
               </button>
             )}
-          </div>
-          <div className="flex items-center gap-1">
-            <ListPanelToggleButton />
           </div>
         </div>
 

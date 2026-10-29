@@ -270,7 +270,14 @@
         "backup": "Backup"
       },
       "password": "Password for the demo page without a link",
-      "passwordPlaceholder": "e.g. solar, demo2026"
+      "passwordPlaceholder": "e.g. solar, demo2026",
+      "style": "How Sara joins \"Call me + prospect\"",
+      "styleHint": "Hand off: Sara takes over the prospect while you wait on hold and read along, with the clearest sound. Three-way: all three of you on one line, where Sara's voice can break up.",
+      "styles": {
+        "handoff": "Hand off",
+        "barge": "Three-way (barge)",
+        "conference": "Three-way (conference)"
+      }
     }
   },
   "widgetColor": {
@@ -327,7 +334,8 @@
       "failed": "failed",
       "busy": "busy",
       "no_answer": "no answer",
-      "voicemail": "voicemail"
+      "voicemail": "voicemail",
+      "on_hold": "on hold"
     },
     "gone": "That call is no longer running (the call engine restarted). You can start a new one.",
     "errors": {
@@ -347,7 +355,30 @@
       "leg_join_failed": "{{who}}: could not join the call.",
       "leg_failed": "{{who}}: the call failed.",
       "leg_busy": "{{who}}: line busy.",
-      "leg_no_answer": "{{who}}: no answer."
+      "leg_no_answer": "{{who}}: no answer.",
+      "take_back_failed": "The call could not be handed back to you."
+    },
+    "handTo": "Hand to Sara",
+    "takeBack": "Take the call back",
+    "transcript": "Sara's conversation",
+    "transcriptEmpty": "What Sara and the prospect say appears here as they talk.",
+    "ring": {
+      "label": "Call me on",
+      "phone": "My phone",
+      "browser": "This browser"
+    },
+    "browser": {
+      "label": "Browser",
+      "mute": "Mute",
+      "unmute": "Unmute",
+      "micDenied": "Microphone access was refused. Allow it for this site and try again.",
+      "loginFailed": "This browser could not connect to the phone line. Try again or ring your phone.",
+      "state": {
+        "idle": "disconnected",
+        "connecting": "connecting",
+        "waiting": "waiting for the call",
+        "active": "on the call"
+      }
     }
   },
   "personaList": {

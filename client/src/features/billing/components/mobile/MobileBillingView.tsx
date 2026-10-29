@@ -263,7 +263,7 @@ export function MobileBillingView({
         <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 12, padding: "14px 18px 12px" }}>
           <span className="serif" style={{ fontSize: 28, color: "var(--ink)", letterSpacing: "-0.02em", flexShrink: 0 }}>{t("page.title")}</span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <MBSegment value={activeTab} onChange={onTabChange} options={tabOpts} />
+            <MBSegment value={activeTab} onChange={onTabChange} options={tabOpts} collapse />
           </div>
         </div>
       </div>

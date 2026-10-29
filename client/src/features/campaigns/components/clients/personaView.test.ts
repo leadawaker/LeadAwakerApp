@@ -79,11 +79,11 @@ test("no personas, no groups", () => {
   assert.deepEqual(groupPersonas([], "date", { now: NOW }), []);
 });
 
-test("the remembered grouping falls back to category for anything else", () => {
+test("the remembered grouping falls back to date for anything else", () => {
   assert.equal(parseGroupBy("date"), "date");
   assert.equal(parseGroupBy("category"), "category");
-  assert.equal(parseGroupBy(null), "category");
-  assert.equal(parseGroupBy("weeks"), "category");
+  assert.equal(parseGroupBy(null), "date");
+  assert.equal(parseGroupBy("weeks"), "date");
 });
 
 test("the row date is day and month, with the year only when it is not this year", () => {

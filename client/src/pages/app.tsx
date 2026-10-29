@@ -234,10 +234,10 @@ function PageLoader({ children }: { children?: ReactNode } = {}) {
           <div className="h-5 w-40 animate-pulse rounded bg-primary/10" />
           <div className="ml-2 flex items-center gap-1.5">
             {[72, 72, 72].map((w, i) => (
-              <div key={i} className="h-8 animate-pulse rounded-full bg-primary/10" style={{ width: w }} />
+              <div key={i} className="h-9 animate-pulse rounded-full bg-primary/10" style={{ width: w }} />
             ))}
           </div>
-          <div className="ml-auto h-8 w-48 animate-pulse rounded-full bg-primary/10" />
+          <div className="ml-auto h-[38px] w-48 animate-pulse rounded-full bg-primary/10" />
         </div>
         {/* Body: a page-shaped skeleton when given (Chats / Leads), else the generic one */}
         {children ?? (

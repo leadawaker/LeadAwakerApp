@@ -137,7 +137,7 @@ export function CampaignSettingsLayout(props: CampaignSettingsLayoutProps) {
           <div style={{ display: 'flex', flexWrap: compact ? 'wrap' : 'nowrap', gap: compact ? 10 : undefined, justifyContent: compact ? 'center' : 'space-between', marginTop: 36, paddingTop: 24, borderTop: '1px solid var(--line)' }}>
             <CampaignGenerateButton campaign={props.campaign} onGenerated={props.onGenerated} onFieldsGenerated={props.onFieldsGenerated} />
 
-            {/* Launch Campaign: opens WhatsApp on the Lead Awaker AI line with
+            {/* Test on my phone: opens WhatsApp on the Lead Awaker AI line with
                 "/start <campaignId> <name>" prefilled. The name comes from the
                 "Demo lead name" field in the Business section above. */}
             <a

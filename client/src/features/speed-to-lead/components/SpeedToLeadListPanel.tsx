@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Send } from "lucide-react";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import { SpeedToLeadListCard } from "./SpeedToLeadListCard";
 import type { SpeedToLeadCampaign } from "../data/mockMetrics";
 
@@ -37,6 +38,8 @@ export function SpeedToLeadListPanel({
           </div>
         )}
       </div>
+      {/* Bottom bar: the list fold button at the right end */}
+      <ListPanelFooter />
     </div>
   );
 }

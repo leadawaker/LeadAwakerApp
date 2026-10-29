@@ -67,7 +67,7 @@ export function SocialCalendar({ accountId, timeZone }: { accountId: number; tim
         <span style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", minWidth: 120, textAlign: "center", textTransform: "capitalize" }} aria-live="polite">{label}</span>
         <IconBtn onClick={() => move(1)} title={t("calendar.next")} aria-label={t("calendar.next")}><ChevronRight className="w-4 h-4" /></IconBtn>
         <button type="button" className="la-btn la-btn--plain" onClick={() => { setCursor(today); setPicked(today); }}>{t("calendar.today")}</button>
-        <div className="la-seg la-seg--pill" role="tablist" aria-label={t("calendar.view")} style={{ marginLeft: "auto" }}>
+        <div className="la-seg la-seg--main la-seg--soft la-seg--compact" role="tablist" aria-label={t("calendar.view")} style={{ marginLeft: "auto" }}>
           {(["month", "week"] as const).map((v) => (
             <button key={v} type="button" role="tab" aria-selected={view === v} className={cn("la-seg-btn", view === v && "on")} onClick={() => setView(v)} data-testid={`calendar-view-${v}`}>{t(`calendar.${v}`)}</button>
           ))}

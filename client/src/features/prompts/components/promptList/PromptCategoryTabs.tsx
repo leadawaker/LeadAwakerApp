@@ -1,6 +1,7 @@
 // The Prompt Library's area tabs (Chat, Voice, CRM, Social, Test, Reputation)
 // plus Niche Words, and the Demo show/hide switch above the list.
 import { useTranslation } from "react-i18next";
+import { useScrollFadeX } from "@/hooks/useScrollFadeX";
 import { Switch } from "@/components/ui/switch";
 import { PROMPT_CATEGORIES, type PromptListTab } from "../../promptCategories";
 
@@ -15,8 +16,11 @@ export function PromptCategoryTabs({
 }) {
   const { t } = useTranslation("prompts");
   const tabs: PromptListTab[] = [...PROMPT_CATEGORIES, "niche"];
+  // Seven tabs do not fit beside the editor actions at laptop widths: the track scrolls
+  // sideways with an edge fade instead of the actions overlapping it.
+  const scrollRef = useScrollFadeX<HTMLDivElement>(value);
   return (
-    <div className="la-seg" role="tablist" aria-label={t("category.label")} style={{ flexShrink: 0 }}>
+    <div ref={scrollRef} className="la-seg la-seg--main la-fade-x" role="tablist" aria-label={t("category.label")} style={{ minWidth: 0, maxWidth: "100%" }}>
       {tabs.map((id) => {
         const on = value === id;
         return (
@@ -31,14 +35,7 @@ export function PromptCategoryTabs({
           >
             {id === "niche" ? t("vocabulary.title") : t(`category.${id}`)}
             {id !== "niche" && (
-              <span style={{
-                fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700,
-                color: on ? "var(--wine)" : "var(--mute-2)",
-                background: on ? "var(--wine-tint)" : "var(--bg)",
-                borderRadius: "var(--r-pill)", padding: "1px 7px", marginLeft: 5,
-              }}>
-                {counts[id] ?? 0}
-              </span>
+              <span className="la-seg-count">{counts[id] ?? 0}</span>
             )}
           </button>
         );
@@ -63,7 +60,7 @@ export function PromptListStrip({
   return (
     <div
       className="flex items-center gap-2 shrink-0"
-      style={{ padding: "8px 14px 6px", borderBottom: "1px solid var(--line)" }}
+      style={{ minHeight: 48, padding: "4px 8px 4px 14px", borderBottom: "1px solid var(--line)" }}
     >
       <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>
         {t("toolbar.promptCount", { count: shown })}

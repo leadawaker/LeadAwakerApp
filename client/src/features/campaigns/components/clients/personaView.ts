@@ -1,6 +1,6 @@
 /**
- * How the persona list is ordered and grouped: newest first, in category
- * sections (default) or in date sections. Pure, and `import type` only from the
+ * How the persona list is ordered and grouped: newest first, in date
+ * sections (default) or in category sections. Pure, and `import type` only from the
  * api file (which reads `import.meta.env`), so node:test can run it.
  */
 import { groupByDate } from "@/features/voiceCalls/dateGroups";
@@ -18,8 +18,9 @@ export function listLayout(selectedNiche: string | null): ListLayout {
   return selectedNiche ? "rows" : "cards";
 }
 
+/** The remembered grouping; Date unless Category was picked. */
 export function parseGroupBy(raw: string | null | undefined): GroupBy {
-  return raw === "date" ? "date" : "category";
+  return raw === "category" ? "category" : "date";
 }
 
 type Dated = Pick<DemoClientSummary, "createdAt" | "updatedAt">;

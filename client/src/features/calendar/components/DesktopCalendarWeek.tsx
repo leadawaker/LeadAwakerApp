@@ -190,7 +190,9 @@ export function WeekGrid(p: DesktopCalendarProps) {
     if (!el) return;
     const totalH = SPAN * PX_PER_HOUR;
     const startHour = el.clientHeight >= 800 ? 7.5 : 9;
-    el.scrollTop = ((startHour - HOUR0) / SPAN) * totalH;
+    // 12px of headroom so the first hour label (it sits 7px above its line) is not
+    // tucked under the day header.
+    el.scrollTop = Math.max(0, ((startHour - HOUR0) / SPAN) * totalH - 12);
   }, []);
 
   // Drag-to-navigate (horizontal swipe on the grid — pointer events for desktop)

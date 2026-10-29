@@ -30,7 +30,7 @@ function TotalLeadsContent({ m, activeRange = "24h", onRangeChange }: TotalLeads
         title={t("totalLeads.title")}
         action={
           onRangeChange && (
-            <div className="la-seg" role="tablist" data-testid="range-switcher">
+            <div className="la-seg la-seg--main la-seg--soft la-seg--compact" role="tablist" data-testid="range-switcher">
               {RANGES.map((r) => (
                 <button
                   key={r.id}

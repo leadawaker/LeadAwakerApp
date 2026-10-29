@@ -23,7 +23,12 @@
   "sidebar": {
     "skipToMain": "Naar de inhoud",
     "menu": "Menu",
-    "home": "Stats",
+    "home": "Home",
+    "listPanelCompact": "Lijst compact",
+    "listPanelHide": "Lijst verbergen",
+    "listPanelShow": "Lijst tonen",
+    "listPanelMinimize": "Lijst minimaliseren",
+    "listPanelExpand": "Lijst uitklappen",
     "calls": "Gesprekken",
     "myReceptionist": "Mijn account",
     "myReceptionistShort": "Account",

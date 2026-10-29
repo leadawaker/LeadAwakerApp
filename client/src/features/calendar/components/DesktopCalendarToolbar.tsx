@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import {
   Clock, Check,
   Calendar as CalIcon, CalendarDays, Filter, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
-  PanelLeft, PanelLeftClose, MoreVertical, RefreshCw, XCircle, Settings,
+  MoreVertical, RefreshCw, XCircle, Settings,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -19,8 +19,10 @@ import {
   HEADER_H, HOUR0, HOUR1,
   statusKeyOf, dateKeyOf,
 } from "../lib/calendarDesign";
+import { ExpandingSearch } from "@/components/crm/primitives/ExpandingSearch";
 import { BookAppointmentPopover } from "./BookAppointmentPopover";
 import { hourLabel } from "./hourLabel";
+import { useScrollFadeX } from "@/hooks/useScrollFadeX";
 import {
   type DesktopCalendarProps, type ApptFilterStatus, type ApptGroupBy,
   MONO, SERIF, SORT_GROUPS, GROUP_KEYS, FILTER_KEYS,
@@ -214,9 +216,8 @@ export function TopToolbar(p: DesktopCalendarProps) {
       className="la-btn la-btn--soft"
       title={t("blocks.addBlock")}
       onClick={() => p.onOpenBlockPanel!()}
-      style={{ gap: 6, paddingLeft: 10, paddingRight: 12, fontSize: 12, fontWeight: 600 }}
     >
-      <CalIcon className="h-3.5 w-3.5" />
+      <CalIcon className="h-4 w-4" />
       {t("blocks.addBlock")}
     </button>
   ) : null;
@@ -267,12 +268,15 @@ export function TopToolbar(p: DesktopCalendarProps) {
     return (
       <MobileListHeader
         title={t("title")}
-        tabSwitcher={(
-          <MobileTabSeg
-            tabs={(["week", "month", "list"] as const).map((k) => ({ id: k, label: t(`views.${k}`) }))}
-            activeId={p.viewMode}
-            onChange={(id) => p.setViewMode(id as "week" | "month" | "list")}
-          />
+        // Three tabs do not fit beside the title at phone width: they get their own full-width row.
+        subRow={(
+          <div className="la-m-header-row" style={{ flex: 1, minWidth: 0 }}>
+            <MobileTabSeg
+              tabs={(["week", "month", "list"] as const).map((k) => ({ id: k, label: t(`views.${k}`) }))}
+              activeId={p.viewMode}
+              onChange={(id) => p.setViewMode(id as "week" | "month" | "list")}
+            />
+          </div>
         )}
         searchValue={p.searchQuery}
         onSearchChange={p.setSearchQuery}
@@ -308,64 +312,44 @@ export function TopToolbar(p: DesktopCalendarProps) {
   }
 
   return (
-    <div style={{ height: 60, flexShrink: 0, padding: "0 14px", background: "var(--surface)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 18 }}>
-      <span style={{ ...SERIF, fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{t("title")}</span>
+    <div className="la-page-header" style={{ padding: "0 17px", gap: 18 }}>
+      <span className="la-page-title">{t("title")}</span>
 
-      {/* Week / Month + collapse button immediately after */}
+      {/* Week / Month + the meetings KPI (the list fold button sits on the agenda panel header) */}
       <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {!p.ultra && (
-          <div className="la-seg">
+          <div className="la-seg la-seg--main" role="tablist">
             {(["week", "month"] as const).map((k) => (
-              <button key={k} onClick={() => p.setViewMode(k)} className={cn("la-seg-btn", k === p.viewMode && "on")}>
+              <button key={k} role="tab" aria-selected={k === p.viewMode} onClick={() => p.setViewMode(k)} className={cn("la-seg-btn", k === p.viewMode && "on")}>
                 {t(`views.${k}`)}
               </button>
             ))}
           </div>
         )}
-        {p.onCyclePanel && (
-          <button
-            className="la-btn la-btn--soft la-btn--icon"
-            onClick={p.onCyclePanel}
-            title={p.leftPanelState === "full" ? t("design.panel.minimize") : p.leftPanelState === "compact" ? t("design.panel.hide") : t("design.panel.show")}
-          >
-            {p.leftPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          </button>
-        )}
-        {/* Meetings-this-week KPI — always next to the fold button */}
+        {/* Meetings-this-week KPI */}
         <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginLeft: 4 }}>
-          <span style={{ ...SERIF, fontSize: 20, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
-          <span style={{ ...MONO, fontSize: 7.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{t("design.kpi.meetings")}</span>
+          <span style={{ ...SERIF, fontSize: 22, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
+          <span style={{ ...MONO, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)" }}>{t("design.kpi.meetings")}</span>
         </div>
       </div>
 
       <div style={{ flex: 1 }} />
 
       {/* Search / Filter / Sort / Group / New — top-right */}
-      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         {/* Appointment actions (reschedule / cancel) — only with a selection */}
         {actionsMenu}
 
         {/* Calendar settings — availability overlay, business hours, hide weekends */}
         <CalendarSettingsPopover p={p} />
 
-        {/* Search */}
-        <div style={{ position: "relative" }}>
-          <input
-            className="neu-input"
-            placeholder={t(p.isAgencyUser ? "search.placeholder" : "search.placeholderClient")}
-            value={p.searchQuery}
-            onChange={e => p.setSearchQuery(e.target.value)}
-            style={{ paddingLeft: 32, paddingTop: 0, paddingBottom: 0, height: 32, fontSize: 12, width: 190 }}
-          />
-          <span style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--mute-2)", display: "flex", pointerEvents: "none" }}>
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
-          </span>
-          {p.searchQuery && (
-            <button onClick={() => p.setSearchQuery("")} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--mute-2)", display: "flex", padding: 0 }}>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M18 6 6 18M6 6l12 12"/></svg>
-            </button>
-          )}
-        </div>
+        {/* Search: one icon that opens into the field */}
+        <ExpandingSearch
+          value={p.searchQuery}
+          onChange={p.setSearchQuery}
+          placeholder={t(p.isAgencyUser ? "search.placeholder" : "search.placeholderClient")}
+          testId="calendar-search"
+        />
 
         {filterMenu}
         {sortMenu}
@@ -402,6 +386,8 @@ export function StatusTabs(p: DesktopCalendarProps) {
     else p.setApptFilterStatuses(["rescheduled"]);
   };
 
+  const scrollRef = useScrollFadeX<HTMLDivElement>(active);
+
   const tabs: [typeof active, string, number][] = [
     ["all", t("design.tabs.all"), counts.all],
     ["booked", t("design.tabs.booked"), counts.booked],
@@ -410,20 +396,20 @@ export function StatusTabs(p: DesktopCalendarProps) {
   ];
 
   return (
-    <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 10px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 3 }}>
+    <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 8px 0 10px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 6 }}>
+      {/* A secondary switch (Week | Month are the page's main tabs): the soft pill. */}
+      {/* Scrolls sideways with an edge fade when the list panel is too narrow for all four. */}
+      <div ref={scrollRef} className="la-seg la-seg--main la-seg--soft la-seg--compact la-fade-x" role="tablist" style={{ minWidth: 0, maxWidth: "100%" }}>
       {tabs.map(([k, label, count]) => {
         const on = k === active;
         return (
-          <button key={k} onClick={() => set(k)} style={{
-            display: "flex", alignItems: "center", gap: 5, padding: "6px 8px", borderRadius: "var(--r-button)", border: "none", cursor: "pointer",
-            background: on ? "var(--wine)" : "transparent", color: on ? "var(--paper)" : "var(--mute)",
-            ...MONO, fontSize: 8.5, letterSpacing: "0.05em", textTransform: "uppercase", fontWeight: on ? 700 : 500, whiteSpace: "nowrap", transition: "color 120ms, background 120ms",
-          }}>
+          <button key={k} type="button" role="tab" aria-selected={on} onClick={() => set(k)} className={`la-seg-btn${on ? " on" : ""}`} style={{ padding: "0 9px", gap: 5, fontSize: 12 }}>
             {label}
-            <span style={{ ...MONO, fontSize: 8, fontWeight: 700, color: on ? "var(--paper)" : "var(--mute-2)", opacity: on ? 0.85 : 1 }}>{count}</span>
+            <span style={{ ...MONO, fontSize: 9, fontWeight: 700, color: on ? "var(--wine)" : "var(--mute-2)" }}>{count}</span>
           </button>
         );
       })}
+      </div>
     </div>
   );
 }

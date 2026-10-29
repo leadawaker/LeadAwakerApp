@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Receipt, PenLine, Wallet, Filter, Check, ArrowUpDown, ArrowUp, ArrowDown,
-  Layers, Plus, PanelLeft, PanelLeftClose, MoreHorizontal, Trash2, CalendarDays,
+  Layers, Plus, MoreHorizontal, Trash2, CalendarDays,
   LayoutList, LayoutGrid, Building2,
 } from "lucide-react";
 import {
@@ -10,9 +10,8 @@ import {
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
-import { PageTopbar, ExpandingSearch } from "@/components/crm/primitives";
+import { PageTopbar, ExpandingSearch, PillSwitch } from "@/components/crm/primitives";
 import { INVOICE_STATUS_COLORS, CONTRACT_STATUS_COLORS } from "../../types";
-import type { ListPanelState } from "@/hooks/useListPanelState";
 import type { BillingGroupBy } from "./BillingListPanel";
 
 type Tab = "invoices" | "contracts" | "expenses";
@@ -36,8 +35,6 @@ interface Props {
   onTabChange: (t: Tab) => void;
   isOwner: boolean;
   count: number;
-  listPanelState: ListPanelState;
-  onCycle: () => void;
   // search
   search: string;
   onSearchChange: (v: string) => void;
@@ -105,26 +102,27 @@ export function BillingTopBar(p: Props) {
       title={t("page.title")}
       count={p.count}
       left={<>
-        <div className="la-seg shrink-0">
+        <div className="la-seg la-seg--main shrink-0" role="tablist">
           {tabs.map(({ id, label, icon: Icon }) => (
-            <button key={id} onClick={() => p.onTabChange(id)} className={`la-seg-btn${p.tab === id ? " on" : ""}`} style={{ padding: "8px 12px", fontSize: 11, letterSpacing: "0.08em" }}>
-              <Icon size={13} />{label}
+            <button key={id} role="tab" aria-selected={p.tab === id} onClick={() => p.onTabChange(id)} className={`la-seg-btn${p.tab === id ? " on" : ""}`}>
+              <Icon size={14} style={{ flexShrink: 0 }} />{label}
             </button>
           ))}
         </div>
-
-        {/* Fold/cycle list panel */}
-        <button className="la-btn la-btn--soft la-btn--icon" onClick={p.onCycle}
-          title={p.listPanelState === "full" ? t("workspace.compactPanel", "Compact") : p.listPanelState === "compact" ? t("workspace.hidePanel", "Hide") : t("workspace.showPanel", "Show")}>
-          {p.listPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-        </button>
       </>}
       right={<>
-        {/* View toggle (all tabs) */}
-        <div className="la-seg shrink-0">
-          <button onClick={() => p.onViewModeChange("list")} className={`la-seg-btn${p.viewMode === "list" ? " on" : ""}`} style={{ padding: "7px 12px", fontSize: 11 }}><LayoutList size={13} />{t("tabs.list")}</button>
-          <button onClick={() => p.onViewModeChange("table")} className={`la-seg-btn${p.viewMode === "table" ? " on" : ""}`} style={{ padding: "7px 12px", fontSize: 11 }}><LayoutGrid size={13} />{t("tabs.table")}</button>
-        </div>
+        {/* View toggle (all tabs): a secondary switch, soft pill */}
+        <PillSwitch
+          variant="soft"
+          compact
+          ariaLabel={t("tabs.view")}
+          items={[
+            { id: "list" as ViewMode, label: t("tabs.list"), icon: LayoutList },
+            { id: "table" as ViewMode, label: t("tabs.table"), icon: LayoutGrid },
+          ]}
+          value={p.viewMode}
+          onChange={p.onViewModeChange}
+        />
 
         {/* Search */}
         <ExpandingSearch value={p.search} onChange={p.onSearchChange}

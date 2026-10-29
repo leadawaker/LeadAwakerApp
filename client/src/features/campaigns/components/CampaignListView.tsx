@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { ListPanelFooter, ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import {
   Megaphone,
   Filter,
@@ -14,8 +15,6 @@ import {
   Plus,
   Layers,
   EyeOff,
-  PanelLeft,
-  PanelLeftClose,
   FileText,
   FlaskConical,
   Users,
@@ -54,6 +53,7 @@ import { CompactCampaignCard } from "./CompactCampaignCard";
 import { CampaignListCard, GroupHeader, ListSkeleton, CompactListSkeleton } from "./CampaignListCard";
 import { CampaignFilterSheet } from "./CampaignFilterSheet";
 import { useListPanelState } from "@/hooks/useListPanelState";
+import { useListPanelFold } from "@/hooks/useListPanelFold";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ShareButton } from "./detailView/atoms";
@@ -221,7 +221,9 @@ export function CampaignListView({
     deepLinkSheetOpened.current = true;
     setMobilePanelOpen(true);
   }, [initialSettingsSection, isMobile768, selectedCampaign]);
-  const { state: leftPanelState, cycle } = useListPanelState();
+  const { state: leftPanelState } = useListPanelState();
+  // List fold button (panel header): full → compact → hidden.
+  useListPanelFold(!isNarrow);
   const [promptPanelOpen, setPromptPanelOpen] = useState(() => {
     try { return localStorage.getItem("campaigns-prompt-panel-open") === "true"; } catch { return false; }
   });
@@ -646,27 +648,20 @@ export function CampaignListView({
         title={tNav("sidebar.reactivation")}
         count={totalCampaigns}
         left={<>
-          <div className="la-seg la-seg--fill shrink-0">
+          <div className="la-seg la-seg--main shrink-0" role="tablist">
             {DETAIL_TABS.map((tab) => (
               <button
                 key={tab.id}
+                role="tab"
+                aria-selected={detailTab === tab.id}
                 onClick={() => onDetailTabChange(tab.id as CampaignDetailTab)}
                 className={`la-seg-btn${detailTab === tab.id ? ' on' : ''}`}
-                style={{ padding: '8px 12px', fontSize: 11, letterSpacing: '0.13em' }}
               >
-                {tab.icon && <span className="flex items-center"><tab.icon size={13} /></span>}
+                {tab.icon && <tab.icon size={14} style={{ flexShrink: 0 }} />}
                 {tab.label}
               </button>
             ))}
           </div>
-          {/* Fold/expand left panel */}
-          <button
-            className="la-btn la-btn--soft la-btn--icon"
-            onClick={cycle}
-            title={leftPanelState === "full" ? t("toolbar.compactPanel") : leftPanelState === "compact" ? t("toolbar.hidePanel") : t("toolbar.showPanel")}
-          >
-            {leftPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-          </button>
         </>}
         right={<>
           {/* Duplicate/Delete — Clients tab only, when a Client is open */}
@@ -787,6 +782,7 @@ export function CampaignListView({
                 </div>
               )}
             </div>
+            <ListPanelFooter compact />
           </>
         )}
 
@@ -841,31 +837,35 @@ export function CampaignListView({
           )}
         </div>
 
-        {/* Pagination footer */}
-        {totalCampaigns > PAGE_SIZE && (
-          <div className="h-9 md:h-[18px] px-3 py-1 border-t border-border/20 flex items-center justify-between shrink-0">
-            <button
-              onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
-              disabled={currentPage === 0}
-              className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30 touch-target"
-            >
-              {t("pagination.previous")}
-            </button>
-            <span className="text-[10px] text-muted-foreground tabular-nums">
-              {t("pagination.rangeOf", { start: currentPage * PAGE_SIZE + 1, end: Math.min((currentPage + 1) * PAGE_SIZE, totalCampaigns), total: totalCampaigns })}
-            </span>
-            <button
-              onClick={() => setCurrentPage((p) => Math.min(maxPage, p + 1))}
-              disabled={currentPage >= maxPage}
-              className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30 touch-target"
-            >
-              {t("pagination.next")}
-            </button>
-          </div>
-        )}
+        {/* Bottom bar: pagination on the left, the list fold button at the right end */}
+        <ListPanelFooter>
+          {totalCampaigns > PAGE_SIZE && (
+            <>
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(0, p - 1))}
+                disabled={currentPage === 0}
+                className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30 touch-target"
+              >
+                {t("pagination.previous")}
+              </button>
+              <span className="text-[10px] text-muted-foreground tabular-nums">
+                {t("pagination.rangeOf", { start: currentPage * PAGE_SIZE + 1, end: Math.min((currentPage + 1) * PAGE_SIZE, totalCampaigns), total: totalCampaigns })}
+              </span>
+              <button
+                onClick={() => setCurrentPage((p) => Math.min(maxPage, p + 1))}
+                disabled={currentPage >= maxPage}
+                className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30 touch-target"
+              >
+                {t("pagination.next")}
+              </button>
+            </>
+          )}
+        </ListPanelFooter>
         </>}
       </div>
       </MobileRecede>
+      {/* Hidden list: the slim strip that brings it back */}
+      <ListPanelUnfoldButton />
 
       {/* ── MOBILE FULL-SCREEN DETAIL PANEL (< 768px) ──────────────── */}
       <MobileCampaignDetailPanel

@@ -17,6 +17,8 @@ export const startDemoCallSchema = z.object({
   // Typed by hand on the Demos page; the route turns it into E.164 (forgetE164) first.
   toNumber: z.string().trim().min(1).max(30),
   mode: z.enum(["sara", "bridge"]),
+  // Bridge mode: ring the owner's phone (the default) or this browser (WebRTC).
+  ring: z.enum(["phone", "browser"]).optional(),
   locale: z.enum(ELEVEN_DEMO_LOCALES).optional(),
   voice: z.string().trim().max(40).optional(),
 });
@@ -39,6 +41,7 @@ export function engineStartBody(
     to_number: input.toNumber,
     mode: input.mode,
     ...(input.mode === "bridge" ? { owner_number: ownerNumber } : {}),
+    ...(input.mode === "bridge" && input.ring === "browser" ? { ring: "browser" } : {}),
     ...(input.locale ? { locale: input.locale } : {}),
     ...(input.voice ? { voice: input.voice } : {}),
   };

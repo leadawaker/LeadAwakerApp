@@ -3,7 +3,9 @@ import { readPref, writePref } from "@/features/voiceCalls/localPref";
 import { DEFAULT_PERSONA_FILTERS, type PersonaFilters } from "./personaFilters";
 import { parseGroupBy, type GroupBy } from "./personaView";
 
-const GROUP_BY_KEY = "demos.personas.groupBy";
+// v2: Date became the default (2026-10). The old key held Category for nearly everyone
+// (the old default), so it is left behind and each user starts on Date once.
+const GROUP_BY_KEY = "demos.personas.groupBy.v2";
 
 /**
  * What the persona list remembers about how it is shown: the filters and the

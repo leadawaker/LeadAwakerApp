@@ -67,6 +67,10 @@
     "new_photo": {
       "label": "Nieuwe foto",
       "help": "Een klant stuurde een foto via WhatsApp of de websitechat, met wat erop staat. Per e-mail (foto als bijlage) en in de CRM, niet via WhatsApp."
+    },
+    "caller_hung_up": {
+      "label": "Beller hing meteen op",
+      "help": "Een WhatsApp als iemand belt en ophangt voordat er iets gezegd is. Standaard uit."
     }
   },
   "quiet": {
@@ -98,15 +102,19 @@
   },
   "test": {
     "title": "Test versturen",
-    "help": "Stuurt een voorbeeld met verzonnen gegevens via de echte route naar de ontvangers van dit account.",
+    "help": "Stuurt een voorbeeld met verzonnen gegevens via de echte route: naar alle ontvangers van dit account, of alleen naar jou.",
     "type": "Wat versturen",
     "email": "Test-e-mail sturen",
     "whatsapp": "Test-WhatsApp sturen",
+    "emailMe": "Test-e-mail alleen naar mij",
+    "whatsappMe": "Test-WhatsApp alleen naar mij",
+    "sentMe": "Test alleen naar jou verstuurd.",
     "sent_one": "Test verstuurd naar {{count}} ontvanger.",
     "sent_other": "Test verstuurd naar {{count}} ontvangers.",
     "failed": "De test is niet verstuurd: {{error}}",
     "errors": {
       "no_recipients": "Voeg eerst een ontvanger toe (voor WhatsApp moet het akkoord aangevinkt zijn).",
+      "owner_not_listed": "Je staat niet in de ontvangerslijst van dit account, dus er is niets om alleen naar jou te sturen.",
       "engine_unavailable": "De automation-engine reageerde niet. Probeer het over een minuut opnieuw.",
       "engine_not_restarted": "De automation-engine is nog niet herstart met deze functie."
     }

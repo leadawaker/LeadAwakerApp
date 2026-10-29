@@ -98,9 +98,9 @@
       "hint": "Não conectado"
     },
     "website": {
-      "title": "Site",
+      "title": "Webchat",
       "help": "A janela de chat no site do próprio cliente.",
-      "short": "Chat do site",
+      "short": "Webchat",
       "hint": "Nenhum site definido"
     },
     "bookings": {
@@ -454,7 +454,8 @@
     "showPanel": "Mostrar painel"
   },
   "metrics": {
-    "nMembers": "{{count}} membros",
+    "nMembers_one": "{{count}} membro",
+    "nMembers_other": "{{count}} membros",
     "callsMonth": "Ligações no mês",
     "nBooked_one": "{{count}} agendada",
     "nBooked_other": "{{count}} agendadas",
@@ -622,7 +623,7 @@
     "loadFailed": "Não foi possível carregar as configurações de visitas. Recarregue a página para tentar de novo."
   },
   "websiteChat": {
-    "title": "Chat do site",
+    "title": "Webchat",
     "subtitle": "Um assistente digital no site do próprio cliente.",
     "none": "Ainda não há widget nesta conta.",
     "create": "Criar widget",
@@ -704,7 +705,7 @@
     "rows": {
       "phone": "Recepcionista por telefone",
       "whatsapp": "WhatsApp",
-      "website": "Chat do site",
+      "website": "Webchat",
       "reactivation": "Reativação",
       "reputation": "Reputação",
       "social": "Redes sociais"

@@ -13,7 +13,7 @@ interface HeaderIconBtnProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 }
 
 /**
- * Round 36px header icon button (the IconBtn size) with a 44px tap target
+ * Round 40px header icon button (18px icons via `.la-m-hbtn`) with a 44px tap target
  * (`la-hit`). Forwards its ref + extra props so it can act as a Radix dropdown trigger.
  */
 export const MobileHeaderIconBtn = forwardRef<HTMLButtonElement, HeaderIconBtnProps>(function HeaderIconBtn(
@@ -25,10 +25,10 @@ export const MobileHeaderIconBtn = forwardRef<HTMLButtonElement, HeaderIconBtnPr
       ref={ref}
       type="button"
       {...rest}
-      className={`la-hit${rest.className ? ` ${rest.className}` : ""}`}
+      className={`la-hit la-m-hbtn${rest.className ? ` ${rest.className}` : ""}`}
       style={{
-        width: 36,
-        height: 36,
+        width: 40,
+        height: 40,
         borderRadius: "var(--r-pill)",
         position: "relative",
         border: "none",
@@ -72,7 +72,7 @@ export interface MobileTabDef<T extends string = string> {
 }
 
 /**
- * Premium segmented tab switcher (la-seg) for the header's title row.
+ * The main pill tab switcher (la-seg--main, solid wine selected tab) for the header's title row.
  * Use as the `tabSwitcher` slot so every page's view tabs share one look.
  */
 export function MobileTabSeg<T extends string>({
@@ -85,18 +85,19 @@ export function MobileTabSeg<T extends string>({
   onChange: (id: T) => void;
 }) {
   return (
-    <div className="la-seg la-seg--fill" style={{ flexShrink: 0 }}>
+    <div className="la-seg la-seg--main la-seg--fill" role="tablist" style={{ flexShrink: 0 }}>
       {tabs.map((tab) => {
         const Icon = tab.icon;
         return (
           <button
             key={tab.id}
             type="button"
+            role="tab"
+            aria-selected={activeId === tab.id}
             onClick={() => onChange(tab.id)}
             className={`la-seg-btn${activeId === tab.id ? " on" : ""}`}
-            style={{ padding: "8px 13px", fontSize: 12.5, letterSpacing: "0.08em" }}
           >
-            {tab.iconNode ?? (Icon && <span className="flex items-center"><Icon size={14} /></span>)}
+            {tab.iconNode ?? (Icon && <Icon size={14} style={{ flexShrink: 0 }} />)}
             {tab.label}
           </button>
         );
@@ -464,23 +465,23 @@ export function MobileListHeader({
       style={{ flexShrink: 0, background: "var(--chrome-deep)", borderBottom: "1px solid var(--line)", paddingTop: "var(--safe-top)" }}
       data-testid="mobile-list-header"
     >
-      <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 10, padding: "12px 16px" }}>
+      <div className="row la-m-header-row" style={{ justifyContent: "space-between", alignItems: "center", gap: 10, padding: "12px 16px" }}>
         {hasSearch && searchOpen ? (
           <>
             <div
               className="row"
               style={{
-                flex: 1, minWidth: 0, gap: 8, padding: "7px 12px",
+                flex: 1, minWidth: 0, gap: 8, padding: "0 14px", height: 40,
                 background: "var(--surface)", boxShadow: "var(--sh-inset-super-crisp)", borderRadius: "var(--r-pill)",
               }}
             >
-              <Search size={15} style={{ color: "var(--mute)", flexShrink: 0 }} />
+              <Search size={17} style={{ color: "var(--mute)", flexShrink: 0 }} />
               <input
                 ref={inputRef}
                 value={searchValue ?? ""}
                 onChange={(e) => onSearchChange?.(e.target.value)}
                 placeholder={searchPlaceholder ?? t("topbar.search", "Search")}
-                style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontSize: 14, color: "var(--ink)" }}
+                style={{ flex: 1, minWidth: 0, border: "none", outline: "none", background: "transparent", fontSize: 15, color: "var(--ink)" }}
                 data-testid="mobile-header-search-input"
               />
             </div>
@@ -493,6 +494,7 @@ export function MobileListHeader({
             {/* Title (left) — raised, ellipsises so the tabs + buttons keep their space */}
             <span
               className="serif"
+              title={title}
               style={{ fontSize: 27, lineHeight: 1.05, color: "var(--ink)", letterSpacing: "-0.02em", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
               data-testid="mobile-header-title"
             >

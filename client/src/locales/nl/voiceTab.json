@@ -397,7 +397,6 @@
         "delaysHint": "Bij benadering: berekend uit de tijden in het transcript.",
         "tools": "Tools",
         "unknown": "Onbekend",
-        "noTools": "Er zijn geen tools gebruikt",
         "recording": "Opname",
         "recordingLoading": "Opname laden",
         "noRecording": "Geen opname van dit gesprek: de markeringen tonen wanneer de tools liepen.",
@@ -407,6 +406,7 @@
         "back": "10 seconden terug",
         "forward": "10 seconden vooruit",
         "speed": "Afspeelsnelheid",
+        "zoom": "Zoom",
         "zoomIn": "Inzoomen",
         "zoomOut": "Uitzoomen",
         "download": "Opname downloaden",
@@ -427,6 +427,37 @@
         "outcome": "Uitkomst"
       }
     },
+    "facts": {
+      "foundCount": "{{n}} gevonden",
+      "noneFound": "Niets gevonden",
+      "notInStock": "Niet op voorraad",
+      "freeCount": "{{n}} vrije tijden",
+      "nothingFree": "Niets vrij",
+      "booked": "Ingepland",
+      "moved": "Verplaatst",
+      "notBooked": "Niet gelukt",
+      "cancelled": "Geannuleerd",
+      "noAppointment": "Geen afspraak gevonden",
+      "callback": "Terugbelverzoek",
+      "notes": "Notities",
+      "ended": "Gesprek beëindigd",
+      "transferring": "Doorverbinden",
+      "transferFailed": "Niemand vrij",
+      "plateNone": "Niet gevonden",
+      "plateInvalid": "Ongeldig kenteken",
+      "more": "+{{n}} meer",
+      "row": {
+        "name": "Naam",
+        "when": "Wanneer",
+        "type": "Soort",
+        "reason": "Reden",
+        "number": "Nummer"
+      },
+      "kind": {
+        "visit": "Bezoek",
+        "callback": "Terugbellen"
+      }
+    },
     "tools": {
       "search_stock": "Voorraad zoeken",
       "car_details": "Autogegevens",
@@ -436,6 +467,8 @@
       "request_callback": "Terugbelverzoek",
       "update_call_summary": "Gespreksnotities",
       "end_call": "Gesprek beëindigen",
+      "transfer_to_human": "Doorverbinden",
+      "rdw_plate_lookup": "Kenteken opzoeken",
       "other": "Tool",
       "running": "Bezig"
     }

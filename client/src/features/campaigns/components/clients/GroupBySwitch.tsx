@@ -4,8 +4,8 @@ import { PillSwitch } from "@/components/crm/primitives";
 import type { GroupBy } from "./personaView";
 
 /**
- * Category | Date: how the persona list is sectioned. The same pill switch as the
- * Calls page's Live | Demo; below 768px its items grow to the page's 44px target.
+ * Category | Date: how the persona list is sectioned (Date by default). A secondary
+ * switch, so the soft pill (the page's main tabs keep the solid wine); below 768px its items grow to the page's 44px target.
  * `compact` (default on) is the 30px track; the Demos topbar passes it off on a desktop
  * for the regular-size track.
  */
@@ -24,6 +24,7 @@ export function GroupBySwitch({ value, onChange, compact = true }: { value: Grou
         testId="personas-group-by"
         itemTestId={(id) => `personas-group-${id}`}
         compact={compact}
+        variant="soft"
       />
     </div>
   );

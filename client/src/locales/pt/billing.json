@@ -9,7 +9,8 @@
     "expenses": "Despesas",
     "contracts": "Contratos",
     "list": "Lista",
-    "table": "Tabela"
+    "table": "Tabela",
+    "view": "Visualização"
   },
   "toolbar": {
     "newInvoice": "Nova Fatura",

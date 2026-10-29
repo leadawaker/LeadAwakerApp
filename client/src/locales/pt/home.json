@@ -1,15 +1,9 @@
 {
   "stats": {
-    "recentChannel": "Canal da atividade recente",
-    "recentTabs": {
-      "phone": "Chamadas",
-      "whatsapp": "WhatsApp",
-      "website": "Site"
-    },
     "waiting_one": "{{count}} aguardando",
     "waiting_other": "{{count}} aguardando"
   },
-  "title": "Métricas",
+  "title": "Início",
   "greeting": {
     "morning": "Bom dia",
     "afternoon": "Boa tarde",
@@ -18,31 +12,33 @@
   "tabs": {
     "phone": "Telefone",
     "whatsapp": "WhatsApp",
-    "website": "Site",
+    "website": "Webchat",
     "reactivation": "Reativação",
     "reputation": "Reputação",
     "social": "Redes sociais"
   },
   "period": {
     "label": "Período",
+    "all": "Todo o período",
+    "year": "Este ano",
     "month": "Este mês",
-    "7d": "Últimos 7 dias",
-    "30d": "Últimos 30 dias",
-    "last_month": "Mês passado"
+    "week": "Esta semana",
+    "today": "Hoje"
   },
   "vs": {
+    "year": "em relação ao ano passado",
     "month": "em relação ao mês passado",
-    "7d": "em relação aos 7 dias anteriores",
-    "30d": "em relação aos 30 dias anteriores",
-    "last_month": "em relação ao mês anterior"
+    "week": "em relação à semana passada",
+    "today": "em relação a ontem"
   },
   "channel": {
     "phone": "Telefone",
     "whatsapp": "WhatsApp",
     "sms": "SMS",
-    "website": "Site",
+    "website": "Webchat",
     "booking_page": "Página de agendamento",
-    "unknown": "Desconhecido"
+    "unknown": "Desconhecido",
+    "other": "Outros"
   },
   "allAccounts": "Todas as contas",
   "loading": "Carregando",
@@ -59,8 +55,8 @@
     "byChannel": "Por canal",
     "conversations": "Conversas",
     "bookings": "Agendamentos",
+    "otherNote": "conversas e agendamentos sem canal de chat ou chamada: mensagens não classificadas, a página de agendamento, manual ou importado",
     "smsNote": "mensagens enviadas, só como reserva",
-    "perDay": "Conversas por dia",
     "attention": "Precisa de atenção",
     "attentionEmpty": "Ninguém está esperando por você.",
     "attentionKind": {
@@ -71,7 +67,24 @@
     "activity": "Atividade recente",
     "activityEmpty": "Ainda não há atividade neste período.",
     "unknownCaller": "Pessoa desconhecida",
-    "visitor": "Visitante do site"
+    "visitor": "Visitante do site",
+    "all": "Todos os canais",
+    "perBucket": {
+      "month": "Conversas por mês",
+      "day": "Conversas por dia",
+      "hour": "Conversas por hora"
+    },
+    "attentionTag": {
+      "callback": "Retorno",
+      "transfer_failed": "Transferência falhou",
+      "handoff": "Precisa de uma pessoa"
+    },
+    "markHandled": "Marcar como resolvido",
+    "clearAll": "Limpar tudo",
+    "handled_one": "Marcado como resolvido",
+    "handled_other": "{{count}} marcados como resolvidos",
+    "undo": "Desfazer",
+    "handledFailed": "Não foi possível marcar como resolvido. Tente novamente."
   },
   "phone": {
     "tiles": {
@@ -99,7 +112,7 @@
       "contacts": "Contatos captados",
       "bookings": "Agendamentos"
     },
-    "recentEmpty": "Ainda não há chats no site neste período."
+    "recentEmpty": "Ainda não há webchats neste período."
   },
   "reactivation": {
     "tiles": {
@@ -123,7 +136,7 @@
     "close": "Fechar",
     "welcome": "Bem-vindo, {{firstName}}. {{agentName}} atende pela {{company}}.",
     "welcomeNoName": "Bem-vindo. {{agentName}} atende pela {{company}}.",
-    "where1": "Ligações, conversas e agendamentos aparecem em {{calls}}, {{chats}} e {{calendar}}. Os números e o resumo ficam nesta página de Métricas.",
+    "where1": "Ligações, conversas e agendamentos aparecem em {{calls}}, {{chats}} e {{calendar}}. Os números e o resumo ficam nesta página de Início.",
     "where2": "Você recebe um resumo diário e alertas na hora assim que se adicionar a eles.",
     "guide": "Ler o guia",
     "done": "Pronto",
@@ -137,7 +150,6 @@
     }
   },
   "cards": {
-    "open": "Abrir",
     "noTrend": "Ainda sem comparação",
     "phone": {
       "main": "Ligações atendidas"

@@ -1,15 +1,9 @@
 {
   "stats": {
-    "recentChannel": "Recent activity channel",
-    "recentTabs": {
-      "phone": "Calls",
-      "whatsapp": "WhatsApp",
-      "website": "Website"
-    },
     "waiting_one": "{{count}} waiting",
     "waiting_other": "{{count}} waiting"
   },
-  "title": "Stats",
+  "title": "Home",
   "greeting": {
     "morning": "Good morning",
     "afternoon": "Good afternoon",
@@ -18,31 +12,33 @@
   "tabs": {
     "phone": "Phone",
     "whatsapp": "WhatsApp",
-    "website": "Website",
+    "website": "Webchat",
     "reactivation": "Reactivation",
     "reputation": "Reputation",
     "social": "Social"
   },
   "period": {
     "label": "Period",
+    "all": "All time",
+    "year": "This year",
     "month": "This month",
-    "7d": "Last 7 days",
-    "30d": "Last 30 days",
-    "last_month": "Last month"
+    "week": "This week",
+    "today": "Today"
   },
   "vs": {
+    "year": "vs last year",
     "month": "vs last month",
-    "7d": "vs the 7 days before",
-    "30d": "vs the 30 days before",
-    "last_month": "vs the month before"
+    "week": "vs last week",
+    "today": "vs yesterday"
   },
   "channel": {
     "phone": "Phone",
     "whatsapp": "WhatsApp",
     "sms": "SMS",
-    "website": "Website",
+    "website": "Webchat",
     "booking_page": "Booking page",
-    "unknown": "Unknown"
+    "unknown": "Unknown",
+    "other": "Other"
   },
   "allAccounts": "All accounts",
   "loading": "Loading",
@@ -59,8 +55,8 @@
     "byChannel": "By channel",
     "conversations": "Conversations",
     "bookings": "Bookings",
+    "otherNote": "chats and bookings not tied to a chat or call channel: unclassified messages, the booking page, manual or imported",
     "smsNote": "messages sent, fallback only",
-    "perDay": "Conversations per day",
     "attention": "Needs attention",
     "attentionEmpty": "Nobody is waiting on you.",
     "attentionKind": {
@@ -71,7 +67,24 @@
     "activity": "Recent activity",
     "activityEmpty": "No activity in this period yet.",
     "unknownCaller": "Unknown caller",
-    "visitor": "Website visitor"
+    "visitor": "Website visitor",
+    "all": "All channels",
+    "perBucket": {
+      "month": "Conversations per month",
+      "day": "Conversations per day",
+      "hour": "Conversations per hour"
+    },
+    "attentionTag": {
+      "callback": "Callback",
+      "transfer_failed": "Transfer failed",
+      "handoff": "Needs a person"
+    },
+    "markHandled": "Mark as handled",
+    "clearAll": "Clear all",
+    "handled_one": "Marked as handled",
+    "handled_other": "{{count}} marked as handled",
+    "undo": "Undo",
+    "handledFailed": "Could not mark as handled. Try again."
   },
   "phone": {
     "tiles": {
@@ -99,7 +112,7 @@
       "contacts": "Contacts captured",
       "bookings": "Bookings"
     },
-    "recentEmpty": "No website chats in this period yet."
+    "recentEmpty": "No webchats in this period yet."
   },
   "reactivation": {
     "tiles": {
@@ -123,7 +136,7 @@
     "close": "Close",
     "welcome": "Welcome, {{firstName}}. {{agentName}} answers for {{company}}.",
     "welcomeNoName": "Welcome. {{agentName}} answers for {{company}}.",
-    "where1": "Calls, chats and bookings show up under {{calls}}, {{chats}} and {{calendar}}. The figures and the summary sit on this Stats page.",
+    "where1": "Calls, chats and bookings show up under {{calls}}, {{chats}} and {{calendar}}. The figures and the summary sit on this Home page.",
     "where2": "You get a daily recap and instant alerts once you add yourself to them.",
     "guide": "Read the guide",
     "done": "Done",
@@ -137,7 +150,6 @@
     }
   },
   "cards": {
-    "open": "Open",
     "noTrend": "No earlier data yet",
     "phone": {
       "main": "Calls answered"

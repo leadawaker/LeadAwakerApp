@@ -59,11 +59,11 @@ export function CalendarLoadingSkeleton({ leftPanelState }: CalendarLoadingSkele
       <div className="shrink-0 flex items-center px-3.5" style={{ height: 60, gap: 18, background: "var(--surface)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
         <Skeleton className="h-5 w-24 rounded bg-primary/10" />
         <div className="flex items-center gap-2">
-          <div className="la-seg">
-            <Skeleton className="h-[26px] w-[52px] rounded-[var(--r-button)] bg-primary/10" />
-            <Skeleton className="h-[26px] w-[56px] rounded-[var(--r-button)] bg-primary/5" />
+          {/* Week / Month: main pill tabs (la-seg--main), selected one solid wine */}
+          <div className="la-seg la-seg--main">
+            <Skeleton className="h-8 w-[64px] rounded-[var(--r-pill)]" style={{ background: "var(--wine)", opacity: 0.55 }} />
+            <Skeleton className="h-8 w-[68px] rounded-[var(--r-pill)] bg-primary/5" />
           </div>
-          <ToolIcon />
           <div className="hidden md:flex items-baseline gap-1.5 ml-1">
             <Skeleton className="h-5 w-4 rounded bg-primary/10" />
             <Skeleton className="h-2 w-28 rounded bg-primary/5" />

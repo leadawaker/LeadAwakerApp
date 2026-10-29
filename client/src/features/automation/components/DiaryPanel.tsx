@@ -94,7 +94,7 @@ export function DiaryPanel({ automationId, accountId: fixedAccountId, row, onClo
         )}
 
         <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          <div className="la-seg" role="tablist" aria-label={t("diary.title")}>
+          <div className="la-seg la-seg--main la-seg--soft la-seg--compact" role="tablist" aria-label={t("diary.title")}>
             {[false, true].map((f) => (
               <button key={String(f)} type="button" role="tab" aria-selected={failedOnly === f} className={cn("la-seg-btn", failedOnly === f && "on")} onClick={() => { setFailedOnly(f); resetPaging(); }}>
                 {f ? t("diary.failures") : t("diary.everything")}

@@ -3,7 +3,7 @@
   "loadFailed": "Não foi possível carregar as configurações do chat.",
   "empty": {
     "title": "Ainda sem assistente de chat",
-    "help": "Esta conta não tem campanha respondendo o chat do site ou o WhatsApp. Crie uma campanha de recepção na página Campanhas e depois aponte o chat do site e o WhatsApp de entrada para ela em Integrações.",
+    "help": "Esta conta não tem campanha respondendo o webchat ou o WhatsApp. Crie uma campanha de recepção na página Campanhas e depois aponte o webchat e o WhatsApp de entrada para ela em Integrações.",
     "helpClient": "Seu assistente de chat ainda não está configurado. A Lead Awaker vai configurá-lo para você.",
     "openCampaigns": "Abrir Campanhas"
   },
@@ -22,7 +22,7 @@
     "greeting": {
       "label": "Saudação",
       "help": "Como um chat começa no site e no WhatsApp.",
-      "none": "Sem saudação no site"
+      "none": "Sem saudação no webchat"
     },
     "behaviour": {
       "label": "Comportamento",
@@ -52,7 +52,7 @@
   },
   "overview": {
     "thisMonth": "Este mês",
-    "websiteChats": "Chats no site",
+    "websiteChats": "Webchats",
     "whatsappChats": "Chats no WhatsApp",
     "bookings": "Agendamentos",
     "handedOff": "Passados para uma pessoa",
@@ -60,7 +60,7 @@
     "unknownName": "Visitante desconhecido",
     "noChats": "Nenhum chat ainda.",
     "channel": {
-      "website": "Chat do site",
+      "website": "Webchat",
       "whatsapp": "WhatsApp"
     },
     "channels": "Canais",
@@ -72,16 +72,16 @@
     "widgetNone": "Não configurado",
     "senderOn": "Número conectado",
     "senderOff": "Nenhum número de WhatsApp conectado",
-    "wiringHelp": "A instalação do chat no site e a conexão do número de WhatsApp são feitas em Integrações.",
+    "wiringHelp": "A instalação do webchat e a conexão do número de WhatsApp são feitas em Integrações.",
     "openIntegrations": "Abrir Integrações"
   },
   "greeting": {
-    "websiteTitle": "Chat do site",
+    "websiteTitle": "Webchat",
     "websiteHelp": "A primeira frase que os visitantes veem ao abrir o chat no site.",
     "websiteLabel": "Saudação",
     "websitePlaceholder": "Oi, como posso ajudar?",
-    "noWidget": "Esta conta ainda não tem chat no site. Adicione um em Integrações.",
-    "agencyOnly": "A saudação do site é gerenciada pela Lead Awaker.",
+    "noWidget": "Esta conta ainda não tem webchat. Adicione um em Integrações.",
+    "agencyOnly": "A saudação do webchat é gerenciada pela Lead Awaker.",
     "saving": "Salvando...",
     "saved": "Salvo",
     "failed": "Não foi possível salvar a saudação.",

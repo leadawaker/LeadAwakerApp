@@ -67,6 +67,10 @@
     "new_photo": {
       "label": "New photo",
       "help": "A customer sent a photo in WhatsApp or the website chat, with what it shows. By email (photo attached) and in the CRM, not by WhatsApp."
+    },
+    "caller_hung_up": {
+      "label": "Caller hung up right away",
+      "help": "A WhatsApp when someone calls and hangs up before saying anything. Off by default."
     }
   },
   "quiet": {
@@ -98,15 +102,19 @@
   },
   "test": {
     "title": "Send a test",
-    "help": "Sends a sample with made-up details to this account's recipients through the real path.",
+    "help": "Sends a sample with made-up details through the real path: to all of this account's recipients, or to you only.",
     "type": "What to send",
     "email": "Send test email",
     "whatsapp": "Send test WhatsApp",
+    "emailMe": "Test email to me only",
+    "whatsappMe": "Test WhatsApp to me only",
+    "sentMe": "Test sent to you only.",
     "sent_one": "Test sent to {{count}} recipient.",
     "sent_other": "Test sent to {{count}} recipients.",
     "failed": "The test did not go out: {{error}}",
     "errors": {
       "no_recipients": "Add a recipient first (WhatsApp needs a ticked consent box).",
+      "owner_not_listed": "You are not on this account's recipient list, so there is nothing to send to just you.",
       "engine_unavailable": "The automation engine did not answer. Try again in a minute.",
       "engine_not_restarted": "The automation engine has not been restarted with this feature yet."
     }

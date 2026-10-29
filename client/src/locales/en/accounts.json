@@ -98,9 +98,9 @@
       "hint": "Not connected"
     },
     "website": {
-      "title": "Website",
+      "title": "Webchat",
       "help": "The chat window on the client's own site.",
-      "short": "Website chat",
+      "short": "Webchat",
       "hint": "No site set"
     },
     "bookings": {
@@ -463,7 +463,8 @@
     "showPanel": "Show panel"
   },
   "metrics": {
-    "nMembers": "{{count}} members",
+    "nMembers_one": "{{count}} member",
+    "nMembers_other": "{{count}} members",
     "callsMonth": "Calls this month",
     "nBooked_one": "{{count}} booked",
     "nBooked_other": "{{count}} booked",
@@ -673,7 +674,7 @@
     "removeFailed": "Could not remove the domain."
   },
   "websiteChat": {
-    "title": "Website chat",
+    "title": "Webchat",
     "subtitle": "A digital assistant on the client's own website.",
     "none": "No widget on this account yet.",
     "create": "Create widget",
@@ -755,7 +756,7 @@
     "rows": {
       "phone": "Phone receptionist",
       "whatsapp": "WhatsApp",
-      "website": "Website chat",
+      "website": "Webchat",
       "reactivation": "Reactivation",
       "reputation": "Reputation",
       "social": "Social"

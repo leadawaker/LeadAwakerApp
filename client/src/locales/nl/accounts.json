@@ -98,9 +98,9 @@
       "hint": "Niet gekoppeld"
     },
     "website": {
-      "title": "Website",
+      "title": "Webchat",
       "help": "Het chatvenster op de eigen site van de klant.",
-      "short": "Websitechat",
+      "short": "Webchat",
       "hint": "Geen site ingesteld"
     },
     "bookings": {
@@ -463,7 +463,8 @@
     "showPanel": "Paneel tonen"
   },
   "metrics": {
-    "nMembers": "{{count}} leden",
+    "nMembers_one": "{{count}} lid",
+    "nMembers_other": "{{count}} leden",
     "callsMonth": "Gesprekken deze maand",
     "nBooked_one": "{{count}} geboekt",
     "nBooked_other": "{{count}} geboekt",
@@ -673,7 +674,7 @@
     "removeFailed": "Kon het domein niet verwijderen."
   },
   "websiteChat": {
-    "title": "Websitechat",
+    "title": "Webchat",
     "subtitle": "Een digitale assistent op de eigen website van de klant.",
     "none": "Nog geen widget op dit account.",
     "create": "Widget aanmaken",
@@ -755,7 +756,7 @@
     "rows": {
       "phone": "Telefoonreceptionist",
       "whatsapp": "WhatsApp",
-      "website": "Websitechat",
+      "website": "Webchat",
       "reactivation": "Reactivatie",
       "reputation": "Reputatie",
       "social": "Social"

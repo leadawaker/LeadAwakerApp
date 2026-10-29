@@ -397,7 +397,6 @@
         "delaysHint": "Approximate: worked out from the transcript times.",
         "tools": "Tools",
         "unknown": "Unknown",
-        "noTools": "No tools ran",
         "recording": "Recording",
         "recordingLoading": "Loading the recording",
         "noRecording": "No recording for this call: the markers show when the tools ran.",
@@ -407,6 +406,7 @@
         "back": "Back 10 seconds",
         "forward": "Forward 10 seconds",
         "speed": "Playback speed",
+        "zoom": "Zoom",
         "zoomIn": "Zoom in",
         "zoomOut": "Zoom out",
         "download": "Download the recording",
@@ -427,6 +427,37 @@
         "outcome": "Outcome"
       }
     },
+    "facts": {
+      "foundCount": "{{n}} found",
+      "noneFound": "None found",
+      "notInStock": "Not in stock",
+      "freeCount": "{{n}} free times",
+      "nothingFree": "Nothing free",
+      "booked": "Booked",
+      "moved": "Moved",
+      "notBooked": "Could not book",
+      "cancelled": "Cancelled",
+      "noAppointment": "No appointment found",
+      "callback": "Callback requested",
+      "notes": "Notes",
+      "ended": "Call ended",
+      "transferring": "Putting through",
+      "transferFailed": "Nobody free",
+      "plateNone": "Not found",
+      "plateInvalid": "Invalid plate",
+      "more": "+{{n}} more",
+      "row": {
+        "name": "Name",
+        "when": "When",
+        "type": "Type",
+        "reason": "Reason",
+        "number": "Number"
+      },
+      "kind": {
+        "visit": "Visit",
+        "callback": "Callback"
+      }
+    },
     "tools": {
       "search_stock": "Search stock",
       "car_details": "Car details",
@@ -436,6 +467,8 @@
       "request_callback": "Request callback",
       "update_call_summary": "Call notes",
       "end_call": "End call",
+      "transfer_to_human": "Transfer to a person",
+      "rdw_plate_lookup": "Plate lookup",
       "other": "Tool",
       "running": "Running"
     }

@@ -2,11 +2,20 @@
   "chatsTabs": {
     "chats": "Chats",
     "settings": "Settings",
-    "aria": "View"
+    "aria": "View",
+    "openSettings": "Chat settings",
+    "back": "Chats",
+    "settingsTitle": "Chat settings",
+    "reactivationSettings": "Reactivation settings"
+  },
+  "presenting": {
+    "on": "Identities hidden",
+    "off": "Identities shown",
+    "tooltip": "Hides lead names and phone numbers, also inside the messages."
   },
   "chatChannel": {
     "all": "All chats",
-    "website": "Website",
+    "website": "Webchat",
     "whatsapp": "WhatsApp"
   },
   "chatRecap": {
@@ -25,7 +34,7 @@
     "messageCounts": "{{received}} in, {{sent}} out",
     "bookingChannel": {
       "whatsapp": "WhatsApp",
-      "website": "website",
+      "website": "webchat",
       "booking_page": "booking page",
       "phone": "phone",
       "sms": "SMS"
@@ -33,11 +42,13 @@
   },
   "conversationType": {
     "label": "Channel",
-    "widget": "Website chat",
+    "widget": "Webchat",
     "voice": "Phone",
     "dbr": "Reactivation / Quotes",
     "instagram": "Instagram",
-    "other": "Other"
+    "other": "Other",
+    "reactivationBadge": "Reactivation",
+    "aiPrefix": "AI"
   },
   "page": {
     "chatsTitle": "Chats",
@@ -611,7 +622,7 @@
     "record": "Record voice message",
     "aiResumeBody": "The assistant picks this conversation up again. You can take over again any time.",
     "sendFailed": "The message could not be sent. Try again.",
-    "unreachable": "Replies from here cannot reach this person: they did not write through your website chat, and your account has no WhatsApp number of its own yet. Ask Gabriel to connect one.",
+    "unreachable": "Replies from here cannot reach this person: they did not write through your webchat, and your account has no WhatsApp number of its own yet. Ask Gabriel to connect one.",
     "title": "Chat",
     "noMessages": "No messages yet",
     "noMessagesHint": "Messages will appear here once outreach begins",
@@ -732,7 +743,7 @@
     }
   },
   "leadChannel": {
-    "website": "Website chat",
+    "website": "Webchat",
     "whatsapp": "WhatsApp",
     "phone": "Called",
     "email": "Email",
@@ -740,7 +751,7 @@
   },
   "channelFilter": {
     "all": "All channels",
-    "website": "Website",
+    "website": "Webchat",
     "whatsapp": "WhatsApp",
     "phone": "Phone"
   },

@@ -93,7 +93,7 @@ export function SocialPage() {
     <CrmShell>
       <div className="la-page" style={{ background: "var(--bg)" }} data-testid="page-social">
         <div className="la-page-header" style={{ gap: 12, padding: isMobile ? "0 12px" : "0 17px" }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--ink)", flexShrink: 0 }}>{t("page.title")}</span>
+          <span className="la-page-title">{t("page.title")}</span>
           {hasInsights && (
             <PillSwitch<"insights" | "work">
               items={[

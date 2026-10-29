@@ -2,11 +2,20 @@
   "chatsTabs": {
     "chats": "Chats",
     "settings": "Instellingen",
-    "aria": "Weergave"
+    "aria": "Weergave",
+    "openSettings": "Chatinstellingen",
+    "back": "Chats",
+    "settingsTitle": "Chatinstellingen",
+    "reactivationSettings": "Reactivatie-instellingen"
+  },
+  "presenting": {
+    "on": "Identiteiten verborgen",
+    "off": "Identiteiten zichtbaar",
+    "tooltip": "Verbergt namen en telefoonnummers van leads, ook in de berichten."
   },
   "chatChannel": {
     "all": "Alle chats",
-    "website": "Website",
+    "website": "Webchat",
     "whatsapp": "WhatsApp"
   },
   "chatRecap": {
@@ -25,7 +34,7 @@
     "messageCounts": "{{received}} binnen, {{sent}} verstuurd",
     "bookingChannel": {
       "whatsapp": "WhatsApp",
-      "website": "website",
+      "website": "webchat",
       "booking_page": "boekingspagina",
       "phone": "telefoon",
       "sms": "sms"
@@ -33,11 +42,13 @@
   },
   "conversationType": {
     "label": "Kanaal",
-    "widget": "Websitechat",
+    "widget": "Webchat",
     "voice": "Telefoon",
     "dbr": "Reactivatie / Offertes",
     "instagram": "Instagram",
-    "other": "Overig"
+    "other": "Overig",
+    "reactivationBadge": "Reactivatie",
+    "aiPrefix": "AI"
   },
   "page": {
     "chatsTitle": "Chats",
@@ -611,7 +622,7 @@
     "record": "Spraakbericht opnemen",
     "aiResumeBody": "De assistent neemt dit gesprek weer over. Je kunt altijd opnieuw overnemen.",
     "sendFailed": "Het bericht kon niet worden verstuurd. Probeer het opnieuw.",
-    "unreachable": "Een antwoord vanaf hier bereikt deze persoon niet: hij of zij schreef niet via je websitechat, en je account heeft nog geen eigen WhatsApp-nummer. Vraag Gabriel er een te koppelen.",
+    "unreachable": "Een antwoord vanaf hier bereikt deze persoon niet: hij of zij schreef niet via je webchat, en je account heeft nog geen eigen WhatsApp-nummer. Vraag Gabriel er een te koppelen.",
     "title": "Chat",
     "noMessages": "Nog geen berichten",
     "noMessagesHint": "Berichten verschijnen hier zodra het contact begint",
@@ -732,7 +743,7 @@
     }
   },
   "leadChannel": {
-    "website": "Websitechat",
+    "website": "Webchat",
     "whatsapp": "WhatsApp",
     "phone": "Gebeld",
     "email": "E-mail",
@@ -740,7 +751,7 @@
   },
   "channelFilter": {
     "all": "Alle kanalen",
-    "website": "Website",
+    "website": "Webchat",
     "whatsapp": "WhatsApp",
     "phone": "Telefoon"
   },

@@ -124,7 +124,7 @@ export function ThumbnailGallery({ accountId, thumbs, loading, canEdit, canLink,
     <section className="neu-inset-crisp" style={{ borderRadius: "var(--r-card)", padding: "14px 14px 16px", display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }} data-testid="thumb-gallery">
       <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
         <h3 style={{ margin: 0, fontSize: 13, fontWeight: 700, color: "var(--ink-soft)", flex: 1 }}>{t("thumbnails.gallery.title")}</h3>
-        <div className="la-seg la-seg--pill" role="tablist" aria-label={t("thumbnails.gallery.title")}>
+        <div className="la-seg la-seg--main la-seg--soft la-seg--compact" role="tablist" aria-label={t("thumbnails.gallery.title")}>
           {(["all", "starred"] as const).map((f) => (
             <button key={f} type="button" role="tab" aria-selected={filter === f} className={cn("la-seg-btn", filter === f && "on")} onClick={() => setFilter(f)}>
               {t(`thumbnails.gallery.filters.${f}`)}

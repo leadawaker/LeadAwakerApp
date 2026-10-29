@@ -17,12 +17,14 @@
   "pageTabs": {
     "aria": "Calls page",
     "calls": "Calls",
-    "settings": "Settings"
+    "settings": "Settings",
+    "callSettings": "Call settings"
   },
   "title": "Calls",
   "webCaller": "Web caller",
   "booked": "Booked",
   "empty": "No voice calls yet. Calls made on the voice demo will appear here.",
+  "emptyTest": "No test calls yet. Calls you make with Start test call on an account's Voice tab appear here.",
   "selectCall": "Select a call to see what happened.",
   "notFound": "This call could not be found.",
   "callLoadError": "This call could not be loaded.",
@@ -153,6 +155,7 @@
   "playbackFailed": "This recording could not be played. Try downloading it instead.",
   "scope": {
     "live": "Live",
+    "test": "Tests",
     "demo": "Demo",
     "aria": "Call source"
   },
@@ -163,6 +166,7 @@
     "booked": "Booked",
     "avgLength": "Avg length",
     "last7Days": "Last 7 days",
+    "window": "7 days",
     "noValue": "–"
   },
   "outcomes": {
@@ -172,10 +176,9 @@
     "hungUp": "Hung up",
     "other": "Answered"
   },
-  "testData": {
-    "label": "Test data (hidden from the client)"
-  },
   "presenting": {
+    "hide": "Hide identities",
+    "show": "Show identities",
     "label": "Presenting",
     "on": "Identities hidden",
     "off": "Identities shown",
@@ -200,10 +203,12 @@
     },
     "callCount_one": "{{count}} call",
     "callCount_other": "{{count}} calls",
+    "peopleCount_one": "{{count}} person",
+    "peopleCount_other": "{{count}} people",
     "lead": "Lead",
     "booked": "Booked",
     "callBack": "Call back",
-    "whatsapp": "Message on WhatsApp",
+    "whatsapp": "WhatsApp",
     "callAnyway": "Call anyway",
     "warnDnd": "This person asked not to be contacted.",
     "warnOutOfHours": "It is outside business hours for this account right now.",

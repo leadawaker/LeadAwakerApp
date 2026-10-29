@@ -25,7 +25,7 @@ export function InsightsSection({ accountId }: { accountId: number }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16, minWidth: 0 }} data-testid="insights-section">
       <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
-        <div className="la-seg la-seg--pill" role="tablist" aria-label={t("insights.period")}>
+        <div className="la-seg la-seg--main la-seg--soft la-seg--compact" role="tablist" aria-label={t("insights.period")}>
           {([7, 30] as const).map((d) => (
             <button key={d} type="button" role="tab" aria-selected={days === d} className={cn("la-seg-btn", days === d && "on")} onClick={() => setDays(d)} data-testid={`insights-days-${d}`}>
               {t("insights.days", { count: d })}

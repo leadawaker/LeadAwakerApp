@@ -270,7 +270,14 @@
         "backup": "Reserva"
       },
       "password": "Senha da página de demo sem link",
-      "passwordPlaceholder": "ex.: solar, demo2026"
+      "passwordPlaceholder": "ex.: solar, demo2026",
+      "style": "Como a Sara entra em \"Ligar para mim + prospect\"",
+      "styleHint": "Passar: a Sara assume o prospect enquanto você fica em espera e acompanha pelo texto, com o som mais limpo. Três pessoas: os três na mesma linha, e a voz da Sara pode falhar.",
+      "styles": {
+        "handoff": "Passar",
+        "barge": "Três pessoas (barge)",
+        "conference": "Três pessoas (conferência)"
+      }
     }
   },
   "widgetColor": {
@@ -327,7 +334,8 @@
       "failed": "falhou",
       "busy": "ocupado",
       "no_answer": "não atendeu",
-      "voicemail": "caixa postal"
+      "voicemail": "caixa postal",
+      "on_hold": "em espera"
     },
     "gone": "Essa ligação não está mais ativa (o servidor de chamadas reiniciou). Você pode iniciar uma nova.",
     "errors": {
@@ -347,7 +355,30 @@
       "leg_join_failed": "{{who}}: não conseguiu entrar na ligação.",
       "leg_failed": "{{who}}: a ligação falhou.",
       "leg_busy": "{{who}}: linha ocupada.",
-      "leg_no_answer": "{{who}}: não atendeu."
+      "leg_no_answer": "{{who}}: não atendeu.",
+      "take_back_failed": "Não foi possível devolver a ligação para você."
+    },
+    "handTo": "Passar para a Sara",
+    "takeBack": "Retomar a ligação",
+    "transcript": "Conversa da Sara",
+    "transcriptEmpty": "O que a Sara e o prospect dizem aparece aqui enquanto eles falam.",
+    "ring": {
+      "label": "Me ligar no",
+      "phone": "Meu telefone",
+      "browser": "Este navegador"
+    },
+    "browser": {
+      "label": "Navegador",
+      "mute": "Silenciar",
+      "unmute": "Ativar som",
+      "micDenied": "O acesso ao microfone foi recusado. Permita para este site e tente de novo.",
+      "loginFailed": "Este navegador não conseguiu se conectar à linha. Tente de novo ou use seu telefone.",
+      "state": {
+        "idle": "desconectado",
+        "connecting": "conectando",
+        "waiting": "aguardando a chamada",
+        "active": "em ligação"
+      }
     }
   },
   "personaList": {

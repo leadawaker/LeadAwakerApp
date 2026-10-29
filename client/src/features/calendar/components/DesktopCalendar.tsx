@@ -5,6 +5,8 @@
 // DesktopCalendarToolbar, DesktopCalendarWeek, DesktopCalendarMonthAgenda, DesktopCalendarDetail.
 import { useState, useRef, useEffect } from "react";
 import { useListPanelState, type ListPanelState } from "@/hooks/useListPanelState";
+import { useListPanelFold } from "@/hooks/useListPanelFold";
+import { ListPanelFooter, ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
 import { usePersistedState } from "@/hooks/usePersistedState";
@@ -76,8 +78,10 @@ const DETAIL_W = 372;
 const DETAIL_W_CALL = 500;
 
 export function DesktopCalendar(props: DesktopCalendarProps) {
-  const { state: leftPanelState, cycle } = useListPanelState();
+  const { state: leftPanelState } = useListPanelState();
   const isMobile = useIsMobile(1024);
+  // List fold button (agenda header): the agenda rail cycles full → compact → hidden (never on mobile).
+  useListPanelFold(!isMobile);
   const isPhone = useIsMobile(768);
 
   // Block panel (create / edit a busy block). Opened from the toolbar and the week grid;
@@ -123,21 +127,28 @@ export function DesktopCalendar(props: DesktopCalendarProps) {
 
   return (
     <div ref={rootRef} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }} data-testid="calendar-desktop">
-      <TopToolbar {...p} leftPanelState={effectiveLeftPanelState} onCyclePanel={isMobile ? undefined : cycle} ultra={ultra} />
+      <TopToolbar {...p} leftPanelState={effectiveLeftPanelState} ultra={ultra} />
       <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 0, padding: 0, overflow: "hidden", position: "relative" }}>
         {/* LEFT — agenda (full | minimized | hidden); never shown on mobile */}
         {effectiveLeftPanelState !== "hidden" && (
           <div style={{ ...CARD_STYLE, width: leftWidth, flexShrink: 0, background: "hsl(var(--panel-list-bg))", borderRadius: 0, borderRight: "1px solid var(--line)" }}>
             {effectiveLeftPanelState === "compact" ? (
-              <CompactAgendaList {...p} />
+              <>
+                <CompactAgendaList {...p} />
+                <ListPanelFooter compact />
+              </>
             ) : (
               <>
                 <StatusTabs {...p} />
                 <AgendaList {...p} />
+                {/* Bottom bar: the list fold button at the right end */}
+                <ListPanelFooter />
               </>
             )}
           </div>
         )}
+        {/* Hidden agenda: the slim strip that brings it back */}
+        {!isMobile && <ListPanelUnfoldButton />}
         {/* CENTER — calendar. Ultra-wide: week + month split */}
         <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg)", borderRadius: 0, display: "flex", flexDirection: "column" }}>
           {p.viewMode === "list" && isMobile ? (

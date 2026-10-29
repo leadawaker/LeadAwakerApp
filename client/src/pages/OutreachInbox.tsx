@@ -1,16 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ChevronLeft, PanelLeft, PanelLeftClose } from "lucide-react";
+import { ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
+import { ChevronLeft } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
 import { useListPanelState } from "@/hooks/useListPanelState";
+import { useListPanelFold } from "@/hooks/useListPanelFold";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { fetchProspectsByIds } from "@/features/prospects/api/prospectsApi";
 import { InboxPanel } from "@/features/conversations/components/InboxPanel";
 import { ProspectInboxTopbarControls, useProspectInboxFilters } from "@/features/conversations/components/ProspectInboxControls";
-import { PageTopbar, TopbarIconButton } from "@/components/crm/primitives";
+import { PageTopbar } from "@/components/crm/primitives";
 import { ProspectChatPanel } from "@/features/conversations/components/ProspectChatPanel";
 import { ProspectDetailSidebar } from "@/features/conversations/components/ProspectDetailSidebar";
 import { useProspectConversations } from "@/features/conversations/hooks/useProspectConversations";
@@ -100,8 +102,9 @@ export default function OutreachInbox() {
 
   // Shared global list-panel state (Prospects/Leads/Campaigns/Chats all cycle together).
   const { ref: chatPanelAreaRef, narrow: chatPanelNarrow } = useCompactPanelState(false, { activateBelow: 720, deactivateAbove: 960 });
-  const { state: listPanelState, setState: setListPanelState } = useListPanelState();
-  const cycleListPanel = () => setListPanelState(listPanelState === "full" ? "compact" : listPanelState === "compact" ? "hidden" : "full");
+  const { state: listPanelState } = useListPanelState();
+  // List fold button (panel header): full → compact → hidden.
+  useListPanelFold(!isMobile);
   const isListCompact = !isMobile && (listPanelState === "compact" || (listPanelState === "full" && chatPanelNarrow));
   const isListHidden = listPanelState === "hidden";
 
@@ -139,14 +142,6 @@ export default function OutreachInbox() {
         <PageTopbar
           desktopOnly
           title={t("sidebar.inbox")}
-          left={
-            <TopbarIconButton
-              label={listPanelState === "full" ? tc("prospectInbox.compactPanel") : listPanelState === "compact" ? tc("prospectInbox.hidePanel") : tc("prospectInbox.showPanel")}
-              onClick={cycleListPanel}
-            >
-              {listPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-            </TopbarIconButton>
-          }
           right={<ProspectInboxTopbarControls filters={prospectFilters} />}
         />
 
@@ -184,6 +179,12 @@ export default function OutreachInbox() {
             )}
             data-testid="outreach-inbox-panel"
           />
+          {/* Hidden list: the slim strip that brings it back */}
+          {!isMobile && isListHidden && (
+            <div className="hidden lg:flex rounded-lg overflow-hidden">
+              <ListPanelUnfoldButton />
+            </div>
+          )}
 
           {/* Right panel: prospect chat */}
           <div

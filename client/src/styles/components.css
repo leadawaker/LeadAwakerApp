@@ -90,50 +90,7 @@
 .la-btn--lg { font-size: 11px; padding: 13px 22px; }
 .la-btn--pill { border-radius: var(--r-pill); }
 
-/* ─── Segmented controls ─────────────────────────────────────── */
-
-.la-seg {
-  display: inline-flex;
-  gap: 3px;
-  padding: 3px;
-  background: hsl(var(--background));
-  box-shadow: var(--sh-inset-super-crisp);
-  border-radius: var(--r-surface);
-}
-
-.la-seg-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
-  padding: 7px 13px;
-  border: none;
-  border-radius: var(--r-button);
-  background: transparent;
-  box-shadow: none;
-  cursor: pointer;
-  font-family: 'Geist Mono', ui-monospace, monospace;
-  font-size: 9px;
-  font-weight: 400;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted-foreground);
-  white-space: nowrap;
-  transition: color 120ms, box-shadow 120ms, background 120ms;
-}
-.la-seg-btn:hover { color: var(--wine); }
-.la-seg-btn.on {
-  background: #FFFFFF;
-  box-shadow: var(--sh-raised-crisp);
-  color: var(--wine);
-  font-weight: 700;
-}
-
-.la-seg--pill,
-.la-seg--pill .la-seg-btn { border-radius: var(--r-pill); }
-.la-seg--pill .la-seg-btn { padding: 6px 15px; }
-.la-seg--fill { display: flex; }
-.la-seg--fill .la-seg-btn { flex: 1; }
+/* Segmented controls (.la-seg, .la-seg-btn and modifiers) live in design-system.css. */
 
 /* Compact (mobile) campaign config: collapse the desktop 2-column field grids
    to a single column so fields are full-width on narrow sheets. The field
@@ -229,6 +186,51 @@
     box-shadow: var(--sh-raised-crisp);
   }
 }
+
+/* Lead row swipe wrapper (LeadListCard): the selected card's lift, raised on phones. */
+.la-lead-swipe { border-radius: var(--list-card-radius); }
+.la-lead-swipe.is-active { box-shadow: var(--sh-raised-crisp); }
+@media (max-width: 768px) {
+  .la-lead-swipe { border-radius: var(--list-card-radius-mobile); box-shadow: var(--sh-raised-crisp); }
+}
+
+/* ─── Flat list rows (experiment, 2026-10-29): WhatsApp-style rows on the list ground ───
+   Opt-in with `.la-cards--flat` on the `.la-cards` container (Calls: VoiceCallsInbox,
+   CallersInbox; Chats: LeadsListPanel). Remove the modifier to bring the raised cards back.
+   No dividers and no lift on idle rows; a very light wine tint on hover. The selected row
+   is a white raised card (--card + --sh-raised-crisp), rounded like the old cards. Every row
+   carries the same small horizontal inset, so selecting never shifts content. Rows stay
+   opaque so the Chats swipe tray never shows through. On Chats the lift sits on the swipe
+   wrapper (.la-lead-swipe): its overflow-x clip would cut a shadow on the inner card. That clip
+   is `overflow-x: clip` (not hidden), so it never turns the wrapper into a vertical clipper. */
+.la-cards.la-cards--flat,
+.la-list-area > .la-cards.la-cards--flat { gap: 0; }
+.la-cards--flat > .la-camp-card,
+.la-cards--flat .la-lead-swipe { margin-inline: 4px; }
+.la-cards--flat .la-lead-swipe { box-shadow: none; border-radius: var(--list-card-radius); }
+.la-cards--flat .la-camp-card,
+.la-cards--flat .la-camp-card:not(.active) {
+  border-radius: var(--list-card-radius);
+  background: var(--surface);
+  box-shadow: none;
+}
+.la-cards--flat .la-camp-card:hover {
+  background: linear-gradient(color-mix(in srgb, var(--wine) 4%, transparent), color-mix(in srgb, var(--wine) 4%, transparent)), var(--surface);
+}
+/* Selected: z-index lifts the shadow above the next (opaque) row. */
+.la-cards--flat .la-camp-card.active,
+.la-cards--flat .la-camp-card.active:hover {
+  background: var(--card);
+  box-shadow: var(--sh-raised-crisp);
+  z-index: 2;
+}
+.la-cards--flat .la-lead-swipe.is-active { box-shadow: var(--sh-raised-crisp); z-index: 2; }
+.la-cards--flat .la-lead-swipe .la-camp-card.active { box-shadow: none; }
+/* The selected row keeps the small wine bar at its left edge (.la-camp-card.active::before), Calls and Chats alike. */
+/* Breathing room for the selected row's lift: --sh-raised-crisp reaches ~13px past the card, so the flat
+   list pads itself instead of letting the scroll container (.la-list-area, overflow-y: auto) crop the shadow.
+   With the list padding (6px 8px 8px) and the 4px row inset this leaves ~14px on every side. */
+.la-cards.la-cards--flat { padding: 8px 4px; }
 
 /* ─── Mono tile ──────────────────────────────────────────────── */
 
@@ -498,12 +500,6 @@
    .la-m-crisp   inset fields stay crisp on phones. */
 @media (max-width: 767px) {
   .la-m-chrome { background: var(--chrome-deep) !important; }
-  .la-m-chrome .la-seg {
-    background: var(--surface);
-    box-shadow: var(--sh-raised-crisp);
-  }
-  .la-m-chrome .la-seg-btn { color: var(--chrome-deep-ink); }
-  .la-m-chrome .la-seg-btn.on { background: var(--card); color: var(--wine); }
   .la-m-crisp,
   .la-m-chrome .neu-inset,
   .la-m-chrome .neu-inset-medium { box-shadow: var(--sh-inset-crisp) !important; }

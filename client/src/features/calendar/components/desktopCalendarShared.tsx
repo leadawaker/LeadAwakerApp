@@ -175,7 +175,6 @@ export interface DesktopCalendarProps {
   narrow?: boolean;
   // panel fold (left agenda) + popup detail mode — injected by composition root
   leftPanelState?: ListPanelState;
-  onCyclePanel?: () => void;
   showClose?: boolean;
   // ultra-wide (>= 1700px): week + month shown side by side, toggle hidden
   ultra?: boolean;

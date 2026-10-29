@@ -85,21 +85,21 @@ export function CenterHeader(p: DesktopCalendarProps) {
   // Mobile: single-row layout — [Today] ‹ Date › [KPI]
   if (isMobile) {
     return (
-      <div style={{ flexShrink: 0, borderBottom: "1px solid var(--line)", padding: "8px 10px" }}>
+      <div style={{ flexShrink: 0, borderBottom: "1px solid var(--line)", padding: "8px 16px 8px 10px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
           {/* Today button — left edge */}
           <button onClick={p.onToday} className="la-btn la-btn--soft la-btn--sm" style={{ flexShrink: 0, ...todayBtnStyle }}>{t("navigation.today")}</button>
           {/* Prev arrow */}
           <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")} style={{ flexShrink: 0 }} forcePressed={flashDir === -1}><ChevronLeft className="h-5 w-5" /></NavBtn>
           {/* Date label — centered, fills remaining space */}
-          <span style={{ ...SERIF, fontSize: 19, color: "var(--ink)", letterSpacing: "-0.01em", textAlign: "center", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
+          <span style={{ ...SERIF, fontSize: 17, color: "var(--ink)", letterSpacing: "-0.01em", textAlign: "center", flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
           {/* Next arrow */}
           <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")} style={{ flexShrink: 0 }} forcePressed={flashDir === 1}><ChevronRight className="h-5 w-5" /></NavBtn>
           {/* Meetings-this-week KPI — right edge: big number + 3-line stacked label */}
-          <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
-            <span style={{ ...SERIF, fontSize: 28, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
-            <span style={{ ...MONO, fontSize: 8, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute)", lineHeight: 1.15, display: "flex", flexDirection: "column" }}>
-              {t("design.kpi.meetings").split(" ").map((w, i) => <span key={i}>{w}</span>)}
+          <div style={{ display: "flex", alignItems: "center", gap: 5, flexShrink: 0, marginLeft: 2 }}>
+            <span style={{ ...SERIF, fontSize: 24, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.02em" }}>{meetingsThisWeek}</span>
+            <span style={{ ...MONO, fontSize: 8, letterSpacing: "0.08em", textTransform: "uppercase", color: "var(--mute)", lineHeight: 1.2, maxWidth: 76, whiteSpace: "normal" }}>
+              {t("design.kpi.meetings")}
             </span>
           </div>
         </div>

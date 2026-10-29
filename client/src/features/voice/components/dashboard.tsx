@@ -72,7 +72,7 @@ function CallsChart() {
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--mute)" }}><span style={{ width: 14, height: 2, background: "var(--mute-2)", borderRadius: 2 }} />Missed calls</span>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, color: "var(--mute)" }}><span style={{ width: 14, height: 2, background: "var(--wine)", borderRadius: 2 }} />Recovered</span>
           </span>
-          <div className="la-seg">
+          <div className="la-seg la-seg--main la-seg--soft la-seg--compact" role="tablist">
             {(["daily", "weekly"] as const).map((g) => (
               <button key={g} onClick={() => setGrain(g)} className={`la-seg-btn${grain === g ? " on" : ""}`} style={{ textTransform: "capitalize" }}>{g}</button>
             ))}

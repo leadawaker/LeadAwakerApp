@@ -1,6 +1,7 @@
 // The Prompt Library's list parts: the card, the compact icon rail and the
 // group divider. The icon tile takes its area's color (promptCategories).
 import { useTranslation } from "react-i18next";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import { Bot } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { getPromptId } from "../../types";
@@ -225,6 +226,8 @@ export function CompactPromptRail({
           );
         })}
       </div>
+      {/* Bottom bar: the list fold button, centered in the rail */}
+      <ListPanelFooter compact />
     </div>
   );
 }

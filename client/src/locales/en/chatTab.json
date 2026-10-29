@@ -3,7 +3,7 @@
   "loadFailed": "Could not load the chat settings.",
   "empty": {
     "title": "No chat assistant yet",
-    "help": "This account has no campaign answering its website chat or WhatsApp. Create a receptionist campaign on the Campaigns page, then point the website chat and inbound WhatsApp at it on Integrations.",
+    "help": "This account has no campaign answering its webchat or WhatsApp. Create a receptionist campaign on the Campaigns page, then point the webchat and inbound WhatsApp at it on Integrations.",
     "helpClient": "Your chat assistant is not set up yet. Lead Awaker will set it up for you.",
     "openCampaigns": "Open Campaigns"
   },
@@ -22,7 +22,7 @@
     "greeting": {
       "label": "Greeting",
       "help": "How a chat starts on the website and on WhatsApp.",
-      "none": "No website greeting"
+      "none": "No webchat greeting"
     },
     "behaviour": {
       "label": "Behaviour",
@@ -52,7 +52,7 @@
   },
   "overview": {
     "thisMonth": "This month",
-    "websiteChats": "Website chats",
+    "websiteChats": "Webchats",
     "whatsappChats": "WhatsApp chats",
     "bookings": "Bookings",
     "handedOff": "Handed to a person",
@@ -60,7 +60,7 @@
     "unknownName": "Unknown visitor",
     "noChats": "No chats yet.",
     "channel": {
-      "website": "Website chat",
+      "website": "Webchat",
       "whatsapp": "WhatsApp"
     },
     "channels": "Channels",
@@ -72,16 +72,16 @@
     "widgetNone": "Not set up",
     "senderOn": "Number connected",
     "senderOff": "No WhatsApp number connected",
-    "wiringHelp": "Installing the website chat and connecting the WhatsApp number are done on Integrations.",
+    "wiringHelp": "Installing the webchat and connecting the WhatsApp number are done on Integrations.",
     "openIntegrations": "Open Integrations"
   },
   "greeting": {
-    "websiteTitle": "Website chat",
+    "websiteTitle": "Webchat",
     "websiteHelp": "The first line visitors see when they open the chat on the website.",
     "websiteLabel": "Greeting",
     "websitePlaceholder": "Hi, how can I help?",
-    "noWidget": "There is no website chat on this account yet. Add one on Integrations.",
-    "agencyOnly": "The website greeting is managed by Lead Awaker.",
+    "noWidget": "There is no webchat on this account yet. Add one on Integrations.",
+    "agencyOnly": "The webchat greeting is managed by Lead Awaker.",
     "saving": "Saving...",
     "saved": "Saved",
     "failed": "Could not save the greeting.",

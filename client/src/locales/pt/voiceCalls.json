@@ -17,12 +17,14 @@
   "pageTabs": {
     "aria": "Página de chamadas",
     "calls": "Chamadas",
-    "settings": "Configurações"
+    "settings": "Configurações",
+    "callSettings": "Configurações de chamadas"
   },
   "title": "Chamadas",
   "webCaller": "Visitante do site",
   "booked": "Agendado",
   "empty": "Nenhuma chamada de voz ainda. As chamadas feitas na demo de voz aparecem aqui.",
+  "emptyTest": "Nenhuma chamada de teste ainda. As ligações que você faz com Iniciar ligação de teste na aba Voice de uma conta aparecem aqui.",
   "selectCall": "Selecione uma chamada para ver o que aconteceu.",
   "notFound": "Esta chamada não foi encontrada.",
   "callLoadError": "Não foi possível carregar esta chamada.",
@@ -153,6 +155,7 @@
   "playbackFailed": "Não foi possível reproduzir esta gravação. Tente baixá-la.",
   "scope": {
     "live": "Ao vivo",
+    "test": "Testes",
     "demo": "Demo",
     "aria": "Origem das chamadas"
   },
@@ -163,6 +166,7 @@
     "booked": "Agendados",
     "avgLength": "Duração média",
     "last7Days": "Últimos 7 dias",
+    "window": "7 dias",
     "noValue": "–"
   },
   "outcomes": {
@@ -172,10 +176,9 @@
     "hungUp": "Desligou",
     "other": "Atendido"
   },
-  "testData": {
-    "label": "Dados de teste (ocultos do cliente)"
-  },
   "presenting": {
+    "hide": "Ocultar identidades",
+    "show": "Mostrar identidades",
     "label": "Apresentando",
     "on": "Identidades ocultas",
     "off": "Identidades visíveis",
@@ -200,10 +203,12 @@
     },
     "callCount_one": "{{count}} ligação",
     "callCount_other": "{{count}} ligações",
+    "peopleCount_one": "{{count}} pessoa",
+    "peopleCount_other": "{{count}} pessoas",
     "lead": "Lead",
     "booked": "Agendado",
     "callBack": "Retornar ligação",
-    "whatsapp": "Mensagem no WhatsApp",
+    "whatsapp": "WhatsApp",
     "callAnyway": "Ligar mesmo assim",
     "warnDnd": "Esta pessoa pediu para não ser contatada.",
     "warnOutOfHours": "Agora está fora do horário de atendimento desta conta.",

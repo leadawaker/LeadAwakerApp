@@ -37,6 +37,11 @@ export function registerVoiceDemoCallRoutes(app: Express) {
     send(res, r);
   }));
 
+  // A WebRTC login for this browser ("Call me + prospect" ringing the browser). Before /:id.
+  app.get("/api/voice/demo-calls/browser-token", requireAuth, requireAgency, wrapAsync(async (_req: Request, res: Response) => {
+    send(res, await relayDemoCall(getEngineUrl(), "GET", "/voice/demo-calls/browser-token", null, key()));
+  }));
+
   app.get("/api/voice/demo-calls/:id", requireAuth, requireAgency, wrapAsync(async (req: Request, res: Response) => {
     const id = String(req.params.id || "");
     if (!DEMO_CALL_ID.test(id)) return res.status(422).json({ message: "Invalid call id" });

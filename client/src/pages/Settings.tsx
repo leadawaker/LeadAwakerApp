@@ -168,9 +168,7 @@ function SettingsContent() {
         </div>
       )}
       <div className="la-page-header flex items-center gap-4 min-w-0">
-        <span className="serif shrink-0" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>
-          {t("title")}
-        </span>
+        <span className="la-page-title">{t("title")}</span>
         {/* Toolbar portal slot: the Users toolbar mounts here on the topbar */}
         {active === "users" && (
           <div id="settings-team-toolbar-slot" className="flex-1 flex items-center justify-end gap-1.5 px-2" style={{ overflow: "visible" }} />

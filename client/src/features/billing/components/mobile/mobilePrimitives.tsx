@@ -106,30 +106,35 @@ export function DueLabel({ inv, t }: { inv: InvoiceRow; t: (k: string, o?: any) 
   return <span style={{ fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute)" }}>{t("invoices.card.dueIn", { count: d })}</span>;
 }
 
-// ── Segmented control (cream .la-seg) ─────────────────────────────────────────
+// ── Main tab switch (la-seg--main pill, solid wine selected tab, as MobileTabSeg) ──
 
 export type SegOption = { key: string; label: string; Ic?: ComponentType<{ size?: number }>; badge?: number };
 
 export function MBSegment({
-  options, value, onChange, small,
-}: { options: SegOption[]; value: string; onChange: (k: string) => void; small?: boolean }) {
+  options, value, onChange, small, collapse,
+}: { options: SegOption[]; value: string; onChange: (k: string) => void; small?: boolean;
+  /** Idle tabs show only their icon (mobile.css .la-seg--collapse), for a strip beside a title. */
+  collapse?: boolean }) {
   return (
-    <div className="la-seg la-seg--fill">
+    <div className={`la-seg la-seg--main la-seg--fill${small ? " la-seg--compact" : ""}${collapse ? " la-seg--collapse" : ""}`} role="tablist">
       {options.map((o) => {
         const on = o.key === value;
         return (
           <button
             key={o.key}
+            type="button"
+            role="tab"
+            aria-selected={on}
             onClick={() => onChange(o.key)}
             className={`la-seg-btn${on ? " on" : ""}`}
-            style={{ padding: small ? "8px 4px" : "11px 6px", fontSize: small ? 9.5 : 10.5 }}
+            style={small ? undefined : { minHeight: 36 }}
           >
-            {o.Ic && <o.Ic size={small ? 13 : 15} />}
+            {o.Ic && <o.Ic size={14} />}
             {o.label}
             {o.badge != null && o.badge > 0 && (
               <span style={{
                 fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700, padding: "1px 5px", borderRadius: "var(--r-pill)",
-                background: on ? "var(--wine)" : "var(--mute-2)", color: "var(--paper)",
+                background: on ? "var(--on-wine)" : "var(--mute-2)", color: on ? "var(--wine)" : "var(--paper)",
               }}>{o.badge}</span>
             )}
           </button>
@@ -139,18 +144,18 @@ export function MBSegment({
   );
 }
 
-// ── Icon-only view toggle (list / table) ──────────────────────────────────────
+// ── Icon-only view toggle (list / table): a secondary switch, soft pill ──────
 
 export function MBViewToggle({
   value, onChange, opts,
 }: { value: string; onChange: (k: string) => void; opts: Array<[string, ComponentType<{ size?: number }>]> }) {
   return (
-    <div className="la-seg">
+    <div className="la-seg la-seg--main la-seg--soft" role="tablist">
       {opts.map(([k, Ic]) => {
         const on = k === value;
         return (
-          <button key={k} onClick={() => onChange(k)} className={`la-seg-btn${on ? " on" : ""}`}
-            style={{ width: 36, height: 32, padding: 0 }}><Ic size={15} /></button>
+          <button key={k} type="button" role="tab" aria-selected={on} onClick={() => onChange(k)} className={`la-seg-btn${on ? " on" : ""}`}
+            style={{ width: 36, height: 32, padding: 0, justifyContent: "center" }}><Ic size={15} /></button>
         );
       })}
     </div>

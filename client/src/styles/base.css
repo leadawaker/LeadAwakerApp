@@ -72,25 +72,9 @@
   }
 }
 
-/* ── Responsive zoom — scale down on tablet/small screens ──
-   Viewport-unit classes (h-svh, h-screen, etc.) are overridden because
-   CSS zoom does not affect vh/svh calculations — they still reference the
-   physical viewport. Compensating with (100svh / zoom) fills the screen. */
-@media (max-width: 1366px) {
-  html { zoom: 0.8; }
-  .h-svh, .h-screen { height: calc(100svh / 0.8) !important; }
-  .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.8) !important; }
-}
-@media (max-width: 1024px) {
-  html { zoom: 0.8; }
-  .h-svh, .h-screen { height: calc(100svh / 0.8) !important; }
-  .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.8) !important; }
-}
-@media (max-width: 820px) {
-  html { zoom: 0.75; }
-  .h-svh, .h-screen { height: calc(100svh / 0.75) !important; }
-  .min-h-svh, .min-h-screen { min-height: calc(100svh / 0.75) !important; }
-}
+/* No page zoom at any width (removed 2026-10-29: it was 0.8 below 1366px and
+   0.75 below 820px). The app renders at 100%; phones get their larger type
+   from the bump in mobile.css. */
 
 /* Scroll fade: fades last 24px of scrollable content to transparent */
 .scroll-fade-bottom {

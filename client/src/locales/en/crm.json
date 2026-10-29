@@ -23,7 +23,12 @@
   "sidebar": {
     "skipToMain": "Skip to main content",
     "menu": "Menu",
-    "home": "Stats",
+    "home": "Home",
+    "listPanelCompact": "Compact list",
+    "listPanelHide": "Hide list",
+    "listPanelShow": "Show list",
+    "listPanelMinimize": "Minimize list",
+    "listPanelExpand": "Expand list",
     "calls": "Calls",
     "myReceptionist": "My account",
     "myReceptionistShort": "Account",

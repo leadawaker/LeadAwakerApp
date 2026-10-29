@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
+import { ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import { useQueryClient } from "@tanstack/react-query";
 import { Trash2, X, Plus } from "lucide-react";
 import { MobileListHeader, MobileHeaderIconBtn, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useListPanelState } from "@/hooks/useListPanelState";
+import { useListPanelFold } from "@/hooks/useListPanelFold";
 import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
 import { useAccounts } from "@/hooks/useApiData";
 import type { InvoiceRow, ContractRow, ExpenseRow } from "../../types";
@@ -72,7 +74,7 @@ export function BillingWorkspace(p: Props) {
   const isExpenses = p.activeTab === "expenses";
 
   // ── List-panel fold state ────────────────────────────────────────────────
-  const { state: listPanelState, cycle } = useListPanelState();
+  const { state: listPanelState } = useListPanelState();
   const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 900, deactivateAbove: 1250 });
   const isListCompact = !isNarrow && (listPanelState === "compact" || (listPanelState === "full" && rightPanelNarrow));
   const isListHidden = !isNarrow && listPanelState === "hidden";
@@ -276,6 +278,8 @@ export function BillingWorkspace(p: Props) {
 
   // Table mode = full-width table (no list panel), with optional create panel on the right.
   const tableMode = viewMode === "table";
+  // List fold button: only the list view has a list panel.
+  useListPanelFold(!isNarrow && !tableMode);
 
   return (
     <div className="flex flex-col h-full w-full" data-testid="billing-workspace">
@@ -302,8 +306,6 @@ export function BillingWorkspace(p: Props) {
         onTabChange={p.onTabChange}
         isOwner={p.isOwner}
         count={count}
-        listPanelState={listPanelState}
-        onCycle={cycle}
         search={search}
         onSearchChange={setSearch}
         filterStatus={filterStatus}
@@ -350,6 +352,8 @@ export function BillingWorkspace(p: Props) {
             onListClearSelection={() => setListSelectedIds(new Set())}
           />
         )}
+        {/* Hidden list: the slim strip that brings it back */}
+        {!tableMode && <ListPanelUnfoldButton />}
 
         <div ref={setDetailNode} className="flex-1 min-w-0 overflow-hidden flex flex-col" style={{ background: "var(--bg)" }}>
           {renderMain()}

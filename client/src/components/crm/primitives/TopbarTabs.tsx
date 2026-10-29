@@ -1,5 +1,5 @@
-// Page tabs for the PageTopbar: the la-seg track with mono uppercase items and
-// a 13px icon, as on Billing, Campaigns, Demos and Reputation.
+// Page tabs for the PageTopbar: the same pill as PillSwitch (solid), the `.la-seg--main` track with
+// sans items, a 14px icon and the selected tab a raised wine fill. Optional icons and badges.
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,8 @@ export interface TopbarTab<Id extends string> {
   id: Id;
   label: string;
   icon?: LucideIcon;
-  /** Small trailing content, e.g. a count badge. */
+  /** Small trailing content. A number or string renders as the shared `.la-seg-count`
+   *  badge, which stays readable (bone) on the selected wine fill. */
   badge?: ReactNode;
 }
 
@@ -24,7 +25,7 @@ export function TopbarTabs<Id extends string>({ tabs, value, onChange, ariaLabel
   className?: string;
 }) {
   return (
-    <div className={cn("la-seg la-seg--fill shrink-0", className)} role="tablist" aria-label={ariaLabel} data-testid={testId}>
+    <div className={cn("la-seg la-seg--main shrink-0", className)} role="tablist" aria-label={ariaLabel} data-testid={testId}>
       {tabs.map(({ id, label, icon: Icon, badge }) => (
         <button
           key={id}
@@ -32,13 +33,12 @@ export function TopbarTabs<Id extends string>({ tabs, value, onChange, ariaLabel
           role="tab"
           aria-selected={value === id}
           className={cn("la-seg-btn", value === id && "on")}
-          style={{ padding: "8px 12px", fontSize: 11, letterSpacing: "0.13em" }}
           onClick={() => onChange(id)}
           data-testid={testIdPrefix ? `${testIdPrefix}-${id}` : undefined}
         >
-          {Icon && <span className="flex items-center"><Icon size={13} /></span>}
+          {Icon && <Icon size={14} style={{ flexShrink: 0 }} />}
           {label}
-          {badge}
+          {typeof badge === "number" || typeof badge === "string" ? <span className="la-seg-count">{badge}</span> : badge}
         </button>
       ))}
     </div>

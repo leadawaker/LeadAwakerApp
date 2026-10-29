@@ -1,6 +1,7 @@
 import { type ReactNode, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { motion, AnimatePresence, type PanInfo } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue } from "framer-motion";
+import { useSwipeDownToClose } from "./useSwipeDownToClose";
 
 /**
  * While the sheet is open, push a sentinel history entry so the phone/browser
@@ -43,9 +44,9 @@ export function useBackButtonClose(open: boolean, onClose: () => void) {
 const EASE_OUT = [0.22, 1, 0.36, 1] as const;
 const EASE_IN = [0.4, 0, 1, 1] as const;
 
-// Dismiss when dragged past this many px, or flicked faster than this velocity.
-const DRAG_CLOSE_OFFSET = 120;
-const DRAG_CLOSE_VELOCITY = 600;
+// Pull-down-to-close lives in useSwipeDownToClose: it starts anywhere on the
+// sheet (header, handle, or the body while it is scrolled to the top), closes
+// past 80px or 25% of the height, or on a quick flick, and tolerates diagonals.
 
 export function MobileSheet({
   open,
@@ -69,11 +70,11 @@ export function MobileSheet({
 }) {
   useBackButtonClose(open, onClose);
 
-  const handleDragEnd = (_e: unknown, info: PanInfo) => {
-    if (info.offset.y > DRAG_CLOSE_OFFSET || info.velocity.y > DRAG_CLOSE_VELOCITY) {
-      onClose();
-    }
-  };
+  // Drag offset on the inner panel; the outer layer owns the slide in / out.
+  const dragY = useMotionValue(0);
+  const panelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (open) dragY.set(0); }, [open, dragY]);
+  useSwipeDownToClose(panelRef, { onClose, y: dragY, enabled: open });
 
   return createPortal(
     <AnimatePresence>
@@ -90,27 +91,18 @@ export function MobileSheet({
             data-testid={testId ? `${testId}-scrim` : undefined}
           />
 
-          {/* Panel */}
+          {/* Panel: the outer layer slides in and out, the inner one follows the finger */}
           <motion.div
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "tween", duration: 0.36, ease: open ? EASE_OUT : EASE_IN }}
-            drag="y"
-            dragDirectionLock
-            dragConstraints={{ top: 0, bottom: 0 }}
-            dragElastic={{ top: 0, bottom: 0.6 }}
-            onDragEnd={handleDragEnd}
             style={fitContent ? {
               position: "absolute",
               left: 0,
               right: 0,
               bottom: 0,
               maxHeight: `calc(90vh - ${topGap}px)`,
-              borderRadius: "var(--r-panel) var(--r-panel) 0 0",
-              overflow: "auto",
-              background: "var(--bg)",
-              boxShadow: "0 -10px 40px rgba(60,45,25,0.20)",
               display: "flex",
               flexDirection: "column",
             } : {
@@ -119,8 +111,19 @@ export function MobileSheet({
               right: 0,
               top: topGap,
               bottom: 0,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+          <motion.div
+            ref={panelRef}
+            style={{
+              y: dragY,
+              flex: fitContent ? "0 1 auto" : "1 1 auto",
+              minHeight: 0,
               borderRadius: "var(--r-panel) var(--r-panel) 0 0",
-              overflow: "hidden",
+              overflow: fitContent ? "auto" : "hidden",
+              overscrollBehaviorY: "contain",
               background: "var(--bg)",
               boxShadow: "0 -10px 40px rgba(60,45,25,0.20)",
               display: "flex",
@@ -137,7 +140,6 @@ export function MobileSheet({
                 justifyContent: "center",
                 height: 22,
                 cursor: "grab",
-                touchAction: "none",
               }}
               data-testid={testId ? `${testId}-handle` : undefined}
             >
@@ -156,6 +158,7 @@ export function MobileSheet({
             <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column" }}>
               {children}
             </div>
+          </motion.div>
           </motion.div>
         </div>
       )}

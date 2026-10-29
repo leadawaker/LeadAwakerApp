@@ -573,7 +573,8 @@ body, html { margin: 0; padding: 0; }
 
 /* ─── Segmented controls / tabs — .la-seg ──────────────────────────
    The app's universal tab / view switcher: an inset track holding 2–4
-   toggle items; the active item lifts to a raised card and turns wine.
+   toggle items; the active item lifts, filled wine with bone text
+   (2026-10-26: white read poorly on the bone ground).
    Compose: <div class="la-seg"> with <button class="la-seg-btn"> items,
    adding .on to the active one. Modifiers:
      --pill  fully-round track + items (Chat/Summary, Stats/Settings)
@@ -593,9 +594,10 @@ body, html { margin: 0; padding: 0; }
 }
 .la-seg-btn:hover { color: var(--wine); }
 .la-seg-btn.on {
-  background: var(--card); box-shadow: var(--sh-raised-crisp);
-  color: var(--wine); font-weight: 700;
+  background: var(--wine); box-shadow: var(--sh-raised-crisp);
+  color: var(--on-wine); font-weight: 700;
 }
+.la-seg-btn.on:hover { color: var(--on-wine); }
 .la-seg-btn:disabled { opacity: 0.45; cursor: not-allowed; }
 .la-seg-btn:disabled:hover { color: var(--mute); }
 .la-seg--pill, .la-seg--pill .la-seg-btn { border-radius: var(--r-pill); }
@@ -608,6 +610,56 @@ body, html { margin: 0; padding: 0; }
 /* --touch: readable, tappable items on phones (no change from 768px up) */
 @media (max-width: 767px) {
   .la-seg--touch .la-seg-btn { font-size: 11px; min-height: 36px; }
+}
+/* --main: every page's primary tab strip (PillSwitch, TopbarTabs, MobileTabSeg and the
+   inline Leads / Calendar / Billing tabs). Pill track, sans 12.5px items; the selected one
+   is a raised solid fill of --seg-c (an item's own color, wine by default).
+   --compact: 30px items.  --soft: the selected item is a flat 14% tint with an inset ring. */
+.la-seg--main { align-items: center; border-radius: var(--r-pill); }
+.la-seg--main .la-seg-btn {
+  height: 32px; padding: 0 13px; gap: 6px; border-radius: var(--r-pill);
+  font-family: var(--sans); font-size: 12.5px; font-weight: 600;
+  letter-spacing: 0; text-transform: none; color: var(--mute);
+  transition: color 130ms, box-shadow 130ms, background 130ms;
+}
+.la-seg--main .la-seg-btn:hover { color: var(--ink); }
+.la-seg--main .la-seg-btn.on,
+.la-seg--main .la-seg-btn.on:hover {
+  background: var(--seg-c, var(--wine)); color: var(--on-wine);
+  font-weight: 700; box-shadow: var(--sh-raised-crisp);
+}
+.la-seg--compact .la-seg-btn { height: 30px; padding: 0 11px; }
+/* Phones: mobile headers and bars sit on the deeper sand (.la-m-chrome), so the track
+   turns into a raised bone pill and idle items take the chrome ink. */
+@media (max-width: 767px) {
+  .la-m-chrome .la-seg { background: var(--surface); box-shadow: var(--sh-raised-crisp); }
+  .la-m-chrome .la-seg-btn { color: var(--chrome-deep-ink); }
+  .la-m-chrome .la-seg-btn.on { color: var(--on-wine); }
+}
+/* Count badge inside a tab item. On the solid selected fill it turns bone (72%), so it
+   stays readable on wine; on the soft variant it takes the item's color. */
+.la-seg-count {
+  font-family: var(--mono); font-size: 9px; font-weight: 700; line-height: 1;
+  color: var(--mute-2); background: var(--bg); border-radius: var(--r-pill); padding: 3px 7px;
+  letter-spacing: 0;
+}
+.la-seg-btn.on .la-seg-count {
+  color: color-mix(in srgb, var(--on-wine) 72%, transparent);
+  background: color-mix(in srgb, var(--on-wine) 14%, transparent);
+}
+.la-seg--soft .la-seg-btn.on .la-seg-count { color: var(--seg-c, var(--wine)); background: transparent; }
+/* Horizontal scroller with edge fades (useScrollFadeX sets data-fade). */
+.la-fade-x { overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: none; }
+.la-fade-x::-webkit-scrollbar { display: none; }
+.la-fade-x[data-fade="end"] { mask-image: linear-gradient(to right, black calc(100% - 32px), transparent); }
+.la-fade-x[data-fade="start"] { mask-image: linear-gradient(to left, black calc(100% - 32px), transparent); }
+.la-fade-x[data-fade="both"] { mask-image: linear-gradient(to right, transparent, black 32px, black calc(100% - 32px), transparent); }
+.la-seg.la-fade-x > .la-seg-btn { flex-shrink: 0; }
+.la-seg--soft .la-seg-btn.on,
+.la-seg--soft .la-seg-btn.on:hover {
+  background: color-mix(in srgb, var(--seg-c, var(--wine)) 14%, var(--card));
+  color: var(--seg-c, var(--wine)); font-weight: 700;
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--seg-c, var(--wine)) 35%, transparent);
 }
 
 /* ─── Tasks merged view — board primary + calendar ───────────────────
@@ -826,7 +878,35 @@ body, html { margin: 0; padding: 0; }
   align-items: center;
   gap: 16px;
   padding: 0 20px;
+  /* One control height for everything in a topbar (search, icon buttons, text buttons). */
+  --tb-ctl: 38px;
 }
+
+/* ─── Topbar scale (2026-10-29) ───────────────────────────────────
+   Everything inside a page topbar is one step larger than the same parts inside a
+   panel, so it reads at a glance: a 22px title, 36px tab items (13.5px, 16px icons)
+   and 38px buttons, search and icon squares. Scoped to .la-page-header so a la-seg,
+   la-btn or IconBtn inside a panel keeps its own size. Hand-rolled bars add the class. */
+.la-page-title {
+  font-family: var(--sans); font-weight: 700; font-size: 22px; line-height: 1.1;
+  color: var(--ink); letter-spacing: -0.015em; white-space: nowrap; flex-shrink: 0;
+}
+.la-page-header .la-seg--main .la-seg-btn { height: 36px; padding: 0 15px; gap: 7px; font-size: 13.5px; }
+.la-page-header .la-seg--main.la-seg--compact .la-seg-btn { height: 32px; padding: 0 13px; }
+.la-page-header .la-seg--main .la-seg-btn svg { width: 16px; height: 16px; }
+.la-page-header .la-seg:not(.la-seg--main) .la-seg-btn { font-size: 10.5px; padding: 9px 15px; }
+.la-page-header .la-btn { height: var(--tb-ctl); padding: 0 16px; gap: 8px; font-family: var(--sans); font-size: 13.5px; font-weight: 600; letter-spacing: 0; text-transform: none; }
+.la-page-header .la-btn svg { width: 16px; height: 16px; flex-shrink: 0; }
+.la-page-header .la-btn svg.lucide-chevron-down { width: 14px; height: 14px; }
+.la-page-header .la-btn--icon { width: var(--tb-ctl); padding: 0; gap: 0; }
+.la-page-header .icon-circle-lg { width: var(--tb-ctl); height: var(--tb-ctl); }
+.la-page-header .icon-circle-lg svg { width: 16px; height: 16px; }
+.la-page-header .la-switcher { height: var(--tb-ctl); padding: 0 14px; font-size: 11px; }
+
+/* Phone headers (MobileListHeader): 40px round buttons with 18px icons, 40px / 14px tabs. */
+.la-m-hbtn svg { width: 18px; height: 18px; }
+.la-m-header-row .la-seg--main .la-seg-btn { min-height: 40px; font-size: 14px; gap: 7px; }
+.la-m-header-row .la-seg--main .la-seg-btn svg { width: 16px; height: 16px; }
 
 /* ─── Animations ──────────────────────────────────────────────── */
 @keyframes la-pulse {
@@ -900,6 +980,8 @@ body, html { margin: 0; padding: 0; }
 }
 .la-profile-menu {
   position: absolute; bottom: 100%; left: 0; right: 0; margin-bottom: 8px;
+  /* Wider than the 188px nav bar footer so "Lead Awaker AI" + the mic stay on one line. */
+  min-width: 240px;
   background: var(--card);
   border-radius: 12px;
   box-shadow: var(--sh-raised-large);
@@ -915,6 +997,7 @@ body, html { margin: 0; padding: 0; }
   border: none; background: transparent; cursor: pointer;
   border-radius: 8px;
   font-family: var(--sans); font-size: 13px; font-weight: 500; color: var(--ink-soft);
+  white-space: nowrap;
   transition: background 120ms;
 }
 .la-profile-menu-item:hover { background: var(--wine-tint); color: var(--wine); }

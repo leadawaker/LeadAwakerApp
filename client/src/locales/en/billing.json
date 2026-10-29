@@ -9,7 +9,8 @@
     "expenses": "Expenses",
     "contracts": "Contracts",
     "list": "List",
-    "table": "Table"
+    "table": "Table",
+    "view": "View"
   },
   "toolbar": {
     "newInvoice": "New Invoice",
