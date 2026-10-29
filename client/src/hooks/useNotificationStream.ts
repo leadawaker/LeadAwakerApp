@@ -13,6 +13,7 @@ import { useEffect, useRef, useCallback, useMemo } from "react";
 import { useQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 import { toast } from "@/hooks/use-toast";
+import { hiddenOnPhone, notificationsUrl, notificationsView } from "@/lib/phoneNotifications";
 
 /* ─── Types ──────────────────────────────────────────────────────── */
 
@@ -38,7 +39,8 @@ export type NotificationType =
   | "callback_requested"
   | "daily_recap"
   | "client_reply"
-  | "unanswered_question";
+  | "unanswered_question"
+  | "caller_hung_up";
 
 export interface Notification {
   id: number;
@@ -71,6 +73,7 @@ const NOTIFICATION_VARIANT: Record<string, "default" | "destructive" | "success"
   booking_rescheduled: "info",
   booking_cancelled: "destructive",
   callback_requested: "destructive",
+  caller_hung_up: "info",
   daily_recap: "info",
   client_reply: "info",
   campaign: "info",
@@ -91,9 +94,14 @@ const NOTIFICATION_VARIANT: Record<string, "default" | "destructive" | "success"
 /* ─── Query keys ─────────────────────────────────────────────────── */
 
 // Match the query keys used by Topbar and NotificationCenter so SSE
-// invalidation automatically updates their cached data.
+// invalidation automatically updates their cached data. Invalidate and cancel
+// with the base key (prefix match); read and write the cache with the
+// phone/desktop key, since the phone fetches with `exclude=` and must not
+// share entries with the desktop.
 const NOTIFICATIONS_KEY = ["/api/notifications"] as const;
 const NOTIFICATIONS_COUNT_KEY = ["/api/notifications/count"] as const;
+const listKey = () => [...NOTIFICATIONS_KEY, notificationsView()];
+const countKey = () => [...NOTIFICATIONS_COUNT_KEY, notificationsView()];
 
 /* ─── Hook ───────────────────────────────────────────────────────── */
 
@@ -120,9 +128,9 @@ export function useNotificationStream(options?: {
 
   /* ── Unread count (lightweight poll every 30s) ──────────────── */
   const { data: countData } = useQuery<CountResponse>({
-    queryKey: [...NOTIFICATIONS_COUNT_KEY],
+    queryKey: countKey(),
     queryFn: async () => {
-      const res = await apiFetch("/api/notifications/count");
+      const res = await apiFetch(notificationsUrl("/api/notifications/count"));
       if (!res.ok) return { unreadCount: 0 };
       return res.json();
     },
@@ -135,9 +143,9 @@ export function useNotificationStream(options?: {
 
   /* ── Full notification list (fetched on demand / on mount) ──── */
   const { data: notifData, refetch: refetchNotifications } = useQuery<NotificationsResponse>({
-    queryKey: [...NOTIFICATIONS_KEY],
+    queryKey: listKey(),
     queryFn: async () => {
-      const res = await apiFetch("/api/notifications?limit=50");
+      const res = await apiFetch(notificationsUrl("/api/notifications?limit=50"));
       if (!res.ok) return { items: [], unreadCount: 0, totalCount: 0 };
       return res.json();
     },
@@ -180,11 +188,12 @@ export function useNotificationStream(options?: {
       // Handle dedicated "notification" SSE events from the server
       try {
         const notif: Notification = JSON.parse(event.data);
+        if (hiddenOnPhone(notif.type)) return;
         // Track this ID so the refetch-based toast effect skips it
         sseToastedIdsRef.current.add(notif.id);
         fireNotificationToast(notif);
         // Optimistically prepend to cache
-        qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], (old) => {
+        qc.setQueryData<NotificationsResponse>(listKey(), (old) => {
           if (!old) return { items: [notif], unreadCount: 1, totalCount: 1 };
           return {
             items: [notif, ...old.items.filter((n) => n.id !== notif.id)].slice(0, 50),
@@ -192,7 +201,7 @@ export function useNotificationStream(options?: {
             totalCount: old.totalCount + 1,
           };
         });
-        qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], (old) => ({
+        qc.setQueryData<CountResponse>(countKey(), (old) => ({
           unreadCount: (old?.unreadCount ?? 0) + 1,
         }));
       } catch {
@@ -256,11 +265,11 @@ export function useNotificationStream(options?: {
       await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
 
       // Snapshot previous values for rollback
-      const previousNotifs = qc.getQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY]);
-      const previousCount = qc.getQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY]);
+      const previousNotifs = qc.getQueryData<NotificationsResponse>(listKey());
+      const previousCount = qc.getQueryData<CountResponse>(countKey());
 
       // Optimistic update
-      qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], (old) => {
+      qc.setQueryData<NotificationsResponse>(listKey(), (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -268,7 +277,7 @@ export function useNotificationStream(options?: {
           unreadCount: Math.max(0, old.unreadCount - 1),
         };
       });
-      qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], (old) => ({
+      qc.setQueryData<CountResponse>(countKey(), (old) => ({
         unreadCount: Math.max(0, (old?.unreadCount ?? 1) - 1),
       }));
 
@@ -277,10 +286,10 @@ export function useNotificationStream(options?: {
     onError: (_err, _id, context) => {
       // Rollback on failure
       if (context?.previousNotifs) {
-        qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], context.previousNotifs);
+        qc.setQueryData<NotificationsResponse>(listKey(), context.previousNotifs);
       }
       if (context?.previousCount) {
-        qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], context.previousCount);
+        qc.setQueryData<CountResponse>(countKey(), context.previousCount);
       }
     },
     onSettled: () => {
@@ -302,10 +311,10 @@ export function useNotificationStream(options?: {
       await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_KEY] });
       await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
 
-      const previousNotifs = qc.getQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY]);
-      const previousCount = qc.getQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY]);
+      const previousNotifs = qc.getQueryData<NotificationsResponse>(listKey());
+      const previousCount = qc.getQueryData<CountResponse>(countKey());
 
-      qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], (old) => {
+      qc.setQueryData<NotificationsResponse>(listKey(), (old) => {
         if (!old) return old;
         return {
           ...old,
@@ -313,7 +322,7 @@ export function useNotificationStream(options?: {
           unreadCount: 0,
         };
       });
-      qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], () => ({
+      qc.setQueryData<CountResponse>(countKey(), () => ({
         unreadCount: 0,
       }));
 
@@ -321,10 +330,10 @@ export function useNotificationStream(options?: {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousNotifs) {
-        qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], context.previousNotifs);
+        qc.setQueryData<NotificationsResponse>(listKey(), context.previousNotifs);
       }
       if (context?.previousCount) {
-        qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], context.previousCount);
+        qc.setQueryData<CountResponse>(countKey(), context.previousCount);
       }
     },
     onSettled: () => {
@@ -347,11 +356,11 @@ export function useNotificationStream(options?: {
       await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_KEY] });
       await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
 
-      const previousNotifs = qc.getQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY]);
-      const previousCount = qc.getQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY]);
+      const previousNotifs = qc.getQueryData<NotificationsResponse>(listKey());
+      const previousCount = qc.getQueryData<CountResponse>(countKey());
 
       // Optimistic: remove from list and adjust counts
-      qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], (old) => {
+      qc.setQueryData<NotificationsResponse>(listKey(), (old) => {
         if (!old) return old;
         const target = old.items.find((n) => n.id === id);
         const wasUnread = target ? !target.read : false;
@@ -362,7 +371,7 @@ export function useNotificationStream(options?: {
           totalCount: Math.max(0, old.totalCount - 1),
         };
       });
-      qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], (old) => {
+      qc.setQueryData<CountResponse>(countKey(), (old) => {
         const target = previousNotifs?.items.find((n) => n.id === id);
         const wasUnread = target ? !target.read : false;
         return {
@@ -374,10 +383,10 @@ export function useNotificationStream(options?: {
     },
     onError: (_err, _id, context) => {
       if (context?.previousNotifs) {
-        qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], context.previousNotifs);
+        qc.setQueryData<NotificationsResponse>(listKey(), context.previousNotifs);
       }
       if (context?.previousCount) {
-        qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], context.previousCount);
+        qc.setQueryData<CountResponse>(countKey(), context.previousCount);
       }
     },
     onSettled: () => {
@@ -400,15 +409,15 @@ export function useNotificationStream(options?: {
       await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_KEY] });
       await qc.cancelQueries({ queryKey: [...NOTIFICATIONS_COUNT_KEY] });
 
-      const previousNotifs = qc.getQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY]);
-      const previousCount = qc.getQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY]);
+      const previousNotifs = qc.getQueryData<NotificationsResponse>(listKey());
+      const previousCount = qc.getQueryData<CountResponse>(countKey());
 
-      qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], () => ({
+      qc.setQueryData<NotificationsResponse>(listKey(), () => ({
         items: [],
         unreadCount: 0,
         totalCount: 0,
       }));
-      qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], () => ({
+      qc.setQueryData<CountResponse>(countKey(), () => ({
         unreadCount: 0,
       }));
 
@@ -416,10 +425,10 @@ export function useNotificationStream(options?: {
     },
     onError: (_err, _vars, context) => {
       if (context?.previousNotifs) {
-        qc.setQueryData<NotificationsResponse>([...NOTIFICATIONS_KEY], context.previousNotifs);
+        qc.setQueryData<NotificationsResponse>(listKey(), context.previousNotifs);
       }
       if (context?.previousCount) {
-        qc.setQueryData<CountResponse>([...NOTIFICATIONS_COUNT_KEY], context.previousCount);
+        qc.setQueryData<CountResponse>(countKey(), context.previousCount);
       }
     },
     onSettled: () => {
@@ -454,7 +463,7 @@ export function notificationGroupKey(n: Pick<Notification, "type" | "title">): s
 const toastedIds = new Set<number>();
 
 function fireNotificationToast(notif: Notification, count = 1) {
-  if (toastedIds.has(notif.id)) return;
+  if (toastedIds.has(notif.id) || hiddenOnPhone(notif.type)) return;
   toastedIds.add(notif.id);
   const variant = NOTIFICATION_VARIANT[notif.type] ?? "default";
 

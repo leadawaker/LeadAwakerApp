@@ -24,6 +24,7 @@ import {
   CalendarClock,
   CalendarX,
   PhoneCall,
+  PhoneOff,
   Newspaper,
   Reply,
   HelpCircle,
@@ -83,6 +84,8 @@ const TYPE_CONFIG: Record<string, { icon: typeof Bell; tone: keyof typeof TONE }
   client_reply:                { icon: Reply,         tone: "primary" },
   // A question the AI's knowledge base does not answer (light, bell only)
   unanswered_question:         { icon: HelpCircle,    tone: "muted" },
+  // A caller hung up right after the opener (opt-in alert, light, bell only)
+  caller_hung_up:              { icon: PhoneOff,      tone: "muted" },
 
   // ── Legacy broad types (existing API) ──────────────────────────────────
   message:    { icon: MessageSquare, tone: "primary" },
@@ -201,6 +204,7 @@ export function NotificationCenter({
     booking_rescheduled: "bookings",
     booking_cancelled: "bookings",
     callback_requested: "messages",
+    caller_hung_up: "messages",
     client_reply: "messages",
     unanswered_question: "messages",
     daily_recap: "system",

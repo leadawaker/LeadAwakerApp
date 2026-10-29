@@ -162,14 +162,17 @@ export function MTDue({
   iso,
   todayISO,
   labels,
+  done = false,
 }: {
   iso: string;
   todayISO: string;
   labels: { today: string; tomorrow: string; yesterday: string };
+  /** A done task is never shown as overdue or due soon. */
+  done?: boolean;
 }) {
   const days = dayDiff(iso, todayISO);
-  const overdue = days < 0;
-  const soon = days === 0;
+  const overdue = !done && days < 0;
+  const soon = !done && days === 0;
   return (
     <span
       style={{
@@ -283,7 +286,7 @@ export default function MobileTaskListCard({ task, category, todayISO, dueLabels
                 flexShrink: 0,
               }}
             />
-            {dueISO && <MTDue iso={dueISO} todayISO={todayISO} labels={dueLabels} />}
+            {dueISO && <MTDue iso={dueISO} todayISO={todayISO} labels={dueLabels} done={done} />}
           </span>
         </div>
       </div>

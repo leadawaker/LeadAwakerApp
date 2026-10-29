@@ -153,10 +153,11 @@ export default function MobileTasksView({ tasks, categories, todayISO }: Props) 
               const items = filtered.filter(tk => tk.status === col.key);
               return (
                 <div key={col.key} style={{ flex: '0 0 252px', display: 'flex', flexDirection: 'column' }}>
+                  {/* Count right after the label, so it shows even while the column only peeks in. */}
                   <div className="row" style={{ gap: 9, padding: '0 4px 11px' }}>
-                    <span style={{ width: 9, height: 9, borderRadius: '50%', background: col.color }} />
+                    <span style={{ width: 9, height: 9, borderRadius: '50%', background: col.color, flexShrink: 0 }} />
                     <span style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-soft)', fontWeight: 700 }}>{col.label}</span>
-                    <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--mute-2)', background: 'var(--card)', boxShadow: 'var(--sh-raised-crisp)', borderRadius: 'var(--r-pill)', padding: '1px 8px', marginLeft: 'auto' }}>{items.length}</span>
+                    <span style={{ fontFamily: 'var(--mono)', fontSize: 9, color: 'var(--mute-2)', background: 'var(--card)', boxShadow: 'var(--sh-raised-crisp)', borderRadius: 'var(--r-pill)', padding: '1px 8px', flexShrink: 0 }}>{items.length}</span>
                   </div>
                   <div className="neu-inset" style={{ flex: 1, borderRadius: 'var(--r-card)', padding: 10, display: 'flex', flexDirection: 'column', gap: 10, background: 'var(--bg)', minHeight: 120 }}>
                     {items.length === 0 ? (

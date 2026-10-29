@@ -19,6 +19,7 @@ import { handleZodError, wrapAsync } from "./_helpers";
 import { eq, count, and, gte, lte, lt, ne, isNotNull, desc, sql, type SQL } from "drizzle-orm";
 import { ilike } from "drizzle-orm";
 import { APP_DIR } from "../paths";
+import { ownTasksOnly } from "../storage/tasks";
 
 export function registerTasksRoutes(app: Express): void {
   // ─── Tasks ─────────────────────────────────────────────────────────
@@ -31,7 +32,7 @@ export function registerTasksRoutes(app: Express): void {
 
     if (searchParam) {
       const rows = await db.select().from(tasks).where(
-        ilike(tasks.title, `%${searchParam}%`)
+        and(ilike(tasks.title, `%${searchParam}%`), ownTasksOnly)
       ).orderBy(desc(tasks.createdAt));
       return res.json(rows);
     }
@@ -64,6 +65,7 @@ export function registerTasksRoutes(app: Express): void {
     const conditions: SQL[] = [
       isNotNull(tasks.completedAt),
       eq(tasks.status, "done"),
+      ownTasksOnly,
     ];
 
     if (categoryId !== undefined) {
@@ -93,7 +95,12 @@ export function registerTasksRoutes(app: Express): void {
   app.post("/api/tasks", requireAgency, wrapAsync(async (req, res) => {
     const parsed = insertTaskSchema.safeParse(req.body);
     if (!parsed.success) return handleZodError(res, parsed.error);
-    const task = await storage.createTask(parsed.data);
+    // Stamp the creator server-side: the Tasks page filter (ownTasksOnly)
+    // tells UI/agent tasks from engine-written ones partly by this column.
+    const task = await storage.createTask({
+      ...parsed.data,
+      createdByUserId: req.user?.id ?? parsed.data.createdByUserId ?? null,
+    });
 
     // Notification: task_assigned — when a task is created with an assignee
     if (task.assignedToUserId) {

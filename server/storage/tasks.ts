@@ -104,15 +104,30 @@ import {
 
 import type { NotificationItem, ProspectsListParams } from "./types";
 
+/**
+ * The Tasks page is Gabriel's own (agency) work only. Rows the automation
+ * engine writes for client calls (voice "call back" requests, failed phone
+ * bookings; automations tools/db/tasks.create_task) are task_type 'call',
+ * titled "Call back ...", with no creating user and no assignee; those stay in
+ * the table but never reach the Tasks page. Everything else shows, including
+ * older UI tasks linked to a lead or campaign that predate created_by_user_id.
+ */
+export const ownTasksOnly: SQL = sql`NOT (${and(
+  eq(tasks.taskType, "call"),
+  ilike(tasks.title, "Call back %"),
+  isNull(tasks.createdByUserId),
+  isNull(tasks.assignedToUserId),
+)})`;
+
 export const tasksStorage = {
   // ─── Tasks ────────────────────────────────────────────────────────────
 
   async getTasks(): Promise<Task[]> {
-    return db.select().from(tasks).where(eq(tasks.isArchived, false)).orderBy(desc(tasks.createdAt));
+    return db.select().from(tasks).where(and(eq(tasks.isArchived, false), ownTasksOnly)).orderBy(desc(tasks.createdAt));
   },
 
   async getTasksFiltered(filters: { accountId?: number; categoryId?: number | null; parentTaskId?: number | null }): Promise<Task[]> {
-    const conditions: SQL[] = [eq(tasks.isArchived, false)];
+    const conditions: SQL[] = [eq(tasks.isArchived, false), ownTasksOnly];
     if (filters.accountId !== undefined) {
       conditions.push(eq(tasks.accountsId, filters.accountId));
     }

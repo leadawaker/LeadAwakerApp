@@ -105,6 +105,12 @@ import {
 import type { NotificationItem, ProspectsListParams } from "./types";
 import { notTestInteractionSql } from "../routes/testDataAccess";
 
+/** `type NOT IN (...)` for the given types, or nothing when the list is empty. */
+function excludeTypesCondition(types?: string[]): SQL[] {
+  if (!types?.length) return [];
+  return [sql`${notifications.type} NOT IN (${sql.join(types.map((t) => sql`${t}`), sql`, `)})`];
+}
+
 export const notificationsStorage = {
   // ─── Notifications ──────────────────────────────────────────────────
 
@@ -179,13 +185,15 @@ export const notificationsStorage = {
 
   // ─── Notifications ──────────────────────────────────────────────────────
 
-  async getNotificationsByUserId(userId: number, opts?: { limit?: number; offset?: number; unreadOnly?: boolean }): Promise<Notifications[]> {
+  // excludeTypes: types left out of the list and counts (the phone hides campaign_summary).
+  async getNotificationsByUserId(userId: number, opts?: { limit?: number; offset?: number; unreadOnly?: boolean; excludeTypes?: string[] }): Promise<Notifications[]> {
     const limit = opts?.limit ?? 50;
     const offset = opts?.offset ?? 0;
     const conditions = [eq(notifications.userId, userId)];
     if (opts?.unreadOnly) {
       conditions.push(eq(notifications.read, false));
     }
+    conditions.push(...excludeTypesCondition(opts?.excludeTypes));
     return db
       .select()
       .from(notifications)
@@ -200,19 +208,23 @@ export const notificationsStorage = {
     return row;
   },
 
-  async getUnreadNotificationCount(userId: number): Promise<number> {
+  async getUnreadNotificationCount(userId: number, excludeTypes?: string[]): Promise<number> {
+    const conditions = [eq(notifications.userId, userId), eq(notifications.read, false)];
+    conditions.push(...excludeTypesCondition(excludeTypes));
     const [result] = await db
       .select({ total: count() })
       .from(notifications)
-      .where(and(eq(notifications.userId, userId), eq(notifications.read, false)));
+      .where(and(...conditions));
     return result?.total ?? 0;
   },
 
-  async getTotalNotificationCount(userId: number): Promise<number> {
+  async getTotalNotificationCount(userId: number, excludeTypes?: string[]): Promise<number> {
+    const conditions = [eq(notifications.userId, userId)];
+    conditions.push(...excludeTypesCondition(excludeTypes));
     const [result] = await db
       .select({ total: count() })
       .from(notifications)
-      .where(eq(notifications.userId, userId));
+      .where(and(...conditions));
     return result?.total ?? 0;
   },
 

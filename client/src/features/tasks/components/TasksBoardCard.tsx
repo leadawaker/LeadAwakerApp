@@ -53,9 +53,11 @@ function PriorityBars({ priority }: { priority: string }) {
 }
 
 type DueKind = 'overdue' | 'today' | 'tomorrow' | 'date';
-function getDueInfo(dueDate: Date | string | null, todayISO: string): { kind: DueKind; label: string | null; color: string; bold: boolean } {
+function getDueInfo(dueDate: Date | string | null, todayISO: string, done = false): { kind: DueKind; label: string | null; color: string; bold: boolean } {
   if (!dueDate) return { kind: 'date', label: null, color: 'var(--mute-2)', bold: false };
   const due = new Date(dueDate as any);
+  // A done task is never overdue or urgent: just its plain due date.
+  if (done) return { kind: 'date', label: `${MONTHS[due.getMonth()]} ${due.getDate()}`, color: 'var(--mute-2)', bold: false };
   const [ty, tm, td] = todayISO.split('-').map(Number);
   const today = new Date(Date.UTC(ty, tm - 1, td));
   const dueUTC = new Date(Date.UTC(due.getFullYear(), due.getMonth(), due.getDate()));
@@ -81,9 +83,9 @@ function nameColor(name: string | null | undefined): string {
 
 export default function TasksBoardCard({ task, active, onSelect, categoryColor, categoryName, todayISO, users = [], commentCount = 0 }: Props) {
   const { t } = useTranslation("tasks");
-  const { kind: dueKind, label: dueDateLabel, color: dueColor, bold: dueBold } = getDueInfo(task.dueDate, todayISO);
-  const dueLabel = dueKind === 'date' ? dueDateLabel : t(`due.${dueKind}`);
   const done = task.status === 'done';
+  const { kind: dueKind, label: dueDateLabel, color: dueColor, bold: dueBold } = getDueInfo(task.dueDate, todayISO, done);
+  const dueLabel = dueKind === 'date' ? dueDateLabel : t(`due.${dueKind}`);
   const edgeColor = STATUS_EDGE[task.status ?? 'todo'] ?? 'var(--mute)';
 
   // Resolve assignee avatar from users list
