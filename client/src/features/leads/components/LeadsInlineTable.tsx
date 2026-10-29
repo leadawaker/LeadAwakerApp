@@ -663,7 +663,7 @@ export function LeadsInlineTable({
                     />
                   </div>
                 </th>
-                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd} accessibility={{ container: typeof document !== "undefined" ? document.body : undefined }}>
                   <SortableContext items={visibleColumns.map(c => c.key)} strategy={horizontalListSortingStrategy}>
                     {visibleColumns.map((col, ci) => (
                       <SortableHeaderCell key={col.key} col={col} isFirst={ci === 0} t={t} onResizeStart={handleResizeStart} />
