@@ -28,10 +28,13 @@ export function DemosTopbarActions({ view, followUp, followUpCount, onFollowUp, 
         className={cn(`la-btn la-btn--soft h-8 shrink-0 gap-1.5 ${TOUCH_ROW}`, followUp && "on")}
         onClick={() => onFollowUp(!followUp)}
         title={t("merge.followUpHint")}
+        aria-label={t("merge.followUp", { count: followUpCount })}
         data-testid="demos-follow-up"
       >
         <span className="dp-dot dp-dot--reply" aria-hidden />
-        {t("merge.followUp", { count: followUpCount })}
+        {/* Phones: the dot and the count only, so the crowded bar scrolls less. */}
+        <span className="max-md:hidden">{t("merge.followUp", { count: followUpCount })}</span>
+        <span className="md:hidden tabular-nums" aria-hidden>{followUpCount}</span>
       </button>
 
       <ClientsTopbarActions view={view} />
@@ -40,10 +43,11 @@ export function DemosTopbarActions({ view, followUp, followUpCount, onFollowUp, 
         type="button"
         className={`la-btn la-btn--wine h-8 shrink-0 ${TOUCH_ROW}`}
         onClick={onNewDemo}
+        aria-label={t("sessions.newDemo")}
         data-testid="demos-new-demo"
       >
         <Plus size={14} />
-        {t("sessions.newDemo")}
+        <span className="max-md:hidden">{t("sessions.newDemo")}</span>
       </button>
     </>
   );

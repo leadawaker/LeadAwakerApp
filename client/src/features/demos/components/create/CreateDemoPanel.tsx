@@ -103,7 +103,7 @@ export function CreateDemoPanel({ draft, update, updateIf, isCurrent, clear, mar
       title={t("create.title")}
       subtitle={
         <div className="mt-2 max-md:[&_[role=tab]]:!h-11">
-          <PillSwitch items={modes} value={draft.mode} onChange={(mode) => update({ mode })} ariaLabel={t("create.title")} />
+          <PillSwitch items={modes} value={draft.mode} onChange={(mode) => update({ mode })} ariaLabel={t("create.title")} variant="soft" />
         </div>
       }
       onClose={onClose}

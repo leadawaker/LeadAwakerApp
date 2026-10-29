@@ -5,15 +5,27 @@ import { useQuery } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 
 export type DemoCallMode = "sara" | "bridge";
+/** How "Call me + prospect" puts Sara on: handoff swaps her with the owner, barge and conference make it three-way. */
+export type DemoCallStyle = "handoff" | "barge" | "conference";
+/** Where "Call me + prospect" rings the owner. */
+export type DemoCallRing = "phone" | "browser";
 export type DemoCallStatus = "dialing_owner" | "dialing_prospect" | "live" | "ended" | "failed";
 export type DemoLegStatus = "idle" | "dialing" | "answered" | "ended" | "failed" | "busy" | "no_answer" | "voicemail";
+
+export interface DemoTurn { who: "sara" | "prospect"; text: string }
 
 export interface DemoCall {
   id: string;
   mode: DemoCallMode;
+  style?: DemoCallStyle;
+  ring?: DemoCallRing;
   status: DemoCallStatus;
   legs: { owner: DemoLegStatus; prospect: DemoLegStatus; ai: DemoLegStatus };
   sara_in: boolean;
+  /** Handoff: Sara has the prospect and the owner waits, parked in silence. */
+  owner_on_hold?: boolean;
+  /** Sara's conversation so far (GPT-Live), filled in as the call goes. */
+  transcript?: DemoTurn[];
   error: string | null;
   started_at: string | null;
   ended_at: string | null;
@@ -41,7 +53,7 @@ const post = (path: string, body: unknown) =>
   apiFetch(path, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
 
 export async function startDemoCall(body: {
-  token: string; toNumber: string; mode: DemoCallMode; locale?: string; voice?: string;
+  token: string; toNumber: string; mode: DemoCallMode; ring?: DemoCallRing; locale?: string; voice?: string;
 }): Promise<DemoCall> {
   return json<DemoCall>(await post("/api/voice/demo-calls", body));
 }

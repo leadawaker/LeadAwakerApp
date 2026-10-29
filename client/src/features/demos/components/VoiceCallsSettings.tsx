@@ -1,5 +1,6 @@
 // Demos > Settings > AI receptionist > Calls: how long a demo call may run,
-// the numbers Sara never remembers, Gabriel's phones for "Call me + prospect",
+// the numbers Sara never remembers, Gabriel's phones for "Call me + prospect" and how
+// Sara joins it (handoff or three-way),
 // and the password for the demo page opened without a link (minted links need
 // none). Saves only its own fields; the server merges them into the voice row.
 import { useState } from "react";
@@ -16,7 +17,8 @@ import { CommaListInput } from "./CommaListInput";
 import { ENGINE_INPUT, SaveBar, Seg, SETTINGS_CARD, SETTINGS_HINT, SETTINGS_LABEL, SETTINGS_RULE, SETTINGS_TITLE } from "./engineControls";
 
 type Draft = Pick<VoiceDemoSettings,
-  "maxCallMinutes" | "forgetNumbers" | "passwords" | "ownerPhone" | "ownerPhoneBackup" | "ownerPhoneUse">;
+  "maxCallMinutes" | "forgetNumbers" | "passwords" | "ownerPhone" | "ownerPhoneBackup" | "ownerPhoneUse" | "callMeStyle">;
+type CallMeStyle = NonNullable<VoiceDemoSettings["callMeStyle"]>;
 
 const ROW = "flex items-center gap-2 max-sm:flex-wrap";
 const SMALL: React.CSSProperties = { ...SETTINGS_TITLE, fontSize: 13 };
@@ -42,6 +44,7 @@ export function VoiceCallsSettings() {
         ownerPhone: current.ownerPhone?.trim() || null,
         ownerPhoneBackup: current.ownerPhoneBackup?.trim() || null,
         ownerPhoneUse: current.ownerPhoneUse ?? "primary",
+        callMeStyle: current.callMeStyle ?? "handoff",
       });
       setDraft(null);
     } catch {
@@ -117,6 +120,18 @@ export function VoiceCallsSettings() {
             onChange={(ownerPhoneUse) => patch({ ownerPhoneUse })}
           />
         </div>
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <span style={SMALL}>{t("settings.calls.style")}</span>
+        <span style={SETTINGS_HINT}>{t("settings.calls.styleHint")}</span>
+        <Seg<CallMeStyle>
+          value={current.callMeStyle ?? "handoff"}
+          options={["handoff", "barge", "conference"]}
+          ariaLabel={t("settings.calls.style")}
+          label={(o) => t(`settings.calls.styles.${o}`)}
+          onChange={(callMeStyle) => patch({ callMeStyle })}
+        />
       </div>
 
       <div style={SETTINGS_RULE} />

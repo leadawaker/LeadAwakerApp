@@ -69,6 +69,8 @@ export interface VoiceDemoSettings {
   ownerPhone?: string | null;
   ownerPhoneBackup?: string | null;
   ownerPhoneUse?: "primary" | "backup";
+  /** How "Call me + prospect" puts Sara on the call (engine demo_settings.call_me_style). Missing = handoff. */
+  callMeStyle?: "handoff" | "barge" | "conference";
 }
 
 /** The engine per demo locale when nothing is saved (engine demo_settings.DEFAULT_ENGINES):

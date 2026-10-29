@@ -1,16 +1,23 @@
 // A minted voice demo, by phone: "Sara calls now" rings the prospect from the
 // demo number with Sara on the line; "Call me + prospect" rings Gabriel's phone
-// first (Demos settings), then the prospect, and Sara joins on "Bring Sara in".
+// first (Demos settings), then the prospect. In its handoff style (the default)
+// "Hand to Sara" swaps him for Sara and "Take the call back" swaps back; in a
+// three-way style Sara joins on "Bring Sara in". Sara's conversation shows live.
+// "Call me" can ring this browser instead of the phone (lib/browserPhone.ts).
 // Inside a popover (the sessions table link actions): never a Dialog.
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { TFunction } from "i18next";
-import { Loader2, PhoneCall, PhoneOff, UserMinus, UserPlus, Users } from "lucide-react";
+import { Loader2, Mic, MicOff, PhoneCall, PhoneOff, UserMinus, UserPlus, Users } from "lucide-react";
 import { Pill } from "@/components/crm/primitives/Pill";
 import {
   endDemoCall, isCallGone, isFinished, setSara, startDemoCall, useDemoCall,
-  type DemoCall, type DemoCallMode, type DemoLegStatus,
+  type DemoCall, type DemoCallMode, type DemoCallRing, type DemoLegStatus, type DemoTurn,
 } from "../api/demoCallsApi";
+import { hangUpBrowserPhone, readyBrowserPhone, toggleBrowserMute, useBrowserPhone } from "../lib/browserPhone";
+import { Seg } from "./engineControls";
+
+const RING_KEY = "demo-call:ring";
 
 const INPUT: React.CSSProperties = {
   height: 34,
@@ -39,6 +46,38 @@ function legColor(s: DemoLegStatus): string | undefined {
   return undefined;
 }
 
+/** Sara's conversation as it happens, newest at the bottom (kept in view while it grows). */
+function LiveTranscript({ turns, live }: { turns: DemoTurn[]; live: boolean }) {
+  const { t } = useTranslation("demos");
+  const box = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = box.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [turns.length]);
+  return (
+    <div className="flex flex-col gap-1">
+      <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mute)" }}>{t("calls.transcript")}</span>
+      <div
+        ref={box}
+        className="neu-inset flex flex-col gap-1.5"
+        style={{ maxHeight: 220, overflowY: "auto", borderRadius: "var(--r-field, 8px)", padding: "8px 10px" }}
+        aria-live={live ? "polite" : "off"}
+      >
+        {turns.length === 0 ? (
+          <span style={{ fontSize: 12, color: "var(--mute)" }}>{t("calls.transcriptEmpty")}</span>
+        ) : turns.map((turn, i) => (
+          <p key={i} style={{ margin: 0, fontSize: 12, lineHeight: 1.45, color: "var(--ink)" }}>
+            <span style={{ fontWeight: 600, color: turn.who === "sara" ? "var(--wine)" : "var(--mute)" }}>
+              {t(`calls.legs.${turn.who === "sara" ? "ai" : "prospect"}`)}:
+            </span>{" "}
+            {turn.text}
+          </p>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function DemoCallControls({ token, defaultPhone, locale, voice }: {
   token: string;
   /** The lead's phone when known. */
@@ -61,6 +100,15 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
     } catch { /* private mode: the call still shows while this stays open */ }
   };
   const [busy, setBusy] = useState<"" | DemoCallMode | "sara" | "end">("");
+  // Where "Call me" rings, remembered for this browser.
+  const [ring, setRingState] = useState<DemoCallRing>(() => {
+    try { return localStorage.getItem(RING_KEY) === "browser" ? "browser" : "phone"; } catch { return "phone"; }
+  });
+  const setRing = (r: DemoCallRing) => {
+    setRingState(r);
+    try { localStorage.setItem(RING_KEY, r); } catch { /* not remembered: still used for this call */ }
+  };
+  const browser = useBrowserPhone();
   const [error, setError] = useState("");
   // The start's answer shows until the first poll lands.
   const [started, setStarted] = useState<DemoCall | null>(null);
@@ -78,6 +126,10 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
   const lost = isError && !polled;
   const call = lost ? null : polled ?? started;
   const active = !!callId && !lost && !isFinished(call?.status);
+  // The call is over (or forgotten): this browser's line goes with it.
+  useEffect(() => {
+    if (!active && browser.state !== "idle" && busy !== "bridge") hangUpBrowserPhone();
+  }, [active, browser.state, busy]);
 
   const run = async (what: typeof busy, fn: () => Promise<unknown>) => {
     setBusy(what);
@@ -96,11 +148,20 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
 
   const start = (mode: DemoCallMode) =>
     run(mode, async () => {
-      const c = await startDemoCall({
-        token, toNumber: phone.trim(), mode,
-        ...(locale ? { locale } : {}),
-        ...(voice ? { voice } : {}),
-      });
+      const inBrowser = mode === "bridge" && ring === "browser";
+      if (inBrowser) await readyBrowserPhone({ mic: t("calls.browser.micDenied"), login: t("calls.browser.loginFailed") });
+      let c: DemoCall;
+      try {
+        c = await startDemoCall({
+          token, toNumber: phone.trim(), mode,
+          ...(inBrowser ? { ring: "browser" as const } : {}),
+          ...(locale ? { locale } : {}),
+          ...(voice ? { voice } : {}),
+        });
+      } catch (e) {
+        if (inBrowser) hangUpBrowserPhone();
+        throw e;
+      }
       setGone(false);
       setStarted(c);
       setCallId(c.id);
@@ -130,6 +191,16 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
               onChange={(e) => setPhone(e.target.value)}
             />
           </label>
+          <div className="flex flex-col gap-1">
+            <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mute)" }}>{t("calls.ring.label")}</span>
+            <Seg<DemoCallRing>
+              value={ring}
+              options={["phone", "browser"]}
+              label={(o) => t(`calls.ring.${o}`)}
+              ariaLabel={t("calls.ring.label")}
+              onChange={setRing}
+            />
+          </div>
           <div className="flex flex-wrap gap-2">
             <button
               type="button"
@@ -161,13 +232,32 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
             {t(`calls.status.${call.status}`, { defaultValue: call.status })}
           </span>
           <div className="flex flex-wrap gap-1.5">
-            {legs.map((l) => (
-              <Pill key={l.key} color={legColor(l.status)}>
-                {t(`calls.legs.${l.key}`)}: {t(`calls.leg.${l.status}`)}
-              </Pill>
-            ))}
+            {legs.map((l) => {
+              const onHold = l.key === "owner" && !!call.owner_on_hold && l.status === "answered";
+              return (
+                <Pill key={l.key} color={onHold ? "var(--warn)" : legColor(l.status)}>
+                  {t(`calls.legs.${l.key}`)}: {t(`calls.leg.${onHold ? "on_hold" : l.status}`)}
+                </Pill>
+              );
+            })}
           </div>
+          {call.ring === "browser" && active && (
+            <div className="flex flex-wrap items-center gap-2">
+              <Pill color={browser.state === "active" ? "var(--good)" : browser.state === "idle" ? "hsl(var(--destructive))" : "var(--warn)"}>
+                {t("calls.browser.label")}: {t(`calls.browser.state.${browser.state}`)}
+              </Pill>
+              {browser.state === "active" && (
+                <button type="button" className="la-btn la-btn--soft" onClick={toggleBrowserMute} aria-pressed={browser.muted}>
+                  {browser.muted ? <MicOff size={13} /> : <Mic size={13} />}
+                  {browser.muted ? t("calls.browser.unmute") : t("calls.browser.mute")}
+                </button>
+              )}
+            </div>
+          )}
           {call.error && <span style={{ fontSize: 11, color: "hsl(var(--destructive))" }}>{errorText(t, hasKey, call.error)}</span>}
+          {(call.sara_in || (call.transcript?.length ?? 0) > 0) && (
+            <LiveTranscript turns={call.transcript ?? []} live={active} />
+          )}
           {active ? (
             <div className="flex flex-wrap gap-2">
               {call.mode === "bridge" && (
@@ -181,7 +271,9 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
                   })}
                 >
                   {busy === "sara" ? <Loader2 size={13} className="animate-spin" /> : call.sara_in ? <UserMinus size={13} /> : <UserPlus size={13} />}
-                  {call.sara_in ? t("calls.saraOut") : t("calls.saraIn")}
+                  {call.style === "handoff"
+                    ? (call.sara_in ? t("calls.takeBack") : t("calls.handTo"))
+                    : (call.sara_in ? t("calls.saraOut") : t("calls.saraIn"))}
                 </button>
               )}
               <button
@@ -190,6 +282,7 @@ export function DemoCallControls({ token, defaultPhone, locale, voice }: {
                 style={{ color: "hsl(var(--destructive))" }}
                 disabled={busy === "end"}
                 onClick={() => void run("end", async () => {
+                  hangUpBrowserPhone();
                   await endDemoCall(call.id);
                   await refetch();
                 })}
