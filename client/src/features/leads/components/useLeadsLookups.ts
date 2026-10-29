@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { apiFetch } from "@/lib/apiUtils";
 
-export type CampaignInfo = { name: string; accountId: number | null; bookingMode: string | null; campaignType: string | null };
+export type CampaignInfo = { name: string; accountId: number | null; bookingMode: string | null; campaignType: string | null; bumpMode: string | null };
 
 const listOf = (data: any): any[] => (Array.isArray(data) ? data : data?.list || data?.data || []);
 const archived = (x: any) => String(x?.status || x?.Status || "").toLowerCase() === "archived";
@@ -42,6 +42,7 @@ export function useLeadsLookups(isAgencyView: boolean) {
           accountId: c.Accounts_id ?? c.accounts_id ?? c.accountsId ?? null,
           bookingMode: c.booking_mode_override ?? c.bookingModeOverride ?? null,
           campaignType: c.campaign_type ?? c.campaignType ?? null,
+          bumpMode: c.bump_mode ?? c.bumpMode ?? null,
         });
       });
       setCampaignsById(m);

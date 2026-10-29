@@ -1,13 +1,13 @@
-// Menu bodies for the desktop topbar's Filter / Sort / Group controls. Shared by
+// Menu bodies for the desktop topbar's Filter / Sort / Group controls. Filter and
+// Group categories are folded MenuGroups (FilterGroups.tsx). Shared by
 // the three standalone topbar buttons.
 import { useTranslation } from "react-i18next";
-import { useState } from "react";
-import { Check, ChevronDown, ChevronRight } from "lucide-react";
+import { Check } from "lucide-react";
 import {
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import { MenuGroup } from "../FilterGroups";
 import { cn } from "@/lib/utils";
 import { ALL_STAGE_KEYS, stageHex, stageLabel } from "../../lib/leadDisplay";
 import { CONVERSATION_TYPE_ICON, CONVERSATION_TYPES, type ConversationType } from "../conversationType";
@@ -16,22 +16,16 @@ type NamedOption = { id: string; name: string };
 type TagOption = { name: string; color: string };
 
 
-// One filter section: a heading with a selected-count badge, then its options.
-// Flat on purpose: nested submenus misplace themselves (overlapping their parent)
-// when the app is scaled down on narrower desktop windows.
+// Each filter category is a folded MenuGroup (opens on click, wine count when
+// something in it is picked). Flat on purpose: nested submenus misplace themselves
+// (overlapping their parent) when the app is scaled down on narrower desktop windows.
 function Section({ label, count, children }: { label: string; count?: number; subClass?: string; children: React.ReactNode }) {
-  return (
-    <>
-      <DropdownMenuLabel className="text-[11px] font-medium text-muted-foreground pt-2 pb-0.5">
-        {label}{count ? <span className="ml-1.5 text-brand-indigo font-semibold">{count}</span> : null}
-      </DropdownMenuLabel>
-      {children}
-    </>
-  );
+  return <MenuGroup label={label} count={count}>{children}</MenuGroup>;
 }
 
-export const FILTER_MENU_CLASS = "w-56 max-h-[420px] overflow-y-auto bg-white";
-export const SORT_MENU_CLASS = "w-44 bg-white";
+export const FILTER_MENU_CLASS = "w-60 max-h-[420px] overflow-y-auto";
+export const SORT_MENU_CLASS = "w-44";
+export const GROUP_MENU_CLASS = "w-52";
 
 export interface FilterMenuProps {
   showTypeControls?: boolean;
@@ -57,8 +51,6 @@ export function FilterMenuItems({
   availableCampaigns, filterCampaign, setFilterCampaign, allTags,
 }: FilterMenuProps) {
   const { t } = useTranslation("leads");
-  // Tags start folded (C11); a selected tag keeps the list open.
-  const [tagsOpen, setTagsOpen] = useState(filterTags.length > 0);
   return (
     <>
       {showTypeControls && (
@@ -115,20 +107,15 @@ export function FilterMenuItems({
           </Section>
       )}
       {allTags.length > 0 && (
-        <>
-          <DropdownMenuItem onClick={(e) => { e.preventDefault(); setTagsOpen((o) => !o); }} className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground" aria-expanded={tagsOpen} data-testid="filter-tags-toggle">
-            {tagsOpen ? <ChevronDown className="h-3 w-3 shrink-0" /> : <ChevronRight className="h-3 w-3 shrink-0" />}
-            <span className="flex-1">{t("detail.sections.tags")}</span>
-            {filterTags.length > 0 && <span className="text-brand-indigo font-semibold">{filterTags.length}</span>}
-          </DropdownMenuItem>
-            {tagsOpen && allTags.map((tag) => (
+        <Section label={t("detail.sections.tags")} count={filterTags.length}>
+            {allTags.map((tag) => (
               <DropdownMenuItem key={tag.name} onClick={(e) => { e.preventDefault(); onToggleFilterTag(tag.name); }} className="flex items-center gap-2 text-[12px]">
                 <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
                 <span className="flex-1 truncate">{tag.name}</span>
                 {filterTags.includes(tag.name) && <Check className="h-3 w-3 text-brand-indigo shrink-0" />}
               </DropdownMenuItem>
             ))}
-        </>
+        </Section>
       )}
       {isFilterActive && (
         <>
@@ -176,14 +163,15 @@ export function GroupMenuItems({ groupBy, onGroupByChange, showTypeControls }: {
     tag: t("detail.sections.tags"), type: t("conversationType.label"), none: t("group.none"),
   };
   const options = (["date", "status", "campaign", "tag", "type", "none"] as const).filter((v) => v !== "type" || showTypeControls);
+  // One folded "Group" category; its header shows the current grouping.
   return (
-    <>
+    <MenuGroup label={t("toolbar.group")} value={labels[groupBy]} testId="leads-group-by">
       {options.map((value) => (
         <DropdownMenuItem key={value} onClick={() => onGroupByChange(value)} className={cn("text-[12px]", groupBy === value && "font-semibold text-brand-indigo")}>
           {labels[value]}
           {groupBy === value && <Check className="h-3 w-3 ml-auto" />}
         </DropdownMenuItem>
       ))}
-    </>
+    </MenuGroup>
   );
 }

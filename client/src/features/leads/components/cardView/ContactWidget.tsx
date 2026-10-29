@@ -21,6 +21,7 @@ import { getLeadId } from "./leadUtils";
 import { InlineEditField } from "./atoms";
 import { formatRelativeTime } from "./formatUtils";
 import { Card, CardLabel } from "./designPrimitives";
+import { presentName, presentNumber, useChatsPresenting } from "../../presenting";
 
 // ── Copy button ───────────────────────────────────────────────────────────────
 function CopyContactBtn({ value }: { value: string }) {
@@ -241,6 +242,15 @@ export function ContactWidget({
     setRecordingSeconds(0);
   }, []);
 
+  // Presenting (Owner, Chats): names and numbers read masked and are not editable or copyable meanwhile
+  // (as maskName: a first name stays when there is a last name, the last name keeps its initial).
+  const { masked } = useChatsPresenting();
+  const maskedField: Record<string, string> = masked ? {
+    first_name: lastName ? firstName : presentName(firstName, true),
+    last_name: lastName ? `${lastName.charAt(0).toUpperCase()}.` : "",
+    phone: phone ? presentNumber(phone, true) : "",
+  } : {};
+
   const editableRows: { label: string; value: string; field: string; copy?: boolean; type?: string }[] = [
     { label: t("contact.firstName"),  value: firstName, field: "first_name" },
     { label: t("contact.lastName"),   value: lastName,  field: "last_name" },
@@ -259,15 +269,19 @@ export function ContactWidget({
               </span>
               <div className="min-h-[1.125rem] flex items-center gap-1">
                 <div className="flex-1 min-w-0">
-                  <InlineEditField
-                    value={row.value}
-                    field={row.field}
-                    leadId={leadId}
-                    onSaved={onRefresh}
-                    type={row.type}
-                  />
+                  {row.field in maskedField ? (
+                    <span className="text-[12px] font-semibold text-foreground leading-snug">{maskedField[row.field]}</span>
+                  ) : (
+                    <InlineEditField
+                      value={row.value}
+                      field={row.field}
+                      leadId={leadId}
+                      onSaved={onRefresh}
+                      type={row.type}
+                    />
+                  )}
                 </div>
-                {row.copy && row.value && <CopyContactBtn value={row.value} />}
+                {row.copy && row.value && !(row.field in maskedField) && <CopyContactBtn value={row.value} />}
               </div>
             </div>
           ))}
@@ -279,8 +293,8 @@ export function ContactWidget({
                 {t("contact.callbackPhone")}
               </span>
               <div className="min-h-[1.125rem] flex items-center gap-1">
-                <span className="flex-1 min-w-0 text-[12px] font-semibold text-foreground leading-snug">{callbackPhone}</span>
-                <CopyContactBtn value={callbackPhone} />
+                <span className="flex-1 min-w-0 text-[12px] font-semibold text-foreground leading-snug">{presentNumber(callbackPhone, masked)}</span>
+                {!masked && <CopyContactBtn value={callbackPhone} />}
               </div>
             </div>
           )}

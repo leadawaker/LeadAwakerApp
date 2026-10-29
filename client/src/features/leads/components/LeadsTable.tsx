@@ -22,7 +22,7 @@ import { isRealTag } from "./cardView/constants";
 import { isStageTag } from "@/components/crm/status/statusPill";
 import { exportLeadsCsv } from "./cardView/exportLeadsCsv";
 import { CsvImportWizard } from "./CsvImportWizard";
-import { createLead, bulkDeleteLeads, updateLead, deleteLead } from "../api/leadsApi";
+import { createLead, bulkDeleteLeads, updateLead } from "../api/leadsApi";
 import { usePagedLeads, fetchLeadsByIds, fetchAllLeads, useDebouncedValue, type PagedLeadsQuery } from "../hooks/usePagedLeads";
 import { buildServerRows } from "../lib/serverRows";
 import { ALL_STAGE_KEYS, RX_STAGES, RX_STAGE_DB_STATUS } from "../lib/leadDisplay";
@@ -30,14 +30,16 @@ import { CHAT_CHANNEL_TABS, type ChatChannelTab } from "./chatChannel";
 import type { ConversationType } from "./conversationType";
 import { LeadsTableTopbar, type TableFilters } from "./LeadsTableTopbar";
 import { LeadsPipelineTopbar } from "./LeadsPipelineTopbar";
-import { LeadsQuickControls, LeadsQuickFilters } from "./LeadsQuickFilters";
+import { LeadsQuickControls, LeadsQuickFilters, QuickViewFilterGroup } from "./LeadsQuickFilters";
 import { useLeadsLookups } from "./useLeadsLookups";
-import { ChatsPageTabs, CHATS_LAST_TAB_PAGE, CHATS_REMEMBERED_TABS, type ChatsTab } from "./cardView/ChatsPageTabs";
+import { ChatsPageTabs, type ChatsTab } from "./cardView/ChatsPageTabs";
 import { ChatsSideView } from "./cardView/ChatsSideView";
+import { ChatsPresentingProvider } from "../presenting";
 import { readSettingsParams } from "@/features/accounts/components/workspace/receptionist/settingsLink";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { readLastTab, writeLastTab } from "@/lib/lastTab";
 import { useHomeServices } from "@/features/home/api/homeApi";
+import { useChatScope } from "../hooks/useChatScope";
+import { ScopeSwitch } from "@/features/voiceCalls/components/ScopeSwitch";
 
 import {
   VIEW_MODE_KEY, VISIBLE_COLS_KEY, LIST_PREFS_KEY, TABLE_PREFS_KEY, PIPE_PREFS_KEY, COL_ORDER_KEY, COL_WIDTHS_KEY,
@@ -56,6 +58,15 @@ export type { LeadsPageMode };
  * on the server; the list loads 50 at a time and fetches more on scroll.
  */
 export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
+  // Chats: the Owner's Presenting switch masks names and numbers on the cards, the lead and the messages.
+  return (
+    <ChatsPresentingProvider enabled={mode === "conversations"}>
+      <LeadsWorkspace mode={mode} />
+    </ChatsPresentingProvider>
+  );
+}
+
+function LeadsWorkspace({ mode }: { mode: LeadsPageMode }) {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
   const allowedViews = ALLOWED_VIEWS_BY_MODE[mode];
@@ -107,23 +118,17 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   const toggleListFilterType = useCallback((v: ConversationType) => setListFilterType((p) => (p.includes(v) ? p.filter((x) => x !== v) : [...p, v])), []);
   const clearListFilterType = useCallback(() => setListFilterType([]), []);
   const [storedChannelTab, setChannelTab] = usePersistedState<ChatChannelTab>("chats-channel-tab", "all", (v) => CHAT_CHANNEL_TABS.includes(v as ChatChannelTab));
-  // Chats page: [chat] Chats · [gear] Settings, opening on Chats the first time, then the
-  // last tab used (the figures live on the Stats page, /platform/home). Settings also opens from ?view=settings (links, reloads).
-  // A ?lead= link (the lead's one home, lib/leadLink) opens on Chats with that lead selected.
-  const [chatsTab, setChatsTabState] = useState<ChatsTab>(() => (
-    mode === "conversations" && readSettingsParams(window.location.search).open ? "settings"
-      : mode === "conversations" && readLeadParam(window.location.search) ? "chats"
-      : readLastTab(CHATS_LAST_TAB_PAGE, CHATS_REMEMBERED_TABS, "chats")
+  // Chats page: the list, or its settings (the "Chat settings" button). It always opens on Chats; Settings only
+  // from a link (?view=settings), never remembered between visits. A ?lead= link opens on Chats with that lead selected.
+  const [chatsTab, setChatsTab] = useState<ChatsTab>(() => (
+    mode === "conversations" && readSettingsParams(window.location.search).open ? "settings" : "chats"
   ));
-  const setChatsTab = useCallback((tab: ChatsTab) => {
-    setChatsTabState(tab);
-    writeLastTab(CHATS_LAST_TAB_PAGE, tab);
-  }, []);
   const isPhone = useIsMobile(768);
   // The All / Website / WhatsApp filter only exists when the account runs both channels.
   const { data: chatServices } = useHomeServices(currentAccountId);
   const showChannelFilter = !!(chatServices?.website && chatServices?.whatsapp) || (currentAccountId === 0 && !!isAgencyUser);
   const channelTab: ChatChannelTab = showChannelFilter ? storedChannelTab : "all";
+  const chatScope = useChatScope();
 
   /* ── Table prefs ── */
   const [tableSearch, setTableSearch] = useState("");
@@ -152,6 +157,16 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   const clearTableFilters = useCallback(() => setTablePrefs((p) => ({
     ...p, filterStatus: [], filterCampaign: "", filterAccount: "", filterService: [], filterSource: [], filterTags: [], filterHasPhone: false, filterHasEmail: false,
   })), [setTablePrefs]);
+  // A switch in the nav bar's account picker wins over an account or campaign filter picked here
+  // (both belong to the old account, and Chat settings would keep showing it).
+  const seenWorkspace = useRef(currentAccountId);
+  useEffect(() => {
+    if (seenWorkspace.current === currentAccountId) return;
+    seenWorkspace.current = currentAccountId;
+    setListFilterAccount("");
+    setListFilterCampaign("");
+    setTablePrefs((p) => (p.filterAccount || p.filterCampaign ? { ...p, filterAccount: "", filterCampaign: "" } : p));
+  }, [currentAccountId, setTablePrefs]);
   const isTableFilterActive = tableFilters.status.length > 0 || !!tableFilters.campaign || !!tableFilters.account || tableFilters.service.length > 0
     || tableFilters.source.length > 0 || tableFilters.tags.length > 0 || tableFilters.hasPhone || tableFilters.hasEmail;
 
@@ -192,14 +207,15 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
   const [importWizardOpen, setImportWizardOpen] = useState(false);
 
   /* ── Full-width page (strip the shared content cap while mounted) ── */
+  // Chats sits flush like Calls (list panel right after the nav bar); the Leads views keep the 4px side gutter.
   useEffect(() => {
     const el = document.getElementById("crm-content-wrapper");
-    if (el) { el.classList.remove("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]"); el.classList.add("px-1", "md:px-1"); el.style.overflow = "visible"; }
+    if (el) { el.classList.remove("px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]"); if (mode !== "conversations") el.classList.add("px-1", "md:px-1"); el.style.overflow = "visible"; }
     return () => {
       const w = document.getElementById("crm-content-wrapper");
       if (w) { w.classList.remove("px-1", "md:px-1", "px-3", "md:pl-0", "md:pr-5", "max-w-[1729px]"); w.style.overflow = ""; }
     };
-  }, []);
+  }, [mode]);
   const { clearTopbarActions } = useTopbarActions();
   useEffect(() => { clearTopbarActions(); }, [clearTopbarActions]);
 
@@ -220,7 +236,8 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     status: filterStatus, tags: filterTags, account: listFilterAccount, campaign: listFilterCampaign, type: listFilterType,
     chatChannel: mode === "conversations" && channelTab !== "all" ? channelTab : undefined,
     chatsOnly: mode === "conversations",
-  }), [filterAccountId, dListSearch, sortBy, groupBy, filterStatus, filterTags, listFilterAccount, listFilterCampaign, listFilterType, mode, channelTab]);
+    scope: mode === "conversations" ? chatScope.scope : undefined,
+  }), [filterAccountId, dListSearch, sortBy, groupBy, filterStatus, filterTags, listFilterAccount, listFilterCampaign, listFilterType, mode, channelTab, chatScope.scope]);
   const tableQuery = useMemo<PagedLeadsQuery>(() => ({
     accountId: filterAccountId, search: dTableSearch.trim(),
     sort: quickPrefs.view === "upcoming" ? "appointment" : tableSortBy,
@@ -298,8 +315,17 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     if (viewMode !== "list" || selectedLead || leads.length === 0) return;
     let sid: string | null = null;
     try { sid = localStorage.getItem("selected-lead-id"); } catch {}
-    if (!sid || pinnedMissing) setSelectedLead(leads[0]);
-  }, [leads, selectedLead, viewMode, pinnedMissing, setSelectedLead]);
+    // Chats: the first row of the tab on screen (the rows of the tab just left stay until the new ones load).
+    const first = mode === "conversations" ? leads.find((l) => !!l.is_demo === (chatScope.scope === "demo")) : leads[0];
+    if (first && (!sid || pinnedMissing)) setSelectedLead(first);
+  }, [leads, selectedLead, viewMode, pinnedMissing, setSelectedLead, mode, chatScope.scope]);
+
+  // A lead opened by link that sits in the other tab (a live chat while on Demo, or the reverse): show its tab.
+  useEffect(() => {
+    if (mode !== "conversations" || !chatScope.canDemo || !pinned) return;
+    const tab = pinned.is_demo ? "demo" : "live";
+    if (tab !== chatScope.scope) chatScope.setScope(tab);
+  }, [pinned]); // eslint-disable-line react-hooks/exhaustive-deps
 
   /* ── Tags per lead ── */
   const leadTagsInfo = useMemo(() => {
@@ -340,6 +366,10 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
     if (!allowedViews.includes(next)) return;
     setViewMode(next); setSelectedLead(null); setMobileView("list");
   }, [allowedViews, setSelectedLead]);
+  const handleChatScope = useCallback((s: string) => {
+    chatScope.setScope(s === "demo" ? "demo" : "live");
+    setSelectedLead(null); setPinned(null); setMobileView("list");
+  }, [chatScope.setScope, setSelectedLead]); // eslint-disable-line react-hooks/exhaustive-deps
   const handleClosePanel = useCallback(() => setSelectedLead(null), [setSelectedLead]);
   const handleAddLead = useCallback(async () => {
     try {
@@ -428,18 +458,26 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
       onToggleStage={(st) => toggleTableFilter("status", st)}
     />
   );
-  // Desktop: the same two switches, inside the topbar instead of a row under it.
+  // Desktop: the channel tabs sit in the topbar; the view is the "Show" group of the Filter menu.
   const quickControls = mode !== "conversations" && (
     <LeadsQuickControls
-      view={quickPrefs.view}
-      onViewChange={(v) => setQuickPrefs((p) => ({ ...p, view: v }))}
       channel={quickPrefs.channel}
       onChannelChange={(c) => setQuickPrefs((p) => ({ ...p, channel: c }))}
-      total={active.total}
-      viewCounts={active.viewCounts}
       channelCounts={active.channelCounts}
     />
   );
+  const viewFilter = mode !== "conversations" ? {
+    group: (
+      <QuickViewFilterGroup
+        view={quickPrefs.view}
+        onViewChange={(v) => setQuickPrefs((p) => ({ ...p, view: v }))}
+        total={active.total}
+        viewCounts={active.viewCounts}
+      />
+    ),
+    active: quickPrefs.view !== "all",
+    clear: () => setQuickPrefs((p) => ({ ...p, view: "all" as QuickView })),
+  } : undefined;
   const sidePanelStyle: React.CSSProperties = { flex: "0 0 clamp(260px, 22vw, 400px)", minWidth: 0, borderLeft: "1px solid var(--line)", background: "var(--surface)" };
 
   if (mode === "conversations" && chatsTab !== "chats") {
@@ -494,6 +532,9 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             channelTab={channelTab}
             onChannelTabChange={setChannelTab}
             showChannelFilter={showChannelFilter}
+            scopeSwitch={mode === "conversations" && chatScope.canDemo
+              ? (compact, menu) => <ScopeSwitch scope={chatScope.scope} onScope={handleChatScope} canDemo canTest={false} compact={compact} menu={menu} />
+              : undefined}
             pageTabs={mode === "conversations" ? <ChatsPageTabs active={chatsTab} onChange={setChatsTab} /> : undefined}
             mobilePageTabs={mode === "conversations" ? <ChatsPageTabs variant="mobile" active={chatsTab} onChange={setChatsTab} /> : undefined}
             chatChannelCounts={listData.chatChannelCounts}
@@ -547,6 +588,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             onAdd={handleAddLead}
             isAgency={!!isAgencyUser}
             quickControls={quickControls}
+            viewFilter={viewFilter}
           />
           {quickFilters}
           <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>
@@ -608,12 +650,6 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             setCompactMode={(fn) => setCompactMode(fn(compactMode))}
             hasAnyCollapsed={hasAnyCollapsed}
             onFoldToggle={() => setFoldAction((prev) => ({ type: hasAnyCollapsed ? "expand-all" : "fold-empty", seq: prev.seq + 1 }))}
-            canDelete={!!selectedKanbanLead && isAgencyUser}
-            onDeleteSelected={async () => {
-              const id = selectedKanbanLead?.Id ?? selectedKanbanLead?.id;
-              if (!id) return;
-              await deleteLead(id); setSelectedKanbanLead(null); handleRefresh();
-            }}
             search={kanbanSearch}
             onSearch={setKanbanSearch}
             hasPhone={pipePrefs.filterHasPhone}
@@ -623,6 +659,7 @@ export function LeadsTable({ mode = "all" }: { mode?: LeadsPageMode } = {}) {
             sortBy={pipelineSortBy}
             setSortBy={(v) => setPipePrefs((p) => ({ ...p, sortBy: v }))}
             quickControls={quickControls}
+            viewFilter={viewFilter}
           />
           {quickFilters}
           <div className="flex-1 min-h-0 flex overflow-hidden" style={{ gap: "var(--panel-gap)", paddingRight: "var(--panel-gap)" }}>

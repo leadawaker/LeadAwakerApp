@@ -2,6 +2,7 @@ import { useRef } from "react";
 import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { useTheme } from "@/hooks/useTheme";
 import { getFullName, getInitials } from "./leadUtils";
+import { presentName, useChatsPresenting } from "../../presenting";
 import { displayStage, stageColorKey, stageHex } from "../../lib/leadDisplay";
 
 interface Props {
@@ -22,7 +23,8 @@ const SIZE = 38;
 export function CompactLeadCard({ lead, isActive, onClick, onHover, onHoverEnd }: Props) {
   const ref = useRef<HTMLButtonElement>(null);
   const { isDark } = useTheme();
-  const name = getFullName(lead);
+  const { masked } = useChatsPresenting();
+  const name = presentName(getFullName(lead), masked);
   const stage = displayStage(lead);
   const avatarColor = getLeadStatusAvatarColor(stageColorKey(stage));
   const color = isDark ? avatarColor.bg : stageHex(stage);

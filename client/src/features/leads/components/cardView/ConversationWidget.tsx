@@ -32,6 +32,7 @@ import { getDateKey, formatDateLabel } from "./formatUtils";
 import { getLeadId } from "./leadUtils";
 import { splitThreadCalls, type ThreadCall } from "./threadCalls";
 import { ThreadCallLine } from "./ThreadCallLine";
+import { presentName, presentText, useChatsPresenting } from "../../presenting";
 import { openCall } from "@/features/home/lib/openCall";
 import {
   MiniDateSeparator,
@@ -174,12 +175,17 @@ export function ConversationWidget({ lead, showHeader = false, readOnly = false,
   }, []);
 
   // Call turns leave the bubbles: each call is one compact line in the thread (C2).
-  const { chat: sorted, calls: threadCalls } = useMemo(
-    () => splitThreadCalls([...interactions].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || ""))),
-    [interactions]
-  );
+  const realName = lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim();
+  // Presenting (Owner, Chats): the lead's name and any phone number in the message text are masked on screen.
+  const { masked } = useChatsPresenting();
+  const { chat: sorted, calls: threadCalls } = useMemo(() => {
+    const split = splitThreadCalls([...interactions].sort((a, b) => (a.created_at || "").localeCompare(b.created_at || "")));
+    if (!masked) return split;
+    const chat = split.chat.map((m) => (typeof m.content === "string" ? { ...m, content: presentText(m.content, realName, true) } : m));
+    return { ...split, chat };
+  }, [interactions, masked, realName]);
 
-  const leadName = lead.full_name || `${lead.first_name ?? ""} ${lead.last_name ?? ""}`.trim() || t("detailView.newLead");
+  const leadName = presentName(realName, masked) || t("detailView.newLead");
   const leadAvatarColors = useMemo(() => {
     const status = lead.Conversion_Status || lead.conversion_status || "";
     const colors = getLeadStatusAvatarColor(status);

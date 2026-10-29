@@ -1,18 +1,19 @@
-// Leads page quick filters: a view switch (All / Needs reply / Next appointments)
-// and a channel switch (All / Website / WhatsApp / Phone). Desktop: both sit in
-// the topbar (LeadsQuickControls), the view switch as one dropdown button. Phones:
-// one row under the topbar (LeadsQuickFilters) with a Filter sheet.
+// Leads page quick filters: a view (All / Needs reply / Next appointments) and a
+// channel switch (All / Website / WhatsApp / Phone). Desktop: the channel tabs sit
+// in the topbar (LeadsQuickControls) and the view is the "Show" group of the Filter
+// menu (QuickViewFilterGroup). Phones: one row under the topbar (LeadsQuickFilters)
+// with a Filter sheet.
 // Counts come from the server and cover every lead, not only the loaded page.
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
-  Users, MessageSquareReply, CalendarClock, Layers, Globe, MessageCircle, Phone, SlidersHorizontal, X, Check, ChevronDown, type LucideIcon,
+  Users, MessageSquareReply, CalendarClock, Layers, Globe, MessageCircle, Phone, SlidersHorizontal, X, Check, type LucideIcon,
 } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMobile";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { ActiveDot } from "./LeadsTopbarParts";
+import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
+import { MenuGroup, MobileMenuGroup } from "./FilterGroups";
 import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
-import { MobileDrawerOption, MobileDrawerSubheading } from "@/components/crm/mobile/MobileListHeader";
+import { MobileDrawerOption } from "@/components/crm/mobile/MobileListHeader";
 import { stageHex, stageLabel } from "../lib/leadDisplay";
 import type { ChannelFilter, QuickView } from "./leadsTableConfig";
 
@@ -33,7 +34,7 @@ function Seg<K extends string>({
   shortLabels?: boolean;
 }) {
   return (
-    <div className="la-seg shrink-0" role="tablist" data-testid={testId}>
+    <div className="la-seg la-seg--main la-seg--soft la-seg--compact shrink-0" role="tablist" data-testid={testId}>
       {items.map((k) => {
         const Icon = icons[k];
         const on = k === active;
@@ -45,7 +46,6 @@ function Seg<K extends string>({
             role="tab"
             aria-selected={on}
             className={`la-seg-btn${on ? " on" : ""}`}
-            style={{ padding: "7px 12px", fontSize: 10, letterSpacing: "0.1em", gap: 6 }}
             onClick={() => onChange(k)}
             title={shortLabels ? label(k) : undefined}
             aria-label={shortLabels ? label(k) : undefined}
@@ -117,23 +117,24 @@ export function LeadsQuickFilters({
         <MobileSheet open={sheetOpen} onClose={() => setSheetOpen(false)} fitContent data-testid="leads-filter-sheet">
           <div style={{ padding: "2px 18px calc(18px + var(--safe-bottom))", display: "flex", flexDirection: "column", overflowY: "auto" }}>
             {stages && stages.length > 0 && (
-              <>
-                <MobileDrawerSubheading>{t("filters.stage")}</MobileDrawerSubheading>
+              <MobileMenuGroup label={t("filters.stage")} count={picked.length}>
                 {stages.map((s) => (
                   <MobileDrawerOption key={s} label={stageLabel(t, s)} selected={picked.includes(s)} onClick={() => onToggleStage?.(s)} />
                 ))}
-              </>
+              </MobileMenuGroup>
             )}
-            <MobileDrawerSubheading>{t("filters.channel")}</MobileDrawerSubheading>
-            {(["all", "website", "whatsapp", "phone"] as ChannelFilter[]).map((c) => (
-              <MobileDrawerOption key={c} icon={CHANNEL_ICONS[c]} label={t(`channelFilter.${c}`)} selected={channel === c} onClick={() => onChannelChange(c)} />
-            ))}
-            <MobileDrawerSubheading>{t("filters.show")}</MobileDrawerSubheading>
-            {(["needsReply", "upcoming"] as QuickView[]).map((v) => (
-              <MobileDrawerOption key={v} icon={VIEW_ICONS[v]}
-                label={`${t(`quickViews.${v}`)} · ${v === "needsReply" ? viewCounts.needsReply : viewCounts.upcoming}`}
-                selected={view === v} onClick={() => onViewChange(view === v ? "all" : v)} />
-            ))}
+            <MobileMenuGroup label={t("filters.channel")} count={channel !== "all" ? 1 : 0}>
+              {(["all", "website", "whatsapp", "phone"] as ChannelFilter[]).map((c) => (
+                <MobileDrawerOption key={c} icon={CHANNEL_ICONS[c]} label={t(`channelFilter.${c}`)} selected={channel === c} onClick={() => onChannelChange(c)} />
+              ))}
+            </MobileMenuGroup>
+            <MobileMenuGroup label={t("filters.show")} count={view !== "all" ? 1 : 0}>
+              {(["needsReply", "upcoming"] as QuickView[]).map((v) => (
+                <MobileDrawerOption key={v} icon={VIEW_ICONS[v]}
+                  label={`${t(`quickViews.${v}`)} · ${v === "needsReply" ? viewCounts.needsReply : viewCounts.upcoming}`}
+                  selected={view === v} onClick={() => onViewChange(view === v ? "all" : v)} />
+              ))}
+            </MobileMenuGroup>
           </div>
         </MobileSheet>
       </>
@@ -145,66 +146,59 @@ export function LeadsQuickFilters({
 }
 
 /**
- * Desktop topbar controls: the view (All / Needs reply / Next appointments) as one
- * dropdown button with the wine dot when it is not on All, then the channel tabs.
+ * The view (All / Needs reply / Next appointments) as the "Show" group of the
+ * desktop Filter menu. Single choice; the persisted value lives in LeadsTable.
  */
-export function LeadsQuickControls({
-  view, onViewChange, channel, onChannelChange, total, viewCounts, channelCounts,
+export function QuickViewFilterGroup({
+  view, onViewChange, total, viewCounts,
 }: {
   view: QuickView;
   onViewChange: (v: QuickView) => void;
-  channel: ChannelFilter;
-  onChannelChange: (c: ChannelFilter) => void;
+  /** Total for "All" (shown only while All is picked: it is the loaded total). */
   total: number;
   viewCounts: { needsReply: number; upcoming: number };
+}) {
+  const { t } = useTranslation("leads");
+  const countOf = (v: QuickView) => (v === "all" ? (view === "all" ? total : undefined) : viewCounts[v]);
+  return (
+    <MenuGroup label={t("filters.show")} count={view !== "all" ? 1 : 0} testId="leads-quick-view">
+      {(["all", "needsReply", "upcoming"] as QuickView[]).map((v) => {
+        const Icon = VIEW_ICONS[v];
+        const n = countOf(v);
+        return (
+          <DropdownMenuItem key={v} onSelect={(e) => { e.preventDefault(); onViewChange(v); }} className="flex items-center gap-2 text-[12px]" style={{ fontWeight: view === v ? 600 : 400 }} data-testid={`leads-quick-view-${v}`}>
+            <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: view === v ? "var(--wine)" : "var(--mute)" }} />
+            <span className="flex-1">{t(`quickViews.${v}`)}</span>
+            {n !== undefined && <span className="tabular-nums text-[11px]" style={{ color: "var(--mute-2)" }}>{n}</span>}
+            {view === v && <Check className="h-3 w-3 shrink-0" style={{ color: "var(--wine)" }} />}
+          </DropdownMenuItem>
+        );
+      })}
+    </MenuGroup>
+  );
+}
+
+/** Desktop topbar controls: the channel tabs (the view moved into the Filter menu). */
+export function LeadsQuickControls({
+  channel, onChannelChange, channelCounts,
+}: {
+  channel: ChannelFilter;
+  onChannelChange: (c: ChannelFilter) => void;
   channelCounts: Record<string, number>;
 }) {
   const { t } = useTranslation("leads");
   const isPhone = useIsMobile(768);
   if (isPhone) return null;
-  const countOf = (v: QuickView) => (v === "all" ? (view === "all" ? total : undefined) : viewCounts[v]);
-  const ViewIcon = VIEW_ICONS[view];
-  const current = countOf(view);
-
   return (
-    <>
-      <DropdownMenu>
-        <div className="shrink-0" style={{ position: "relative" }}>
-          <DropdownMenuTrigger asChild>
-            <button type="button" className="la-btn la-btn--soft" title={t("filters.show")} data-testid="leads-quick-view" style={{ height: 32, gap: 6 }}>
-              <ViewIcon size={13} className="shrink-0" />
-              {t(`quickViews.${view}`)}
-              {current !== undefined && <span className="tabular-nums" style={{ color: "var(--mute-2)", fontWeight: 400 }}>{current}</span>}
-              <ChevronDown size={12} className="shrink-0" />
-            </button>
-          </DropdownMenuTrigger>
-          {view !== "all" && <ActiveDot />}
-        </div>
-        <DropdownMenuContent align="start" className="w-56 glass-strong border-none">
-          {(["all", "needsReply", "upcoming"] as QuickView[]).map((v) => {
-            const Icon = VIEW_ICONS[v];
-            const n = countOf(v);
-            return (
-              <DropdownMenuItem key={v} onClick={() => onViewChange(v)} className="flex items-center gap-2 text-[12px]" style={{ fontWeight: view === v ? 600 : 400 }} data-testid={`leads-quick-view-${v}`}>
-                <Icon className="h-3.5 w-3.5 shrink-0" style={{ color: view === v ? "var(--wine)" : "var(--mute)" }} />
-                <span className="flex-1">{t(`quickViews.${v}`)}</span>
-                {n !== undefined && <span className="tabular-nums text-[11px]" style={{ color: "var(--mute-2)" }}>{n}</span>}
-                {view === v && <Check className="h-3 w-3 shrink-0" style={{ color: "var(--wine)" }} />}
-              </DropdownMenuItem>
-            );
-          })}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <Seg<ChannelFilter>
-        items={["all", "website", "whatsapp", "phone"]}
-        active={channel}
-        onChange={onChannelChange}
-        icons={CHANNEL_ICONS}
-        label={(k) => t(`channelFilter.${k}`)}
-        counts={{ website: channelCounts.website, whatsapp: channelCounts.whatsapp, phone: channelCounts.phone }}
-        testId="leads-channel-filter"
-        shortLabels
-      />
-    </>
+    <Seg<ChannelFilter>
+      items={["all", "website", "whatsapp", "phone"]}
+      active={channel}
+      onChange={onChannelChange}
+      icons={CHANNEL_ICONS}
+      label={(k) => t(`channelFilter.${k}`)}
+      counts={{ website: channelCounts.website, whatsapp: channelCounts.whatsapp, phone: channelCounts.phone }}
+      testId="leads-channel-filter"
+      shortLabels
+    />
   );
 }

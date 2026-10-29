@@ -30,6 +30,8 @@ export interface PagedLeadsQuery {
   chatChannel?: string;
   /** Chats page: only leads that have a website or WhatsApp chat. */
   chatsOnly?: boolean;
+  /** Chats page Live / Demo (the server gives non-Owners Live whatever they send). */
+  scope?: "live" | "demo";
   channel?: string;
   needsReply?: boolean;
   upcoming?: boolean;

@@ -515,20 +515,27 @@ export function registerConversationsRoutes(app: Express): void {
     res.json(data);
   }));
 
+  // ?exclude=a,b leaves those types out of the list and counts (the phone hides campaign_summary).
+  const excludedTypes = (req: { query: Record<string, unknown> }): string[] =>
+    typeof req.query.exclude === "string"
+      ? req.query.exclude.split(",").map((s) => s.trim()).filter((s) => /^[a-z_]{1,64}$/i.test(s)).slice(0, 10)
+      : [];
+
   app.get("/api/notifications", requireAuth, wrapAsync(async (req, res) => {
     const user = req.user!;
     const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
     const offset = parseInt(req.query.offset as string) || 0;
     const unreadOnly = req.query.unread === "true";
-    const items = await storage.getNotificationsByUserId(user.id!, { limit, offset, unreadOnly });
-    const unreadCount = await storage.getUnreadNotificationCount(user.id!);
-    const totalCount = await storage.getTotalNotificationCount(user.id!);
+    const excludeTypes = excludedTypes(req);
+    const items = await storage.getNotificationsByUserId(user.id!, { limit, offset, unreadOnly, excludeTypes });
+    const unreadCount = await storage.getUnreadNotificationCount(user.id!, excludeTypes);
+    const totalCount = await storage.getTotalNotificationCount(user.id!, excludeTypes);
     res.json({ items, unreadCount, totalCount });
   }));
 
   app.get("/api/notifications/count", requireAuth, wrapAsync(async (req, res) => {
     const user = req.user!;
-    const unreadCount = await storage.getUnreadNotificationCount(user.id!);
+    const unreadCount = await storage.getUnreadNotificationCount(user.id!, excludedTypes(req));
     res.json({ unreadCount });
   }));
 

@@ -61,3 +61,13 @@ export function ActiveDot() {
     <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
   );
 }
+
+/** The quick view ("Show": All / Needs reply / Next appointments) handed to a topbar's Filter menu. */
+export type ViewFilterSlot = {
+  /** The folded "Show" group (QuickViewFilterGroup). */
+  group: React.ReactNode;
+  /** Not on "All": lights the Filter dot. */
+  active: boolean;
+  /** Back to "All" (Clear filters). */
+  clear: () => void;
+};

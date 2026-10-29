@@ -1,42 +1,44 @@
-// Chats page tabs, mirroring Calls: [chat] Chats · [gear] Settings. The figures live on the Stats page (/platform/home).
+// The Chats page's way into its settings, mirroring Calls: a "Chat settings" button (gear) in the
+// topbar, and inside the settings a "Chats" back button (arrow). The figures live on Home (/platform/home).
 import { useTranslation } from "react-i18next";
-import { MessageSquare, Settings, type LucideIcon } from "lucide-react";
-import { MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
-import { PillSwitch } from "@/components/crm/primitives/PillSwitch";
+import { ArrowLeft, Settings } from "lucide-react";
+import { MobileHeaderIconBtn } from "@/components/crm/mobile/MobileListHeader";
 
 export type ChatsTab = "chats" | "settings";
 export const CHATS_TABS: ChatsTab[] = ["chats", "settings"];
-/** The tabs the page reopens on next time (both: leaving from Settings comes back to Settings). A remembered old "stats" opens Chats. */
-export const CHATS_REMEMBERED_TABS: ChatsTab[] = ["chats", "settings"];
-export const CHATS_LAST_TAB_PAGE = "chats";
-const ICONS: Record<ChatsTab, LucideIcon> = { chats: MessageSquare, settings: Settings };
 
 export function ChatsPageTabs({ active, onChange, variant = "topbar" }: { active: ChatsTab; onChange: (tab: ChatsTab) => void; variant?: "topbar" | "mobile" }) {
   const { t } = useTranslation("leads");
+  const inSettings = active === "settings";
+  const label = inSettings ? t("chatsTabs.back") : t("chatsTabs.openSettings");
+  const go = () => onChange(inSettings ? "chats" : "settings");
   if (variant === "mobile") {
-    // Beside the title, search and filter buttons on a phone: only the open tab is labelled, the others are icons.
+    // Phone header: a round gear on the list; in the settings a labelled pill back to the chats.
+    if (!inSettings) {
+      return (
+        <MobileHeaderIconBtn onClick={go} aria-label={label} title={label} data-testid="chats-open-settings">
+          <Settings size={16} />
+        </MobileHeaderIconBtn>
+      );
+    }
     return (
-      <MobileTabSeg<ChatsTab>
-        tabs={CHATS_TABS.map((id) => {
-          const label = t(`chatsTabs.${id}`);
-          const Icon = ICONS[id];
-          return id === active
-            ? { id, label, icon: Icon }
-            : { id, label: "", iconNode: <span className="flex items-center" role="img" aria-label={label} title={label}><Icon size={14} /></span> };
-        })}
-        activeId={active}
-        onChange={onChange}
-      />
+      <MobileHeaderIconBtn onClick={go} aria-label={label} data-testid="chats-back"
+        style={{ width: "auto", padding: "0 15px 0 12px", gap: 7, fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
+        <ArrowLeft size={16} />
+        {label}
+      </MobileHeaderIconBtn>
     );
   }
+  const Icon = inSettings ? ArrowLeft : Settings;
   return (
-    <PillSwitch<ChatsTab>
-      items={CHATS_TABS.map((id) => ({ id, label: t(`chatsTabs.${id}`), icon: ICONS[id], color: "var(--wine)" }))}
-      value={active}
-      onChange={onChange}
-      ariaLabel={t("chatsTabs.aria")}
-      testId="chats-page-tabs"
-      itemTestId={(id) => `chats-tab-${id}`}
-    />
+    <button
+      type="button"
+      onClick={go}
+      className={`la-btn ${inSettings ? "la-btn--soft" : "la-btn--wine"} shrink-0`}
+      data-testid={inSettings ? "chats-back" : "chats-open-settings"}
+    >
+      <Icon className="h-4 w-4 shrink-0" />
+      {label}
+    </button>
   );
 }

@@ -14,11 +14,11 @@ import {
   Trash2,
   Pencil,
   Megaphone,
-  PanelLeftClose,
-  PanelLeft,
   MoreHorizontal,
   FileText,
   Palette,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -31,17 +31,19 @@ import type { ViewMode } from "./types";
 import { ExpandingSearch } from "@/components/crm/primitives";
 import { PIPELINE_HEX, ALL_LEAD_FILTER_STAGES } from "./constants";
 import type { ConversationType } from "../conversationType";
+import { useChatsPresenting } from "../../presenting";
 import {
   FilterMenuItems,
   SortMenuItems,
   GroupMenuItems,
   FILTER_MENU_CLASS,
   SORT_MENU_CLASS,
+  GROUP_MENU_CLASS,
 } from "./LeadsToolbarMenus";
 
 function WineDot() {
   return (
-    <span style={{ position: "absolute", bottom: 3, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
+    <span style={{ position: "absolute", bottom: 4, left: "50%", transform: "translateX(-50%)", width: 4, height: 4, borderRadius: 999, background: "var(--wine)", display: "block", pointerEvents: "none" }} />
   );
 }
 
@@ -70,8 +72,6 @@ export function LeadsDesktopToolbar({
   deleteLabel,
   peekOn,
   setPeekOn,
-  isCompact,
-  setLeftPanelState,
   listSearch,
   onListSearchChange,
   isFilterActive,
@@ -100,6 +100,7 @@ export function LeadsDesktopToolbar({
   filterType,
   onToggleFilterType,
   channelTabs,
+  scopeSwitch,
   pageTabs,
 }: {
   leadsCount: number;
@@ -122,8 +123,6 @@ export function LeadsDesktopToolbar({
   deleteLabel: string;
   peekOn: boolean;
   setPeekOn: (fn: (p: boolean) => boolean) => void;
-  isCompact: boolean;
-  setLeftPanelState: (v: "full" | "compact" | "hidden") => void;
   listSearch: string;
   onListSearchChange: (v: string) => void;
   isFilterActive: boolean;
@@ -157,10 +156,16 @@ export function LeadsDesktopToolbar({
   onToggleFilterType: (v: ConversationType) => void;
   /** Chats page: All / Website / WhatsApp inbox tabs, shown in place of the view switcher. */
   channelTabs?: ReactNode;
-  /** Page-level tabs (Chats: Stats · Chats), before the channel filter. */
+  /** Chats page: the Live / Demo switch (Owner). */
+  scopeSwitch?: ReactNode;
+  /** Chats: the "Chat settings" button, in the right cluster after the scope switch. Also turns on the identities item of the "..." menu (Owner). */
   pageTabs?: ReactNode;
 }) {
   const { t } = useTranslation("leads");
+  const { t: tVoice } = useTranslation("voiceCalls");
+  // Chats (Owner): the identities switch lives in the "..." menu.
+  const presenting = useChatsPresenting();
+  const canPresent = !!pageTabs && presenting.canToggle;
   const [leadDeleteConfirm, setLeadDeleteConfirm] = useState(false);
   const filterMenuProps = {
     showTypeControls, isFilterActive, filterStatus, onToggleFilterStatus, filterTags, onToggleFilterTag,
@@ -168,24 +173,24 @@ export function LeadsDesktopToolbar({
     availableCampaigns, filterCampaign, setFilterCampaign, allTags,
   };
   return (
-    <div className="shrink-0 flex items-center gap-3" style={{ height: 60, borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)", background: "var(--surface)", paddingLeft: 17, paddingRight: 17 }}>
+    <div className="la-page-header" style={{ gap: 12, padding: "0 17px" }}>
       <div className="flex items-baseline gap-2 shrink-0">
-        <span className="serif" style={{ fontSize: 20, color: "var(--ink)", letterSpacing: "-0.01em" }}>{title ?? t("page.title")}</span>
+        <span className="la-page-title">{title ?? t("page.title")}</span>
         <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leadsCount}</span>
       </div>
-      {pageTabs}
       {channelTabs}
       {/* Single-view pages (e.g. Conversations) hide the segmented switcher. */}
       {!channelTabs && !pageTabs && viewTabs.length > 1 && (
-        <div className="la-seg shrink-0">
+        <div className="la-seg la-seg--main shrink-0" role="tablist">
           {viewTabs.map((tab) => (
             <button
               key={tab.id}
+              role="tab"
+              aria-selected={viewMode === tab.id}
               onClick={() => onViewModeChange(tab.id as ViewMode)}
               className={`la-seg-btn${viewMode === tab.id ? " on" : ""}`}
-              style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
             >
-              {tab.icon && <span className="flex items-center"><tab.icon size={13} /></span>}
+              {tab.icon && <tab.icon size={14} style={{ flexShrink: 0 }} />}
               {tab.label}
             </button>
           ))}
@@ -195,14 +200,14 @@ export function LeadsDesktopToolbar({
       {selectedLeadIds.size > 0 && (
         <>
           <div style={{ width: 1, height: 20, background: "var(--line)", flexShrink: 0 }} />
-          <span style={{ fontFamily: "var(--mono)", fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700, flexShrink: 0, whiteSpace: "nowrap" }}>
+          <span style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--wine)", fontWeight: 700, flexShrink: 0, whiteSpace: "nowrap" }}>
             {t("selection.countSelected", { count: selectedLeadIds.size })}
           </span>
           {/* Change stage dropdown */}
           <DropdownMenu open={bulkStageOpen} onOpenChange={setBulkStageOpen}>
             <DropdownMenuTrigger asChild>
-              <button className="la-btn la-btn--soft shrink-0" style={{ fontSize: 11 }} disabled={bulkBusy}>
-                <Pencil size={12} />
+              <button className="la-btn la-btn--soft shrink-0" disabled={bulkBusy}>
+                <Pencil size={16} />
                 {t("toolbar.changeStage", "Change stage")}
               </button>
             </DropdownMenuTrigger>
@@ -223,8 +228,8 @@ export function LeadsDesktopToolbar({
           {availableCampaigns.length > 0 && (
             <DropdownMenu open={bulkCampaignOpen} onOpenChange={setBulkCampaignOpen}>
               <DropdownMenuTrigger asChild>
-                <button className="la-btn la-btn--soft shrink-0" style={{ fontSize: 11 }} disabled={bulkBusy}>
-                  <Megaphone size={12} />
+                <button className="la-btn la-btn--soft shrink-0" disabled={bulkBusy}>
+                  <Megaphone size={16} />
                   {t("toolbar.assignCampaign", "Assign campaign")}
                 </button>
               </DropdownMenuTrigger>
@@ -246,92 +251,36 @@ export function LeadsDesktopToolbar({
             <div className="flex items-center gap-1.5 shrink-0">
               <button
                 className="la-btn la-btn--wine"
-                style={{ fontSize: 11 }}
+               
                 disabled={bulkBusy}
                 onClick={async () => { await handleListBulkDelete(); setBulkDeleteConfirm(false); }}
               >
                 {bulkBusy ? "…" : t("common.confirm", "Confirm")}
               </button>
-              <button className="la-btn la-btn--soft" style={{ fontSize: 11 }} onClick={() => setBulkDeleteConfirm(false)}>
+              <button className="la-btn la-btn--soft" onClick={() => setBulkDeleteConfirm(false)}>
                 {t("common.cancel", "Cancel")}
               </button>
             </div>
           ) : (
             <button
               className="la-btn la-btn--soft shrink-0"
-              style={{ fontSize: 11, color: "#C0392B" }}
+              style={{ color: "hsl(var(--destructive))" }}
               disabled={bulkBusy}
               onClick={() => setBulkDeleteConfirm(true)}
             >
-              <Trash2 size={12} />
+              <Trash2 size={16} />
               {deleteLabel}
             </button>
           )}
           {/* Clear selection */}
           <button className="la-btn la-btn--soft la-btn--icon shrink-0" onClick={clearLeadSelection} title={t("selection.clearSelection", "Clear selection")}>
-            <X size={13} />
+            <X size={16} />
           </button>
         </>
       )}
 
-      {/* Minimize / expand the list pane (toggles compact rail) */}
-      <button
-        onClick={() => setLeftPanelState(isCompact ? "full" : "compact")}
-        className="la-btn la-btn--soft la-btn--icon"
-        title={isCompact ? t("toolbar.expandList", "Expand list") : t("toolbar.minimizeList", "Minimize list")}
-      >
-        {isCompact ? <PanelLeft size={13} /> : <PanelLeftClose size={13} />}
-      </button>
       <div className="flex-1 min-w-0" />
-      <div className="shrink-0 flex items-center gap-[5px]">
-      {/* Per-lead actions ("...") — relocated here from the lead's header. Acts
-          on the open lead via window events handled in LeadDetailView. */}
-      {showLeadActions && (
-        <DropdownMenu onOpenChange={(o) => { if (!o) setLeadDeleteConfirm(false); }}>
-          <DropdownMenuTrigger asChild>
-            <button className="la-btn la-btn--soft la-btn--icon" title={t("common.more", "More")}>
-              <MoreHorizontal size={13} />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 bg-white">
-            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("lead-export-pdf"))}>
-              <FileText className="h-4 w-4 mr-2" />
-              {t("detailView.toPdf", "Export PDF")}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("toggle-gradient-tester"))}>
-              <Palette className="h-4 w-4 mr-2" />
-              {t("detail.gradientTester", "Gradient tester")}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={(e) => {
-                e.preventDefault();
-                const newPeekState = !peekOn;
-                setPeekOn(() => newPeekState);
-                if (newPeekState && sortBy !== "latest_message") {
-                  onSortByChange("latest_message");
-                }
-              }}
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              {peekOn ? t("toolbar.hideChats", "Hide conversations") : t("toolbar.showChats", "Show conversations")}
-              {peekOn && <Check className="h-3.5 w-3.5 ml-auto" />}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem
-              onSelect={(e) => {
-                if (!leadDeleteConfirm) { e.preventDefault(); setLeadDeleteConfirm(true); }
-                else { window.dispatchEvent(new CustomEvent("lead-delete")); setLeadDeleteConfirm(false); }
-              }}
-              className="text-red-600 focus:text-red-600"
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              {leadDeleteConfirm ? t("confirm.yes", "Confirm delete") : t("detailView.deleteLead", "Delete lead")}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-
+      <div className="shrink-0 flex items-center gap-2">
       <ExpandingSearch value={listSearch} onChange={onListSearchChange} placeholder={searchPlaceholder ?? t("toolbar.searchPlaceholder")} width={180} />
 
       {/* Filter */}
@@ -374,16 +323,79 @@ export function LeadsDesktopToolbar({
           </DropdownMenuTrigger>
           {isGroupNonDefault && <WineDot />}
         </div>
-        <DropdownMenuContent align="end" className={SORT_MENU_CLASS}>
+        <DropdownMenuContent align="end" className={GROUP_MENU_CLASS}>
           <GroupMenuItems groupBy={groupBy} onGroupByChange={onGroupByChange} showTypeControls={showTypeControls} />
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* +Add */}
-      {onCreateLead && (
-        <button onClick={onCreateLead} className="la-btn la-btn--wine la-btn--icon" title={t("toolbar.add")}>
-          <Plus className="h-[14px] w-[14px] shrink-0" />
-        </button>
+      {/* Chats: the Live / Tests / Demo scope dropdown, then "Chat settings" right after it. */}
+      {scopeSwitch}
+      {pageTabs}
+
+      {/* "..." at the far right: New lead, the identities switch (Owner, Chats) and, with a lead
+          open (agency), the per-lead actions. Those act on the open lead via window events
+          handled in LeadDetailView. */}
+      {(onCreateLead || canPresent || showLeadActions) && (
+        <DropdownMenu onOpenChange={(o) => { if (!o) setLeadDeleteConfirm(false); }}>
+          <DropdownMenuTrigger asChild>
+            <button className="la-btn la-btn--soft la-btn--icon" title={t("common.more", "More")} aria-label={t("common.more", "More")} data-testid="chats-more-menu">
+              <MoreHorizontal size={16} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-52">
+            {onCreateLead && (
+              <DropdownMenuItem onClick={onCreateLead} data-testid="chats-new-lead">
+                <Plus className="h-4 w-4 mr-2" />
+                {t("detailView.newLead", "New lead")}
+              </DropdownMenuItem>
+            )}
+            {canPresent && (
+              <DropdownMenuItem onClick={presenting.toggle} data-testid="chats-presenting-toggle">
+                {presenting.masked ? <EyeOff className="h-4 w-4 mr-2" /> : <Eye className="h-4 w-4 mr-2" />}
+                {presenting.masked ? tVoice("presenting.show") : tVoice("presenting.hide")}
+              </DropdownMenuItem>
+            )}
+            {showLeadActions && (
+              <>
+                {(onCreateLead || canPresent) && <DropdownMenuSeparator />}
+                <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("lead-export-pdf"))}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  {t("detailView.toPdf", "Export PDF")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => window.dispatchEvent(new CustomEvent("toggle-gradient-tester"))}>
+                  <Palette className="h-4 w-4 mr-2" />
+                  {t("detail.gradientTester", "Gradient tester")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    const newPeekState = !peekOn;
+                    setPeekOn(() => newPeekState);
+                    if (newPeekState && sortBy !== "latest_message") {
+                      onSortByChange("latest_message");
+                    }
+                  }}
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  {peekOn ? t("toolbar.hideChats", "Hide conversations") : t("toolbar.showChats", "Show conversations")}
+                  {peekOn && <Check className="h-3.5 w-3.5 ml-auto" />}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={(e) => {
+                    if (!leadDeleteConfirm) { e.preventDefault(); setLeadDeleteConfirm(true); }
+                    else { window.dispatchEvent(new CustomEvent("lead-delete")); setLeadDeleteConfirm(false); }
+                  }}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {leadDeleteConfirm ? t("confirm.yes", "Confirm delete") : t("detailView.deleteLead", "Delete lead")}
+                </DropdownMenuItem>
+              </>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
       )}
       </div>
     </div>

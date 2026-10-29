@@ -10,6 +10,7 @@ import { leads } from "@shared/schema";
 import { toDbKeysArray } from "../dbKeys";
 import { wrapAsync } from "./_helpers";
 import { requestHidesTestData } from "./testDataAccess";
+import { requestChatsScope } from "./leadsPageScope";
 import { getLeadsPage, type LeadsPageParams, type LeadsPageSort, type LeadsPageGroup } from "../storage/leadsPage";
 
 const SORTS: LeadsPageSort[] = [
@@ -58,6 +59,7 @@ function parseParams(req: Request): LeadsPageParams {
     type: list(q.type),
     chatChannel: chat === "website" || chat === "whatsapp" ? chat : undefined,
     chatsOnly: flag(q.chatsOnly),
+    scope: requestChatsScope(req, flag(q.chatsOnly)),
     channel: channel === "website" || channel === "whatsapp" || channel === "phone" ? channel : undefined,
     needsReply: flag(q.needsReply),
     upcoming: flag(q.upcoming),
@@ -106,6 +108,7 @@ export function registerLeadsPageRoutes(app: Express): void {
           needs_reply: !!r.needs_reply,
           upcoming: !!r.upcoming,
           is_receptionist: !!r.is_receptionist,
+          is_demo: !!r.is_demo,
           stage_key: r.stage_key,
           group_key: r.group_key ?? "",
           conversation_type: r.conversation_type,

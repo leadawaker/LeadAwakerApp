@@ -11,7 +11,6 @@ import {
 } from "lucide-react";
 import { PhoneDialer } from "@/features/prospects/components/PhoneDialer";
 import type { ProspectRow } from "@/features/prospects/components/ProspectListView";
-import { ListPanelToggleButton } from "@/components/crm/ListPanelToggleButton";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
@@ -466,7 +465,6 @@ export function ProspectChatPanel({
                       <ChevronLeft className="h-4 w-4" />
                     </button>
                   )}
-                  <ListPanelToggleButton />
                 </div>
               </div>
             </div>

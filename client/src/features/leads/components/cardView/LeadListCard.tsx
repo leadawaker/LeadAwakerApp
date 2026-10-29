@@ -5,16 +5,18 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "@/hooks/useTheme";
 import { LEAD_AVATAR_BG_DARK, LEAD_AVATAR_TEXT_DARK } from "@/lib/avatarUtils";
 import { useDeleteAction } from "@/hooks/useDeleteAction";
-import { Phone, Mail, MessageSquare, Tag as TagIcon, Pencil, Trash2, Check, Clock } from "lucide-react";
+import { Phone, Mail, MessageSquare, Tag as TagIcon, Pencil, Trash2, Check, Clock, RefreshCw } from "lucide-react";
 
 import { PIPELINE_HEX } from "./constants";
 import { getLeadId, getFullName, getInitials, getStatus, getPhone, getLastMessage, getLastMessageSender, getUnreadCount } from "./leadUtils";
 import { displayStage, stageHex, stageColorKey, stageLabel, lastContactChannel, lastContactAt } from "../../lib/leadDisplay";
 import { ChannelGlyph } from "./ChannelGlyph";
+import { getConversationType } from "../conversationType";
 import { formatRelativeTime } from "./formatUtils";
 import { isDemoLead } from "@/features/leads/demoLead";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { NeedsYouMarker, personStageFromKey, StatusPill } from "@/components/crm/status/StatusPill";
+import { presentName, presentNumber, presentText, useChatsPresenting } from "../../presenting";
 
 // ── Lead list card ─────────────────────────────────────────────────────────────
 const TRAY_WIDTH = 220;
@@ -49,7 +51,7 @@ export function LeadListCard({
   isActive: boolean;
   onClick: () => void;
   leadTags: { name: string; color: string }[];
-  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null }>;
+  campaignsById?: Map<number, { name: string; accountId: number | null; bookingMode?: string | null; campaignType?: string | null }>;
   /** When true, render the lead's last message as a chat-peek bubble under the card (Feature A) */
   showPeek?: boolean;
   /** Chats with both channels on: website / WhatsApp badge on the avatar. */
@@ -66,7 +68,9 @@ export function LeadListCard({
   const { t } = useTranslation("leads");
   const { isDark } = useTheme();
   const { label: deleteLabel } = useDeleteAction("lead");
-  const name        = getFullName(lead);
+  // Presenting (Owner, Chats): the card shows masked names and numbers.
+  const { masked }  = useChatsPresenting();
+  const name        = presentName(getFullName(lead), masked);
   const status      = getStatus(lead);
   // Receptionist leads show their simpler stage (New inquiry / Answered / Booked / Done).
   const stage       = displayStage(lead);
@@ -75,6 +79,7 @@ export function LeadListCard({
   const needsYou    = !!lead.needs_reply;
   const { isAgencyUser } = useWorkspace();
   const phone       = getPhone(lead);
+  const shownPhone  = phone ? presentNumber(phone, masked) : "";
   const email       = lead.email || lead.Email || "";
   const statusHex   = stageHex(stage);
   // Night-mode-friendly avatar: muted dark bg + light initials in dark mode,
@@ -97,11 +102,15 @@ export function LeadListCard({
   const bookedCallDate = lead.booked_call_date || lead.bookedCallDate || null;
   const isPastCall = status === "Booked" && !!bookedCallDate && new Date(bookedCallDate) < new Date();
   const isDemo = isDemoLead(lead);
+  // Reactivation chats (conversation type "dbr", minus the speed-to-lead quotes that share the bucket).
+  const campaignType = String(lead.campaign_type ?? (cId && campaignsById?.get(cId)?.campaignType) ?? "");
+  // Conversation type only: the server's conv type when present, else the client-side derivation.
+  const isReactivation = (lead.conversation_type ?? getConversationType(lead, campaignsById)) === "dbr" && campaignType !== "speed_to_lead";
   const sourceRaw   = String(lead.source || lead.Source || "");
   const sourceLabel = isDemo ? "" : (SOURCE_LABELS[sourceRaw] || (sourceRaw.startsWith("zapier:") ? "Zapier" : ""));
 
   // ── Chat peek (Feature A): last message under the row when showPeek is on ──
-  const peekText   = getLastMessage(lead);
+  const peekText   = presentText(getLastMessage(lead), getFullName(lead), masked);
   const peekSender = getLastMessageSender(lead);   // "" = inbound (from lead), "AI" = outbound
   const peekIsInbound = peekSender === "";
 
@@ -273,13 +282,10 @@ export function LeadListCard({
   return (
     <div
       ref={cardWrapRef}
-      className="relative overflow-x-hidden rounded-[var(--list-card-radius)] max-md:rounded-[var(--list-card-radius-mobile)] max-md:shadow-[var(--sh-raised-crisp)]"
-      // overflow-x-hidden (not overflow-hidden): the swipe gesture only needs
-      // horizontal clipping. A plain overflow-hidden here would clip this
-      // element's OWN box-shadow too — overflow:hidden clips a box-shadow on
-      // the same element, regardless of which side the shadow extends past.
-      // That's what was silently eating the active card's shadow.
-      style={isActive ? { boxShadow: "var(--sh-raised-crisp)" } : undefined}
+      // overflow-x-clip: the swipe gesture only needs horizontal clipping. Not overflow-x-hidden,
+      // which forces overflow-y to auto and so crops anything that pokes out above or below
+      // (button highlights, focus rings). The lift lives in .la-lead-swipe (components.css).
+      className={cn("la-lead-swipe relative overflow-x-clip", isActive && "is-active")}
       data-testid={`swipe-card-${getLeadId(lead)}`}
     >
       {/* Inbox icon revealed behind card as it slides right (Feature #40) */}
@@ -352,10 +358,8 @@ export function LeadListCard({
       <div
         className={cn("la-camp-card group/card", isActive && "active", leftFlash && "bg-muted/60")}
         style={{
-          padding: '10px 10px 10px 11px',
-          alignItems: 'flex-start',
-          flexWrap: 'wrap',
-          rowGap: 5,
+          padding: '12px 14px',
+          alignItems: 'center',
           transform: `translateX(${swipeX - swipeLeft}px)`,
           transition: (isReleasing || isReleasingLeft) ? "transform 260ms cubic-bezier(0.34, 1.56, 0.64, 1)" : "none",
           zIndex: 1,
@@ -366,9 +370,10 @@ export function LeadListCard({
         onKeyDown={(e) => { if (e.key === "Enter") { if (trayOpen) closeTray(); else onClick(); } }}
         data-swipe-x={swipeX > 0 ? swipeX : undefined}
       >
-          {/* Stage-colored avatar — click to toggle selection (with unread badge) */}
+          {/* Stage-colored avatar (click to toggle selection) */}
+        {/* 46px on phones/tablet, 40px on desktop (lg+) rows. */}
         <div
-          className="shrink-0 relative w-9 h-9 max-md:w-11 max-md:h-11"
+          className="shrink-0 relative w-[46px] h-[46px] lg:w-10 lg:h-10"
           style={{ cursor: 'pointer' }}
           onClick={(e) => { e.stopPropagation(); onToggleSelect?.(); }}
           role="checkbox"
@@ -376,14 +381,14 @@ export function LeadListCard({
           aria-label={selected ? "Deselect" : "Select"}
         >
           <div
-            className="flex items-center justify-center w-full h-full text-[14px] max-md:text-[17px]"
+            className="flex items-center justify-center w-full h-full text-[16px]"
             style={{
-              borderRadius: 'var(--r-surface)',
-              background: selected ? '#FFFFFF' : avatarBg,
+              borderRadius: 13,
+              background: selected ? 'var(--card)' : avatarBg,
               color: selected ? 'var(--wine)' : avatarText,
               border: selected ? '2px solid var(--wine)' : 'none',
               boxShadow: 'var(--sh-raised-crisp)',
-              fontFamily: "'Geist Mono', ui-monospace, monospace",
+              fontFamily: "var(--mono)",
               fontWeight: 700,
               opacity: isPastCall ? 0.4 : 1,
             }}
@@ -395,171 +400,123 @@ export function LeadListCard({
               className="absolute flex items-center justify-center"
               data-testid="lead-channel-badge"
               title={t(`leadChannel.${lead.chat_channel}`)}
-              style={{ bottom: -3, right: -3, width: 16, height: 16, borderRadius: 9999, background: 'var(--card)', boxShadow: '0 0 0 1.5px var(--bg)' }}
+              style={{ bottom: -3, right: -3, width: 18, height: 18, borderRadius: 9999, background: 'var(--card)', boxShadow: '0 0 0 1.5px var(--bg)' }}
             >
-              <ChannelGlyph channel={lead.chat_channel} size={10} />
-            </span>
-          )}
-          {unreadCount > 0 && (
-            <span
-              className="absolute flex items-center justify-center"
-              style={{
-                top: -4,
-                right: -4,
-                minWidth: 16,
-                height: 16,
-                padding: '0 4px',
-                borderRadius: 9999,
-                background: 'var(--wine)',
-                color: '#FFFFFF',
-                fontSize: 9,
-                fontWeight: 700,
-                lineHeight: 1,
-                boxShadow: '0 0 0 2px var(--bg)',
-              }}
-              aria-label={`${unreadCount} unread`}
-            >
-              {unreadCount > 9 ? '9+' : unreadCount}
+              <ChannelGlyph channel={lead.chat_channel} size={11} />
             </span>
           )}
         </div>
 
-        {/* Body */}
+        {/* Body, WhatsApp-like: name | time, then preview (or campaign) | stage tag */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="text-[12px] max-md:text-[16px]" style={{
-            fontWeight: 600, color: "var(--ink)",
-            overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-            marginBottom: 2,
-            display: 'flex', alignItems: 'center', gap: 6,
-          }}>
-            <span className="truncate">{name}</span>
-            {isDemo && (
-              <span className="shrink-0" style={{
-                fontSize: 9, fontWeight: 700, color: 'var(--wine)',
-                textTransform: 'uppercase', letterSpacing: '0.08em',
-                lineHeight: 1,
-              }}>demo</span>
-            )}
-          </div>
-
-          {/* Stage + campaign — single line, matches the design leads page */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 5, minWidth: 0 }}>
-            {personStage ? (
-              <>
-                <StatusPill status={personStage} small />
-                {needsYou && <NeedsYouMarker small />}
-              </>
-            ) : (
-              <span style={{ width: 5, height: 5, borderRadius: '50%', background: statusHex, flexShrink: 0 }} />
-            )}
-            {/* Campaign and source are agency detail; clients only see their stage. */}
-            {(!personStage || (isAgencyUser && (campaignName || sourceLabel))) && (
-            <span className="text-[9px] max-md:text-[13px]" style={{ color: 'var(--mute)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {personStage ? '' : stageLabel(t, stage)}
-              {isAgencyUser && campaignName ? `${personStage ? '' : ' · '}${campaignName}` : ''}
-              {isAgencyUser && sourceLabel ? ` · ${sourceLabel}` : ''}
-            </span>
-            )}
-            {resumeDate && (
-              <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] max-md:text-[11px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0"
-                title={t("tags.resumesOn", { date: resumeDate })}
-              >
-                <Clock className="h-2.5 w-2.5 shrink-0" />
-                {resumeDate}
-              </span>
-            )}
-          </div>
-
-          {/* Contact info — revealed on hover */}
-          <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-h-24 opacity-100">
-            <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-md:hidden max-h-0 opacity-0 group-hover/card:max-h-12 group-hover/card:opacity-100">
-              {(phone || email) && (
-                <div className="pt-0.5 pb-0 flex items-center gap-2 text-[9px] text-muted-foreground/70">
-                  {phone && (
-                    <span className="inline-flex items-center gap-1 truncate">
-                      <Phone className="h-3 w-3 shrink-0" />
-                      {phone}
-                    </span>
-                  )}
-                  {email && (
-                    <span className="inline-flex items-center gap-1 truncate">
-                      <Mail className="h-3 w-3 shrink-0" />
-                      {email}
-                    </span>
-                  )}
-                </div>
+          {/* Row 1: name + badges | channel + last contact time */}
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8, marginBottom: 3 }}>
+            <div className="text-[15.5px] max-md:text-[16px]" style={{
+              fontFamily: 'var(--sans)', fontWeight: 700, color: 'var(--ink)', letterSpacing: '-0.005em', lineHeight: 1.25,
+              minWidth: 0, display: 'flex', alignItems: 'center', gap: 6,
+            }}>
+              <span className="truncate">{name}</span>
+              {/* Compact badges, so the name keeps the room: a small DEMO tag and an icon-only Reactivation mark. */}
+              {isDemo && (
+                <span className="shrink-0" style={{
+                  fontFamily: 'var(--mono)', fontSize: 8, fontWeight: 700, color: 'var(--wine)',
+                  textTransform: 'uppercase', letterSpacing: '0.06em', lineHeight: 1,
+                }}>demo</span>
+              )}
+              {isReactivation && (
+                <span
+                  className="shrink-0 inline-flex items-center justify-center"
+                  data-testid="lead-reactivation-badge"
+                  role="img"
+                  aria-label={t("conversationType.reactivationBadge")}
+                  title={t("conversationType.reactivationBadge")}
+                  style={{ width: 18, height: 18, borderRadius: 'var(--r-pill)', color: 'var(--wine)', background: 'var(--wine-tint)', alignSelf: 'center' }}
+                >
+                  <RefreshCw size={10} strokeWidth={2.4} aria-hidden="true" />
+                </span>
               )}
             </div>
+            <span className="shrink-0 inline-flex items-center gap-1.5" style={{ alignSelf: 'center' }}>
+              {contactChannel && (
+                <span title={t(`leadChannel.${contactChannel}`)} className="inline-flex"><ChannelGlyph channel={contactChannel} size={12} /></span>
+              )}
+              {lastActivity && (
+                <span className="text-[12px] tabular-nums leading-none" style={{ color: unreadCount > 0 ? 'var(--wine)' : 'var(--mute-2)', fontWeight: unreadCount > 0 ? 700 : 400 }}>
+                  {formatRelativeTime(lastActivity, t)}
+                </span>
+              )}
+            </span>
           </div>
-        </div>
 
-        {/* Right column: last contact time, with the channel it came through */}
-        <div className="shrink-0 flex flex-col items-end gap-1.5" style={{ paddingTop: 1 }}>
-          {lastActivity && (
-            <span className="text-[9px] max-md:text-[11px] tabular-nums leading-none text-muted-foreground/60">
-              {formatRelativeTime(lastActivity, t)}
+          {/* Row 2: last message (chat peek on) or campaign / source / number | stage + unread */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, minWidth: 0 }}>
+            <span className="text-[13.5px] max-md:text-[14px] truncate" style={{ flex: 1, minWidth: 0, color: 'var(--mute)', lineHeight: 1.4 }}>
+              {showPeek && peekText ? (
+                <>
+                  {!peekIsInbound && <span style={{ color: 'var(--wine)', fontWeight: 600 }}>{`${t("conversationType.aiPrefix")}: `}</span>}
+                  {peekText}
+                </>
+              ) : (
+                <>
+                  {!personStage && stageLabel(t, stage)}
+                  {isAgencyUser && campaignName ? `${personStage ? '' : ' · '}${campaignName}` : ''}
+                  {isAgencyUser && sourceLabel ? `${(campaignName || !personStage) ? ' · ' : ''}${sourceLabel}` : ''}
+                  {(personStage && !(isAgencyUser && (campaignName || sourceLabel))) ? shownPhone : ''}
+                </>
+              )}
             </span>
-          )}
-          {contactChannel && (
-            <span title={t(`leadChannel.${contactChannel}`)} className="inline-flex"><ChannelGlyph channel={contactChannel} size={11} /></span>
-          )}
-        </div>
+            <span className="shrink-0 inline-flex items-center" style={{ gap: 6 }}>
+              {resumeDate && (
+                <span
+                  className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0"
+                  title={t("tags.resumesOn", { date: resumeDate })}
+                >
+                  <Clock className="h-3 w-3 shrink-0" />
+                  {resumeDate}
+                </span>
+              )}
+              {needsYou && <NeedsYouMarker small />}
+              {personStage ? (
+                <StatusPill status={personStage} small />
+              ) : (
+                <span style={{ width: 7, height: 7, borderRadius: '50%', background: statusHex, flexShrink: 0 }} />
+              )}
+              {unreadCount > 0 && (
+                <span
+                  className="shrink-0 flex items-center justify-center"
+                  style={{
+                    minWidth: 19, height: 19, padding: '0 5px', borderRadius: 9999,
+                    background: 'var(--wine)', color: 'var(--on-wine)',
+                    fontSize: 10.5, fontWeight: 700, lineHeight: 1,
+                  }}
+                  aria-label={`${unreadCount} unread`}
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </span>
+              )}
+            </span>
+          </div>
 
-        {/* Chat peek — full-width row below, left-aligned with the avatar (chats mode) */}
-        {showPeek && peekText && (
-          <div style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 6, minWidth: 0 }}>
-            <span
-              className="text-[7.5px] max-md:text-[10px]"
-              style={{
-                fontFamily: "'Geist Mono', ui-monospace, monospace",
-                letterSpacing: '0.1em',
-                textTransform: 'uppercase',
-                fontWeight: 700,
-                color: peekIsInbound ? 'var(--good)' : 'var(--wine)',
-                background: peekIsInbound ? 'var(--good-tint)' : 'var(--wine-tint)',
-                borderRadius: 'var(--r-pill)',
-                padding: '1px 5px',
-                flexShrink: 0,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {peekIsInbound ? (name.split(/\s+/)[0] || name) : 'AI'}
-            </span>
-            <span
-              className="text-[10px] max-md:text-[13px]"
-              style={{
-                color: 'var(--ink-soft)',
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                flex: 1,
-                minWidth: 0,
-              }}
-            >
-              {peekText}
-            </span>
-            {unreadCount > 0 && (
-              <span
-                className="shrink-0 flex items-center justify-center"
-                style={{
-                  minWidth: 16,
-                  height: 16,
-                  padding: '0 4px',
-                  borderRadius: 9999,
-                  background: 'var(--wine)',
-                  color: '#FFFFFF',
-                  fontSize: 9,
-                  fontWeight: 700,
-                  lineHeight: 1,
-                }}
-                aria-label={`${unreadCount} unread`}
-              >
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </span>
+          {/* Contact info, revealed on hover (hover-capable desktops only) */}
+          <div className="overflow-hidden transition-[max-height,opacity] duration-200 ease-out max-md:hidden max-h-0 opacity-0 group-hover/card:max-h-12 group-hover/card:opacity-100">
+            {(phone || email) && (
+              <div className="pt-1 flex items-center gap-3 text-[12px]" style={{ color: 'var(--mute-2)' }}>
+                {phone && (
+                  <span className="inline-flex items-center gap-1 truncate">
+                    <Phone className="h-3 w-3 shrink-0" />
+                    {shownPhone}
+                  </span>
+                )}
+                {email && (
+                  <span className="inline-flex items-center gap-1 truncate">
+                    <Mail className="h-3 w-3 shrink-0" />
+                    {email}
+                  </span>
+                )}
+              </div>
             )}
           </div>
-        )}
+        </div>
 
       </div>
 

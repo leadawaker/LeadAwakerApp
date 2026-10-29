@@ -1,5 +1,6 @@
 import { useRef, useMemo, useEffect, useCallback, useState } from "react";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import { PullToRefreshIndicator } from "@/components/ui/PullToRefreshIndicator";
 import { useTranslation } from "react-i18next";
 import { useVirtualizer } from "@tanstack/react-virtual";
@@ -1557,6 +1558,8 @@ export function InboxPanel({
         onSelectLead={onSelectLead}
       />
       </>}
+      {/* Outreach inbox: bottom bar with the list fold button at the right end (centered in the rail) */}
+      {prospectOnly && <ListPanelFooter compact={isCompact} />}
     </section>
   );
 }

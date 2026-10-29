@@ -340,9 +340,10 @@ export function PipelineDashBar({ status }: { status: string }) {
             <div key={s.key} style={{
               flex: 1, borderRadius: 9999,
               height: current ? 16 : reached ? 9 : 5,
-              background: reached ? hex : "rgba(0,0,0,0.1)",
+              // Unreached track and labels use line/mute tokens, so they stay legible in dark mode.
+              background: reached ? hex : "var(--line-strong)",
               boxShadow: current ? `0 3px 10px ${hex}55` : reached ? "inset 0 1px 0 rgba(255,255,255,0.28)" : "none",
-              transition: "all 280ms",
+              transition: "height 280ms, background-color 280ms, box-shadow 280ms",
             }} />
           );
         })}
@@ -356,10 +357,10 @@ export function PipelineDashBar({ status }: { status: string }) {
             <div key={s.key} style={{ flex: 1, overflow: "hidden" }}>
               <span style={{
                 display: "block", textAlign: "center",
-                fontFamily: "'Geist Mono', ui-monospace, monospace",
+                fontFamily: "var(--mono)",
                 fontSize: current ? 8.5 : 7.5,
-                fontWeight: current ? 700 : 400,
-                color: current ? hex : reached ? "var(--muted-foreground)" : "rgba(0,0,0,0.2)",
+                fontWeight: current ? 700 : 500,
+                color: current ? hex : reached ? "var(--mute)" : "var(--mute-2)",
                 letterSpacing: "0.07em", textTransform: "uppercase",
                 whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
               }}>

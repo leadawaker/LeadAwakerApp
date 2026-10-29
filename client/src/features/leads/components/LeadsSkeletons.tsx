@@ -166,7 +166,7 @@ export function LeadsRouteSkeleton({ mode }: { mode: "conversations" | "contacts
   if (mode === "conversations") {
     return (
       <div className="flex min-h-0 flex-1">
-        <div className="hidden md:flex flex-col shrink-0 overflow-hidden" style={{ width: "var(--toolbar-w, 300px)", borderRight: "1px solid var(--line)", padding: "3px 6px" }}>
+        <div className="hidden md:flex flex-col shrink-0 overflow-hidden" style={{ width: 348, borderRight: "1px solid var(--line)", padding: "3px 6px" }}>
           <CardListSkeleton peek />
         </div>
         <div className="hidden lg:flex flex-1 min-w-0"><ChatsDetailSkeleton /></div>

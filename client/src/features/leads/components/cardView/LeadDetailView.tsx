@@ -1,5 +1,5 @@
 // LeadDetailView and KanbanDetailPanel extracted from LeadsCardView.tsx
-import { useState, useMemo, useCallback, useRef, useEffect } from "react";
+import { Fragment, useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import {
@@ -40,6 +40,7 @@ import { hapticSave, hapticDelete } from "@/lib/haptics";
 import { getLeadStatusAvatarColor, getCampaignAvatarColor } from "@/lib/avatarUtils";
 
 import { getLeadId, getFullName, getStatus } from "./leadUtils";
+import { presentName, useChatsPresenting } from "../../presenting";
 import { formatRelativeTime, formatBookedDate } from "./formatUtils";
 import { PipelineProgress, PipelineProgressCompact, PipelineDashBar } from "./atoms";
 import { ContactWidget, NotesSection } from "./ContactWidget";
@@ -69,7 +70,9 @@ export function LeadDetailView({
   mode?: string;
 }) {
   const { t } = useTranslation("leads");
-  const name        = getFullName(lead);
+  // Presenting (Owner, Chats): the header shows the masked name, and the name is not editable meanwhile.
+  const { masked }  = useChatsPresenting();
+  const name        = presentName(getFullName(lead), masked);
   const status      = getStatus(lead);
   const avatarColor = getStatusAvatarColor(status);
   const leadId      = getLeadId(lead);
@@ -479,7 +482,7 @@ export function LeadDetailView({
                   style={{ fontFamily: "var(--serif)", fontSize: isNarrow ? 22 : 27, color: "var(--ink)", background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", border: "none", borderRadius: "var(--r-button)", padding: "2px 8px", outline: "none" }}
                 />
               ) : (
-                <span onClick={startEdit} style={{ fontFamily: "var(--serif)", fontSize: isNarrow ? 22 : 27, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em", cursor: "text" }}>{name}</span>
+                <span onClick={masked ? undefined : startEdit} style={{ fontFamily: "var(--serif)", fontSize: isNarrow ? 22 : 27, color: "var(--ink)", lineHeight: 1, letterSpacing: "-0.01em", cursor: masked ? "default" : "text" }}>{name}</span>
               )}
               <span style={{ fontFamily: "var(--mono)", fontSize: 8.5, color: "var(--mute-2)", letterSpacing: "0.1em", textTransform: "uppercase", border: "1px solid var(--line-strong)", borderRadius: 4, padding: "2px 6px" }}>Lead {leadId}</span>
               {/* Chats: the recap already shows the booking, so the header leaves it out. */}
@@ -502,10 +505,13 @@ export function LeadDetailView({
               )}
             </div>
             <div style={{ display: "flex", gap: 12, fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", letterSpacing: "0.1em", textTransform: "uppercase", flexWrap: "wrap" }}>
-              {hasActivity && <span>{t("contact.lastActivity", "Activity")} {formatRelativeTime(hasActivity, t)}</span>}
-              {campName && <>{sep}<span>{campName}{campaignNumber ? ` #${campaignNumber}` : ""}</span></>}
-              {!isNarrow && acctName && <>{sep}<span>{acctName}</span></>}
-              {isContacts && createdAt && <>{sep}<span>{t("contact.created")} {formatRelativeTime(createdAt, t)}</span></>}
+              {/* Separators only between parts that are there: never a leading "·". */}
+              {[
+                hasActivity ? <span key="activity">{t("contact.lastActivity", "Activity")} {formatRelativeTime(hasActivity, t)}</span> : null,
+                campName ? <span key="campaign">{campName}{campaignNumber ? ` #${campaignNumber}` : ""}</span> : null,
+                !isNarrow && acctName ? <span key="account">{acctName}</span> : null,
+                isContacts && createdAt ? <span key="created">{t("contact.created")} {formatRelativeTime(createdAt, t)}</span> : null,
+              ].filter(Boolean).map((part, i) => <Fragment key={i}>{i > 0 && sep}{part}</Fragment>)}
             </div>
           </div>
         </div>

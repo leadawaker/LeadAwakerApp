@@ -110,8 +110,8 @@ export function ChatBubble({
           isCall && "bg-[#f0fff4] dark:bg-[#0d2318] text-gray-900 dark:text-foreground border border-emerald-200/60 dark:border-emerald-900/60 bubble-shadow",
           // Inbound (lead): neutral gray glow; mobile uses --card bg explicitly
           !isEmail && inbound && "bg-white dark:bg-card max-md:bg-card max-md:dark:bg-card text-gray-900 dark:text-foreground bubble-shadow",
-          // AI outbound: blue (desktop) / brand-indigo (mobile)
-          aiMsg && "bg-[#f2f5ff] dark:bg-[#1e2340] text-gray-900 dark:text-foreground bubble-shadow max-md:bg-brand-indigo max-md:text-white max-md:filter-none",
+          // AI outbound: very dark wine, bone text (desktop + mobile)
+          aiMsg && "bg-[var(--wine-deep)] text-[var(--on-wine)] bubble-shadow max-md:filter-none",
           // Human agent outbound (desktop: green) / brand-indigo (mobile)
           humanAgentMsg && "bg-[#f1fff5] dark:bg-[#1a2e1f] text-gray-900 dark:text-foreground bubble-shadow max-md:bg-brand-indigo max-md:text-white max-md:filter-none",
           isFailed && "opacity-80",
@@ -128,7 +128,7 @@ export function ChatBubble({
             "absolute bottom-0 -right-[6px] w-0 h-0 border-t-[9px] border-t-transparent border-l-[8px]",
             isEmail && "border-l-white dark:border-l-card",
             isLinkedIn && "border-l-[#f4f8ff] dark:border-l-[#1a2540]",
-            aiMsg && "border-l-[#f2f5ff] dark:border-l-[#1e2340] max-md:border-l-brand-indigo",
+            aiMsg && "border-l-[var(--wine-deep)]",
             humanAgentMsg && "border-l-[#f1fff5] dark:border-l-[#1a2e1f] max-md:border-l-brand-indigo",
             isCall && "border-l-[#f0fff4] dark:border-l-[#0d2318]",
           )} />
@@ -141,7 +141,7 @@ export function ChatBubble({
           const hasAudioAttachment = typeof attachment === "string" && attachment.length > 0 && getAttachmentType(attachment) === "audio";
           const isVoiceNote = item.type === "voice_note" || hasAudioAttachment;
           // Voice color: human agent → green, AI → amber, inbound lead → pipeline status color, outbound agent → teal
-          const voiceColor = humanAgentMsg ? "#22C55E" : aiMsg ? "#2050ff" : inbound ? leadAvatarColors.statusColor : "#0ABFA3";
+          const voiceColor = humanAgentMsg ? "#22C55E" : aiMsg ? "var(--wine-soft)" : inbound ? leadAvatarColors.statusColor : "#0ABFA3";
           const emailSubject = isEmail ? ((item.metadata as any)?.subject ?? "") : "";
           // Time + status stamp — WhatsApp-style: inline at bottom-right of bubble
           const timeStamp = (

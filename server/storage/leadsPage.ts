@@ -46,6 +46,8 @@ export interface LeadsPageParams {
   chatChannel?: "website" | "whatsapp";
   /** Chats page: only leads with a chat (a caller who later chatted stays; a call-only lead does not). */
   chatsOnly?: boolean;
+  /** Chats page Live / Demo: demo leads (demo campaign, demo persona or demo channel) or everything else. Unset: both. */
+  scope?: "live" | "demo";
   channel?: "website" | "whatsapp" | "phone";
   needsReply: boolean;
   upcoming: boolean;
@@ -61,8 +63,12 @@ export const STAGE_ORDER = [
 const TYPE_ORDER = ["widget", "voice", "dbr", "instagram", "other"];
 const DATE_BUCKETS = ["today", "yesterday", "thisWeek", "thisMonth", "last3Months", "older", "noActivity"];
 
-// Derived per-lead columns. One aggregate over the lead's interactions.
-const BASE_SQL = `
+// Derived per-lead columns. One aggregate over the lead's interactions. The Chats list
+// (`chats`) leaves phone turns out of the order and the preview: a call shows in the thread as
+// one line, and must not move a chat up the list or stand in as its last message.
+export function baseSql(chats: boolean): string {
+  const noPhone = chats ? ` FILTER (WHERE i.channel IS DISTINCT FROM 'phone')` : "";
+  return `
   SELECT
     l.id,
     l."Accounts_id" AS account_id,
@@ -89,6 +95,11 @@ const BASE_SQL = `
       WHEN COALESCE(l."Source", '') = 'Website Chat' OR COALESCE(l.channel_identifier, '') ~ '^web:' THEN 'widget'
       WHEN COALESCE(l."Source", '') = 'voice_receptionist' THEN 'voice'
       WHEN c.campaign_type = 'social_reply' THEN 'instagram'
+      -- The browser demo page is a website chat, whatever the demo campaign. Receptionist and
+      -- demo campaigns carry the default campaign_type 'reactivation', so the campaign alone
+      -- would file website visitors as dbr. Keep in step with client conversationType.ts.
+      WHEN COALESCE(l.channel_identifier, '') ~ '^web-demo:' THEN 'widget'
+      WHEN COALESCE(c.bump_mode, '') = 'receptionist' THEN 'other'
       WHEN c.campaign_type IN ('reactivation', 'speed_to_lead') THEN 'dbr'
       ELSE 'other'
     END AS conv_type,
@@ -98,7 +109,8 @@ const BASE_SQL = `
             AND (ix.msg_dir IS DISTINCT FROM 'outbound' OR COALESCE(ix.msg_ai, false))))) AS needs_reply,
     (l.booked_call_date >= date_trunc('day', now())
       AND (l.booking_cancelled_at IS NULL OR l.booked_at > l.booking_cancelled_at)) AS upcoming,
-    l.service_completed_at
+    l.service_completed_at,
+    (COALESCE(c.is_demo, false) OR l.demo_niche IS NOT NULL OR COALESCE(l.channel_identifier, '') ~ '^((wa|web)-demo:|tg:|tg-)') AS is_demo
   FROM ${S}."Leads" l
   LEFT JOIN ${S}."Campaigns" c ON c.id = l."Campaigns_id"
   LEFT JOIN ${S}."Accounts" a ON a.id = l."Accounts_id"
@@ -112,13 +124,14 @@ const BASE_SQL = `
       max(i.created_at) FILTER (WHERE i.channel IN ('whatsapp', 'website', 'phone', 'email', 'sms')) AS contact_at,
       (array_agg(i.direction ORDER BY i.created_at DESC NULLS LAST) FILTER (WHERE i.channel IS DISTINCT FROM 'phone'))[1] AS msg_dir,
       (array_agg(i.ai_generated ORDER BY i.created_at DESC NULLS LAST) FILTER (WHERE i.channel IS DISTINCT FROM 'phone'))[1] AS msg_ai,
-      (array_agg(LEFT(i."Content", 140) ORDER BY i.created_at DESC NULLS LAST))[1] AS last_message,
-      (array_agg(i.direction ORDER BY i.created_at DESC NULLS LAST))[1] AS last_dir,
-      max(i.created_at) AS any_at
+      (array_agg(LEFT(i."Content", 140) ORDER BY i.created_at DESC NULLS LAST)${noPhone})[1] AS last_message,
+      (array_agg(i.direction ORDER BY i.created_at DESC NULLS LAST)${noPhone})[1] AS last_dir,
+      max(i.created_at)${noPhone} AS any_at
     FROM ${S}."Interactions" i
     WHERE i."Leads_id" = l.id
   ) ix ON true
 `;
+}
 
 // Second layer: values that depend on the derived columns above.
 const DERIVED_SQL = `
@@ -238,6 +251,7 @@ export async function getLeadsPage(params: LeadsPageParams): Promise<LeadsPageRe
   }
   // In the base filter, so the list and every count (tabs, totals) agree.
   if (params.chatsOnly) base.push(`d.chat_channel_eff IS NOT NULL`);
+  if (params.scope) base.push(params.scope === "demo" ? `d.is_demo` : `NOT d.is_demo`);
   if (params.hasPhone) base.push(`COALESCE(d.phone, '') <> ''`);
   if (params.hasEmail) base.push(`COALESCE(d.email, '') <> ''`);
 
@@ -273,7 +287,7 @@ export async function getLeadsPage(params: LeadsPageParams): Promise<LeadsPageRe
     )` : "";
 
   const sql = `
-    WITH base AS MATERIALIZED (${BASE_SQL} ${scopeSql}),
+    WITH base AS MATERIALIZED (${baseSql(!!params.chatsOnly)} ${scopeSql}),
     derived AS MATERIALIZED (${DERIVED_SQL}),
     f0 AS MATERIALIZED (SELECT d.* FROM derived d WHERE ${base.length ? base.join(" AND ") : "true"}),
     f AS (
@@ -287,7 +301,7 @@ export async function getLeadsPage(params: LeadsPageParams): Promise<LeadsPageRe
       'groups', (SELECT COALESCE(json_agg(json_build_object('key', gk.group_key, 'count', gk.n) ORDER BY gk.ord), '[]')
                  FROM (SELECT f.group_key, count(*) AS n, min(f.rn) AS ord FROM f GROUP BY f.group_key) gk),
       'rows', (SELECT COALESCE(json_agg(json_build_object(
-                 'id', f.id, 'group_key', f.group_key, 'stage_key', f.stage_key, 'is_receptionist', f.is_receptionist,
+                 'id', f.id, 'group_key', f.group_key, 'stage_key', f.stage_key, 'is_receptionist', f.is_receptionist, 'is_demo', f.is_demo,
                  'needs_reply', f.needs_reply, 'upcoming', f.upcoming, 'conversation_type', f.conv_type,
                  'campaign_type', f.campaign_type, 'chat_channel', f.chat_channel, 'channels', f.channels_eff,
                  'contact_channel', COALESCE(f.contact_channel, f.fallback_channel), 'contact_at', COALESCE(f.contact_at, f.activity_at),

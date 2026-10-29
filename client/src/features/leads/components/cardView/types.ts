@@ -133,6 +133,8 @@ export interface LeadsCardViewProps {
   mobilePageTabs?: ReactNode;
   /** Chats page: the All / Website / WhatsApp filter, only when the account has both channels. */
   showChannelFilter?: boolean;
+  /** Chats page Live / Demo switch (Owner): full in the topbar, compact above the list on a tablet, a round menu button beside the title on a phone. */
+  scopeSwitch?: (compact: boolean, menu?: boolean) => ReactNode;
   /** Account / campaign / type filters, owned by the page so they reach the server query. */
   listFilters: import("../useLeadsFilters").ListFilterState;
 }

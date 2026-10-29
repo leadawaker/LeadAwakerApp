@@ -15,8 +15,6 @@ import {
   MessageSquare,
   Trash2,
   FileText,
-  ChevronDown,
-  ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ViewTabBar } from "@/components/ui/view-tab-bar";
@@ -28,7 +26,10 @@ import { CONVERSATION_TYPE_ICON, CONVERSATION_TYPES, type ConversationType } fro
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { GroupHeader, ListSkeleton } from "./atoms";
 import { LeadListCard } from "./LeadListCard";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
+import { MobileMenuGroup } from "../FilterGroups";
 import { MobileSimpleKanban } from "./MobileViews";
+import { ChatsPresentingToggle, useChatsPresenting } from "../../presenting";
 import {
   MobileListHeader,
   MobileHeaderIconBtn,
@@ -42,6 +43,9 @@ import { ALL_LEAD_FILTER_STAGES, PIPELINE_HEX, isRealTag } from "./constants";
 import type { ViewMode, GroupByOption, SortByOption } from "./types";
 
 type ViewTab = { id: string; label: string; icon: any };
+
+/** The Calls list panel width (VoiceCallsInbox, CallersInbox): Chats uses the same on desktop. */
+const CHATS_LIST_WIDTH = 348;
 
 export function LeadsListPanel({
   isHidden,
@@ -94,6 +98,8 @@ export function LeadsListPanel({
   onToggleFilterTag,
   isConversationsMode,
   channelTabs,
+  scopeSwitch,
+  mobileScopeSwitch,
   mobilePageTabs,
   showChannelBadge = false,
   filterType,
@@ -159,6 +165,10 @@ export function LeadsListPanel({
   isConversationsMode?: boolean;
   /** Chats page inbox tabs, shown above the card list. */
   channelTabs?: ReactNode;
+  /** Chats page on a tablet: the compact Live / Demo switch (Owner), above the inbox tabs. */
+  scopeSwitch?: ReactNode;
+  /** Chats page on a phone: the round Live / Demo menu button (Owner), beside the Chat settings gear. */
+  mobileScopeSwitch?: ReactNode;
   /** Chats page: Stats · Chats in the mobile header, in place of the (dead) List switch. */
   mobilePageTabs?: ReactNode;
   /** Both chat channels are on: a small website / WhatsApp badge on each avatar (C8). */
@@ -175,6 +185,8 @@ export function LeadsListPanel({
   handleListBulkDelete: () => Promise<void> | void;
 }) {
   const { t } = useTranslation("leads");
+  // Owner on Chats: the Hide / Show identities row in the phone tools drawer.
+  const { canToggle: canPresent } = useChatsPresenting();
   const { label: deleteLabel } = useDeleteAction("lead");
   const filterOn = isFilterActive || filterStatus.length > 0 || filterTags.length > 0 || filterType.length > 0;
   const [moreDeleteConfirm, setMoreDeleteConfirm] = useState(false);
@@ -217,7 +229,6 @@ export function LeadsListPanel({
     ...(isAgencyUser ? [{ value: "campaign" as GroupByOption, label: t("group.campaign") }] : []),
     ...(showTypes ? [{ value: "type" as GroupByOption, label: t("conversationType.label") }] : []),
   ];
-  const [tagsOpen, setTagsOpen] = useState(filterTags.length > 0);
 
   // Tags table has leftover conversion-status/sentiment entries that were never
   // real tags — never show them as filter options (Gabriel, 2026-06-21).
@@ -226,8 +237,7 @@ export function LeadsListPanel({
   const leadsFilterPanel = (
     <>
       {showTypes && (
-        <>
-          <MobileDrawerSubheading>{t("conversationType.label")}</MobileDrawerSubheading>
+        <MobileMenuGroup label={t("conversationType.label")} count={filterType.length}>
           {CONVERSATION_TYPES.map((v) => {
             const Icon = CONVERSATION_TYPE_ICON[v];
             return (
@@ -239,9 +249,9 @@ export function LeadsListPanel({
               />
             );
           })}
-        </>
+        </MobileMenuGroup>
       )}
-      <MobileDrawerSubheading>{t("group.status", "Status")}</MobileDrawerSubheading>
+      <MobileMenuGroup label={t("group.status", "Status")} count={filterStatus.length}>
       {ALL_LEAD_FILTER_STAGES.map((s) => (
         <MobileDrawerOption
           key={s}
@@ -255,13 +265,10 @@ export function LeadsListPanel({
           onClick={() => onToggleFilterStatus(s)}
         />
       ))}
+      </MobileMenuGroup>
       {realTags.length > 0 && (
-        <>
-          <MobileDrawerOption
-            label={<span className="row" style={{ alignItems: "center", gap: 6 }}>{tagsOpen ? <ChevronDown size={14} /> : <ChevronRight size={14} />}{t("detail.sections.tags", "Tags")}{filterTags.length > 0 ? ` · ${filterTags.length}` : ""}</span>}
-            onClick={() => setTagsOpen((o) => !o)}
-          />
-          {tagsOpen && realTags.map((tag) => (
+        <MobileMenuGroup label={t("detail.sections.tags", "Tags")} count={filterTags.length}>
+          {realTags.map((tag) => (
             <MobileDrawerOption
               key={tag.name}
               label={
@@ -274,11 +281,10 @@ export function LeadsListPanel({
               onClick={() => onToggleFilterTag(tag.name)}
             />
           ))}
-        </>
+        </MobileMenuGroup>
       )}
       {availableAccounts.length > 0 && (
-        <>
-          <MobileDrawerSubheading>{t("detail.fields.account", "Account")}</MobileDrawerSubheading>
+        <MobileMenuGroup label={t("detail.fields.account", "Account")} count={filterAccount ? 1 : 0}>
           <MobileDrawerOption
             label={t("filters.allAccounts", "All Accounts")}
             selected={!filterAccount}
@@ -292,11 +298,10 @@ export function LeadsListPanel({
               onClick={() => { if (filterAccount === a.id) { setFilterAccount(""); } else { setFilterAccount(a.id); setFilterCampaign(""); } }}
             />
           ))}
-        </>
+        </MobileMenuGroup>
       )}
       {availableCampaigns.length > 0 && (
-        <>
-          <MobileDrawerSubheading>{t("detailView.campaign", "Campaign")}</MobileDrawerSubheading>
+        <MobileMenuGroup label={t("detailView.campaign", "Campaign")} count={filterCampaign ? 1 : 0}>
           <MobileDrawerOption
             label={t("filters.allCampaigns", "All Campaigns")}
             selected={!filterCampaign}
@@ -310,7 +315,7 @@ export function LeadsListPanel({
               onClick={() => setFilterCampaign(filterCampaign === c.id ? "" : c.id)}
             />
           ))}
-        </>
+        </MobileMenuGroup>
       )}
     </>
   );
@@ -339,9 +344,13 @@ export function LeadsListPanel({
           ? "hidden"
           : isCompact
             ? "w-[65px] shrink-0"
-            : "w-full lg:w-[var(--toolbar-w)] lg:shrink-0"
+            // Chats: the width is set inline below (exactly the Calls list panel), not by a breakpoint class.
+            : isConversationsMode && !isNarrow ? "shrink-0" : "w-full lg:w-[var(--toolbar-w)] lg:shrink-0"
       )}
-      style={{ borderRight: "1px solid var(--line)" }}
+      // Chats on a desktop: exactly the Calls list panel (VoiceCallsInbox / CallersInbox: 348px, border-box, no shrink),
+      // driven by the same JS breakpoint as the two-pane layout so the width can never fall back to full width.
+      // Chats: the Calls panel's own ground (--surface), on every width.
+      style={{ borderRight: "1px solid var(--line)", ...(isConversationsMode ? { background: "var(--surface)" } : {}), ...(isConversationsMode && !isNarrow && !isCompact && !isHidden ? { width: CHATS_LIST_WIDTH, minWidth: CHATS_LIST_WIDTH, maxWidth: CHATS_LIST_WIDTH, flexShrink: 0 } : {}) }}
     >
 
       {isCompact && (
@@ -378,6 +387,8 @@ export function LeadsListPanel({
               </div>
             )}
           </div>
+          {/* Fold button on the panel it folds (desktop): centred at the bottom of the rail. */}
+          <ListPanelFooter compact />
         </>
       )}
 
@@ -389,7 +400,7 @@ export function LeadsListPanel({
           {/* True mobile (<768): shared two-row header (switcher+search+bell / title+filter+actions) */}
           <MobileListHeader
             title={isConversationsMode ? t("page.chatsTitle") : t("page.title")}
-            tabSwitcher={isConversationsMode ? mobilePageTabs : (
+            tabSwitcher={isConversationsMode ? <>{mobileScopeSwitch}{mobilePageTabs}</> : (
               <MobileTabSeg
                 // Mobile: List + Pipeline only (no Table). The tab drives the
                 // existing mobile bodies directly via mobileListMode.
@@ -451,6 +462,7 @@ export function LeadsListPanel({
               </>
             )}
             onMoreClose={() => setMoreDeleteConfirm(false)}
+            extraActions={isConversationsMode && canPresent ? <ChatsPresentingToggle variant="drawer" /> : undefined}
           />
 
           {/* Tablet chrome (768–1023): legacy header (title + view tabs + actions + search) */}
@@ -567,9 +579,10 @@ export function LeadsListPanel({
           />
         </div>
       )}
+      {mobileListMode !== "kanban" && scopeSwitch && <div className="hidden md:flex justify-center" style={{ padding: "6px 12px 0" }}>{scopeSwitch}</div>}
       {mobileListMode !== "kanban" && channelTabs}
       {/* Lead list — card list (pagination inside scroll area, below last card) */}
-      <div ref={scrollContainerRef} className={cn("la-list-area", mobileListMode === "kanban" && "hidden lg:flex lg:flex-col")} style={{ padding: "3px 6px" }}>
+      <div ref={scrollContainerRef} className={cn("la-list-area", mobileListMode === "kanban" && "hidden lg:flex lg:flex-col")} style={{ padding: "6px 8px 8px" }}>
         {/* Pull-to-refresh indicator — mobile only */}
         <PullToRefreshIndicator pullDistance={leadsPullDistance} isRefreshing={leadsIsRefreshing} />
         {loading ? (
@@ -583,7 +596,8 @@ export function LeadsListPanel({
           </div>
         ) : (
           <>
-            <div key={`anim-${cardAnimKey}`} className="la-cards">
+            {/* la-cards--flat: WhatsApp-style flat rows; drop the modifier for the raised cards. */}
+            <div key={`anim-${cardAnimKey}`} className="la-cards la-cards--flat">
               {flatItems
                 .map((item, i) => {
                   const selectedId = selectedLead ? getLeadId(selectedLead) : null;
@@ -620,6 +634,8 @@ export function LeadsListPanel({
           </>
         )}
       </div>
+      {/* Desktop list panel footer: the fold button at its right end. */}
+      {!isNarrow && <ListPanelFooter />}
       </>}
 
       {/* Hidden printable sheet for the "..." → Export selected as PDF action.

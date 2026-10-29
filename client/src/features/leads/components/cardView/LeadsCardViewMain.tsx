@@ -16,6 +16,7 @@ import {
   CompactHoverCardPortal,
 } from "@/components/crm/CompactEntityRail";
 import { useListPanelState } from "@/hooks/useListPanelState";
+import { useListPanelFold } from "@/hooks/useListPanelFold";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useLocation } from "wouter";
 import { openLead } from "@/lib/leadLink";
@@ -94,6 +95,7 @@ export function LeadsCardView({
   pageTabs,
   mobilePageTabs,
   showChannelFilter = true,
+  scopeSwitch,
 }: LeadsCardViewProps) {
   const { t } = useTranslation("leads");
   const { label: deleteLabel } = useDeleteAction("lead");
@@ -105,9 +107,11 @@ export function LeadsCardView({
   // Only auto-compact the list when the detail panel is genuinely cramped (not
   // on merely "rather wide" screens). Hysteresis keeps it from flickering.
   const { ref: rightPanelRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 680, deactivateAbove: 860 });
-  const { state: leftPanelState, setState: setLeftPanelState } = useListPanelState();
+  const { state: leftPanelState } = useListPanelState();
   const isCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
   const isHidden = !isNarrow && leftPanelState === "hidden";
+  // Nav bar fold button: minimize / expand the list to its compact rail.
+  useListPanelFold(!isNarrow, { mode: "compact" });
 
   // ── Mobile kanban toggle (Feature #39): persisted preference ─────────────────
   const [storedMobileListMode, setMobileListMode] = usePersistedState<"list" | "kanban">(
@@ -323,8 +327,6 @@ export function LeadsCardView({
           deleteLabel={deleteLabel}
           peekOn={peekOn}
           setPeekOn={setPeekOn}
-          isCompact={isCompact}
-          setLeftPanelState={setLeftPanelState}
           listSearch={listSearch}
           onListSearchChange={onListSearchChange}
           isFilterActive={isFilterActive}
@@ -356,11 +358,13 @@ export function LeadsCardView({
           channelTabs={isConversationsMode && showChannelFilter ? (
             <ChatChannelTabs variant="topbar" active={activeChannelTab} onChange={onChannelTabChange} counts={channelCounts} />
           ) : undefined}
+          scopeSwitch={isConversationsMode ? scopeSwitch?.(false, true) : undefined}
         />
       )}
 
       {/* ── Content row: list panel + detail panel ── */}
-      <div className="relative flex flex-1 min-h-0 w-full" style={{ gap: "var(--panel-gap)", paddingLeft: 0, paddingRight: isNarrow ? 0 : "var(--panel-gap)" }}>
+      {/* Chats: the detail starts right after the list's border, as on Calls (the detail pads itself 14px). */}
+      <div className="relative flex flex-1 min-h-0 w-full" style={isConversationsMode ? { gap: 0, padding: 0 } : { gap: "var(--panel-gap)", paddingLeft: 0, paddingRight: isNarrow ? 0 : "var(--panel-gap)" }}>
 
       {/* ── LEFT: Lead List ── */}
       <MobileRecede open={isNarrow && mobileView === "detail" && !!selectedLead} fill={isNarrow}>
@@ -387,6 +391,8 @@ export function LeadsCardView({
           channelTabs={isConversationsMode && isNarrow && showChannelFilter ? (
             <ChatChannelTabs active={activeChannelTab} onChange={onChannelTabChange} counts={channelCounts} />
           ) : undefined}
+          scopeSwitch={isConversationsMode && isNarrow ? scopeSwitch?.(true) : undefined}
+          mobileScopeSwitch={isConversationsMode && isNarrow ? scopeSwitch?.(true, true) : undefined}
           filterType={filterType}
           onToggleFilterType={toggleFilterType}
           setFilterSheetOpen={setFilterSheetOpen}

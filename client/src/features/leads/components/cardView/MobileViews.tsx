@@ -21,6 +21,7 @@ import { PIPELINE_HEX, getInitials } from "@/lib/avatarUtils";
 import type { ParsedNote } from "./types";
 import { ALL_MOBILE_KANBAN_STAGES, PIPELINE_STAGES } from "./constants";
 import { getLeadId, getFullName, getStatus } from "./leadUtils";
+import { presentName, useChatsPresenting } from "../../presenting";
 import { ContactWidget } from "./ContactWidget";
 import { ConversationWidget } from "./ConversationWidget";
 import { LeadSummaryCard } from "./LeadSummaryCard";
@@ -300,15 +301,17 @@ export function MobileLeadDetailPanel({
   onRefresh?: () => void;
 }) {
   const { t } = useTranslation("leads");
-  const name   = lead ? getFullName(lead) : "";
+  const { masked } = useChatsPresenting();
+  const name   = lead ? presentName(getFullName(lead), masked) : "";
   const status = lead ? getStatus(lead) : "";
   const leadId = lead ? getLeadId(lead) : null;
   const stageIdx = stageIndex(status);
   const isBooked = status === "Booked";
   const hasSummary = Boolean(lead?.ai_summary || lead?.aiSummary || lead?.ai_memory || lead?.aiMemory);
 
-  const [tab, setTab] = useState<MLTabKey>(hasSummary ? "summary" : "chat");
-  useEffect(() => { setTab(hasSummary ? "summary" : "chat"); /* eslint-disable-next-line */ }, [leadId]);
+  // Opening a lead always lands on the conversation; Summary is one tap away.
+  const [tab, setTab] = useState<MLTabKey>("chat");
+  useEffect(() => { setTab("chat"); }, [leadId]);
 
   // ── Tag events (used by the Info tab via ContactWidget) ─────────────────────
   const [tagEvents, setTagEvents] = useState<{ name: string; color?: string; appliedAt?: string }[]>([]);
