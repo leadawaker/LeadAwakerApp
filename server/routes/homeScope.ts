@@ -4,10 +4,14 @@
  * query string says.
  */
 import { isHomePeriod } from "@shared/homePeriod";
-import type { HomePeriod } from "@shared/homeTypes";
+import { HOME_CHANNELS, type HomeChannel, type HomePeriod } from "@shared/homeTypes";
 import { decideScope, type VoiceAccess } from "./voiceCallsAccess";
 
-export interface HomeQuery { accountId: number | null; period: HomePeriod; campaignId: number | null }
+export interface HomeQuery {
+  accountId: number | null; period: HomePeriod; campaignId: number | null;
+  /** Home's channel switcher. null = all channels. Only the overview reads it. */
+  channel: HomeChannel | null;
+}
 
 function positiveInt(v: unknown): number | null {
   const n = Number(typeof v === "string" || typeof v === "number" ? v : NaN);
@@ -16,7 +20,7 @@ function positiveInt(v: unknown): number | null {
 
 export function resolveHomeQuery(
   access: VoiceAccess,
-  q: { accountId?: unknown; period?: unknown; campaignId?: unknown },
+  q: { accountId?: unknown; period?: unknown; campaignId?: unknown; channel?: unknown },
   /** scopeToAccount's lock (a user off account 1, or view-as). Wins over the role and the query string. */
   forcedAccountId?: number | null,
 ): HomeQuery {
@@ -26,7 +30,8 @@ export function resolveHomeQuery(
     : scope.ok ? scope.accountId : access.lockedAccountId;
   return {
     accountId,
-    period: isHomePeriod(q.period) ? q.period : "month",
+    period: isHomePeriod(q.period) ? q.period : "all",
     campaignId: positiveInt(q.campaignId),
+    channel: (HOME_CHANNELS as readonly unknown[]).includes(q.channel) ? (q.channel as HomeChannel) : null,
   };
 }

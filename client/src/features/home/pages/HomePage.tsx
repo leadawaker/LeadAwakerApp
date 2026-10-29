@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useWorkspace } from "@/hooks/useWorkspace";
-import { HOME_PERIODS, type HomePeriod, type HomeServices } from "@shared/homeTypes";
+import type { HomePeriod, HomeServices } from "@shared/homeTypes";
+import { isHomePeriod } from "@shared/homePeriod";
 import { useHomeServices, type HomeScope } from "../api/homeApi";
 import { WelcomeChecklistCard } from "../onboarding/WelcomeChecklistCard";
 import { EmptyState } from "../components/EmptyState";
+import { PeriodMenu } from "../components/PeriodMenu";
 import { OverviewGrid } from "../stats/OverviewGrid";
 import { SERVICE_ANCHOR, ServiceCards, type ServiceKey } from "../stats/ServiceCards";
 import "../home.css";
@@ -13,12 +15,13 @@ import "../home.css";
 const DATE_LOCALE: Record<string, string> = { en: "en-US", pt: "pt-BR", nl: "nl-NL" };
 const PERIOD_KEY = "leadawaker_home_period";
 
+/** All time unless a period was picked before (a retired one, like "7d", reads as All time). */
 function readPeriod(): HomePeriod {
   try {
     const saved = localStorage.getItem(PERIOD_KEY);
-    if ((HOME_PERIODS as readonly string[]).includes(saved ?? "")) return saved as HomePeriod;
+    if (isHomePeriod(saved)) return saved;
   } catch { /* storage unavailable */ }
-  return "month";
+  return "all";
 }
 
 /**
@@ -84,7 +87,7 @@ function StatsDashboard() {
 
   return (
     <div className="la-page" data-testid="page-home" style={{ background: "var(--bg)", overflow: "hidden" }}>
-      {/* Fixed header: greeting and period never scroll. The page scrolls in its own
+      {/* Fixed header: the greeting never scrolls. The page scrolls in its own
           container below, so cards (and their shadows) are cut off at the header's
           bottom edge instead of painting over it. */}
       <div className="shrink-0 la-m-chrome" style={{ background: "var(--bg)", position: "relative", zIndex: 1 }}>
@@ -95,11 +98,8 @@ function StatsDashboard() {
               {firstName ? `${greeting}, ${firstName}` : greeting}
             </h1>
           </div>
-          <select value={period} onChange={(e) => choosePeriod(e.target.value as HomePeriod)} aria-label={t("period.label")}
-            className="neu-inset-crisp" data-testid="home-period"
-            style={{ padding: "7px 12px", borderRadius: "var(--r-button)", fontSize: 13, border: "none", background: "var(--bg)", color: "var(--ink-soft)" }}>
-            {HOME_PERIODS.map((p) => <option key={p} value={p}>{t(`period.${p}`)}</option>)}
-          </select>
+          {/* The period menu lives in By channel; without that panel (no conversation channel) it sits here. */}
+          {services && !noServices && !hasConversations(services) && <PeriodMenu value={period} onChange={choosePeriod} />}
         </div>
       </div>
 
@@ -115,7 +115,7 @@ function StatsDashboard() {
           ) : !services ? loading : (
             <div key={currentAccountId} className="flex flex-col gap-8">
               <ServiceCards scope={scope} services={services} />
-              {hasConversations(services) && <OverviewGrid scope={scope} services={services} />}
+              {hasConversations(services) && <OverviewGrid scope={scope} services={services} onPeriod={choosePeriod} />}
             </div>
           )}
         </div>

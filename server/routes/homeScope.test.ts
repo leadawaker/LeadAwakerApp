@@ -42,10 +42,19 @@ test("a user with no account matches nothing, never everything", () => {
   assert.equal(resolveHomeQuery(orphan, {}).accountId, -1);
 });
 
-test("period defaults to month and ignores junk", () => {
-  assert.equal(resolveHomeQuery(owner, {}).period, "month");
-  assert.equal(resolveHomeQuery(owner, { period: "7d" }).period, "7d");
-  assert.equal(resolveHomeQuery(owner, { period: "DROP TABLE" }).period, "month");
+test("period defaults to all and ignores junk and retired periods", () => {
+  assert.equal(resolveHomeQuery(owner, {}).period, "all");
+  assert.equal(resolveHomeQuery(owner, { period: "week" }).period, "week");
+  assert.equal(resolveHomeQuery(owner, { period: "7d" }).period, "all");
+  assert.equal(resolveHomeQuery(owner, { period: "DROP TABLE" }).period, "all");
+});
+
+test("channel is one of the four channels, else all (null)", () => {
+  assert.equal(resolveHomeQuery(owner, { channel: "phone" }).channel, "phone");
+  assert.equal(resolveHomeQuery(owner, { channel: "website" }).channel, "website");
+  assert.equal(resolveHomeQuery(owner, { channel: "all" }).channel, null);
+  assert.equal(resolveHomeQuery(owner, { channel: "instagram" }).channel, null);
+  assert.equal(resolveHomeQuery(owner, {}).channel, null);
 });
 
 test("campaignId is a positive integer or null", () => {

@@ -6,3 +6,119 @@
 .home-row:last-child { border-bottom: 0; }
 button.home-row { width: 100%; text-align: left; background: none; border-left: 0; border-right: 0; border-top: 0; cursor: pointer; }
 button.home-row:hover { background: var(--wine-tint); }
+/* Row text: a two-line grid. Desktop: name and time on line 1, meta and tag on line 2, so the
+   time and the tag both sit flush right and line up from row to row. Phones swap the tag to the
+   left of line 2 (see the 767px block). */
+.home-row-body {
+  flex: 1; min-width: 0; min-height: 36px; display: grid;
+  grid-template-columns: minmax(0, 1fr) auto; column-gap: 12px; row-gap: 3px; align-content: center; align-items: center;
+}
+.home-row-head { grid-column: 1; grid-row: 1; min-width: 0; font-size: 13.5px; line-height: 18px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-row-sub { grid-column: 1; grid-row: 2; min-width: 0; font-size: 12px; line-height: 16px; color: var(--mute); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-row-tag { grid-column: 2; grid-row: 2; display: flex; justify-content: flex-end; }
+.home-row-time { grid-column: 2; grid-row: 1; justify-self: end; font-family: var(--mono); font-size: 11.5px; line-height: 18px; color: var(--mute); white-space: nowrap; }
+/* A row with a "Mark as handled" x: the icon and the x sit beside the row's button. */
+.home-row--dismissable:hover { background: var(--wine-tint); }
+.home-row-main { flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px; padding: 0; text-align: left; background: none; border: 0; color: inherit; }
+button.home-row-main { cursor: pointer; }
+.home-row-dismiss {
+  flex-shrink: 0; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: var(--r-button); background: none; color: var(--mute); cursor: pointer;
+  opacity: 0; transition: opacity 150ms ease, background-color 150ms ease, color 150ms ease;
+}
+.home-row--dismissable:hover .home-row-dismiss, .home-row-dismiss:focus-visible { opacity: 1; }
+.home-row-dismiss:hover { background: var(--line); color: var(--ink); }
+@media (hover: none) { .home-row-dismiss { opacity: 1; } }
+.home-clear-all {
+  font-size: 12.5px; color: var(--mute); background: none; border: 0; padding: 4px 6px; border-radius: var(--r-button); cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+.home-clear-all:hover { background: var(--wine-tint); color: var(--ink); }
+.home-clear-all-text { white-space: nowrap; }
+.home-clear-all-icon { display: none; }
+/* The panel head stays on one line at every width: the title ellipsizes, the actions keep their size. */
+.home-panel-title { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* The negative margin keeps the 28px button from making this head taller than Recent activity's. */
+.home-attn-actions { flex-shrink: 0; margin-top: -6px; }
+/* A narrow panel (small laptops, long titles like "Precisa de atenção") shows "Clear all" as the icon only. */
+.home-list-panel { container-type: inline-size; }
+@container (max-width: 440px) {
+  .home-clear-all { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; }
+  .home-clear-all-text { display: none; }
+  .home-clear-all-icon { display: block; }
+}
+
+/* Phones: the name gets the row. Line 1 is name and time, line 2 is tag and meta.
+   The panel head stays on one line: the title ellipsizes and "Clear all" turns into an icon. */
+@media (max-width: 767px) {
+  .home-row-body { grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 0; }
+  .home-row-head { grid-column: 1 / 3; }
+  .home-row-time { grid-column: 3; grid-row: 1; margin-left: 8px; }
+  .home-row-tag { grid-column: 1; grid-row: 2; justify-content: flex-start; margin-right: 8px; }
+  .home-row-sub { grid-column: 2 / 4; grid-row: 2; }
+  .home-row { gap: 10px; }
+  .home-row-main { gap: 10px; }
+  .home-panel-title { font-size: 20px; }
+  .home-clear-all { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; }
+  .home-clear-all-text { display: none; }
+  .home-clear-all-icon { display: block; }
+}
+
+/* Service cards: one row that scrolls sideways, fading out at the right edge while
+   there is more to see. The padding keeps the cards' raised shadows from being cut. */
+.home-cards {
+  display: flex; gap: 20px; overflow-x: auto; scrollbar-width: none;
+  padding: 16px; margin: -16px;
+  scroll-padding-inline: 16px;
+}
+.home-cards::-webkit-scrollbar { display: none; }
+/* Masks read alpha only: the colour is irrelevant. */
+.home-cards--more { mask-image: linear-gradient(to right, black calc(100% - 72px), transparent); -webkit-mask-image: linear-gradient(to right, black calc(100% - 72px), transparent); }
+
+.home-card {
+  flex: 0 0 300px; min-width: 0; display: flex; flex-direction: column;
+  background: var(--card); border-radius: var(--r-card); overflow: hidden; scroll-margin-top: 12px;
+}
+.home-card--link { cursor: pointer; transition: transform 160ms ease, box-shadow 160ms ease; }
+@media (hover: hover) { .home-card--link:hover { transform: translateY(-2px); } }
+.home-card--link:focus-visible { outline: 2px solid var(--wine); outline-offset: 3px; }
+
+.home-card-art { position: relative; height: 180px; flex-shrink: 0; }
+/* A soft dark wash from the top right so the title reads on any picture. */
+.home-card-art::before {
+  content: ""; position: absolute; inset: 0; pointer-events: none;
+  background: radial-gradient(120% 90% at 100% 0%, color-mix(in srgb, var(--home-banner-night) 72%, transparent) 0%, transparent 60%);
+}
+.home-card-title {
+  position: absolute; top: 14px; right: 16px; left: 16px; margin: 0; text-align: right;
+  font-size: 20px; font-weight: 700; line-height: 1.15; color: var(--on-wine);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  .home-cards { scroll-snap-type: x mandatory; gap: 14px; }
+  .home-card { flex-basis: min(82vw, 300px); scroll-snap-align: start; }
+}
+
+/* By channel: a vertical tab list. The picked row is solid wine and raised, the rest flat. */
+.home-chan {
+  display: flex; align-items: center; gap: 10px; width: 100%; min-height: 40px; padding: 8px 10px;
+  border: 0; border-radius: var(--r-button); background: transparent; color: var(--ink); text-align: left; cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, box-shadow 150ms ease;
+}
+.home-chan:hover { background: var(--wine-tint); }
+.home-chan:focus-visible { outline: 2px solid var(--wine); outline-offset: 2px; }
+.home-chan.on { background: var(--wine); color: var(--on-wine); box-shadow: var(--sh-raised-crisp); font-weight: 700; }
+.home-chan-num { font-family: var(--mono); font-size: 12.5px; width: 52px; text-align: right; flex-shrink: 0; }
+.home-chan-num--wide { width: 92px; }
+.home-chan:not(.on) .home-chan-num--sub { color: var(--mute); }
+.home-chan .home-chan-icon { display: flex; color: var(--mute); }
+.home-chan.on .home-chan-icon { color: var(--on-wine); }
+
+/* Needs attention and Recent activity sit side by side at one fixed height: the header plus
+   about 5 rows (a row is ~59px); the list scrolls inside. Phones: each grows with its rows up to the same ~5 rows. */
+.home-list-panel { height: 390px; min-height: 0; }
+@media (max-width: 767px) {
+  .home-list-panel { height: auto; }
+  .home-list-panel .home-panel-scroll { flex: 0 1 auto; max-height: 300px; }
+}

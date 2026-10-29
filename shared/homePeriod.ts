@@ -1,5 +1,9 @@
-import { HOME_PERIODS, type HomePeriod } from "./homeTypes";
+import { HOME_PERIODS, type HomeBucket, type HomePeriod } from "./homeTypes";
 
+/**
+ * Local dates (YYYY-MM-DD), end exclusive. With no earlier period to compare
+ * with ("all"), prevFrom equals prevTo: an empty range.
+ */
 export interface PeriodDates { from: string; to: string; prevFrom: string; prevTo: string }
 
 export function isHomePeriod(v: unknown): v is HomePeriod {
@@ -19,28 +23,48 @@ const monthStart = (d: string, offset = 0) => {
   const x = parse(d);
   return fmt(new Date(Date.UTC(x.getUTCFullYear(), x.getUTCMonth() + offset, 1)));
 };
+const yearStart = (d: string, offset = 0) => fmt(new Date(Date.UTC(parse(d).getUTCFullYear() + offset, 0, 1)));
+/** Monday of the date's week. */
+const weekStart = (d: string) => addDays(d, -((parse(d).getUTCDay() + 6) % 7));
+const daysBetween = (a: string, b: string) => Math.round((parse(b).getTime() - parse(a).getTime()) / 86_400_000);
 const min = (a: string, b: string) => (a < b ? a : b);
 
-export function periodDates(period: HomePeriod, today: string): PeriodDates {
+/**
+ * The period up to and including today, compared with the same stretch of the
+ * period before (the first 12 days of last month on the 12th). `allFrom` is
+ * where "all" starts (the account's first data); it falls back to this month.
+ * "today" compares with all of yesterday here; rangeOf (server/storage/homeSql.ts)
+ * cuts yesterday at the current time of day, which a date string cannot hold.
+ */
+export function periodDates(period: HomePeriod, today: string, allFrom?: string | null): PeriodDates {
   const tomorrow = addDays(today, 1);
-  if (period === "7d" || period === "30d") {
-    const n = period === "7d" ? 7 : 30;
-    const from = addDays(tomorrow, -n);
-    return { from, to: tomorrow, prevFrom: addDays(from, -n), prevTo: from };
+  if (period === "all") {
+    const from = allFrom && allFrom <= today ? allFrom : monthStart(today);
+    return { from, to: tomorrow, prevFrom: from, prevTo: from };
   }
-  if (period === "last_month") {
-    const to = monthStart(today);
-    const from = monthStart(today, -1);
-    return { from, to, prevFrom: monthStart(today, -2), prevTo: from };
-  }
-  const from = monthStart(today);
-  const prevFrom = monthStart(today, -1);
-  const elapsed = Math.round((parse(tomorrow).getTime() - parse(from).getTime()) / 86_400_000);
-  return { from, to: tomorrow, prevFrom, prevTo: min(addDays(prevFrom, elapsed), from) };
+  if (period === "today") return { from: today, to: tomorrow, prevFrom: addDays(today, -1), prevTo: today };
+  const from = period === "year" ? yearStart(today) : period === "week" ? weekStart(today) : monthStart(today);
+  const prevFrom = period === "year" ? yearStart(today, -1) : period === "week" ? addDays(from, -7) : monthStart(today, -1);
+  return { from, to: tomorrow, prevFrom, prevTo: min(addDays(prevFrom, daysBetween(from, tomorrow)), from) };
+}
+
+export function bucketOf(period: HomePeriod): HomeBucket {
+  return period === "all" || period === "year" ? "month" : period === "today" ? "hour" : "day";
 }
 
 export function eachDay(from: string, to: string): string[] {
   const out: string[] = [];
   for (let d = from; d < to; d = addDays(d, 1)) out.push(d);
+  return out;
+}
+
+/** Every bucket key in [from, to): YYYY-MM, YYYY-MM-DD or YYYY-MM-DD HH (see DayPoint). */
+export function eachBucket(from: string, to: string, bucket: HomeBucket): string[] {
+  if (bucket === "day") return eachDay(from, to);
+  if (bucket === "hour") {
+    return eachDay(from, to).flatMap((d) => Array.from({ length: 24 }, (_, h) => `${d} ${String(h).padStart(2, "0")}`));
+  }
+  const out: string[] = [];
+  for (let m = monthStart(from); m < to; m = monthStart(m, 1)) out.push(m.slice(0, 7));
   return out;
 }

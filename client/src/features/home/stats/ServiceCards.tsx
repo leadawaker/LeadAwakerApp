@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { AudioLines, Clapperboard, Globe, MessageCircle, RefreshCw, Star } from "lucide-react";
@@ -30,16 +31,16 @@ type T = (key: string, opts?: Record<string, unknown>) => string;
 const DASH = "…";
 const pct = (n: number | null) => (n === null ? "-" : `${n}%`);
 
-/** "+20% vs last month", or null when there is nothing to compare with. */
+/** "+20% vs last month", or null when there is nothing to compare with ("All time" never has). */
 function trendText(c: Compared | undefined, period: HomePeriod, t: T): CardTrend | null {
-  const tr = c ? trendOf(c) : null;
+  const tr = c && period !== "all" ? trendOf(c) : null;
   if (!tr) return null;
   return { dir: tr.dir, text: `${tr.dir === "up" ? "+" : tr.dir === "down" ? "-" : ""}${tr.pct}% ${t(`vs.${period}`)}` };
 }
 
-type CardProps = { scope: HomeScope; t: T; go: (to: string) => void };
+type CardProps = { scope: HomeScope; t: T; go: (to: string) => void; showTrend: boolean };
 
-function PhoneCard({ scope, t, go }: CardProps) {
+function PhoneCard({ scope, t, go, showTrend }: CardProps) {
   const { data } = useHomePhone(scope);
   // Open the Calls list, also when the page was last left on Settings.
   const open = () => {
@@ -54,14 +55,14 @@ function PhoneCard({ scope, t, go }: CardProps) {
         { key: "booked", label: t("phone.tiles.booked"), value: data?.booked.value ?? DASH },
         { key: "transferred", label: t("phone.tiles.transferred"), value: data?.transferred.value ?? DASH },
       ]}
-      onOpen={open} />
+      showTrend={showTrend} onOpen={open} />
   );
 }
 
 /** Chats opens on its list, not on Settings. */
 const openChats = (go: (to: string) => void) => () => { writeLastTab("chats", "chats"); go("/platform/chat"); };
 
-function WhatsappCard({ scope, t, go }: CardProps) {
+function WhatsappCard({ scope, t, go, showTrend }: CardProps) {
   const { data } = useHomeWhatsapp(scope);
   return (
     <ServiceCard id={SERVICE_ANCHOR.whatsapp} testId="stats-card-whatsapp" art={whatsappArt} artPos="95% 60%" color="var(--stage-multi)" icon={MessageCircle}
@@ -71,11 +72,11 @@ function WhatsappCard({ scope, t, go }: CardProps) {
         { key: "bookings", label: t("whatsapp.tiles.bookings"), value: data?.bookings.value ?? DASH },
         { key: "handedOff", label: t("whatsapp.tiles.handedOff"), value: data?.handedOff.value ?? DASH },
       ]}
-      onOpen={openChats(go)} />
+      showTrend={showTrend} onOpen={openChats(go)} />
   );
 }
 
-function WebsiteCard({ scope, t, go }: CardProps) {
+function WebsiteCard({ scope, t, go, showTrend }: CardProps) {
   const { data } = useHomeWebsite(scope);
   return (
     <ServiceCard id={SERVICE_ANCHOR.website} testId="stats-card-website" art={websiteArt} artPos="100% 20%" color="var(--stage-contacted)" icon={Globe}
@@ -85,11 +86,11 @@ function WebsiteCard({ scope, t, go }: CardProps) {
         { key: "contacts", label: t("website.tiles.contacts"), value: data?.contacts.value ?? DASH },
         { key: "bookings", label: t("website.tiles.bookings"), value: data?.bookings.value ?? DASH },
       ]}
-      onOpen={openChats(go)} />
+      showTrend={showTrend} onOpen={openChats(go)} />
   );
 }
 
-function ReactivationCard({ scope, t, go, isAgency }: CardProps & { isAgency: boolean }) {
+function ReactivationCard({ scope, t, go, isAgency, showTrend }: CardProps & { isAgency: boolean }) {
   const { data } = useHomeReactivation(scope);
   const [, setLocation] = useLocation();
   // The agency opens the campaigns in Accounts > Reactivation; a client reads the replies in Chats.
@@ -102,17 +103,17 @@ function ReactivationCard({ scope, t, go, isAgency }: CardProps & { isAgency: bo
         { key: "replyRate", label: t("reactivation.tiles.replyRate"), value: data ? pct(rateOf(data.replied.value, data.contacted.value)) : DASH },
         { key: "campaigns", label: t("cards.reactivation.campaigns"), value: data?.campaigns.length ?? DASH },
       ]}
-      onOpen={open} />
+      showTrend={showTrend} onOpen={open} />
   );
 }
 
-function ReputationCard({ scope, t, go, isAgency }: CardProps & { isAgency: boolean }) {
+function ReputationCard({ scope, t, go, isAgency, showTrend }: CardProps & { isAgency: boolean }) {
   const { data } = useHomeReputation(scope);
   const avg = data?.avgRating.value ?? null;
   const prev = data?.avgRating.previous ?? null;
   // The rating moves in tenths, not percent: "+0.2 vs last month".
   const diff = avg !== null && prev !== null ? Math.round((avg - prev) * 10) / 10 : null;
-  const trend: CardTrend | null = diff === null ? null : {
+  const trend: CardTrend | null = diff === null || scope.period === "all" ? null : {
     dir: diff > 0 ? "up" : diff < 0 ? "down" : "flat",
     text: `${diff > 0 ? "+" : ""}${diff.toFixed(1)} ${t(`vs.${scope.period}`)}`,
   };
@@ -125,11 +126,11 @@ function ReputationCard({ scope, t, go, isAgency }: CardProps & { isAgency: bool
         { key: "awaiting", label: t("cards.reputation.awaiting"), value: data?.awaitingReply ?? DASH },
       ]}
       // The Reputation page is agency-only.
-      onOpen={isAgency ? () => go("/platform/reputation") : undefined} />
+      showTrend={showTrend} onOpen={isAgency ? () => go("/platform/reputation") : undefined} />
   );
 }
 
-function SocialCard({ scope, t, go }: CardProps) {
+function SocialCard({ scope, t, go, showTrend }: CardProps) {
   const { data } = useHomeSocial(scope);
   return (
     <ServiceCard id={SERVICE_ANCHOR.social} testId="stats-card-social" art={socialArt} artPos="100% 55%" color="var(--stage-new)" icon={Clapperboard}
@@ -139,25 +140,45 @@ function SocialCard({ scope, t, go }: CardProps) {
         { key: "bookings", label: t("social.tiles.bookings"), value: data?.bookings.value ?? DASH },
         { key: "rate", label: t("social.tiles.bookingRate"), value: data ? pct(rateOf(data.bookings.value, data.conversations.value)) : DASH },
       ]}
-      onOpen={() => go("/platform/social")} />
+      showTrend={showTrend} onOpen={() => go("/platform/social")} />
   );
 }
 
+/** True while the row has cards hidden past its right edge: that is when the fade shows. */
+function useMoreToTheRight() {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [more, setMore] = useState(false);
+  const measure = useCallback(() => {
+    const el = ref.current;
+    if (el) setMore(el.scrollLeft + el.clientWidth < el.scrollWidth - 4);
+  }, []);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [measure]);
+  return { ref, more, measure };
+}
+
 /**
- * One tall card per switched-on service, side by side: four in a row on a wide
- * screen, two on a tablet, one on a phone.
+ * One card per switched-on service, in a single row that scrolls sideways
+ * (snapping card by card on a phone). The period picked on the page drives them.
  */
 export function ServiceCards({ scope, services }: { scope: HomeScope; services: HomeServices }) {
   const { t } = useTranslation("home");
   const [, setLocation] = useLocation();
   const { isAgencyUser } = useWorkspace();
+  const row = useMoreToTheRight();
   const tt: T = (key, opts) => String(t(key, opts));
-  const props: CardProps = { scope, t: tt, go: setLocation };
+  const props: CardProps = { scope, t: tt, go: setLocation, showTrend: scope.period !== "all" };
   const isAgency = !!isAgencyUser;
   const on = ORDER.filter((k) => services[k]);
   if (on.length === 0) return null;
   return (
-    <div className="grid grid-cols-1 items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-4" data-testid="stats-service-cards">
+    <div ref={row.ref} onScroll={row.measure} className={row.more ? "home-cards home-cards--more" : "home-cards"} data-testid="stats-service-cards">
       {on.map((k) => (
         k === "phone" ? <PhoneCard key={k} {...props} />
           : k === "whatsapp" ? <WhatsappCard key={k} {...props} />

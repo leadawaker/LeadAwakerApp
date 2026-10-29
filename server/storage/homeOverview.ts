@@ -4,12 +4,14 @@
  */
 import { sql } from "drizzle-orm";
 import { db } from "../db";
-import type { ActivityRow, AttentionRow, HomeChannel, HomeOverview } from "@shared/homeTypes";
+import type { AttentionRow, HomeChannel, HomeOverview } from "@shared/homeTypes";
 import type { HomeQuery } from "../routes/homeScope";
 import {
-  T, acct, at, boundsFor, bookingsSql, dayOf, fillDays, humanOutboundSql,
+  T, acct, boundsFor, rangeOf, bookingsSql, bucketSql, fillDays,
   liveCallSql, liveLeadSql, needsCallbackSql, num, receptionistLeadSql,
 } from "./homeSql";
+import { recentActivity } from "./homeRecent";
+import { attentionSql } from "./homeAttention";
 
 const TEXT_CHANNELS: HomeChannel[] = ["whatsapp", "website", "sms"];
 type Row = Record<string, unknown>;
@@ -18,7 +20,7 @@ const iso = (v: unknown) => new Date(v as string).toISOString();
 
 async function getHomeOverview(q: HomeQuery): Promise<HomeOverview> {
   const b = await boundsFor(q);
-  const cur = at(b.from, b.tz), end = at(b.to, b.tz), prev = at(b.prevFrom, b.tz), prevEnd = at(b.prevTo, b.tz);
+  const { cur, end, prev, prevEnd } = rangeOf(b);
 
   // Inbound non-phone messages from receptionist leads, both periods.
   // channel NULL (unclassified) still counts as a conversation, under no channel.
@@ -40,40 +42,8 @@ async function getHomeOverview(q: HomeQuery): Promise<HomeOverview> {
     WHERE ${acct("vc.accounts_id", q.accountId)} AND vc.started_at >= ${prev} AND vc.started_at < ${end} AND ${liveCallSql}`;
   const bookings = bookingsSql(q.accountId, prev, end);
 
-  // The current to-do list as one union, shared by the list (LIMIT 8) and the true count.
-  // A callback is done once the lead has a logged call back (Voice Calls page) after the call,
-  // or rang again and that later live call was booked or transferred. Calls with no lead stay.
-  const attentionUnion = sql`
-        SELECT CASE WHEN o.transfer_outcome = 'failed' THEN 'transfer_failed' ELSE 'callback' END AS kind,
-               'phone' AS channel, o.leads_id AS lead_id, o.call_id,
-               NULLIF(trim(concat_ws(' ', cl.first_name, cl.last_name)), '') AS name, o.started_at AS at
-        FROM (SELECT vc.leads_id, vc.call_id, vc.started_at, vc.transfer_outcome
-              FROM ${T.voiceCalls} vc
-              WHERE ${acct("vc.accounts_id", q.accountId)} AND vc.started_at > now() - interval '7 days'
-                AND ${liveCallSql} AND ${needsCallbackSql}) o
-        LEFT JOIN ${T.leads} cl ON cl.id = o.leads_id
-        WHERE NOT EXISTS (SELECT 1 FROM ${T.interactions} cb WHERE cb."Leads_id" = o.leads_id
-                          AND cb.type = 'call_back' AND cb.created_at > o.started_at)
-          AND NOT EXISTS (SELECT 1 FROM ${T.voiceCalls} vc WHERE vc.leads_id = o.leads_id
-                          AND vc.started_at > o.started_at AND vc.outcome IN ('booked', 'transferred') AND ${liveCallSql})
-        UNION ALL
-        SELECT 'handoff' AS kind,
-               COALESCE((SELECT li.channel FROM ${T.interactions} li WHERE li."Leads_id" = l.id AND lower(li.direction) = 'inbound'
-                         AND li.channel IN ('whatsapp', 'sms', 'website', 'phone') ORDER BY li.created_at DESC LIMIT 1), 'whatsapp') AS channel,
-               l.id AS lead_id, NULL AS call_id,
-               NULLIF(trim(concat_ws(' ', l.first_name, l.last_name)), '') AS name,
-               COALESCE(l.last_message_received_at,
-                        (SELECT max(mi.created_at) FROM ${T.interactions} mi WHERE mi."Leads_id" = l.id AND lower(mi.direction) = 'inbound'),
-                        l.created_at) AS at
-        FROM ${T.leads} l
-        LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
-        WHERE ${acct('l."Accounts_id"', q.accountId)} AND l.manual_takeover = true
-          AND ${liveLeadSql} AND ${receptionistLeadSql}
-          AND NOT EXISTS (SELECT 1 FROM ${T.interactions} i WHERE i."Leads_id" = l.id AND lower(i.direction) = 'outbound'
-                          AND i.created_at > COALESCE(l.last_message_received_at,
-                        (SELECT max(mi.created_at) FROM ${T.interactions} mi WHERE mi."Leads_id" = l.id AND lower(mi.direction) = 'inbound'),
-                        l.created_at) AND ${humanOutboundSql})
-  `;
+  // The current to-do list (minus rows marked as handled), shared by the list (LIMIT 8) and the true count.
+  const attentionList = attentionSql(q);
 
   const smsOut = sql`
     SELECT count(*)::int AS n FROM ${T.interactions} i
@@ -83,7 +53,27 @@ async function getHomeOverview(q: HomeQuery): Promise<HomeOverview> {
       AND i.created_at >= ${cur} AND i.created_at < ${end}
       AND ${liveLeadSql} AND ${receptionistLeadSql}`;
 
-  const [totals, chanMsg, chanBook, days, attention, waitingCount, activity, smsSent] = await Promise.all([
+  // Conversations per bucket for the channel switcher: calls, chats on one text
+  // channel, or (SMS, a one-way fallback) messages sent, as in byChannel.
+  const ch = q.channel;
+  const msgDays = sql`SELECT ${bucketSql("created_at", b)} AS day, count(DISTINCT lead_id) AS n FROM msg
+        WHERE created_at >= ${cur} ${ch === null ? sql`` : sql`AND channel = ${ch}`} GROUP BY 1`;
+  const callDays = sql`SELECT ${bucketSql("started_at", b)} AS day, count(*) AS n FROM calls WHERE started_at >= ${cur} GROUP BY 1`;
+  const perDaySql = ch === "sms"
+    ? sql`
+      SELECT ${bucketSql("i.created_at", b)} AS day, count(*)::int AS value FROM ${T.interactions} i
+      JOIN ${T.leads} l ON l.id = i."Leads_id"
+      LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
+      WHERE ${acct('i."Accounts_id"', q.accountId)} AND lower(i.direction) = 'outbound' AND i.channel = 'sms'
+        AND i.created_at >= ${cur} AND i.created_at < ${end} AND ${liveLeadSql} AND ${receptionistLeadSql}
+      GROUP BY 1`
+    : sql`
+      WITH msg AS (${msg}), calls AS (${calls})
+      SELECT day, sum(n)::int AS value FROM (
+        ${ch === "phone" ? callDays : ch !== null ? msgDays : sql`${msgDays} UNION ALL ${callDays}`}
+      ) d GROUP BY day`;
+
+  const [totals, chanMsg, chanBook, days, attention, waitingCount, recent, smsSent] = await Promise.all([
     db.execute(sql`
       WITH msg AS (${msg}), calls AS (${calls}), bk AS (${bookings})
       SELECT
@@ -103,46 +93,11 @@ async function getHomeOverview(q: HomeQuery): Promise<HomeOverview> {
     db.execute(sql`
       WITH bk AS (${bookings})
       SELECT channel, count(*)::int AS n FROM bk WHERE booked >= ${cur} GROUP BY channel`),
-    db.execute(sql`
-      WITH msg AS (${msg}), calls AS (${calls})
-      SELECT day, sum(n)::int AS value FROM (
-        SELECT ${dayOf("created_at", b.tz)} AS day, count(DISTINCT lead_id) AS n FROM msg WHERE created_at >= ${cur} GROUP BY 1
-        UNION ALL
-        SELECT ${dayOf("started_at", b.tz)} AS day, count(*) AS n FROM calls WHERE started_at >= ${cur} GROUP BY 1
-      ) d GROUP BY day`),
+    db.execute(perDaySql),
     // The current to-do list: not tied to the period.
-    db.execute(sql`SELECT * FROM (${attentionUnion}) a ORDER BY at DESC NULLS LAST LIMIT 8`),
-    db.execute(sql`SELECT count(*)::int AS n FROM (${attentionUnion}) a`),
-    db.execute(sql`
-      SELECT * FROM (
-        SELECT 'booked' AS kind, COALESCE(l.booking_channel, 'unknown') AS channel, l.id AS lead_id, NULL AS call_id,
-               NULLIF(trim(concat_ws(' ', l.first_name, l.last_name)), '') AS name,
-               COALESCE(l.booked_at, l.booking_confirmed_at_) AS at, NULL::text AS headline
-        FROM ${T.leads} l LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
-        WHERE ${acct('l."Accounts_id"', q.accountId)} AND l.booked_call_date IS NOT NULL
-          AND COALESCE(l.booked_at, l.booking_confirmed_at_) >= ${cur} AND COALESCE(l.booked_at, l.booking_confirmed_at_) < ${end}
-          AND ${liveLeadSql} AND ${receptionistLeadSql}
-        UNION ALL
-        SELECT CASE WHEN vc.outcome = 'transferred' THEN 'transferred' ELSE 'call' END, 'phone', vc.leads_id, vc.call_id,
-               NULLIF(trim(concat_ws(' ', cl.first_name, cl.last_name)), ''), vc.started_at,
-               NULLIF(vc.summary ->> 'outcome', '')
-        FROM ${T.voiceCalls} vc LEFT JOIN ${T.leads} cl ON cl.id = vc.leads_id
-        WHERE ${acct("vc.accounts_id", q.accountId)} AND vc.started_at >= ${cur} AND vc.started_at < ${end} AND ${liveCallSql}
-        UNION ALL
-        SELECT 'chat_started', 'website', l.id, NULL,
-               NULLIF(trim(concat_ws(' ', l.first_name, l.last_name)), ''), l.created_at, NULL
-        FROM ${T.leads} l LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
-        WHERE ${acct('l."Accounts_id"', q.accountId)} AND l.channel_identifier LIKE 'web:%'
-          AND l.created_at >= ${cur} AND l.created_at < ${end} AND ${liveLeadSql} AND ${receptionistLeadSql}
-        UNION ALL
-        SELECT 'followup_sent', CASE WHEN f.channel = 'sms' THEN 'sms' ELSE 'whatsapp' END, f.leads_id, NULL,
-               NULLIF(trim(concat_ws(' ', l.first_name, l.last_name)), ''), f.created_at, NULL
-        FROM ${T.callFollowupLog} f LEFT JOIN ${T.leads} l ON l.id = f.leads_id
-        LEFT JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
-        WHERE ${acct("f.accounts_id", q.accountId)} AND f.decision = 'sent'
-          AND (l.id IS NULL OR (${liveLeadSql} AND ${receptionistLeadSql}))
-          AND f.created_at >= ${cur} AND f.created_at < ${end}
-      ) a ORDER BY at DESC NULLS LAST LIMIT 12`),
+    db.execute(sql`SELECT * FROM (${attentionList}) a ORDER BY at DESC NULLS LAST LIMIT 8`),
+    db.execute(sql`SELECT count(*)::int AS n FROM (${attentionList}) a`),
+    recentActivity(q, cur, end),
     db.execute(smsOut),
   ]);
 
@@ -171,13 +126,9 @@ async function getHomeOverview(q: HomeQuery): Promise<HomeOverview> {
     attention: attentionRows.map((r): AttentionRow => ({
       kind: r.kind as AttentionRow["kind"], channel: r.channel as HomeChannel,
       leadId: r.lead_id == null ? null : num(r.lead_id), callId: (r.call_id as string | null) ?? null,
-      name: (r.name as string | null) ?? null, at: iso(r.at),
+      name: (r.name as string | null) ?? null, at: iso(r.at), ref: (r.ref as string | null) ?? null,
     })),
-    activity: rows(activity).map((r): ActivityRow => ({
-      kind: r.kind as ActivityRow["kind"], channel: r.channel as ActivityRow["channel"],
-      leadId: r.lead_id == null ? null : num(r.lead_id), callId: (r.call_id as string | null) ?? null,
-      name: (r.name as string | null) ?? null, at: iso(r.at), headline: (r.headline as string | null) || null,
-    })),
+    recent,
   };
 }
 

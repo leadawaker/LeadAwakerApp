@@ -2831,3 +2831,16 @@ export const voiceCoachMessages = nocodb.table("Voice_Coach_Messages", {
   index("voice_coach_messages_account_created_idx").on(t.accountsId, t.createdAt),
 ]);
 export type VoiceCoachMessageRow = typeof voiceCoachMessages.$inferSelect;
+
+/** Home "Needs attention" rows marked as handled, per account (shared by every user of it). Created by hand with SQL. */
+export const homeAttentionDismissed = nocodb.table("Home_Attention_Dismissed", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("accounts_id").notNull(),
+  kind: text("kind").notNull(),                                 // callback | transfer_failed | handoff
+  refId: text("ref_id").notNull(),                              // call id, or "<lead id>:<handoff epoch ms>" for handoff
+  dismissedByUserId: integer("dismissed_by_user_id"),
+  dismissedAt: timestamp("dismissed_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  uniqueIndex("home_attention_dismissed_ref").on(t.accountsId, t.kind, t.refId),
+]);
+export type HomeAttentionDismissedRow = typeof homeAttentionDismissed.$inferSelect;

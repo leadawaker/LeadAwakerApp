@@ -1,9 +1,9 @@
 import { sql } from "drizzle-orm";
 import { db } from "../db";
 import type { HomeReactivation } from "@shared/homeTypes";
-import { eachDay } from "@shared/homePeriod";
+import { eachBucket } from "@shared/homePeriod";
 import type { HomeQuery } from "../routes/homeScope";
-import { T, acct, at, boundsFor, dayOf, dbrCampaignSql, liveLeadSql, num } from "./homeSql";
+import { T, acct, boundsFor, rangeOf, bucketSql, dbrCampaignSql, liveLeadSql, num } from "./homeSql";
 import { homeReactivationLiveStorage } from "./homeReactivationLive";
 
 type Row = Record<string, unknown>;
@@ -11,7 +11,7 @@ const rows = (r: { rows: unknown[] }) => r.rows as Row[];
 
 async function getHomeReactivation(q: HomeQuery): Promise<HomeReactivation> {
   const b = await boundsFor(q);
-  const cur = at(b.from, b.tz), end = at(b.to, b.tz), prev = at(b.prevFrom, b.tz), prevEnd = at(b.prevTo, b.tz);
+  const { cur, end, prev, prevEnd } = rangeOf(b);
   const campaign = q.campaignId === null ? sql`TRUE` : sql`c.id = ${q.campaignId}`;
   const scope = sql`${acct('l."Accounts_id"', q.accountId)} AND ${dbrCampaignSql} AND ${liveLeadSql} AND ${campaign}`;
 
@@ -43,10 +43,10 @@ async function getHomeReactivation(q: HomeQuery): Promise<HomeReactivation> {
     db.execute(sql`
       WITH msg AS (${msg})
       SELECT day, sum(replies)::int AS replies, sum(bookings)::int AS bookings FROM (
-        SELECT ${dayOf("created_at", b.tz)} AS day, count(DISTINCT lead_id) AS replies, 0 AS bookings
+        SELECT ${bucketSql("created_at", b)} AS day, count(DISTINCT lead_id) AS replies, 0 AS bookings
         FROM msg WHERE created_at >= ${cur} AND direction = 'inbound' GROUP BY 1
         UNION ALL
-        SELECT to_char(${booked} AT TIME ZONE ${b.tz}, 'YYYY-MM-DD'), 0, count(*)
+        SELECT ${bucketSql('COALESCE(l.booked_at, l.booking_confirmed_at_)', b)}, 0, count(*)
         FROM ${T.leads} l JOIN ${T.campaigns} c ON c.id = l."Campaigns_id"
         WHERE ${scope} AND l.booked_call_date IS NOT NULL AND ${booked} >= ${cur} AND ${booked} < ${end} GROUP BY 1
       ) d GROUP BY day`),
@@ -68,7 +68,7 @@ async function getHomeReactivation(q: HomeQuery): Promise<HomeReactivation> {
     bookings: { value: num(t.bookings), previous: num(t.bookings_prev) },
     // Lifetime cost over lifetime bookings: campaign cost is not stored per period.
     costPerBooking: totalBookings === 0 ? null : Math.round((num(t.total_cost) / totalBookings) * 100) / 100,
-    perDay: eachDay(b.from, b.to).map((day) => ({
+    perDay: eachBucket(b.from, b.to, b.bucket).map((day) => ({
       day, replies: num(byDay.get(day)?.replies), bookings: num(byDay.get(day)?.bookings),
     })),
     pipeline: rows(pipeline).map((r) => ({ status: String(r.status), count: num(r.n) })),

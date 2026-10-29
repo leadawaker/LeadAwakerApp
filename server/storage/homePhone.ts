@@ -3,7 +3,7 @@ import { db } from "../db";
 import type { CallOutcome, HomePhone } from "@shared/homeTypes";
 import { classifyHomeOutcome } from "@shared/homeOutcome";
 import type { HomeQuery } from "../routes/homeScope";
-import { DEFAULT_TZ, T, needsCallbackSql, acct, at, bookingsSql, boundsFor, dayOf, fillDays, liveCallSql, num } from "./homeSql";
+import { DEFAULT_TZ, T, needsCallbackSql, acct, bookingsSql, boundsFor, rangeOf, bucketSql, fillDays, liveCallSql, num } from "./homeSql";
 
 const OUTCOMES: CallOutcome[] = ["booked", "callback", "transferred", "hung_up", "answered"];
 // A call with no ended_at that has been quiet this long was dropped (same as the Voice calls page).
@@ -12,7 +12,7 @@ type Row = Record<string, unknown>;
 const rows = (r: { rows: unknown[] }) => r.rows as Row[];
 
 /** The Home outcome of one calls-CTE row. Null-outcome legacy rows are derived. */
-function classify(r: Row): CallOutcome {
+export function classify(r: Row): CallOutcome {
   const intents = Array.isArray(r.intents) ? (r.intents as unknown[]).map(String) : [];
   return classifyHomeOutcome({
     outcome: (r.raw_outcome as string | null) ?? null,
@@ -28,7 +28,7 @@ function classify(r: Row): CallOutcome {
 
 async function getHomePhone(q: HomeQuery): Promise<HomePhone> {
   const b = await boundsFor(q);
-  const cur = at(b.from, b.tz), end = at(b.to, b.tz), prev = at(b.prevFrom, b.tz), prevEnd = at(b.prevTo, b.tz);
+  const { cur, end, prev, prevEnd } = rangeOf(b);
 
   // ended_at, else the last transcript turn (a tab closed before wrap-up leaves ended_at null).
   const callsOf = (full: boolean) => sql`
@@ -85,7 +85,7 @@ async function getHomePhone(q: HomeQuery): Promise<HomePhone> {
       FROM calls WHERE started_at >= ${cur}`),
     db.execute(sql`
       WITH calls AS (${calls})
-      SELECT ${dayOf("started_at", b.tz)} AS day, count(*)::int AS value FROM calls WHERE started_at >= ${cur} GROUP BY 1`),
+      SELECT ${bucketSql("started_at", b)} AS day, count(*)::int AS value FROM calls WHERE started_at >= ${cur} GROUP BY 1`),
     db.execute(sql`
       WITH calls AS (${classifyCalls})
       SELECT c.call_id, c.started_at, c.ended_at, c.caller_number, c.seconds, c.headline,

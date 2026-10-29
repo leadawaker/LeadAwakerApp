@@ -1,16 +1,23 @@
-import {
-  CalendarCheck, Hand, MessageCircle, Phone, PhoneForwarded, PhoneOff, PhoneOutgoing, Send, type LucideIcon,
-} from "lucide-react";
-import type { ActivityRow, AttentionRow } from "@shared/homeTypes";
+import { AudioLines, Globe, MessageCircle, MessageSquare, type LucideIcon } from "lucide-react";
+import type { AttentionRow, CallOutcome, HomeChannel } from "@shared/homeTypes";
 
-/** One icon and token colour per event type, so Recent activity scans at a glance. */
-export const EVENT_ICON: Record<ActivityRow["kind"] | AttentionRow["kind"], { icon: LucideIcon; tone: string }> = {
-  booked: { icon: CalendarCheck, tone: "var(--stage-booked)" },
-  call: { icon: Phone, tone: "var(--stage-responded)" },
-  transferred: { icon: PhoneForwarded, tone: "var(--stage-multi)" },
-  chat_started: { icon: MessageCircle, tone: "var(--stage-new)" },
-  followup_sent: { icon: Send, tone: "var(--stage-contacted)" },
-  callback: { icon: PhoneOutgoing, tone: "var(--stage-contacted)" },
-  transfer_failed: { icon: PhoneOff, tone: "var(--stage-lost)" },
-  handoff: { icon: Hand, tone: "var(--wine)" },
+/** One icon and token colour per channel, on every Recent activity and Needs attention row. */
+export const CHANNEL_ICON: Record<HomeChannel, { icon: LucideIcon; tone: string }> = {
+  phone: { icon: AudioLines, tone: "var(--wine)" },
+  whatsapp: { icon: MessageCircle, tone: "var(--stage-multi)" },
+  sms: { icon: MessageSquare, tone: "var(--stage-new)" },
+  website: { icon: Globe, tone: "var(--stage-contacted)" },
+};
+
+/** Tag colours. "answered" (questions answered) has no tag at all. */
+export const OUTCOME_COLOR: Record<Exclude<CallOutcome, "answered">, string> = {
+  booked: "var(--stage-booked)",
+  callback: "var(--stage-contacted)",
+  transferred: "var(--stage-multi)",
+  hung_up: "var(--mute)",
+};
+export const ATTENTION_COLOR: Record<AttentionRow["kind"], string> = {
+  callback: "var(--stage-contacted)",
+  transfer_failed: "var(--stage-lost)",
+  handoff: "var(--wine)",
 };

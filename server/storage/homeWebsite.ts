@@ -2,7 +2,7 @@ import { sql, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import type { HomeWebsite } from "@shared/homeTypes";
 import type { HomeQuery } from "../routes/homeScope";
-import { T, acct, at, boundsFor, dayOf, fillDays, liveLeadSql, num, receptionistLeadSql } from "./homeSql";
+import { T, acct, boundsFor, rangeOf, bucketSql, fillDays, liveLeadSql, num, receptionistLeadSql } from "./homeSql";
 import { channelMessagesSql, recentLeadsSql, toRecent } from "./homeMessaging";
 
 type Row = Record<string, unknown>;
@@ -10,7 +10,7 @@ const rows = (r: { rows: unknown[] }) => r.rows as Row[];
 
 async function getHomeWebsite(q: HomeQuery): Promise<HomeWebsite> {
   const b = await boundsFor(q);
-  const cur = at(b.from, b.tz), end = at(b.to, b.tz), prev = at(b.prevFrom, b.tz), prevEnd = at(b.prevTo, b.tz);
+  const { cur, end, prev, prevEnd } = rangeOf(b);
   const msg = channelMessagesSql(q, "website", prev, end);
   // No lower date bound: a visitor's first message may predate the window.
   const msgAll = channelMessagesSql(q, "website", sql`'-infinity'::timestamptz`, end);
@@ -34,7 +34,7 @@ async function getHomeWebsite(q: HomeQuery): Promise<HomeWebsite> {
       FROM chats ch JOIN ${T.leads} l ON l.id = ch.lead_id`),
     db.execute(sql`
       WITH msg AS (${msgAll}), ${chats}
-      SELECT ${dayOf("first_at", b.tz)} AS day, count(*)::int AS value
+      SELECT ${bucketSql("first_at", b)} AS day, count(*)::int AS value
       FROM chats WHERE first_at >= ${cur} GROUP BY 1`),
     db.execute(recentLeadsSql(msg, cur)),
     db.execute(bookings(cur, end)),

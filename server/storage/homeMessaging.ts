@@ -2,7 +2,7 @@ import { sql, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import type { HomeWhatsapp, RecentLead } from "@shared/homeTypes";
 import type { HomeQuery } from "../routes/homeScope";
-import { T, acct, at, boundsFor, dayOf, fillDays, humanOutboundSql, liveCallSql, liveLeadSql, num, receptionistLeadSql } from "./homeSql";
+import { T, acct, boundsFor, rangeOf, bucketSql, fillDays, humanOutboundSql, liveCallSql, liveLeadSql, num, receptionistLeadSql } from "./homeSql";
 
 type Row = Record<string, unknown>;
 const rows = (r: { rows: unknown[] }) => r.rows as Row[];
@@ -33,7 +33,7 @@ export const toRecent = (r: Row): RecentLead => ({
 
 async function getHomeWhatsapp(q: HomeQuery): Promise<HomeWhatsapp> {
   const b = await boundsFor(q);
-  const cur = at(b.from, b.tz), end = at(b.to, b.tz), prev = at(b.prevFrom, b.tz), prevEnd = at(b.prevTo, b.tz);
+  const { cur, end, prev, prevEnd } = rangeOf(b);
   const msg = channelMessagesSql(q, "whatsapp", prev, end);
 
   const [totals, days, recent, extras, sms] = await Promise.all([
@@ -51,7 +51,7 @@ async function getHomeWhatsapp(q: HomeQuery): Promise<HomeWhatsapp> {
       FROM msg`),
     db.execute(sql`
       WITH msg AS (${msg})
-      SELECT ${dayOf("created_at", b.tz)} AS day, count(DISTINCT lead_id)::int AS value
+      SELECT ${bucketSql("created_at", b)} AS day, count(DISTINCT lead_id)::int AS value
       FROM msg WHERE created_at >= ${cur} AND direction = 'inbound' GROUP BY 1`),
     db.execute(recentLeadsSql(msg, cur)),
     db.execute(sql`

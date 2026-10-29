@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db";
 import type { HomeReputation } from "@shared/homeTypes";
 import type { HomeQuery } from "../routes/homeScope";
-import { T, acct, at, boundsFor, dayOf, fillDays, liveLeadSql, num, reputationCampaignSql } from "./homeSql";
+import { T, acct, boundsFor, rangeOf, bucketSql, fillDays, liveLeadSql, num, reputationCampaignSql } from "./homeSql";
 
 type Row = Record<string, unknown>;
 const rows = (r: { rows: unknown[] }) => r.rows as Row[];
@@ -10,7 +10,7 @@ const avg = (v: unknown): number | null => (v == null ? null : Math.round(Number
 
 async function getHomeReputation(q: HomeQuery): Promise<HomeReputation> {
   const b = await boundsFor(q);
-  const cur = at(b.from, b.tz), end = at(b.to, b.tz), prev = at(b.prevFrom, b.tz), prevEnd = at(b.prevTo, b.tz);
+  const { cur, end, prev, prevEnd } = rangeOf(b);
   const reviewScope = sql`${acct("r.accounts_id", q.accountId)}`;
   const requestScope = sql`${acct('l."Accounts_id"', q.accountId)} AND l.review_request_sent_at IS NOT NULL
     AND ${reputationCampaignSql} AND ${liveLeadSql}`;
@@ -30,7 +30,7 @@ async function getHomeReputation(q: HomeQuery): Promise<HomeReputation> {
       SELECT r.rating, count(*)::int AS n FROM ${T.accountReviews} r
       WHERE ${reviewScope} AND COALESCE(r.review_created_at, r.created_at) >= ${cur} AND COALESCE(r.review_created_at, r.created_at) < ${end} GROUP BY 1`),
     db.execute(sql`
-      SELECT ${dayOf("COALESCE(r.review_created_at, r.created_at)", b.tz)} AS day, count(*)::int AS value
+      SELECT ${bucketSql("COALESCE(r.review_created_at, r.created_at)", b)} AS day, count(*)::int AS value
       FROM ${T.accountReviews} r
       WHERE ${reviewScope} AND COALESCE(r.review_created_at, r.created_at) >= ${cur} AND COALESCE(r.review_created_at, r.created_at) < ${end} GROUP BY 1`),
     db.execute(sql`

@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { db } from "../db";
 import type { HomeSocial } from "@shared/homeTypes";
 import type { HomeQuery } from "../routes/homeScope";
-import { T, acct, at, boundsFor, dayOf, fillDays, liveLeadSql, num, socialCampaignSql } from "./homeSql";
+import { T, acct, boundsFor, rangeOf, bucketSql, fillDays, liveLeadSql, num, socialCampaignSql } from "./homeSql";
 import { recentLeadsSql, toRecent } from "./homeMessaging";
 
 type Row = Record<string, unknown>;
@@ -10,7 +10,7 @@ const rows = (r: { rows: unknown[] }) => r.rows as Row[];
 
 async function getHomeSocial(q: HomeQuery): Promise<HomeSocial> {
   const b = await boundsFor(q);
-  const cur = at(b.from, b.tz), end = at(b.to, b.tz), prev = at(b.prevFrom, b.tz), prevEnd = at(b.prevTo, b.tz);
+  const { cur, end, prev, prevEnd } = rangeOf(b);
   const scope = sql`${acct('l."Accounts_id"', q.accountId)} AND ${socialCampaignSql} AND ${liveLeadSql}`;
 
   // The Social stream is picked by campaign: Instagram messages are stored with channel 'other'.
@@ -35,7 +35,7 @@ async function getHomeSocial(q: HomeQuery): Promise<HomeSocial> {
       FROM msg`),
     db.execute(sql`
       WITH msg AS (${msg})
-      SELECT ${dayOf("created_at", b.tz)} AS day, count(DISTINCT lead_id)::int AS value
+      SELECT ${bucketSql("created_at", b)} AS day, count(DISTINCT lead_id)::int AS value
       FROM msg WHERE created_at >= ${cur} AND direction = 'inbound' GROUP BY 1`),
     db.execute(recentLeadsSql(msg, cur)),
     db.execute(sql`

@@ -5,8 +5,8 @@
 import { eq, sql, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import { accounts } from "@shared/schema";
-import { eachDay, periodDates, todayIn, type PeriodDates } from "@shared/homePeriod";
-import type { DayPoint } from "@shared/homeTypes";
+import { bucketOf, eachBucket, periodDates, todayIn, type PeriodDates } from "@shared/homePeriod";
+import type { DayPoint, HomeBucket, HomePeriod } from "@shared/homeTypes";
 import type { HomeQuery } from "../routes/homeScope";
 
 const table = (name: string) => sql.raw(`"p2mxx34fvbf3ll6"."${name}"`);
@@ -14,17 +14,22 @@ export const T = {
   interactions: table("Interactions"), leads: table("Leads"), campaigns: table("Campaigns"),
   accounts: table("Accounts"), voiceCalls: table("Voice_Calls"), voiceNumbers: table("Voice_Numbers"),
   widgetConfigs: table("Widget_Configs"), whatsappSenders: table("WhatsApp_Senders"),
-  callFollowupLog: table("Call_Followup_Log"),
+  callFollowupLog: table("Call_Followup_Log"), attentionDismissed: table("Home_Attention_Dismissed"),
   accountReviews: table("Account_Reviews"), calendarConnections: table("Calendar_Connections"),
 };
 
 export const DEFAULT_TZ = "Europe/Amsterdam";
 
-/** Lead l (campaign c) is real traffic. Mirrors the engine's recap filter. */
+/**
+ * Lead l (campaign c) is real traffic. Mirrors the engine's recap filter, plus the
+ * Telegram demo bots (tg:<chat> and tg-<bot>:<chat>), which carry no demo flag.
+ */
 export const liveLeadSql = sql`(
   COALESCE(c.is_demo, false) = false AND l.demo_niche IS NULL
   AND COALESCE(l.channel_identifier, '') NOT LIKE 'wa-demo:%'
   AND COALESCE(l.channel_identifier, '') NOT LIKE 'web-demo:%'
+  AND COALESCE(l.channel_identifier, '') NOT LIKE 'tg:%'
+  AND COALESCE(l.channel_identifier, '') NOT LIKE 'tg-%'
   AND COALESCE(l.is_test, false) = false
 )`;
 
@@ -83,11 +88,47 @@ export const humanOutboundSql = sql`(
   AND (i.triggered_by IS NULL OR i.triggered_by IN ('manual', 'crm', 'user'))
 )`;
 
-export interface Bounds extends PeriodDates { tz: string }
+export interface Bounds extends PeriodDates { tz: string; period: HomePeriod; bucket: HomeBucket }
 
 function validTz(tz: string | null | undefined): string {
   if (!tz) return DEFAULT_TZ;
   try { new Intl.DateTimeFormat("en-US", { timeZone: tz }); return tz; } catch { return DEFAULT_TZ; }
+}
+
+/**
+ * Where "all time" starts on the chart: the account's creation or its first call,
+ * message or lead, whichever is earliest (every account for the agency view).
+ */
+async function queryFirstDay(accountId: number | null, tz: string): Promise<string | null> {
+  const r = await db.execute(sql`
+    SELECT to_char(LEAST(
+      (SELECT min(a.created_at) FROM ${T.accounts} a WHERE ${acct("a.id", accountId)}),
+      (SELECT min(vc.started_at) FROM ${T.voiceCalls} vc WHERE ${acct("vc.accounts_id", accountId)}),
+      (SELECT min(i.created_at) FROM ${T.interactions} i WHERE ${acct('i."Accounts_id"', accountId)}),
+      (SELECT min(l.created_at) FROM ${T.leads} l WHERE ${acct('l."Accounts_id"', accountId)})
+    ) AT TIME ZONE ${tz}, 'YYYY-MM-DD') AS first`);
+  const first = (r.rows[0] as { first?: string | null } | undefined)?.first;
+  return typeof first === "string" ? first : null;
+}
+
+/**
+ * firstDay() runs on every Home endpoint for "all time" (the default) and only
+ * moves when older data is backfilled, so it is kept per account and timezone
+ * for a few minutes. The promise is cached too, so the tabs Home loads at once
+ * share one query.
+ */
+const FIRST_DAY_TTL_MS = 10 * 60 * 1000;
+const firstDayCache = new Map<string, { at: number; value: Promise<string | null> }>();
+
+function firstDay(accountId: number | null, tz: string): Promise<string | null> {
+  const key = `${accountId ?? "all"}|${tz}`;
+  const hit = firstDayCache.get(key);
+  if (hit && Date.now() - hit.at < FIRST_DAY_TTL_MS) return hit.value;
+  const value = queryFirstDay(accountId, tz);
+  firstDayCache.set(key, { at: Date.now(), value });
+  // A failed query must not stick for the whole TTL.
+  value.catch(() => { if (firstDayCache.get(key)?.value === value) firstDayCache.delete(key); });
+  return value;
 }
 
 /** Period bounds in the account's timezone; the agency timezone for all accounts. */
@@ -97,22 +138,42 @@ export async function boundsFor(q: HomeQuery): Promise<Bounds> {
     const [a] = await db.select({ timezone: accounts.timezone }).from(accounts).where(eq(accounts.id, q.accountId));
     tz = validTz(a?.timezone);
   }
-  return { ...periodDates(q.period, todayIn(tz)), tz };
+  const allFrom = q.period === "all" ? await firstDay(q.accountId, tz) : null;
+  return { ...periodDates(q.period, todayIn(tz), allFrom), tz, period: q.period, bucket: bucketOf(q.period) };
 }
 
 /** A local date as an instant: start of that day in the timezone. */
 export const at = (date: string, tz: string): SQL => sql`((${date}::date)::timestamp AT TIME ZONE ${tz})`;
+
+const NEVER = sql`'-infinity'::timestamptz`;
+/**
+ * The period and the one before it as instants. "All time" counts everything,
+ * also data from before the chart's first bucket, and has an empty previous range.
+ */
+export function rangeOf(b: Bounds): { cur: SQL; end: SQL; prev: SQL; prevEnd: SQL } {
+  if (b.period === "all") return { cur: NEVER, end: at(b.to, b.tz), prev: NEVER, prevEnd: NEVER };
+  // Today so far is compared with yesterday up to the same time of day, not all of yesterday.
+  if (b.period === "today") {
+    const prev = at(b.prevFrom, b.tz);
+    return { cur: at(b.from, b.tz), end: at(b.to, b.tz), prev, prevEnd: sql`(${prev} + (now() - ${at(b.from, b.tz)}))` };
+  }
+  return { cur: at(b.from, b.tz), end: at(b.to, b.tz), prev: at(b.prevFrom, b.tz), prevEnd: at(b.prevTo, b.tz) };
+}
+
 /** Account filter. null = all accounts (agency only, decided in homeScope). */
 export const acct = (column: string, accountId: number | null): SQL =>
   accountId === null ? sql`TRUE` : sql`${sql.raw(column)} = ${accountId}`;
-export const dayOf = (column: string, tz: string): SQL =>
-  sql`to_char(${sql.raw(column)} AT TIME ZONE ${tz}, 'YYYY-MM-DD')`;
+
+const BUCKET_FORMAT: Record<HomeBucket, string> = { month: "YYYY-MM", day: "YYYY-MM-DD", hour: "YYYY-MM-DD HH24" };
+/** The chart bucket key (see DayPoint) of a timestamp column, in the period's timezone. */
+export const bucketSql = (column: string, b: Bounds): SQL =>
+  sql`to_char(${sql.raw(column)} AT TIME ZONE ${b.tz}, ${BUCKET_FORMAT[b.bucket]})`;
 export const num = (v: unknown): number => Number(v ?? 0) || 0;
 
-/** A value for every day of the period, zero where the query returned no row. */
+/** A value for every bucket of the period, zero where the query returned no row. */
 export function fillDays(b: Bounds, rows: { day: string; value: number }[]): DayPoint[] {
   const byDay = new Map(rows.map((r) => [r.day, r.value]));
-  return eachDay(b.from, b.to).map((day) => ({ day, value: byDay.get(day) ?? 0 }));
+  return eachBucket(b.from, b.to, b.bucket).map((day) => ({ day, value: byDay.get(day) ?? 0 }));
 }
 
 /**

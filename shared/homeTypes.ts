@@ -1,7 +1,14 @@
-export const HOME_PERIODS = ["month", "7d", "30d", "last_month"] as const;
+/** "all" (the default) has no earlier period to compare with. Weeks start on Monday. */
+export const HOME_PERIODS = ["all", "year", "month", "week", "today"] as const;
 export type HomePeriod = (typeof HOME_PERIODS)[number];
 export type HomeChannel = "phone" | "whatsapp" | "sms" | "website";
+export const HOME_CHANNELS: readonly HomeChannel[] = ["phone", "whatsapp", "sms", "website"];
+/** The Home page's channel switcher: null on the server = all channels. */
+export type HomeChannelFilter = "all" | HomeChannel;
+/** Chart granularity: month for all/year, day for month/week, hour for today. */
+export type HomeBucket = "month" | "day" | "hour";
 export interface Compared { value: number; previous: number }
+/** `day` is the bucket key: YYYY-MM (month), YYYY-MM-DD (day) or YYYY-MM-DD HH (hour). */
 export interface DayPoint { day: string; value: number }
 
 export interface HomeServices { phone: boolean; whatsapp: boolean; website: boolean; reactivation: boolean; reputation: boolean; social: boolean; sms: boolean }
@@ -13,24 +20,30 @@ export interface AttentionRow {
   callId: string | null;
   name: string | null;
   at: string;
+  /** Stable id for "Mark as handled": the call id, or "<lead id>:<handoff epoch ms>". */
+  ref: string | null;
 }
-export interface ActivityRow {
-  kind: "booked" | "call" | "transferred" | "chat_started" | "followup_sent";
-  channel: HomeChannel | "booking_page" | "unknown";
-  leadId: number | null;
+/** One Recent activity row: a call, or a lead's latest message on a text channel. Newest first. */
+export interface RecentItem {
+  channel: HomeChannel;
   callId: string | null;
+  leadId: number | null;
   name: string | null;
+  callerNumber: string | null;
   at: string;
-  /** One-line summary of the call (as on the Voice calls inbox); null for non-call rows. */
-  headline: string | null;
+  /** Call headline (as on the Voice calls inbox) or the message snippet. */
+  text: string | null;
+  /** Calls only. */
+  outcome: CallOutcome | null;
 }
 export interface HomeOverview {
   conversations: Compared; bookings: Compared; callbacks: Compared; newContacts: Compared;
   waiting: number;
   byChannel: { channel: HomeChannel; conversations: number; bookings: number }[];
   perDay: DayPoint[];
+  /** Open to-dos, not tied to the period. Filtered by the channel param, like perDay and recent. */
   attention: AttentionRow[];
-  activity: ActivityRow[];
+  recent: RecentItem[];
 }
 export type CallOutcome = "booked" | "callback" | "transferred" | "hung_up" | "answered";
 export interface HomePhone {
