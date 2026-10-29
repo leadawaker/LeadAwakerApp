@@ -21,6 +21,7 @@ import {
 import { hydrateUserLanguage } from "@/lib/userLanguage";
 import { hydrateLandingPage, isLandingHydrated, resolveLandingPath } from "@/lib/landingPage";
 import { getQueryFn } from "@/lib/queryClient";
+import { useWorkspace } from "@/hooks/useWorkspace";
 import { TwoFactorNotice } from "@/features/settings/twoFactor/TwoFactorNotice";
 import { parsePrefs } from "@/lib/userPrefs";
 import { LEAD_HOME_PATH, leadPath, readLeadParam } from "@/lib/leadLink";
@@ -58,14 +59,6 @@ function isAuthed() {
   return Boolean(localStorage.getItem("leadawaker_auth"));
 }
 
-/**
- * Checks if the current user has agency-level access.
- */
-function isAgencyUser(): boolean {
-  const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  return role === "Owner" || role === "Admin";
-}
-
 function Protected({ children }: { children: ReactElement }) {
   if (!isAuthed()) return <Redirect to="/login" />;
   return children;
@@ -77,7 +70,9 @@ function Protected({ children }: { children: ReactElement }) {
  * Client users (Manager, Viewer) are blocked from these routes.
  */
 function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: string }) {
-  if (!isAgencyUser()) {
+  // useWorkspace follows "view as" impersonation, so a previewed client is sent away too.
+  const { isAgencyUser: agency } = useWorkspace();
+  if (!agency) {
     return <Redirect to={`${prefix}/home`} />;
   }
   return children;
@@ -88,8 +83,8 @@ function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: stri
  * Everyone else is sent to Home.
  */
 function OwnerOnly({ children, prefix }: { children: ReactElement; prefix: string }) {
-  const role = localStorage.getItem("leadawaker_user_role") || "Viewer";
-  if (role !== "Owner") {
+  const { isOwner } = useWorkspace();
+  if (!isOwner) {
     return <Redirect to={`${prefix}/home`} />;
   }
   return children;
