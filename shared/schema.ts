@@ -606,6 +606,10 @@ export const campaigns = nocodb.table("Campaigns", {
   // own, so two campaigns share ONE prompt instead of drifting copies. Read by
   // the engine's get_prompt_for_campaign (campaign 68 -> 67's prompt #108).
   promptCampaignId: integer("prompt_campaign_id"),
+  // The conversation prompt this campaign runs (Prompt_Library.id), picked in Chats > Settings >
+  // Prompt or the campaign's "Prompt linked" select. The engine reads it first; NULL falls back
+  // to the campaign's own Campaigns_id rows, then prompt_campaign_id.
+  promptId: integer("prompt_id"),
   // Reputation: minutes after service_completed_at before the feedback ask is sent.
   reputationDelayMinutes: integer("reputation_delay_minutes"),
   accountsId: integer("Accounts_id"),

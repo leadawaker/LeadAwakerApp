@@ -9,7 +9,7 @@
 import { type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
-import { BookOpen, Bot, Clock, Hand, LayoutDashboard, Loader2, MessageSquareText, ArrowRight, Check, SlidersHorizontal } from "lucide-react";
+import { BookOpen, Bot, Clock, FileText, Hand, LayoutDashboard, Loader2, MessageSquareText, ArrowRight, Check, SlidersHorizontal } from "lucide-react";
 import { useCampaignDetail } from "@/features/campaigns/components/useCampaignDetail";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLastTab } from "@/hooks/useLastTab";
@@ -22,9 +22,13 @@ import { ChatGreeting } from "./ChatGreeting";
 import { ChatBehaviour, ChatKnowledge } from "./ChatBehaviour";
 import { ChatFollowUp, ChatHours, followUpOn, isReceptionistBump } from "./ChatFollowUp";
 import { ChatAdvanced } from "./ChatAdvanced";
+import { ChatPrompt } from "./ChatPrompt";
 
-/** Every section a link may name. "advanced" opens only for the Owner; anyone else lands on Overview. */
-export const CHAT_SECTIONS = ["overview", "greeting", "behaviour", "knowledge", "followup", "hours", "advanced"] as const;
+/**
+ * Every section a link may name. "prompt" opens only for the agency and "advanced" only for the
+ * Owner; anyone else lands on Overview.
+ */
+export const CHAT_SECTIONS = ["overview", "greeting", "behaviour", "prompt", "knowledge", "followup", "hours", "advanced"] as const;
 export type ChatSection = (typeof CHAT_SECTIONS)[number];
 
 function Centered({ children }: { children: React.ReactNode }) {
@@ -87,12 +91,12 @@ function ChatSections({ accountId, campaign, onSave, canEdit, stacked, widget, s
   initialSection?: ChatSection; knowledgeNote?: ReactNode;
 }) {
   const { t } = useTranslation("chatTab");
-  const { isOwner } = useWorkspace();
+  const { isOwner, isAgencyUser } = useWorkspace();
   // A ?section= link wins; otherwise the section used last reopens.
   const [picked, setSection] = useLastTab<ChatSection>("chats.settings", CHAT_SECTIONS, "overview", initialSection);
-  // Advanced is the Owner's alone, also when a link names it.
-  const section: ChatSection = picked === "advanced" && !isOwner ? "overview" : picked;
-  const { draft, setDraft, saving, hasChanges } = useCampaignDetail(campaign as unknown as Campaign, onSave);
+  // Advanced is the Owner's alone and Prompt the agency's, also when a link names them.
+  const section: ChatSection = (picked === "advanced" && !isOwner) || (picked === "prompt" && !isAgencyUser) ? "overview" : picked;
+  const { draft, setDraft, saving, hasChanges, linkedPrompt, conversationPrompts, reloadPrompts } = useCampaignDetail(campaign as unknown as Campaign, onSave);
   const edit: ChatEdit = { campaign, draft, setDraft, canEdit };
   const loc = useLocalized(edit);
 
@@ -116,6 +120,11 @@ function ChatSections({ accountId, campaign, onSave, canEdit, stacked, widget, s
       state: name && loc.get("ai_style_override") ? "on" : "pending",
       detail: [name, t(`behaviour.languages.${String(draft.language || "en")}`)].filter(Boolean).join(" · "),
     },
+    ...(isAgencyUser ? [{
+      key: "prompt" as const, icon: <FileText size={16} />, label: t("rail.prompt.label"),
+      state: linkedPrompt ? "on" as const : "off" as const,
+      detail: linkedPrompt ? `${linkedPrompt.name} · #${linkedPrompt.id ?? linkedPrompt.Id}` : t("prompt.none"),
+    }] : []),
     {
       key: "knowledge", icon: <BookOpen size={16} />, label: t("rail.knowledge.label"),
       state: loc.get("kb") ? (draft.calendar_link_override ? "on" : "pending") : "off",
@@ -153,6 +162,7 @@ function ChatSections({ accountId, campaign, onSave, canEdit, stacked, widget, s
         {section === "overview" && <ChatOverview accountId={accountId} campaign={campaign} widget={widget} onOpenIntegrations={onOpenIntegrations} />}
         {section === "greeting" && <ChatGreeting widget={widget} canEdit={canEdit} onSaveWidget={saveWidget} />}
         {section === "behaviour" && <ChatBehaviour {...edit} />}
+        {section === "prompt" && <ChatPrompt {...edit} prompts={conversationPrompts} linkedPrompt={linkedPrompt} reloadPrompts={reloadPrompts} />}
         {section === "knowledge" && <>{knowledgeNote}<ChatKnowledge {...edit} /></>}
         {section === "followup" && <ChatFollowUp {...edit} />}
         {section === "hours" && <ChatHours {...edit} />}

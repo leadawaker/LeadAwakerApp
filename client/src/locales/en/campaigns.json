@@ -328,7 +328,9 @@
       "reactivation": "Reactivation",
       "reputation": "Reputation",
       "speed_to_lead": "Speed to Lead",
-      "missed_call": "Missed-Call Text-Back"
+      "missed_call": "Missed-Call Text-Back",
+      "receptionist": "Receptionist",
+      "social_reply": "Social reply"
     },
     "coldOpenTemplateSid": "Cold-open Template SID",
     "coldOpenTemplateSidHint": "Approved Twilio WhatsApp template for the first cold message (speed-to-lead).",

@@ -8,6 +8,8 @@ export interface CampaignForPreview {
   aiModel: string;
   /** Campaign whose prompt this one borrows when it has none of its own (engine falls through to it). */
   promptCampaignId?: number | null;
+  /** The conversation prompt this campaign picked (Campaigns.prompt_id); the engine reads it first. */
+  promptId?: number | null;
   agentName?: string | null;
   serviceName?: string | null;
   campaignService?: string | null;

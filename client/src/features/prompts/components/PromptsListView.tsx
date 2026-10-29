@@ -21,6 +21,7 @@ import { PageTopbar, ExpandingSearch } from "@/components/crm/primitives";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { type CampaignForPreview } from "../utils/resolveVariables";
 import { getPromptId, MODEL_OPTIONS, isCampaignPrompt } from "../types";
+import { campaignsByPrompt } from "../utils/campaignPrompt";
 import {
   CATEGORY_COLOR, PROMPT_CATEGORIES, isDemoPrompt, isPromptCategory, promptCategory,
   type PromptCategory, type PromptListTab,
@@ -92,30 +93,17 @@ export function PromptsListView(props: PromptsListViewProps) {
 
   const accountMap = useMemo(() => new Map(props.availableAccounts.map((a) => [a.id, a.name])), [props.availableAccounts]);
 
-  // Campaigns that talk with each prompt: its own campaign plus every campaign
-  // that borrows it via prompt_campaign_id and has no active prompt of its own
-  // (same fall-through as the engine's get_prompt_for_campaign).
+  // Campaigns that talk with each prompt, resolved like the engine's
+  // get_prompt_for_campaign: the picked prompt_id, the campaign's own row, then
+  // prompt_campaign_id. A helper row (not "conversation") shows its own campaign.
   const servedCampaignNames = useMemo(() => {
-    const ownActive = new Set<number>();
-    for (const p of prompts) {
-      if (isCampaignPrompt(p) && String(p.status || "").toLowerCase().trim() === "active") {
-        ownActive.add(Number(p.campaignsId || p.Campaigns_id));
-      }
-    }
-    const byPromptCampaign = new Map<number, string[]>();
-    for (const c of campaigns) {
-      const target = Number(c.promptCampaignId) || 0;
-      if (!target || target === c.id || ownActive.has(c.id)) continue;
-      const list = byPromptCampaign.get(target) ?? [];
-      list.push(c.name);
-      byPromptCampaign.set(target, list);
-    }
+    const byPrompt = campaignsByPrompt(prompts, campaigns);
     return (p: any): string | undefined => {
+      const served = byPrompt.get(getPromptId(p))?.map((c) => c.name) ?? [];
+      if (served.length) return served.join(" · ");
       const cId = Number(p.campaignsId || p.Campaigns_id) || 0;
-      const own = cId ? campaignMap.get(cId) : undefined;
-      if (!own) return undefined;
-      if (!isCampaignPrompt(p)) return own;
-      return [own, ...(byPromptCampaign.get(cId) ?? [])].join(" · ");
+      if (!cId || isCampaignPrompt(p)) return undefined;
+      return campaignMap.get(cId);
     };
   }, [prompts, campaigns, campaignMap]);
 

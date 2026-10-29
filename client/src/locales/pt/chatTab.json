@@ -28,6 +28,10 @@
       "label": "Comportamento",
       "help": "Quem é o assistente, como escreve e quando uma pessoa assume."
     },
+    "prompt": {
+      "label": "Prompt",
+      "help": "O prompt que o assistente segue em cada conversa. Escolha outro da biblioteca ou edite este."
+    },
     "knowledge": {
       "label": "Conhecimento",
       "help": "O que o assistente sabe sobre a empresa e onde agenda.",
@@ -194,5 +198,18 @@
     "stopOnResponseHelp": "Cancela a próxima retomada planejada assim que chega uma resposta.",
     "objectionsTitle": "Roteiro de objeções",
     "objectionsHelp": "Até cinco objeções, cada uma com a resposta que a empresa aprova. O assistente usa essas respostas em vez de inventar uma."
+  },
+  "prompt": {
+    "none": "Nenhum prompt escolhido",
+    "pickTitle": "Prompt em uso",
+    "pickHelp": "O assistente de chat segue este prompt da biblioteca. Escolher outro vale a partir da próxima mensagem.",
+    "inUse": "Prompt",
+    "noneHelp": "Nenhum prompt escolhido: as conversas usam o prompt da conta ou o padrão.",
+    "alsoUsedBy": "Também usado por: {{names}}. Alterações aqui valem para eles também. Faça uma cópia para mudar só para esta conta.",
+    "copy": "Fazer uma cópia para esta conta",
+    "copyFailed": "Não foi possível fazer a cópia. Tente de novo.",
+    "copyNote": "Copiado do prompt #{{id}} em Chats > Configurações.",
+    "openLibrary": "Abrir #{{id}} na Biblioteca de prompts",
+    "versionLabel": "Antes de uma alteração em Chats > Configurações ({{campaign}})"
   }
 }

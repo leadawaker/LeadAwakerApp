@@ -12,7 +12,7 @@ import { helpStyle } from "./voiceAtoms";
 
 const versionsUrl = (promptId: number) => `/api/prompts/${promptId}/versions`;
 
-async function postVersion(promptId: number, text: string, label: string): Promise<boolean> {
+export async function postVersion(promptId: number, text: string, label: string): Promise<boolean> {
   const res = await apiFetch(versionsUrl(promptId), {
     method: "POST",
     headers: { "Content-Type": "application/json" },

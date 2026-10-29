@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiUtils";
 import type { Campaign } from "@/types/models";
 import { useCampaignAiSummary } from "../hooks/useCampaignAiSummary";
+import { campaignPromptResolver, isActivePrompt, isConversationPrompt, promptIdOf } from "@/features/prompts/utils/campaignPrompt";
 
 // The only fields POST /api/campaigns/:id/generate writes (CONTEXT_FIELDS in
 // server/routes/campaigns.ts), in draft/db-key form. Its response carries a
@@ -35,6 +36,23 @@ function coerceMaxMessagesPerReply(v: unknown): number {
   const n = Number(v);
   if (!Number.isFinite(n)) return 1;
   return Math.min(4, Math.max(1, Math.round(n)));
+}
+
+// The draft as a campaign PATCH: "" becomes null, and a changed "Prompt linked"
+// becomes Campaigns.prompt_id (the pointer the engine reads first), so one
+// prompt can serve several campaigns and picking one never unlinks it elsewhere.
+function toCampaignPatch(draft: Record<string, unknown>, original: Record<string, unknown>): Record<string, unknown> {
+  const { prompt_linked_id: linked, ...rawPatch } = draft as any;
+  const patch: Record<string, unknown> = Object.fromEntries(
+    Object.entries(rawPatch).map(([k, v]) => [k, v === "" ? null : v])
+  );
+  if (patch.max_messages_per_reply !== undefined) {
+    patch.max_messages_per_reply = coerceMaxMessagesPerReply(patch.max_messages_per_reply);
+  }
+  if (String(linked ?? "") !== String(original.prompt_linked_id ?? "")) {
+    patch.prompt_id = Number(linked) || null;
+  }
+  return patch;
 }
 
 /** The three AI disclosure modes, in the order they appear in the settings select. */
@@ -141,19 +159,12 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
   onSaveRef.current = onSave;
 
   // ── Linked prompt ──────────────────────────────────────────────────────────
-  const [conversationPrompts, setConversationPrompts] = useState<any[]>([]);
+  const [allPrompts, setAllPrompts] = useState<any[]>([]);
 
   const reloadPrompts = useCallback(() => {
     apiFetch("/api/prompts")
       .then((r) => r.ok ? r.json() : [])
-      .then((data: any[]) => {
-        setConversationPrompts(
-          Array.isArray(data) ? data.filter((p) =>
-            (p.use_case || p.useCase || "").toLowerCase() === "conversation" ||
-            !!(p.campaigns_id || p.campaignsId || p.Campaigns_id)
-          ) : []
-        );
-      })
+      .then((data: any[]) => setAllPrompts(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
 
@@ -161,10 +172,19 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     reloadPrompts();
   }, [reloadPrompts]);
 
+  // The prompt the engine runs for this campaign: the picked prompt_id, else its own
+  // active conversation row, else the one it borrows (utils/campaignPrompt).
+  const promptPick = (campaign as any).prompt_id ?? (campaign as any).promptId ?? null;
   const linkedPrompt = useMemo(() => {
     const cid = campaign.id || (campaign as any).Id;
-    return conversationPrompts.find((p) => Number(p.campaigns_id || p.campaignsId || p.Campaigns_id) === cid) ?? null;
-  }, [conversationPrompts, campaign.id, (campaign as any).Id]);
+    return campaignPromptResolver(allPrompts, [campaign])(cid);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allPrompts, campaign.id, (campaign as any).Id, promptPick]);
+
+  // What the "Prompt linked" select offers: the active conversation prompts, plus the linked one.
+  const conversationPrompts = useMemo(() => allPrompts.filter((p) =>
+    (isConversationPrompt(p) && isActivePrompt(p)) || (linkedPrompt && promptIdOf(p) === promptIdOf(linkedPrompt)),
+  ), [allPrompts, linkedPrompt]);
 
   // ── Daily capacity stats ───────────────────────────────────────────────────
   const [dailyStats, setDailyStats] = useState<{ sentToday: number; dailyLimit: number; channel: string } | null>(null);
@@ -358,14 +378,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
         JSON.stringify(currentDraft[k]) !== JSON.stringify(currentOriginal[k])
       );
       if (changed && prevId) {
-        const { prompt_linked_id: _omit, ...rawPatch } = currentDraft as any;
-        const campaignPatch = Object.fromEntries(
-          Object.entries(rawPatch).map(([k, v]: [string, unknown]) => [k, v === "" ? null : v])
-        );
-        if (campaignPatch.max_messages_per_reply !== undefined) {
-          campaignPatch.max_messages_per_reply = coerceMaxMessagesPerReply(campaignPatch.max_messages_per_reply);
-        }
-        onSaveRef.current(prevId, campaignPatch);
+        onSaveRef.current(prevId, toCampaignPatch(currentDraft, currentOriginal));
       }
     }
     prevCampaignIdRef.current = campaignId;
@@ -412,35 +425,7 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     if (!id) return;
     setSaving(true);
     try {
-      // Handle prompt linking changes
-      const prevPromptId = String(currentOriginal.prompt_linked_id ?? "");
-      const newPromptId = String(currentDraft.prompt_linked_id ?? "");
-      if (newPromptId !== prevPromptId) {
-        if (prevPromptId) {
-          await apiFetch(`/api/prompts/${prevPromptId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ campaignsId: null }),
-          });
-        }
-        if (newPromptId) {
-          await apiFetch(`/api/prompts/${newPromptId}`, {
-            method: "PUT",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ campaignsId: id }),
-          });
-        }
-        reloadPrompts();
-      }
-
-      const { prompt_linked_id: _omit, ...rawPatch } = currentDraft as any;
-      const campaignPatch = Object.fromEntries(
-        Object.entries(rawPatch).map(([k, v]) => [k, v === "" ? null : v])
-      );
-      if (campaignPatch.max_messages_per_reply !== undefined) {
-        campaignPatch.max_messages_per_reply = coerceMaxMessagesPerReply(campaignPatch.max_messages_per_reply);
-      }
-      await onSaveRef.current(id, campaignPatch);
+      await onSaveRef.current(id, toCampaignPatch(currentDraft, currentOriginal));
       setOriginalDraft({ ...currentDraft });
     } catch (e) {
       console.error("Auto-save failed", e);

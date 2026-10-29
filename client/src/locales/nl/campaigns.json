@@ -328,7 +328,9 @@
       "reactivation": "Reactivatie",
       "reputation": "Reputatie",
       "speed_to_lead": "Snelle opvolging",
-      "missed_call": "Gemiste oproep terugbericht"
+      "missed_call": "Gemiste oproep terugbericht",
+      "receptionist": "Receptionist",
+      "social_reply": "Social-reacties"
     },
     "coldOpenTemplateSid": "Cold-open template-SID",
     "coldOpenTemplateSidHint": "Goedgekeurd Twilio WhatsApp-template voor het eerste koude bericht (snelle opvolging).",

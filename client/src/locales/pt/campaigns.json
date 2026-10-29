@@ -258,7 +258,9 @@
       "reactivation": "Reativação",
       "reputation": "Reputação",
       "speed_to_lead": "Resposta Imediata",
-      "missed_call": "Retorno de Chamada Perdida"
+      "missed_call": "Retorno de Chamada Perdida",
+      "receptionist": "Recepcionista",
+      "social_reply": "Respostas sociais"
     },
     "coldOpenTemplateSid": "SID do Template de Abertura",
     "coldOpenTemplateSidHint": "Template aprovado do WhatsApp (Twilio) para a primeira mensagem fria (resposta imediata).",

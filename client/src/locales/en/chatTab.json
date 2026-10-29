@@ -28,6 +28,10 @@
       "label": "Behaviour",
       "help": "Who the assistant is, how it writes and when a person takes over."
     },
+    "prompt": {
+      "label": "Prompt",
+      "help": "The prompt the assistant follows in every chat. Pick another from the library or edit this one."
+    },
     "knowledge": {
       "label": "Knowledge",
       "help": "What the assistant knows about the business and where it books.",
@@ -194,5 +198,18 @@
     "stopOnResponseHelp": "Clears the next planned follow-up as soon as a reply comes in.",
     "objectionsTitle": "Objection playbook",
     "objectionsHelp": "Up to five objections, each with the answer the business approves. The assistant uses these answers instead of making one up."
+  },
+  "prompt": {
+    "none": "No prompt picked",
+    "pickTitle": "Prompt in use",
+    "pickHelp": "The chat assistant follows this prompt from the library. Picking another one takes effect on the next message.",
+    "inUse": "Prompt",
+    "noneHelp": "No prompt picked: the chats use the account's prompt or the built-in default.",
+    "alsoUsedBy": "Also used by: {{names}}. Edits here change it for them too. Make a copy to change it for this account only.",
+    "copy": "Make a copy for this account",
+    "copyFailed": "The copy could not be made. Try again.",
+    "copyNote": "Copied from prompt #{{id}} in Chats > Settings.",
+    "openLibrary": "Open #{{id}} in the Prompt Library",
+    "versionLabel": "Before an edit in Chats > Settings ({{campaign}})"
   }
 }

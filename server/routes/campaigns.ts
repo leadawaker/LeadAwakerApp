@@ -382,6 +382,8 @@ export function registerCampaignsRoutes(app: Express): void {
     }
     const parsed = insertCampaignsSchema.partial().safeParse(fromDbKeys(req.body, campaigns));
     if (!parsed.success) return handleZodError(res, parsed.error);
+    // Which prompt a campaign runs is the agency's to pick (the prompt library is agency-only).
+    if (req.user!.accountsId !== 1) delete (parsed.data as any).promptId;
 
     // Hard-block activation if preflight critical checks fail (every activation path enforces this).
     const activating = parsed.data.status?.toLowerCase() === "active" && existing.status?.toLowerCase() !== "active";
