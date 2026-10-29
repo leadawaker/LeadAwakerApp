@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiFetch } from "@/lib/apiUtils";
 
 export type VoiceOutcome = "booked" | "callback" | "transferred" | "hung_up" | "other";
-export type VoiceScope = "live" | "demo";
+export type VoiceScope = "live" | "demo" | "test";
 
 export const VOICE_OUTCOMES: VoiceOutcome[] = ["booked", "callback", "transferred", "hung_up", "other"];
 
@@ -45,6 +45,8 @@ export interface VoiceStats {
 export interface VoiceCapabilities {
   live: boolean;
   demo: boolean;
+  /** The Tests tab: agency users. Absent on an older server build. */
+  test?: boolean;
 }
 
 export interface VoiceCallSummaryItem {
@@ -197,27 +199,6 @@ export function useBookingCallId(leadId: number | null | undefined) {
       return (await res.json()).callId ?? null;
     },
     staleTime: 60 * 1000,
-  });
-}
-
-/** Owner only: flag a call (and its lead) as test data, hidden from clients and Home. */
-export function useSetCallTest() {
-  const qc = useQueryClient();
-  return useMutation<{ isTest: boolean }, Error, { callId: string; isTest: boolean }>({
-    mutationFn: async ({ callId, isTest }) => {
-      const res = await apiFetch(`/api/voice-calls/${encodeURIComponent(callId)}/test`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isTest }),
-      });
-      if (!res.ok) throw new Error(`${res.status}`);
-      return res.json();
-    },
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: LIST_KEY });
-      qc.invalidateQueries({ queryKey: ["/api/home"] });
-      qc.invalidateQueries({ queryKey: [CALLERS_KEY] });
-    },
   });
 }
 

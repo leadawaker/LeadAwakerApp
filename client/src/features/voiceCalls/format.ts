@@ -5,6 +5,15 @@ export function formatDuration(seconds: number | null): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+/**
+ * List-row length: "4s" under a minute, "m:ss" from there ("1:00", "12:34"), no unit suffix.
+ * `sec` is the locale's seconds pattern (`duration.sec`).
+ */
+export function formatRowDuration(seconds: number, sec: (s: number) => string): string {
+  const total = Math.max(0, Math.round(seconds));
+  return total < 60 ? sec(total) : formatDuration(total);
+}
+
 export function formatDateTime(iso: string, locale: string): string {
   return new Date(iso).toLocaleString(locale, {
     day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",

@@ -17,7 +17,7 @@ const REVIEW: CallReview = {
   recordingUrl: "/api/voice-calls/el_conv_1/recording",
   stereo: false,
   turns: [{ i: 0, role: "agent", text: "Goedemiddag", atS: 0.5, delayMs: null }],
-  tools: [{ name: "check_availability", atS: 12, ms: 340, args: "{\"day\":\"monday\"}", result: "{\"slots\":[\"16:45\"]}" }],
+  tools: [{ name: "check_availability", atS: 12, ms: 340, args: "{\"day\":\"monday\"}", result: "{\"slots\":[\"16:45\"]}", facts: { state: "ok", query: "2026-10-26", items: ["2026-10-26T09:00"], total: 1 } }],
   summary: { medianDelayMs: 900, slowestDelayMs: 1400, toolCount: 1 },
   cost: { total: 0.12, minutes: 1.5, ai: 0.08, recap: 0.01, telephony: 0.03, estimate: true },
   recap: { intents: ["book"], interests: ["APK"], notes: ["Prefers mornings"], outcome: "booked" },
@@ -80,9 +80,9 @@ test("agency keeps test call reach, only the Owner opens real demo calls", async
   assert.equal((await respondReview(OWNER, "demo", fakeGetCall, load)).status, 200);
 });
 
-test("client view strips tool arguments and results, the engine and the cost", () => {
+test("client view strips tool arguments and results, the engine and the cost, keeps the tool facts", () => {
   const r = clientReview(REVIEW);
-  assert.deepEqual(r.tools, [{ name: "check_availability", atS: 12, ms: 340, args: "", result: "" }]);
+  assert.deepEqual(r.tools, [{ name: "check_availability", atS: 12, ms: 340, args: "", result: "", facts: REVIEW.tools[0].facts }]);
   assert.equal("engine" in r, false);
   assert.equal("stereo" in r, false);
   assert.equal(r.cost, null);

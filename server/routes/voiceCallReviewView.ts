@@ -5,9 +5,10 @@
  * Anyone who may open the call on the Calls page may open its review: the same reach as
  * GET /api/voice-calls/:callId (clients only their own account's live calls, never test
  * or demo calls; browser test calls any agency user; real demo calls the Owner).
- * A client sees the timeline, not our plumbing: tools keep their name, time and latency
- * (the page labels them from the name) but lose arguments and results, and the engine
- * is left out. What a call costs us stays the Owner's number only.
+ * A client sees the timeline, not our plumbing: tools keep their name, time, latency and
+ * `facts` (the few main findings, picked field by field in storage/voiceToolFacts.ts) but
+ * lose arguments and results, and the engine is left out. What a call costs us stays the
+ * Owner's number only.
  */
 import type { CallReview } from "../storage/voiceCallReview";
 import { callReach, hidesTestData, type VoiceAccess } from "./voiceCallsAccess";
@@ -30,7 +31,7 @@ export function clientReview(review: CallReview): ClientCallReview {
   const { engine: _engine, stereo: _stereo, ...rest } = review;
   return {
     ...rest,
-    tools: review.tools.map((x) => ({ name: x.name, atS: x.atS, ms: x.ms, args: "", result: "" })),
+    tools: review.tools.map((x) => ({ name: x.name, atS: x.atS, ms: x.ms, args: "", result: "", facts: x.facts })),
     cost: null,
   };
 }

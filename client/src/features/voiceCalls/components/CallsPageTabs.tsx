@@ -1,77 +1,79 @@
-// Calls page tabs, mirroring Chats: [audio] Calls · [gear] Settings, then (agency) People · All calls.
-// The figures moved to the Stats page (/platform/home).
+// Calls page navigation: a "Call settings" button in the topbar (a "Calls" back button inside settings; phones: as on Chats);
+// People | All calls is the page's main tab switcher: a solid pill switch after the topbar title (phones: the topbar's second row).
 import { useTranslation } from "react-i18next";
-import { AudioLines, Settings } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
+import { ArrowLeft, Settings } from "lucide-react";
 import { PillSwitch } from "@/components/crm/primitives/PillSwitch";
+import { MobileHeaderIconBtn } from "@/components/crm/mobile/MobileListHeader";
 import type { CallsTab } from "../callers";
 import { CALLS_TAB_ICON, type CallsPageView } from "./callsTabs";
 
-type PageTab = "list" | "settings";
-
-/** Calls | Settings, the same pill switch as the Chats page. "Calls" opens the list tab used last. */
-export function CallsPageTabs({ view, listView, onView }: { view: CallsPageView; listView: CallsTab; onView: (v: CallsPageView) => void }) {
+/**
+ * List view: "Call settings" (gear). Settings: "Calls" (arrow), back to the list tab used last.
+ * `mobile`: the phone header's look, as on Chats: a round gear on the list, a labelled "Calls" pill in settings.
+ */
+export function CallsSettingsButton({ view, listView, onView, variant = "topbar" }: { view: CallsPageView; listView: CallsTab; onView: (v: CallsPageView) => void; variant?: "topbar" | "mobile" }) {
   const { t } = useTranslation("voiceCalls");
+  const inSettings = view === "settings";
+  if (variant === "mobile") {
+    if (!inSettings) {
+      const label = t("pageTabs.callSettings");
+      return (
+        <MobileHeaderIconBtn onClick={() => onView("settings")} aria-label={label} title={label} data-testid="voice-view-settings">
+          <Settings size={16} />
+        </MobileHeaderIconBtn>
+      );
+    }
+    return (
+      <MobileHeaderIconBtn onClick={() => onView(listView)} aria-label={t("pageTabs.calls")} data-testid="voice-view-back"
+        style={{ width: "auto", padding: "0 15px 0 12px", gap: 7, fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>
+        <ArrowLeft size={16} />
+        {t("pageTabs.calls")}
+      </MobileHeaderIconBtn>
+    );
+  }
+  if (inSettings) {
+    return (
+      <button
+        type="button"
+        className="la-btn la-btn--soft shrink-0"
+        onClick={() => onView(listView)}
+        data-testid="voice-view-back"
+      >
+        <ArrowLeft className="h-4 w-4 shrink-0" />
+        {t("pageTabs.calls")}
+      </button>
+    );
+  }
   return (
-    <PillSwitch<PageTab>
-      items={[
-        { id: "list", label: t("pageTabs.calls"), icon: AudioLines, color: "var(--wine)" },
-        { id: "settings", label: t("pageTabs.settings"), icon: Settings, color: "var(--wine)" },
-      ]}
-      value={view === "settings" ? "settings" : "list"}
-      onChange={(id) => onView(id === "list" ? listView : id)}
-      ariaLabel={t("pageTabs.aria")}
-      testId="calls-page-tabs"
-      itemTestId={(id) => `voice-view-${id}`}
-    />
-  );
-}
-
-/** People · All calls (agency only; clients have one list), drawn like the Chats channel tabs. */
-export function CallsListTabs({ tabs, view, onView }: { tabs: CallsTab[]; view: CallsPageView; onView: (v: CallsTab) => void }) {
-  const { t } = useTranslation("voiceCalls");
-  const list = tabs;
-  if (list.length < 2 || view === "settings") return null;
-  return (
-    <div className="la-seg shrink-0" role="tablist" aria-label={t("callers.view.aria")}>
-      {list.map((v) => {
-        const Icon = CALLS_TAB_ICON[v];
-        return (
-          <button
-            key={v}
-            role="tab"
-            aria-selected={view === v}
-            data-testid={`voice-view-${v}`}
-            className={cn("la-seg-btn", view === v && "on")}
-            style={{ padding: "8px 13px", fontSize: 10, letterSpacing: "0.12em" }}
-            onClick={() => onView(v)}
-          >
-            <Icon size={13} />
-            {t(`tabs.${v}`)}
-          </button>
-        );
-      })}
-    </div>
+    <button
+      type="button"
+      className="la-btn la-btn--wine shrink-0"
+      onClick={() => onView("settings")}
+      data-testid="voice-view-settings"
+    >
+      <Settings className="h-4 w-4 shrink-0" />
+      {t("pageTabs.callSettings")}
+    </button>
   );
 }
 
 /**
- * Phone: one segmented row. Clients see Calls; the agency keeps People and All calls apart.
- * Settings closes the row as a gear without a label, so the row still fits a phone.
+ * People · All calls, the page's main tabs, as a solid raised pill switch (PillSwitch default): in the desktop topbar right after
+ * the page title (sized like the topbar tabs there), and on phones the topbar's second row (`fill`: full width).
  */
-export function CallsMobileTabs({ tabs, view, onView }: { tabs: CallsTab[]; view: CallsPageView; onView: (v: CallsPageView) => void }) {
+export function CallsListTabs({ tabs, view, onView, fill = false }: { tabs: CallsTab[]; view: CallsTab; onView: (v: CallsTab) => void; fill?: boolean }) {
   const { t } = useTranslation("voiceCalls");
-  const oneList = !tabs.includes("calls");
-  const settings = t("pageTabs.settings");
-  return (
-    <MobileTabSeg<CallsPageView>
-      tabs={[
-        ...tabs.map((v) => ({ id: v, label: oneList && v === "people" ? t("pageTabs.calls") : t(`tabs.${v}`), icon: oneList && v === "people" ? AudioLines : CALLS_TAB_ICON[v] })),
-        { id: "settings", label: "", iconNode: <span className="flex items-center" role="img" aria-label={settings} title={settings}><Settings size={14} /></span> },
-      ]}
-      activeId={view}
+  if (tabs.length < 2) return null;
+  const pills = (
+    <PillSwitch<CallsTab>
+      items={tabs.map((v) => ({ id: v, label: t(`tabs.${v}`), icon: CALLS_TAB_ICON[v] }))}
+      value={view}
       onChange={onView}
+      ariaLabel={t("callers.view.aria")}
+      testId="voice-list-tabs"
+      itemTestId={(v) => `voice-view-${v}`}
+      className={fill ? "la-seg--fill" : undefined}
     />
   );
+  return fill ? <div style={{ flex: 1, minWidth: 0 }}>{pills}</div> : pills;
 }

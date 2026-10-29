@@ -46,13 +46,13 @@ export function CallBackButton({ caller, align = "start" }: Props) {
         <span title={noNumber} style={{ display: "inline-flex" }}>
           <button
             type="button"
-            className="la-btn la-btn--wine"
+            className="la-btn la-btn--soft"
             disabled={disabled}
             onClick={() => click("phone")}
             data-testid="voice-caller-call-back"
-            style={{ height: 32, ...off }}
+            style={{ ...SOFT_RAISED, height: 32, ...off }}
           >
-            <Phone className="h-4 w-4 shrink-0" />
+            <Phone className="h-4 w-4 shrink-0" style={{ color: "var(--wine)" }} />
             {t("callers.callBack")}
           </button>
         </span>

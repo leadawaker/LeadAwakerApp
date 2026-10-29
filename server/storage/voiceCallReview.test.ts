@@ -68,6 +68,8 @@ test("args and result are cut to 120 characters", () => {
   assert.ok(r.tools[0].args.length <= 120);
   assert.ok(r.tools[0].result.length <= 120);
   assert.equal(r.tools[0].name, "check_availability");
+  assert.equal(r.tools[0].facts?.query, undefined);
+  assert.notEqual(r.tools[0].facts, null);
   assert.equal(r.tools[0].ms, 340);
   assert.equal(r.tools[0].atS, 12);
 });
@@ -80,7 +82,7 @@ test("a call without events has no tools", () => {
 
 test("tool markers fall back to turn_metrics when there are no events", () => {
   const r = buildCallReview(ELEVEN, [], [], { tools: [{ name: "book_slot", at_s: 20.4, latency_ms: 250 }] });
-  assert.deepEqual(r.tools, [{ name: "book_slot", atS: 20.4, ms: 250, args: "", result: "" }]);
+  assert.deepEqual(r.tools, [{ name: "book_slot", atS: 20.4, ms: 250, args: "", result: "", facts: null }]);
   assert.equal(r.summary.toolCount, 1);
 });
 
@@ -246,4 +248,11 @@ test("costIsCurrent: an ElevenLabs cost counts only when priced by this feature"
   assert.equal(costIsCurrent("elevenlabs", { prices_version: "2026-10-23" }, { cost: { total: "x" } }), false);
   // GPT Live was priced right before this feature.
   assert.equal(costIsCurrent("gpt-live", null, null), true);
+});
+
+test("turns are laid out by when they were heard, not when their row was stored", () => {
+  // The caller's long line is stored after the agent's short "Nou," but was heard first.
+  const turns = [turn("outbound", "Hallo", 9, 4), turn("outbound", "Nou,", 15, 14), turn("inbound", "Goedendag", 23, 12)];
+  const r = buildCallReview(GPT, turns, [], null);
+  assert.deepEqual(r.turns.map((x) => [x.i, x.text, x.atS]), [[0, "Hallo", 4], [1, "Goedendag", 12], [2, "Nou,", 14]]);
 });

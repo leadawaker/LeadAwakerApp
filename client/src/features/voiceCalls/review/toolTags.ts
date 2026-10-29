@@ -3,7 +3,7 @@
 // between transcript lines and read "what she understood" from update_call_summary.
 // No React: ToolTag.tsx draws the tag, the transcripts call the helpers.
 import {
-  CalendarCheck, CalendarClock, CalendarX, Car, ClipboardList, PhoneCall, PhoneOff, Search, Wrench,
+  CalendarCheck, CalendarClock, CalendarX, Car, ClipboardList, PhoneCall, PhoneForwarded, PhoneOff, ScanSearch, Search, Wrench,
   type LucideIcon,
 } from "lucide-react";
 
@@ -29,6 +29,8 @@ const KNOWN: Record<string, Known> = {
   request_callback: { icon: PhoneCall, tone: "var(--stage-booked)" },
   update_call_summary: { icon: ClipboardList, tone: "var(--wine)" },
   end_call: { icon: PhoneOff, tone: "var(--mute)" },
+  transfer_to_human: { icon: PhoneForwarded, tone: "var(--stage-booked)" },
+  rdw_plate_lookup: { icon: ScanSearch, tone: "var(--stage-responded)" },
 };
 
 const NEUTRAL: Known = { icon: Wrench, tone: "var(--mute)" };

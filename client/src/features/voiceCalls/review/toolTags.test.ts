@@ -6,7 +6,7 @@ import {
 
 const KNOWN = [
   "search_stock", "car_details", "check_availability", "book_appointment",
-  "cancel_appointment", "request_callback", "update_call_summary", "end_call",
+  "cancel_appointment", "request_callback", "update_call_summary", "end_call", "transfer_to_human", "rdw_plate_lookup",
 ];
 
 test("every known tool maps to its own key, an icon and a tone", () => {

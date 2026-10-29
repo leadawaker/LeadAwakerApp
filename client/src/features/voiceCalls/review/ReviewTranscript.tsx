@@ -14,6 +14,7 @@ import { useFitInColumn } from "./useFitInColumn";
 import { activeTurnIndex, formatTime, type ReviewTool, type ReviewTurn } from "./reviewMath";
 import { insertToolsByTime } from "./toolTags";
 import { ToolLine } from "./ToolTag";
+import { useToolDetail } from "./useToolDetail";
 import { TranscriptBubble } from "./TranscriptBubble";
 import { highlight } from "./highlight";
 
@@ -46,6 +47,7 @@ export function ReviewTranscript({
 }: ReviewTranscriptProps) {
   const { t } = useTranslation("voiceTab");
   const listRef = useRef<HTMLDivElement>(null);
+  const detailOf = useToolDetail();
   const items = useMemo(() => {
     const slots: Slot[] = [...tools.map((tool) => ({ atS: tool.atS, tool })), ...(extras ?? []).map((extra) => ({ atS: extra.atS, extra }))];
     return insertToolsByTime(turns, slots);
@@ -86,7 +88,7 @@ export function ReviewTranscript({
           if (slot.extra) return <div key={`extra-${slot.extra.key}`}>{slot.extra.node}</div>;
           const x = slot.tool as ReviewTool;
           return (
-            <ToolLine key={`tool-${item.key}`} onClick={() => onSeek(x.atS)}
+            <ToolLine key={`tool-${item.key}`} onClick={() => onSeek(x.atS)} detail={detailOf(x)}
               tool={{ name: x.name, result: x.result, ms: x.ms, title: [x.args, x.result].filter(Boolean).join("\n") || undefined }}
               lead={<span style={label}>{formatTime(x.atS)}</span>} />
           );

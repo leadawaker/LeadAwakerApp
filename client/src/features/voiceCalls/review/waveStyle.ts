@@ -32,8 +32,9 @@ export function palette() {
   return {
     wave: tokenColor("var(--mute-2)"), progress: tokenColor("var(--ink-soft)"), cursor: tokenColor("var(--ink)"),
     agentWave: tokenColor("hsl(var(--chart-wine) / 0.45)"), agentProgress: tokenColor("hsl(var(--chart-wine))"),
-    // One-track speaker colours: the agent bubble's wine, the caller in ink, silence neutral.
-    speakerAgent: tokenColor("var(--wine)"), speakerUser: tokenColor("var(--ink)"), silence: tokenColor("var(--mute-2)"),
+    // One-track speaker colours: the agent in the lighter chart wine (the brand wine is too dark
+    // beside the ink), the caller in ink, silence neutral.
+    speakerAgent: tokenColor("hsl(var(--chart-wine))"), speakerUser: tokenColor("var(--ink)"), silence: tokenColor("var(--mute-2)"),
     playedWash: withAlpha(tokenColor("var(--card)"), 0.45),
   };
 }

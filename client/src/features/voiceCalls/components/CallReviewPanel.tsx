@@ -1,6 +1,8 @@
 // The Calls page's call, as the call review (features/voiceCalls/review), for everyone who
-// may open the call: the summary row (duration, reply delays, tools; cost for the Owner),
-// the waveform with tool markers and the player (play, skip, speed, zoom, download), then
+// may open the call: the title with the small summary row at its right edge (duration, reply
+// delays, tools; cost for the Owner), the waveform with tool markers, its time scale and the
+// player (zoom and the transcript search buttons at the left, play and skip centered, speed
+// and download at the right), then
 // the transcript as speaker bubbles with the reply delays and the tools at their moment.
 // On top of the review it keeps what the Calls page had: transcript search, the playing
 // line kept in view while playing (scrolling by hand pauses that, playing picks it up),
@@ -21,7 +23,7 @@ import { countMatches } from "../review/highlight";
 import { fallbackTurns } from "../review/fallbackTurns";
 import type { CallReview } from "../review/reviewMath";
 import { CallEventChip } from "./CallEventChip";
-import { TranscriptSearch } from "./TranscriptSearch";
+import { TranscriptSearchButton } from "./TranscriptSearchButton";
 
 const RECEIPT = {
   alignSelf: "center", maxWidth: "86%", padding: "5px 12px", borderRadius: "var(--r-pill)", fontSize: 12, lineHeight: 1.45,
@@ -73,15 +75,13 @@ function ReviewBody({ call, review, processing, mask }: {
   return (
     <>
       <div style={{ flexShrink: 0, padding: "16px 20px 14px", borderBottom: "1px solid var(--line)", display: "flex", flexDirection: "column", gap: 14 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px 16px" }}>
           <span style={{ fontSize: 18, fontWeight: 700, color: "var(--ink)", lineHeight: 1, flexShrink: 0 }}>{t("sections.transcript")}</span>
-          <div style={{ flex: 1, minWidth: 0, display: "flex", justifyContent: "flex-end" }}>
-            <TranscriptSearch query={query} onQuery={setQuery} matches={matches} />
-          </div>
+          <div style={{ marginLeft: "auto", minWidth: 0 }}><ReviewSummary review={review} showCost={isOwner} /></div>
         </div>
-        <ReviewSummary review={review} showCost={isOwner} />
         <ReviewWaveform review={review} recording={recording} currentS={currentS} onTime={setCurrentS} seekRef={seekRef}
-          speakers={speakers} missingNote={t(recordingMissingKey(call.startedAt))} onPlay={() => setFollow(true)} />
+          speakers={speakers} missingNote={t(recordingMissingKey(call.startedAt))} onPlay={() => setFollow(true)}
+          search={<TranscriptSearchButton query={query} onQuery={setQuery} matches={matches} />} />
       </div>
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "12px 15px 16px" }}>
         <ReviewTranscript turns={turns} tools={review.tools} currentS={currentS} onSeek={playFrom} column={false} processing={processing}

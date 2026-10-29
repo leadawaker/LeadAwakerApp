@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { maskName, maskNumber } from "../maskIdentity";
 import { statusColors, type VoiceCallStatus } from "../status";
 
@@ -46,6 +47,18 @@ export function CallAvatar({ ini, status, size = 38, radius }: { ini: string; st
     </div>
   );
 }
+
+/** List-row type scale (Calls and Chats rows, WhatsApp-like): 40px avatar (46px on phones), bold sans name, readable meta. */
+export const ROW_AVATAR = 40;
+export const ROW_AVATAR_MOBILE = 46;
+
+/** The Calls row avatar size for this screen: ROW_AVATAR on desktop, ROW_AVATAR_MOBILE on phones. */
+export function useRowAvatar(): number {
+  return useIsMobile(768) ? ROW_AVATAR_MOBILE : ROW_AVATAR;
+}
+export const ROW_NAME: React.CSSProperties = { fontFamily: "var(--sans)", fontSize: 15.5, fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.005em" };
+export const ROW_META: React.CSSProperties = { fontSize: 13.5, lineHeight: 1.4, color: "var(--mute)" };
+export const ROW_TIME: React.CSSProperties = { fontFamily: "var(--sans)", fontSize: 12, color: "var(--mute-2)", fontVariantNumeric: "tabular-nums" };
 
 // Neumorphic depth turned down: on the bone ground the full-strength cast
 // reads too dark and the highlight disappears (Gabriel, 2026-10-15).

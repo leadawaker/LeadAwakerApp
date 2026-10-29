@@ -1,5 +1,5 @@
 // One transcript line, the same in the live view and the review: the agent's lines are
-// wine-tinted and sit left, the caller's are a neutral surface and sit right, so it is
+// very dark wine with bone text and sit left, the caller's are a neutral surface and sit right, so it is
 // clear who speaks. An agent line ends with its reply delay ("≈ 0.8 s") when known.
 // With `onClick` the line is a button (the review seeks the recording from it).
 // `speaker` names the sides where "Agent" / "You" do not fit (the Calls page: caller, AI).
@@ -29,27 +29,29 @@ export interface TranscriptBubbleProps {
 export function TranscriptBubble({ role, text, speaker, delayMs, time, active, onClick, title, dataTurn }: TranscriptBubbleProps) {
   const { t } = useTranslation("voiceTab");
   const agent = role === "agent";
+  // Secondary text on the dark wine: bone, dimmed.
+  const onWine = agent ? { color: "var(--on-wine)", opacity: 0.7 } : null;
   const style: CSSProperties = {
     display: "flex", flexDirection: "column", gap: 3, minWidth: 0, maxWidth: "92%", textAlign: "left",
-    padding: "7px 10px", borderRadius: "var(--r-surface)", color: "var(--ink)",
+    padding: "7px 10px", borderRadius: "var(--r-surface)", color: agent ? "var(--on-wine)" : "var(--ink)",
     alignSelf: agent ? "flex-start" : "flex-end",
-    background: agent ? "var(--wine-tint)" : "var(--surface)",
-    border: `1px solid ${agent ? "color-mix(in srgb, var(--wine) 22%, transparent)" : "var(--line)"}`,
-    outline: active ? "2px solid color-mix(in srgb, var(--wine) 55%, transparent)" : "none",
+    background: agent ? "var(--wine-deep)" : "var(--surface)",
+    border: `1px solid ${agent ? "var(--wine-deep)" : "var(--line)"}`,
+    outline: active ? "2px solid var(--wine-soft)" : "none",
     outlineOffset: 1, transition: "outline-color 150ms, background-color 150ms",
     ...(onClick ? { cursor: "pointer", font: "inherit" } : null),
   };
   const body = (
     <>
       <span style={{ display: "flex", alignItems: "baseline", gap: 8 }}>
-        <span style={{ ...mono, color: agent ? "var(--wine)" : "var(--mute)", fontWeight: 600 }}>
+        <span style={{ ...mono, color: agent ? "var(--on-wine)" : "var(--mute)", fontWeight: 600 }}>
           {speaker ?? (agent ? t("test.eleven.agent") : t("test.eleven.you"))}
         </span>
-        {time && <span style={{ ...mono, fontVariantNumeric: "tabular-nums" }}>{time}</span>}
+        {time && <span style={{ ...mono, ...onWine, fontVariantNumeric: "tabular-nums" }}>{time}</span>}
       </span>
       <span style={{ fontSize: 13, lineHeight: 1.45, overflowWrap: "anywhere" }}>{text}</span>
       {agent && delayMs != null && Number.isFinite(delayMs) && (
-        <span style={{ ...mono, alignSelf: "flex-end", fontVariantNumeric: "tabular-nums" }} title={t("test.panel.live.delaysHint")} data-testid="voice-test-bubble-delay">
+        <span style={{ ...mono, ...onWine, alignSelf: "flex-end", fontVariantNumeric: "tabular-nums" }} title={t("test.panel.live.delaysHint")} data-testid="voice-test-bubble-delay">
           {formatDelay(delayMs)}
         </span>
       )}

@@ -9,6 +9,7 @@ import { VOICE_OUTCOMES } from "../api/voiceCallsApi";
 import { PEOPLE_GROUPS, PEOPLE_RANGES, PEOPLE_SORTS, peopleFiltered, type PeopleOptions } from "../callers";
 import { GROUPS, SORTS, type ListOptions } from "../listOptions";
 import { OUTCOME_LABEL_KEY, outcomeColors, statusColors, VOICE_CALL_STATUSES, type VoiceCallStatus } from "../status";
+import { AccountSubmenu, type AccountFilterProps } from "./AccountFilter";
 
 const MENU = "glass-strong border-none";
 const ITEM = "flex items-center gap-2 text-[12px]";
@@ -32,18 +33,26 @@ function Tick({ on }: { on: boolean }) {
   return on ? <Check className="h-3 w-3 ml-auto shrink-0" style={{ color: "var(--wine)" }} /> : null;
 }
 
-export function VoiceCallsMenus({ options, setOptions, languages }: {
+export function VoiceCallsMenus({ options, setOptions, languages, account }: {
   options: ListOptions;
   setOptions: (patch: Partial<ListOptions>) => void;
   languages: string[];
+  /** Owner on Live: the "Account" submenu. */
+  account?: AccountFilterProps;
 }) {
   const { t } = useTranslation("voiceCalls");
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
-  const filtered = options.outcomes.length > 0 || options.statuses.length > 0 || options.languages.length > 0;
+  const accountSet = account?.value != null;
+  const filtered = options.outcomes.length > 0 || options.statuses.length > 0 || options.languages.length > 0 || accountSet;
+  const clear = () => {
+    setOptions({ outcomes: [], statuses: [], languages: [] });
+    if (accountSet) account?.onChange(undefined);
+  };
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
       <MenuButton icon={<Filter className="h-4 w-4 shrink-0" />} label={t("menus.filter")} dot={filtered} width="w-52">
+        {account && <AccountSubmenu {...account} />}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger className={ITEM}>
             <span className="flex-1">{t("menus.outcome")}</span>
@@ -93,7 +102,7 @@ export function VoiceCallsMenus({ options, setOptions, languages }: {
         {filtered && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-[12px] text-muted-foreground" onClick={() => setOptions({ outcomes: [], statuses: [], languages: [] })}>
+            <DropdownMenuItem className="text-[12px] text-muted-foreground" onClick={clear}>
               {t("menus.clearFilters")}
             </DropdownMenuItem>
           </>
@@ -120,17 +129,25 @@ export function VoiceCallsMenus({ options, setOptions, languages }: {
 }
 
 /** The People tab: outcome and date range filters, sort by latest or most calls, group by date, outcome or none. */
-export function PeopleMenus({ options, setOptions }: {
+export function PeopleMenus({ options, setOptions, account }: {
   options: PeopleOptions;
   setOptions: (patch: Partial<PeopleOptions>) => void;
+  /** Owner on Live: the "Account" submenu. */
+  account?: AccountFilterProps;
 }) {
   const { t } = useTranslation("voiceCalls");
   const toggle = <T,>(list: T[], v: T) => (list.includes(v) ? list.filter((x) => x !== v) : [...list, v]);
-  const filtered = peopleFiltered(options);
+  const accountSet = account?.value != null;
+  const filtered = peopleFiltered(options) || accountSet;
+  const clear = () => {
+    setOptions({ outcomes: [], range: "all" });
+    if (accountSet) account?.onChange(undefined);
+  };
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
       <MenuButton icon={<Filter className="h-4 w-4 shrink-0" />} label={t("menus.filter")} dot={filtered} width="w-52">
+        {account && <AccountSubmenu {...account} />}
         <DropdownMenuSub>
           <DropdownMenuSubTrigger className={ITEM}>
             <span className="flex-1">{t("menus.outcome")}</span>
@@ -162,7 +179,7 @@ export function PeopleMenus({ options, setOptions }: {
         {filtered && (
           <>
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="text-[12px] text-muted-foreground" onClick={() => setOptions({ outcomes: [], range: "all" })}>
+            <DropdownMenuItem className="text-[12px] text-muted-foreground" onClick={clear}>
               {t("menus.clearFilters")}
             </DropdownMenuItem>
           </>

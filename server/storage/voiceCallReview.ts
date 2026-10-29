@@ -13,10 +13,12 @@
  * Older calls have none: the review then works from turn and event timestamps,
  * and its reply delays are approximate.
  */
+import { toolFacts, type ToolFacts } from "./voiceToolFacts";
 
 export type ReviewEngine = "gpt-live" | "elevenlabs";
 
-export interface ReviewTool { name: string; atS: number; ms: number | null; args: string; result: string }
+/** `facts`: the tool's main findings, safe for clients (voiceToolFacts.ts); null for a tool it does not know. */
+export interface ReviewTool { name: string; atS: number; ms: number | null; args: string; result: string; facts: ToolFacts | null }
 export interface ReviewTurnOut { i: number; role: "user" | "agent"; text: string; atS: number; delayMs: number | null }
 export interface ReviewCost { total: number; minutes: number; ai: number; recap: number; telephony: number; estimate: boolean }
 
@@ -237,7 +239,12 @@ export function buildCallReview(
       if (gapMs > 0) delayMs = gapMs;
     }
     return { i, role, text: t.content ?? "", atS, delayMs };
-  });
+  })
+    // Rows are stored when a turn ends, so a short reply can land before the longer line it
+    // answered or overlapped. Lay the turns out by when they were heard, so the transcript
+    // reads in the recording's order and the playing line is the right one.
+    .sort((a, b) => a.atS - b.atS || a.i - b.i)
+    .map((x, i) => ({ ...x, i }));
 
   const toolEvents = events.filter((e) => e.kind === "tool");
   const traceT0 = engine === "gpt-live" ? traceStartMs(toolEvents, list(m.tools)) : null;
@@ -253,6 +260,7 @@ export function buildCallReview(
       ms: e.latencyMs ?? null,
       args: show(e.args),
       result: show(e.result ?? e.error),
+      facts: toolFacts(e.toolName, e.args, e.result, e.error),
     }));
   const tools: ReviewTool[] = eventTools.length
     ? eventTools
@@ -262,6 +270,7 @@ export function buildCallReview(
         ms: num(t.latency_ms),
         args: "",
         result: "",
+        facts: null,
       }));
 
   const delays = out.map((t) => t.delayMs).filter((d): d is number => d !== null);

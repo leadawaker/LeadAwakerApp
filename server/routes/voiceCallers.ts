@@ -1,7 +1,7 @@
 import type { Express, Request, RequestHandler } from "express";
 import { storage } from "../storage";
 import { wrapAsync } from "./_helpers";
-import { decideScope, hidesTestData, type VoiceAccess } from "./voiceCallsAccess";
+import { callReach, decideScope, hidesTestData, type VoiceAccess } from "./voiceCallsAccess";
 import type { VoiceOutcome } from "@shared/voiceOutcome";
 
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
@@ -72,7 +72,7 @@ export function registerVoiceCallersRoutes(
     const access = accessOf(req);
     const lead = await storage.getCallerLead(leadsId, {
       accountId: access.lockedAccountId,
-      allowDemo: access.isOwner,
+      ...callReach(access),
     });
     if (!lead) return res.status(404).json({ message: "Caller not found" });
     const user = req.user!;

@@ -9,7 +9,24 @@ export function formatDelay(ms: number): string {
 
 /** Mirrors CallReview in server/storage/voiceCallReview.ts (GET /api/voice-calls/:callId/review). */
 export type ReviewEngine = "gpt-live" | "elevenlabs";
-export interface ReviewTool { name: string; atS: number; ms: number | null; args: string; result: string }
+/** Mirrors ToolFacts in server/storage/voiceToolFacts.ts: a tool's main findings, safe for clients. */
+export interface ToolFacts {
+  state: "ok" | "none" | "failed";
+  status?: string;
+  query?: string;
+  title?: string;
+  name?: string;
+  kind?: string;
+  /** A local time "YYYY-MM-DDTHH:mm" when known, else the spoken moment. */
+  at?: string;
+  when?: string;
+  reason?: string;
+  number?: string;
+  items?: string[];
+  total?: number;
+}
+/** `facts` is null for a tool the server has no reading for, absent on an older server build. */
+export interface ReviewTool { name: string; atS: number; ms: number | null; args: string; result: string; facts?: ToolFacts | null }
 export interface ReviewTurn { i: number; role: "user" | "agent"; text: string; atS: number; delayMs: number | null }
 export interface ReviewCost { total: number; minutes: number; ai: number; recap: number; telephony: number; estimate: boolean }
 /** The receptionist's recap of the call (intents, what they wanted, notes, outcome). Mirrors ReviewRecap on the server. */
@@ -25,7 +42,7 @@ export interface CallReview {
   /** The server's guess from the engine (agency only). The player reads the channels of the audio itself. */
   stereo?: boolean;
   turns: ReviewTurn[];
-  /** For a client, args and result are empty: the tag shows the name, time and latency only. */
+  /** For a client, args and result are empty: the tag shows the name, time, latency and the facts. */
   tools: ReviewTool[];
   summary: { medianDelayMs: number | null; slowestDelayMs: number | null; toolCount: number };
   /** Null for non-Owners and for older calls. */
@@ -75,12 +92,14 @@ export function clampTime(s: number, durationS: number): number {
   return Math.min(durationS, Math.max(0, s));
 }
 
-/** The transcript line playing at `currentS`: the last one that has started, or -1. */
+/**
+ * The transcript line playing at `currentS`: the one that started last before it, or -1.
+ * Scans every line, so a line out of time order cannot hide the ones after it.
+ */
 export function activeTurnIndex(turns: readonly { atS: number }[], currentS: number): number {
   let found = -1;
   for (let i = 0; i < turns.length; i++) {
-    if (turns[i].atS <= currentS) found = i;
-    else break;
+    if (turns[i].atS <= currentS && (found < 0 || turns[i].atS >= turns[found].atS)) found = i;
   }
   return found;
 }
@@ -93,6 +112,27 @@ export const ZOOM_LEVELS = [0, 40, 100, 220] as const;
 
 export function nextZoom(index: number, step: 1 | -1): number {
   return Math.min(ZOOM_LEVELS.length - 1, Math.max(0, index + step));
+}
+
+/** The next playback speed: the speed button cycles through REVIEW_SPEEDS. */
+export function nextSpeed(rate: number): number {
+  const i = REVIEW_SPEEDS.findIndex((s) => s === rate);
+  return REVIEW_SPEEDS[(i + 1) % REVIEW_SPEEDS.length];
+}
+
+const SCALE_STEPS = [1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 1200] as const;
+
+/**
+ * The time scale under the waveform for the part in view (it follows zoom and scroll):
+ * the smallest round step that keeps at most `max` labelled ticks, and the ticks in view.
+ */
+export function scaleTicks(startS: number, endS: number, max = 8): { step: number; ticks: number[] } {
+  const span = endS - startS;
+  if (!finite(startS) || !finite(span) || span <= 0) return { step: 1, ticks: [] };
+  const step = SCALE_STEPS.find((x) => span / x <= max) ?? SCALE_STEPS[SCALE_STEPS.length - 1];
+  const ticks: number[] = [];
+  for (let n = Math.max(0, Math.ceil(startS / step - 1e-9)); n * step <= endS + 1e-9; n++) ticks.push(n * step);
+  return { step, ticks };
 }
 
 /** m:ss for the time labels. */

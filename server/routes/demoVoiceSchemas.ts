@@ -72,6 +72,8 @@ export const voiceSettingsSchema = z.object({
   ownerPhone: z.string().trim().max(30).nullable().optional(),
   ownerPhoneBackup: z.string().trim().max(30).nullable().optional(),
   ownerPhoneUse: z.enum(["primary", "backup"]).optional(),
+  // How "Call me + prospect" puts Sara on the call (engine demo_settings.call_me_style).
+  callMeStyle: z.enum(["handoff", "barge", "conference"]).optional(),
 });
 export type VoiceSettingsInput = z.infer<typeof voiceSettingsSchema>;
 

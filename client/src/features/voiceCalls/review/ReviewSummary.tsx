@@ -1,16 +1,17 @@
 // The call review's summary row: duration, cost (breakdown in a tooltip), median and
-// slowest reply delay, and how many tools ran. Delays and estimated costs carry "≈".
+// slowest reply delay, and how many tools ran. Delays and estimated costs carry "≈". Small
+// type in one row: this is detail, not the page's headline.
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { costParts, formatCost, formatReviewDelay, formatTime, formatUsd, type CallReview } from "./reviewMath";
 
-const value = { fontFamily: "var(--mono)", fontSize: 15, color: "var(--ink)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" } as const;
+const value = { fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink)", fontVariantNumeric: "tabular-nums", whiteSpace: "nowrap" } as const;
 
 function Stat({ label, children, hint, testId }: { label: string; children: ReactNode; hint?: string; testId: string }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 3, minWidth: 0 }} title={hint} data-testid={testId}>
-      <span className="eyebrow eyebrow-sm">{label}</span>
+    <div style={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0 }} title={hint} data-testid={testId}>
+      <span className="eyebrow eyebrow-sm" style={{ fontSize: 8, letterSpacing: "0.08em", whiteSpace: "nowrap" }}>{label}</span>
       <span style={value}>{children}</span>
     </div>
   );
@@ -53,7 +54,7 @@ export function ReviewSummary({ review, showCost = true }: {
   const unknown = t("test.panel.review.unknown");
   const delayHint = t("test.panel.review.delaysHint");
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(92px, 1fr))", gap: "12px 14px" }} data-testid="voice-test-review-summary">
+    <div style={{ display: "flex", alignItems: "flex-end", gap: "6px 12px", flexWrap: "nowrap", minWidth: 0 }} data-testid="voice-test-review-summary">
       <Stat label={t("test.panel.review.duration")} testId="voice-test-review-duration">{formatTime(review.durationSeconds)}</Stat>
       {showCost && <Stat label={t("test.panel.review.cost")} testId="voice-test-review-cost"><CostValue review={review} /></Stat>}
       <Stat label={t("test.panel.review.median")} hint={delayHint} testId="voice-test-review-median">

@@ -1,7 +1,7 @@
 // Wraps each case-insensitive match of the transcript search in a wine mark (the Calls page).
 import type { ReactNode } from "react";
 
-const MARK = { background: "var(--wine-tint)", color: "inherit", borderRadius: 3, padding: "0 1px", boxShadow: "0 0 0 1px var(--wine)" } as const;
+const MARK = { background: "var(--wine-glow)", color: "inherit", borderRadius: 3, padding: "0 1px", boxShadow: "0 0 0 1px var(--wine-soft)" } as const;
 
 export function highlight(text: string, query: string): ReactNode {
   const q = query.trim();

@@ -4,7 +4,7 @@
  * without Express or a database.
  */
 export interface VoiceAccess {
-  /** Owner role and NOT impersonating: the only one who may query scope=demo. */
+  /** Owner role and NOT impersonating: the only one who may query scope=demo (agency users may query scope=test). */
   isOwner: boolean;
   /** Account 1 or Owner/Admin role, and NOT impersonating: may pick any account. */
   isAgency: boolean;
@@ -36,7 +36,7 @@ export function resolveVoiceAccess(input: {
 }
 
 export type ScopeDecision =
-  | { ok: true; scope: "live" | "demo"; accountId: number | null }
+  | { ok: true; scope: "live" | "demo" | "test"; accountId: number | null }
   | { ok: false; status: 403 };
 
 function positiveInt(v: unknown): number | null {
@@ -46,8 +46,9 @@ function positiveInt(v: unknown): number | null {
 }
 
 export function decideScope(access: VoiceAccess, q: { scope?: unknown; accountId?: unknown }): ScopeDecision {
-  const scope = q.scope === "demo" ? "demo" : "live";
+  const scope = q.scope === "demo" ? "demo" : q.scope === "test" ? "test" : "live";
   if (scope === "demo" && !access.isOwner) return { ok: false, status: 403 };
+  if (scope === "test" && !access.isAgency) return { ok: false, status: 403 };
   const accountId = access.isAgency ? positiveInt(q.accountId) : access.lockedAccountId;
   return { ok: true, scope, accountId };
 }

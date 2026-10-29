@@ -3,10 +3,9 @@ import { maskName, maskNumber } from "./maskIdentity";
 import { phoneMatches } from "./phoneMatch";
 import { callStatus, normalizeOutcome, type VoiceCallStatus } from "./status";
 
-/** Calls page tabs: People for everyone, All calls for the agency only. The figures live on the Stats page (/platform/home). */
+/** Calls page tabs: People and All calls, for everyone. The figures live on the Stats page (/platform/home). */
 export type CallsTab = "people" | "calls";
-export const AGENCY_TABS: CallsTab[] = ["people", "calls"];
-export const CLIENT_TABS: CallsTab[] = ["people"];
+export const CALLS_TABS: CallsTab[] = ["people", "calls"];
 export const LAST_TAB_PAGE = "calls";
 /** Which list (People or All calls) the "Calls" pill reopens after Settings. */
 export const LAST_LIST_PAGE = "calls.list";

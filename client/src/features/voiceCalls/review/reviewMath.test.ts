@@ -1,8 +1,8 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
-  activeTurnIndex, clampTime, costParts, formatCost, formatReviewDelay, formatUsd, markerLeftPct, nextZoom,
-  REVIEW_SPEEDS, stillProcessing, type CallReview, type ReviewCost,
+  activeTurnIndex, clampTime, costParts, formatCost, formatReviewDelay, formatUsd, markerLeftPct, nextSpeed, nextZoom,
+  REVIEW_SPEEDS, scaleTicks, stillProcessing, type CallReview, type ReviewCost,
 } from "./reviewMath";
 
 const cost = (over: Partial<ReviewCost> = {}): ReviewCost => ({
@@ -111,4 +111,22 @@ test("stillProcessing: a missing cost only waits when the viewer gets one (Owner
   assert.equal(stillProcessing(reviewOf({ cost: null }), after(30), { costExpected: false }), false);
   assert.equal(stillProcessing(reviewOf({ cost: null }), after(30), { costExpected: true }), true);
   assert.equal(stillProcessing(reviewOf({ turns: [], cost: null }), after(30), { costExpected: false }), true);
+});
+
+test("nextSpeed cycles through the speeds and wraps", () => {
+  assert.equal(nextSpeed(1), 1.25);
+  assert.equal(nextSpeed(2), 1);
+  assert.equal(nextSpeed(3), REVIEW_SPEEDS[0]);
+});
+
+test("scaleTicks picks a round step for the part in view", () => {
+  assert.deepEqual(scaleTicks(0, 90), { step: 15, ticks: [0, 15, 30, 45, 60, 75, 90] });
+  assert.deepEqual(scaleTicks(12, 30), { step: 5, ticks: [15, 20, 25, 30] });
+  assert.deepEqual(scaleTicks(0, 0), { step: 1, ticks: [] });
+});
+
+test("activeTurnIndex is not stopped by a line out of time order", () => {
+  const turns = [{ atS: 4 }, { atS: 14 }, { atS: 12 }];
+  assert.equal(activeTurnIndex(turns, 13), 2);
+  assert.equal(activeTurnIndex(turns, 15), 1);
 });

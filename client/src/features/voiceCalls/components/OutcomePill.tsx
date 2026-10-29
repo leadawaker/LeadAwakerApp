@@ -23,12 +23,14 @@ interface Props {
   small?: boolean;
   /** Shown before the outcome inside the pill, e.g. "Call 3". */
   prefix?: string;
+  /** No dot, smaller text: the list cards. */
+  bare?: boolean;
 }
 
 /** What the call amounted to, as the shared status pill. Booked calls carry their slot inside it. */
-export function OutcomePill({ outcome, bookedSlot, bookedIso, small, prefix }: Props) {
+export function OutcomePill({ outcome, bookedSlot, bookedIso, small, prefix, bare }: Props) {
   const { i18n } = useTranslation("voiceCalls");
   const status = callOutcomeStatus(normalizeOutcome(outcome));
   const slot = status === "booked" ? slotLabel(bookedIso, bookedSlot, i18n.language) : null;
-  return <StatusPill status={status} detail={slot} small={small} prefix={prefix} />;
+  return <StatusPill status={status} detail={slot} small={small} prefix={prefix} bare={bare} />;
 }

@@ -2,8 +2,9 @@ import { desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "../db";
 import { accounts, interactions, leads, voiceCalls } from "@shared/schema";
 import type { VoiceOutcome } from "@shared/voiceOutcome";
-import { itemColumns, scopeWhere, toItem, type VoiceCallListItem, type VoiceScope } from "./voiceCalls";
+import { itemColumns, scopeOf, scopeWhere, toItem, type VoiceCallListItem, type VoiceScope } from "./voiceCalls";
 import { toE164 } from "@shared/phoneE164";
+import { demoCallVisible } from "../routes/voiceCallsAccess";
 import { bestOutcome, isDnd, isOutOfHours } from "./voiceCallersLogic";
 
 /** One row per person Sara spoke to (spec "API contract"). */
@@ -228,7 +229,7 @@ export const voiceCallersStorage = {
    */
   async getCallerLead(
     leadsId: number,
-    opts: { scope?: VoiceScope; accountId: number | null; allowDemo: boolean },
+    opts: { scope?: VoiceScope; accountId: number | null; allowDemo: boolean; allowTest?: boolean },
   ): Promise<CallerLead | undefined> {
     const rows = await db
       .select(itemColumns(false))
@@ -236,9 +237,9 @@ export const voiceCallersStorage = {
       .where(eq(voiceCalls.leadsId, leadsId))
       .orderBy(desc(voiceCalls.startedAt), desc(voiceCalls.id));
     const visible = rows.filter((r) => {
-      if (r.isDemo && !opts.allowDemo) return false;
-      if (opts.scope && (r.isDemo ? "demo" : "live") !== opts.scope) return false;
-      return opts.accountId === null || r.call.accountsId === opts.accountId;
+      if (!demoCallVisible(r, { allowDemo: opts.allowDemo, allowTest: opts.allowTest === true })) return false;
+      if (opts.scope && scopeOf(r) !== opts.scope) return false;
+      return opts.accountId === null || (r.testAccountId ?? r.call.accountsId) === opts.accountId;
     });
     if (!visible.length) return undefined;
     const [lead] = await db.select(leadColumns).from(leads).where(eq(leads.id, leadsId));

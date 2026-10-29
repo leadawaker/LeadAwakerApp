@@ -6,7 +6,7 @@ export const CALLS_TAB_ICON: Record<CallsTab, LucideIcon> = { people: Users, cal
 
 /**
  * What the Calls page shows: a tab, or Settings (the phone receptionist's
- * settings for one account, ?view=settings). Settings is remembered as the
- * last tab too, so leaving the page from Settings comes back to Settings.
+ * settings for one account, ?view=settings). Settings is never remembered:
+ * the page opens on the list unless a link asks for Settings.
  */
 export type CallsPageView = CallsTab | "settings";

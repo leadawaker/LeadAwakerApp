@@ -6,10 +6,13 @@ import { CallListSkeleton } from "./VoiceCallsSkeleton";
 import type { VoiceCallListItem, VoiceScope } from "../api/voiceCallsApi";
 import { filterCalls, groupCalls, sortCalls, type ListOptions } from "../listOptions";
 import { callStatus } from "../status";
-import { callerIni, callerInitials, callerTitle, maskCaller } from "./bits";
+import { callerIni, callerTitle, maskCaller } from "./bits";
 import { CompactCallRail, RAIL_WIDTH, type RailItem } from "./CompactCallRail";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
+import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
 import { VoiceCallListCard } from "./VoiceCallListCard";
 import { VoiceCallDetail } from "./VoiceCallDetail";
+import { WeekSummary } from "./WeekSummary";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useListPanelState } from "@/hooks/useListPanelState";
 
@@ -40,9 +43,13 @@ interface Props {
   masked: boolean;
   selection: string | null;
   setSelection: (id: string | null) => void;
+  /** The account filter (Live): the stats line under the tabs follows it. */
+  accountId?: number;
+  /** All-accounts view (agency): each card names its client account. */
+  showAccount: boolean;
 }
 
-export function VoiceCallsInbox({ calls, isLoading, error, options, scope, masked, selection, setSelection }: Props) {
+export function VoiceCallsInbox({ calls, isLoading, error, options, scope, masked, selection, setSelection, accountId, showAccount }: Props) {
   const { t, i18n } = useTranslation("voiceCalls");
   const { currentAccount } = useWorkspace();
   const timeZone = (currentAccount?.timezone as string | undefined) || undefined;
@@ -53,6 +60,8 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
     return () => window.removeEventListener("resize", onR);
   }, []);
   const narrow = vw < 920;
+  // Phones: the detail rises as a sheet over the list; pull it down to go back (as on Chats).
+  const isMobile = vw < 768;
   // Same minimize switch as the Chats list (shared across pages, desktop only).
   const { state: panel } = useListPanelState();
   const compact = !narrow && panel === "compact";
@@ -60,10 +69,10 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
 
   const items = useMemo(() => sortCalls(filterCalls(calls, options), options.sort), [calls, options]);
   const railItems: RailItem[] = useMemo(() => items.map((raw) => {
-    // Titled like the list card: Demo by the business answered for, Live by who called.
+    // Titled like the list card: by who called.
     const c = maskCaller(raw, masked);
-    const title = c.scope === "demo" ? c.personaCompany || t("persona.universal") : callerTitle(c, t("webCaller"));
-    const ini = c.scope === "demo" ? callerInitials(title, t("persona.universal")) : callerIni(c, t("webCaller"));
+    const title = callerTitle(c, t("webCaller"));
+    const ini = callerIni(c, t("webCaller"));
     return { key: c.callId, ini, status: callStatus(c), title };
   }), [items, masked, t]);
   const sections = useMemo(
@@ -88,7 +97,7 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
           <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--mute)", maxWidth: 240 }}>{t("emptyLive.hint")}</p>
         </>
       ) : (
-        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--mute)", maxWidth: 240 }}>{t("empty")}</p>
+        <p style={{ margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--mute)", maxWidth: 240 }}>{t(scope === "test" ? "emptyTest" : "empty")}</p>
       )}
     </Centered>
   ) : items.length === 0 ? (
@@ -97,9 +106,10 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
     sections.map((sec) => (
       <div key={sec.key}>
         {sec.label && <GroupHeader label={sec.label} count={sec.items.length} />}
-        <div className="la-cards">
+        {/* la-cards--flat: WhatsApp-style flat rows; drop the modifier for the raised cards. */}
+        <div className="la-cards la-cards--flat">
           {sec.items.map((c) => (
-            <VoiceCallListCard key={c.callId} call={c} masked={masked} active={selection === c.callId} onClick={() => setSelection(c.callId)} />
+            <VoiceCallListCard key={c.callId} call={c} masked={masked} showAccount={showAccount} active={selection === c.callId} onClick={() => setSelection(c.callId)} />
           ))}
         </div>
       </div>
@@ -108,29 +118,36 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
 
   const renderCard = (key: string) => {
     const c = items.find((x) => x.callId === key);
-    return c ? <VoiceCallListCard call={c} masked={masked} active={selection === key} onClick={() => setSelection(key)} /> : null;
+    return c ? <VoiceCallListCard call={c} masked={masked} showAccount={showAccount} active={selection === key} onClick={() => setSelection(key)} /> : null;
   };
 
   const listPane = compact ? (
     <div style={{ width: RAIL_WIDTH, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--line)", background: "var(--surface)" }}>
       <CompactCallRail items={isLoading || error ? [] : railItems} selection={selection} onSelect={setSelection} renderCard={renderCard} />
+      {/* The fold button at the bottom of the rail: expands it back to the full list. */}
+      <ListPanelFooter compact />
     </div>
   ) : (
     <div style={{ width: narrow ? "100%" : 348, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: narrow ? "none" : "1px solid var(--line)", background: "var(--surface)" }}>
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "10px 10px 8px", display: "flex", flexDirection: "column" }}>
+      {/* Panel head: the stats line. */}
+      <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, padding: narrow ? "8px 0 0" : "6px 8px 0 0" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <WeekSummary scope={scope} accountId={accountId} />
+        </div>
+      </div>
+      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "6px 8px 8px", display: "flex", flexDirection: "column" }}>
         {listBody}
       </div>
-      {calls.length > 0 && (
-        <div style={{ flexShrink: 0, padding: "8px 16px", borderTop: "1px solid var(--line)" }}>
-          <MonoLabel>{t("showing", { shown: items.length, total: calls.length })}</MonoLabel>
-        </div>
-      )}
+      {/* Bottom bar: "showing x of y" on the left, the fold button at the right end (desktop, two panes). */}
+      <ListPanelFooter>
+        {calls.length > 0 && <MonoLabel>{t("showing", { shown: items.length, total: calls.length })}</MonoLabel>}
+      </ListPanelFooter>
     </div>
   );
 
   const rightPane = (
     <div style={{ flex: 1, minWidth: 0, minHeight: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }}>
-      {narrow && selection && (
+      {narrow && !isMobile && selection && (
         <button onClick={() => setSelection(null)} className="la-btn la-btn--soft" style={{ margin: "12px 0 0 14px", alignSelf: "flex-start" }}>
           ‹ {t("back")}
         </button>
@@ -145,7 +162,12 @@ export function VoiceCallsInbox({ calls, isLoading, error, options, scope, maske
 
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden", background: "var(--bg)" }}>
-      {narrow ? (selection ? rightPane : listPane) : <>{!hidden && listPane}{rightPane}</>}
+      {isMobile ? (
+        <>
+          {listPane}
+          <MobileSheet open={!!selection} onClose={() => setSelection(null)} data-testid="voice-call-sheet">{rightPane}</MobileSheet>
+        </>
+      ) : narrow ? (selection ? rightPane : listPane) : <>{!hidden && listPane}{rightPane}</>}
     </div>
   );
 }

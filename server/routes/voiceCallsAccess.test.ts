@@ -58,6 +58,13 @@ test("scope: client demo is 403", () => {
   assert.deepEqual(decideScope(client, { scope: "demo" }), { ok: false, status: 403 });
 });
 
+test("scope: tests are for agency users (Owner, Admin), never clients", () => {
+  assert.deepEqual(decideScope(owner, { scope: "test" }), { ok: true, scope: "test", accountId: null });
+  assert.deepEqual(decideScope(admin, { scope: "test" }), { ok: true, scope: "test", accountId: null });
+  assert.deepEqual(decideScope(client, { scope: "test" }), { ok: false, status: 403 });
+  assert.deepEqual(decideScope(impersonating, { scope: "test" }), { ok: false, status: 403 });
+});
+
 test("scope: impersonating owner demo is 403", () => {
   assert.deepEqual(decideScope(impersonating, { scope: "demo" }), { ok: false, status: 403 });
 });

@@ -1,71 +1,80 @@
 import { useTranslation } from "react-i18next";
-import { AudioLines } from "lucide-react";
+import { callOutcomeStatus } from "@/components/crm/status/StatusPill";
 import type { VoiceCallListItem } from "../api/voiceCallsApi";
-import { formatDuration, formatListTime } from "../format";
-import { callStatus } from "../status";
-import { Pill } from "@/components/crm/primitives";
-import { CallAvatar, callerIni, callerInitials, callerTitle, maskCaller } from "./bits";
-import { OutcomePill } from "./OutcomePill";
+import { formatListTime, formatRowDuration } from "../format";
+import { callStatus, normalizeOutcome } from "../status";
+import { CallAvatar, callerIni, callerTitle, maskCaller, ROW_META, ROW_NAME, ROW_TIME, useRowAvatar } from "./bits";
+import { OutcomePill, slotLabel } from "./OutcomePill";
 
 interface Props {
   call: VoiceCallListItem;
   active: boolean;
   masked: boolean;
+  /** All-accounts view (agency): the client account rides after the name. */
+  showAccount: boolean;
   onClick: () => void;
 }
 
-// 10.5px so the number stays readable at 390px (D7); the pill beside it never shrinks.
-const META: React.CSSProperties = { display: "inline-flex", alignItems: "center", gap: 6, fontFamily: "var(--mono)", fontSize: 10.5, color: "var(--mute)", letterSpacing: "0.03em", minWidth: 0 };
-
-export function VoiceCallListCard({ call: rawCall, active, masked, onClick }: Props) {
+/**
+ * One call, two rows: caller (· account) | length + outcome tag, then the recap | date (bold).
+ * The recap is one line; on hover (devices that hover) the card grows to a second line.
+ */
+export function VoiceCallListCard({ call: rawCall, active, masked, showAccount, onClick }: Props) {
   const { t, i18n } = useTranslation("voiceCalls");
   const call = maskCaller(rawCall, masked);
   const demo = call.scope === "demo";
-  const caller = callerTitle(call, t("webCaller"));
-  // Demo rows are titled by the business the AI answered for, Live rows by who called.
-  const title = demo ? call.personaCompany || t("persona.universal") : caller;
-  const ini = demo ? callerInitials(title, t("persona.universal")) : callerIni(call, t("webCaller"));
-  const duration = formatDuration(call.durationSeconds);
+  // Row 1 is always who called; the muted tail is the client account (all-accounts view)
+  // or, on Demo, the business the AI answered for.
+  const title = callerTitle(call, t("webCaller"));
+  const ini = callerIni(call, t("webCaller"));
+  const avatar = useRowAvatar();
+  // "4s" under a minute, "1:00" / "12:34" from there.
+  const duration = call.durationSeconds == null ? null : formatRowDuration(call.durationSeconds, (s) => t("duration.sec", { s }));
+  const when = formatListTime(call.startedAt, i18n.language);
+  // Row 2 is the recap on every scope.
+  const recap = call.conclusion || t("noSummary");
+  // "Answered" is what most calls are: no tag for it.
+  const showOutcome = callOutcomeStatus(normalizeOutcome(call.outcome)) !== "answered";
+  // The card tag stays short ("Booked"): the slot is in the tooltip and in the detail.
+  const slot = slotLabel(call.bookedIso, call.bookedSlot, i18n.language);
+  const account = demo ? call.personaCompany || t("persona.universal") : showAccount ? call.accountName : null;
   return (
     <div
       onClick={onClick}
       data-testid="voice-call-row"
-      // The Chats card: flat until opened, then a raised card with the wine bar (all raised on phones).
-      className={active ? "la-camp-card active" : "la-camp-card"}
+      // The Chats row: inside `.la-cards--flat` a flat WhatsApp-style row (see components.css).
+      className={active ? "la-camp-card active group" : "la-camp-card group"}
       style={{ display: "block", padding: 0 }}
     >
-      <div style={{ padding: "9px 12px", display: "flex", gap: 10 }}>
-        <CallAvatar ini={ini} status={callStatus(call)} size={38} />
+      <div style={{ padding: "12px 14px", display: "flex", alignItems: "center", gap: 12 }}>
+        <CallAvatar ini={ini} status={callStatus(call)} size={avatar} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 2 }}>
-            <span style={{ fontFamily: "var(--serif)", fontSize: 15.5, color: "var(--ink)", fontWeight: active ? 600 : 400, lineHeight: 1.1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {title}
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 3 }}>
+            <span style={{ flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", lineHeight: 1.25 }}>
+              <span style={ROW_NAME}>{title}</span>
+              {account && <span style={{ fontSize: 13, color: "var(--mute)" }}>{` · ${account}`}</span>}
             </span>
-            <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)", flexShrink: 0, letterSpacing: "0.04em" }}>
-              {formatListTime(call.startedAt, i18n.language)}
-            </span>
-          </div>
-          <p style={{ margin: "0 0 6px", fontSize: 12, lineHeight: 1.45, color: "var(--mute)", display: "-webkit-box", WebkitLineClamp: 1, WebkitBoxOrient: "vertical", overflow: "hidden" } as React.CSSProperties}>
-            {demo ? `${caller} · ${duration}` : call.conclusion || t("noSummary")}
-          </p>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-            {demo ? (
-              <span style={META}>
-                {call.personaNiche && (
-                  <Pill style={{ fontFamily: "var(--mono)", fontSize: 8, fontWeight: 700, letterSpacing: "0.1em", textTransform: "uppercase", padding: "3px 7px", maxWidth: 130, overflow: "hidden", textOverflow: "ellipsis", display: "inline-block", boxShadow: "var(--sh-inset-crisp)", background: "var(--bg)", color: "var(--mute)" }}>
-                    {call.personaNiche}
-                  </Pill>
+            {(duration || showOutcome) && (
+              <span style={{ flexShrink: 0, display: "inline-flex", alignItems: "center", gap: 8 }}>
+                {duration && <span style={{ ...ROW_TIME, whiteSpace: "nowrap" }}>{duration}</span>}
+                {showOutcome && (
+                  <span title={slot ?? undefined} style={{ display: "inline-flex" }}>
+                    <OutcomePill outcome={call.outcome} bare />
+                  </span>
                 )}
               </span>
-            ) : (
-              <span style={META}>
-                <AudioLines size={11} style={{ color: "var(--wine)", flexShrink: 0 }} />
-                <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {call.accountName ? `${call.accountName} · ${duration}` : `${t("voiceCall")} · ${duration}`}
-                </span>
-              </span>
             )}
-            <OutcomePill outcome={call.outcome} bookedSlot={call.bookedSlot} bookedIso={call.bookedIso} small={!active} />
+          </div>
+          <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+            {/* One line at rest; hover grows it to two (max-height animates, hover-capable devices only).
+                Smaller on desktop (12.75px), the phone keeps the readable 13.5px. */}
+            <p
+              className="line-clamp-1 max-h-[1.4em] text-[13.5px] md:text-[12.75px] transition-[max-height] duration-200 ease-out group-hover:line-clamp-2 group-hover:max-h-[2.8em]"
+              style={{ lineHeight: ROW_META.lineHeight, color: ROW_META.color, flex: 1, minWidth: 0, margin: 0 }}
+            >
+              {recap}
+            </p>
+            <span style={{ ...ROW_TIME, flexShrink: 0, whiteSpace: "nowrap", fontWeight: 700, color: "var(--ink)", lineHeight: 1.4 }}>{when}</span>
           </div>
         </div>
       </div>

@@ -18,7 +18,7 @@ import { listVoiceCallEvents, type VoiceCallEventItem } from "./voiceCallEvents"
 import { callEngine, costIsCurrent, type ReviewEngine } from "./voiceCallReview";
 
 export type { VoiceOutcome };
-export type VoiceScope = "live" | "demo";
+export type VoiceScope = "live" | "demo" | "test";
 
 export interface VoiceCallListItem {
   callId: string;
@@ -41,6 +41,7 @@ export interface VoiceCallListItem {
   leadStatus: string | null;
   /** The number the caller rang from (made up for the web demo). */
   callerNumber: string | null;
+  /** The tab the call belongs to: test (the Test call button), else demo, else live. */
   scope: VoiceScope;
   /** Owner-flagged test data: hidden from clients. */
   isTest: boolean;
@@ -69,6 +70,8 @@ export interface VoiceStats {
 export interface VoiceCapabilities {
   live: boolean;
   demo: boolean;
+  /** The Tests tab: agency users (Owner, Admin). */
+  test: boolean;
 }
 
 export interface VoiceCallTurn {
@@ -134,16 +137,43 @@ interface ItemExtras {
   leadStatus: string | null;
   callerNumber: string | null;
   isDemo: boolean;
+  /** A test call (testCallSql). */
+  testCall: boolean;
   accountName: string | null;
   /** The test-call list's extra figures (cost, engine, reply speed). Off by default: most lists reach clients. */
   forTestList?: boolean;
 }
 
+/**
+ * ElevenLabs calls: the provider's own call length (`usage.seconds` = its call_duration_secs),
+ * which matches the recording. Our started_at is stamped well before her audio starts (up to
+ * ~10s on browser calls), so the wall clock overstates short calls. GPT-Live `usage.seconds` is
+ * our wall clock again, so GPT-Live calls use `usage.recording_seconds`: the stored recording's
+ * own length (engine live_recording_length.py), which is what the player plays. Rows without it
+ * fall back to the wall clock.
+ */
+function meteredSeconds(usage: unknown): number | null {
+  if (!usage || typeof usage !== "object") return null;
+  const u = usage as { live_model?: unknown; seconds?: unknown; recording_seconds?: unknown };
+  if (u.recording_seconds != null) {
+    const r = typeof u.recording_seconds === "number" ? u.recording_seconds : Number(u.recording_seconds);
+    if (Number.isFinite(r) && r >= 0) return Math.round(r);
+  }
+  if (typeof u.live_model !== "string" || !u.live_model.startsWith("eleven")) return null;
+  const s = typeof u.seconds === "number" ? u.seconds : Number(u.seconds);
+  return Number.isFinite(s) && s > 0 ? Math.round(s) : null;
+}
+
+/** The demo stores the placeholder "web" as a number: that is not one. */
+function realCallerNumber(v: string | null): string | null {
+  return v && v.trim() !== "" && v.trim() !== "web" ? v : null;
+}
+
 export function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
   const end = row.endedAt ?? (x.lastTurn ? new Date(x.lastTurn) : null);
-  const durationSeconds = end
+  const durationSeconds = meteredSeconds(row.usage) ?? (end
     ? Math.max(0, Math.round((end.getTime() - row.startedAt.getTime()) / 1000))
-    : null;
+    : null);
   const summary = normalizeSummary(row.summary);
   const intents = summary?.items.map((i) => i.intent) ?? [];
   const outcome: VoiceOutcome = isVoiceOutcome(row.outcome)
@@ -171,8 +201,11 @@ export function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
     conclusion: summary?.outcome ?? null,
     intents,
     leadStatus: x.leadStatus,
-    callerNumber: x.callerNumber,
-    scope: x.isDemo ? "demo" : "live",
+    // The lead's phone, else (Live only) the number the line saw ring: a phone call that never
+    // got a lead (caller hung up before she spoke) would otherwise read as "Web caller".
+    // Demo and Tests keep the lead's phone only (their stored caller_number is made up).
+    callerNumber: x.callerNumber ?? (!x.isDemo && !x.testCall ? realCallerNumber(row.callerNumber) : null),
+    scope: scopeOf(x),
     isTest: row.isTest === true,
     personaCompany: x.isDemo ? row.personaCompany : null,
     personaNiche: x.isDemo ? row.personaNiche : null,
@@ -185,17 +218,36 @@ export function toItem(row: VoiceCall, x: ItemExtras): VoiceCallListItem {
   };
 }
 
-/** Live ALWAYS excludes demo calls, whoever asks. */
+/**
+ * Every call belongs to exactly one tab: Tests first (browser test calls), then Demo, else
+ * Live. So Live and Demo never hold a browser test call, whoever asks. `hideTest` (clients)
+ * also drops calls and leads Gabriel marked as test data.
+ */
 export function scopeWhere(scope: VoiceScope, accountId: number | null, hideTest = false): SQL {
-  // Test calls are listed on the tested client's Voice tab instead.
-  const base = scope === "demo" ? sql`${isDemoSql} AND ${testAccountIdSql} IS NULL` : sql`NOT ${isDemoSql}`;
-  const scoped = accountId === null ? base : sql`${base} AND ${voiceCalls.accountsId} = ${accountId}`;
+  const base = scope === "test" ? testCallSql
+    : scope === "demo" ? sql`${isDemoSql} AND NOT ${testCallSql}`
+    : sql`NOT ${isDemoSql} AND NOT ${testCallSql}`;
+  // Test calls live in the demo account and point to the tested client through test_account_id.
+  const accountCol = scope === "test" ? testAccountIdSql : voiceCalls.accountsId;
+  const scoped = accountId === null ? base : sql`${base} AND ${accountCol} = ${accountId}`;
   return hideTest ? sql`${scoped} AND ${notTestSql}` : scoped;
+}
+
+/** The tab of a call row (the same order as scopeWhere). */
+export function scopeOf(x: { isDemo: boolean; testCall: boolean }): VoiceScope {
+  return x.testCall ? "test" : x.isDemo ? "demo" : "live";
 }
 
 /** Not flagged is_test itself and not linked to a lead flagged is_test. */
 export const notTestSql = sql`(COALESCE(${voiceCalls.isTest}, false) = false
   AND NOT EXISTS (SELECT 1 FROM ${leads} tl WHERE tl.id = ${voiceCalls.leadsId} AND tl.is_test = true))`;
+
+/**
+ * A test call: one staff made from the "Test call" button on an account's Voice tab (the
+ * engine tags it with test_account_id). These make up the Tests tab; calls other people made
+ * stay in Live or Demo, whatever the test-data marks say.
+ */
+export const testCallSql = sql<boolean>`(${testAccountIdSql} IS NOT NULL)`;
 
 export function itemColumns(includeAccountName: boolean) {
   return {
@@ -204,6 +256,7 @@ export function itemColumns(includeAccountName: boolean) {
     leadStatus: leadStatusOf,
     callerNumber: leadPhoneOf,
     isDemo: isDemoSql,
+    testCall: testCallSql,
     testAccountId: testAccountIdSql,
     accountName: includeAccountName ? accountNameOf : sql<string | null>`NULL::text`,
   };
@@ -273,7 +326,8 @@ export const voiceCallsStorage = {
     }
     // Browser test calls classify as demo; agency users may open them (allowTest), real demo calls stay Owner only.
     if (!demoCallVisible({ isDemo: row.isDemo, testAccountId: row.testAccountId }, { allowDemo: opts.allowDemo, allowTest: opts.allowTest === true })) return undefined;
-    if (opts.accountId !== null && row.call.accountsId !== opts.accountId) return undefined;
+    const ownerAccount = row.testAccountId ?? row.call.accountsId;
+    if (opts.accountId !== null && ownerAccount !== opts.accountId) return undefined;
     const turns = await db
       .select({
         id: interactions.id,
@@ -375,7 +429,7 @@ export const voiceCallsStorage = {
   },
 
   async getVoiceCapabilities(access: VoiceAccess): Promise<VoiceCapabilities> {
-    if (access.isOwner) return { live: true, demo: true };
+    if (access.isOwner) return { live: true, demo: true, test: true };
     // Same rule as the Home phone service: an enabled client line, or a live call in the last 90 days.
     const result = await db.execute(sql`SELECT (
       ${hasEnabledClientLineSql(access.lockedAccountId)}
@@ -383,6 +437,6 @@ export const voiceCallsStorage = {
                  WHERE vc.accounts_id = ${access.lockedAccountId} AND vc.started_at > now() - interval '90 days'
                    AND ${liveCallSql})
     ) AS ok`);
-    return { live: (result.rows[0] as { ok: boolean }).ok === true, demo: false };
+    return { live: (result.rows[0] as { ok: boolean }).ok === true, demo: false, test: access.isAgency };
   },
 };
