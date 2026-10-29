@@ -135,24 +135,6 @@ export function AgentVoiceCard({ line, onSave }: {
           )}
         </div>
         <div>
-          <FieldLabel>{cp("voiceSound.voiceLabel")}</FieldLabel>
-          {eleven ? (
-            <>
-              <VoicePicker
-                value={elevenPick}
-                onChange={(id) => { void pickEleven(id); }}
-                eleven={{ voices: elevenVoicesFor(allEleven, gender, voice, elevenPick), defaultLabel: t("voiceTab:lineEngine.defaultVoice", { name: spoken || savedName }) }}
-              />
-              {elevenVoices.isError && <p style={warnStyle} data-testid="line-engine-voices-failed">{t("voiceTab:lineEngine.voicesFailed")}</p>}
-              {allEleven.length > 0 && !pickFits(elevenPick, allEleven, gv) && (
-                <p style={warnStyle} data-testid="line-engine-mismatch">{t("voiceTab:lineEngine.mismatch", { name: spoken || savedName })}</p>
-              )}
-            </>
-          ) : (
-            <VoicePicker value={voice} gender={gender} onChange={(v) => { void pick({ voice: v }); }} />
-          )}
-        </div>
-        <div>
           <FieldLabel>{cp("voiceSound.localeLabel")}</FieldLabel>
           <select
             value={locale}
@@ -167,6 +149,24 @@ export function AgentVoiceCard({ line, onSave }: {
               <option key={k} value={k}>{(VOICE_LOCALES as readonly string[]).includes(k) ? `${VOICE_LOCALE_FLAGS[k]} ${cp(`voiceSound.locales.${k}`)}` : k}</option>
             ))}
           </select>
+        </div>
+        <div>
+          <FieldLabel>{cp("voiceSound.voiceLabel")}</FieldLabel>
+          {eleven ? (
+            <>
+              <VoicePicker
+                value={elevenPick}
+                onChange={(id) => { void pickEleven(id); }}
+                eleven={{ voices: elevenVoicesFor(allEleven, gender, voice, elevenPick, locale), defaultLabel: t("voiceTab:lineEngine.defaultVoice", { name: spoken || savedName }) }}
+              />
+              {elevenVoices.isError && <p style={warnStyle} data-testid="line-engine-voices-failed">{t("voiceTab:lineEngine.voicesFailed")}</p>}
+              {allEleven.length > 0 && !pickFits(elevenPick, allEleven, gv) && (
+                <p style={warnStyle} data-testid="line-engine-mismatch">{t("voiceTab:lineEngine.mismatch", { name: spoken || savedName })}</p>
+              )}
+            </>
+          ) : (
+            <VoicePicker value={voice} gender={gender} onChange={(v) => { void pick({ voice: v }); }} />
+          )}
         </div>
       </div>
 

@@ -108,3 +108,14 @@ test("needsConfirm: only the language model of a client line asks first", () => 
   assert.equal(needsConfirm("test", "liveLlm"), false);
   assert.equal(needsConfirm(undefined, "liveLlm"), false);
 });
+
+test("elevenVoicesFor shows only the line language's voices, Portugal on the Brazilian ones", () => {
+  const voices = [
+    { id: "v", label: "Vincent", gender: "male", locale: "nl" },
+    { id: "g", label: "George", gender: "male", locale: "en-GB" },
+    { id: "p", label: "Paulo", gender: "male", locale: "pt-BR" },
+  ] as const;
+  assert.deepEqual(elevenVoicesFor([...voices], "male", null, null, "nl").map((v) => v.id), ["v"]);
+  assert.deepEqual(elevenVoicesFor([...voices], "male", null, null, "pt-PT").map((v) => v.id), ["p"]);
+  assert.deepEqual(elevenVoicesFor([...voices], "male", null, "g", "nl").map((v) => v.id), ["v", "g"]);  // the saved pick stays
+});

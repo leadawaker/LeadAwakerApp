@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
+import { useScrollFadeX } from "@/hooks/useScrollFadeX";
 import { ToastAction } from "@/components/ui/toast";
 import { parseInstagramReturn, stripInstagramParams } from "@/features/social/lib/socialState";
 import { SOCIAL_PAGE_PATH } from "@/features/social/lib/socialPage";
@@ -19,6 +20,8 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { myAccountLabelKey } from "@/components/crm/navGates";
 import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 import { useListPanelState } from "@/hooks/useListPanelState";
+import { useListPanelFold } from "@/hooks/useListPanelFold";
+import { ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { AccountsTopBar } from "./AccountsTopBar";
@@ -112,7 +115,9 @@ export function AccountsWorkspace(p: Props) {
   }, [tab, isOwner, isAgencyUser]);
   const [panelMode, setPanelMode] = useState<"view" | "create">("view");
 
-  const { state: listPanelState, cycle } = useListPanelState();
+  const { state: listPanelState } = useListPanelState();
+  // List fold button (agency only: a client has no account list).
+  useListPanelFold(isAgencyUser && !isNarrow);
   const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 900, deactivateAbove: 1250 });
   const isListCompact = !isNarrow && (listPanelState === "compact" || (listPanelState === "full" && rightPanelNarrow));
   const isListHidden = !isNarrow && listPanelState === "hidden";
@@ -285,11 +290,16 @@ export function AccountsWorkspace(p: Props) {
   const showDetailArea = !isNarrow;
 
   // ── Shared mobile detail blocks (used by the client page + the agency sheet) ──
+  const tabScrollRef = useScrollFadeX<HTMLDivElement>(tab);
   const mobileTabSeg = (
-    <div className={`la-seg la-seg--fill${isClient ? " la-seg--touch" : ""}`} style={{ overflowX: "auto", scrollbarWidth: "none" }}>
+    // Five tabs are wider than a phone: the track scrolls sideways with an edge fade,
+    // and the picked tab scrolls into view.
+    <div ref={tabScrollRef} role="tablist" className={`la-seg la-seg--fill la-fade-x${isClient ? " la-seg--touch" : ""}`}>
       {tabs.map((k) => (
         <button
           key={k}
+          role="tab"
+          aria-selected={tab === k}
           onClick={() => pickTab(k)}
           className={`la-seg-btn${tab === k ? " on" : ""}`}
           style={{ padding: "9px 10px", fontSize: 11, letterSpacing: "0.08em", whiteSpace: "nowrap", flex: "1 0 auto" }}
@@ -425,8 +435,6 @@ export function AccountsWorkspace(p: Props) {
         onTabChange={pickTab}
         showTabs={!isNarrow}
         count={p.count}
-        listPanelState={listPanelState}
-        onCycle={cycle}
         listSearch={p.listSearch}
         onListSearchChange={p.onListSearchChange}
         filterStatus={p.filterStatus}
@@ -503,6 +511,8 @@ export function AccountsWorkspace(p: Props) {
           />
         </MobileRecede>
         )}
+        {/* Hidden list: the slim strip that brings it back */}
+        {isAgencyUser && <ListPanelUnfoldButton />}
 
         {/* Desktop detail panel — this div is the single scroll container; 48px h-padding keeps shadows (22.5px reach) within the clip boundary */}
         {showDetailArea && (

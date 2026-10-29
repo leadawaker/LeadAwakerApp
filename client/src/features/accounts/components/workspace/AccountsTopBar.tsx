@@ -2,7 +2,7 @@ import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Filter, Check, ArrowUpDown, ArrowUp, ArrowDown, Layers, Plus,
-  PanelLeft, PanelLeftClose, MoreHorizontal, Trash2,
+  MoreHorizontal, Trash2,
   Building2, Link2, MessagesSquare, MessageCircle, Phone, Zap, BellRing, Megaphone,
   type LucideIcon,
 } from "lucide-react";
@@ -18,7 +18,6 @@ import { ACCOUNT_STATUS_HEX } from "@/lib/avatarUtils";
 import {
   STATUS_FILTER_OPTIONS, STATUS_I18N_KEY, GROUP_TKEYS,
 } from "../listWidgets/accountListConstants";
-import type { ListPanelState } from "@/hooks/useListPanelState";
 import type { WorkspaceTab } from "./types";
 import type { AccountGroupBy, AccountSortBy } from "../../pages/AccountsPage";
 
@@ -39,8 +38,6 @@ interface Props {
   onTabChange: (t: WorkspaceTab) => void;
   showTabs: boolean;
   count: number;
-  listPanelState: ListPanelState;
-  onCycle: () => void;
   listSearch: string;
   onListSearchChange: (v: string) => void;
   filterStatus: string[];
@@ -83,20 +80,13 @@ export function AccountsTopBar(p: Props) {
   };
 
   const tabItems: TopbarTab<WorkspaceTab>[] = p.tabs.map((k) => ({ id: k, label: t(`workspace.tabs.${k}`), icon: TAB_ICONS[k] }));
-  const foldLabel = p.listPanelState === "full" ? t("workspace.compactPanel") : p.listPanelState === "compact" ? t("workspace.hidePanel") : t("workspace.showPanel");
   const nameSortActive = p.sortBy === "name_asc" || p.sortBy === "name_desc";
   const nameSortDir = p.sortBy === "name_asc" ? "asc" : "desc";
 
-  // A client has no account list: no fold button, search, filter, sort, group, delete or create.
-  const left = (p.showTabs || isAgencyUser) ? (
-    <>
-      {p.showTabs && <TopbarTabs tabs={tabItems} value={p.tab} onChange={p.onTabChange} testIdPrefix="account-topbar-tab" />}
-      {isAgencyUser && (
-        <TopbarIconButton label={foldLabel} onClick={p.onCycle}>
-          {p.listPanelState === "hidden" ? <PanelLeft className="h-4 w-4" /> : <PanelLeftClose className="h-4 w-4" />}
-        </TopbarIconButton>
-      )}
-    </>
+  // A client has no account list: no search, filter, sort, group, delete or create.
+  // The list fold button sits on the list panel header.
+  const left = p.showTabs ? (
+    <TopbarTabs tabs={tabItems} value={p.tab} onChange={p.onTabChange} testIdPrefix="account-topbar-tab" />
   ) : undefined;
 
   const right = isAgencyUser ? (

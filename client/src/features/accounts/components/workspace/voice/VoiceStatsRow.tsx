@@ -38,7 +38,8 @@ export function VoiceStatsRow({ accountId }: { accountId: number }) {
           {months.map((m) => <option key={m} value={m}>{monthLabel(m, i18n.language)}</option>)}
         </select>
       </div>
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))", gap: 14 }}>
+      {/* 110px min keeps the four tiles on one row in the narrow settings column, never 3 + 1 orphan. */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(110px, 1fr))", gap: 14 }}>
         <StatCard label={t("stats.calls")} value={dash(stats?.calls)} accent="var(--wine)" icon={<Phone size={15} />} />
         <StatCard label={t("stats.bookings")} value={dash(stats?.bookings)} accent="var(--good)" icon={<CalendarCheck size={15} />} />
         <StatCard

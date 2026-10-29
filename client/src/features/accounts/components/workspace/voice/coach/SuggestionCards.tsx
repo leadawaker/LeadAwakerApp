@@ -36,7 +36,7 @@ export function SuggestionCards({ accountId }: { accountId: number }) {
       note={suggestions.data ? t("cards.openCount", { count: byTab.open.length }) : undefined}
     >
       <p style={helpStyle}>{t("cards.help")}</p>
-      <div className="la-seg la-seg--touch" role="tablist" aria-label={t("cards.tabsLabel")} style={{ marginBottom: 14, flexWrap: "wrap", maxWidth: "100%" }}>
+      <div className="la-seg la-seg--main la-seg--soft" role="tablist" aria-label={t("cards.tabsLabel")} style={{ marginBottom: 14, flexWrap: "wrap", maxWidth: "100%" }}>
         {TABS.map((id) => (
           <button
             key={id} type="button" role="tab" aria-selected={tab === id} className={`la-seg-btn${tab === id ? " on" : ""}`}

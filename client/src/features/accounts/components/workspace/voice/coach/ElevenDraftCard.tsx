@@ -237,7 +237,7 @@ function DraftEditor({ accountId, lineId, lang, view, other, langSwitch }: {
 
       <div style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center", marginBottom: 10 }}>
         {langSwitch}
-        <div className="la-seg la-seg--touch" role="tablist" aria-label={tc("draft.viewLabel")}>
+        <div className="la-seg la-seg--main la-seg--soft" role="tablist" aria-label={tc("draft.viewLabel")}>
           {VIEWS.map((v) => (
             <button
               key={v} type="button" role="tab" aria-selected={mode === v} className={`la-seg-btn${mode === v ? " on" : ""}`}

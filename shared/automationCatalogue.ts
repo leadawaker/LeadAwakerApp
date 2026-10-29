@@ -58,6 +58,8 @@ export const AUTOMATION_CATALOGUE: AutomationEntry[] = [
   { id: "channel_fallback", service: "inbox", trigger: on("whatsapp_undelivered"), scope: "campaign", audience: "client" },
   { id: "message_delivery", service: "inbox", trigger: on("delivery_receipt"), scope: "account", audience: "client", aliases: ["whatsapp_cloud_webhook"] },
   { id: "stock_sync", service: "inbox", trigger: every(3600), scope: "account", audience: "client" },
+  { id: "marktplaats_sync", service: "inbox", trigger: every(3600), scope: "account", audience: "client" },
+  { id: "eleven_kb_sync", service: "receptionist", trigger: every(3600), scope: "account", audience: "internal" },
   // Behind the scenes
   { id: "lead_scorer", service: "internal", trigger: every(1800), scope: "agency", audience: "internal" },
   { id: "metrics_aggregator", service: "internal", trigger: every(900), scope: "agency", audience: "internal" },

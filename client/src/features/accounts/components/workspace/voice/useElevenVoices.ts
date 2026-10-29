@@ -10,6 +10,8 @@ export interface ElevenVoice extends EngineVoice {
   age?: string | null;
   accent?: string | null;
   description?: string | null;
+  /** The language the voice speaks ("nl", "en-GB", "en-US", "pt-BR"), from the engine's catalogue. */
+  locale?: string | null;
   /** A path under /voice-samples/eleven, or null when there is none. */
   preview: string | null;
 }

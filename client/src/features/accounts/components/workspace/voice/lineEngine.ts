@@ -64,9 +64,14 @@ export function openAiVoiceGroups(gender: AgentGender | null | undefined, curren
   return groups;
 }
 
-/** ElevenLabs voices on offer: the set gender's (else the GPT Live voice's), plus the saved pick wherever it sits. */
-export function elevenVoicesFor<T extends EngineVoice>(voices: T[], gender: AgentGender | null | undefined, lineVoice: string | null | undefined, pick?: string | null): T[] {
-  const shown = voicesForAgent(voices, effectiveVoice(lineVoice, gender) || (gender ?? null));
+/** The engine's voice language for a line language: Portuguese (Portugal) speaks with the Brazilian voices. */
+const voiceLocale = (locale: string) => (locale === "pt-PT" ? "pt-BR" : locale);
+
+/** ElevenLabs voices on offer: the line language's and the set gender's (else the GPT Live voice's),
+ *  plus the saved pick wherever it sits. A voice without a language stays on offer. */
+export function elevenVoicesFor<T extends EngineVoice & { locale?: string | null }>(voices: T[], gender: AgentGender | null | undefined, lineVoice: string | null | undefined, pick?: string | null, locale?: string | null): T[] {
+  const spoken = locale ? voices.filter((v) => !v.locale || v.locale === voiceLocale(locale)) : voices;
+  const shown = voicesForAgent(spoken, effectiveVoice(lineVoice, gender) || (gender ?? null)) as T[];
   if (!pick || shown.some((v) => v.id === pick)) return shown;
   const saved = voices.find((v) => v.id === pick);
   return saved ? [...shown, saved] : shown;

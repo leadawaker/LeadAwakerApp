@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import { useTranslation } from "react-i18next";
 import { Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -225,15 +226,19 @@ export function AccountsListPanel({
               </div>
             )}
           </div>
-          {totalAccounts > PAGE_SIZE && (
-            <div className="h-9 md:h-[18px] px-3 py-1 border-t border-border/20 flex items-center justify-between shrink-0">
-              <button onClick={() => setCurrentPage((p) => Math.max(0, p - 1))} disabled={currentPage === 0} className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30">{t("toolbar.previous")}</button>
-              <span className="text-[10px] text-muted-foreground tabular-nums">{currentPage * PAGE_SIZE + 1}&ndash;{Math.min((currentPage + 1) * PAGE_SIZE, totalAccounts)} {t("toolbar.of")} {totalAccounts}</span>
-              <button onClick={() => setCurrentPage((p) => Math.min(maxPage, p + 1))} disabled={currentPage >= maxPage} className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30">{t("toolbar.next")}</button>
-            </div>
-          )}
+          {/* Bottom bar: pagination on the left, the list fold button at the right end */}
+          <ListPanelFooter>
+            {totalAccounts > PAGE_SIZE && (
+              <>
+                <button onClick={() => setCurrentPage((p) => Math.max(0, p - 1))} disabled={currentPage === 0} className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30">{t("toolbar.previous")}</button>
+                <span className="text-[10px] text-muted-foreground tabular-nums">{currentPage * PAGE_SIZE + 1}&ndash;{Math.min((currentPage + 1) * PAGE_SIZE, totalAccounts)} {t("toolbar.of")} {totalAccounts}</span>
+                <button onClick={() => setCurrentPage((p) => Math.min(maxPage, p + 1))} disabled={currentPage >= maxPage} className="text-[10px] text-muted-foreground hover:text-foreground disabled:opacity-30">{t("toolbar.next")}</button>
+              </>
+            )}
+          </ListPanelFooter>
         </>
       )}
+      {isListCompact && <ListPanelFooter compact />}
 
       {isListCompact && hovered && (
         <CompactHoverCardPortal rect={rect} onMouseEnter={cancelHoverEnd} onMouseLeave={onHoverEnd}>

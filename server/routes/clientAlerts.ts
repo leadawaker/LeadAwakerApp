@@ -109,7 +109,7 @@ const patchSchema = z.object({
   }).strict().optional(),
 }).strict();
 
-const testSchema = z.object({ channel: z.enum(["email", "whatsapp"]), type: z.enum(emailTypes) }).strict();
+const testSchema = z.object({ channel: z.enum(["email", "whatsapp"]), type: z.enum(emailTypes), onlyMe: z.boolean().optional() }).strict();
 
 export function registerClientAlertsRoutes(app: Express): void {
   app.post("/api/internal/client-alerts/email", wrapAsync(async (req, res) => {
@@ -177,7 +177,7 @@ export function registerClientAlertsRoutes(app: Express): void {
       const resp = await fetch(`${getEngineUrl()}/internal/client-alerts/test`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Internal-Key": process.env.INTERNAL_API_KEY || "" },
-        body: JSON.stringify({ account_id: accountId, channel: parsed.data.channel, type: parsed.data.type }),
+        body: JSON.stringify({ account_id: accountId, channel: parsed.data.channel, type: parsed.data.type, only_me: parsed.data.onlyMe === true }),
         signal: AbortSignal.timeout(60_000),
       });
       const data = await resp.json().catch(() => ({}));
@@ -219,8 +219,9 @@ export function registerClientAlertsRoutes(app: Express): void {
     const t = target.eventType;
     // A callback request or message from a phone call opens that call (its
     // recording and transcript hold the request); a chat callback has no call
-    // and opens the lead's chat below.
-    if (t === "callback_requested" && target.voiceCallId) {
+    // and opens the lead's chat below. A caller who hung up right away opens
+    // their call too (the row may carry a lead id; the call still comes first).
+    if ((t === "callback_requested" || t === "caller_hung_up") && target.voiceCallId) {
       return res.json({ path: "/platform/voice-calls", selectVoiceCallId: target.voiceCallId, accountId: target.accountsId });
     }
     // Appointment alerts open where the booking happened: the phone call, the

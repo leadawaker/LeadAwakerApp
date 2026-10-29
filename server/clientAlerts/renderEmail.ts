@@ -84,7 +84,7 @@ const settingsLink = (c: Copy, link: string) => ({ label: c.manage, url: `${link
 
 const ALERT_ART: Record<AlertEmailType, "booked" | "moved" | "cancelled" | "callback" | "reply" | "photo"> = {
   appointment_booked: "booked", appointment_rescheduled: "moved", appointment_cancelled: "cancelled",
-  callback_requested: "callback", lead_needs_reply: "reply", new_photo: "photo",
+  callback_requested: "callback", lead_needs_reply: "reply", new_photo: "photo", caller_hung_up: "callback",
 };
 
 /** A message a caller left for the team (callback_requested, reason
@@ -149,6 +149,8 @@ function renderAlert(input: AlertEmailInput & { type: AlertEmailType }): Rendere
   }
   if (input.type === "appointment_booked") facts.push([L.source, str(d.sourceText), "d-source.png"]);
   if (input.type === "callback_requested") facts.push([L.about, str(d.about), "d-note.png"]);
+  // caller_hung_up: who called (above) and when (sinceText, formatted by the engine).
+  if (input.type === "caller_hung_up") facts.push([L.calledAt, str(d.sinceText), "d-since.png"]);
   // new_photo: one bundle of 1+ photos (photos[], or one top-level photo on older rows).
   const items: any[] = Array.isArray(d.photos) && d.photos.length ? d.photos : [{ description: d.description, caption: d.caption }];
   const count = items.length;

@@ -58,7 +58,7 @@ export function useAlertSettings(accountId: number) {
     onSuccess: (data) => qc.setQueryData(alertSettingsKey(accountId), data),
   });
   const test = useMutation({
-    mutationFn: (body: { channel: "email" | "whatsapp"; type: TestType }) =>
+    mutationFn: (body: { channel: "email" | "whatsapp"; type: TestType; onlyMe?: boolean }) =>
       call<TestResult>(`/api/accounts/${accountId}/alert-settings/test`, "POST", body),
   });
   return { settings: query.data ?? null, loading: query.isLoading, error: query.error as Error | null, save, test };

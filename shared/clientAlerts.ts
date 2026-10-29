@@ -2,7 +2,8 @@
 // settings stored in Account_Communication_Profile.setup.alerts. Recap on/off
 // and time stay in setup.handoff.recap / recapTime (the wizard's keys).
 // The engine reads the same shape in
-// automations/src/automations/client_alerts/settings.py: change both.
+// automations/src/automations/client_alerts/settings.py: change both (the
+// ALERT_TYPES list and the OPT_IN_ALERT_TYPES list below, with its default).
 
 export const ALERT_TYPES = [
   "appointment_booked",
@@ -11,8 +12,15 @@ export const ALERT_TYPES = [
   "callback_requested",
   "lead_needs_reply",
   "new_photo",
+  "caller_hung_up",
 ] as const;
 export type AlertType = (typeof ALERT_TYPES)[number];
+
+/** Types that start OFF: an account only gets them once someone switches
+ *  them on (`instant[t] === true`). Every other type is ON unless it is
+ *  explicitly false (`instant[t] !== false`). */
+export const OPT_IN_ALERT_TYPES: readonly AlertType[] = ["caller_hung_up"];
+const isOptIn = (t: AlertType) => OPT_IN_ALERT_TYPES.includes(t);
 
 export const ALERT_CHANNELS = ["crm", "email", "whatsapp"] as const;
 export type AlertChannel = (typeof ALERT_CHANNELS)[number];
@@ -50,7 +58,7 @@ const channelDefaults = (): ChannelMatrix => ({ crm: true, email: false, whatsap
 export const DEFAULT_ALERT_SETTINGS: AlertSettings = {
   language: null,
   channels: { recap: channelDefaults(), alerts: channelDefaults() },
-  instant: Object.fromEntries(ALERT_TYPES.map((t) => [t, true])) as Record<AlertType, boolean>,
+  instant: Object.fromEntries(ALERT_TYPES.map((t) => [t, !isOptIn(t)])) as Record<AlertType, boolean>,
   quietHours: { enabled: true, from: "22:00", to: "07:00" },
   includePhoneInWhatsApp: true,
   recipients: { emails: [], whatsapp: [] },
@@ -74,7 +82,7 @@ export function normalizeAlertSettings(raw: unknown): AlertSettings {
   return {
     language: (ALERT_LANGUAGES as readonly string[]).includes(r.language) ? r.language : null,
     channels: { recap: matrix(channels.recap), alerts: matrix(channels.alerts) },
-    instant: Object.fromEntries(ALERT_TYPES.map((t) => [t, instant[t] !== false])) as Record<AlertType, boolean>,
+    instant: Object.fromEntries(ALERT_TYPES.map((t) => [t, isOptIn(t) ? instant[t] === true : instant[t] !== false])) as Record<AlertType, boolean>,
     quietHours: {
       enabled: quiet.enabled !== false,
       from: isHHMM(quiet.from) ? quiet.from : "22:00",
