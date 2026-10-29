@@ -946,6 +946,7 @@ export function useLiveCall() {
             account: setup.staff ? setup.staff.account ?? null : Number(new URLSearchParams(window.location.search).get("account")) || null,
             // The test panel's LLM pick (test only); /voice-demo sends none.
             llm: setup.staff?.llm ?? null,
+            prompt: setup.staff?.prompt ?? null,
             timezone: browserTimezone(),
             sdp: pc.localDescription?.sdp,
           }),

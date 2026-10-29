@@ -4,7 +4,8 @@
  *
  * Which row a call uses is the engine's choice, mirrored here:
  * - Voice layer: the active `voice_layer_{locale}` row, newest updated_at first
- *   (engine voice_prompt_store.refresh).
+ *   (engine voice_prompt_store.refresh); `voice_lean_layer_{locale}` the same way,
+ *   used unless the account's testPrompt is "standard" (no lean row for pt).
  * - Backend: `voice_receptionist_demo[_{lang}]`, campaign 60 first, else
  *   account 52, newest created_at first, NULLs first like Postgres DESC
  *   (engine realtime_voice_routes._load_prompt_row).
@@ -32,6 +33,8 @@ export interface VoicePromptRow {
 export interface AccountVoicePrompts {
   locale: string;
   layer: VoicePromptRow | null;
+  /** The lean voice layer (`voice_lean_layer_{locale}`), what calls run on unless the account picks standard. None for pt. */
+  lean: VoicePromptRow | null;
   backend: VoicePromptRow | null;
   /** The ElevenLabs prompt (`eleven_layer_{nl|en|pt}`), shared by every ElevenLabs line in that language. */
   eleven: VoicePromptRow | null;
@@ -50,9 +53,9 @@ function toRow(r: typeof promptLibrary.$inferSelect | undefined): VoicePromptRow
 
 const active = sql`lower(${promptLibrary.status}) = 'active'`;
 
-async function layerRow(locale: string) {
+async function layerRow(locale: string, prefix = "voice_layer") {
   const [r] = await db.select().from(promptLibrary)
-    .where(and(eq(promptLibrary.useCase, `voice_layer_${locale}`), active))
+    .where(and(eq(promptLibrary.useCase, `${prefix}_${locale}`), active))
     .orderBy(sql`${promptLibrary.updatedAt} DESC NULLS LAST`, desc(promptLibrary.id))
     .limit(1);
   return toRow(r);
@@ -96,8 +99,10 @@ async function elevenRow(locale: string) {
 }
 
 async function getAccountVoicePrompts(locale: string): Promise<AccountVoicePrompts> {
-  const [layer, backend, eleven] = await Promise.all([layerRow(locale), backendRow(locale), elevenRow(locale)]);
-  return { locale, layer, backend, eleven };
+  const [layer, lean, backend, eleven] = await Promise.all([
+    layerRow(locale), layerRow(locale, "voice_lean_layer"), backendRow(locale), elevenRow(locale),
+  ]);
+  return { locale, layer, lean, backend, eleven };
 }
 
 /**

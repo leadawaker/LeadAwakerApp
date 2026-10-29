@@ -284,9 +284,7 @@
         "off": "Uit",
         "standard": "Standaard (60 tot 200 ms)",
         "large": "Groot (100 tot 400 ms)"
-      },
-      "saraJitter": "Egalisatie lijn van Sara",
-      "saraJitterHint": "Aan: Sara wordt gebeld via ons New Yorkse nummer, zodat Telnyx haar stem gelijkmatiger maakt voordat iemand haar hoort, met iets vertraging. Uit: ze wordt direct gebeld, zoals voorheen. Geldt vanaf de volgende oproep."
+      }
     }
   },
   "widgetColor": {

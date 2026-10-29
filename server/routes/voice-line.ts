@@ -69,7 +69,7 @@ const putBodySchema = z.object({
     abuse: z.boolean().optional(),
   }).strict().optional(),
   agentGender: z.enum(["female", "male"]).nullable().optional(),
-  // Which GPT Live voice layer the Test button runs (engine client_setup.TEST_PROMPTS). Never a phone call.
+  // Which GPT Live voice layer the account's calls and Test button run (engine client_setup.TEST_PROMPTS). Unset = lean.
   testPrompt: z.enum(["standard", "lean"]).optional(),
   greeting: z.string().max(500).optional(),
   pronunciation: z.array(z.object({

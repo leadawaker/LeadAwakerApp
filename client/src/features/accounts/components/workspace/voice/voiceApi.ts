@@ -65,7 +65,7 @@ export interface VoiceLine {
   voice: string | null;
   /** Set explicitly (female | male) it decides the agent's gender for both engines; null = automatic. */
   agentGender?: AgentGender | null;
-  /** Agency A/B test: the voice layer the Test button runs. Phone calls ignore it. */
+  /** The GPT Live voice layer calls and the Test button run on (unset = lean). */
   testPrompt?: TestPrompt;
   /** Agency only: the account's other lines, which share every setting here. */
   otherLines?: { phoneNumber: string; purpose: LinePurpose }[];

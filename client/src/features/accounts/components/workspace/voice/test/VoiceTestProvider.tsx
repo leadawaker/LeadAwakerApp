@@ -16,10 +16,11 @@ import { flushAllAutosaves } from "../autosaveRegistry";
 import { useElevenTestCall } from "../useElevenTestCall";
 import type { ElevenTestError, ElevenTestStatus } from "../elevenTestState";
 import type { LlmKey } from "../llmOptions";
+import { SHOW_ELEVEN } from "../lineEngine";
 import { testCallsKey, type VoiceLine } from "../voiceApi";
 import {
   browserStorage, defaultTestPrefs, loadTestPrefs, prefsKey, saveTestPrefs,
-  type TestEngine, type TestPrefs,
+  type TestEngine, type TestPrefs, type TestPrompt,
 } from "./testPanelPrefs";
 
 export type TestPhase = "idle" | "connecting" | "live" | "ending" | "review";
@@ -45,6 +46,9 @@ export interface VoiceTestValue {
   setEngine(e: TestEngine): void;
   llm: LlmKey;
   setLlm(k: LlmKey): void;
+  /** The voice layer this test runs on: the account's live pick, or one tried here only. */
+  testPrompt: TestPrompt;
+  setTestPrompt(p: TestPrompt): void;
   /** ElevenLabs tests need the agency (the relay is agency only) and a number on the line. */
   elevenAvailable: boolean;
   phase: TestPhase;
@@ -170,7 +174,9 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
     });
   }, [key, defaults]);
 
-  const elevenAvailable = isAgencyUser && !!line.number;
+  const elevenAvailable = SHOW_ELEVEN && isAgencyUser && !!line.number;
+  // Not stored: each visit starts on the live pick, so a test never quietly runs another prompt.
+  const [testPrompt, setTestPromptState] = useState<TestPrompt>("live");
   const engine: TestEngine = elevenAvailable ? prefs.engine : "gpt-live";
 
   // --- phase -----------------------------------------------------------------
@@ -256,7 +262,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
             companyName: line.persona?.companyName ?? "",
             callerNumber: callerNumber(locale),
             voice: "",
-            staff: { account: line.accountId, llm: prefs.llm },
+            staff: { account: line.accountId, llm: prefs.llm, prompt: testPrompt === "live" ? undefined : testPrompt },
           },
           // The door's shared word (public, told to prospects); the staff pass is what opens a client line.
           storedVoicePassword() || VOICE_DEMO_PASSWORDS[0],
@@ -268,7 +274,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
       starting.current = false;
       if (mounted.current) setFlushing(false);
     }
-  }, [busy, engine, eleven, gpt, line.accountId, line.locale, line.number, line.persona, prefs.llm]);
+  }, [busy, engine, eleven, gpt, line.accountId, line.locale, line.number, line.persona, prefs.llm, testPrompt]);
 
   const hangup = useCallback(() => {
     if (flushing) { cancelled.current = true; setFlushing(false); return; }
@@ -330,6 +336,8 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
     setEngine: (e) => { if (!busy) pick({ engine: e }); },
     llm: prefs.llm,
     setLlm: (k) => { if (!busy) pick({ llm: k }); },
+    testPrompt,
+    setTestPrompt: (p) => { if (!busy) setTestPromptState(p); },
     elevenAvailable,
     phase,
     callEngine,

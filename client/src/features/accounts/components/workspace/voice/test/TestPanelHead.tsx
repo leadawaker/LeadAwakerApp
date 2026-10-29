@@ -1,24 +1,25 @@
-// The test panel's head: the GPT Live | ElevenLabs tab, the GPT Live pick under it
-// (Sol | Terra | Luna; ElevenLabs always runs Realtime Max), the A/B prompt switch on
-// GPT Live (agency), and the Test button (Hang up during a call). On ElevenLabs a saved
-// prompt draft adds Test draft under it: the same call on the draft, with writes faked.
-// All picks are test only (testPanelPrefs); they never change the line.
+// The test panel's head: the GPT Live | ElevenLabs tab (hidden while SHOW_ELEVEN is off),
+// the GPT Live pick under it (Sol | Terra | Luna; ElevenLabs always runs Realtime Max), the
+// prompt to test with on GPT Live (agency: the live pick, standard or lean), and the Test
+// button (Hang up during a call). On ElevenLabs a saved prompt draft adds Test draft under
+// it: the same call on the draft, with writes faked. All picks are test only; they never
+// change the line. The live prompt pick itself is in PromptSection (LivePromptPick).
 import { useTranslation } from "react-i18next";
 import { FlaskConical, Loader2, PhoneCall, PhoneOff } from "lucide-react";
 import { Seg } from "@/features/demos/components/engineControls";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { FieldLabel, helpStyle } from "../voiceAtoms";
 import { LLM_KEYS, llmLabel } from "../llmOptions";
-import { TestPromptSwitch } from "../TestPromptSwitch";
+import { SHOW_ELEVEN } from "../lineEngine";
 import { promptLangOf, useElevenDraft } from "../coach/coachApi";
 import type { VoiceLine, VoiceLinePatch } from "../voiceApi";
-import { TEST_ENGINES } from "./testPanelPrefs";
+import { TEST_ENGINES, TEST_PROMPTS } from "./testPanelPrefs";
 import { isCallBusy, useVoiceTest } from "./VoiceTestProvider";
 
 const noteStyle = { ...helpStyle, margin: 0 } as const;
 const bigBtn = { width: "100%", justifyContent: "center", padding: "14px 20px", fontSize: 14 } as const;
 
-export function TestPanelHead({ line, canEdit, saving, onSave }: {
+export function TestPanelHead({ line }: {
   line: VoiceLine; canEdit: boolean; saving: boolean; onSave: (patch: VoiceLinePatch) => Promise<boolean>;
 }) {
   const { t } = useTranslation("voiceTab");
@@ -34,7 +35,7 @@ export function TestPanelHead({ line, canEdit, saving, onSave }: {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }} data-testid="voice-test-head">
-      <div className="la-seg la-seg--fill" role="tablist" aria-label={t("test.panel.engine")}>
+      {SHOW_ELEVEN && <div className="la-seg la-seg--fill" role="tablist" aria-label={t("test.panel.engine")}>
         {TEST_ENGINES.map((e) => (
           <button
             key={e} type="button" role="tab" aria-selected={engine === e}
@@ -46,7 +47,7 @@ export function TestPanelHead({ line, canEdit, saving, onSave }: {
             {t(`test.panel.engines.${e}`)}
           </button>
         ))}
-      </div>
+      </div>}
 
       {engine === "gpt-live" && (
         <div>
@@ -56,10 +57,16 @@ export function TestPanelHead({ line, canEdit, saving, onSave }: {
         </div>
       )}
       <p style={noteStyle}>{t("test.panel.testOnly")}</p>
-      {isAgencyUser && !line.number && <p style={noteStyle} data-testid="voice-test-eleven-no-number">{t("test.panel.elevenNoNumber")}</p>}
+      {SHOW_ELEVEN && isAgencyUser && !line.number && <p style={noteStyle} data-testid="voice-test-eleven-no-number">{t("test.panel.elevenNoNumber")}</p>}
 
       {engine === "gpt-live" && isAgencyUser && canTest && (
-        <TestPromptSwitch line={line} canEdit={canEdit} saving={saving} onSave={onSave} />
+        <div data-testid="voice-test-prompt-pick">
+          <FieldLabel>{t("test.prompt.testWith")}</FieldLabel>
+          <Seg value={test.testPrompt} options={TEST_PROMPTS} ariaLabel={t("test.prompt.testWith")}
+            label={(p) => p === "live" ? `${t("test.prompt.live")} (${t(`test.prompt.${line.testPrompt ?? "lean"}`)})` : t(`test.prompt.${p}`)}
+            disabledOptions={busy ? TEST_PROMPTS : undefined} onChange={test.setTestPrompt} />
+          {test.testPrompt !== "live" && <p style={{ ...noteStyle, marginTop: 8 }}>{t("test.prompt.testHelp")}</p>}
+        </div>
       )}
 
       <TestButton canTest={canTest} />

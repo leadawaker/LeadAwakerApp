@@ -17,7 +17,7 @@ import { CommaListInput } from "./CommaListInput";
 import { ENGINE_INPUT, SaveBar, Seg, SETTINGS_CARD, SETTINGS_HINT, SETTINGS_LABEL, SETTINGS_RULE, SETTINGS_TITLE } from "./engineControls";
 
 type Draft = Pick<VoiceDemoSettings,
-  "maxCallMinutes" | "forgetNumbers" | "passwords" | "ownerPhone" | "ownerPhoneBackup" | "ownerPhoneUse" | "callMeStyle" | "browserJitter" | "saraJitter">;
+  "maxCallMinutes" | "forgetNumbers" | "passwords" | "ownerPhone" | "ownerPhoneBackup" | "ownerPhoneUse" | "callMeStyle" | "browserJitter">;
 type CallMeStyle = NonNullable<VoiceDemoSettings["callMeStyle"]>;
 type BrowserJitter = NonNullable<VoiceDemoSettings["browserJitter"]>;
 
@@ -47,7 +47,6 @@ export function VoiceCallsSettings() {
         ownerPhoneUse: current.ownerPhoneUse ?? "primary",
         callMeStyle: current.callMeStyle ?? "handoff",
         browserJitter: current.browserJitter ?? "standard",
-        saraJitter: current.saraJitter ?? "off",
       });
       setDraft(null);
     } catch {
@@ -146,18 +145,6 @@ export function VoiceCallsSettings() {
           ariaLabel={t("settings.calls.jitter")}
           label={(o) => t(`settings.calls.jitters.${o}`)}
           onChange={(browserJitter) => patch({ browserJitter })}
-        />
-      </div>
-
-      <div style={{ marginTop: 14 }}>
-        <span style={SMALL}>{t("settings.calls.saraJitter")}</span>
-        <span style={SETTINGS_HINT}>{t("settings.calls.saraJitterHint")}</span>
-        <Seg<BrowserJitter>
-          value={current.saraJitter ?? "off"}
-          options={["off", "standard", "large"]}
-          ariaLabel={t("settings.calls.saraJitter")}
-          label={(o) => t(`settings.calls.jitters.${o}`)}
-          onChange={(saraJitter) => patch({ saraJitter })}
         />
       </div>
 

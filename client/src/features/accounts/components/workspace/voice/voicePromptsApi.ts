@@ -14,6 +14,8 @@ export interface VoicePromptRow {
 export interface AccountVoicePrompts {
   locale: string | null;
   layer: VoicePromptRow | null;
+  /** voice_lean_layer_{locale}: what calls run on unless the account picks standard. None for pt. */
+  lean?: VoicePromptRow | null;
   backend: VoicePromptRow | null;
   /** eleven_layer_nl / eleven_layer_en: shared by every ElevenLabs line. */
   eleven?: VoicePromptRow | null;

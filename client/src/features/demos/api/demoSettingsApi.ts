@@ -73,8 +73,6 @@ export interface VoiceDemoSettings {
   callMeStyle?: "handoff" | "barge" | "conference";
   /** Telnyx's jitter buffer on the browser line: off, 60 to 200 ms, or 100 to 400 ms. */
   browserJitter?: "off" | "standard" | "large";
-  /** Sara's line through the jitter-buffer route number; off dials her directly. */
-  saraJitter?: "off" | "standard" | "large";
 }
 
 /** The engine per demo locale when nothing is saved (engine demo_settings.DEFAULT_ENGINES):

@@ -78,7 +78,7 @@ export interface VoiceLine {
   voice: string | null;
   /** The agent's gender when set explicitly; null = automatic (the GPT Live voice's gender). */
   agentGender: "female" | "male" | null;
-  /** Agency A/B test: the voice layer the browser Test button runs ("lean" = voice_lean_layer_*). Phone calls ignore it. */
+  /** The GPT Live voice layer calls and the Test button run on ("lean" = voice_lean_layer_*, the default). */
   testPrompt: "standard" | "lean";
   /** Agency only: the account's other real lines (the settings above are shared with them). */
   otherLines: { phoneNumber: string; purpose: "client" | "demo" | "test" }[];
@@ -276,7 +276,7 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     agentNameCustom,
     voice,
     agentGender: voiceSetup.agentGender === "female" || voiceSetup.agentGender === "male" ? voiceSetup.agentGender : null,
-    testPrompt: voiceSetup.testPrompt === "lean" ? "lean" : "standard",
+    testPrompt: voiceSetup.testPrompt === "standard" ? "standard" : "lean",
     elevenLlmSupported: ELEVEN_LLM_SUPPORTED,
     clientElevenAllowed: CLIENT_ELEVEN_ALLOWED,
     otherLines: others.map((o) => ({ phoneNumber: o.phoneNumber, purpose: lineFieldsOf({ purpose: o.purpose, engine: null, engineVoice: null }).purpose })),

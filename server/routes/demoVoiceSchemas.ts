@@ -76,8 +76,6 @@ export const voiceSettingsSchema = z.object({
   callMeStyle: z.enum(["handoff", "barge", "conference"]).optional(),
   // Telnyx's jitter buffer on the browser line (engine demo_browser.BROWSER_JITTER).
   browserJitter: z.enum(["off", "standard", "large"]).optional(),
-  // Sara's GPT-Live leg through the jitter-buffer route number (engine demo_sara_route.py).
-  saraJitter: z.enum(["off", "standard", "large"]).optional(),
 });
 export type VoiceSettingsInput = z.infer<typeof voiceSettingsSchema>;
 

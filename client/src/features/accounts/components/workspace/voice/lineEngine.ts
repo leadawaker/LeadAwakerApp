@@ -5,6 +5,13 @@ import { FEMININE_VOICE_OPTIONS, MASCULINE_VOICE_OPTIONS, isMasculineVoice } fro
 import type { AgentGender, LineEngine, LinePurpose, VoiceNumber } from "./voiceApi";
 import { asLlmKey, type LlmKey } from "./llmOptions";
 
+/**
+ * The ElevenLabs controls in the Voice tab (engine tab, Test draft, its voice picker, the
+ * draft and coach cards, the line type and engine card). Hidden since 2026-10-29: every
+ * call runs on GPT Live. The code stays until task #746 deletes it.
+ */
+export const SHOW_ELEVEN = false;
+
 /** Whether real calls on this line run on ElevenLabs: demo and test lines only, when their engine pick is elevenlabs. */
 export function runsOnEleven(n?: VoiceNumber | null): boolean {
   return (n?.purpose === "demo" || n?.purpose === "test") && n.engine === "elevenlabs";
