@@ -277,7 +277,16 @@
         "handoff": "Hand off",
         "barge": "Three-way (barge)",
         "conference": "Three-way (conference)"
-      }
+      },
+      "jitter": "Browser line smoothing",
+      "jitterHint": "Telnyx holds your browser's audio back a moment to even out late packets. More smoothing hides more hiccups and adds a little delay. Applies from the next call.",
+      "jitters": {
+        "off": "Off",
+        "standard": "Standard (60 to 200 ms)",
+        "large": "Large (100 to 400 ms)"
+      },
+      "saraJitter": "Sara's line smoothing",
+      "saraJitterHint": "On: Sara is rung through our New York number so Telnyx can even out her voice before anyone hears it, with a little delay. Off: she is dialed directly, as before. Applies from the next call."
     }
   },
   "widgetColor": {

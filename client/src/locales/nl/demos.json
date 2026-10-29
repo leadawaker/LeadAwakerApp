@@ -277,7 +277,16 @@
         "handoff": "Overdragen",
         "barge": "Drieweg (barge)",
         "conference": "Drieweg (conferentie)"
-      }
+      },
+      "jitter": "Egalisatie browserlijn",
+      "jitterHint": "Telnyx houdt de audio van je browser even vast om late pakketjes op te vangen. Meer egalisatie verbergt meer haperingen en geeft iets meer vertraging. Geldt vanaf de volgende oproep.",
+      "jitters": {
+        "off": "Uit",
+        "standard": "Standaard (60 tot 200 ms)",
+        "large": "Groot (100 tot 400 ms)"
+      },
+      "saraJitter": "Egalisatie lijn van Sara",
+      "saraJitterHint": "Aan: Sara wordt gebeld via ons New Yorkse nummer, zodat Telnyx haar stem gelijkmatiger maakt voordat iemand haar hoort, met iets vertraging. Uit: ze wordt direct gebeld, zoals voorheen. Geldt vanaf de volgende oproep."
     }
   },
   "widgetColor": {

@@ -17,8 +17,9 @@ import { CommaListInput } from "./CommaListInput";
 import { ENGINE_INPUT, SaveBar, Seg, SETTINGS_CARD, SETTINGS_HINT, SETTINGS_LABEL, SETTINGS_RULE, SETTINGS_TITLE } from "./engineControls";
 
 type Draft = Pick<VoiceDemoSettings,
-  "maxCallMinutes" | "forgetNumbers" | "passwords" | "ownerPhone" | "ownerPhoneBackup" | "ownerPhoneUse" | "callMeStyle">;
+  "maxCallMinutes" | "forgetNumbers" | "passwords" | "ownerPhone" | "ownerPhoneBackup" | "ownerPhoneUse" | "callMeStyle" | "browserJitter" | "saraJitter">;
 type CallMeStyle = NonNullable<VoiceDemoSettings["callMeStyle"]>;
+type BrowserJitter = NonNullable<VoiceDemoSettings["browserJitter"]>;
 
 const ROW = "flex items-center gap-2 max-sm:flex-wrap";
 const SMALL: React.CSSProperties = { ...SETTINGS_TITLE, fontSize: 13 };
@@ -45,6 +46,8 @@ export function VoiceCallsSettings() {
         ownerPhoneBackup: current.ownerPhoneBackup?.trim() || null,
         ownerPhoneUse: current.ownerPhoneUse ?? "primary",
         callMeStyle: current.callMeStyle ?? "handoff",
+        browserJitter: current.browserJitter ?? "standard",
+        saraJitter: current.saraJitter ?? "off",
       });
       setDraft(null);
     } catch {
@@ -131,6 +134,30 @@ export function VoiceCallsSettings() {
           ariaLabel={t("settings.calls.style")}
           label={(o) => t(`settings.calls.styles.${o}`)}
           onChange={(callMeStyle) => patch({ callMeStyle })}
+        />
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <span style={SMALL}>{t("settings.calls.jitter")}</span>
+        <span style={SETTINGS_HINT}>{t("settings.calls.jitterHint")}</span>
+        <Seg<BrowserJitter>
+          value={current.browserJitter ?? "standard"}
+          options={["off", "standard", "large"]}
+          ariaLabel={t("settings.calls.jitter")}
+          label={(o) => t(`settings.calls.jitters.${o}`)}
+          onChange={(browserJitter) => patch({ browserJitter })}
+        />
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <span style={SMALL}>{t("settings.calls.saraJitter")}</span>
+        <span style={SETTINGS_HINT}>{t("settings.calls.saraJitterHint")}</span>
+        <Seg<BrowserJitter>
+          value={current.saraJitter ?? "off"}
+          options={["off", "standard", "large"]}
+          ariaLabel={t("settings.calls.saraJitter")}
+          label={(o) => t(`settings.calls.jitters.${o}`)}
+          onChange={(saraJitter) => patch({ saraJitter })}
         />
       </div>
 

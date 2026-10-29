@@ -277,7 +277,16 @@
         "handoff": "Passar",
         "barge": "Três pessoas (barge)",
         "conference": "Três pessoas (conferência)"
-      }
+      },
+      "jitter": "Suavização da linha do navegador",
+      "jitterHint": "A Telnyx segura o áudio do seu navegador por um instante para compensar pacotes atrasados. Mais suavização esconde mais falhas e adiciona um pouco de atraso. Vale a partir da próxima ligação.",
+      "jitters": {
+        "off": "Desligado",
+        "standard": "Padrão (60 a 200 ms)",
+        "large": "Grande (100 a 400 ms)"
+      },
+      "saraJitter": "Suavização da linha da Sara",
+      "saraJitterHint": "Ligado: a Sara é chamada pelo nosso número de Nova York, para a Telnyx suavizar a voz dela antes de alguém ouvir, com um pouco de atraso. Desligado: ela é chamada diretamente, como antes. Vale a partir da próxima ligação."
     }
   },
   "widgetColor": {

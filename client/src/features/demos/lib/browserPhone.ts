@@ -15,7 +15,7 @@ interface Snapshot { state: BrowserPhoneState; muted: boolean }
 interface RtcCall {
   state: string;
   direction: string;
-  answer(params?: { audio?: boolean; video?: boolean }): Promise<void>;
+  answer(params?: { audio?: boolean; video?: boolean; preferred_codecs?: RTCRtpCodecCapability[] }): Promise<void>;
   hangup(): void;
   muteAudio(): void;
   unmuteAudio(): void;
@@ -102,7 +102,10 @@ export async function readyBrowserPhone(messages: { mic: string; login: string }
         if (c.state === "ringing" && c.direction === "inbound" && !call) {
           call = c;
           if (waitTimer) clearTimeout(waitTimer);
-          void c.answer({ audio: true, video: false });
+          // Opus first: it hides lost packets far better than G.711 on a home connection.
+          const opus = (typeof RTCRtpReceiver !== "undefined" && RTCRtpReceiver.getCapabilities?.("audio")?.codecs
+            .filter((codec) => /opus/i.test(codec.mimeType))) || [];
+          void c.answer({ audio: true, video: false, ...(opus.length ? { preferred_codecs: opus } : {}) });
         } else if (c === call && c.state === "active") {
           set({ state: "active" });
         } else if (c === call && (c.state === "hangup" || c.state === "destroy")) {
