@@ -24,9 +24,10 @@ export function addressFor(value: number | null): string | null {
   return FORMALITY_LEVELS.find((l) => l.value === value)?.address ?? null;
 }
 
-// Perception: 7 options, max 3 picks. "speels" also makes the voice agent joke now and then.
+// Perception: 7 options, max 3 picks. "speels" also makes the voice agent joke now and then;
+// "vrolijk" tells her "Je bent heel vrolijk" (engine: client_setup_slots._CHEERFUL).
 export const PERCEPTION = [
-  "persoonlijk", "deskundig", "betrokken", "exclusief", "hoogwaardig", "toegankelijk", "speels",
+  "persoonlijk", "deskundig", "betrokken", "vrolijk", "hoogwaardig", "toegankelijk", "speels",
 ] as const;
 export const PERCEPTION_MAX = 3;
 

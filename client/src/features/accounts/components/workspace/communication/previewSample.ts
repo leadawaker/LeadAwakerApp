@@ -7,9 +7,9 @@ const PERCEPTION_GROUP: Record<string, string> = {
   betrokken: "warm",
   toegankelijk: "warm",
   speels: "warm",
+  vrolijk: "warm",
   deskundig: "expert",
   hoogwaardig: "expert",
-  exclusief: "exclusive",
 };
 
 // Dutch fallbacks so the WhatsApp demo always reads naturally before the client
