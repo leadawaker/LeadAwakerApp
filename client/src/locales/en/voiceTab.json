@@ -757,8 +757,8 @@
       "help_male": "Said word for word when he picks up. Only this business."
     },
     "extra": {
-      "help": "Rules and facts for this business only. They reach the part that answers questions and books, not her speaking style.",
-      "help_male": "Rules and facts for this business only. They reach the part that answers questions and books, not his speaking style."
+      "help": "Rules and facts for this business only. One rule per line. They reach both her conversation and the part that answers questions and books.",
+      "help_male": "Rules and facts for this business only. One rule per line. They reach both his conversation and the part that answers questions and books."
     },
     "layer": {
       "title": "How she speaks ({{language}})",

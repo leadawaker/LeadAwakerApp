@@ -125,7 +125,7 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
           onSave={savePrompt}
         />
       )}
-      {/* Extra instructions go to the backend (under "Wat hij doet"); the ElevenLabs prompt leaves them out. */}
+      {/* Extra instructions go to the backend (under "Wat hij doet") and, one rule per line, to the voice layer ({client_rules}); the ElevenLabs prompt leaves them out. */}
       {!onEleven && <AccountTextCard
         card="promptExtra"
         icon={<NotebookPen size={17} />}

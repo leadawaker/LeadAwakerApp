@@ -757,8 +757,8 @@
       "help_male": "Letterlijk uitgesproken als hij opneemt. Alleen voor dit bedrijf."
     },
     "extra": {
-      "help": "Regels en feiten alleen voor dit bedrijf. Ze gaan naar het deel dat vragen beantwoordt en afspraken maakt, niet naar haar spreekstijl.",
-      "help_male": "Regels en feiten alleen voor dit bedrijf. Ze gaan naar het deel dat vragen beantwoordt en afspraken maakt, niet naar zijn spreekstijl."
+      "help": "Regels en feiten alleen voor dit bedrijf. Eén instructie per regel. Ze gaan naar haar gesprek én naar het deel dat vragen beantwoordt en afspraken maakt.",
+      "help_male": "Regels en feiten alleen voor dit bedrijf. Eén instructie per regel. Ze gaan naar zijn gesprek én naar het deel dat vragen beantwoordt en afspraken maakt."
     },
     "layer": {
       "title": "Hoe ze spreekt ({{language}})",

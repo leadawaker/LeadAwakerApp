@@ -757,8 +757,8 @@
       "help_male": "Dito palavra por palavra quando ele atende. Só para esta empresa."
     },
     "extra": {
-      "help": "Regras e fatos só desta empresa. Vão para a parte que responde perguntas e agenda, não para o jeito dela falar.",
-      "help_male": "Regras e fatos só desta empresa. Vão para a parte que responde perguntas e agenda, não para o jeito dele falar."
+      "help": "Regras e fatos só desta empresa. Uma regra por linha. Vão para a conversa dela e para a parte que responde perguntas e agenda.",
+      "help_male": "Regras e fatos só desta empresa. Uma regra por linha. Vão para a conversa dele e para a parte que responde perguntas e agenda."
     },
     "layer": {
       "title": "Como ela fala ({{language}})",
