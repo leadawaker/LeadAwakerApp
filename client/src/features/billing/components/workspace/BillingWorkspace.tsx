@@ -1,6 +1,5 @@
 import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import { useQueryClient } from "@tanstack/react-query";
 import { Trash2, X, Plus } from "lucide-react";
 import { MobileListHeader, MobileHeaderIconBtn, MobileTabSeg } from "@/components/crm/mobile/MobileListHeader";
@@ -77,7 +76,6 @@ export function BillingWorkspace(p: Props) {
   const { state: listPanelState } = useListPanelState();
   const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 900, deactivateAbove: 1250 });
   const isListCompact = !isNarrow && (listPanelState === "compact" || (listPanelState === "full" && rightPanelNarrow));
-  const isListHidden = !isNarrow && listPanelState === "hidden";
   const detailRef = useRef<HTMLDivElement | null>(null);
   const setDetailNode = useCallback((node: HTMLDivElement | null) => { detailRef.current = node; compactObserverRef(node); }, [compactObserverRef]);
 
@@ -344,7 +342,6 @@ export function BillingWorkspace(p: Props) {
             groupBy={groupBy}
             groupDirection={groupDirection}
             isListCompact={isListCompact}
-            isListHidden={isListHidden}
             isNarrow={isNarrow}
             listSelectedIds={listSelectedIds}
             onListCheck={handleListCheck}
@@ -353,7 +350,6 @@ export function BillingWorkspace(p: Props) {
           />
         )}
         {/* Hidden list: the slim strip that brings it back */}
-        {!tableMode && <ListPanelUnfoldButton />}
 
         <div ref={setDetailNode} className="flex-1 min-w-0 overflow-hidden flex flex-col" style={{ background: "var(--bg)" }}>
           {renderMain()}

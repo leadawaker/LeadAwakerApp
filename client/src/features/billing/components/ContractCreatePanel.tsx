@@ -14,6 +14,8 @@ import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { fetchCampaigns, createCampaign } from "../../campaigns/api/campaignsApi";
 import { generateContractText, type ContractFormFields } from "../utils/contractTemplate";
+import { generateVoiceTrialText, type VoiceTrialFields as VoiceTrialValues } from "../utils/voiceTrialTemplate";
+import { VoiceTrialFields } from "./VoiceTrialFields";
 
 // ── Constants ──────────────────────────────────────────────────────────────────
 
@@ -91,6 +93,13 @@ export function ContractCreatePanel({
   const { toast } = useToast();
   const { t } = useTranslation("billing");
 
+  // ── Template: a new contract type is one more entry here, one generator and its fields.
+  const [templateId, setTemplateId] = useState<"voiceTrial" | "service">("voiceTrial");
+  const isVoiceTrial = templateId === "voiceTrial";
+  const [voiceTrial, setVoiceTrial] = useState<VoiceTrialValues>({
+    legalName: "", kvkNumber: "", address: "", website: "", monthlyEstimate: "40", monthlyCap: "75",
+  });
+
   // ── Core fields ─────────────────────────────────────────────────────────────
   const [title, setTitle] = useState("");
   const [accountId, setAccountId] = useState("");
@@ -106,8 +115,8 @@ export function ContractCreatePanel({
   const [language, setLanguage] = useState("nl");
   const [timezone, setTimezone] = useState("Europe/Amsterdam");
   const [startDate, setStartDate] = useState(todayISO());
-  const [endDate, setEndDate] = useState(addMonths(todayISO(), 12));
-  const [endDatePreset, setEndDatePreset] = useState<number | "custom">(12);
+  const [endDate, setEndDate] = useState(addMonths(todayISO(), 3));
+  const [endDatePreset, setEndDatePreset] = useState<number | "custom">(3);
 
   // ── Deal structure ─────────────────────────────────────────────────────────
   const [dealType, setDealType] = useState("performance");
@@ -172,12 +181,15 @@ export function ContractCreatePanel({
     depositAmount, monthlyFee, costPassthroughRate, invoiceCadence, paymentPreset, signerName,
   ]);
 
+  const generatedText = useMemo(
+    () => isVoiceTrial ? generateVoiceTrialText(templateFields, voiceTrial) : generateContractText(templateFields),
+    [isVoiceTrial, templateFields, voiceTrial],
+  );
+
   // Auto-generate contract text (only if not manually edited)
   useEffect(() => {
-    if (!isManuallyEdited) {
-      setEditedText(generateContractText(templateFields));
-    }
-  }, [templateFields, isManuallyEdited]);
+    if (!isManuallyEdited) setEditedText(generatedText);
+  }, [generatedText, isManuallyEdited]);
 
   // ── Conditional field visibility ──────────────────────────────────────────
   const showCostPassthrough = dealType === "cost_passthrough" || dealType === "hybrid";
@@ -226,8 +238,8 @@ export function ContractCreatePanel({
 
   const handleReset = useCallback(() => {
     setIsManuallyEdited(false);
-    setEditedText(generateContractText(templateFields));
-  }, [templateFields]);
+    setEditedText(generatedText);
+  }, [generatedText]);
 
   const handleSubmit = useCallback(async () => {
     if (!title.trim()) {
@@ -242,7 +254,7 @@ export function ContractCreatePanel({
         start_date: startDate || null,
         end_date: endDate || null,
         status: "Draft",
-        deal_type: dealType || null,
+        deal_type: isVoiceTrial ? null : dealType || null,
         payment_trigger: paymentTrigger || null,
         value_per_booking: valuePerBooking || null,
         fixed_fee_amount: fixedFeeAmount || null,
@@ -253,8 +265,8 @@ export function ContractCreatePanel({
         currency: currency || null,
         language: language || null,
         timezone: timezone || null,
-        invoice_cadence: invoiceCadence || null,
-        payment_preset: paymentPreset || null,
+        invoice_cadence: isVoiceTrial ? null : invoiceCadence || null,
+        payment_preset: isVoiceTrial ? null : paymentPreset || null,
         contract_text: editedText || null,
         signer_name: signerName.trim() || null,
       });
@@ -267,7 +279,7 @@ export function ContractCreatePanel({
       setSaving(false);
     }
   }, [
-    title, accountId, startDate, endDate, dealType, paymentTrigger, valuePerBooking,
+    isVoiceTrial, title, accountId, startDate, endDate, dealType, paymentTrigger, valuePerBooking,
     fixedFeeAmount, depositAmount, monthlyFee, costPassthroughRate, campaignId,
     currency, language, timezone, invoiceCadence, paymentPreset, editedText,
     signerName, onCreate, onClose, toast,
@@ -301,6 +313,24 @@ export function ContractCreatePanel({
           style={{ background: "var(--card)", borderColor: "var(--line)" }}
         >
           <div className="px-4 py-4 space-y-4">
+
+            {/* Template */}
+            <div className="space-y-1.5">
+              <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.template")}</Label>
+              <Select
+                value={templateId}
+                onValueChange={(v) => {
+                  setTemplateId(v as "voiceTrial" | "service");
+                  handleEndDatePreset(v === "voiceTrial" ? 3 : 12);
+                }}
+              >
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="voiceTrial">{t("contracts.form.templateVoiceTrial")}</SelectItem>
+                  <SelectItem value="service">{t("contracts.form.templateService")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
 
             {/* Title */}
             <div className="space-y-1.5">
@@ -342,8 +372,10 @@ export function ContractCreatePanel({
               />
             </div>
 
+            {isVoiceTrial && <VoiceTrialFields value={voiceTrial} onChange={(patch) => setVoiceTrial((v) => ({ ...v, ...patch }))} />}
+
             {/* Campaign + inline create */}
-            {isAgencyUser && accountId && (
+            {!isVoiceTrial && isAgencyUser && accountId && (
               <div className="space-y-1.5">
                 <Label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{t("contracts.form.campaign")}</Label>
                 <div className="flex gap-1.5">
@@ -421,6 +453,7 @@ export function ContractCreatePanel({
               </div>
             </div>
 
+            {!isVoiceTrial && (<>
             {/* Divider: Deal Structure */}
             <div className="h-px bg-border/40" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-foreground/40 font-heading">{t("contracts.form.dealStructure")}</p>
@@ -586,6 +619,8 @@ export function ContractCreatePanel({
               </div>
             </div>
 
+            </>)}
+
             {/* Divider: Dates */}
             <div className="h-px bg-border/40" />
 
@@ -691,7 +726,7 @@ export function ContractCreatePanel({
             value={editedText}
             onChange={e => {
               setEditedText(e.target.value);
-              setIsManuallyEdited(e.target.value !== generateContractText(templateFields));
+              setIsManuallyEdited(e.target.value !== generatedText);
             }}
             spellCheck={false}
           />

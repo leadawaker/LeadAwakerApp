@@ -488,7 +488,18 @@
       "fileSizeLimit": "O arquivo deve ter menos de 5 MB.",
       "remove": "Remover",
       "uploading": "Enviando...",
-      "uploadContract2": "Enviar Contrato"
+      "uploadContract2": "Enviar Contrato",
+      "template": "Modelo",
+      "templateVoiceTrial": "Teste de parceria Voice AI",
+      "templateService": "Contrato de serviço de campanha",
+      "voiceTrial": {
+        "legalName": "Razão social",
+        "kvkNumber": "Número KvK",
+        "address": "Endereço",
+        "website": "Site",
+        "monthlyEstimate": "Previsto / mês (€)",
+        "monthlyCap": "Perguntar antes acima de (€)"
+      }
     },
     "table": {
       "untitled": "Sem título",

@@ -507,7 +507,18 @@
       "fileSizeLimit": "File size must be under 5 MB.",
       "remove": "Remove",
       "uploading": "Uploading...",
-      "uploadContract2": "Upload Contract"
+      "uploadContract2": "Upload Contract",
+      "template": "Template",
+      "templateVoiceTrial": "Voice AI partnership trial",
+      "templateService": "Campaign service agreement",
+      "voiceTrial": {
+        "legalName": "Legal company name",
+        "kvkNumber": "KvK number",
+        "address": "Address",
+        "website": "Website",
+        "monthlyEstimate": "Expected / month (€)",
+        "monthlyCap": "Ask first above (€)"
+      }
     },
     "table": {
       "untitled": "Untitled",

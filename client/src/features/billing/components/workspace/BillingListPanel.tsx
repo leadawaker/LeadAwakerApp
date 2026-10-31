@@ -12,6 +12,7 @@ import { InvoiceListCard } from "./InvoiceListCard";
 import { ContractListCard } from "./ContractListCard";
 import { ExpenseListCard } from "./ExpenseListCard";
 import { CompactBillingCard } from "./CompactBillingCard";
+import { ListSection, SplitListSkeleton } from "@/components/crm/primitives";
 import { GroupBar } from "./atoms";
 import {
   getDateGroupKey, DATE_GROUP_I18N_KEYS, DATE_GROUP_ORDER,
@@ -38,7 +39,6 @@ interface Props {
   groupBy: BillingGroupBy;
   groupDirection: "asc" | "desc";
   isListCompact: boolean;
-  isListHidden: boolean;
   isNarrow: boolean;
   listSelectedIds?: Set<number>;
   onListCheck?: (id: number) => void;
@@ -48,7 +48,7 @@ interface Props {
 
 export function BillingListPanel({
   tab, items, loading, selectedId, onSelect,
-  groupBy, groupDirection, isListCompact, isListHidden, isNarrow,
+  groupBy, groupDirection, isListCompact, isNarrow,
   listSelectedIds, onListCheck, onListBulkDelete, onListClearSelection,
 }: Props) {
   const { t } = useTranslation("billing");
@@ -179,14 +179,26 @@ export function BillingListPanel({
 
   const EmptyIcon = tab === "invoices" ? Receipt : tab === "contracts" ? FileText : Wallet;
 
-  const widthClass = isListHidden
-    ? cn(isNarrow && selectedId != null ? "hidden" : "flex", "lg:hidden")
-    : isListCompact
-      ? cn("w-[65px] shrink-0", isNarrow && selectedId != null ? "hidden" : "flex")
-      : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedId != null ? "hidden" : "flex");
+  // Desktop: each group is its own card under a title on the ground, as on Calls and Chats.
+  const splitGroups = !isNarrow && !isListCompact;
+  const sections = useMemo(() => {
+    const out: { label: string | null; count?: number; items: BillingItem[] }[] = [];
+    for (const it of paginatedItems) {
+      if (it.kind === "header") out.push({ label: it.label, count: it.count, items: [] });
+      else {
+        if (out.length === 0) out.push({ label: null, items: [] });
+        out[out.length - 1].items.push(it.item);
+      }
+    }
+    return out;
+  }, [paginatedItems]);
+
+  const widthClass = isListCompact
+    ? cn("w-[65px] shrink-0", isNarrow && selectedId != null ? "hidden" : "flex")
+    : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedId != null ? "hidden" : "flex");
 
   return (
-    <div className={cn("flex-col h-full min-h-0 bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", widthClass)}>
+    <div className={cn("la-list-panel flex-col h-full min-h-0 bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", splitGroups && "la-list-panel--split", widthClass)}>
       {isListCompact ? (
         <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area">
           {loading ? (
@@ -220,9 +232,9 @@ export function BillingListPanel({
         </div>
       ) : (
         <>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area px-2 pt-1.5 pb-2">
+          <div ref={scrollRef} className={cn("flex-1 overflow-y-auto la-list-area px-2 pt-1.5 pb-2", splitGroups && "la-split-scroll")}>
             {loading ? (
-              <div className="flex flex-col gap-[6px] pb-2">
+              splitGroups ? <SplitListSkeleton /> : <div className="flex flex-col gap-[6px] pb-2">
                 {Array.from({ length: 7 }).map((_, i) => (
                   <div
                     key={i}
@@ -245,6 +257,21 @@ export function BillingListPanel({
                   {tab === "invoices" ? t("invoices.empty.noInvoicesYet") : tab === "contracts" ? t("contracts.empty.noContractsYet") : t("expenses.empty.noExpensesFound")}
                 </p>
               </div>
+            ) : splitGroups ? (
+              sections.map((sec) => (
+                <ListSection key={sec.label ?? "all"} label={sec.label ?? undefined} count={sec.count}>
+                  <div className="flex flex-col gap-[6px] p-1.5">
+                    {sec.items.map((item, idx) => {
+                      const id = idOf(item);
+                      return (
+                        <div key={id || idx} data-billing-id={id} className="animate-card-enter" style={{ animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
+                          {renderCard(item, selectedId === id, () => onSelect(item))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ListSection>
+              ))
             ) : (
               <div className="flex flex-col gap-[6px] pb-2">
                 {paginatedItems.map((it, idx) => {

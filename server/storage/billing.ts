@@ -266,6 +266,11 @@ export const billingStorage = {
     return db.select().from(contracts).where(eq(contracts.accountsId, accountId)).orderBy(desc(contracts.createdAt));
   },
 
+  async getContractBySignwellDocumentId(documentId: string): Promise<Contracts | undefined> {
+    const [row] = await db.select().from(contracts).where(eq(contracts.signwellDocumentId, documentId));
+    return row;
+  },
+
   async getContractByViewToken(token: string): Promise<Contracts | undefined> {
     const [row] = await db.select().from(contracts).where(eq(contracts.viewToken, token));
     return row;

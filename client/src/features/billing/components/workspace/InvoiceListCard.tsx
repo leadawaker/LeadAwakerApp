@@ -41,8 +41,8 @@ export function InvoiceListCard({ invoice, isSelected, isChecked, onClick, onChe
       className="w-full text-left flex items-center gap-3 cursor-pointer"
       style={{
         padding: "12px 16px", borderRadius: "var(--r-card)",
-        background: isSelected ? "var(--card)" : "transparent",
-        boxShadow: isSelected ? "inset 3px 0 0 var(--wine), var(--sh-raised-crisp)" : "none",
+        background: isSelected ? "var(--list-selected)" : "transparent",
+        boxShadow: isSelected ? "var(--list-selected-shadow)" : "none",
         transition: "background 120ms, box-shadow 120ms",
       }}
       data-testid="invoice-card"
