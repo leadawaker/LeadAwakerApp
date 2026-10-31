@@ -200,7 +200,7 @@ export function registerClientAlertsRoutes(app: Express): void {
     const params = parseGoLinkParams(new URLSearchParams(req.query as Record<string, string>).toString());
     if (params.to === "settings") {
       // The email footer's "choose which emails you get" link.
-      return res.json({ path: "/platform/accounts?tab=alerts", selectAccountId: target.accountsId, accountId: target.accountsId });
+      return res.json({ path: "/platform/settings?tab=alerts", selectAccountId: target.accountsId, accountId: target.accountsId });
     }
     if (params.to === "calls") {
       // The recap's "See all N calls".

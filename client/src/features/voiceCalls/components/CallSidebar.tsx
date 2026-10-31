@@ -2,10 +2,12 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "wouter";
 import { Building2, ChevronDown, ChevronUp, UserRound } from "lucide-react";
+import { ListSection } from "@/components/crm/primitives";
 import { Card, CardLabel } from "@/features/leads/components/cardView/designPrimitives";
 import { openLead } from "@/lib/leadLink";
 import type { VoiceCaller, VoiceCallDetail, VoiceCallListItem } from "../api/voiceCallsApi";
 import { formatDateTime, formatDurationUnits } from "../format";
+import { CallHeader } from "./CallHeader";
 import { CallBooking, CallSummaryCard } from "./CallRecap";
 import { SOFT_RAISED } from "./bits";
 import { OutcomePill } from "./OutcomePill";
@@ -65,7 +67,7 @@ function CallTile({ call, number, active, onClick }: { call: VoiceCallListItem; 
  * loads): the latest three, the rest behind "Show more". Numbered from the
  * oldest, so the latest call has the highest number.
  */
-export function CallerHistory({ ctx, divider = true }: { ctx: CallerContext; divider?: boolean }) {
+export function CallerHistory({ ctx, divider = true, split = false }: { ctx: CallerContext; divider?: boolean; /** Title outside the card. */ split?: boolean }) {
   const { t } = useTranslation("voiceCalls");
   const [all, setAll] = useState(false);
   // An older call that is selected keeps the full list open.
@@ -73,9 +75,10 @@ export function CallerHistory({ ctx, divider = true }: { ctx: CallerContext; div
   const shown = open ? ctx.calls : ctx.calls.slice(0, HISTORY_SHOWN);
   const hidden = ctx.calls.length - HISTORY_SHOWN;
   const total = ctx.calls.length;
-  return (
+  const body = (
     <Card
       variant="flat"
+      hideHead={split}
       headLeft={<CardLabel>{t("callers.calls")}</CardLabel>}
       headRight={<span style={{ fontFamily: "var(--mono)", fontSize: 11, fontWeight: 700, color: "var(--mute)" }}>{total}</span>}
       style={{ borderTop: divider ? "1px solid var(--line)" : undefined }}
@@ -98,6 +101,7 @@ export function CallerHistory({ ctx, divider = true }: { ctx: CallerContext; div
       )}
     </Card>
   );
+  return split ? <ListSection label={t("callers.calls")} count={total}>{body}</ListSection> : body;
 }
 
 /**
@@ -112,7 +116,7 @@ function useOpenLead() {
   };
 }
 
-function Details({ call, ctx, divider }: { call: VoiceCallDetail; ctx?: CallerContext; divider: boolean }) {
+function Details({ call, ctx }: { call: VoiceCallDetail; ctx?: CallerContext }) {
   const { t } = useTranslation("voiceCalls");
   const openLead = useOpenLead();
   const caller = ctx?.caller;
@@ -123,7 +127,8 @@ function Details({ call, ctx, divider }: { call: VoiceCallDetail; ctx?: CallerCo
   const meta = [call.language ? call.language.toUpperCase() : null, t("turns", { count: call.turnCount })].filter(Boolean).join(" · ");
 
   return (
-    <Card variant="flat" headLeft={<CardLabel>{t("sections.details")}</CardLabel>} style={{ borderTop: divider ? "1px solid var(--line)" : undefined }} bodyStyle={{ padding: "14px 16px 18px", gap: 12 }}>
+    <ListSection label={t("sections.details")}>
+    <Card variant="flat" hideHead bodyStyle={{ padding: "14px 16px 18px", gap: 12 }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
         {leadId != null && (
           <button
@@ -148,31 +153,33 @@ function Details({ call, ctx, divider }: { call: VoiceCallDetail; ctx?: CallerCo
       </div>
       <div style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.06em", color: "var(--mute)" }}>{meta}</div>
     </Card>
+    </ListSection>
   );
 }
 
 /**
- * Left column, like the Chats recap sidebar: (Callers view) this person's calls
- * first, then the booking, the summary under it, then the details.
+ * Left column, like the Chats recap sidebar: the header on its own card, then (Callers view)
+ * this person's calls, the booking, the summary and the details, each a card with its title on
+ * the ground. The column reaches 14px past its cards so its scrolling never cuts their shadows.
  */
 export function CallSidebar({ call, narrow, caller }: { call: VoiceCallDetail; narrow: boolean; caller?: CallerContext }) {
-  const booked = !!call.bookedSlot;
   const history = !!caller && caller.calls.length > 0;
-  // The summary sits in here now, so on a wide screen the column takes a bit more room.
-  const width = narrow ? "auto" : SIDEBAR_WIDTH;
   return (
     <div
-      className="neu-raised"
       data-testid="voice-call-sidebar"
       style={{
-        width, flexShrink: 0, minHeight: 0, borderRadius: "var(--r-card)", background: "var(--card)",
-        overflowX: "hidden", overflowY: narrow ? "hidden" : "auto",
+        width: narrow ? "auto" : SIDEBAR_WIDTH + 28, flexShrink: 0, minHeight: 0, boxSizing: "border-box",
+        margin: narrow ? 0 : -14, padding: narrow ? 0 : 14,
+        overflowX: "hidden", overflowY: narrow ? "hidden" : "auto", display: "flex", flexDirection: "column",
       }}
     >
-      {caller && history && <CallerHistory ctx={caller} divider={false} />}
-      <CallBooking call={call} divider={history} />
-      <CallSummaryCard call={call} divider={booked || history} />
-      <Details call={call} ctx={caller} divider />
+      <div className="neu-raised" style={{ flexShrink: 0, borderRadius: "var(--r-card)", background: "var(--card)", marginBottom: 18 }}>
+        <CallHeader call={call} narrow={narrow} caller={caller} />
+      </div>
+      {caller && history && <CallerHistory ctx={caller} split />}
+      <CallBooking call={call} split />
+      <CallSummaryCard call={call} divider={false} split />
+      <Details call={call} ctx={caller} />
     </div>
   );
 }

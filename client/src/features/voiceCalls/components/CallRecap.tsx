@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { ListSection } from "@/components/crm/primitives";
 import { Card, CardLabel } from "@/features/leads/components/cardView/designPrimitives";
 import type { VoiceCallDetail } from "../api/voiceCallsApi";
 import { groupSummaryItems } from "../summaryGroups";
@@ -41,14 +42,14 @@ function MiniMonth({ date, locale }: { date: Date; locale: string }) {
  * time, then what it is for (the recap's booking item, so the summary below
  * does not repeat it).
  */
-export function CallBooking({ call, divider = false }: { call: VoiceCallDetail; divider?: boolean }) {
+export function CallBooking({ call, divider = false, split = false }: { call: VoiceCallDetail; divider?: boolean; /** Title outside the card. */ split?: boolean }) {
   const { t, i18n } = useTranslation("voiceCalls");
   if (!call.bookedSlot) return null;
   const when = call.bookedIso ? new Date(call.bookedIso) : null;
   const purpose = groupSummaryItems(call.summary?.items ?? [])
     .find((g) => g.id === "booked")?.items.map((i) => i.interest).filter(Boolean).join(" · ");
-  return (
-    <Card variant="flat" headLeft={<CardLabel>{t("sections.booked")}</CardLabel>} style={{ minWidth: 0, borderTop: divider ? "1px solid var(--line)" : undefined }} bodyStyle={{ padding: "14px 16px 18px" }}>
+  const body = (
+    <Card variant="flat" hideHead={split} headLeft={<CardLabel>{t("sections.booked")}</CardLabel>} style={{ minWidth: 0, borderTop: divider ? "1px solid var(--line)" : undefined }} bodyStyle={{ padding: "14px 16px 18px" }}>
       {when ? (
         <>
           <MiniMonth date={when} locale={i18n.language} />
@@ -67,6 +68,7 @@ export function CallBooking({ call, divider = false }: { call: VoiceCallDetail; 
       )}
     </Card>
   );
+  return split ? <ListSection label={t("sections.booked")}>{body}</ListSection> : body;
 }
 
 /** The summary as its own raised block, above the conversation (Voice calls and Calendar). */
@@ -81,11 +83,12 @@ export function CallSummary({ call }: { call: VoiceCallDetail }) {
 }
 
 /** The summary as a flat section of the call's left panel, under the booking. */
-export function CallSummaryCard({ call, divider }: { call: VoiceCallDetail; divider: boolean }) {
+export function CallSummaryCard({ call, divider, split = false }: { call: VoiceCallDetail; divider: boolean; /** Title outside the card. */ split?: boolean }) {
   const { t } = useTranslation("voiceCalls");
-  return (
+  const body = (
     <Card
       variant="flat"
+      hideHead={split}
       headLeft={<CardLabel>{t("sections.summary")}</CardLabel>}
       style={{ minWidth: 0, borderTop: divider ? "1px solid var(--line)" : undefined }}
       bodyStyle={{ padding: "14px 16px 18px" }}
@@ -93,6 +96,7 @@ export function CallSummaryCard({ call, divider }: { call: VoiceCallDetail; divi
       <CallSummaryBody call={call} withBooking={!!call.bookedSlot} />
     </Card>
   );
+  return split ? <ListSection label={t("sections.summary")}>{body}</ListSection> : body;
 }
 
 /** Booking plus summary in one flat column (the account Voice tab's test calls). */

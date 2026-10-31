@@ -83,9 +83,11 @@ export interface VoiceCallEvent {
 }
 
 export interface VoiceCallDetail extends VoiceCallListItem {
+  /** The receptionist's name on this line; null shows "AI receptionist". */
+  agentName: string | null;
   summary: { name: string | null; outcome?: string | null; items: VoiceCallSummaryItem[] } | null;
   turns: VoiceCallTurn[];
-  /** Grok calls: when the recording began. Null means it began at startedAt. */
+  /** The Grok test calls (2026-10-22): when the recording began. Null means it began at startedAt. */
   recordingStartedAt: string | null;
   events: VoiceCallEvent[];
 }

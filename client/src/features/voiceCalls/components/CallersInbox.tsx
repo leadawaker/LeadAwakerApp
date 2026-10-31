@@ -3,10 +3,12 @@ import { useTranslation } from "react-i18next";
 import { AudioLines, Users } from "lucide-react";
 import { MonoLabel } from "@/features/voice/components/atoms";
 import { CallListSkeleton } from "./VoiceCallsSkeleton";
+import { SplitListSkeleton } from "@/components/crm/primitives";
 import { VOICE_OUTCOMES, type VoiceCaller, type VoiceCallListItem, type VoiceScope } from "../api/voiceCallsApi";
 import { callerStatus, filterCallers, maskVoiceCaller, type PeopleOptions } from "../callers";
 import { normalizeOutcome, OUTCOME_LABEL_KEY } from "../status";
 import { dateSections } from "../listOptions";
+import { ListSection } from "@/components/crm/primitives";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useListPanelState } from "@/hooks/useListPanelState";
 import { callerIni, callerTitle } from "./bits";
@@ -16,6 +18,11 @@ import { CompactCallRail, RAIL_WIDTH, type RailItem } from "./CompactCallRail";
 import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import { PeopleSummary } from "./WeekSummary";
 import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
+
+/** Phones: the group's divider above its rows, all in one list. */
+function PhoneSection({ label, count, children }: { label?: string; count: number; children: React.ReactNode }) {
+  return <div>{label && <GroupHeader label={label} count={count} />}{children}</div>;
+}
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
@@ -41,6 +48,8 @@ interface Props {
   accountId?: number;
   /** All-accounts view (agency): each card names its client account (Live only). */
   showAccount: boolean;
+  /** Desktop: the row above the list (People | All calls). */
+  head?: React.ReactNode;
   /** A call handed over by a link: that person opens with this call expanded. */
   linkedCall?: { key: string; callId: string } | null;
 }
@@ -56,7 +65,7 @@ function GroupHeader({ label, count }: { label: string; count: number }) {
 }
 
 /** Same split as VoiceCallsInbox: 348px list of people, the chosen person on the right. */
-export function CallersInbox({ callers, calls, isLoading, error, query, options, scope, masked, isOwner, selection, setSelection, accountId, showAccount, linkedCall }: Props) {
+export function CallersInbox({ callers, calls, isLoading, error, query, options, scope, masked, isOwner, selection, setSelection, accountId, showAccount, linkedCall, head }: Props) {
   const { t, i18n } = useTranslation("voiceCalls");
   const { currentAccount } = useWorkspace();
   const cardAccount = showAccount && scope === "live";
@@ -73,7 +82,6 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
   // Same minimize switch as the Chats list (shared across pages, desktop only).
   const { state: panel } = useListPanelState();
   const compact = !narrow && panel === "compact";
-  const hidden = !narrow && panel === "hidden";
 
   const items = useMemo(() => filterCallers(callers, query, options), [callers, query, options]);
   const railItems: RailItem[] = useMemo(() => items.map((raw) => {
@@ -101,7 +109,10 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
     setSelection(items[0].key);
   }, [narrow, selected, items, setSelection]);
 
-  const listBody = isLoading ? <CallListSkeleton /> : error ? (
+  // Desktop: every group is its own card with a big title. Phones keep the one list with its dividers.
+  const Section = isMobile ? PhoneSection : ListSection;
+
+  const listBody = isLoading ? (narrow ? <CallListSkeleton /> : <SplitListSkeleton />) : error ? (
     <Centered><MonoLabel>{t("loadError")}</MonoLabel></Centered>
   ) : callers.length === 0 ? (
     <Centered>
@@ -119,15 +130,14 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
     <Centered><MonoLabel>{t("nothingHere")}</MonoLabel></Centered>
   ) : (
     sections.map((sec) => (
-      <div key={sec.key}>
-        {sec.label && <GroupHeader label={sec.label} count={sec.items.length} />}
+      <Section key={sec.key} label={sec.label || undefined} count={sec.items.length}>
         {/* la-cards--flat: WhatsApp-style flat rows; drop the modifier for the raised cards. */}
         <div className="la-cards la-cards--flat">
           {sec.items.map((c) => (
             <CallerListCard key={c.key} caller={c} masked={masked} showAccount={cardAccount} recap={recapByCall.get(c.lastCallId)} active={selection === c.key} onClick={() => setSelection(c.key)} />
           ))}
         </div>
-      </div>
+      </Section>
     ))
   );
 
@@ -137,20 +147,21 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
   };
 
   const listPane = compact ? (
-    <div style={{ width: RAIL_WIDTH, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--line)", background: "var(--surface)" }}>
+    <div className="la-list-panel" style={{ width: RAIL_WIDTH, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: "1px solid var(--line)", background: "var(--surface)" }}>
       <CompactCallRail items={isLoading || error ? [] : railItems} selection={selection} onSelect={setSelection} renderCard={renderCard} />
       {/* The fold button at the bottom of the rail: expands it back to the full list. */}
       <ListPanelFooter compact />
     </div>
   ) : (
-    <div style={{ width: narrow ? "100%" : 348, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: narrow ? "none" : "1px solid var(--line)", background: "var(--surface)" }}>
+    <div className="la-list-panel la-list-panel--split" style={{ width: narrow ? "100%" : "var(--toolbar-w)", flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: narrow ? "none" : "1px solid var(--line)", background: "var(--surface)" }}>
+      {head}
       {/* Panel head: the stats line. */}
-      <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, padding: narrow ? "8px 0 0" : "6px 8px 0 0" }}>
+      <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 4, padding: narrow ? "8px 0 0" : "0 8px 8px 0" }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           {!isLoading && !error && <PeopleSummary count={items.length} />}
         </div>
       </div>
-      <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "6px 8px 8px", display: "flex", flexDirection: "column" }}>
+      <div className="la-split-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "6px 8px 8px", display: "flex", flexDirection: "column" }}>
         {listBody}
       </div>
       {/* Bottom bar: "showing x of y" on the left, the fold button at the right end (desktop, two panes). */}
@@ -182,7 +193,7 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
           {listPane}
           <MobileSheet open={!!selected} onClose={() => setSelection(null)} data-testid="voice-caller-sheet">{rightPane}</MobileSheet>
         </>
-      ) : narrow ? (selected ? rightPane : listPane) : <>{!hidden && listPane}{rightPane}</>}
+      ) : narrow ? (selected ? rightPane : listPane) : <>{listPane}{rightPane}</>}
     </div>
   );
 }

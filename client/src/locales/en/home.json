@@ -152,7 +152,8 @@
   "cards": {
     "noTrend": "No earlier data yet",
     "phone": {
-      "main": "Calls answered"
+      "main": "Calls answered",
+      "minutes": "Minutes"
     },
     "whatsapp": {
       "main": "Conversations"

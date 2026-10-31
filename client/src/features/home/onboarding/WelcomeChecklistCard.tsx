@@ -28,7 +28,7 @@ export function WelcomeChecklistCard() {
 
   const go = (key: ChecklistKey) => {
     if (key === "details") setLocation("/platform/accounts");
-    else if (key === "alerts") setLocation("/platform/accounts?tab=alerts");
+    else if (key === "alerts") setLocation("/platform/settings?tab=alerts");
     else if (key === "call") {
       // Without live voice there is no call to open: opening Leads counts as the visit.
       if (!caps?.live) void markVisited("call");

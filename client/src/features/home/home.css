@@ -72,6 +72,8 @@ button.home-row-main { cursor: pointer; }
   scroll-padding-inline: 16px;
 }
 .home-cards::-webkit-scrollbar { display: none; }
+@media (hover: hover) and (pointer: fine) { .home-cards { cursor: grab; } }
+.home-cards.is-dragging, .home-cards.is-dragging * { cursor: grabbing; user-select: none; }
 /* Masks read alpha only: the colour is irrelevant. */
 .home-cards--more { mask-image: linear-gradient(to right, black calc(100% - 72px), transparent); -webkit-mask-image: linear-gradient(to right, black calc(100% - 72px), transparent); }
 

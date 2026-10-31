@@ -63,12 +63,13 @@ function ReviewBody({ call, review, processing, mask }: {
   const recording = useRecording(review.recordingUrl, recordingMayStillCome(call.startedAt) ? undefined : 1);
   const { currentS, setCurrentS, seekRef, seek } = useReviewSeek();
   const [follow, setFollow] = useState(true);
+  const [playing, setPlaying] = useState(false);
   const [query, setQuery] = useState("");
 
   const turns = useMemo(() => (mask ? review.turns.map((x) => ({ ...x, text: mask(x.text) })) : review.turns), [review.turns, mask]);
   const extras = useMemo(() => extrasOf(call), [call]);
   const matches = useMemo(() => countMatches(turns.map((x) => x.text), query), [turns, query]);
-  const speakers = useMemo(() => ({ agent: t("ai"), user: t("caller") }), [t]);
+  const speakers = useMemo(() => ({ agent: call.agentName || t("ai"), user: t("caller") }), [call.agentName, t]);
   // A line plays from where it starts, and the list follows it again.
   const playFrom = useCallback((s: number) => { setFollow(true); seek(s, true); }, [seek]);
 
@@ -80,12 +81,12 @@ function ReviewBody({ call, review, processing, mask }: {
           <div style={{ marginLeft: "auto", minWidth: 0 }}><ReviewSummary review={review} showCost={isOwner} /></div>
         </div>
         <ReviewWaveform review={review} recording={recording} currentS={currentS} onTime={setCurrentS} seekRef={seekRef}
-          speakers={speakers} missingNote={t(recordingMissingKey(call.startedAt))} onPlay={() => setFollow(true)}
+          speakers={speakers} missingNote={t(recordingMissingKey(call.startedAt))} onPlay={() => setFollow(true)} onPlaying={setPlaying}
           search={<TranscriptSearchButton query={query} onQuery={setQuery} matches={matches} />} />
       </div>
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "12px 15px 16px" }}>
         <ReviewTranscript turns={turns} tools={review.tools} currentS={currentS} onSeek={playFrom} column={false} processing={processing}
-          query={query} speakers={speakers} extras={extras} fill follow={follow} onUserScroll={() => setFollow(false)} />
+          query={query} speakers={speakers} extras={extras} fill follow={follow} focus={playing} onUserScroll={() => setFollow(false)} />
       </div>
     </>
   );
@@ -102,7 +103,7 @@ function FallbackTranscript({ call, mask }: { call: VoiceCallDetail; mask: ((tex
     return mask ? out.map((x) => ({ ...x, text: mask(x.text) })) : out;
   }, [call, mask]);
   const extras = useMemo(() => extrasOf(call), [call]);
-  const speakers = useMemo(() => ({ agent: t("ai"), user: t("caller") }), [t]);
+  const speakers = useMemo(() => ({ agent: call.agentName || t("ai"), user: t("caller") }), [call.agentName, t]);
   return (
     <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", padding: "12px 15px 16px" }} data-testid="voice-call-review-fallback">
       <ReviewTranscript turns={turns} tools={[]} currentS={-1} onSeek={() => {}} column={false}

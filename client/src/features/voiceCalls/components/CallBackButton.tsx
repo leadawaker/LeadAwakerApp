@@ -1,24 +1,26 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { MessageCircle, Phone, TriangleAlert, X } from "lucide-react";
+import { Phone, TriangleAlert, X } from "lucide-react";
 import { useCallBack, type CallBackChannel, type VoiceCaller } from "../api/voiceCallsApi";
 import { dialDigits, lastContactAttempt } from "../callers";
-import { SOFT_RAISED } from "./bits";
+import { ROUND_ACTION, WhatsAppIcon } from "./bits";
 
 interface Props {
   /** The unmasked caller: the number is dialled, never shown here. */
   caller: VoiceCaller;
-  /** Which side the buttons and the "called back" line hug. */
-  align?: "start" | "end";
+  /** Sits before the buttons on their row (the caller's name), taking the free width. */
+  before?: ReactNode;
+  /** Sits after the buttons on their row. */
+  after?: ReactNode;
 }
 
 /**
  * A human calls the person back by phone or messages them on WhatsApp. The
  * press is logged on the lead (the call or chat itself is not tracked), and the
- * line under the buttons says what was opened, by whom and when. DND and
+ * full-width line under them says what was opened, by whom and when. DND and
  * out-of-hours callers get a warning first and need a second click.
  */
-export function CallBackButton({ caller, align = "start" }: Props) {
+export function CallBackButton({ caller, before, after }: Props) {
   const { t, i18n } = useTranslation("voiceCalls");
   const callBack = useCallBack();
   const [pending, setPending] = useState<CallBackChannel | null>(null);
@@ -41,8 +43,9 @@ export function CallBackButton({ caller, align = "start" }: Props) {
   const off: React.CSSProperties = disabled ? { opacity: 0.45, cursor: "not-allowed", transform: "none" } : {};
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: align === "end" ? "flex-end" : "flex-start", gap: 8, minWidth: 0 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap" }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+        {before}
         <span title={noNumber} style={{ display: "inline-flex" }}>
           <button
             type="button"
@@ -50,10 +53,11 @@ export function CallBackButton({ caller, align = "start" }: Props) {
             disabled={disabled}
             onClick={() => click("phone")}
             data-testid="voice-caller-call-back"
-            style={{ ...SOFT_RAISED, height: 32, ...off }}
+            aria-label={t("callers.callBack")}
+            title={noNumber ? undefined : t("callers.callBack")}
+            style={{ ...ROUND_ACTION, ...off }}
           >
             <Phone className="h-4 w-4 shrink-0" style={{ color: "var(--wine)" }} />
-            {t("callers.callBack")}
           </button>
         </span>
         <span title={noNumber ?? t("callers.whatsappHint")} style={{ display: "inline-flex" }}>
@@ -63,12 +67,13 @@ export function CallBackButton({ caller, align = "start" }: Props) {
             disabled={disabled}
             onClick={() => click("whatsapp")}
             data-testid="voice-caller-whatsapp"
-            style={{ ...SOFT_RAISED, height: 32, ...off }}
+            aria-label={t("callers.whatsapp")}
+            style={{ ...ROUND_ACTION, color: "var(--good)", ...off }}
           >
-            <MessageCircle className="h-4 w-4 shrink-0" style={{ color: "var(--good)" }} />
-            {t("callers.whatsapp")}
+            <WhatsAppIcon />
           </button>
         </span>
+        {after}
       </div>
 
       {pending && (

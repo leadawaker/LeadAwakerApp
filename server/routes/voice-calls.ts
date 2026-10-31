@@ -60,7 +60,7 @@ async function proxyRecording(req: Request, res: Response): Promise<void> {
     return;
   }
   res.status(200);
-  // GPT-Live and Grok calls are wav, ElevenLabs calls mp3: the engine says which.
+  // GPT-Live calls are wav, ElevenLabs calls mp3: the engine says which.
   res.setHeader("Content-Type", upstream.headers.get("content-type") || "audio/wav");
   res.setHeader("Cache-Control", "private, no-store");
   const len = upstream.headers.get("content-length");

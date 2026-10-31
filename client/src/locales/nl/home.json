@@ -152,7 +152,8 @@
   "cards": {
     "noTrend": "Nog niets om mee te vergelijken",
     "phone": {
-      "main": "Opgenomen gesprekken"
+      "main": "Opgenomen gesprekken",
+      "minutes": "Minuten"
     },
     "whatsapp": {
       "main": "Gesprekken"

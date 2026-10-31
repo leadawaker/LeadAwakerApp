@@ -43,8 +43,8 @@ function LiveDot({ style }: { style?: React.CSSProperties }) {
  * three look nothing alike on purpose, so it is always clear which one is on screen: Live is
  * green with a radio mast and a pulsing dot, Tests amber with a test tube, Demo wine with a flask.
  *
- * One look everywhere (Calls and Chats, desktop and phone): a square neumorphic raised button
- * (--r-button corners, --sh-raised-crisp on --card) showing the current scope's icon in its
+ * One look everywhere (Calls and Chats, desktop and phone): a round neumorphic raised button
+ * (--sh-raised-crisp on --card) showing the current scope's icon in its
  * colour, opening a menu of the scopes (wine tick on the current one). Its size is the topbar
  * control height (--tb-ctl, 38px inside .la-page-header) and 40px in a phone header (`menu`,
  * where --tb-ctl is not set). `compact`: the 32px of a compact bar.
@@ -73,7 +73,7 @@ export function ScopeSwitch({ scope, onScope, canDemo, canTest, compact, menu }:
             height: size,
             padding: 0,
             border: "none",
-            borderRadius: "var(--r-button)",
+            borderRadius: "50%",
             background: "var(--card)",
             boxShadow: "var(--sh-raised-crisp)",
             color: current.color,

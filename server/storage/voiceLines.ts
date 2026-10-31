@@ -78,8 +78,6 @@ export interface VoiceLine {
   voice: string | null;
   /** The agent's gender when set explicitly; null = automatic (the GPT Live voice's gender). */
   agentGender: "female" | "male" | null;
-  /** The GPT Live voice layer calls and the Test button run on ("lean" = voice_lean_layer_*, the default). */
-  testPrompt: "standard" | "lean";
   /** Agency only: the account's other real lines (the settings above are shared with them). */
   otherLines: { phoneNumber: string; purpose: "client" | "demo" | "test" }[];
   /** Whether ElevenLabs lets a line pick its LLM (engine ELEVEN_LLM_SUPPORTED); false hides that pick. */
@@ -135,7 +133,6 @@ export interface VoiceLinePatch {
   voice?: string | null;
   /** female | male, or null for automatic (the key is removed). */
   agentGender?: "female" | "male" | null;
-  testPrompt?: "standard" | "lean";
   locale?: string | null;
   transferNumber?: string | null;
   transferName?: string | null;
@@ -276,7 +273,6 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     agentNameCustom,
     voice,
     agentGender: voiceSetup.agentGender === "female" || voiceSetup.agentGender === "male" ? voiceSetup.agentGender : null,
-    testPrompt: voiceSetup.testPrompt === "standard" ? "standard" : "lean",
     elevenLlmSupported: ELEVEN_LLM_SUPPORTED,
     clientElevenAllowed: CLIENT_ELEVEN_ALLOWED,
     otherLines: others.map((o) => ({ phoneNumber: o.phoneNumber, purpose: lineFieldsOf({ purpose: o.purpose, engine: null, engineVoice: null }).purpose })),
@@ -395,7 +391,6 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
     if (patch.agentGender) setVoice("agentGender", patch.agentGender);
     else { delete voice.agentGender; setupTouched = true; }
   }
-  if (patch.testPrompt !== undefined) setVoice("testPrompt", patch.testPrompt);
   if (patch.locale !== undefined) setVoice("locale", patch.locale);
   if (patch.greeting !== undefined) setVoice("greeting", patch.greeting);
   if (patch.pronunciation !== undefined) setVoice("pronunciation", patch.pronunciation);

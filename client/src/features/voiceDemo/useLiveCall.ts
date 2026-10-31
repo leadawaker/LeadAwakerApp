@@ -47,9 +47,10 @@ export const DEMO_CAMPAIGN_ID = 60;
  */
 const TURN_GAP_MS = 1400;
 
-// The car tools a staff test of a dealer line gets (engine browser_stock.py): their
-// result is the engine's, passed back to the backend as is.
-const STOCK_TOOLS = new Set(["car_details", "rdw_plate_lookup", "search_stock"]);
+// The car tools a staff test of a dealer line gets (engine browser_stock.py), and the
+// buying checklist's save_answer (buying_checklist.py): their result is the engine's,
+// passed back to the backend as is.
+const STOCK_TOOLS = new Set(["car_details", "rdw_plate_lookup", "search_stock", "save_answer"]);
 
 /** Hard stop, so an abandoned tab cannot bill a session indefinitely. */
 export const MAX_CALL_MS = 5 * 60 * 1000;
@@ -770,6 +771,9 @@ export function useLiveCall() {
           // She has handed the question to the backend and is waiting on it.
           // The wave breathes through this gap instead of lying flat.
           setOrbState("thinking");
+          // Relayed so the engine log shows a handover happened: without it, "she said
+          // she would check and went quiet" cannot tell no handover from a dead backend.
+          void relay({ type: "session.delegation.created" });
           break;
 
         case "response.event":
@@ -788,6 +792,12 @@ export function useLiveCall() {
             total.input_tokens += Number(u.input_tokens) || 0;
             total.output_tokens += Number(u.output_tokens) || 0;
             total.input_tokens_details.cached_tokens += Number(u.input_tokens_details?.cached_tokens) || 0;
+          } else if (
+            ev.event?.type === "response.failed" || ev.event?.type === "response.incomplete" || ev.event?.type === "error"
+          ) {
+            // A backend that fails leaves her waiting in silence: relay it so the engine logs it
+            // (realtime_voice_routes._log_relay_event warns on *.failed and errors).
+            void relay({ ...ev.event });
           }
           break;
 

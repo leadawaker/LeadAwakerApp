@@ -4,20 +4,20 @@ import { useIsMobile } from "@/hooks/useIsMobile";
 import { useListPanelFold } from "@/hooks/useListPanelFold";
 import type { VoiceScope } from "../api/voiceCallsApi";
 import type { CallsTab, PeopleOptions } from "../callers";
-import { CallsListTabs, CallsSettingsButton } from "./CallsPageTabs";
+import { CallsViewTabs } from "./CallsPageTabs";
+import { ScopeSwitch } from "./ScopeSwitch";
 import type { CallsPageView } from "./callsTabs";
 import type { ListOptions } from "../listOptions";
 import type { AccountFilterProps, AccountOption } from "./AccountFilter";
 import { PresentingToggle } from "./PresentingToggle";
 import { PeopleMenus, VoiceCallsMenus } from "./VoiceCallsMenus";
 import { VoiceCallsMobileTopbar } from "./VoiceCallsMobileTopbar";
-import { ScopeSwitch } from "./ScopeSwitch";
 
 interface Props {
   scope: VoiceScope;
   /** Owner only: the Demo tab of the scope switch, the Account filter and the Presenting toggle. */
   isOwner: boolean;
-  /** Agency: the scope dropdown (Live | Tests, and Demo for the Owner), directly left of "Call settings". */
+  /** Agency: the small round scope switch (Live | Tests, and Demo for the Owner), right after the page tabs. */
   canTest: boolean;
   onScope: (s: VoiceScope) => void;
   /** People · All calls (desktop: right after the title; phones: the second row). */
@@ -49,7 +49,7 @@ export function VoiceCallsTopbar({ scope, isOwner, canTest, onScope, tabs, view,
   // Settings has no list: search, filters, the scope switch and the list toggle hide.
   const hasList = view !== "settings";
   // The fold button sits on the list panel head (ListPanelFoldButton): minimize / expand, as on the Chats page.
-  useListPanelFold(hasList && !singlePane, { mode: "compact" });
+  useListPanelFold(hasList && !singlePane);
   // Owner on Live: "Account" inside the Filter menu (follows the sidebar's account).
   const account: AccountFilterProps | undefined = isOwner && scope === "live" && (accounts.length > 1 || accountId != null)
     ? { accounts, value: accountId, onChange: onAccount }
@@ -66,12 +66,11 @@ export function VoiceCallsTopbar({ scope, isOwner, canTest, onScope, tabs, view,
   }
   return (
     <div className="la-page-header" style={{ gap: 12, padding: "0 17px", overflowX: "auto" }}>
-      {/* Settings is titled "Call settings" (as Chat settings), with the "Calls" back button after it. */}
-      <span className="la-page-title">{view === "settings" ? t("pageTabs.callSettings") : t("title")}</span>
-      {view !== "settings" && <CallsListTabs tabs={tabs} view={view} onView={onView} />}
+      <span className="la-page-title">{t("title")}</span>
+      <CallsViewTabs view={view} listView={listView} onView={onView} />
+      {canTest && hasList && <ScopeSwitch scope={scope} onScope={onScope} canDemo={isOwner} canTest={canTest} compact />}
 
-      {/* Settings: the "Calls" back button sits by the title, the account picker right after it. */}
-      {view === "settings" && <CallsSettingsButton view={view} listView={listView} onView={onView} />}
+      {/* Settings: the account picker right after the tabs. */}
       {view === "settings" && onPickerSlot && <span ref={onPickerSlot} style={{ display: "contents" }} data-testid="calls-settings-picker-slot" />}
 
       <div style={{ flex: 1, minWidth: 8 }} />
@@ -88,11 +87,6 @@ export function VoiceCallsTopbar({ scope, isOwner, canTest, onScope, tabs, view,
       {view === "people" && <PeopleMenus options={peopleOptions} setOptions={setPeopleOptions} account={account} />}
 
       {isOwner && hasList && <PresentingToggle masked={masked} onToggle={onTogglePresenting} />}
-
-      {/* Order: search, list menus, the scope dropdown, then "Call settings" right after it. */}
-      {canTest && hasList && <ScopeSwitch scope={scope} onScope={onScope} canDemo={isOwner} canTest={canTest} />}
-
-      {hasList && <CallsSettingsButton view={view} listView={listView} onView={onView} />}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm";
 import { db } from "../db";
 import { T, liveCallSql } from "./homeSql";
-import { interactions, leads, voiceCalls, type VoiceCall, type VoiceCallSummary } from "@shared/schema";
+import { interactions, leads, voiceCalls, voiceNumbers, type VoiceCall, type VoiceCallSummary } from "@shared/schema";
 import { deriveOutcome, isVoiceOutcome, type VoiceOutcome } from "@shared/voiceOutcome";
 import { demoCallVisible, type VoiceAccess } from "../routes/voiceCallsAccess";
 import {
@@ -92,7 +92,7 @@ export type { VoiceCallEventItem };
 export interface VoiceCallDetail extends VoiceCallListItem {
   summary: VoiceCallSummary | null;
   turns: VoiceCallTurn[];
-  /** Grok calls: when the recording began. Null means it began at startedAt. */
+  /** The Grok test calls (2026-10-22): when the recording began. Null means it began at startedAt. */
   recordingStartedAt: string | null;
   /** Tool calls and backend delegations, oldest first. */
   events: VoiceCallEventItem[];
@@ -345,8 +345,14 @@ export const voiceCallsStorage = {
       .orderBy(asc(interactions.createdAt), asc(interactions.id));
     // Tool calls and backend lookups are our plumbing: agency staff only.
     const events = opts.includeEvents ? await listVoiceCallEvents(callId) : [];
+    // The line's name only while the line still belongs to this call's account: a number lent
+    // to another client answered under another name before, and those calls stay generic.
+    const [line] = row.call.voiceNumbersId !== null && !row.isDemo
+      ? await db.select({ agentName: voiceNumbers.agentName, accountsId: voiceNumbers.accountsId }).from(voiceNumbers).where(eq(voiceNumbers.id, row.call.voiceNumbersId))
+      : [];
     return {
       ...toItem(row.call, row),
+      agentName: line?.accountsId === row.call.accountsId ? line.agentName : null,
       summary: normalizeSummary(row.call.summary),
       recordingStartedAt: row.call.recordingStartedAt ? row.call.recordingStartedAt.toISOString() : null,
       events,
