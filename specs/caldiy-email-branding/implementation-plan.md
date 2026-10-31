@@ -28,7 +28,7 @@ ALTER TABLE "User"
 
 Run with:
 ```bash
-PGPASSWORD=9bc4d97599fd5d3a0187ec31bd3f450e3756fad11de6a915 \
+PGPASSWORD=<caldiy db password from caldiy/.env> \
   psql -h 127.0.0.1 -U caldiy -d caldiy \
   -c 'ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "brandLogoUrl" TEXT, ADD COLUMN IF NOT EXISTS "brandName" TEXT;'
 ```
