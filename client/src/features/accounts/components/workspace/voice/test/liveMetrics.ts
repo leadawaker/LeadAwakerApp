@@ -7,6 +7,39 @@ export function runningCost(elapsedMs: number, perMin: number): number {
   return (elapsedMs / 60_000) * perMin;
 }
 
+/** Gemini 3.8 Live, paid tier, USD per 1M tokens (ai.google.dev/gemini-api/docs/pricing, 2026-10-31). Kept in step with the engine's gemini_live_test.PRICES. */
+export const GEMINI_PRICES = { textIn: 0.75, audioIn: 3, textOut: 4.5, audioOut: 12 } as const;
+
+export interface GeminiTokens { textIn: number; audioIn: number; textOut: number; audioOut: number }
+
+export const NO_GEMINI_TOKENS: GeminiTokens = { textIn: 0, audioIn: 0, textOut: 0, audioOut: 0 };
+
+interface ModalityCount { modality?: string; tokenCount?: number }
+export interface GeminiUsage {
+  promptTokensDetails?: ModalityCount[];
+  responseTokensDetails?: ModalityCount[];
+  thoughtsTokenCount?: number;
+}
+
+const count = (rows: ModalityCount[] | undefined, modality: string) =>
+  (rows ?? []).filter((r) => r.modality === modality).reduce((n, r) => n + (Number(r.tokenCount) || 0), 0);
+
+/** Adds one usageMetadata (Gemini sends one per turn, each re-billing the prompt). Thoughts bill as text out. */
+export function addGeminiUsage(total: GeminiTokens, u: GeminiUsage | null | undefined): GeminiTokens {
+  if (!u) return total;
+  return {
+    textIn: total.textIn + count(u.promptTokensDetails, "TEXT"),
+    audioIn: total.audioIn + count(u.promptTokensDetails, "AUDIO"),
+    textOut: total.textOut + count(u.responseTokensDetails, "TEXT") + (Number(u.thoughtsTokenCount) || 0),
+    audioOut: total.audioOut + count(u.responseTokensDetails, "AUDIO"),
+  };
+}
+
+export function geminiCost(t: GeminiTokens): number {
+  return (t.textIn * GEMINI_PRICES.textIn + t.audioIn * GEMINI_PRICES.audioIn
+    + t.textOut * GEMINI_PRICES.textOut + t.audioOut * GEMINI_PRICES.audioOut) / 1_000_000;
+}
+
 /** Caller's last final words to her first audio, in ms. Null when either is unknown; never negative. */
 export function replyDelay(lastUserFinalAt: number | null | undefined, firstAgentAudioAt: number | null | undefined): number | null {
   if (lastUserFinalAt == null || firstAgentAudioAt == null) return null;

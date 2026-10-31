@@ -10,6 +10,9 @@ import { apiFetch } from "@/lib/apiUtils";
 import { ENGINE_BASE_URL } from "../engine";
 import { DEMO_ACCOUNT_ID, DEMO_CAMPAIGN_ID, browserTimezone } from "../useLiveCall";
 import type { CallState, LiveToolRun, Turn } from "../types";
+import {
+  NO_GEMINI_TOKENS, addGeminiUsage, geminiCost, type GeminiTokens,
+} from "@/features/accounts/components/workspace/voice/test/liveMetrics";
 import { createPlayer, startMic, type MicCapture, type PcmPlayer } from "./geminiAudio";
 
 export interface GeminiSetup {
@@ -41,6 +44,9 @@ export function useGeminiLiveCall() {
   const [replyGaps, setReplyGaps] = useState<number[]>([]);
   const [callId, setCallId] = useState<string | null>(null);
   const [startedAt, setStartedAt] = useState<number | null>(null);
+  /** USD so far, from Gemini's own token counts (one usageMetadata per turn). */
+  const [costUsd, setCostUsd] = useState(0);
+  const tokensRef = useRef<GeminiTokens>(NO_GEMINI_TOKENS);
 
   const wsRef = useRef<WebSocket | null>(null);
   const micRef = useRef<MicCapture | null>(null);
@@ -153,6 +159,8 @@ export function useGeminiLiveCall() {
           account_id: DEMO_ACCOUNT_ID,
           generate: all.length >= 3,
           duration_s: startedAtRef.current ? (Date.now() - startedAtRef.current) / 1000 : null,
+          // The engine prices it again from these counts (gemini_live_test.record_gemini_cost).
+          live_usage: { engine: "gemini-live", tokens: tokensRef.current },
         }),
       });
     } catch {
@@ -228,6 +236,10 @@ export function useGeminiLiveCall() {
       close("you");
       (msg.toolCall.functionCalls as FunctionCall[]).forEach((fc) => { void runTool(fc); });
     }
+    if (msg.usageMetadata) {
+      tokensRef.current = addGeminiUsage(tokensRef.current, msg.usageMetadata);
+      setCostUsd(geminiCost(tokensRef.current));
+    }
     if (msg.goAway) {
       // The connection is about to close (its time is up): end the call cleanly.
       window.setTimeout(finish, 1500);
@@ -278,6 +290,8 @@ export function useGeminiLiveCall() {
     setError(null);
     setStartedAt(null);
     startedAtRef.current = null;
+    tokensRef.current = NO_GEMINI_TOKENS;
+    setCostUsd(0);
     callIdRef.current = `gem-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     setCallId(callIdRef.current);
     setState("connecting");
@@ -357,5 +371,5 @@ export function useGeminiLiveCall() {
 
   useEffect(() => () => { runRef.current++; teardown(); }, [teardown]);
 
-  return { state, error, turns, tools, replyGaps, callId, startedAt, start, hangup, reset };
+  return { state, error, turns, tools, replyGaps, callId, startedAt, costUsd, start, hangup, reset };
 }

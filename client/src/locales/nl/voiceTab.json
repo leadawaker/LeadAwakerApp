@@ -372,7 +372,8 @@
         "toolFailed": "Mislukt",
         "delaysHint": "Bij benadering: gemeten aan het transcript, niet aan het geluid.",
         "transcript": "Transcript",
-        "ms": "{{ms}} ms"
+        "ms": "{{ms}} ms",
+        "costHintGemini": "Gemini's eigen tokentelling tegen de betaalde prijs: de prompt wordt elke beurt opnieuw gerekend."
       },
       "review": {
         "loading": "Overzicht laden",
@@ -429,7 +430,8 @@
           "female": "Vrouw",
           "male": "Man"
         },
-        "note": "Gemini Live-experiment: dezelfde persona en kennis, in het Nederlands, met de voorraadtools en de demo-agenda. Gesprekken stoppen na 10 minuten."
+        "note": "Gemini Live-experiment: dezelfde persona en kennis, in het Nederlands, met de voorraadtools en de demo-agenda. Gesprekken stoppen na 10 minuten.",
+        "voiceNote": "Gemini-stem voor testgesprekken in deze browser. De eigen stem van de lijn verandert niet."
       }
     },
     "facts": {
@@ -819,6 +821,11 @@
       "title": "ElevenLabs stemprompt",
       "help": "De prompt die ElevenLabs bij elk gesprek op deze lijn krijgt.",
       "syntax": "{name} wordt ingevuld uit de instellingen; een regel die met {?flag} begint blijft alleen staan als die instelling aan staat; de benoemde blokken ({person}, {callback_policy}, ...) worden uit de instellingen gevuld."
+    },
+    "gemini": {
+      "title": "Gemini-prompt ({{language}})",
+      "help": "De ene prompt die Gemini Live in deze test krijgt: hoe ze praat en hoe ze de voorraad- en agendatools gebruikt. De bedrijfskennis, afspraakregels en extra instructies komen erbij. Plaatshouders tussen accolades worden per bedrijf ingevuld. Alleen voor de test.",
+      "help_male": "De ene prompt die Gemini Live in deze test krijgt: hoe hij praat en hoe hij de voorraad- en agendatools gebruikt. De bedrijfskennis, afspraakregels en extra instructies komen erbij. Plaatshouders tussen accolades worden per bedrijf ingevuld. Alleen voor de test."
     }
   }
 }

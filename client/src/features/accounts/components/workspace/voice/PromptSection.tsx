@@ -21,6 +21,7 @@ import { ElevenDraftCard } from "./coach/ElevenDraftCard";
 import { ImprovePromptCard } from "./coach/ImprovePromptCard";
 import { promptLangOf } from "./coach/coachApi";
 import type { VoiceCard } from "./readiness";
+import { useOptionalVoiceTest } from "./test/VoiceTestProvider";
 
 const GREETING_MAX = 500;
 
@@ -74,6 +75,9 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
   const clientLines = (line.otherLines ?? []).map((l) => l.phoneNumber).join(", ");
   const shared = onEleven && clientLines ? t("agent.alsoUsedBy", { number: clientLines }) : undefined;
   const eleven = prompts.data?.eleven;
+  // The test panel on Gemini Live: its one prompt replaces the two GPT Live cards.
+  const test = useOptionalVoiceTest();
+  const geminiRow = test?.engine === "gemini-live" ? prompts.data?.gemini ?? null : null;
 
   return (
     <>
@@ -98,7 +102,21 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
       )}
       {!line.locale && !prompts.isLoading && <p style={helpStyle}>{t("prompt.noLanguage")}</p>}
       {prompts.isError && <p style={{ ...helpStyle, color: "var(--stage-lost)" }}>{t("common.loadFailed")}</p>}
-      {!onEleven && layer && (
+      {geminiRow && (
+        <SharedPromptCard
+          key={`gemini-${geminiRow.id}`}
+          card="promptLayer"
+          kind="layer"
+          accountId={line.accountId}
+          icon={<Waves size={17} />}
+          title={t("prompt.gemini.title", { language })}
+          help={t("prompt.gemini.help")}
+          leanLayer
+          row={geminiRow}
+          onSave={savePrompt}
+        />
+      )}
+      {!onEleven && !geminiRow && layer && (
         <SharedPromptCard
           key={`layer-${layer.id}`}
           card="promptLayer"
@@ -112,7 +130,7 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
           onSave={savePrompt}
         />
       )}
-      {!onEleven && prompts.data?.backend && (
+      {!onEleven && !geminiRow && prompts.data?.backend && (
         <SharedPromptCard
           key={`backend-${prompts.data.backend.id}`}
           card="promptBackend"

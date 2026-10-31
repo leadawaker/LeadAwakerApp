@@ -56,7 +56,12 @@ export function LiveCallView() {
           </div>
           <span style={statValue} data-testid="voice-test-live-timer" aria-label={t("test.panel.live.time")}>{formatClock(elapsed)}</span>
         </div>
-        {perMin !== null && (
+        {live.costUsd != null ? (
+          <div style={{ ...stat, alignItems: "flex-end" }} title={t("test.panel.live.costHintGemini")}>
+            <span className="eyebrow eyebrow-sm">{t("test.panel.live.cost")}</span>
+            <span style={statValue} data-testid="voice-test-live-cost">{formatCost(live.costUsd)}</span>
+          </div>
+        ) : perMin !== null && (
           <div style={{ ...stat, alignItems: "flex-end" }} title={t("test.panel.live.costHint")}>
             <span className="eyebrow eyebrow-sm">{t("test.panel.live.cost")}</span>
             <span style={statValue} data-testid="voice-test-live-cost">{`≈ ${formatCost(runningCost(elapsed ?? 0, perMin))}`}</span>

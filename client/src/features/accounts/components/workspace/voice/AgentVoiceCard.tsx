@@ -11,6 +11,8 @@ import { VOICE_LOCALES, nameForVoice, spokenAgentName, type PronunciationRow } f
 import { VoiceCardShell, FieldLabel, helpStyle, inputStyle } from "./voiceAtoms";
 import { VOICE_LOCALE_FLAGS } from "@/lib/languages";
 import { VoicePicker } from "./VoicePicker";
+import { useOptionalVoiceTest } from "./test/VoiceTestProvider";
+import { GEMINI_TEST_VOICES, geminiSampleUrl } from "./test/geminiAccess";
 import { Seg } from "@/features/demos/components/engineControls";
 import { SHOW_ELEVEN, effectiveVoice, elevenVoicesFor, pickFits, runsOnEleven } from "./lineEngine";
 import { useElevenVoices } from "./useElevenVoices";
@@ -25,6 +27,7 @@ const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const swapName = (text: string, from: string, to: string) =>
   from && to && from !== to ? text.replace(new RegExp(`\\b${escapeRe(from)}\\b`, "g"), to) : text;
 
+const GEMINI_VOICE_ROWS = GEMINI_TEST_VOICES.map((v) => ({ id: v.name, label: v.name, gender: v.gender, preview: geminiSampleUrl(v.name) }));
 const GENDER_CHOICES: ("auto" | "female" | "male")[] = ["auto", "female", "male"];
 const warnStyle = { ...helpStyle, color: "var(--stage-lost)", margin: "6px 0 0" } as const;
 
@@ -45,6 +48,8 @@ export function AgentVoiceCard({ line, onSave }: {
   const savedName = line.agentNameCustom?.trim() || titleCase(line.agentName ?? "");
   const spokenNow = spokenAgentName(savedName, gv, locale);
   const eleven = SHOW_ELEVEN && runsOnEleven(line.number);
+  // The test panel's engine tab on Gemini Live: this dropdown lists Gemini's voices (a test-only pick).
+  const test = useOptionalVoiceTest();
   const elevenVoices = useElevenVoices(eleven);
   const saveEngine = useSaveLineEngine(line.accountId);
   const allEleven = elevenVoices.data ?? [];
@@ -151,8 +156,17 @@ export function AgentVoiceCard({ line, onSave }: {
           </select>
         </div>
         <div>
-          <FieldLabel>{cp("voiceSound.voiceLabel")}</FieldLabel>
-          {eleven ? (
+          <FieldLabel>{test?.engine === "gemini-live" ? t("voiceTab:test.panel.gemini.voice") : cp("voiceSound.voiceLabel")}</FieldLabel>
+          {test?.engine === "gemini-live" ? (
+            <>
+              <VoicePicker
+                value={test.geminiVoice}
+                onChange={test.setGeminiVoice}
+                gemini={{ voices: GEMINI_VOICE_ROWS }}
+              />
+              <p style={{ ...helpStyle, margin: "6px 0 0" }} data-testid="gemini-voice-test-only">{t("voiceTab:test.panel.gemini.voiceNote")}</p>
+            </>
+          ) : eleven ? (
             <>
               <VoicePicker
                 value={elevenPick}

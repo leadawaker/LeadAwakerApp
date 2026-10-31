@@ -14,7 +14,6 @@ import { SHOW_ELEVEN } from "../lineEngine";
 import { promptLangOf, useElevenDraft } from "../coach/coachApi";
 import type { VoiceLine, VoiceLinePatch } from "../voiceApi";
 import { TEST_ENGINES } from "./testPanelPrefs";
-import { GeminiVoicePicker } from "./GeminiVoicePicker";
 import { isCallBusy, useVoiceTest } from "./VoiceTestProvider";
 
 const noteStyle = { ...helpStyle, margin: 0 } as const;
@@ -58,7 +57,6 @@ export function TestPanelHead({ line }: {
             disabledOptions={busy ? [...LLM_KEYS] : undefined} onChange={test.setLlm} />
         </div>
       )}
-      {engine === "gemini-live" && <GeminiVoicePicker />}
       <p style={noteStyle}>{t("test.panel.testOnly")}</p>
       {SHOW_ELEVEN && isAgencyUser && !line.number && <p style={noteStyle} data-testid="voice-test-eleven-no-number">{t("test.panel.elevenNoNumber")}</p>}
 

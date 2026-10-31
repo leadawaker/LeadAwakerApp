@@ -37,6 +37,8 @@ export interface LiveView {
   delaysMs: number[];
   callId: string | null;
   rates: { gptLivePerMin: number; elevenPerMin: number } | null;
+  /** Measured cost so far (Gemini Live: from its token counts). Wins over `rates` when set. */
+  costUsd?: number | null;
 }
 
 export type TestError =
@@ -345,8 +347,9 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
         }),
         delaysMs: gem.replyGaps,
         callId: gem.callId,
-        // No GPT Live price on a Gemini call.
+        // Priced from Gemini's own token counts, not a GPT Live per-minute rate.
         rates: null,
+        costUsd: gem.costUsd,
       };
     }
     const spoken = gpt.turns.filter((t) => t.text.trim());
@@ -363,7 +366,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
       callId: gpt.callId,
       rates: fallbackRates,
     };
-  }, [callEngine, gem.startedAt, gem.turns, gem.tools, gem.replyGaps, gem.callId, eleven.startedAt, eleven.lines, eleven.callId, eleven.rates, eleven.delaysMs, gpt.options, gpt.startedAt, gpt.turns, gpt.tools, gpt.replyGaps, gpt.callId]);
+  }, [callEngine, gem.startedAt, gem.turns, gem.tools, gem.replyGaps, gem.callId, gem.costUsd, eleven.startedAt, eleven.lines, eleven.callId, eleven.rates, eleven.delaysMs, gpt.options, gpt.startedAt, gpt.turns, gpt.tools, gpt.replyGaps, gpt.callId]);
 
   const rawError: TestError | null = callEngine === "elevenlabs"
     ? (eleven.error ? { engine: "elevenlabs", key: eleven.error } : null)

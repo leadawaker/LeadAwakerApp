@@ -15,6 +15,8 @@ export interface AccountVoicePrompts {
   locale: string | null;
   /** voice_lean_layer_{locale}: what calls run on. */
   lean?: VoicePromptRow | null;
+  /** The Gemini Live test layer (Robben experiment). */
+  gemini?: VoicePromptRow | null;
   backend: VoicePromptRow | null;
   /** eleven_layer_nl / eleven_layer_en: shared by every ElevenLabs line. */
   eleven?: VoicePromptRow | null;

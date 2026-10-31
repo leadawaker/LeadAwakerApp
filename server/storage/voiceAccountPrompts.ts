@@ -36,6 +36,8 @@ export interface AccountVoicePrompts {
   backend: VoicePromptRow | null;
   /** The ElevenLabs prompt (`eleven_layer_{nl|en|pt}`), shared by every ElevenLabs line in that language. */
   eleven: VoicePromptRow | null;
+  /** The Gemini Live test layer (`voice_lean_layer_{locale}_gemini`, Robben experiment only); null when there is none. */
+  gemini: VoicePromptRow | null;
 }
 
 function toRow(r: typeof promptLibrary.$inferSelect | undefined): VoicePromptRow | null {
@@ -97,8 +99,10 @@ async function elevenRow(locale: string) {
 }
 
 async function getAccountVoicePrompts(locale: string): Promise<AccountVoicePrompts> {
-  const [lean, backend, eleven] = await Promise.all([leanRow(locale), backendRow(locale), elevenRow(locale)]);
-  return { locale, lean, backend, eleven };
+  const [lean, backend, eleven, gemini] = await Promise.all([
+    leanRow(locale), backendRow(locale), elevenRow(locale), leanRow(`${locale}_gemini`),
+  ]);
+  return { locale, lean, backend, eleven, gemini };
 }
 
 /**

@@ -372,7 +372,8 @@
         "toolFailed": "Failed",
         "delaysHint": "Approximate: measured from the transcript, not the audio.",
         "transcript": "Transcript",
-        "ms": "{{ms}} ms"
+        "ms": "{{ms}} ms",
+        "costHintGemini": "Gemini's own token counts at the paid-tier price: the prompt is billed again on every turn."
       },
       "review": {
         "loading": "Loading the review",
@@ -429,7 +430,8 @@
           "female": "Female",
           "male": "Male"
         },
-        "note": "Gemini Live experiment: same persona and knowledge, Dutch, with the stock tools and the demo diary. Calls end after 10 minutes."
+        "note": "Gemini Live experiment: same persona and knowledge, Dutch, with the stock tools and the demo diary. Calls end after 10 minutes.",
+        "voiceNote": "Gemini voice for test calls in this browser. The line's own voice does not change."
       }
     },
     "facts": {
@@ -819,6 +821,11 @@
       "title": "ElevenLabs voice prompt",
       "help": "The prompt ElevenLabs gets on every call on this line.",
       "syntax": "{name} is filled in from the settings; a line starting with {?flag} is only kept when that setting is on; the named blocks ({person}, {callback_policy}, ...) are filled from the settings."
+    },
+    "gemini": {
+      "title": "Gemini prompt ({{language}})",
+      "help": "The one prompt Gemini Live gets in this test: how she speaks and how she uses the stock and booking tools. The business knowledge, booking rules and extra instructions are added to it. Placeholders in curly brackets are filled per business. Test only.",
+      "help_male": "The one prompt Gemini Live gets in this test: how he speaks and how he uses the stock and booking tools. The business knowledge, booking rules and extra instructions are added to it. Placeholders in curly brackets are filled per business. Test only."
     }
   }
 }

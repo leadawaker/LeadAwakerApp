@@ -81,3 +81,14 @@ test("pairAgentDelays: a caller-first call pairs from the first agent line, and 
   assert.deepEqual(pairAgentDelays(lines, [500]), [null, 500, null, null]);
   assert.deepEqual(pairAgentDelays([], [1]), []);
 });
+
+test("Gemini usage adds up per modality, thoughts as text out, and prices it", async () => {
+  const { addGeminiUsage, geminiCost, NO_GEMINI_TOKENS } = await import("./liveMetrics");
+  let t = addGeminiUsage(NO_GEMINI_TOKENS, {
+    promptTokensDetails: [{ modality: "TEXT", tokenCount: 8000 }, { modality: "AUDIO", tokenCount: 200 }],
+    responseTokensDetails: [{ modality: "AUDIO", tokenCount: 100 }], thoughtsTokenCount: 50,
+  });
+  t = addGeminiUsage(t, null);
+  assert.deepEqual(t, { textIn: 8000, audioIn: 200, textOut: 50, audioOut: 100 });
+  assert.ok(Math.abs(geminiCost(t) - (8000 * 0.75 + 200 * 3 + 50 * 4.5 + 100 * 12) / 1e6) < 1e-12);
+});

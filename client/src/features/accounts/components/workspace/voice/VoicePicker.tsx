@@ -162,9 +162,12 @@ export interface VoicePickerProps {
   onChange: (voice: string) => void;
   gender?: AgentGender | null;
   eleven?: { voices: ElevenVoice[]; defaultLabel: string };
+  /** The Gemini Live test voices (test panel engine "Gemini Live"): the same rows, no default. */
+  gemini?: { voices: ElevenVoice[] };
 }
 
-export function VoicePicker({ value, onChange, gender, eleven }: VoicePickerProps) {
+export function VoicePicker({ value, onChange, gender, eleven: elevenProp, gemini }: VoicePickerProps) {
+  const eleven = elevenProp ?? (gemini ? { voices: gemini.voices, defaultLabel: "" } : undefined);
   const { t } = useTranslation(["voiceTab", "communicationProfile"]);
   const [open, setOpen] = useState(false);
   const player = useSamplePlayer();
@@ -206,14 +209,14 @@ export function VoicePicker({ value, onChange, gender, eleven }: VoicePickerProp
         className="p-2"
         style={{ width: "min(92vw, 440px)", maxHeight: "min(var(--radix-popover-content-available-height), 560px)", overflowY: "auto" }}
       >
-        <p style={{ ...helpStyle, margin: "4px 8px 8px" }}>{t(eleven ? "voiceTab:agent.elevenSamplesHelp" : "voiceTab:agent.samplesHelp")}</p>
+        <p style={{ ...helpStyle, margin: "4px 8px 8px" }}>{t(gemini ? "voiceTab:test.panel.gemini.voiceHelp" : eleven ? "voiceTab:agent.elevenSamplesHelp" : "voiceTab:agent.samplesHelp")}</p>
         {eleven ? (
           <>
-            <button type="button" onClick={() => choose("")} aria-pressed={!value}
+            {!gemini && <button type="button" onClick={() => choose("")} aria-pressed={!value}
               style={{ display: "block", width: "100%", textAlign: "left", background: !value ? "var(--wine-tint)" : "none", border: 0, cursor: "pointer", padding: "9px 10px", borderRadius: "var(--r-button)", fontSize: 13.5, fontWeight: 700, color: !value ? "var(--wine)" : "var(--ink)" }}
               data-testid="voice-option-default">
               {eleven.defaultLabel}
-            </button>
+            </button>}
             {[...elevenGroups, ...(elevenOther.length ? [{ gender: "other" as const, voices: elevenOther }] : [])].map(({ gender: g, voices }) => (
               <div key={g} style={{ marginBottom: 6 }}>
                 {g !== "other" && <div className="eyebrow eyebrow-sm" style={{ padding: "6px 10px 4px" }}>{t(`communicationProfile:questions.agentName.${g}`)}</div>}
