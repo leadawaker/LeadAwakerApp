@@ -11,7 +11,8 @@
     "security": "Segurança",
     "notifications": "Notificações",
     "users": "Usuários",
-    "billing": "Faturamento"
+    "billing": "Faturamento",
+    "alerts": "Alertas"
   },
   "mobileProfile": {
     "title": "Meu perfil",
@@ -72,7 +73,6 @@
     "outreachPagesToggle": "Mostrar na barra de navegacao",
     "servicePages": "Páginas de serviço",
     "servicePagesDescription": "Mostrar estas páginas de serviço na barra de navegação e em Métricas. Ocultas por padrão.",
-    "servicePageSpeed": "Resposta Rápida",
     "servicePageReputation": "Reputação",
     "servicePageMissedCalls": "Chamadas Perdidas",
     "landingPage": "Página inicial",
@@ -155,7 +155,11 @@
     },
     "alertsHint": "Quais eventos são enviados, e para quem, é definido por conta em Alertas.",
     "alertsLink": "Abrir Alertas",
-    "alsoInAlerts": "Só é enviado quando os Alertas da conta estão ligados"
+    "alsoInAlerts": "Só é enviado quando os Alertas da conta estão ligados",
+    "mine": {
+      "label": "Minhas notificações",
+      "help": "O que chega até você, onde quer que esteja."
+    }
   },
   "hub": {
     "back": "Voltar",
@@ -396,6 +400,7 @@
     "notificationsAgency": "Push, e-mail e Telegram",
     "notificationsClient": "Push neste aparelho",
     "users": "Quem pode entrar",
-    "billing": "Faturas e contratos"
+    "billing": "Faturas e contratos",
+    "alerts": "Resumo, alertas instantâneos e seus dispositivos"
   }
 }

@@ -60,7 +60,7 @@ export function FilledIn({ segments }: { segments: Segment[] }) {
   );
 }
 
-export function SharedPromptCard({ card, kind, accountId, icon, title, help, notice, row, onSave }: {
+export function SharedPromptCard({ card, kind, accountId, icon, title, help, notice, leanLayer, row, onSave }: {
   card: VoiceCard;
   /** Which GPT-Live prompt this is, for the engine's preview (the ElevenLabs one is coach/ElevenDraftCard). */
   kind: "layer" | "backend";
@@ -70,6 +70,9 @@ export function SharedPromptCard({ card, kind, accountId, icon, title, help, not
   help: string;
   /** Shown above the text when this prompt is not used on the line being viewed. */
   notice?: string;
+  /** Shown under the help, above the shared-prompt warning (the layer card's live prompt pick). */
+  /** The row is a lean layer (voice_lean_layer_*): previewed and counted as calls run it. */
+  leanLayer?: boolean;
   row: VoicePromptRow;
   onSave: (promptId: number, text: string) => Promise<boolean>;
 }) {
@@ -90,7 +93,7 @@ export function SharedPromptCard({ card, kind, accountId, icon, title, help, not
       const res = await apiFetch("/api/voice-prompts/preview", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, accountId, text }),
+        body: JSON.stringify({ kind, accountId, text, leanLayer }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok || typeof body.text !== "string") throw new Error();
@@ -153,7 +156,7 @@ export function SharedPromptCard({ card, kind, accountId, icon, title, help, not
           <PromptCodeEditor key={`${row.id}-${rev}`} initialValue={text} fontSize={13} onChange={setText} />
         </div>
       )}
-      <PromptCounts text={text} resolve={{ kind, accountId }} />
+      <PromptCounts text={text} resolve={{ kind, accountId, leanLayer }} />
     </VoiceCardShell>
   );
 }

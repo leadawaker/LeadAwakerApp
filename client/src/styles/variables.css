@@ -20,14 +20,14 @@
 
 :root {
   /* ── Dials ── */
-  --brand-h: 346;
-  --brand-s: 43%;
-  --brand-l: 25%;                    /* #5E2230 deep wine */
+  --brand-h: 339;
+  --brand-s: 58%;
+  --brand-l: 15%;                    /* #3D1020 deep wine */
 
   --ground-h: 38;
   --ground-s: 42%;
-  --ground-page: var(--ground-h) var(--ground-s) 98.5%;    /* page ground */
-  --ground-panel: var(--ground-h) var(--ground-s) 97.5%;    /* topbar, toolbars, list panels */
+  --ground-page: var(--ground-h) var(--ground-s) 92.5%;    /* page ground and topbar */
+  --ground-panel: var(--ground-h) var(--ground-s) 98%;     /* light bone: wells and editors; never as dark as the ground */
   --ground-chrome: var(--ground-h) var(--ground-s) 90%;  /* nav rail */
 
   /* ── Brand, derived ── */
@@ -54,7 +54,7 @@
   --brand-indigo-foreground: 0 0% 100%;
 
   --wine: hsl(var(--brand));
-  --wine-soft: hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) + 8%));   /* hover */
+  --wine-soft: hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) + 14%));  /* #761F3B hover + active accent */
   --wine-tint: hsl(var(--brand) / 0.08);
   --wine-glow: hsl(var(--brand) / 0.18);
   /* The single primary-action gradient. Reference the token, not the hex. */
@@ -73,7 +73,9 @@
   --background: var(--ground-page);
   --bg-main: var(--ground-page);
   --bg: hsl(var(--ground-page));
-  --surface: hsl(var(--ground-panel));        /* topbar, toolbars, raised chips */
+  --surface: var(--card);                     /* raised panels, chips, soft buttons: white */
+  --well: hsl(var(--ground-panel));           /* inset wells and editors */
+  --well-triple: var(--ground-panel);
   --bg-2: hsl(var(--ground-chrome));          /* nav rail / sidebar */
   --chrome: var(--bg-2);
   --footer-bg: var(--ground-panel);           /* mobile bottom bar */
@@ -81,14 +83,22 @@
      desktop nav rail (--chrome). One value, used everywhere below 768px. */
   --chrome-deep: var(--chrome);
   --chrome-deep-ink: #5A5244;                 /* muted ink on the sand: 5.5:1, AA at 10px */
-  --wine-deep: hsl(var(--brand-h) 45% 15%);   /* very dark wine: AI bubbles (chats, call transcript) */
+  --wine-deep: var(--wine);                   /* AI bubbles (chats, call transcript) */
+  --bubble-low: var(--wine);                  /* transcript bubbles: wine at the top of the screen ... */
+  --bubble-high: hsl(var(--brand-h) 38% 40%); /* ... lighter wine toward the bottom */
   --on-wine: #FBF8F2;                         /* bone icon + label on a filled wine pill */
+  --nav-bg: var(--wine);                      /* desktop nav bar (phones keep --chrome-deep) */
+  --nav-ink: var(--on-wine);
+  --nav-ink-mute: rgba(251, 248, 242, 0.62);
+  --nav-line: rgba(255, 255, 255, 0.10);
+  --nav-hover: rgba(255, 255, 255, 0.07);
+  --nav-active: rgba(255, 255, 255, 0.13);
   --sidebar-bg: var(--ground-panel);          /* topbar chrome */
-  --panel-list-bg: var(--ground-panel);       /* page toolbars (sticky header rows) */
+  --panel-list-bg: 0 0% 100%;       /* page toolbars (sticky header rows) */
   --secondary: var(--ground-chrome);
   --secondary-foreground: 30 14% 10%;
   --muted: var(--ground-h) 30% 96%;
-  --muted-foreground: 39 15% 38%;             /* #6C6354 warm muted text */
+  --muted-foreground: 211 12% 42%;            /* #5E6A78 cool slate: the one cold note against the warm ground */
   --card-hover: var(--ground-h) 43% 97%;
   --input: var(--ground-h) 30% 93%;
   --input-bg: var(--ground-h) 30% 93%;
@@ -99,6 +109,9 @@
 
   /* White surfaces */
   --card: #FFFFFF;                            /* full color: use var(--card) or bg-card */
+  --card-triple: 0 0% 100%;                   /* the same white as a channel triple */
+  --list-selected: color-mix(in srgb, var(--wine-soft) 7%, var(--card));   /* the selected list card */
+  --list-selected-shadow: inset 0 0 0 1px var(--wine-soft), 0 2px 5px var(--neu-dark);
   --card-bright: #FFFFFF;
   --paper: #FFFFFF;
   --popover: 0 0% 100%;
@@ -116,8 +129,8 @@
   --sidebar-active-foreground: 0 0% 100%;
   --ink: #1F1A14;
   --ink-soft: #322B22;                        /* secondary text */
-  --mute: #6C6354;                            /* secondary warm text */
-  --mute-2: #948A77;                          /* tertiary warm text */
+  --mute: #5E6A78;                            /* secondary text, cool slate */
+  --mute-2: #8A95A1;                          /* tertiary text, cool slate */
 
   /* ── Status ── */
   --destructive: 0 84.2% 60.2%;
@@ -170,20 +183,20 @@
   /* Pure white: the ground was brightened to 98.5% lightness, and the old warm
      rgb(255,253,245) highlight sat almost on top of it, so raised and inset
      surfaces read flat. White keeps a visible lit edge. */
-  --neu-light: #FFFFFF;
+  --neu-light: rgba(255, 255, 255, 0.65);     /* see-through, so it works on any color */
   --inset-rim-color: rgba(255, 255, 255, 1);
   /* Active nav pill body: a step under the panel ground so its white
      bottom highlight (--sh-polished-crisp) reads as a lit edge. */
   --nav-active-bg: hsl(var(--ground-h) var(--ground-s) 95.5%);
-  --glass-bg: rgba(255, 250, 240, 0.28);
-  --glass-bg-strong: rgba(255, 250, 240, 0.46);
+  --glass-bg: var(--card);                    /* panels are solid white on the ground, not see-through */
+  --glass-bg-strong: var(--card);
   --glass-border: rgba(255, 255, 255, 0.45);
   --glass-edge: rgba(255, 255, 255, 0.70);
 
   /* ── Layout tokens ── */
   --radius: 1.5rem;
   --panel-gap: 16px;
-  --toolbar-w: 300px;   /* default width of a page's list panel ("toolbar"): Leads/Campaigns/Prospects/etc. */
+  --toolbar-w: 348px;   /* width of every page's list panel ("toolbar"), Calls included */
   --panel-shadow: var(--sh-raised-medium);
   --card-glow: var(--sh-raised-crisp);
   --card-shadow: var(--sh-raised-crisp);
@@ -237,16 +250,21 @@
   --wine-soft: hsl(var(--brand-h) 45% calc(var(--brand-l) + 7%));
   --wine-tint: hsl(var(--brand) / 0.18);
   --wine-deep: hsl(var(--brand-h) 38% 22%);
+  --bubble-low: var(--wine-deep);
+  --bubble-high: hsl(var(--brand-h) 40% 34%);
+  --well: var(--surface);
   --wine-glow: hsl(var(--brand) / 0.32);
   --wine-grad: linear-gradient(145deg,
     hsl(var(--brand)),
     hsl(var(--brand-h) var(--brand-s) calc(var(--brand-l) - 14%)));
 
   /* ── Grounds & surfaces ── */
-  --background: 30 12% 8%;            /* #171411 */
-  --bg-main: 30 12% 8%;
-  --bg: #16120F;                      /* page ground */
+  --background: 30 15% 10%;           /* #1E1A16: the same as the topbar */
+  --bg-main: 30 15% 10%;
   --surface: #1E1A16;                 /* topbar, toolbars, raised chips */
+  --bg: var(--surface);               /* page ground */
+  --well-triple: 30 15% 10%;
+  --nav-bg: hsl(var(--brand-h) 40% 13%);
   --bg-2: #1B1714;                    /* nav rail / sidebar */
   --footer-bg: 30 12% 14%;
   --chrome-deep: hsl(30 12% 11%);     /* one step deeper than the bottom bar, never lighter */
@@ -266,6 +284,7 @@
   --brand-indian-yellow-foreground: 36 20% 90%;
 
   --card: #241F1B;
+  --card-triple: 27 14% 12%;
   --card-bright: #2A2420;
   --paper: #221D19;
   --popover: 30 12% 14%;
@@ -328,8 +347,8 @@
   --neu-light: rgba(255, 240, 220, 0.045);
   --inset-rim-color: rgba(255, 240, 220, 0.10);
   --nav-active-bg: var(--surface);
-  --glass-bg: rgba(31, 26, 22, 0.42);
-  --glass-bg-strong: rgba(31, 26, 22, 0.64);
+  --glass-bg: var(--card);
+  --glass-bg-strong: var(--card);
   --glass-border: rgba(255, 255, 255, 0.08);
   --glass-edge: rgba(255, 255, 255, 0.12);
 }

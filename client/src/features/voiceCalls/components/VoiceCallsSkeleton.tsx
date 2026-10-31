@@ -1,11 +1,13 @@
 /**
  * Loading shapes for the Voice calls page, in the same layout as the real
- * thing: a list of call rows, and a call detail with the header on top, the
- * booking and summary panel on the left and the conversation on the right,
- * all inside the centered DETAIL_MAX_WIDTH column.
+ * thing: a list of call rows, and a call detail with the lead's titled cards
+ * on the left and the conversation on the right, all inside the centered
+ * DETAIL_MAX_WIDTH column.
  */
+import { ListSection } from "@/components/crm/primitives";
+
 export const DETAIL_MAX_WIDTH = 1100;
-export const SIDEBAR_WIDTH = 340;
+export const SIDEBAR_WIDTH = 380;
 
 function Bar({ w, h = 10, r = "var(--r-flush)", style }: { w: number | string; h?: number; r?: string; style?: React.CSSProperties }) {
   return <span aria-hidden="true" style={{ display: "block", width: w, height: h, borderRadius: r, background: "var(--line)", flexShrink: 0, ...style }} />;
@@ -29,6 +31,11 @@ export function CallListSkeleton({ rows = 7 }: { rows?: number }) {
   );
 }
 
+/** A section title on the ground, in place of Calls, Summary or Details. */
+function SectionTitle({ w }: { w: number }) {
+  return <Bar w={w} h={14} r="var(--r-pill)" style={{ marginBlock: 3 }} />;
+}
+
 function Bubble({ right, w }: { right?: boolean; w: string }) {
   return <Bar w={w} h={40} r="13px" style={{ alignSelf: right ? "flex-end" : "flex-start", background: right ? "color-mix(in srgb, var(--ink) 14%, transparent)" : "var(--line)" }} />;
 }
@@ -42,28 +49,30 @@ export function CallDetailSkeleton({ narrow, sidebar }: { narrow: boolean; sideb
   return (
     <div aria-busy="true" data-testid="voice-detail-skeleton" style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: "column", overflow: "hidden" }}>
       <div style={{ width: "100%", maxWidth: DETAIL_MAX_WIDTH, margin: "0 auto", flex: 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14 }}>
-        <div className="neu-raised animate-pulse" style={{ ...panel, flexShrink: 0, padding: "14px 18px", display: "flex", alignItems: "center", gap: 14 }}>
-          <Bar w={42} h={42} r="13px" />
-          <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-            <div style={{ display: "flex", gap: 10, alignItems: "center" }}><Bar w={180} h={16} /><Bar w={90} h={16} r="var(--r-pill)" /></div>
-            <Bar w={220} h={9} />
-          </div>
-        </div>
         <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: narrow ? "column" : "row", gap: 14 }}>
           {sidebar ? (
             <div className="neu-raised" style={{ ...panel, width: narrow ? "auto" : SIDEBAR_WIDTH, flexShrink: 0, minHeight: 0, overflowY: "auto" }}>{sidebar}</div>
           ) : (
-            <div className="neu-raised animate-pulse" style={{ ...panel, width: narrow ? "auto" : SIDEBAR_WIDTH, flexShrink: 0, padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-              <Bar w={80} h={8} />
-              <Bar w="100%" h={48} r="var(--r-surface)" />
-              {[0, 1, 2].map((i) => (
-                <div key={i} style={{ display: "flex", gap: 10 }}>
-                  <Bar w={26} h={26} r="var(--r-button)" />
-                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 6 }}><Bar w="70%" h={11} /><Bar w="90%" h={9} /></div>
+            <div className="animate-pulse" style={{ width: narrow ? "auto" : SIDEBAR_WIDTH, flexShrink: 0 }}>
+              <ListSection label={<SectionTitle w={64} />}>
+                <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <Bar w={56} h={56} r="28%" />
+                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}><Bar w="60%" h={14} /><Bar w="40%" h={9} /></div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}><Bar w={36} h={36} r="50%" /><Bar w={36} h={36} r="50%" /><Bar w={36} h={36} r="50%" /></div>
                 </div>
-              ))}
-              <Bar w={70} h={8} style={{ marginTop: 8 }} />
-              <div style={{ display: "flex", gap: 8 }}><Bar w={70} h={26} r="var(--r-pill)" /><Bar w={110} h={26} r="var(--r-pill)" /></div>
+              </ListSection>
+              <ListSection label={<SectionTitle w={84} />}>
+                <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}><Bar w="100%" h={10} /><Bar w="92%" h={10} /><Bar w="70%" h={10} /></div>
+              </ListSection>
+              <ListSection label={<SectionTitle w={72} />}>
+                <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
+                  {[0, 1, 2].map((i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between" }}><Bar w={80} h={9} /><Bar w={110} h={9} /></div>
+                  ))}
+                </div>
+              </ListSection>
             </div>
           )}
           <div className="glass animate-pulse" style={{ ...panel, background: undefined, flex: 1, minWidth: 0, minHeight: narrow ? 520 : 0, padding: "16px 20px", display: "flex", flexDirection: "column", gap: 14 }}>

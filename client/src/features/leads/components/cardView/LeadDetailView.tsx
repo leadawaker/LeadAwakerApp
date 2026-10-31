@@ -47,6 +47,7 @@ import { ContactWidget, NotesSection } from "./ContactWidget";
 import { ConversationWidget } from "./ConversationWidget";
 import { LeadSummaryCard } from "./LeadSummaryCard";
 import { LeadRecap } from "./LeadRecap";
+import { ListSection } from "@/components/crm/primitives";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 // ── Alias used inside this file ──────────────────────────────────────────────
@@ -429,32 +430,36 @@ export function LeadDetailView({
 
   // Chats page sidebar (left): recap, then the contact card.
   const chatsSidebar = (
+    // Reaches 14px past its cards so its scrolling never cuts their shadows.
     <div
-      className="neu-raised"
       data-testid="chat-recap-sidebar"
       style={{
-        width: isNarrow ? "auto" : 310, flexShrink: 0, minHeight: 0, borderRadius: "var(--r-card)", background: "var(--card)",
+        width: isNarrow ? "auto" : 338, flexShrink: 0, minHeight: 0, boxSizing: "border-box",
+        margin: isNarrow ? 0 : -14, padding: isNarrow ? 0 : 14,
         overflowX: "hidden", overflowY: isNarrow ? "visible" : "auto",
       }}
     >
-      <LeadRecap lead={lead} timeZone={accountTimezone} />
-      <div style={{ display: "flex", borderTop: "1px solid var(--line)" }}>
-        <ContactWidget
-          lead={lead}
-          onRefresh={onRefresh}
-          accountLogo={accountLogo}
-          campaignStickerUrl={campaignStickerUrl}
-          campaignsById={campaignsById}
-          onPdf={handlePdf}
-          onDelete={handleDelete}
-          isDeleting={deleting}
-          deleteConfirm={deleteConfirm}
-          setDeleteConfirm={setDeleteConfirm}
-          onToggleGradient={toggleGradientTester}
-          gradientTesterOpen={gradientTesterOpen}
-          isAgencyUser={isAgencyUser}
-        />
-      </div>
+      <LeadRecap lead={lead} timeZone={accountTimezone} split />
+      <ListSection label={t("contact.title")}>
+        <div style={{ display: "flex" }}>
+          <ContactWidget
+            hideTitle
+            lead={lead}
+            onRefresh={onRefresh}
+            accountLogo={accountLogo}
+            campaignStickerUrl={campaignStickerUrl}
+            campaignsById={campaignsById}
+            onPdf={handlePdf}
+            onDelete={handleDelete}
+            isDeleting={deleting}
+            deleteConfirm={deleteConfirm}
+            setDeleteConfirm={setDeleteConfirm}
+            onToggleGradient={toggleGradientTester}
+            gradientTesterOpen={gradientTesterOpen}
+            isAgencyUser={isAgencyUser}
+          />
+        </div>
+      </ListSection>
     </div>
   );
 

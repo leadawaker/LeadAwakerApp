@@ -1,12 +1,12 @@
 // DesktopCalendar.tsx — wine/neumorphic Calendar at all breakpoints.
 // Full-width top toolbar + three floating panels (agenda · week/month grid · detail).
-// Fabricated metrics removed; real lead score, AI summary, and full conversation shown.
+// Fabricated metrics removed; AI summary and full conversation shown.
 // Component groups live in sibling files: desktopCalendarShared (atoms/types),
 // DesktopCalendarToolbar, DesktopCalendarWeek, DesktopCalendarMonthAgenda, DesktopCalendarDetail.
 import { useState, useRef, useEffect } from "react";
-import { useListPanelState, type ListPanelState } from "@/hooks/useListPanelState";
+import { useListPanelState } from "@/hooks/useListPanelState";
 import { useListPanelFold } from "@/hooks/useListPanelFold";
-import { ListPanelFooter, ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { MobileSheet } from "@/components/crm/mobile/MobileSheet";
 import { usePersistedState } from "@/hooks/usePersistedState";
@@ -23,7 +23,17 @@ import { useBookingCallId } from "@/features/voiceCalls/api/voiceCallsApi";
 
 export type { DesktopCalendarProps } from "./desktopCalendarShared";
 
-// ── Ultra-wide split: week (left) + draggable divider + month (right, darker) ──
+/** One inset calendar well; the overlay keeps its inset shadow on top of the grid's backgrounds. */
+function CalendarWell({ style, children }: { style?: React.CSSProperties; children: React.ReactNode }) {
+  return (
+    <div style={{ flex: 1, minWidth: 0, minHeight: 0, borderRadius: "var(--r-surface)", overflow: "hidden", display: "flex", flexDirection: "column", position: "relative", ...style }}>
+      {children}
+      <div style={{ position: "absolute", inset: 0, borderRadius: "var(--r-surface)", boxShadow: "var(--sh-inset-crisp)", pointerEvents: "none", zIndex: 20 }} />
+    </div>
+  );
+}
+
+// ── Wide split: week (left) + draggable gap + month (right), each in its own well ──
 function WeekMonthSplit(p: DesktopCalendarProps) {
   const [frac, setFrac] = usePersistedState<number>(
     "calendar-week-month-split",
@@ -46,26 +56,26 @@ function WeekMonthSplit(p: DesktopCalendarProps) {
   };
 
   return (
-    <div ref={ref} style={{ flex: 1, minHeight: 0, display: "flex", overflow: "hidden" }}>
+    <div ref={ref} style={{ flex: 1, minHeight: 0, display: "flex" }}>
       {/* Week side */}
-      <div style={{ width: `${frac * 100}%`, minWidth: 0, display: frac === 0 ? "none" : "flex", flexDirection: "column", minHeight: 0 }}>
+      <CalendarWell style={{ flex: frac === 1 ? 1 : `0 0 calc(${frac * 100}% - 7px)`, display: frac === 0 ? "none" : "flex" }}>
         <WeekGrid {...p} />
-      </div>
-      {/* Draggable divider — 8px gap with a short centered handle; collapses a side */}
+      </CalendarWell>
+      {/* Draggable gap with a short centered handle; collapses a side */}
       <div
         onPointerDown={(e) => { dragging.current = true; e.currentTarget.setPointerCapture(e.pointerId); }}
         onPointerMove={(e) => { if (dragging.current) updateFromX(e.clientX); }}
         onPointerUp={(e) => { dragging.current = false; try { e.currentTarget.releasePointerCapture(e.pointerId); } catch {} }}
-        style={{ width: 8, flexShrink: 0, cursor: "col-resize", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", touchAction: "none" }}
+        style={{ width: 14, flexShrink: 0, cursor: "col-resize", display: "flex", alignItems: "center", justifyContent: "center", background: "transparent", touchAction: "none" }}
         role="separator"
         aria-orientation="vertical"
       >
         <div style={{ width: 3, height: 50, borderRadius: 2, background: "var(--line-strong)" }} />
       </div>
-      {/* Month side — lighter surface to distinguish from week side */}
-      <div style={{ flex: 1, minWidth: 0, display: frac === 1 ? "none" : "flex", flexDirection: "column", minHeight: 0, background: "var(--surface)" }}>
+      {/* Month side */}
+      <CalendarWell style={{ display: frac === 1 ? "none" : "flex", background: "var(--surface)" }}>
         <MonthGrid {...p} />
-      </div>
+      </CalendarWell>
     </div>
   );
 }
@@ -80,7 +90,7 @@ const DETAIL_W_CALL = 500;
 export function DesktopCalendar(props: DesktopCalendarProps) {
   const { state: leftPanelState } = useListPanelState();
   const isMobile = useIsMobile(1024);
-  // List fold button (agenda header): the agenda rail cycles full → compact → hidden (never on mobile).
+  // List fold button: the agenda is full or small (never on mobile).
   useListPanelFold(!isMobile);
   const isPhone = useIsMobile(768);
 
@@ -119,20 +129,21 @@ export function DesktopCalendar(props: DesktopCalendarProps) {
 
   // The agenda rail and the cycle-panel toggle don't make sense on a phone —
   // mobile always gets the full-width week/month grid with detail in a bottom sheet.
-  const effectiveLeftPanelState: ListPanelState = isMobile ? "hidden" : leftPanelState;
-  const leftWidth = effectiveLeftPanelState === "hidden" ? 0 : effectiveLeftPanelState === "compact" ? 64 : 318;
+  const compactAgenda = leftPanelState === "compact";
+  const leftWidth = isMobile ? 0 : compactAgenda ? 64 : "var(--toolbar-w)";
+  const leftPx = isMobile ? 0 : compactAgenda ? 64 : 348;
   const ultra = rootWidth >= 1700;
   const { data: bookingCallId } = useBookingCallId(bookingLeadId(p.selectedBooking));
   const detailW = bookingCallId ? DETAIL_W_CALL : DETAIL_W;
 
   return (
     <div ref={rootRef} style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", overflow: "hidden", background: "var(--bg)" }} data-testid="calendar-desktop">
-      <TopToolbar {...p} leftPanelState={effectiveLeftPanelState} ultra={ultra} />
+      <TopToolbar {...p} ultra={ultra} />
       <div style={{ flex: 1, minHeight: 0, display: "flex", gap: 0, padding: 0, overflow: "hidden", position: "relative" }}>
-        {/* LEFT — agenda (full | minimized | hidden); never shown on mobile */}
-        {effectiveLeftPanelState !== "hidden" && (
-          <div style={{ ...CARD_STYLE, width: leftWidth, flexShrink: 0, background: "hsl(var(--panel-list-bg))", borderRadius: 0, borderRight: "1px solid var(--line)" }}>
-            {effectiveLeftPanelState === "compact" ? (
+        {/* LEFT — agenda (full | small); never shown on mobile */}
+        {!isMobile && (
+          <div className={compactAgenda ? "la-list-panel" : "la-list-panel la-list-panel--split"} style={{ ...CARD_STYLE, width: leftWidth, flexShrink: 0, background: "hsl(var(--panel-list-bg))", borderRadius: 0, borderRight: "1px solid var(--line)" }}>
+            {compactAgenda ? (
               <>
                 <CompactAgendaList {...p} />
                 <ListPanelFooter compact />
@@ -140,17 +151,14 @@ export function DesktopCalendar(props: DesktopCalendarProps) {
             ) : (
               <>
                 <StatusTabs {...p} />
-                <AgendaList {...p} />
-                {/* Bottom bar: the list fold button at the right end */}
+                <AgendaList {...p} split />
                 <ListPanelFooter />
               </>
             )}
           </div>
         )}
-        {/* Hidden agenda: the slim strip that brings it back */}
-        {!isMobile && <ListPanelUnfoldButton />}
         {/* CENTER — calendar. Ultra-wide: week + month split */}
-        <div style={{ ...CARD_STYLE, flex: 1, minWidth: 0, background: "var(--bg)", borderRadius: 0, display: "flex", flexDirection: "column" }}>
+        <div className="la-list-panel" style={{ ...CARD_STYLE, flex: 1, minWidth: 0, marginRight: 14, borderRadius: 0, display: "flex", flexDirection: "column" }}>
           {p.viewMode === "list" && isMobile ? (
             // List view (mobile only — desktop already has the agenda in its left
             // panel). Full-height agenda of all appointments grouped by date, no
@@ -160,24 +168,22 @@ export function DesktopCalendar(props: DesktopCalendarProps) {
             <>
               <CenterHeader {...p} ultra={ultra} />
               {/* Chart area — inset with rounded corners and breathing room */}
-              <div style={{ flex: 1, minHeight: 0, margin: 8, borderRadius: "var(--r-surface)", overflow: "hidden", display: "flex", flexDirection: "column", position: "relative" }}>
-                {ultra
-                  ? <WeekMonthSplit {...p} />
-                  : p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}
-                {/* Overlay so inset shadow renders on top of child backgrounds */}
-                <div style={{ position: "absolute", inset: 0, borderRadius: "var(--r-surface)", boxShadow: "var(--sh-inset-crisp)", pointerEvents: "none", zIndex: 20 }} />
-              </div>
+              {ultra ? (
+                <div style={{ flex: 1, minHeight: 0, margin: 8, display: "flex", flexDirection: "column" }}><WeekMonthSplit {...p} /></div>
+              ) : (
+                <CalendarWell style={{ margin: 8 }}>{p.viewMode === "week" ? <WeekGrid {...p} /> : <MonthGrid {...p} />}</CalendarWell>
+              )}
             </>
           )}
         </div>
         {/* RIGHT: block panel (create / edit busy block) takes the slot while open; phones use the sheet below */}
         {!isPhone && blockPanelEl ? (
-          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(DETAIL_W, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--card)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
+          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(DETAIL_W, Math.max(280, rootWidth - leftPx - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--card)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
             {blockPanelEl}
           </div>
         ) : !isMobile && p.selectedBooking && (
         /* RIGHT: detail, a floating slide-over, desktop/tablet only (mobile uses the bottom sheet below) */
-          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(detailW, Math.max(280, rootWidth - leftWidth - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--bg)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
+          <div style={{ position: "absolute", top: 0, right: 0, bottom: 0, width: Math.min(detailW, Math.max(280, rootWidth - leftPx - 24)), maxWidth: "92%", display: "flex", flexDirection: "column", background: "var(--bg)", borderLeft: "1px solid var(--line)", boxShadow: "-12px 0 40px rgba(60,45,25,0.18)", zIndex: 30 }}>
             <DetailPanel {...p} showClose />
           </div>
         )}

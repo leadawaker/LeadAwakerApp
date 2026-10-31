@@ -67,17 +67,20 @@ export function CenterHeader(p: DesktopCalendarProps) {
     </div>
   );
 
-  // Ultra-wide: date nav sits next to Today (left), week-only stepping, month buttons on right.
+  // Ultra-wide: Refresh and Today left, the date centered on the panel, week-only stepping, month buttons right.
   if (p.ultra) {
     return (
-      <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: 12 }}>
-        <NavBtn onClick={() => p.onRefresh?.()} aria-label="Refresh"><RefreshCw className="h-4 w-4" /></NavBtn>
-        <button onClick={p.onToday} className="la-btn la-btn--soft" style={todayBtnStyle}>{t("navigation.today")}</button>
-        <NavBtn onClick={() => p.onNavigateWeek(-1)} aria-label={t("navigation.previous")} forcePressed={flashDir === -1}><ChevronLeft className="h-5 w-5" /></NavBtn>
-        <span style={{ ...SERIF, fontSize: 26, color: "var(--ink)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{p.weekLabel}</span>
-        <NavBtn onClick={() => p.onNavigateWeek(1)} aria-label={t("navigation.next")} forcePressed={flashDir === 1}><ChevronRight className="h-5 w-5" /></NavBtn>
-        <div style={{ flex: 1 }} />
-        {monthButtons}
+      <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 12 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <NavBtn onClick={() => p.onRefresh?.()} aria-label="Refresh"><RefreshCw className="h-4 w-4" /></NavBtn>
+          <button onClick={p.onToday} className="la-btn la-btn--soft" style={todayBtnStyle}>{t("navigation.today")}</button>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <NavBtn onClick={() => p.onNavigateWeek(-1)} aria-label={t("navigation.previous")} forcePressed={flashDir === -1}><ChevronLeft className="h-5 w-5" /></NavBtn>
+          <span style={{ ...SERIF, fontSize: 26, color: "var(--ink)", letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>{p.weekLabel}</span>
+          <NavBtn onClick={() => p.onNavigateWeek(1)} aria-label={t("navigation.next")} forcePressed={flashDir === 1}><ChevronRight className="h-5 w-5" /></NavBtn>
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", minWidth: 0 }}>{monthButtons}</div>
       </div>
     );
   }
@@ -108,19 +111,19 @@ export function CenterHeader(p: DesktopCalendarProps) {
   }
 
   return (
-    <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 16, position: "relative" }}>
+    <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 14px", borderBottom: "1px solid var(--line)", display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "center", gap: 16, position: "relative" }}>
       {/* Refresh + Today — left-anchored */}
-      <div style={{ flexShrink: 0, display: "flex", alignItems: "center", gap: 8 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
         <NavBtn onClick={() => p.onRefresh?.()} aria-label="Refresh"><RefreshCw className="h-4 w-4" /></NavBtn>
         <button onClick={p.onToday} className="la-btn la-btn--soft" style={todayBtnStyle}>{t("navigation.today")}</button>
       </div>
-      <div style={{ flex: "1 0 auto", display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16 }}>
         <NavBtn onClick={() => p.onNavigate(-1)} aria-label={t("navigation.previous")} forcePressed={flashDir === -1}><ChevronLeft className="h-5 w-5" /></NavBtn>
         <span style={{ ...SERIF, fontSize: 28, color: "var(--ink)", letterSpacing: "-0.01em", minWidth: 200, textAlign: "center", whiteSpace: "nowrap" }}>{p.viewLabel}</span>
         <NavBtn onClick={() => p.onNavigate(1)} aria-label={t("navigation.next")} forcePressed={flashDir === 1}><ChevronRight className="h-5 w-5" /></NavBtn>
       </div>
       {/* Month buttons — in flow, right-aligned; hidden (not overlapping) when they don't fit */}
-      <div ref={pillSlotRef} style={{ flex: "0 1 auto", minWidth: 0, display: "flex", justifyContent: "flex-end", overflow: "hidden" }}>
+      <div ref={pillSlotRef} style={{ minWidth: 0, display: "flex", justifyContent: "flex-end", overflow: "hidden" }}>
         <div ref={pillInnerRef} style={{ flexShrink: 0, visibility: pillsFit ? "visible" : "hidden" }}>
           {monthButtons}
         </div>

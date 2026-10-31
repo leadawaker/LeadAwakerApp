@@ -202,7 +202,6 @@
       "callsHandoffs": "Gesprekken & Overdrachten",
       "live": "Live",
       "revenue": "Omzet",
-      "aiRead": "AI-lezing",
       "experiment": "Experiment"
     },
     "timeframes": {
@@ -247,15 +246,11 @@
     "noPipelineData": "Nog geen pipelinegegevens",
     "noConversionData": "Geen conversiegegevens",
     "aiAnalysis": "AI-analyse",
-    "noAiAnalysis": "Nog geen AI-analyse",
     "aiRunsNightly": "Draait elke nacht of klik op Genereren",
     "lastRun": "Laatste uitvoering: {{date}}",
     "noAnalysisYet": "Nog geen analyse",
     "generate": "Genereren",
-    "regenerate": "Opnieuw genereren",
     "generating": "Genereren…",
-    "groqApiKeyMissing": "Groq API-sleutel niet geconfigureerd. Voeg GROQ_API_KEY toe aan .env.",
-    "generateFailed": "Samenvatting genereren mislukt. Probeer opnieuw.",
     "networkError": "Netwerkfout. Probeer opnieuw.",
     "activity": "Activiteit",
     "financials": "Financiën",
@@ -328,7 +323,9 @@
       "reactivation": "Reactivatie",
       "reputation": "Reputatie",
       "speed_to_lead": "Snelle opvolging",
-      "missed_call": "Gemiste oproep terugbericht"
+      "missed_call": "Gemiste oproep terugbericht",
+      "receptionist": "Receptionist",
+      "social_reply": "Social-reacties"
     },
     "coldOpenTemplateSid": "Cold-open template-SID",
     "coldOpenTemplateSidHint": "Goedgekeurd Twilio WhatsApp-template voor het eerste koude bericht (snelle opvolging).",

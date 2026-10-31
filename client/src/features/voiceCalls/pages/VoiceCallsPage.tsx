@@ -11,6 +11,7 @@ import { CALLS_TABS, DEFAULT_PEOPLE_OPTIONS, LAST_LIST_PAGE, LAST_TAB_PAGE, type
 import type { AccountOption } from "../components/AccountFilter";
 import type { CallsPageView } from "../components/callsTabs";
 import { readSettingsParams } from "@/features/accounts/components/workspace/receptionist/settingsLink";
+import { CallsListTabs } from "../components/CallsPageTabs";
 import { CallersInbox } from "../components/CallersInbox";
 import { VoiceCallsInbox } from "../components/VoiceCallsInbox";
 import { VoiceCallsTopbar } from "../components/VoiceCallsTopbar";
@@ -174,6 +175,13 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
     setCallerSelection(null);
   };
 
+  // Desktop: the list's own filters head the list panel. Phones keep them in the topbar.
+  const listHead = isPhone ? null : (
+    <div className="la-list-head">
+      <CallsListTabs tabs={tabs} view={listView} onView={changeView} soft />
+    </div>
+  );
+
   return (
     <div className="la-page" style={{ display: "flex", flexDirection: "column" }}>
       <VoiceCallsTopbar
@@ -220,6 +228,7 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
             accountId={accountId}
             showAccount={showAccount}
             linkedCall={linkKey && deepLinkCall ? { key: linkKey, callId: deepLinkCall } : null}
+            head={listHead}
           />
         ) : (
           <VoiceCallsInbox
@@ -233,6 +242,7 @@ function VoiceCallsContent({ capabilities }: { capabilities: VoiceCapabilities }
             setSelection={setSelection}
             accountId={accountId}
             showAccount={showAccount}
+            head={listHead}
           />
         )}
       </div>

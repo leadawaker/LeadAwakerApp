@@ -304,8 +304,7 @@
     "kind": {
       "layer": "Voice layer",
       "greeting": "Greeting",
-      "backend": "Backend",
-      "xai": "Grok prompt (lean)"
+      "backend": "Backend"
     },
     "noLine": "{{name}} has no voice line yet, so this is the prompt without client details.",
     "otherLocale": "{{name}}'s line speaks {{line}}, so its calls never get this {{prompt}} prompt. Shown without client details."
@@ -335,5 +334,30 @@
     "sans": "Sans",
     "system": "System",
     "humanist": "Humanist"
+  },
+  "valueEditor": {
+    "help": "Saved where this value is kept. The next call on this line hears it.",
+    "loadFailed": "Could not load this value.",
+    "saveFailed": "Could not save.",
+    "noPersona": "This account has no persona of its own yet. Set one up in Calls > Call settings.",
+    "cancel": "Cancel",
+    "save": "Save",
+    "word": "Word",
+    "sayAs": "Say it as",
+    "remove": "Remove",
+    "addWord": "Add a word",
+    "names": {
+      "company_name": "Company name",
+      "business": "What the business does",
+      "agent_name": "Her name",
+      "tone": "Tone (up to 3)",
+      "address": "How she addresses callers",
+      "pronunciation": "Pronunciation"
+    }
+  },
+  "voiceSection": {
+    "voice": "Voice prompt",
+    "backend": "Back end prompt",
+    "universal": "Universal prompt"
   }
 }

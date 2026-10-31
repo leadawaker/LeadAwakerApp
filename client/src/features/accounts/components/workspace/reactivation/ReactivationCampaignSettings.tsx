@@ -1,16 +1,16 @@
-// One reactivation campaign on Accounts > Reactivation: a bar with the picker,
-// its status, launch readiness and the Activate / Pause switch, then the
-// campaign settings screen (CampaignStageEditor, Business / AI / Behavior on its
-// own side tabs). Edits go through useCampaignDetail's draft and 1.5s autosave,
+// One reactivation campaign (Accounts > Reactivation and Chats > Settings >
+// Reactivation): a bar with the picker, its status, launch readiness and the
+// Activate / Pause switch, then its settings in sections (ReactivationSections,
+// laid out like Speed to Lead). Edits go through useCampaignDetail's draft and 1.5s autosave,
 // like on the Campaigns page. The status switch writes the same draft field the
 // Behavior section's Status select does, so the two never disagree.
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2, Pause, Play, RefreshCw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { Campaign } from "@/types/models";
 import { useCampaignDetail } from "@/features/campaigns/components/useCampaignDetail";
-import { CampaignStageEditor } from "@/features/campaigns/components/CampaignStageEditor";
+import { ReactivationSections } from "./ReactivationSections";
 import { CampaignPreflight } from "@/features/campaigns/components/detailView/CampaignPreflight";
 import { fetchCampaignPreflight } from "@/features/campaigns/api/campaignsApi";
 import type { ReactivationSection } from "./reactivationLink";
@@ -43,6 +43,8 @@ export function ReactivationCampaignSettings({ campaign, onSave, readOnly, compa
   const status = String(detail.draft.status || campaign.status || "Draft");
   const isActive = status.toLowerCase() === "active";
   const [checking, setChecking] = useState(false);
+  // The sections read account_id (the row comes with db keys).
+  const row = useMemo(() => ({ ...campaign, account_id: (campaign as any).account_id ?? (campaign as any).Accounts_id }), [campaign]);
 
   // Same rule as the Campaigns page: activation is blocked while a critical
   // launch check fails (the server refuses it too), so the switch never shows
@@ -107,18 +109,13 @@ export function ReactivationCampaignSettings({ campaign, onSave, readOnly, compa
         </div>
       </div>
 
-      <CampaignStageEditor
-        campaign={campaign}
-        isEditing={!readOnly}
-        draft={detail.draft}
-        setDraft={detail.setDraft}
-        applyGeneratedFields={detail.applyGeneratedFields}
-        linkedPrompt={detail.linkedPrompt}
-        conversationPrompts={detail.conversationPrompts}
-        linkedContract={detail.linkedContract}
-        compact={compact}
-        focusField={detail.focusField}
-        onStartEditField={detail.startEditForField}
+      <ReactivationSections
+        key={campaignId}
+        campaign={row}
+        detail={detail}
+        canEdit={!readOnly}
+        stacked={compact}
+        status={tc(`statusLabels.${status}`, status)}
         initialSection={initialSection}
       />
     </div>

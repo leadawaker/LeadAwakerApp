@@ -7,7 +7,6 @@ import {
   Clock, Check, RefreshCw, Info, AlertCircle, Target, ShieldQuestion, ArrowRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { ListPanelState } from "@/hooks/useListPanelState";
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from "@/components/ui/popover";
@@ -174,7 +173,6 @@ export interface DesktopCalendarProps {
   onCancelCall: (apptId: number) => Promise<void>;
   narrow?: boolean;
   // panel fold (left agenda) + popup detail mode — injected by composition root
-  leftPanelState?: ListPanelState;
   showClose?: boolean;
   // ultra-wide (>= 1700px): week + month shown side by side, toggle hidden
   ultra?: boolean;

@@ -1,0 +1,218 @@
+{
+  "rail": {
+    "overview": {
+      "label": "Overview",
+      "help": "What this campaign sends, to whom and when. Click a line to change it."
+    },
+    "opener": {
+      "label": "First message",
+      "help": "The first message every lead gets, and how it introduces the assistant."
+    },
+    "followups": {
+      "label": "Follow-ups",
+      "help": "The nudges a lead gets when they do not reply."
+    },
+    "behaviour": {
+      "label": "Behaviour",
+      "help": "Who the assistant is and how it writes once a lead replies."
+    },
+    "prompt": {
+      "label": "Prompt",
+      "help": "The conversation prompt this campaign runs."
+    },
+    "knowledge": {
+      "label": "Knowledge",
+      "help": "What the assistant knows about the business and about these leads."
+    },
+    "sending": {
+      "label": "Channel & schedule",
+      "help": "WhatsApp or SMS, and when and how fast messages go out."
+    },
+    "advanced": {
+      "label": "Advanced",
+      "help": "Engine settings for the agency. Most campaigns never need these."
+    }
+  },
+  "state": {
+    "notWritten": "Not written yet",
+    "followupsOff": "No follow-ups",
+    "followups": "{{count}} follow-ups",
+    "followups_one": "1 follow-up",
+    "followups_other": "{{count}} follow-ups",
+    "noPrompt": "No prompt picked",
+    "noBookingLink": "No booking link",
+    "withBookingLink": "Booking link set",
+    "noKb": "No business info yet",
+    "unnamed": "No name yet"
+  },
+  "overview": {
+    "title": "This campaign at a glance",
+    "status": "Status",
+    "channel": "Channel",
+    "opener": "First message",
+    "followups": "Follow-ups",
+    "window": "Sending window",
+    "windowValue": "{{start}} to {{end}}, up to {{limit}} new leads a day",
+    "assistant": "Assistant",
+    "booking": "Booking link",
+    "prompt": "Prompt",
+    "notSet": "Not set",
+    "range": "{{start}} to {{end}}"
+  },
+  "opener": {
+    "messageTitle": "First message",
+    "messageHelp": "Click the preview to edit. Words in braces such as {first_name} are filled in per lead. The template button offers ready-made openers.",
+    "label": "Message",
+    "extrasTitle": "Extras",
+    "voiceNote": "Send it as a voice note",
+    "voiceNoteHelp": "On WhatsApp the first message goes out as a spoken voice note. Needs voice replies switched on under Behaviour.",
+    "optOut": "Add an opt-out line",
+    "optOutHelp": "Adds a short \"reply STOP to stop\" line under the first message. Expected for SMS in the US."
+  },
+  "followups": {
+    "countTitle": "How many",
+    "countHelp": "Each follow-up goes out only if the lead has not replied yet. When the last one gets no answer, the lead is marked lost.",
+    "count": "Follow-ups",
+    "none": "None",
+    "bump": "Follow-up {{n}}",
+    "delay": "Wait",
+    "delayUnit": "hours after the previous message",
+    "message": "Message",
+    "messagePlaceholder": "What this follow-up says. Left empty, this follow-up is skipped.",
+    "angle": "Angle for the AI",
+    "anglePlaceholder": "e.g. Mention that the spring schedule is filling up. Leave empty for the default.",
+    "voiceNote": "Voice note",
+    "howTitle": "How they are written",
+    "aiBumps": "Let the AI write the follow-ups",
+    "aiBumpsHelp": "For leads who already replied, the AI writes each follow-up from the conversation and the angle given. Leads who never replied get the message text.",
+    "stopOnResponse": "Stop following up once the lead replies",
+    "stopOnResponseHelp": "Recommended. When off, the follow-ups keep their schedule even after a reply.",
+    "laterTitle": "When a lead asks to be contacted later",
+    "laterHelp": "Sent on the day the lead asked for (\"try me again in March\"). The AI writes it from the conversation; this text is the backup when it cannot.",
+    "laterPlaceholder": "Hi {first_name}, you asked me to get back to you around now..."
+  },
+  "behaviour": {
+    "whoTitle": "Who is writing",
+    "agentName": "Assistant name",
+    "agentNameHelp": "The first name the assistant signs with.",
+    "language": "Language",
+    "languageHelp": "The language the messages go out in.",
+    "languages": {
+      "en": "English",
+      "nl": "Dutch",
+      "pt": "Portuguese (Brazil)"
+    },
+    "tone": "Tone",
+    "toneHelp": "How it writes, in your own words.",
+    "tonePlaceholder": "e.g. Warm and brief, like a colleague who remembers them.",
+    "howTitle": "How it replies",
+    "replies": "Messages per reply",
+    "repliesHelp": "Up to how many short messages it may send in a row, like a person typing.",
+    "voice": "Voice replies",
+    "voiceHelp": "Whether it may answer with voice notes on WhatsApp.",
+    "voiceModes": {
+      "off": "Off",
+      "smart": "When the lead sends one",
+      "voice_reply": "Always"
+    },
+    "objectionsTitle": "Objections",
+    "objectionsHelp": "Answers you approved for the pushback these leads give most. The assistant uses them in its own words."
+  },
+  "knowledge": {
+    "businessTitle": "The business",
+    "company": "Business name",
+    "companyHelp": "How the assistant names the business in messages.",
+    "description": "What the business does",
+    "descriptionHelp": "A few lines the assistant can rely on.",
+    "service": "Service",
+    "serviceHelp": "What these leads once asked about.",
+    "kb": "Knowledge",
+    "kbHelp": "Prices, areas, opening hours, FAQs: anything the assistant may need to answer.",
+    "accountKb": "Also use the account's Company Intel",
+    "accountKbHelp": "Adds the knowledge saved for the whole account (shared with the receptionist).",
+    "bookingLink": "Booking link",
+    "bookingLinkHelp": "Where a lead books. Each lead gets their own short link to it.",
+    "leadsTitle": "About these leads",
+    "leadContext": "What the assistant knows about them",
+    "leadContextHelp": "e.g. They asked for a quote last year and never booked. A per-lead note on the lead overrides this.",
+    "whatLeadDid": "What they did",
+    "whatLeadDidHelp": "Their last step with the business.",
+    "when": "When",
+    "whenHelp": "Roughly when that was, e.g. last spring."
+  },
+  "sending": {
+    "channelTitle": "Channel",
+    "channelHelp": "How the messages reach the leads. Replies come back on the same channel and the assistant answers them.",
+    "channels": {
+      "whatsapp_sms": {
+        "label": "WhatsApp, SMS as fallback",
+        "help": "Sends on WhatsApp. When a number is not on WhatsApp, or WhatsApp refuses a message, it goes out as an SMS instead."
+      },
+      "whatsapp": {
+        "label": "WhatsApp only",
+        "help": "Never sends an SMS. Leads who are not on WhatsApp are not reached."
+      },
+      "sms": {
+        "label": "SMS",
+        "help": "Text messages only, for markets where SMS is the norm such as the US."
+      }
+    },
+    "smsNote": "SMS goes out from the account's Twilio number. In the US that number must be registered for business texting (A2P 10DLC) first.",
+    "templateTitle": "WhatsApp template",
+    "template": "Approved template for the first message",
+    "templateHelp": "WhatsApp only lets a business start a chat with an approved template. Without one, the first message goes out as an SMS (with SMS fallback) or is not sent (WhatsApp only).",
+    "vcard": "Contact card name",
+    "vcardHelp": "The name on the contact card the lead can save. Empty uses the assistant and business name.",
+    "scheduleTitle": "Schedule",
+    "hours": "Sending hours",
+    "hoursHelp": "Messages only go out between these times.",
+    "to": "to",
+    "dailyLimit": "New leads a day",
+    "dailyLimitHelp": "How many leads get their first message per day.",
+    "interval": "Minutes between first messages",
+    "intervalHelp": "Spreads the sending out so it looks natural and protects the number."
+  },
+  "advanced": {
+    "modelTitle": "Model",
+    "model": "AI model",
+    "modelDefault": "Default",
+    "role": "Role",
+    "roleHelp": "One line on the assistant's job, used in the prompt.",
+    "conversationTitle": "Conversation",
+    "conversationMode": "Conversation type",
+    "conversationModeHelp": "Scoping asks what the lead needs. Decision follows up on a quote they already have. Auto picks per lead.",
+    "conversationModes": {
+      "auto": "Auto",
+      "scoping": "Scoping",
+      "decision": "Decision (quote on file)"
+    },
+    "bookingMode": "Booking",
+    "bookingModeHelp": "Book a sales call, or book the job directly.",
+    "bookingModes": {
+      "unset": "Default",
+      "Sales Call": "Sales call",
+      "Direct Booking": "Direct booking",
+      "Call Agent": "Alert a person",
+      "Qualifying": "Qualify only"
+    },
+    "typos": "Typos per conversation",
+    "typosHelp": "A few small typos make the messages read human.",
+    "timingTitle": "Reply timing",
+    "textDelay": "Wait after a text",
+    "textDelayHelp": "Seconds the assistant waits for more messages before it answers.",
+    "voiceDelay": "Wait after a voice note",
+    "voiceDelayHelp": "The same, after a voice note.",
+    "seconds": "{{n}} s",
+    "abTitle": "A/B test",
+    "ab": "Run an A/B test",
+    "abHelp": "Splits the leads between prompt A and prompt B.",
+    "abSplit": "Share on A (%)",
+    "legacyTitle": "Prompt variables",
+    "legacyHelp": "Older fields some prompts still read as {variables}. Leave them empty unless the prompt uses them.",
+    "niche": "Niche",
+    "nicheHelp": "Picks the trade words such as {project}.",
+    "nicheQuestion": "Niche question",
+    "firstTouch": "First touch",
+    "usp": "Unique selling point"
+  }
+}

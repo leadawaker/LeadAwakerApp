@@ -10,8 +10,6 @@ export const VOICE_LINES = ["landline", "mobile"] as const;
 export const FORWARD_WHEN = ["noAnswer", "busy", "unreachable", "always"] as const;
 export const RING_WHEN = ["anytime", "hours", "never"] as const;
 export const AFTER_HOURS = ["message", "callback", "ringHot"] as const;
-export const WA_NUMBER_CHOICE = ["new", "existing"] as const;
-export const WA_APP_TYPE = ["business", "personal", "unknown"] as const;
 
 // The voices the phone receptionist can use: mirrors FEMININE_VOICES and
 // MASCULINE_VOICES in the engine's live_session_config.py, same order. OpenAI
@@ -141,8 +139,5 @@ export const SERVICE_STEPS: Partial<Record<ServiceKey, StepDef[]>> = {
     { key: "voiceAfterHours", kind: "custom", section: "voice" },
   ],
   widget: [{ key: "widgetSetup", kind: "custom", section: "widget" }],
-  whatsapp: [
-    { key: "whatsappNumber", kind: "custom", section: "whatsapp" },
-    { key: "whatsappConnect", kind: "custom", section: "whatsapp" },
-  ],
+  whatsapp: [{ key: "whatsappConnect", kind: "custom", section: "whatsapp" }],
 };

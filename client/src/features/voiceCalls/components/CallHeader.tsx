@@ -10,8 +10,8 @@ import { HubspotPushButton } from "./HubspotPushButton";
 import { OutcomePill } from "./OutcomePill";
 
 /**
- * The one header above the transcript: who, how the selected call ended, when,
- * how long. On the right: the caller actions (Callers view).
+ * The top of the lead panel: who, how the selected call ended, when, how long,
+ * then the caller actions (Callers view).
  */
 export function CallHeader({ call, narrow, caller }: { call: VoiceCallDetail; narrow: boolean; caller?: CallerContext }) {
   const { t, i18n } = useTranslation("voiceCalls");
@@ -19,29 +19,33 @@ export function CallHeader({ call, narrow, caller }: { call: VoiceCallDetail; na
   const status = caller ? callerStatus(caller.caller) : callStatus(call);
   const phone = who.callerName && who.callerNumber ? who.callerNumber : null;
 
-  return (
-    <div className="neu-raised" data-testid="voice-call-header" style={{ borderRadius: "var(--r-card)", background: "var(--card)", flexShrink: 0, padding: narrow ? "12px 14px" : "12px 18px", display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
-      <CallAvatar ini={callerIni(who, t("webCaller"))} status={status} size={42} radius={13} />
-      <div style={{ flex: "1 1 240px", minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
-          <span style={{ fontFamily: "var(--serif)", fontSize: narrow ? 20 : 22, color: "var(--ink)", lineHeight: 1.1, letterSpacing: "-0.01em", overflowWrap: "anywhere" }}>
-            {callerTitle(who, t("webCaller"))}
-          </span>
-          <OutcomePill outcome={call.outcome} bookedSlot={call.bookedSlot} bookedIso={call.bookedIso} />
-        </div>
-        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginTop: 4, fontSize: 12, color: "var(--mute)" }}>
-          {phone && <span style={{ fontFamily: "var(--mono)" }}>{phone}</span>}
-          <span>{formatDateTime(call.startedAt, i18n.language)}</span>
-          <span>{formatDuration(call.durationSeconds)}</span>
-        </div>
+  const identity = (
+    <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 12 }}>
+      <CallAvatar ini={callerIni(who, t("webCaller"))} status={status} size={56} />
+      <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 4 }}>
+        <span style={{ fontFamily: "var(--serif)", fontSize: narrow ? 20 : 22, color: "var(--ink)", lineHeight: 1.1, letterSpacing: "-0.01em", overflowWrap: "anywhere" }}>
+          {callerTitle(who, t("webCaller"))}
+        </span>
+        <OutcomePill outcome={call.outcome} bookedSlot={call.bookedSlot} bookedIso={call.bookedIso} />
       </div>
-      {caller && (
-        <div data-testid="voice-caller-header" style={{ display: "flex", alignItems: "flex-start", gap: 10, flexWrap: "wrap", minWidth: 0 }}>
-          <CallBackButton caller={caller.rawCaller} align={narrow ? "start" : "end"} />
-          {/* The HubSpot push is a demo of the CRM handoff: Demo calls only. */}
-          {caller.isOwner && call.scope === "demo" && <HubspotPushButton caller={caller.rawCaller} />}
-        </div>
-      )}
+    </div>
+  );
+
+  return (
+    <div data-testid="voice-call-header" style={{ padding: narrow ? "12px 14px" : "16px 16px 14px", display: "flex", flexDirection: "column", gap: 10 }}>
+      {caller ? (
+        <CallBackButton
+          caller={caller.rawCaller}
+          before={identity}
+          // The HubSpot push is a demo of the CRM handoff: Demo calls only.
+          after={caller.isOwner && call.scope === "demo" ? <HubspotPushButton caller={caller.rawCaller} /> : null}
+        />
+      ) : identity}
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", fontSize: 12, color: "var(--mute)" }}>
+        {phone && <span style={{ fontFamily: "var(--mono)" }}>{phone}</span>}
+        <span>{formatDateTime(call.startedAt, i18n.language)}</span>
+        <span>{formatDuration(call.durationSeconds)}</span>
+      </div>
     </div>
   );
 }

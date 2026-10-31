@@ -147,8 +147,8 @@ export function ClientsTab({
           <div className="dp-list-inner">
             {isLoading ? (
               <>
-                <div className="h-[168px] bg-primary/10 rounded-xl animate-pulse" />
-                {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-[220px] bg-primary/10 rounded-xl animate-pulse" />)}
+                <div className="h-[168px] neu-raised bg-card rounded-[var(--r-card)] animate-pulse" />
+                {Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-[220px] neu-raised bg-card rounded-[var(--r-card)] animate-pulse" />)}
               </>
             ) : all.length === 0 ? (
               <>
@@ -157,6 +157,8 @@ export function ClientsTab({
               </>
             ) : (
               <>
+                {/* Demos: the same spot with a demo open or closed, at the top of the list. */}
+                {view && <div className="dp-group-switch"><GroupBySwitch value={groupBy} onChange={setGroupBy} /></div>}
                 <ClientsHero clients={all} categories={categoryCount} />
 
                 {!view && (

@@ -3,7 +3,7 @@
  * "Prompt & test" section (specs/call-costs follow-up, 2026-10-15).
  *
  * Which row a call uses is the engine's choice, mirrored here:
- * - Voice layer: the active `voice_layer_{locale}` row, newest updated_at first
+ * - Voice layer: the active `voice_lean_layer_{locale}` row, newest updated_at first
  *   (engine voice_prompt_store.refresh).
  * - Backend: `voice_receptionist_demo[_{lang}]`, campaign 60 first, else
  *   account 52, newest created_at first, NULLs first like Postgres DESC
@@ -31,7 +31,8 @@ export interface VoicePromptRow {
 
 export interface AccountVoicePrompts {
   locale: string;
-  layer: VoicePromptRow | null;
+  /** The voice layer calls run on (`voice_lean_layer_{locale}`). */
+  lean: VoicePromptRow | null;
   backend: VoicePromptRow | null;
   /** The ElevenLabs prompt (`eleven_layer_{nl|en|pt}`), shared by every ElevenLabs line in that language. */
   eleven: VoicePromptRow | null;
@@ -50,9 +51,9 @@ function toRow(r: typeof promptLibrary.$inferSelect | undefined): VoicePromptRow
 
 const active = sql`lower(${promptLibrary.status}) = 'active'`;
 
-async function layerRow(locale: string) {
+async function leanRow(locale: string) {
   const [r] = await db.select().from(promptLibrary)
-    .where(and(eq(promptLibrary.useCase, `voice_layer_${locale}`), active))
+    .where(and(eq(promptLibrary.useCase, `voice_lean_layer_${locale}`), active))
     .orderBy(sql`${promptLibrary.updatedAt} DESC NULLS LAST`, desc(promptLibrary.id))
     .limit(1);
   return toRow(r);
@@ -96,8 +97,8 @@ async function elevenRow(locale: string) {
 }
 
 async function getAccountVoicePrompts(locale: string): Promise<AccountVoicePrompts> {
-  const [layer, backend, eleven] = await Promise.all([layerRow(locale), backendRow(locale), elevenRow(locale)]);
-  return { locale, layer, backend, eleven };
+  const [lean, backend, eleven] = await Promise.all([leanRow(locale), backendRow(locale), elevenRow(locale)]);
+  return { locale, lean, backend, eleven };
 }
 
 /**

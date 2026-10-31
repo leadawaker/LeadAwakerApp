@@ -11,7 +11,6 @@ import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { useBookingCallId, useVoiceCall } from "@/features/voiceCalls/api/voiceCallsApi";
 import { CallSummary } from "@/features/voiceCalls/components/CallRecap";
 import { CallConversation } from "@/features/voiceCalls/components/CallConversation";
-import { ScoreArcDonut } from "@/features/leads/components/cardView/atoms";
 import { AiSummaryView } from "@/components/crm/AiSummaryView";
 import type { Appointment } from "../lib/calendarDesign";
 import { HEADER_H, statusMetaOf, kindLabelOf, channelOf, endClockOf } from "../lib/calendarDesign";
@@ -124,12 +123,6 @@ function ChatBookingBody({ p, ev }: { p: DesktopCalendarProps; ev: Appointment }
         {bookedBy && <Fact icon={<MessageSquare className="h-3.5 w-3.5" />} label={t("design.detail.bookedBy")} value={t(`design.detail.${bookedBy}`)} />}
         <Fact icon={<Phone className="h-3.5 w-3.5" />} label={t("design.detail.phone")} value={ev.phone || "–"} />
         <Fact icon={<Mail className="h-3.5 w-3.5" />} label={t("design.detail.email")} value={ev.email || "–"} />
-        {p.isAgencyUser && (
-          <div>
-            <div style={{ ...MONO, fontSize: 8.5, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", marginBottom: 5 }}>{t("design.detail.leadScore")}</div>
-            {ev.leadScore > 0 ? <ScoreArcDonut score={ev.leadScore} /> : <span style={{ fontSize: 12, color: "var(--mute-2)" }}>–</span>}
-          </div>
-        )}
       </div>
 
       <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "14px 16px 16px", flexShrink: 0 }}>

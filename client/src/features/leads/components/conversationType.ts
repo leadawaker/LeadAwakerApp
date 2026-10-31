@@ -2,7 +2,7 @@
 // There is no dedicated DB field, so it is derived from the lead's channel
 // prefix / source and its campaign's service type (verified against live data).
 //   widget   = website chat widget   voice = AI voice receptionist
-//   dbr      = DBR reactivation + speed-to-lead quotes (one bucket on purpose)
+//   dbr      = DBR reactivation (Speed to Lead is the receptionist on WhatsApp: "other")
 //   instagram = Instagram comment-to-DM (the demo, and live leads with an ig: channel)
 // Website chats win over the campaign: receptionist and demo campaigns carry the DB's default
 // campaign_type "reactivation", so the campaign alone would file a website visitor as dbr.
@@ -37,6 +37,6 @@ export function getConversationType(
   if (/^web-demo:/.test(channel)) return "widget";
   // A receptionist campaign answers inbound chats and calls: never a reactivation run.
   if (cId && campaignsById?.get(cId)?.bumpMode === "receptionist") return "other";
-  if (campaignType === "reactivation" || campaignType === "speed_to_lead") return "dbr";
+  if (campaignType === "reactivation") return "dbr";
   return "other";
 }

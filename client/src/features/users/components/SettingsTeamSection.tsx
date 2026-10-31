@@ -777,7 +777,7 @@ export function SettingsTeamSection({ isUltrawide = false }: { isUltrawide?: boo
         {/* Split: cards (left) + detail (right, raised white panel) */}
         <div className="flex flex-1 min-h-0 gap-4">
           {/* Cards — left side (shared toolbar/list-panel pattern) */}
-          <div className="w-[var(--toolbar-w)] shrink-0 flex flex-col min-h-0 overflow-hidden bg-panel-list-bg border-r border-[var(--line)]">
+          <div className="la-list-panel w-[var(--toolbar-w)] shrink-0 flex flex-col min-h-0 overflow-hidden bg-panel-list-bg border-r border-[var(--line)]">
             <div className="la-list-area">
               <UsersCardGrid
                 flatItems={flatItems}

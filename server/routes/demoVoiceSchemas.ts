@@ -43,8 +43,8 @@ export const voiceSettingsSchema = z.object({
   // demo from your own phone always starts fresh. Stored as E.164 (see
   // FORGET_COUNTRIES): the engine compares them with the caller's number.
   forgetNumbers: z.array(z.string().trim().min(1).max(30)).max(20).optional(),
-  // Engine tests: a tester's own phone number gets this engine (GPT-Live,
-  // Grok or ElevenLabs), voice, prompt variant and reasoning on a conference-route line;
+  // Engine tests: a tester's own phone number gets this engine (GPT-Live or
+  // ElevenLabs) and voice on a conference-route line;
   // every other caller keeps the line's setup. Read per call by the engine
   // (src/automations/voice/voice_engines.py), which ignores a voice id the
   // chosen engine does not have. Stored as E.164, like forgetNumbers.
@@ -52,10 +52,8 @@ export const voiceSettingsSchema = z.object({
     number: z.string().trim().min(1).max(30),
     label: z.string().trim().max(40).optional(),
     enabled: z.boolean().optional(),
-    engine: z.enum(["gpt-live", "xai", "elevenlabs"]),
+    engine: z.enum(["gpt-live", "elevenlabs"]),
     voice: z.string().trim().max(40).optional(),
-    prompt: z.enum(["standard", "lean"]).optional(),
-    reasoning: z.enum(["high", "none"]).optional(),
     // Memory off, any engine: the call is heard as a first-time caller's (no
     // memory, stored language or appointment; the booking tools see no booking)
     // and writes no name or language back. Bookings still land on the lead.
@@ -65,6 +63,7 @@ export const voiceSettingsSchema = z.object({
   // alike (engine demo_settings.demo_engines; a missing locale keeps its
   // default). Demo phone calls stay on ElevenLabs.
   engines: z.record(z.enum(ELEVEN_DEMO_LOCALES), z.enum(DEMO_ENGINES)).optional(),
+  // The GPT-Live voice layer per demo locale (engine demo_settings.demo_wants_lean); missing = lean.
   // The ElevenLabs voice per demo locale; an empty pick is removed (the
   // locale's female default then answers).
   elevenVoices: z.record(z.enum(ELEVEN_DEMO_LOCALES), z.string().trim().max(40)).optional(),
@@ -76,8 +75,6 @@ export const voiceSettingsSchema = z.object({
   callMeStyle: z.enum(["handoff", "barge", "conference"]).optional(),
   // Telnyx's jitter buffer on the browser line (engine demo_browser.BROWSER_JITTER).
   browserJitter: z.enum(["off", "standard", "large"]).optional(),
-  // Sara's GPT-Live leg through the jitter-buffer route number (engine demo_sara_route.py).
-  saraJitter: z.enum(["off", "standard", "large"]).optional(),
 });
 export type VoiceSettingsInput = z.infer<typeof voiceSettingsSchema>;
 

@@ -4,26 +4,15 @@
       "Edit",
       "Write",
       "Bash(node:*)",
-      "Bash(npx tsc:*)",
       "Bash(npx playwright-cli:*)",
-      "Bash(dpkg:*)",
-      "Bash(sudo apt-get:*)",
-      "Bash(npx vite build:*)",
       "Bash(lsof:*)",
       "Read(//tmp/**)",
-      "Bash(pkill:*)",
       "Bash(nginx -t:*)",
       "Bash(caddy version:*)",
       "Bash(python3:*)",
       "Bash(python:*)",
-      "Bash(npm run dev:*)",
       "Bash(git:*)",
-      "Bash(rm:*)",
-      "Bash(mkdir:*)",
-      "Bash(sudo -u postgres psql:*)"
-    ],
-    "additionalDirectories": [
-      "/config/workspace/LeadAwakerApp"
+      "Bash(mkdir:*)"
     ]
   },
   "hooks": {

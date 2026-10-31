@@ -177,7 +177,7 @@ export function ContractDetailView({
   const [swSending,     setSwSending]     = useState(false);
   const [swSigningUrl,  setSwSigningUrl]  = useState<string | null>(null);
   const [swUrlCopied,   setSwUrlCopied]   = useState(false);
-  const [swTestMode,    setSwTestMode]    = useState(true);   // flip to false for real sends
+  const [swTestMode,    setSwTestMode]    = useState(false);
 
   // ── Upload state ──────────────────────────────────────────────────────────
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -479,7 +479,7 @@ export function ContractDetailView({
                     <Link className="h-3.5 w-3.5 shrink-0" />
                     {sending ? t("contracts.actions.sending") : t("contracts.actions.markSent")}
                   </button>
-                  {contract.contract_text && (
+                  {(contract.contract_text || contract.file_data) && (
                     <button onClick={() => setSwDialogOpen(v => !v)} className={`la-btn gap-1.5 ${swDialogOpen ? "la-btn--wine" : "la-btn--soft"}`}>
                       <Send className="h-3.5 w-3.5 shrink-0" />
                       {t("contracts.signwell.sendViaSignWell")}

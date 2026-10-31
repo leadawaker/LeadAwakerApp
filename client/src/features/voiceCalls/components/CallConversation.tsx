@@ -34,7 +34,7 @@ export function CallConversation({ call }: { call: VoiceCallDetail }) {
   const hasPlayer = audio.status === "ready";
 
   const duration = audio.duration || state.duration || call.durationSeconds || 0;
-  // A Grok recording starts once the caller is in, after the call opened.
+  // A recording Telnyx made (the Grok test calls of 2026-10-22) starts once the caller is in, after the call opened.
   const t0 = call.recordingStartedAt ?? call.startedAt;
   const times = useMemo(
     () => (audio.status === "ready" ? turnTimes(call.turns, t0, audio.caller, audio.ai, duration) : null),

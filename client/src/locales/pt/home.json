@@ -152,7 +152,8 @@
   "cards": {
     "noTrend": "Ainda sem comparação",
     "phone": {
-      "main": "Ligações atendidas"
+      "main": "Ligações atendidas",
+      "minutes": "Minutos"
     },
     "whatsapp": {
       "main": "Conversas"

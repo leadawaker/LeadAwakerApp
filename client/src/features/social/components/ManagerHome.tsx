@@ -13,7 +13,7 @@ import { managerHome, studioErrorKey } from "../lib/studio";
 import { PostCard } from "./PostCard";
 import { TopicComposer } from "./studio/TopicComposer";
 
-const card: React.CSSProperties = { borderRadius: "var(--r-card)", background: "var(--bone)", padding: "16px 16px", display: "flex", flexDirection: "column", gap: 12 };
+const card: React.CSSProperties = { borderRadius: "var(--r-card)", background: "var(--card)", padding: "16px 16px", display: "flex", flexDirection: "column", gap: 12 };
 const h: React.CSSProperties = { margin: 0, fontSize: 15, fontWeight: 700, color: "var(--ink)" };
 /** Phone tap target for the answer buttons. */
 const touch: React.CSSProperties = { minHeight: 40, padding: "10px 16px" };

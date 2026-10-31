@@ -152,12 +152,12 @@
 .la-camp-card:hover { background: var(--wine-tint); }
 .la-camp-card.active,
 .la-camp-card.active:hover {
-  /* White, not the warm-cream --surface: the selected card should read as
-     visibly "lifted paper" against the page, easy to spot in a long list. */
-  background: var(--card);
-  box-shadow: var(--sh-raised-crisp);
+  /* Raised, wine outline, a light wine tint: easy to spot in a long list. */
+  background: var(--list-selected);
+  box-shadow: var(--list-selected-shadow);
 }
 .la-camp-card.active::before {
+  display: none;
   content: '';
   position: absolute;
   left: 0;
@@ -220,13 +220,14 @@
 /* Selected: z-index lifts the shadow above the next (opaque) row. */
 .la-cards--flat .la-camp-card.active,
 .la-cards--flat .la-camp-card.active:hover {
-  background: var(--card);
-  box-shadow: var(--sh-raised-crisp);
+  background: var(--list-selected);
+  box-shadow: var(--list-selected-shadow);
   z-index: 2;
 }
-.la-cards--flat .la-lead-swipe.is-active { box-shadow: var(--sh-raised-crisp); z-index: 2; }
-.la-cards--flat .la-lead-swipe .la-camp-card.active { box-shadow: none; }
-/* The selected row keeps the small wine bar at its left edge (.la-camp-card.active::before), Calls and Chats alike. */
+.la-cards--flat .la-lead-swipe.is-active { box-shadow: none; z-index: 2; }
+.la-cards--flat .la-lead-swipe .la-camp-card.active { box-shadow: var(--list-selected-shadow); }
+/* Phones: the swipe wrapper cuts the card's edge, so the tint alone marks the row. */
+@media (max-width: 767px) { .la-cards--flat .la-lead-swipe .la-camp-card.active { box-shadow: none; } }
 /* Breathing room for the selected row's lift: --sh-raised-crisp reaches ~13px past the card, so the flat
    list pads itself instead of letting the scroll container (.la-list-area, overflow-y: auto) crop the shadow.
    With the list padding (6px 8px 8px) and the 4px row inset this leaves ~14px on every side. */

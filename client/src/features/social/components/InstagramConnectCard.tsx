@@ -16,7 +16,7 @@ import { canActOnSocial, connectCardMode } from "../lib/socialState";
 import { socialPageLink } from "@shared/socialStudio";
 import { setPersistedSelection } from "@/hooks/usePersistedSelection";
 
-const cardStyle: React.CSSProperties = { borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" };
+const cardStyle: React.CSSProperties = { borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--card)" };
 const lineStyle: React.CSSProperties = { fontSize: 12.5, color: "var(--mute)", lineHeight: 1.5, margin: 0 };
 
 export function useSocialStatus(accountId: number) {

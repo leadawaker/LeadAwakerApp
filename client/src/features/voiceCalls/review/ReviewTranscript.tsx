@@ -39,11 +39,15 @@ export interface ReviewTranscriptProps {
   fill?: boolean;
   /** Keep the playing line in view (default true). */
   follow?: boolean;
+  /** While the recording plays: the line playing now stands out, the rest fades. */
+  focus?: boolean;
   onUserScroll?: () => void;
 }
 
+const FADED = { opacity: 0.42, transition: "opacity 200ms" } as const;
+
 export function ReviewTranscript({
-  turns, tools, currentS, onSeek, column, processing = false, query = "", speakers, extras, fill = false, follow = true, onUserScroll,
+  turns, tools, currentS, onSeek, column, processing = false, query = "", speakers, extras, fill = false, follow = true, focus = false, onUserScroll,
 }: ReviewTranscriptProps) {
   const { t } = useTranslation("voiceTab");
   const listRef = useRef<HTMLDivElement>(null);
@@ -57,6 +61,7 @@ export function ReviewTranscript({
 
   const active = activeTurnIndex(turns, currentS);
   const activeI = active >= 0 ? turns[active].i : null;
+  const fading = focus && activeI !== null;
 
   // Keep the playing line in view by scrolling the list only.
   useEffect(() => {
@@ -85,19 +90,21 @@ export function ReviewTranscript({
       {items.map((item) => {
         if (item.kind === "tool") {
           const slot = item.tool;
-          if (slot.extra) return <div key={`extra-${slot.extra.key}`}>{slot.extra.node}</div>;
+          if (slot.extra) return <div key={`extra-${slot.extra.key}`} style={fading ? FADED : undefined}>{slot.extra.node}</div>;
           const x = slot.tool as ReviewTool;
           return (
-            <ToolLine key={`tool-${item.key}`} onClick={() => onSeek(x.atS)} detail={detailOf(x)}
-              tool={{ name: x.name, result: x.result, ms: x.ms, title: [x.args, x.result].filter(Boolean).join("\n") || undefined }}
-              lead={<span style={label}>{formatTime(x.atS)}</span>} />
+            <div key={`tool-${item.key}`} style={fading ? FADED : undefined}>
+              <ToolLine onClick={() => onSeek(x.atS)} detail={detailOf(x)}
+                tool={{ name: x.name, result: x.result, ms: x.ms, title: [x.args, x.result].filter(Boolean).join("\n") || undefined }}
+                lead={<span style={label}>{formatTime(x.atS)}</span>} />
+            </div>
           );
         }
         const turn = item.turn;
         return (
           <TranscriptBubble key={`turn-${turn.i}`} role={turn.role} text={query ? highlight(turn.text, query) : turn.text} delayMs={turn.delayMs}
             speaker={speakers ? speakers[turn.role] : undefined}
-            time={formatTime(turn.atS)} active={turn.i === activeI} dataTurn={turn.i} onClick={() => onSeek(turn.atS)}
+            time={formatTime(turn.atS)} active={turn.i === activeI} faded={fading && turn.i !== activeI} dataTurn={turn.i} onClick={() => onSeek(turn.atS)}
             title={t("test.panel.review.seekTo", { time: formatTime(turn.atS) })} />
         );
       })}

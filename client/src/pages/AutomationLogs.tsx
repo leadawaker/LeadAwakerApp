@@ -98,7 +98,7 @@ export default function AutomationLogsPage() {
           {!panelOnly && (
             // The category menu sticks 20px under the top of this scroller, level with its padding (SectionLayout adds 32px).
             <div className="min-h-0 overflow-y-auto" style={{ flex: 1, minWidth: 0, ["--ws-sticky-top" as string]: "-12px" }}>
-              <div style={{ maxWidth: 1386, padding: isMobile ? "14px 12px 32px" : "20px 24px 40px", display: "flex", flexDirection: "column", gap: 18 }}>
+              <div style={{ width: "100%", maxWidth: 1386, margin: "0 auto", padding: isMobile ? "14px 12px 32px" : "20px 24px 40px", display: "flex", flexDirection: "column", gap: 18 }}>
                 {q.error ? (
                   <ApiErrorFallback error={q.error as Error} onRetry={() => q.refetch()} />
                 ) : q.isLoading ? (

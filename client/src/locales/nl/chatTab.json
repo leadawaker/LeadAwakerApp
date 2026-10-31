@@ -28,6 +28,10 @@
       "label": "Gedrag",
       "help": "Wie de assistent is, hoe hij schrijft en wanneer een mens het overneemt."
     },
+    "prompt": {
+      "label": "Prompt",
+      "help": "De prompt die de assistent in elke chat volgt. Kies een andere uit de bibliotheek of pas deze aan."
+    },
     "knowledge": {
       "label": "Kennis",
       "help": "Wat de assistent weet over het bedrijf en waar hij afspraken maakt.",
@@ -194,5 +198,48 @@
     "stopOnResponseHelp": "Wist de volgende geplande opvolging zodra er een antwoord binnenkomt.",
     "objectionsTitle": "Bezwaren-script",
     "objectionsHelp": "Tot vijf bezwaren, elk met het antwoord dat het bedrijf goedkeurt. De assistent gebruikt deze antwoorden in plaats van er zelf een te verzinnen."
+  },
+  "prompt": {
+    "none": "Geen prompt gekozen",
+    "pickTitle": "Prompt in gebruik",
+    "pickHelp": "De chatassistent volgt deze prompt uit de bibliotheek. Een andere kiezen werkt vanaf het volgende bericht.",
+    "inUse": "Prompt",
+    "noneHelp": "Geen prompt gekozen: de chats gebruiken de prompt van het account of de standaardprompt.",
+    "alsoUsedBy": "Ook gebruikt door: {{names}}. Wijzigingen hier gelden ook voor hen. Maak een kopie om hem alleen voor dit account te wijzigen.",
+    "copy": "Kopie maken voor dit account",
+    "copyFailed": "De kopie kon niet worden gemaakt. Probeer het opnieuw.",
+    "copyNote": "Gekopieerd van prompt #{{id}} in Chats > Instellingen.",
+    "openLibrary": "#{{id}} openen in de Promptbibliotheek",
+    "versionLabel": "Voor een wijziging in Chats > Instellingen ({{campaign}})",
+    "pickHelpDemo": "Deze demo volgt deze prompt uit de bibliotheek. Een andere kiezen werkt vanaf het volgende bericht.",
+    "alsoUsedByDemo": "Ook gebruikt door: {{names}}. Wijzigingen hier gelden ook voor hen. Maak een kopie om hem alleen voor deze demo te wijzigen.",
+    "copyDemo": "Kopie maken voor deze demo"
+  },
+  "channels": {
+    "label": "Kanaal",
+    "whatsapp": "WhatsApp",
+    "website": "Website",
+    "shared": "WhatsApp en de websitechat delen deze instellingen, dus een wijziging hier geldt voor allebei.",
+    "split": "Website eigen instellingen geven",
+    "splitFailed": "Dat lukte niet. Probeer het opnieuw."
+  },
+  "services": {
+    "label": "Dienst",
+    "soon": "Binnenkort",
+    "channel": "Kanaal: {{channel}}",
+    "speed_to_lead": {
+      "label": "Snelle opvolging"
+    },
+    "reactivation": {
+      "label": "Reactivatie"
+    },
+    "referrals": {
+      "label": "Doorverwijzingen",
+      "soon": "Vraagt tevreden klanten via WhatsApp om je aan te bevelen en volgt de mensen op die ze noemen."
+    },
+    "reputation": {
+      "label": "Reputatie",
+      "soon": "Vraagt klanten via WhatsApp om een Google-review zodra een klus klaar is. Dit start zodra het boekings- of planningssysteem van de klant gekoppeld is, zodat het CRM weet wanneer een klant geholpen is."
+    }
   }
 }

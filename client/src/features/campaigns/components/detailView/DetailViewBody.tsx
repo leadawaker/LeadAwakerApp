@@ -119,11 +119,7 @@ export function DetailViewBody({
             campaign={campaign}
             allMetrics={allMetrics}
             animTrigger={animTrigger}
-            localAiSummary={detail.localAiSummary}
-            localAiSummaryAt={detail.localAiSummaryAt}
             compact={compact}
-            onRefreshSummary={detail.refreshAiSummary}
-            isRefreshingSummary={detail.refreshingSummary}
           />
         )}
 

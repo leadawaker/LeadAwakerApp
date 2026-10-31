@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { ExternalLink, Loader2, RotateCcw, UploadCloud } from "lucide-react";
 import { hubspotContactUrl, usePushToHubspot, type VoiceCaller } from "../api/voiceCallsApi";
+import { ROUND_ACTION } from "./bits";
 
 /**
  * Owner only. States: Push to HubSpot, Pushing, In HubSpot (link + Update HubSpot),
@@ -41,13 +42,13 @@ export function HubspotPushButton({ caller }: { caller: VoiceCaller }) {
         className={`la-btn la-btn--soft${failed ? " on" : ""}`}
         disabled={push.isPending}
         onClick={() => push.mutate({ leadsId })}
-        title={failed ? push.error?.message : undefined}
+        aria-label={label}
+        title={failed ? push.error?.message : label}
         data-testid="voice-caller-hubspot"
         data-state={push.isPending ? "pushing" : failed ? "failed" : contactUrl ? "in-hubspot" : "idle"}
-        style={{ height: 32, flexShrink: 0 }}
+        style={{ ...ROUND_ACTION, flexShrink: 0 }}
       >
         <Icon className={`h-4 w-4 shrink-0${push.isPending ? " animate-spin" : ""}`} />
-        {label}
       </button>
     </div>
   );

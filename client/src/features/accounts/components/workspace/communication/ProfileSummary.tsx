@@ -3,7 +3,7 @@ import { normalizeAlertSettings } from "@shared/clientAlerts";
 import { useAlertSettings } from "../alerts/alertsApi";
 import type { LucideIcon } from "lucide-react";
 import {
-  Sparkles, SlidersHorizontal, Eye, Quote, Bot, MessageSquareWarning, Handshake,
+  SlidersHorizontal, Eye, Bot, MessageSquareWarning, Handshake,
   Banknote, Wallet, Truck, ShieldCheck, HelpCircle, Award, AlertTriangle,
   CheckCircle2, XCircle, CalendarClock, Phone,
   LayoutGrid, Boxes, UserRound, BellRing, PhoneForwarded, AudioLines, SpellCheck, ClipboardList, Moon,
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import {
   buildSteps, formalityKey,
-  type ProfileAnswers, type PreferredWordGroup, type FactValues, type SectionKey,
+  type ProfileAnswers, type FactValues, type SectionKey,
 } from "./profileConstants";
 import type { QAGrids } from "./useOnboardingFacts";
 import { normalizeIntake } from "@shared/voiceIntake";
@@ -33,12 +33,10 @@ export interface BookingSnapshot {
 }
 
 const STEP_ICON: Record<string, LucideIcon> = {
-  openingStyle: Sparkles,
   availabilityHours: CalendarClock,
   meetingType: Phone,
   formality: SlidersHorizontal,
   perception: Eye,
-  preferredWords: Quote,
   agentName: Bot,
   objections: MessageSquareWarning,
   negotiation: Handshake,
@@ -59,19 +57,16 @@ const STEP_ICON: Record<string, LucideIcon> = {
   voiceIntake: ClipboardList,
   voiceAfterHours: Moon,
   widgetSetup: Globe,
-  whatsappNumber: MessageCircle,
   whatsappConnect: Link2,
 };
 
 // Reuses the existing pipeline "stage" palette (already theme-safe in light + dark
 // mode) so each item gets a genuinely distinct hue instead of a single-color shade.
 const STEP_COLOR: Record<string, string> = {
-  openingStyle: "var(--stage-new)",
   availabilityHours: "var(--stage-booked)",
   meetingType: "var(--stage-contacted)",
   formality: "var(--stage-contacted)",
   perception: "var(--stage-responded)",
-  preferredWords: "var(--stage-multi)",
   agentName: "var(--stage-qualified)",
   objections: "var(--stage-lost)",
   negotiation: "var(--stage-booked)",
@@ -92,7 +87,6 @@ const STEP_COLOR: Record<string, string> = {
   voiceIntake: "var(--stage-qualified)",
   voiceAfterHours: "var(--stage-multi)",
   widgetSetup: "var(--stage-new)",
-  whatsappNumber: "var(--stage-booked)",
   whatsappConnect: "var(--stage-qualified)",
 };
 
@@ -136,8 +130,6 @@ export function ProfileSummary({ accountId, answers, facts, grids, booking, onEd
       return rows.length ? rows.join(" / ") : notSet;
     }
     switch (key) {
-      case "openingStyle":
-        return answers.openingStyle ? t(`questions.openingStyle.options.${answers.openingStyle}.label`) : notSet;
       case "statusQuestion":
         return answers.statusQuestion ? t(`questions.statusQuestion.options.${answers.statusQuestion}.label`) : notSet;
       case "formality": {
@@ -146,16 +138,9 @@ export function ProfileSummary({ accountId, answers, facts, grids, booking, onEd
       }
       case "perception":
         return answers.perception.length ? answers.perception.map((v) => t(`questions.perception.options.${v}.label`)).join(", ") : notSet;
-      case "preferredWords": {
-        const words = (Object.keys(answers.preferredWords) as PreferredWordGroup[])
-          .map((g) => answers.preferredWords[g]).filter(Boolean).map((w) => cap(w as string));
-        return words.length ? words.join(", ") : notSet;
-      }
       case "agentName": {
         const name = answers.agentNameCustom || (answers.agentName ? t(`questions.agentName.options.${answers.agentName}.label`) : "");
-        const avatar = answers.avatarChoice ? t(`questions.agentName.avatar.${answers.avatarChoice}.label`) : "";
-        if (!name && !avatar) return notSet;
-        return [name, avatar].filter(Boolean).join(" · ");
+        return name || notSet;
       }
       case "differentiator": {
         const rows = answers.differentiator.split("\n").map((r) => r.trim()).filter(Boolean);
@@ -183,7 +168,7 @@ export function ProfileSummary({ accountId, answers, facts, grids, booking, onEd
 
   // Receptionist sections (setupConstants). Builds one readable line per step.
   function setupValue(key: string): string {
-    const { handoff, voice, whatsapp, stock } = answers.setup;
+    const { handoff, voice, stock } = answers.setup;
     const q = (path: string) => t(`questions.${key}.${path}`);
     const join = (parts: Array<string | false | null | undefined>) => parts.filter(Boolean).join(" · ") || notSet;
     switch (key) {
@@ -230,8 +215,6 @@ export function ProfileSummary({ accountId, answers, facts, grids, booking, onEd
         return voice.afterHours ? q(`options.${voice.afterHours}.label`) : notSet;
       case "widgetSetup":
         return booking?.widgetDomains?.length ? booking.widgetDomains.join(", ") : notSet;
-      case "whatsappNumber":
-        return whatsapp.numberChoice ? q(`options.${whatsapp.numberChoice}.label`) : notSet;
       case "whatsappConnect":
         return booking?.whatsappSenderStatus || notSet;
       default:

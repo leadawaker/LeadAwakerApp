@@ -9,6 +9,7 @@ import { AgentChatWidget } from "@/features/ai-agents/components/AgentChatWidget
 import { Loader2 } from "lucide-react";
 // Small, dependency-free skeleton so the Chats/Leads loader matches those pages.
 import { LeadsRouteSkeleton } from "@/features/leads/components/LeadsSkeletons";
+import { ListHeadSkeleton, SplitListSkeleton } from "@/components/crm/primitives";
 import { apiFetch } from "@/lib/apiUtils";
 import { useVoiceCapabilities } from "@/features/voiceCalls/api/voiceCallsApi";
 import {
@@ -49,7 +50,6 @@ const DocsPage = lazy(() => import("@/pages/Docs"));
 const TasksPage = lazy(() => import("@/features/tasks/pages/TasksPage"));
 const AgentsPage = lazy(() => import("@/features/ai-agents/pages/AgentsPage").then(m => ({ default: m.AgentsPage })));
 const AgentChatPage = lazy(() => import("@/features/ai-agents/pages/AgentChatPage").then(m => ({ default: m.AgentChatPage })));
-const SpeedToLeadPage = lazy(() => import("@/features/speed-to-lead/pages/SpeedToLeadPage").then(m => ({ default: m.SpeedToLeadPage })));
 const ReputationPage = lazy(() => import("@/features/reputation/ReputationPage").then(m => ({ default: m.ReputationPage })));
 const VoicePage = lazy(() => import("@/features/voice/VoicePage").then(m => ({ default: m.VoicePage })));
 const SocialPage = lazy(() => import("@/features/social/pages/SocialPage").then(m => ({ default: m.SocialPage })));
@@ -200,6 +200,51 @@ function VoiceCallsGuard({ prefix }: { prefix: string }) {
   return <VoiceCallsPage />;
 }
 
+/** Pages that are one centered column, not a list beside a detail. */
+const SINGLE_COLUMN_PAGES = ["/platform/home", "/platform/demos", "/platform/settings", "/platform/traffic", "/platform/automation"];
+
+function GenericPageBody() {
+  const path = window.location.pathname;
+  // One centered column of cards.
+  if (SINGLE_COLUMN_PAGES.some((p) => path.startsWith(p))) {
+    return (
+      <div className="min-h-0 flex-1 overflow-hidden" style={{ background: "var(--bg)", padding: "20px 14px" }}>
+        <div className="la-page-center flex flex-col gap-4">
+          <div className="h-40 animate-pulse rounded-[var(--r-card)] neu-raised bg-card" />
+          <div className="h-56 animate-pulse rounded-[var(--r-card)] neu-raised bg-card" />
+          <div className="h-56 animate-pulse rounded-[var(--r-card)] neu-raised bg-card" />
+        </div>
+      </div>
+    );
+  }
+  const split = path.startsWith("/platform/voice-calls") || path.startsWith("/platform/billing");
+  return (
+    <div className="flex min-h-0 flex-1" style={{ background: "var(--bg)" }}>
+      {split ? (
+        <div className="la-list-panel la-list-panel--split hidden shrink-0 flex-col md:flex" style={{ width: "var(--toolbar-w)" }}>
+          <ListHeadSkeleton />
+          <div className="la-split-scroll min-h-0 flex-1 overflow-hidden"><SplitListSkeleton /></div>
+        </div>
+      ) : (
+        <div className="la-list-panel hidden shrink-0 flex-col gap-1 p-2 md:flex" style={{ width: "var(--toolbar-w)" }}>
+          {Array.from({ length: 7 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-xl p-3">
+              <div className="h-9 w-9 shrink-0 animate-pulse rounded-[28%] bg-primary/10" />
+              <div className="flex-1 space-y-2">
+                <div className="h-3.5 w-2/3 animate-pulse rounded bg-primary/10" />
+                <div className="h-3 w-2/5 animate-pulse rounded bg-primary/10" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+      <div className="flex flex-1 items-center justify-center p-6">
+        <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
+      </div>
+    </div>
+  );
+}
+
 /**
  * Route-level Suspense fallback shown while a page's lazy chunk loads.
  * Mirrors the real shell: a 188px left nav rail (matching CrmShell's fixed
@@ -213,48 +258,25 @@ function PageLoader({ children }: { children?: ReactNode } = {}) {
       {/* Nav rail placeholder — matches the 188px fixed navbar (desktop only) */}
       <div
         className="hidden w-[188px] shrink-0 flex-col items-center gap-2 px-3 py-4 md:flex"
-        style={{ background: "var(--bg-2)" }}
+        style={{ background: "var(--nav-bg)" }}
       >
-        <div className="mb-2 h-9 w-9 animate-pulse rounded-xl bg-primary/10" />
+        <div className="mb-2 h-9 w-full animate-pulse rounded-xl" style={{ background: "var(--nav-hover)" }} />
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="h-9 w-full animate-pulse rounded-lg bg-primary/10" />
+          <div key={i} className="h-9 w-full animate-pulse rounded-lg" style={{ background: "var(--nav-hover)" }} />
         ))}
-        <div className="mt-auto h-11 w-full animate-pulse rounded-xl bg-primary/10" />
+        <div className="mt-auto h-11 w-full animate-pulse rounded-xl" style={{ background: "var(--nav-hover)" }} />
       </div>
 
       {/* Page area — sits to the right of the navbar */}
       <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-        {/* Flush page header (la-page-header: 60px) */}
-        <div className="flex h-[60px] shrink-0 items-center gap-4 border-b border-border bg-muted px-5">
+        {/* Flush page header (la-page-header: 60px), on the page ground */}
+        <div className="flex h-[60px] shrink-0 items-center gap-4 px-5" style={{ background: "var(--bg)" }}>
           <div className="h-5 w-40 animate-pulse rounded bg-primary/10" />
-          <div className="ml-2 flex items-center gap-1.5">
-            {[72, 72, 72].map((w, i) => (
-              <div key={i} className="h-9 animate-pulse rounded-full bg-primary/10" style={{ width: w }} />
-            ))}
-          </div>
-          <div className="ml-auto h-[38px] w-48 animate-pulse rounded-full bg-primary/10" />
+          <div className="ml-2 h-9 w-48 animate-pulse rounded-full bg-primary/10" />
+          <div className="ml-auto h-[38px] w-48 animate-pulse rounded-full" style={{ background: "var(--card)" }} />
         </div>
-        {/* Body: a page-shaped skeleton when given (Chats / Leads), else the generic one */}
-        {children ?? (
-        <div className="flex min-h-0 flex-1">
-          {/* Toolbar / list panel */}
-          <div className="hidden w-[300px] shrink-0 flex-col gap-2 border-r border-border bg-muted p-3 md:flex">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 rounded-xl p-3">
-                <div className="h-9 w-9 shrink-0 animate-pulse rounded-full bg-primary/10" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3.5 w-2/3 animate-pulse rounded bg-primary/10" />
-                  <div className="h-3 w-2/5 animate-pulse rounded bg-primary/10" />
-                </div>
-              </div>
-            ))}
-          </div>
-          {/* Content area */}
-          <div className="flex flex-1 items-center justify-center p-6 bg-muted">
-            <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
-          </div>
-        </div>
-        )}
+        {/* Body: a page-shaped skeleton when given (Chats / Leads), else the shape of the page's kind */}
+        {children ?? <GenericPageBody />}
       </div>
     </div>
   );
@@ -296,9 +318,6 @@ export default function AppArea() {
           {/* Hidden until finished (list in components/crm/RightSidebar.tsx): Speed to Lead,
               Missed calls, AI agents and Cadence have no way in, but open by URL. Speed to
               Lead and Missed calls lost their Settings switch, so the Owner opens them directly. */}
-          <Route path="/platform/speed-to-lead">
-            <OwnerOnly prefix="/platform"><SpeedToLeadPage /></OwnerOnly>
-          </Route>
           <Route path="/platform/reputation">
             <ServicePageGuard service="reputation"><ReputationPage /></ServicePageGuard>
           </Route>

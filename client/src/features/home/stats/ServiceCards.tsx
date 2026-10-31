@@ -50,6 +50,7 @@ function PhoneCard({ scope, t, go, showTrend }: CardProps) {
   return (
     <ServiceCard id={SERVICE_ANCHOR.phone} testId="stats-card-phone" art={phoneArt} artPos="100% 50%" color="var(--wine)" icon={AudioLines}
       title={t("tabs.phone")} mainLabel={t("cards.phone.main")} mainValue={data?.calls.value ?? DASH}
+      corner={{ label: t("cards.phone.minutes"), value: data?.minutes ?? DASH }}
       trend={trendText(data?.calls, scope.period, t)} spark={data?.perDay}
       stats={[
         { key: "booked", label: t("phone.tiles.booked"), value: data?.booked.value ?? DASH },
@@ -164,6 +165,41 @@ function useMoreToTheRight() {
 }
 
 /**
+ * Click and drag the row sideways with a mouse (touch scrolls by itself). A drag
+ * never opens the card it started on; a plain click still does.
+ */
+function useDragScroll(ref: React.RefObject<HTMLDivElement | null>) {
+  const drag = useRef<{ x: number; left: number; moved: boolean } | null>(null);
+  const end = () => {
+    ref.current?.classList.remove("is-dragging");
+    window.setTimeout(() => { drag.current = null; }); // After the click this drag may have caused.
+  };
+  return {
+    onPointerDown: (e: React.PointerEvent) => {
+      const el = ref.current;
+      if (el && e.pointerType === "mouse" && e.button === 0) drag.current = { x: e.clientX, left: el.scrollLeft, moved: false };
+    },
+    onPointerMove: (e: React.PointerEvent) => {
+      const el = ref.current, d = drag.current;
+      if (!el || !d) return;
+      const dx = e.clientX - d.x;
+      if (!d.moved) {
+        if (Math.abs(dx) < 5) return;
+        d.moved = true;
+        el.setPointerCapture(e.pointerId);
+        el.classList.add("is-dragging");
+      }
+      el.scrollLeft = d.left - dx;
+    },
+    onPointerUp: end,
+    onPointerCancel: end,
+    onClickCapture: (e: React.MouseEvent) => {
+      if (drag.current?.moved) { e.preventDefault(); e.stopPropagation(); }
+    },
+  };
+}
+
+/**
  * One card per switched-on service, in a single row that scrolls sideways
  * (snapping card by card on a phone). The period picked on the page drives them.
  */
@@ -172,13 +208,14 @@ export function ServiceCards({ scope, services }: { scope: HomeScope; services: 
   const [, setLocation] = useLocation();
   const { isAgencyUser } = useWorkspace();
   const row = useMoreToTheRight();
+  const dragProps = useDragScroll(row.ref);
   const tt: T = (key, opts) => String(t(key, opts));
   const props: CardProps = { scope, t: tt, go: setLocation, showTrend: scope.period !== "all" };
   const isAgency = !!isAgencyUser;
   const on = ORDER.filter((k) => services[k]);
   if (on.length === 0) return null;
   return (
-    <div ref={row.ref} onScroll={row.measure} className={row.more ? "home-cards home-cards--more" : "home-cards"} data-testid="stats-service-cards">
+    <div ref={row.ref} onScroll={row.measure} {...dragProps} className={row.more ? "home-cards home-cards--more" : "home-cards"} data-testid="stats-service-cards">
       {on.map((k) => (
         k === "phone" ? <PhoneCard key={k} {...props} />
           : k === "whatsapp" ? <WhatsappCard key={k} {...props} />

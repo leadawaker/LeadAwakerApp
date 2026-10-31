@@ -1,7 +1,8 @@
 // Voice tab "Prompt & test" (Owner only): everything she is told, editable
 // next to the test call, saved as you type. The call button first, then who
-// she is (name, voice, language), this business's own text (greeting,
-// instructions), then the two prompts every client line in this language shares
+// she is (name, voice, language), the greeting, the two prompts every client line
+// in this language shares (the voice layer as picked: lean or standard), then this
+// business's extra instructions, which go to the backend under "Wat hij doet"
 // (on an ElevenLabs line: the draft, then one folded card with the call review, its change cards and the coach).
 import { useEffect, useRef, useState } from "react";
 import { BookOpen, Loader2, MessageSquareQuote, NotebookPen, Waves } from "lucide-react";
@@ -12,7 +13,7 @@ import { TestCard } from "./TestCard";
 import { AgentVoiceCard } from "./AgentVoiceCard";
 import { LineEngineCard } from "./LineEngineCard";
 import { PromptCounts } from "./PromptCounts";
-import { runsOnEleven } from "./lineEngine";
+import { SHOW_ELEVEN, runsOnEleven } from "./lineEngine";
 import { useAutosave } from "./useAutosave";
 import { AutosaveBadge, SharedPromptCard } from "./SharedPromptCard";
 import { useAccountVoicePrompts, useSaveVoicePrompt } from "./voicePromptsApi";
@@ -65,7 +66,9 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
   const prompts = useAccountVoicePrompts(line.accountId, line.locale);
   const savePrompt = useSaveVoicePrompt(line.accountId);
   const language = line.locale ?? "";
-  const onEleven = runsOnEleven(line.number);
+  const onEleven = SHOW_ELEVEN && runsOnEleven(line.number);
+  // The voice layer calls run on.
+  const layer = prompts.data?.lean ?? null;
 
   // These two texts are the account's: the client line on it reads the same ones.
   const clientLines = (line.otherLines ?? []).map((l) => l.phoneNumber).join(", ");
@@ -76,7 +79,7 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
     <>
       <TestCard line={line} canEdit={canEdit} saving={saving} onSave={onSave} />
       <AgentVoiceCard line={line} canEdit={canEdit} saving={saving} onSave={onSave} />
-      <LineEngineCard line={line} />
+      {SHOW_ELEVEN && <LineEngineCard line={line} />}
       <AccountTextCard
         card="promptGreeting"
         icon={<MessageSquareQuote size={17} />}
@@ -88,18 +91,6 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
         rows={2}
         onSave={(greeting) => onSave({ greeting })}
       />
-      {/* Extra instructions are GPT Live's: the ElevenLabs prompt leaves them out. */}
-      {!onEleven && <AccountTextCard
-        card="promptExtra"
-        icon={<NotebookPen size={17} />}
-        title={t("extra.title")}
-        help={t("prompt.extra.help")}
-        shared={shared}
-        value={line.extraInstructions ?? ""}
-        max={EXTRA_INSTRUCTIONS_MAX}
-        rows={6}
-        onSave={(extraInstructions) => onSave({ extraInstructions })}
-      />}
       {prompts.isLoading && (
         <div style={{ display: "flex", justifyContent: "center", padding: 24, color: "var(--mute)" }}>
           <Loader2 className="h-5 w-5 animate-spin" />
@@ -107,16 +98,17 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
       )}
       {!line.locale && !prompts.isLoading && <p style={helpStyle}>{t("prompt.noLanguage")}</p>}
       {prompts.isError && <p style={{ ...helpStyle, color: "var(--stage-lost)" }}>{t("common.loadFailed")}</p>}
-      {!onEleven && prompts.data?.layer && (
+      {!onEleven && layer && (
         <SharedPromptCard
-          key={`layer-${prompts.data.layer.id}`}
+          key={`layer-${layer.id}`}
           card="promptLayer"
           kind="layer"
           accountId={line.accountId}
           icon={<Waves size={17} />}
           title={t("prompt.layer.title", { language })}
           help={t("prompt.layer.help")}
-          row={prompts.data.layer}
+          leanLayer
+          row={layer}
           onSave={savePrompt}
         />
       )}
@@ -133,6 +125,18 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
           onSave={savePrompt}
         />
       )}
+      {/* Extra instructions go to the backend (under "Wat hij doet"); the ElevenLabs prompt leaves them out. */}
+      {!onEleven && <AccountTextCard
+        card="promptExtra"
+        icon={<NotebookPen size={17} />}
+        title={t("extra.title")}
+        help={t("prompt.extra.help")}
+        shared={shared}
+        value={line.extraInstructions ?? ""}
+        max={EXTRA_INSTRUCTIONS_MAX}
+        rows={6}
+        onSave={(extraInstructions) => onSave({ extraInstructions })}
+      />}
       {/* Edits go to a draft; only its Save to live changes what calls hear. */}
       {onEleven && eleven && (
         <ElevenDraftCard

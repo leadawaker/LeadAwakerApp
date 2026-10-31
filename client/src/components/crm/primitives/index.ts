@@ -8,6 +8,8 @@ export { Pill, type PillProps } from "./Pill";
 export { ToolbarButton, type ToolbarButtonProps } from "./ToolbarButton";
 export * from "./toolbarButtonClasses";
 export { PillSwitch, type PillSwitchItem } from "./PillSwitch";
+export { ListSection, type ListSectionProps } from "./ListSection";
+export { SplitListSkeleton, ListHeadSkeleton } from "./SplitListSkeleton";
 // Page topbar (Style A): build every page header from these.
 export { PageTopbar, type PageTopbarProps } from "./PageTopbar";
 export { TopbarTabs, type TopbarTab } from "./TopbarTabs";

@@ -83,7 +83,7 @@ export function UpgradePanel({ accountId, field, currentText, onResult }: Props)
         {videos.items.length > 0 && (
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6 }} data-testid={`${id}-videos`}>
             {videos.items.map((v) => (
-              <li key={v.key} className="neu-raised-crisp" style={{ borderRadius: 10, padding: "8px 10px", display: "flex", gap: 8, alignItems: "flex-start", background: "var(--bone)" }}>
+              <li key={v.key} className="neu-raised-crisp" style={{ borderRadius: 10, padding: "8px 10px", display: "flex", gap: 8, alignItems: "flex-start", background: "var(--card)" }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{v.name}</div>
                   <div style={{ fontSize: 12, lineHeight: 1.45, color: v.status === "error" ? "hsl(var(--destructive))" : "var(--mute)" }}>

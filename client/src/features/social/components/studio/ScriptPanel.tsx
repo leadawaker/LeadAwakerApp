@@ -74,7 +74,7 @@ export function ScriptPanel({ accountId, timeZone, script, onClose }: { accountI
   };
 
   return (
-    <section ref={panelRef} className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14, scrollMarginTop: 96, minWidth: 0 }} data-testid="script-panel">
+    <section ref={panelRef} className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14, scrollMarginTop: 96, minWidth: 0 }} data-testid="script-panel">
       <div className="row" style={{ gap: 10 }}>
         <IconBtn onClick={onClose} title={t("scripts.back")} aria-label={t("scripts.back")}><ArrowLeft className="w-4 h-4" /></IconBtn>
         <span style={{ flex: 1, fontFamily: "var(--mono)", fontSize: 10.5, letterSpacing: "0.1em", textTransform: "uppercase", color: "var(--mute-2)" }}>

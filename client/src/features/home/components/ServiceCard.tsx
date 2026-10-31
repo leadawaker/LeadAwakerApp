@@ -19,6 +19,8 @@ export interface ServiceCardProps {
   icon: LucideIcon;
   mainLabel: string;
   mainValue: ReactNode;
+  /** A second number in the top right corner of the card's body. */
+  corner?: { label: string; value: ReactNode };
   trend: CardTrend | null;
   /** False for "All time": there is no earlier period, so the trend line is left out. */
   showTrend?: boolean;
@@ -76,8 +78,14 @@ export function ServiceCard(p: ServiceCardProps) {
       }}>
         <h3 className="home-card-title">{p.title}</h3>
       </div>
-      <div className="flex flex-1 flex-col" style={{ padding: "16px 20px 20px", gap: 10 }}>
+      <div className="relative flex flex-1 flex-col" style={{ padding: "16px 20px 20px", gap: 10 }}>
         <div style={{ ...mono, fontSize: 10.5, color: "var(--mute)" }}>{p.mainLabel}</div>
+        {p.corner && (
+          <div style={{ position: "absolute", top: 16, right: 20, textAlign: "right" }} data-testid={`${p.testId}-corner`}>
+            <div style={{ ...mono, fontSize: 10.5, color: "var(--mute)" }}>{p.corner.label}</div>
+            <div style={{ fontFamily: "var(--mono)", fontSize: 20, lineHeight: 1, color: "var(--ink)", marginTop: 12 }}>{p.corner.value}</div>
+          </div>
+        )}
         <div className="flex items-center gap-2">
           <span style={{ fontFamily: "var(--mono)", fontSize: 40, lineHeight: 1, color: "var(--ink)", letterSpacing: "-0.02em" }}>{p.mainValue}</span>
           <Icon size={18} aria-hidden style={{ color: p.color }} />

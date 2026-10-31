@@ -1,5 +1,6 @@
 // DesktopCalendarMonthAgenda.tsx — month grid + the left-rail agenda list
 // (full agenda cards + the compact avatars-only minimized variant).
+import { ListSection } from "@/components/crm/primitives";
 import { useMemo, useRef } from "react";
 import type { TFunction } from "i18next";
 import { Clock, Phone, Video } from "lucide-react";
@@ -9,12 +10,11 @@ import {
   type Appointment,
   statusMetaOf, kindLabelOf, channelOf, dateKeyOf,
 } from "../lib/calendarDesign";
-import { ScoreArcDonut } from "@/features/leads/components/cardView/atoms";
 import {
   type DesktopCalendarProps, MONO, SERIF, DAY_KEYS, DOW_ORDER, isWeekendDay, emitCalSwipe,
 } from "./desktopCalendarShared";
 
-function AgendaCard({ ev, active, onClick, t, showScore }: { ev: Appointment; active: boolean; onClick: () => void; t: TFunction; showScore: boolean }) {
+function AgendaCard({ ev, active, onClick, t }: { ev: Appointment; active: boolean; onClick: () => void; t: TFunction }) {
   const sm = statusMetaOf(ev, t);
   const kind = kindLabelOf(ev, t);
   const statusKey = ev.no_show ? "Lost" : (ev.status || "Contacted");
@@ -33,12 +33,11 @@ function AgendaCard({ ev, active, onClick, t, showScore }: { ev: Appointment; ac
       }
     : {
         position: "relative", cursor: "pointer", borderRadius: "var(--r-surface)", padding: "11px 12px 11px 14px",
-        background: active ? "var(--card)" : "transparent", boxShadow: active ? "var(--sh-raised-crisp)" : "none",
+        background: active ? "var(--list-selected)" : "transparent", boxShadow: active ? "var(--list-selected-shadow)" : "none",
         transition: "box-shadow 130ms, background 130ms", display: "flex", gap: 11, alignItems: "center",
       };
   return (
     <div onClick={onClick} role="button" tabIndex={0} onKeyDown={(e) => e.key === "Enter" && onClick()} style={cardStyle}>
-      {!isMobile && active && <div style={{ position: "absolute", left: 0, top: 11, bottom: 11, width: 3, background: "var(--wine)", borderRadius: "0 3px 3px 0" }} />}
       <div style={{ width: avatarSize, height: avatarSize, borderRadius: "var(--r-surface)", background: av.bg, color: av.text, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "var(--mono)", fontSize: 11, fontWeight: 700, flexShrink: 0, boxShadow: "var(--sh-raised-crisp)" }}>{initials}</div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: nameFontSize, fontWeight: 600, color: "var(--ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ev.lead_name}</div>
@@ -51,16 +50,37 @@ function AgendaCard({ ev, active, onClick, t, showScore }: { ev: Appointment; ac
       </div>
       <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
         <span style={{ color: "var(--mute-2)", display: "flex" }}>{channelOf(ev) === "phone" ? <Phone className="h-3.5 w-3.5" /> : <Video className="h-3.5 w-3.5" />}</span>
-        {showScore && ev.leadScore > 0 && <ScoreArcDonut score={ev.leadScore} />}
       </div>
     </div>
   );
 }
 
-export function AgendaList(p: DesktopCalendarProps) {
+export function AgendaList({ split = false, ...p }: DesktopCalendarProps & {
+  /** Desktop: each group is its own card under a title on the ground, as on Calls and Chats. */
+  split?: boolean;
+}) {
   const { t } = p;
   if (!p.groupedAppts.length || p.groupedAppts.every((g) => g.items.length === 0)) {
     return <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--mute-2)", ...MONO, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase" }}>{t("design.detail.noMeetings")}</div>;
+  }
+  if (split) {
+    return (
+      <div ref={p.apptListRef} className="la-split-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto" }}>
+        {p.groupedAppts.filter((g) => g.items.length > 0).map((g, gi) => (
+          <div key={gi} data-group-wrapper className="la-list-section">
+            <ListSection label={g.label ?? undefined} count={g.items.length}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 4, padding: 6 }}>
+                {g.items.map((a) => (
+                  <div key={a.id} data-appt-id={a.id}>
+                    <AgendaCard ev={a} active={p.selectedBooking?.id === a.id} onClick={() => p.onSelectBooking(a)} t={t} />
+                  </div>
+                ))}
+              </div>
+            </ListSection>
+          </div>
+        ))}
+      </div>
+    );
   }
   return (
     <div ref={p.apptListRef} style={{ flex: 1, overflowY: "auto", padding: "6px 16px 16px" }}>
@@ -76,7 +96,7 @@ export function AgendaList(p: DesktopCalendarProps) {
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {g.items.map((a) => (
               <div key={a.id} data-appt-id={a.id}>
-                <AgendaCard ev={a} active={p.selectedBooking?.id === a.id} onClick={() => p.onSelectBooking(a)} t={t} showScore={p.isAgencyUser} />
+                <AgendaCard ev={a} active={p.selectedBooking?.id === a.id} onClick={() => p.onSelectBooking(a)} t={t} />
               </div>
             ))}
           </div>

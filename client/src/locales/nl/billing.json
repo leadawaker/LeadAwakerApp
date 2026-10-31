@@ -507,7 +507,18 @@
       "fileSizeLimit": "Bestandsgrootte moet kleiner zijn dan 5 MB.",
       "remove": "Verwijderen",
       "uploading": "Uploaden...",
-      "uploadContract2": "Contract uploaden"
+      "uploadContract2": "Contract uploaden",
+      "template": "Sjabloon",
+      "templateVoiceTrial": "Voice AI partnerproef",
+      "templateService": "Campagne-dienstverleningsovereenkomst",
+      "voiceTrial": {
+        "legalName": "Officiële bedrijfsnaam",
+        "kvkNumber": "KvK-nummer",
+        "address": "Adres",
+        "website": "Website",
+        "monthlyEstimate": "Verwacht / maand (€)",
+        "monthlyCap": "Eerst vragen boven (€)"
+      }
     },
     "table": {
       "untitled": "Naamloos",

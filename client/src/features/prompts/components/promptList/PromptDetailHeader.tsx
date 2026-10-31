@@ -1,6 +1,6 @@
 // The selected prompt's header bar: icon, editable name, status, campaign,
-// area (category) and the Demo toggle on the left; size estimate and the
-// section / panel / preview toggles on the right.
+// area (category) and the Demo toggle on the left; on the right the section / panel /
+// preview toggles, with the size estimate and the edit actions under them.
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Bot, Check, Eye, EyeOff } from "lucide-react";
@@ -32,7 +32,7 @@ function ToggleButton({ on, highlight, onClick, title, children }: {
       onClick={onClick}
       className={cn("la-btn", on ? "la-btn--inset" : "la-btn--soft")}
       style={{
-        height: 32, padding: "0 10px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontSize: 12,
+        height: 28, padding: "0 10px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontSize: 12,
         color: highlight ? "var(--wine)" : on ? "var(--ink)" : "var(--mute-2)",
       }}
       title={title}
@@ -63,6 +63,7 @@ export function PromptDetailHeader({
   onToggleSidebar,
   previewOpen,
   onTogglePreview,
+  actions,
 }: {
   prompt: any;
   promptId: number | null;
@@ -84,6 +85,8 @@ export function PromptDetailHeader({
   onToggleSidebar: () => void;
   previewOpen: boolean;
   onTogglePreview: () => void;
+  /** Model, font, save and version controls. */
+  actions?: ReactNode;
 }) {
   const { t } = useTranslation("prompts");
   const archived = (prompt.status || "").toLowerCase() === "archived";
@@ -94,17 +97,17 @@ export function PromptDetailHeader({
 
   return (
     <div style={{
-      flexShrink: 0, minHeight: 56, padding: "10px 18px",
+      flexShrink: 0, minHeight: 84, padding: "12px 18px",
       borderRadius: "var(--r-surface)", boxShadow: "var(--sh-raised-crisp)",
       display: "flex", alignItems: "center", gap: 14, background: "var(--paper)",
     }}>
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <span style={{
-          width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-surface)",
+          width: 44, height: 44, flexShrink: 0, borderRadius: "var(--r-surface)",
           display: "flex", alignItems: "center", justifyContent: "center",
           background: CATEGORY_COLOR[category], color: "var(--on-wine)",
         }}>
-          <Bot size={18} />
+          <Bot size={20} />
         </span>
 
         <div className="min-w-0 flex-1">
@@ -190,13 +193,8 @@ export function PromptDetailHeader({
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0">
-        {/* Below 1440px (no page zoom since 2026-10-29) the size estimate hides and the
-            toggles show only their icon, so the prompt name keeps its room. */}
-        <span className="max-[1439px]:hidden" style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", whiteSpace: "nowrap" }}>
-          {t("detail.sizeEstimate", { tokens: tokenEstimate, chars: (chars / 1000).toFixed(1) })}
-        </span>
-        <div className="max-[1439px]:hidden" style={{ width: 1, height: 22, background: "var(--line)" }} />
+      <div className="flex flex-col items-end gap-2 shrink-0">
+        <div className="flex items-center gap-2">
         <ToggleButton
           on={showSystemMessage}
           highlight={!!(prompt.systemMessage || prompt.system_message)}
@@ -214,6 +212,15 @@ export function PromptDetailHeader({
         <ToggleButton on={previewOpen} onClick={onTogglePreview} title={t("detail.togglePreview")}>
           {previewOpen ? <EyeOff size={13} /> : <Eye size={13} />} <span className="max-[1439px]:hidden">{t("detail.preview")}</span>
         </ToggleButton>
+        </div>
+        <div className="flex items-center gap-2.5">
+          {/* Below 1440px (no page zoom since 2026-10-29) the size estimate hides and the
+              toggles show only their icon, so the prompt name keeps its room. */}
+          <span className="max-[1439px]:hidden" style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", whiteSpace: "nowrap" }}>
+            {t("detail.sizeEstimate", { tokens: tokenEstimate, chars: (chars / 1000).toFixed(1) })}
+          </span>
+          {actions}
+        </div>
       </div>
     </div>
   );

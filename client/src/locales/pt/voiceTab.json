@@ -274,12 +274,6 @@
     "call": "Testar no navegador",
     "filedNote": "Abre em uma nova aba. As ligações de teste aparecem abaixo, fora das estatísticas e do CRM deste cliente.",
     "needsPersona": "Crie a persona ao vivo primeiro.",
-    "prompt": {
-      "label": "Prompt de teste",
-      "standard": "Padrão",
-      "lean": "Enxuto (teste A/B)",
-      "help": "Só para o teste no navegador acima. Ligações reais e demos sempre usam o prompt padrão."
-    },
     "promptTitle": "O que ela recebe",
     "promptFailed": "Não foi possível carregar o prompt.",
     "kind": {

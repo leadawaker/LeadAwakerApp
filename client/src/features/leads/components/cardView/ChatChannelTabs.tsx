@@ -1,6 +1,5 @@
-// Chats page inbox tabs (All chats / Website / WhatsApp). Desktop renders them
-// in the topbar (icon + label + count in one row); mobile at the top of the list.
-// Rounded pills; the selected tab keeps its count readable on the wine fill (COUNT_ON).
+// Chats page inbox tabs (All chats / Website / WhatsApp), at the top of the list. Desktop (`bare`): the
+// soft pill, as Demos' Category | Date. Phones: wine pills; the selected tab keeps its count readable on the fill (COUNT_ON).
 import { useTranslation } from "react-i18next";
 import { Globe, MessageCircle, MessagesSquare, type LucideIcon } from "lucide-react";
 import { CHAT_CHANNEL_TABS, type ChatChannelTab } from "../chatChannel";
@@ -18,43 +17,18 @@ export function ChatChannelTabs({
   active,
   onChange,
   counts,
-  variant = "list",
+  bare = false,
 }: {
   active: ChatChannelTab;
   onChange: (tab: ChatChannelTab) => void;
   counts: Record<ChatChannelTab, number>;
-  variant?: "topbar" | "list";
+  /** Desktop: no padding of its own (the list head lays it out), the soft pill. */
+  bare?: boolean;
 }) {
   const { t } = useTranslation("leads");
-  if (variant === "topbar") {
-    return (
-      <div className="la-seg la-seg--pill shrink-0" role="tablist" data-testid="chat-channel-tabs">
-        {CHAT_CHANNEL_TABS.map((tab) => {
-          const Icon = ICONS[tab];
-          const on = tab === active;
-          return (
-            <button
-              key={tab}
-              type="button"
-              role="tab"
-              aria-selected={on}
-              className={`la-seg-btn${on ? " on" : ""}`}
-              style={{ padding: "10px 15px", fontSize: 11, letterSpacing: "0.12em", gap: 7 }}
-              onClick={() => onChange(tab)}
-              data-testid={`chat-channel-tab-${tab}`}
-            >
-              <Icon size={15} className="shrink-0" />
-              {t(`chatChannel.${tab}`)}
-              <span className="tabular-nums" style={{ color: on ? COUNT_ON : "var(--mute-2)", fontWeight: 400 }}>{counts[tab]}</span>
-            </button>
-          );
-        })}
-      </div>
-    );
-  }
   return (
-    <div className="shrink-0" style={{ padding: "10px 10px 6px" }}>
-      <div className="la-seg la-seg--pill la-seg--fill" role="tablist" data-testid="chat-channel-tabs">
+    <div className={bare ? "min-w-0 flex-1" : "shrink-0"} style={bare ? undefined : { padding: "10px 10px 6px" }}>
+      <div className={bare ? "la-seg la-seg--main la-seg--soft la-seg--fill" : "la-seg la-seg--pill la-seg--fill"} role="tablist" data-testid="chat-channel-tabs">
         {CHAT_CHANNEL_TABS.map((tab) => {
           const Icon = ICONS[tab];
           const on = tab === active;
@@ -65,16 +39,16 @@ export function ChatChannelTabs({
               role="tab"
               aria-selected={on}
               className={`la-seg-btn${on ? " on" : ""}`}
-              style={{ padding: "6px 4px", flexDirection: "column", gap: 3, minWidth: 0 }}
+              style={bare ? { padding: "0 6px", gap: 5, fontSize: 12, minWidth: 0 } : { padding: "6px 4px", flexDirection: "column", gap: 3, minWidth: 0 }}
               onClick={() => onChange(tab)}
               data-testid={`chat-channel-tab-${tab}`}
             >
               {/* Label on top, count below: three labelled tabs fit the toolbar width. */}
               <span style={{ display: "inline-flex", alignItems: "center", gap: 4, maxWidth: "100%" }}>
                 <Icon className="h-3.5 w-3.5 shrink-0" />
-                <span className="truncate" style={{ letterSpacing: "0.06em" }}>{t(`chatChannel.${tab}`)}</span>
+                <span className="truncate" style={bare ? undefined : { letterSpacing: "0.06em" }}>{t(`chatChannel.${tab}`)}</span>
               </span>
-              <span className="tabular-nums" style={{ color: on ? COUNT_ON : "var(--mute-2)", fontWeight: 400 }}>{counts[tab]}</span>
+              <span className="tabular-nums" style={{ color: on ? (bare ? "var(--wine)" : COUNT_ON) : "var(--mute-2)", fontWeight: 400, fontSize: bare ? 10.5 : undefined }}>{counts[tab]}</span>
             </button>
           );
         })}

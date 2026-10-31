@@ -115,7 +115,7 @@ export function PostSheet({ accountId, timeZone, post, focus = "all", script, in
   const canSave = changed && !uploading && !save.isPending && caption.ok && !!form.uploadId && !!form.date && !!form.time;
 
   return (
-    <section ref={sectionRef} className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16, scrollMarginTop: 96 }} data-testid="social-post-sheet">
+    <section ref={sectionRef} className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "20px 22px", display: "flex", flexDirection: "column", gap: 16, scrollMarginTop: 96 }} data-testid="social-post-sheet">
       <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: "var(--ink)" }}>
         {t(post ? (timeOnly ? "social.posts.sheet.rescheduleTitle" : "social.posts.sheet.editTitle") : "social.posts.sheet.newTitle")}
       </h3>

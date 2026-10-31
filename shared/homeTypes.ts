@@ -48,6 +48,8 @@ export interface HomeOverview {
 export type CallOutcome = "booked" | "callback" | "transferred" | "hung_up" | "answered";
 export interface HomePhone {
   calls: Compared; booked: Compared; transferred: Compared; avgSeconds: Compared;
+  /** Total minutes on the phone in the period. */
+  minutes: number;
   transfersFailed: number;
   perDay: DayPoint[];
   outcomes: { outcome: CallOutcome; count: number }[];

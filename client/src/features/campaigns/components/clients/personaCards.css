@@ -11,7 +11,7 @@
 
 .dp-cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 250px);
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   justify-content: start;
   gap: 12px;
   padding: 16px 18px 18px;

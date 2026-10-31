@@ -396,7 +396,7 @@ export function StatusTabs(p: DesktopCalendarProps) {
   ];
 
   return (
-    <div style={{ height: HEADER_H, flexShrink: 0, padding: "0 8px 0 10px", borderBottom: "1px solid var(--line)", display: "flex", alignItems: "center", gap: 6 }}>
+    <div className="la-list-head">
       {/* A secondary switch (Week | Month are the page's main tabs): the soft pill. */}
       {/* Scrolls sideways with an edge fade when the list panel is too narrow for all four. */}
       <div ref={scrollRef} className="la-seg la-seg--main la-seg--soft la-seg--compact la-fade-x" role="tablist" style={{ minWidth: 0, maxWidth: "100%" }}>

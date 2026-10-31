@@ -274,12 +274,6 @@
     "call": "Test in browser",
     "filedNote": "Opens in a new tab. Test calls show below, not in this client's stats or CRM.",
     "needsPersona": "Create the live persona first.",
-    "prompt": {
-      "label": "Test prompt",
-      "standard": "Standard",
-      "lean": "Lean (A/B test)",
-      "help": "Only for the browser test above. Real phone calls and demos always use the standard prompt."
-    },
     "promptTitle": "What she is told",
     "promptFailed": "Could not load the prompt.",
     "kind": {

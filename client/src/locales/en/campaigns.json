@@ -202,7 +202,6 @@
       "callsHandoffs": "Calls & Handoffs",
       "live": "Live",
       "revenue": "Revenue",
-      "aiRead": "AI Read",
       "experiment": "Experiment"
     },
     "timeframes": {
@@ -247,15 +246,11 @@
     "noPipelineData": "No pipeline data yet",
     "noConversionData": "No conversion data",
     "aiAnalysis": "AI Analysis",
-    "noAiAnalysis": "No AI analysis yet",
     "aiRunsNightly": "Runs nightly or click Generate",
     "lastRun": "Last run: {{date}}",
     "noAnalysisYet": "No analysis yet",
     "generate": "Generate",
-    "regenerate": "Regenerate",
     "generating": "Generating…",
-    "groqApiKeyMissing": "Groq API key not configured. Add GROQ_API_KEY to .env.",
-    "generateFailed": "Failed to generate summary. Try again.",
     "networkError": "Network error. Try again.",
     "activity": "Activity",
     "financials": "Financials",
@@ -328,7 +323,9 @@
       "reactivation": "Reactivation",
       "reputation": "Reputation",
       "speed_to_lead": "Speed to Lead",
-      "missed_call": "Missed-Call Text-Back"
+      "missed_call": "Missed-Call Text-Back",
+      "receptionist": "Receptionist",
+      "social_reply": "Social reply"
     },
     "coldOpenTemplateSid": "Cold-open Template SID",
     "coldOpenTemplateSidHint": "Approved Twilio WhatsApp template for the first cold message (speed-to-lead).",

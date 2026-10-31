@@ -34,7 +34,7 @@ export function DmModeCard({ accountId, status }: { accountId: number; status: D
   const capValid = Number.isInteger(capNumber) && capNumber >= 1 && capNumber <= 200;
 
   return (
-    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }} data-testid="dm-mode-card">
+    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 }} data-testid="dm-mode-card">
       <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("comments.modeTitle")}</h3>
         <Pill color={MODE_COLOR[status.effectiveMode]} data-testid="dm-effective-mode">{t("comments.now", { mode: t(`comments.modes.${status.effectiveMode}`) })}</Pill>

@@ -79,7 +79,7 @@ export function ThumbnailComposer({ accountId, form, setForm, refs, styles, conf
   const look = styles.find((x) => x.id === form.styleId)?.name ?? t(`thumbnails.kinds.${form.kind}.name`);
 
   return (
-    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }} data-testid="thumb-composer">
+    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "18px 20px", display: "flex", flexDirection: "column", gap: 14, minWidth: 0 }} data-testid="thumb-composer">
       <div>
         <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{t("thumbnails.composer.title")}</h3>
         <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "var(--mute)" }}>{t("thumbnails.composer.help")}</p>

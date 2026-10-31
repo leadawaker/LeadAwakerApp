@@ -12,7 +12,7 @@ import { VoiceCardShell, FieldLabel, helpStyle, inputStyle } from "./voiceAtoms"
 import { VOICE_LOCALE_FLAGS } from "@/lib/languages";
 import { VoicePicker } from "./VoicePicker";
 import { Seg } from "@/features/demos/components/engineControls";
-import { effectiveVoice, elevenVoicesFor, pickFits, runsOnEleven } from "./lineEngine";
+import { SHOW_ELEVEN, effectiveVoice, elevenVoicesFor, pickFits, runsOnEleven } from "./lineEngine";
 import { useElevenVoices } from "./useElevenVoices";
 import { useSaveLineEngine } from "./useLineEngine";
 import { AutosaveBadge } from "./SharedPromptCard";
@@ -44,7 +44,7 @@ export function AgentVoiceCard({ line, onSave }: {
   const gv = effectiveVoice(voice, gender);
   const savedName = line.agentNameCustom?.trim() || titleCase(line.agentName ?? "");
   const spokenNow = spokenAgentName(savedName, gv, locale);
-  const eleven = runsOnEleven(line.number);
+  const eleven = SHOW_ELEVEN && runsOnEleven(line.number);
   const elevenVoices = useElevenVoices(eleven);
   const saveEngine = useSaveLineEngine(line.accountId);
   const allEleven = elevenVoices.data ?? [];

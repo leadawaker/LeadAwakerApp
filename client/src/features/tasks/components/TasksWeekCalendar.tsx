@@ -210,7 +210,7 @@ function DayColumn({
       style={{
         flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', minHeight: 0,
         borderLeft: firstCol ? 'none' : '1px solid var(--line)',
-        background: isOver ? 'hsl(var(--brand) / 0.06)' : isToday ? 'hsl(var(--brand) / 0.022)' : isWeekend ? 'var(--bg-2)' : 'transparent',
+        background: isOver ? 'hsl(var(--brand) / 0.06)' : isToday ? 'hsl(var(--brand) / 0.022)' : isWeekend ? 'var(--surface)' : 'transparent',
         transition: 'background 120ms',
         opacity: dimmed ? 0.45 : 1,
       }}
@@ -342,7 +342,7 @@ export default function TasksWeekCalendar({ tasks, categories, activeId, onSelec
     const monthYear = isoToUTC(weekStart);
     const currentMonth = monthYear.getUTCMonth();
     return (
-      <div style={{ flex: 1, width: '100%', minWidth: 0, background: 'var(--bg-2)', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', borderRadius: 'var(--r-card)', border: '1px solid var(--line)' }}>
+      <div style={{ flex: 1, width: '100%', minWidth: 0, background: 'var(--surface)', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', borderRadius: 'var(--r-card)', border: '1px solid var(--line)' }}>
         {monthWeekStarts.map((ws, wi) => {
           const days = Array.from({ length: 7 }, (_, i) => addDays(isoToUTC(ws), i))
             .filter(d => !hideWeekends || (d.getUTCDay() !== 0 && d.getUTCDay() !== 6));
@@ -382,7 +382,7 @@ export default function TasksWeekCalendar({ tasks, categories, activeId, onSelec
     : weekDays;
 
   return (
-    <div style={{ ...(compact ? { flex: '0 0 auto' } : { flex: 1 }), width: '100%', minWidth: 0, background: 'var(--bg-2)', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', borderRadius: 'var(--r-card)', border: '1px solid var(--line)' }}>
+    <div style={{ ...(compact ? { flex: '0 0 auto' } : { flex: 1 }), width: '100%', minWidth: 0, background: 'var(--surface)', display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden', borderRadius: 'var(--r-card)', border: '1px solid var(--line)' }}>
       <div style={{ ...(compact ? { flex: '0 0 auto' } : { flex: 1, minHeight: 0 }), display: 'flex', overflow: 'hidden' }}>
         {visibleWeekDays.map((d, di) => {
           const iso = utcToISO(d);

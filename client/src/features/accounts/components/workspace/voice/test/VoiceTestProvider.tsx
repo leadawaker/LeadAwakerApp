@@ -16,6 +16,7 @@ import { flushAllAutosaves } from "../autosaveRegistry";
 import { useElevenTestCall } from "../useElevenTestCall";
 import type { ElevenTestError, ElevenTestStatus } from "../elevenTestState";
 import type { LlmKey } from "../llmOptions";
+import { SHOW_ELEVEN } from "../lineEngine";
 import { testCallsKey, type VoiceLine } from "../voiceApi";
 import {
   browserStorage, defaultTestPrefs, loadTestPrefs, prefsKey, saveTestPrefs,
@@ -45,6 +46,7 @@ export interface VoiceTestValue {
   setEngine(e: TestEngine): void;
   llm: LlmKey;
   setLlm(k: LlmKey): void;
+  /** The voice layer this test runs on: the account's live pick, or one tried here only. */
   /** ElevenLabs tests need the agency (the relay is agency only) and a number on the line. */
   elevenAvailable: boolean;
   phase: TestPhase;
@@ -170,7 +172,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
     });
   }, [key, defaults]);
 
-  const elevenAvailable = isAgencyUser && !!line.number;
+  const elevenAvailable = SHOW_ELEVEN && isAgencyUser && !!line.number;
   const engine: TestEngine = elevenAvailable ? prefs.engine : "gpt-live";
 
   // --- phase -----------------------------------------------------------------

@@ -11,7 +11,8 @@
     "security": "Security",
     "notifications": "Notifications",
     "users": "Users",
-    "billing": "Billing"
+    "billing": "Billing",
+    "alerts": "Alerts"
   },
   "mobileProfile": {
     "title": "My profile",
@@ -72,7 +73,6 @@
     "outreachPagesToggle": "Show in nav bar",
     "servicePages": "Service pages",
     "servicePagesDescription": "Show these service pages in the nav bar and on Stats. Hidden by default.",
-    "servicePageSpeed": "Speed to Lead",
     "servicePageReputation": "Reputation",
     "servicePageMissedCalls": "Missed Calls",
     "landingPage": "Landing page",
@@ -155,7 +155,11 @@
     },
     "alertsHint": "Which events are sent, and to whom, is set per account in Alerts.",
     "alertsLink": "Open Alerts",
-    "alsoInAlerts": "Only sent when the account's Alerts have it on"
+    "alsoInAlerts": "Only sent when the account's Alerts have it on",
+    "mine": {
+      "label": "My notifications",
+      "help": "What reaches you yourself, wherever you are."
+    }
   },
   "hub": {
     "back": "Back",
@@ -396,6 +400,7 @@
     "notificationsAgency": "Push, email and Telegram",
     "notificationsClient": "Push on this device",
     "users": "Who can sign in",
-    "billing": "Invoices and contracts"
+    "billing": "Invoices and contracts",
+    "alerts": "Recap, instant alerts and your devices"
   }
 }

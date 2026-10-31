@@ -14,6 +14,7 @@ import { fetchCampaigns } from "@/features/campaigns/api/campaignsApi";
 import { CampaignStageEditor } from "@/features/campaigns/components/CampaignStageEditor";
 import { useCampaignDetail } from "@/features/campaigns/components/useCampaignDetail";
 import { campaignQueryKey, useCampaignById } from "@/features/campaigns/hooks/useCampaignById";
+import { ChatPrompt } from "@/features/accounts/components/workspace/chat/ChatPrompt";
 
 // The account the demo campaigns live on. Mirrors DEMO_ACCOUNT_ID in
 // server/demo-session.ts.
@@ -77,6 +78,10 @@ function CampaignBody({ campaign: row, onSave }: {
           {t(detail.saving ? "settings.campaign.saving" : detail.hasChanges ? "settings.campaign.pending" : "settings.campaign.saved")}
         </span>
       </div>
+      <ChatPrompt
+        campaign={campaign as any} draft={detail.draft} setDraft={detail.setDraft} canEdit scope="demo"
+        prompts={detail.conversationPrompts} linkedPrompt={detail.linkedPrompt} reloadPrompts={detail.reloadPrompts}
+      />
       <CampaignStageEditor
         campaign={campaign}
         isEditing={detail.isEditing}

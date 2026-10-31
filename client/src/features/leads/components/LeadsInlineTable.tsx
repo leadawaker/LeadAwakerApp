@@ -353,7 +353,6 @@ export function LeadsInlineTable({
   const { t } = useTranslation("leads");
   const [, setLocation] = useLocation();
   const { isAgencyUser } = useWorkspace();
-  const { isDark } = useTheme();
 
   // ── Editing state ─────────────────────────────────────────────────────────
   const [editingCell,    setEditingCell]    = useState<{ leadId: number; field: ColKey } | null>(null);
@@ -818,9 +817,9 @@ export function LeadsInlineTable({
                                 <div
                                   style={{
                                     width: 30, height: 30, borderRadius: 8, flexShrink: 0,
-                                    background: isDark ? avatarColor.bg : leadHex,
+                                    background: avatarColor.bg,
                                     display: "flex", alignItems: "center", justifyContent: "center",
-                                    color: isDark ? avatarColor.text : "#fff", fontFamily: "var(--mono)", fontWeight: 600,
+                                    color: avatarColor.text, fontFamily: "var(--mono)", fontWeight: 600,
                                     fontSize: 11, letterSpacing: "0.01em",
                                     boxShadow: "var(--sh-raised-crisp)",
                                   }}

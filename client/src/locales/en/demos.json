@@ -212,7 +212,7 @@
     "rail": {
       "label": "Services",
       "voice": "Voices, calls",
-      "shared": "Shared demo setup"
+      "shared": "Prompt in use"
     },
     "campaign": {
       "help": "The campaign this demo runs on. Changes save on their own.",
@@ -284,9 +284,21 @@
         "off": "Off",
         "standard": "Standard (60 to 200 ms)",
         "large": "Large (100 to 400 ms)"
+      }
+    },
+    "promptTile": {
+      "rail": "Prompt in use",
+      "inUse": "Prompt",
+      "builtIn": "Built-in default",
+      "sharedByClients": "Every client without its own version uses this prompt, so edits here reach them too. Make a copy to change it for this demo only.",
+      "conversation": {
+        "title": "Check-in chat",
+        "help": "How the assistant talks to the customer after a visit."
       },
-      "saraJitter": "Sara's line smoothing",
-      "saraJitterHint": "On: Sara is rung through our New York number so Telnyx can even out her voice before anyone hears it, with a little delay. Off: she is dialed directly, as before. Applies from the next call."
+      "reply": {
+        "title": "Review reply",
+        "help": "How the assistant drafts the owner's public reply to a review."
+      }
     }
   },
   "widgetColor": {

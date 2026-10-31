@@ -123,11 +123,9 @@ export function CommunicationProfilePanel({ accountId, niche, accountName, accou
           initialGrids={grids}
           initialStep={startStep}
           saving={saving}
-          niche={niche}
           accountName={accountName}
           accountLogoUrl={accountLogoUrl}
           showPreview={fill}
-          prefillWords={!exists}
           onFinish={handleFinish}
           onClose={handleClose}
           bodyMaxHeight={(fill || fillHeight) ? undefined : 460}

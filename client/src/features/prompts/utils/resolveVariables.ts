@@ -8,6 +8,8 @@ export interface CampaignForPreview {
   aiModel: string;
   /** Campaign whose prompt this one borrows when it has none of its own (engine falls through to it). */
   promptCampaignId?: number | null;
+  /** The conversation prompt this campaign picked (Campaigns.prompt_id); the engine reads it first. */
+  promptId?: number | null;
   agentName?: string | null;
   serviceName?: string | null;
   campaignService?: string | null;
@@ -208,7 +210,7 @@ export function resolveVariables(
   return { resolved, missing };
 }
 
-const MARK = 'class="bg-amber-100 text-amber-800 rounded px-0.5 dark:bg-amber-900/40 dark:text-amber-300"';
+export const MARK = 'class="bg-amber-100 text-amber-800 rounded px-0.5 dark:bg-amber-900/40 dark:text-amber-300"';
 const MARK_OPEN = `<mark ${MARK}>`;
 const MARK_CLOSE = "</mark>";
 

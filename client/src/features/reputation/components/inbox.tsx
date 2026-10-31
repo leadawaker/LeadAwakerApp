@@ -275,7 +275,7 @@ export function RepInbox({ state, reviews, feedback, selection, setSelection, au
   }
 
   const listPane = (
-    <div style={{ width: narrow ? "100%" : 348, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: narrow ? "none" : "1px solid var(--line)", background: "var(--surface)" }}>
+    <div className="la-list-panel" style={{ width: narrow ? "100%" : 348, flexShrink: 0, display: "flex", flexDirection: "column", minHeight: 0, borderRight: narrow ? "none" : "1px solid var(--line)", background: "var(--surface)" }}>
       <div style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "6px 10px 12px" }}>
         {state === "caughtup" && view === "needs"
           ? <RepCaughtUp />

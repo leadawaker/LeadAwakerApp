@@ -28,6 +28,10 @@
       "label": "Comportamento",
       "help": "Quem é o assistente, como escreve e quando uma pessoa assume."
     },
+    "prompt": {
+      "label": "Prompt",
+      "help": "O prompt que o assistente segue em cada conversa. Escolha outro da biblioteca ou edite este."
+    },
     "knowledge": {
       "label": "Conhecimento",
       "help": "O que o assistente sabe sobre a empresa e onde agenda.",
@@ -194,5 +198,48 @@
     "stopOnResponseHelp": "Cancela a próxima retomada planejada assim que chega uma resposta.",
     "objectionsTitle": "Roteiro de objeções",
     "objectionsHelp": "Até cinco objeções, cada uma com a resposta que a empresa aprova. O assistente usa essas respostas em vez de inventar uma."
+  },
+  "prompt": {
+    "none": "Nenhum prompt escolhido",
+    "pickTitle": "Prompt em uso",
+    "pickHelp": "O assistente de chat segue este prompt da biblioteca. Escolher outro vale a partir da próxima mensagem.",
+    "inUse": "Prompt",
+    "noneHelp": "Nenhum prompt escolhido: as conversas usam o prompt da conta ou o padrão.",
+    "alsoUsedBy": "Também usado por: {{names}}. Alterações aqui valem para eles também. Faça uma cópia para mudar só para esta conta.",
+    "copy": "Fazer uma cópia para esta conta",
+    "copyFailed": "Não foi possível fazer a cópia. Tente de novo.",
+    "copyNote": "Copiado do prompt #{{id}} em Chats > Configurações.",
+    "openLibrary": "Abrir #{{id}} na Biblioteca de prompts",
+    "versionLabel": "Antes de uma alteração em Chats > Configurações ({{campaign}})",
+    "pickHelpDemo": "Esta demo segue este prompt da biblioteca. Escolher outro vale a partir da próxima mensagem.",
+    "alsoUsedByDemo": "Também usado por: {{names}}. Alterações aqui valem para eles também. Faça uma cópia para mudar só nesta demo.",
+    "copyDemo": "Fazer uma cópia para esta demo"
+  },
+  "channels": {
+    "label": "Canal",
+    "whatsapp": "WhatsApp",
+    "website": "Site",
+    "shared": "O WhatsApp e o chat do site compartilham estas configurações, então uma mudança aqui vale para os dois.",
+    "split": "Dar ao site suas próprias configurações",
+    "splitFailed": "Não deu certo. Tente de novo."
+  },
+  "services": {
+    "label": "Serviço",
+    "soon": "Em breve",
+    "channel": "Canal: {{channel}}",
+    "speed_to_lead": {
+      "label": "Resposta Imediata"
+    },
+    "reactivation": {
+      "label": "Reativação"
+    },
+    "referrals": {
+      "label": "Indicações",
+      "soon": "Pede a clientes satisfeitos pelo WhatsApp que indiquem você e depois entra em contato com as pessoas indicadas."
+    },
+    "reputation": {
+      "label": "Reputação",
+      "soon": "Pede aos clientes uma avaliação no Google pelo WhatsApp quando o serviço termina. Começa quando o sistema de agendamento ou de serviços do cliente estiver conectado, para o CRM saber quando o cliente foi atendido."
+    }
   }
 }

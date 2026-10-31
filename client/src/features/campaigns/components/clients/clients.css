@@ -15,8 +15,9 @@
   height: 100%;
   min-height: 0;
   max-width: 1386px;
-  margin-right: auto;
+  margin-inline: auto;
 }
+.dp-group-switch { display: flex; }
 .dp-list {
   container: dp-list / inline-size;
   flex: 1;
@@ -28,7 +29,7 @@
   display: flex;
   flex-direction: column;
   gap: 18px;
-  padding: 20px 24px 40px;
+  padding: 20px 14px 40px;
 }
 .dp-panel {
   container: dp-panel / inline-size;
@@ -44,8 +45,8 @@
 /* Each section of the list is a raised card with a hairline, so it reads against the page. */
 .dp-group { border: 1px solid var(--line); }
 /* A persona is open: the list steps aside into a rail, the editor gets the room. */
-.dp-shell.is-open .dp-list { flex: 0 0 340px; }
-.dp-shell.is-open .dp-list-inner { padding: 16px 14px 32px; gap: 14px; }
+.dp-shell.is-open .dp-list { flex: 0 0 var(--toolbar-w); }
+.dp-shell.is-open .dp-list-inner { gap: 14px; }
 .dp-shell.is-open .dp-hero, .dp-shell.is-open .dp-seg-count { display: none; }
 .dp-shell.is-open .dp-filters .la-seg-btn { padding: 6px 11px; }
 .dp-filters { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }

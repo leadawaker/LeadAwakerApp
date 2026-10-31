@@ -16,6 +16,7 @@ import fs from "fs";
 import path from "path";
 import { execFileSync } from "child_process";
 import { EXPENSES_DIR } from "../paths";
+import { contractHtml, createSignatureRequest, eventIsAuthentic, fetchCompletedPdf } from "../contracts/signwell";
 
 export function registerBillingRoutes(app: Express): void {
   // ─── Billable booking stats ──────────────────────────────────────────
@@ -208,10 +209,10 @@ export function registerBillingRoutes(app: Express): void {
     res.json(toDbKeys(contract as any, contracts));
   }));
 
-  // SignWell: send contract for e-signature
+  // SignWell: send contract for e-signature. A test document never touches the contract.
   app.post("/api/contracts/:id/send-for-signature", requireAgency, wrapAsync(async (req, res) => {
     const contractId = Number(req.params.id);
-    const { signerEmail, signerName, testMode = true } = req.body as {
+    const { signerEmail, signerName, testMode = false } = req.body as {
       signerEmail?: string;
       signerName?: string;
       testMode?: boolean;
@@ -221,81 +222,84 @@ export function registerBillingRoutes(app: Express): void {
 
     const contract = await storage.getContractById(contractId);
     if (!contract) return res.status(404).json({ error: "Contract not found" });
+    if (!process.env.SIGNWELL_API_KEY) return res.status(500).json({ error: "SIGNWELL_API_KEY not configured" });
 
-    const apiKey = process.env.SIGNWELL_API_KEY;
-    if (!apiKey) return res.status(500).json({ error: "SIGNWELL_API_KEY not configured" });
+    const title = contract.title || "Contract";
+    const pdf = contract.fileData?.split(",").pop();
+    const fileBase64 = pdf || (contract.contractText
+      ? Buffer.from(contractHtml(title, contract.contractText)).toString("base64")
+      : null);
+    if (!fileBase64) return res.status(400).json({ error: "No document content available to send for signature" });
 
     try {
-      // Build signer
-      const signer = {
-        id: "1",
-        email: signerEmail,
-        name: signerName || signerEmail,
-        placeholder_name: "Signer 1",
-        routing_order: 1,
-        redirect_url: null,
-      };
-
-      // Prepare document content (base64 from contract.pdfContent or body.htmlContent)
-      let fileData: string | null = null;
-      const htmlContent = req.body.htmlContent as string | undefined;
-      if (htmlContent) {
-        fileData = Buffer.from(htmlContent).toString("base64");
-      } else if ((contract as any).pdfContent) {
-        fileData = (contract as any).pdfContent;
-      }
-
-      if (!fileData) {
-        return res.status(400).json({ error: "No document content available to send for signature" });
-      }
-
-      const body = {
-        test_mode: testMode,
-        files: [{ name: `contract-${contractId}.html`, file_base64: fileData }],
-        signers: [signer],
-        subject: `Please sign: ${(contract as any).title || "Contract"}`,
-        message: `You have been asked to sign a document by Lead Awaker.`,
-        apply_signing_order: false,
-        reminders: true,
-        require_all_signers: true,
-        embedded_signing: false,
-      };
-
-      const swRes = await fetch("https://www.signwell.com/api/v1/documents/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Api-Key": apiKey,
-        },
-        body: JSON.stringify(body),
+      const sw = await createSignatureRequest({
+        contractId,
+        title,
+        fileName: pdf ? (contract.fileName || `contract-${contractId}.pdf`) : `contract-${contractId}.html`,
+        fileBase64,
+        signerEmail,
+        signerName: signerName || signerEmail,
+        testMode,
       });
-
-      const swData = await swRes.json() as any;
-
-      if (!swRes.ok) {
-        console.error("[SignWell] Error:", swData);
-        return res.status(swRes.status).json({ error: "SignWell API error", details: swData });
+      if (!sw.ok) {
+        console.error("[SignWell] Error:", sw.data);
+        return res.status(sw.status).json({ error: "SignWell API error", details: sw.data });
       }
 
-      // Update contract with SignWell document ID and set status to Sent
-      const updated = await storage.updateContract(contractId, {
+      const updated = testMode ? contract : await storage.updateContract(contractId, {
         status: "Sent",
         sentAt: new Date(),
-        signwellDocumentId: swData.id,
+        signwellDocumentId: sw.data.id,
         signerEmail,
         signerName: signerName || null,
-      } as any);
+      });
 
       res.json({
         success: true,
-        document_id: swData.id,
-        signing_url: swData.signers?.[0]?.sign_url || null,
+        documentId: sw.data.id,
+        signingUrl: sw.data.recipients?.[0]?.signing_url || null,
         contract: toDbKeys(updated as any, contracts),
       });
     } catch (err: any) {
       console.error("[SignWell] Error:", err);
       res.status(500).json({ error: "Failed to send contract for signature", details: err.message });
     }
+  }));
+
+  // SignWell events (public, proven by the event hash). Unknown documents, like
+  // test documents, are acknowledged and ignored.
+  app.post("/api/webhooks/signwell", wrapAsync(async (req, res) => {
+    const event = req.body?.event ?? {};
+    if (!eventIsAuthentic(event)) return res.status(401).json({ message: "Invalid event" });
+
+    const documentId = req.body?.data?.object?.id;
+    const contract = documentId ? await storage.getContractBySignwellDocumentId(documentId) : undefined;
+    if (!contract) return res.json({ ok: true });
+
+    if (event.type === "document_viewed") {
+      await storage.updateContract(contract.id!, {
+        viewedCount: (contract.viewedCount ?? 0) + 1,
+        viewedAt: contract.viewedAt ?? new Date(),
+        ...(contract.status === "Sent" ? { status: "Viewed" } : {}),
+      });
+    } else if (event.type === "document_completed") {
+      await storage.updateContract(contract.id!, { status: "Signed", signedAt: new Date() });
+      try {
+        const fileData = await fetchCompletedPdf(documentId);
+        await storage.updateContract(contract.id!, {
+          fileData,
+          fileName: `${contract.title || `contract-${contract.id}`} (signed).pdf`,
+          fileType: "application/pdf",
+        });
+      } catch (err) {
+        console.error("[SignWell] Could not store the signed PDF:", err);
+      }
+    } else if (event.type === "document_declined" || event.type === "document_canceled") {
+      await storage.updateContract(contract.id!, { status: "Cancelled" });
+    } else if (event.type === "document_expired") {
+      await storage.updateContract(contract.id!, { status: "Expired" });
+    }
+    res.json({ ok: true });
   }));
 
   app.delete("/api/contracts/:id", requireAgency, wrapAsync(async (req, res) => {

@@ -12,11 +12,12 @@ import { WhatsAppBehaviourCard } from "./whatsapp/WhatsAppBehaviourCard";
 import { PhoneConnection } from "./PhoneConnection";
 import { VoiceSettingsSection } from "./VoiceSettingsSection";
 import { ConnectionsOverview, groupAnchorId, type ConnectionGroup } from "./ConnectionsOverview";
+import { SectionLayout } from "./SectionRail";
 import { InstagramConnectCard, useSocialStatus } from "@/features/social/components/InstagramConnectCard";
 import { integrationGroupsFor } from "@/features/social/lib/socialState";
 import { useWorkspace } from "@/hooks/useWorkspace";
 
-const cardStyle: React.CSSProperties = { borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" };
+const cardStyle: React.CSSProperties = { borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--card)" };
 
 
 /** One channel family: a numbered heading, one line on what it is for, its cards. */
@@ -117,7 +118,7 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
           </div>
         </div>
         {!readOnly && (
-          <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)" }}>
+          <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)" }}>
             <MeetingTypeCard
               accountId={accountId}
               meetingType={account.meeting_type}
@@ -127,7 +128,7 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
         )}
         {/* In-person visits besides the call (specs/phone-booking-v2). */}
         {!readOnly && (
-          <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)" }}>
+          <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)" }}>
             <VisitsCard key={accountId} accountId={accountId} />
           </div>
         )}
@@ -147,20 +148,12 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
   );
 
   if (readOnly) return groups;
-  if (stacked) {
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 24 }}>
-        <ConnectionsOverview accountId={accountId} active={open} onSelect={setOpen} layout="grid" />
-        {groups}
-      </div>
-    );
-  }
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "220px minmax(0, 1fr)", gap: 28, alignItems: "start" }}>
-      <div style={{ position: "sticky", top: "calc(var(--ws-sticky-top, 0px) + 16px)" }}>
-        <ConnectionsOverview accountId={accountId} active={open} onSelect={setOpen} layout="rail" />
-      </div>
+    <SectionLayout
+      stacked={stacked}
+      rail={(layout) => <ConnectionsOverview accountId={accountId} active={open} onSelect={setOpen} layout={layout} />}
+    >
       {groups}
-    </div>
+    </SectionLayout>
   );
 }

@@ -83,10 +83,10 @@ function NavCountBadge({ count }: { count?: number }) {
       position: "absolute", top: -6, right: -6,
       minWidth: 16, height: 16, padding: "0 4px",
       borderRadius: "var(--r-pill)",
-      background: "var(--wine-grad)",
-      color: "#FFFFFF", fontSize: 10, fontWeight: 700,
+      background: "var(--nav-ink)",
+      color: "var(--nav-bg)", fontSize: 10, fontWeight: 700,
       display: "flex", alignItems: "center", justifyContent: "center",
-      border: "1px solid var(--bg-2)",
+      border: "1px solid var(--nav-bg)",
     }}>
       {count > 9 ? "9+" : count}
     </span>
@@ -275,11 +275,8 @@ export function RightSidebar({
    *  - Cadence (/platform/cadence): navItems row { labelKey: "Cadence", icon: PhoneCall,
    *    testId: "nav-cadence", ownerOnly, outreachOnly } plus "Cadence" in the outreach
    *    section filter below; the CommandPalette row (keywords "cadence cold calls outreach").
-   *  - Speed to Lead (/platform/speed-to-lead, mock data): the "speed" row in the
-   *    Services group below (Icon Send); the CommandPalette and MobileMorePage rows
-   *    (serviceKey "speed", agencyOnly); LANDING_OPTIONS in lib/landingPage.ts; its
-   *    switch in features/settings/components/ServicePagesCard.tsx; its route guard
-   *    back to ServicePageGuard service="speed".
+   *  - Speed to Lead: removed (2026-10-30). It is the WhatsApp receptionist, set up in
+   *    Chats > Settings; the old mock page was a different (outbound) product.
    *  - Missed calls (/platform/missed-calls, mock data): the "missedcall" row in the
    *    Services group (Icon PhoneMissed); the CommandPalette and MobileMorePage rows
    *    (serviceKey "missedcall"); LANDING_OPTIONS; its ServicePagesCard switch; its
@@ -473,12 +470,11 @@ export function RightSidebar({
 
       {/* DESKTOP SIDEBAR — Neumorphic design system */}
       <aside
-        className="hidden md:flex flex-col fixed left-0 bottom-0"
+        className="la-nav-rail hidden md:flex flex-col fixed left-0 bottom-0"
         style={{
           width: 188,
           top: "var(--banner-h, 0px)",
-          background: "var(--chrome)",
-          borderRight: "1px solid var(--line)",
+          background: "var(--nav-bg)",
           height: "100%",
           flexShrink: 0,
           boxShadow: "none",
@@ -490,10 +486,9 @@ export function RightSidebar({
         <a href="/" style={{
           height: 60, flexShrink: 0, padding: "0 12px",
           display: "flex", alignItems: "center",
-          borderBottom: "1px solid var(--line)",
           cursor: "pointer",
         }}>
-          <img src={isDark ? "/premium/logo-v2-dark.svg" : "/premium/logo-v2-outline.svg"} alt="Lead Awaker" style={{ height: 34, marginTop: 4 }} />
+          <img src="/premium/logo-nav-beige.svg" alt="Lead Awaker" style={{ height: 34, marginTop: 4 }} />
         </a>
 
         {/* ── Nav (scrolls) ── */}
@@ -508,7 +503,7 @@ export function RightSidebar({
               <DropdownMenuTrigger asChild>
                 <button className="la-switcher" style={{ marginBottom: 12 }}>
                   <span>{currentAccountId === 0 ? t("topbar.agencyView") : (currentAccount?.name || t("topbar.account"))}</span>
-                  <span style={{ display: "flex", transform: "rotate(90deg)", color: "var(--muted-foreground)" }}>
+                  <span style={{ display: "flex", transform: "rotate(90deg)", color: "var(--nav-ink-mute)" }}>
                     <ChevronRight size={12} />
                   </span>
                 </button>
@@ -686,7 +681,7 @@ export function RightSidebar({
         {/* ── Bottom: utilities + profile ── */}
         <div style={{
           padding: "12px 12px 14px",
-          borderTop: "1px solid var(--line)",
+          borderTop: "1px solid var(--nav-line)",
         }}>
           {/* Notifications button — full-width pill with bell + label + badge */}
           <Popover open={notifOpen} onOpenChange={setNotifOpen}>
@@ -704,8 +699,8 @@ export function RightSidebar({
                   <span style={{
                     minWidth: 18, height: 18, padding: "0 5px",
                     borderRadius: "var(--r-pill)",
-                    background: "var(--wine-grad)",
-                    color: "#fff", fontSize: 10, fontWeight: 700,
+                    background: "var(--nav-ink)",
+                    color: "var(--nav-bg)", fontSize: 10, fontWeight: 700,
                     display: "flex", alignItems: "center", justifyContent: "center",
                   }}>
                     {unreadNotifCount > 9 ? "9+" : unreadNotifCount}
@@ -715,7 +710,7 @@ export function RightSidebar({
             </PopoverTrigger>
             <PopoverContent side="right" align="end" sideOffset={8}
               className="w-[380px] p-0 rounded-2xl shadow-xl border-border overflow-hidden"
-              style={{ background: isDark ? "rgba(10, 8, 6, 0.88)" : "rgba(255, 250, 240, 0.65)", backdropFilter: "blur(40px)", WebkitBackdropFilter: "blur(40px)" }}>
+              style={{ background: isDark ? "rgba(14, 14, 14, 0.88)" : "rgba(255, 255, 255, 0.8)", backdropFilter: "blur(40px) saturate(30%)", WebkitBackdropFilter: "blur(40px) saturate(30%)" }}>
               <NotificationCenter open={notifOpen} onClose={() => setNotifOpen(false)} />
             </PopoverContent>
           </Popover>
@@ -820,10 +815,10 @@ export function RightSidebar({
                 }
               </span>
               <span style={{ flex: 1, minWidth: 0, textAlign: "left" }}>
-                <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--ink-soft)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{shownName}</span>
-                <span style={{ display: "block", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--muted-foreground)" }}>{userRole}</span>
+                <span style={{ display: "block", fontSize: 13, fontWeight: 600, color: "var(--nav-ink)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{shownName}</span>
+                <span style={{ display: "block", fontFamily: "'Geist Mono', ui-monospace, monospace", fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--nav-ink-mute)" }}>{userRole}</span>
               </span>
-              <span style={{ display: "flex", transform: profileOpen ? "rotate(-90deg)" : "rotate(90deg)", transition: "transform 160ms", color: "var(--muted-foreground)" }}>
+              <span style={{ display: "flex", transform: profileOpen ? "rotate(-90deg)" : "rotate(90deg)", transition: "transform 160ms", color: "var(--nav-ink-mute)" }}>
                 <ChevronRight size={12} />
               </span>
             </button>

@@ -147,15 +147,10 @@ export function refreshLeadAvatarColors(): void {
 // Reads from the mutable LEAD_AVATAR_BG/TEXT maps (pastel-derived from PIPELINE_HEX).
 // Dark-mode-aware: picks from dark maps when .dark class is on <html>.
 export function getLeadStatusAvatarColor(status: string): { bg: string; text: string } {
-  if (isDarkMode()) {
-    return {
-      bg:   LEAD_AVATAR_BG_DARK[status]   ?? LEAD_AVATAR_BG_DARK["New"]   ?? "#2A2D33",
-      text: LEAD_AVATAR_TEXT_DARK[status]  ?? LEAD_AVATAR_TEXT_DARK["New"]  ?? "#9CA3AF",
-    };
-  }
+  // The deep circles with bright initials, in day and night mode alike.
   return {
-    bg:   LEAD_AVATAR_BG[status]   ?? LEAD_AVATAR_BG["New"]   ?? "#d1d5db",
-    text: LEAD_AVATAR_TEXT[status]  ?? LEAD_AVATAR_TEXT["New"]  ?? "#374151",
+    bg:   LEAD_AVATAR_BG_DARK[status]   ?? LEAD_AVATAR_BG_DARK["New"]   ?? "#2A2D33",
+    text: LEAD_AVATAR_TEXT_DARK[status]  ?? LEAD_AVATAR_TEXT_DARK["New"]  ?? "#9CA3AF",
   };
 }
 

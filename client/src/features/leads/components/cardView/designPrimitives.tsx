@@ -43,6 +43,7 @@ export function Card({
   style,
   bodyStyle,
   variant = "raised",
+  hideHead = false,
 }: {
   headLeft?: React.ReactNode;
   headRight?: React.ReactNode;
@@ -50,6 +51,8 @@ export function Card({
   style?: React.CSSProperties;
   bodyStyle?: React.CSSProperties;
   variant?: "raised" | "inset" | "flat";
+  /** The title sits outside the card (ListSection). */
+  hideHead?: boolean;
 }) {
   const wrapClass = variant === "raised" ? "neu-raised" : "";
   const wrapBg: React.CSSProperties =
@@ -65,6 +68,7 @@ export function Card({
       className={wrapClass}
       style={{ borderRadius: radius, overflow: "hidden", display: "flex", flexDirection: "column", ...wrapBg, ...style }}
     >
+      {!hideHead && (
       <div
         style={{
           height: HEAD_H,
@@ -80,6 +84,7 @@ export function Card({
         <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>{headLeft}</div>
         {headRight}
       </div>
+      )}
       <div style={{ flex: 1, minHeight: 0, display: "flex", flexDirection: "column", ...bodyStyle }}>{children}</div>
     </div>
   );

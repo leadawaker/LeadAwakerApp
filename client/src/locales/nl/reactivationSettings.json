@@ -1,0 +1,218 @@
+{
+  "rail": {
+    "overview": {
+      "label": "Overzicht",
+      "help": "Wat deze campagne verstuurt, naar wie en wanneer. Klik op een regel om hem te wijzigen."
+    },
+    "opener": {
+      "label": "Eerste bericht",
+      "help": "Het eerste bericht dat elke lead krijgt, en hoe het de assistent voorstelt."
+    },
+    "followups": {
+      "label": "Opvolging",
+      "help": "De herinneringen die een lead krijgt als die niet antwoordt."
+    },
+    "behaviour": {
+      "label": "Gedrag",
+      "help": "Wie de assistent is en hoe die schrijft zodra een lead antwoordt."
+    },
+    "prompt": {
+      "label": "Prompt",
+      "help": "De gespreksprompt waarop deze campagne draait."
+    },
+    "knowledge": {
+      "label": "Kennis",
+      "help": "Wat de assistent weet over het bedrijf en over deze leads."
+    },
+    "sending": {
+      "label": "Kanaal & planning",
+      "help": "WhatsApp of sms, en wanneer en hoe snel berichten uitgaan."
+    },
+    "advanced": {
+      "label": "Geavanceerd",
+      "help": "Engine-instellingen voor het bureau. De meeste campagnes hebben ze nooit nodig."
+    }
+  },
+  "state": {
+    "notWritten": "Nog niet geschreven",
+    "followupsOff": "Geen opvolging",
+    "followups": "{{count}} herinneringen",
+    "followups_one": "1 herinnering",
+    "followups_other": "{{count}} herinneringen",
+    "noPrompt": "Geen prompt gekozen",
+    "noBookingLink": "Geen boekingslink",
+    "withBookingLink": "Boekingslink ingesteld",
+    "noKb": "Nog geen bedrijfsinfo",
+    "unnamed": "Nog geen naam"
+  },
+  "overview": {
+    "title": "Deze campagne in één oogopslag",
+    "status": "Status",
+    "channel": "Kanaal",
+    "opener": "Eerste bericht",
+    "followups": "Opvolging",
+    "window": "Verzendvenster",
+    "windowValue": "{{start}} tot {{end}}, tot {{limit}} nieuwe leads per dag",
+    "assistant": "Assistent",
+    "booking": "Boekingslink",
+    "prompt": "Prompt",
+    "notSet": "Niet ingesteld",
+    "range": "{{start}} tot {{end}}"
+  },
+  "opener": {
+    "messageTitle": "Eerste bericht",
+    "messageHelp": "Klik op het voorbeeld om te bewerken. Woorden tussen accolades, zoals {first_name}, worden per lead ingevuld. De sjabloonknop biedt kant-en-klare openers.",
+    "label": "Bericht",
+    "extrasTitle": "Extra's",
+    "voiceNote": "Als spraakbericht versturen",
+    "voiceNoteHelp": "Op WhatsApp gaat het eerste bericht uit als ingesproken spraakbericht. Zet hiervoor spraakantwoorden aan onder Gedrag.",
+    "optOut": "Afmeldregel toevoegen",
+    "optOutHelp": "Zet een korte regel \"antwoord STOP om te stoppen\" onder het eerste bericht. Gebruikelijk voor sms in de VS."
+  },
+  "followups": {
+    "countTitle": "Hoeveel",
+    "countHelp": "Elke herinnering gaat alleen uit als de lead nog niet heeft geantwoord. Blijft de laatste onbeantwoord, dan wordt de lead als verloren gemarkeerd.",
+    "count": "Herinneringen",
+    "none": "Geen",
+    "bump": "Herinnering {{n}}",
+    "delay": "Wacht",
+    "delayUnit": "uur na het vorige bericht",
+    "message": "Bericht",
+    "messagePlaceholder": "Wat deze herinnering zegt. Leeg gelaten wordt deze herinnering overgeslagen.",
+    "angle": "Invalshoek voor de AI",
+    "anglePlaceholder": "bijv. Noem dat de voorjaarsplanning volloopt. Laat leeg voor de standaard.",
+    "voiceNote": "Spraakbericht",
+    "howTitle": "Hoe ze geschreven worden",
+    "aiBumps": "Laat de AI de herinneringen schrijven",
+    "aiBumpsHelp": "Voor leads die al antwoordden schrijft de AI elke herinnering op basis van het gesprek en de gegeven invalshoek. Leads die nooit antwoordden krijgen de berichttekst.",
+    "stopOnResponse": "Stop met opvolgen zodra de lead antwoordt",
+    "stopOnResponseHelp": "Aanbevolen. Staat dit uit, dan blijven de herinneringen ook na een antwoord op schema.",
+    "laterTitle": "Als een lead vraagt om later contact",
+    "laterHelp": "Verstuurd op de dag die de lead noemde (\"probeer het in maart nog eens\"). De AI schrijft het op basis van het gesprek; deze tekst is de reserve als dat niet lukt.",
+    "laterPlaceholder": "Hoi {first_name}, je vroeg me om rond deze tijd terug te komen..."
+  },
+  "behaviour": {
+    "whoTitle": "Wie er schrijft",
+    "agentName": "Naam van de assistent",
+    "agentNameHelp": "De voornaam waarmee de assistent ondertekent.",
+    "language": "Taal",
+    "languageHelp": "De taal waarin de berichten uitgaan.",
+    "languages": {
+      "en": "Engels",
+      "nl": "Nederlands",
+      "pt": "Portugees (Brazilië)"
+    },
+    "tone": "Toon",
+    "toneHelp": "Hoe die schrijft, in je eigen woorden.",
+    "tonePlaceholder": "bijv. Warm en kort, als een collega die ze nog kent.",
+    "howTitle": "Hoe die antwoordt",
+    "replies": "Berichten per antwoord",
+    "repliesHelp": "Hoeveel korte berichten die maximaal achter elkaar mag sturen, zoals iemand die typt.",
+    "voice": "Spraakantwoorden",
+    "voiceHelp": "Of die op WhatsApp met spraakberichten mag antwoorden.",
+    "voiceModes": {
+      "off": "Uit",
+      "smart": "Als de lead er een stuurt",
+      "voice_reply": "Altijd"
+    },
+    "objectionsTitle": "Bezwaren",
+    "objectionsHelp": "Door jou goedgekeurde antwoorden op de tegenwerpingen die deze leads het vaakst geven. De assistent gebruikt ze in eigen woorden."
+  },
+  "knowledge": {
+    "businessTitle": "Het bedrijf",
+    "company": "Bedrijfsnaam",
+    "companyHelp": "Hoe de assistent het bedrijf in berichten noemt.",
+    "description": "Wat het bedrijf doet",
+    "descriptionHelp": "Een paar regels waar de assistent op kan bouwen.",
+    "service": "Dienst",
+    "serviceHelp": "Waar deze leads destijds naar vroegen.",
+    "kb": "Kennis",
+    "kbHelp": "Prijzen, werkgebied, openingstijden, veelgestelde vragen: alles wat de assistent nodig kan hebben.",
+    "accountKb": "Ook de Company Intel van het account gebruiken",
+    "accountKbHelp": "Voegt de kennis toe die voor het hele account is opgeslagen (gedeeld met de receptionist).",
+    "bookingLink": "Boekingslink",
+    "bookingLinkHelp": "Waar een lead boekt. Elke lead krijgt er een eigen korte link naartoe.",
+    "leadsTitle": "Over deze leads",
+    "leadContext": "Wat de assistent over ze weet",
+    "leadContextHelp": "bijv. Ze vroegen vorig jaar een offerte aan en boekten nooit. Een notitie op de lead zelf gaat hierboven.",
+    "whatLeadDid": "Wat ze deden",
+    "whatLeadDidHelp": "Hun laatste stap bij het bedrijf.",
+    "when": "Wanneer",
+    "whenHelp": "Ongeveer wanneer dat was, bijv. afgelopen voorjaar."
+  },
+  "sending": {
+    "channelTitle": "Kanaal",
+    "channelHelp": "Hoe de berichten de leads bereiken. Antwoorden komen via hetzelfde kanaal terug en de assistent beantwoordt ze.",
+    "channels": {
+      "whatsapp_sms": {
+        "label": "WhatsApp, sms als terugval",
+        "help": "Verstuurt via WhatsApp. Staat een nummer niet op WhatsApp, of weigert WhatsApp een bericht, dan gaat het als sms."
+      },
+      "whatsapp": {
+        "label": "Alleen WhatsApp",
+        "help": "Verstuurt nooit een sms. Leads zonder WhatsApp worden niet bereikt."
+      },
+      "sms": {
+        "label": "Sms",
+        "help": "Alleen sms, voor markten waar sms de norm is, zoals de VS."
+      }
+    },
+    "smsNote": "Sms gaat uit vanaf het Twilio-nummer van het account. In de VS moet dat nummer eerst geregistreerd zijn voor zakelijke sms (A2P 10DLC).",
+    "templateTitle": "WhatsApp-sjabloon",
+    "template": "Goedgekeurd sjabloon voor het eerste bericht",
+    "templateHelp": "WhatsApp laat een bedrijf alleen een gesprek beginnen met een goedgekeurd sjabloon. Zonder sjabloon gaat het eerste bericht als sms (met sms als terugval) of wordt het niet verstuurd (alleen WhatsApp).",
+    "vcard": "Naam op het contactkaartje",
+    "vcardHelp": "De naam op het contactkaartje dat de lead kan opslaan. Leeg gebruikt de naam van de assistent en het bedrijf.",
+    "scheduleTitle": "Planning",
+    "hours": "Verzendtijden",
+    "hoursHelp": "Berichten gaan alleen tussen deze tijden uit.",
+    "to": "tot",
+    "dailyLimit": "Nieuwe leads per dag",
+    "dailyLimitHelp": "Hoeveel leads per dag hun eerste bericht krijgen.",
+    "interval": "Minuten tussen eerste berichten",
+    "intervalHelp": "Spreidt het versturen zodat het natuurlijk oogt en het nummer beschermd blijft."
+  },
+  "advanced": {
+    "modelTitle": "Model",
+    "model": "AI-model",
+    "modelDefault": "Standaard",
+    "role": "Rol",
+    "roleHelp": "Eén regel over de taak van de assistent, gebruikt in de prompt.",
+    "conversationTitle": "Gesprek",
+    "conversationMode": "Soort gesprek",
+    "conversationModeHelp": "Verkennen vraagt wat de lead nodig heeft. Beslissen volgt een offerte op die ze al hebben. Automatisch kiest per lead.",
+    "conversationModes": {
+      "auto": "Automatisch",
+      "scoping": "Verkennen",
+      "decision": "Beslissen (offerte bekend)"
+    },
+    "bookingMode": "Boeken",
+    "bookingModeHelp": "Een verkoopgesprek boeken, of de klus direct inplannen.",
+    "bookingModes": {
+      "unset": "Standaard",
+      "Sales Call": "Verkoopgesprek",
+      "Direct Booking": "Direct boeken",
+      "Call Agent": "Iemand waarschuwen",
+      "Qualifying": "Alleen kwalificeren"
+    },
+    "typos": "Typfouten per gesprek",
+    "typosHelp": "Een paar kleine typfouten laten de berichten menselijk lezen.",
+    "timingTitle": "Wachttijd voor antwoorden",
+    "textDelay": "Wachten na een tekst",
+    "textDelayHelp": "Seconden die de assistent op meer berichten wacht voor die antwoordt.",
+    "voiceDelay": "Wachten na een spraakbericht",
+    "voiceDelayHelp": "Hetzelfde, na een spraakbericht.",
+    "seconds": "{{n}} s",
+    "abTitle": "A/B-test",
+    "ab": "Een A/B-test draaien",
+    "abHelp": "Verdeelt de leads over prompt A en prompt B.",
+    "abSplit": "Aandeel op A (%)",
+    "legacyTitle": "Promptvariabelen",
+    "legacyHelp": "Oudere velden die sommige prompts nog als {variabelen} lezen. Laat leeg tenzij de prompt ze gebruikt.",
+    "niche": "Niche",
+    "nicheHelp": "Kiest de vakwoorden, zoals {project}.",
+    "nicheQuestion": "Nichevraag",
+    "firstTouch": "Eerste contact",
+    "usp": "Onderscheidend punt"
+  }
+}

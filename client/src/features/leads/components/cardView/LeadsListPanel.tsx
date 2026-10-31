@@ -25,6 +25,7 @@ import { CompactLeadCard } from "./CompactLeadCard";
 import { CONVERSATION_TYPE_ICON, CONVERSATION_TYPES, type ConversationType } from "../conversationType";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { GroupHeader, ListSkeleton } from "./atoms";
+import { ListSection, SplitListSkeleton } from "@/components/crm/primitives";
 import { LeadListCard } from "./LeadListCard";
 import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import { MobileMenuGroup } from "../FilterGroups";
@@ -45,10 +46,20 @@ import type { ViewMode, GroupByOption, SortByOption } from "./types";
 type ViewTab = { id: string; label: string; icon: any };
 
 /** The Calls list panel width (VoiceCallsInbox, CallersInbox): Chats uses the same on desktop. */
-const CHATS_LIST_WIDTH = 348;
+const CHATS_LIST_WIDTH = "var(--toolbar-w)";
+
+/** The flat list (group headers and lead rows) as one section per group. */
+function groupSections(flat: any[]) {
+  const out: { label?: string; count?: number; rows: { item: any; i: number }[] }[] = [];
+  flat.forEach((item, i) => {
+    if (item.kind === "header") { out.push({ label: item.label, count: item.count, rows: [] }); return; }
+    if (out.length === 0) out.push({ rows: [] });
+    out[out.length - 1].rows.push({ item, i });
+  });
+  return out;
+}
 
 export function LeadsListPanel({
-  isHidden,
   isCompact,
   isNarrow,
   scrollContainerRef,
@@ -98,7 +109,7 @@ export function LeadsListPanel({
   onToggleFilterTag,
   isConversationsMode,
   channelTabs,
-  scopeSwitch,
+  tabletScopeSwitch,
   mobileScopeSwitch,
   mobilePageTabs,
   showChannelBadge = false,
@@ -113,7 +124,6 @@ export function LeadsListPanel({
   bulkBusy,
   handleListBulkDelete,
 }: {
-  isHidden: boolean;
   isCompact: boolean;
   isNarrow: boolean;
   scrollContainerRef: RefObject<HTMLDivElement | null>;
@@ -166,8 +176,9 @@ export function LeadsListPanel({
   /** Chats page inbox tabs, shown above the card list. */
   channelTabs?: ReactNode;
   /** Chats page on a tablet: the compact Live / Demo switch (Owner), above the inbox tabs. */
-  scopeSwitch?: ReactNode;
   /** Chats page on a phone: the round Live / Demo menu button (Owner), beside the Chat settings gear. */
+  /** Tablets have no topbar: the scope switch stays on the list. */
+  tabletScopeSwitch?: ReactNode;
   mobileScopeSwitch?: ReactNode;
   /** Chats page: Stats · Chats in the mobile header, in place of the (dead) List switch. */
   mobilePageTabs?: ReactNode;
@@ -336,21 +347,47 @@ export function LeadsListPanel({
     </>
   );
 
+  // Desktop Chats: every group is its own card with a big title, tabs and totals sit on the ground.
+  const splitGroups = !!isConversationsMode && !isNarrow && !isCompact;
+  const selectedId = selectedLead ? getLeadId(selectedLead) : null;
+  const leadRow = (item: any, i: number) => {
+    const lid = getLeadId(item.lead);
+    return (
+      <div key={lid} data-lead-id={lid} className={i < 15 ? "animate-card-enter" : undefined} style={{ scrollMarginTop: 44, ...(i < 15 ? { animationDelay: `${Math.min(i, 15) * 30}ms` } : {}) }}>
+      <LeadListCard
+        lead={item.lead}
+        isActive={selectedId === getLeadId(item.lead)}
+        onClick={() => { onSelectLead(item.lead); onMobileViewChange?.("detail"); }}
+        leadTags={item.tags}
+        campaignsById={campaignsById}
+        showPeek={peekOn}
+        showChannelBadge={showChannelBadge}
+        onOpenConversation={() => handleOpenConversation(getLeadId(item.lead))}
+        onQuickChangeStatus={() => openQuickAction(item.lead, "status")}
+        onQuickAddNote={() => openQuickAction(item.lead, "note")}
+        onQuickDelete={() => openQuickAction(item.lead, "delete")}
+        selected={selectedLeadIds.has(getLeadId(item.lead))}
+        onToggleSelect={() => toggleLeadSelection(getLeadId(item.lead))}
+      />
+      </div>
+    );
+  };
+
   return (
     <div
       className={cn(
+        "la-list-panel",
+        splitGroups && "la-list-panel--split",
         "flex flex-col bg-panel-list-bg overflow-hidden h-full min-h-0",
-        isHidden
-          ? "hidden"
-          : isCompact
-            ? "w-[65px] shrink-0"
-            // Chats: the width is set inline below (exactly the Calls list panel), not by a breakpoint class.
-            : isConversationsMode && !isNarrow ? "shrink-0" : "w-full lg:w-[var(--toolbar-w)] lg:shrink-0"
+        isCompact
+          ? "w-[65px] shrink-0"
+          // Chats: the width is set inline below (exactly the Calls list panel), not by a breakpoint class.
+          : isConversationsMode && !isNarrow ? "shrink-0" : "w-full lg:w-[var(--toolbar-w)] lg:shrink-0"
       )}
-      // Chats on a desktop: exactly the Calls list panel (VoiceCallsInbox / CallersInbox: 348px, border-box, no shrink),
+      // Chats on a desktop: exactly the Calls list panel (VoiceCallsInbox / CallersInbox: --toolbar-w, border-box, no shrink),
       // driven by the same JS breakpoint as the two-pane layout so the width can never fall back to full width.
       // Chats: the Calls panel's own ground (--surface), on every width.
-      style={{ borderRight: "1px solid var(--line)", ...(isConversationsMode ? { background: "var(--surface)" } : {}), ...(isConversationsMode && !isNarrow && !isCompact && !isHidden ? { width: CHATS_LIST_WIDTH, minWidth: CHATS_LIST_WIDTH, maxWidth: CHATS_LIST_WIDTH, flexShrink: 0 } : {}) }}
+      style={{ borderRight: "1px solid var(--line)", ...(isConversationsMode ? { background: "var(--surface)" } : {}), ...(isConversationsMode && !isNarrow && !isCompact ? { width: CHATS_LIST_WIDTH, minWidth: CHATS_LIST_WIDTH, maxWidth: CHATS_LIST_WIDTH, flexShrink: 0 } : {}) }}
     >
 
       {isCompact && (
@@ -579,14 +616,21 @@ export function LeadsListPanel({
           />
         </div>
       )}
-      {mobileListMode !== "kanban" && scopeSwitch && <div className="hidden md:flex justify-center" style={{ padding: "6px 12px 0" }}>{scopeSwitch}</div>}
-      {mobileListMode !== "kanban" && channelTabs}
+      {mobileListMode !== "kanban" && (splitGroups ? (
+        // Desktop Chats: the channel tabs head the panel.
+        channelTabs && <div className="la-list-head">{channelTabs}</div>
+      ) : (
+        <>
+          {tabletScopeSwitch && <div className="hidden md:flex justify-center" style={{ padding: "6px 12px 0" }}>{tabletScopeSwitch}</div>}
+          {channelTabs}
+        </>
+      ))}
       {/* Lead list — card list (pagination inside scroll area, below last card) */}
-      <div ref={scrollContainerRef} className={cn("la-list-area", mobileListMode === "kanban" && "hidden lg:flex lg:flex-col")} style={{ padding: "6px 8px 8px" }}>
+      <div ref={scrollContainerRef} className={cn("la-list-area", splitGroups && "la-split-scroll", mobileListMode === "kanban" && "hidden lg:flex lg:flex-col")} style={{ padding: "6px 8px 8px" }}>
         {/* Pull-to-refresh indicator — mobile only */}
         <PullToRefreshIndicator pullDistance={leadsPullDistance} isRefreshing={leadsIsRefreshing} />
         {loading ? (
-          <ListSkeleton peek={peekOn} />
+          splitGroups ? <SplitListSkeleton /> : <ListSkeleton peek={peekOn} />
         ) : flatItems.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-12 px-4 text-center">
             <Users className="h-8 w-8 text-muted-foreground/40" />
@@ -596,38 +640,18 @@ export function LeadsListPanel({
           </div>
         ) : (
           <>
-            {/* la-cards--flat: WhatsApp-style flat rows; drop the modifier for the raised cards. */}
-            <div key={`anim-${cardAnimKey}`} className="la-cards la-cards--flat">
-              {flatItems
-                .map((item, i) => {
-                  const selectedId = selectedLead ? getLeadId(selectedLead) : null;
-                  return item.kind === "header" ? (
-                    <GroupHeader key={`h-${item.label}-${i}`} label={item.label} count={item.count} isFirst={i === 0} />
-                  ) : (() => {
-                    const lid = getLeadId(item.lead);
-                    return (
-                    <div key={lid} data-lead-id={lid} className={i < 15 ? "animate-card-enter" : undefined} style={{ scrollMarginTop: 44, ...(i < 15 ? { animationDelay: `${Math.min(i, 15) * 30}ms` } : {}) }}>
-                      <LeadListCard
-                        lead={item.lead}
-                        isActive={selectedId === getLeadId(item.lead)}
-                        onClick={() => { onSelectLead(item.lead); onMobileViewChange?.("detail"); }}
-                        leadTags={item.tags}
-                        campaignsById={campaignsById}
-                        showPeek={peekOn}
-                        showChannelBadge={showChannelBadge}
-                        onOpenConversation={() => handleOpenConversation(getLeadId(item.lead))}
-                        onQuickChangeStatus={() => openQuickAction(item.lead, "status")}
-                        onQuickAddNote={() => openQuickAction(item.lead, "note")}
-                        onQuickDelete={() => openQuickAction(item.lead, "delete")}
-                        selected={selectedLeadIds.has(getLeadId(item.lead))}
-                        onToggleSelect={() => toggleLeadSelection(getLeadId(item.lead))}
-                      />
-                    </div>
-                    );
-                  })()
-                })}
-
-            </div>
+            {splitGroups ? groupSections(flatItems).map((sec) => (
+              <ListSection key={`${cardAnimKey}-${sec.label ?? "all"}`} label={sec.label} count={sec.count}>
+                <div className="la-cards la-cards--flat">{sec.rows.map(({ item, i }) => leadRow(item, i))}</div>
+              </ListSection>
+            )) : (
+              /* la-cards--flat: WhatsApp-style flat rows; drop the modifier for the raised cards. */
+              <div key={`anim-${cardAnimKey}`} className="la-cards la-cards--flat">
+                {flatItems.map((item, i) => (item.kind === "header"
+                  ? <GroupHeader key={`h-${item.label}-${i}`} label={item.label} count={item.count} isFirst={i === 0} />
+                  : leadRow(item, i)))}
+              </div>
+            )}
 
             {/* Infinite scroll: the next page loads as this nears the viewport */}
             <LoadMoreSentinel rootRef={scrollContainerRef} hasMore={hasMore} loading={loadingMore} onLoadMore={onLoadMore} />

@@ -153,6 +153,8 @@ export interface LiveStaffTest {
   account?: number;
   line?: number;
   llm?: "sol" | "terra" | "luna";
+  /** The voice layer for this test only; unset = the account's own pick. */
+  prompt?: "standard" | "lean";
 }
 
 /** A tool the browser ran during the call, as the test panel shows it live. */

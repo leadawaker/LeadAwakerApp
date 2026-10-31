@@ -20,7 +20,7 @@ import { useToolLabel } from "./useToolLabel";
 import { MarkerTrack } from "./MarkerTrack";
 import { peakOf } from "./speakerWave";
 import { palette, tokenColor, trackHeight, waveMode, waveOptions } from "./waveStyle";
-import { clampTime, nextSpeed, nextZoom, SKIP_S, ZOOM_LEVELS, type CallReview } from "./reviewMath";
+import { clampTime, formatTime, nextSpeed, nextZoom, SKIP_S, ZOOM_LEVELS, type CallReview } from "./reviewMath";
 import { TimeScale } from "./TimeScale";
 
 /** Seek to `s` seconds; `play` also starts playback (the Calls page's lines play from there). */
@@ -58,9 +58,9 @@ function Dot({ color, label }: { color: string; label: string }) {
   return <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}><span style={{ width: 8, height: 8, borderRadius: "var(--r-pill)", background: color }} />{label}</span>;
 }
 
-function WaveTrack({ review, blob, url, ext, onTime, seekRef, onFail, onPlay, speakers, search }: {
+function WaveTrack({ review, blob, url, ext, onTime, seekRef, onFail, onPlay, onPlaying, speakers, search }: {
   review: CallReview; blob: Blob; url: string; ext: string; onTime: (s: number) => void; seekRef: SeekRef; onFail: () => void;
-  onPlay?: () => void; speakers: Speakers; search?: ReactNode;
+  onPlay?: () => void; onPlaying?: (playing: boolean) => void; speakers: Speakers; search?: ReactNode;
 }) {
   const { t } = useTranslation("voiceTab");
   const { isDark } = useTheme();
@@ -69,8 +69,9 @@ function WaveTrack({ review, blob, url, ext, onTime, seekRef, onFail, onPlay, sp
   const wsRef = useRef<WaveSurfer | null>(null);
   const regionsRef = useRef<RegionsPlugin | null>(null);
   const peakRef = useRef(0);
-  const cb = useRef({ onTime, onFail, onPlay });
-  cb.current = { onTime, onFail, onPlay };
+  const lanePeaksRef = useRef<number[]>([]);
+  const cb = useRef({ onTime, onFail, onPlay, onPlaying });
+  cb.current = { onTime, onFail, onPlay, onPlaying };
   const [ready, setReady] = useState(false);
   const [channels, setChannels] = useState(1);
   const [playing, setPlaying] = useState(false);
@@ -115,6 +116,7 @@ function WaveTrack({ review, blob, url, ext, onTime, seekRef, onFail, onPlay, sp
         ws.on("ready", (d) => {
           const audio = ws?.getDecodedData();
           peakRef.current = audio ? peakOf(audio.getChannelData(0)) : 0;
+          lanePeaksRef.current = audio ? Array.from({ length: audio.numberOfChannels }, (_, i) => peakOf(audio.getChannelData(i))) : [];
           setChannels(audio?.numberOfChannels ?? 1);
           setView({ start: 0, end: d || review.durationSeconds });
           setReady(true);
@@ -126,8 +128,8 @@ function WaveTrack({ review, blob, url, ext, onTime, seekRef, onFail, onPlay, sp
           setTime(s);
           cb.current.onTime(s);
         });
-        ws.on("play", () => { setPlaying(true); cb.current.onPlay?.(); });
-        ws.on("pause", () => setPlaying(false));
+        ws.on("play", () => { setPlaying(true); cb.current.onPlay?.(); cb.current.onPlaying?.(true); });
+        ws.on("pause", () => { setPlaying(false); cb.current.onPlaying?.(false); });
         ws.on("finish", () => setPlaying(false));
         ws.on("error", () => { if (!cancelled) cb.current.onFail(); });
         regions.on("region-clicked", (region, e) => { e.stopPropagation(); ws?.setTime(region.start); });
@@ -173,7 +175,7 @@ function WaveTrack({ review, blob, url, ext, onTime, seekRef, onFail, onPlay, sp
         duration: () => ws.getDuration(),
         peak: () => peakRef.current,
         totalWidth: () => ws.getWrapper().clientWidth,
-      }));
+      }, lanePeaksRef.current));
       regions.clearRegions();
       review.tools.forEach((x, i) => {
         const tag = toolTag(x.name);
@@ -227,10 +229,18 @@ function WaveTrack({ review, blob, url, ext, onTime, seekRef, onFail, onPlay, sp
         {ready && <TimeScale startS={view.start} endS={view.end} currentS={time} onSeek={seekTo} />}
         {!ready && <p style={{ ...note, position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>{t("test.panel.review.recordingLoading")}</p>}
       </div>
-      {ready && mode !== "plain" && (
-        <div style={{ display: "flex", gap: 14, ...mono }} aria-hidden data-testid="voice-test-review-legend">
-          <Dot color={mode === "stereo" ? "var(--mute-2)" : "var(--ink)"} label={speakers.user} />
-          <Dot color="hsl(var(--chart-wine))" label={speakers.agent} />
+      {ready && (
+        // The legend on the left, the time centered above the play button.
+        <div style={{ position: "relative", display: "flex", alignItems: "center", minHeight: 16 }}>
+          {mode !== "plain" ? (
+            <div style={{ display: "flex", gap: 14, ...mono }} aria-hidden data-testid="voice-test-review-legend">
+              <Dot color={mode === "stereo" ? "var(--mute-2)" : "var(--ink)"} label={speakers.user} />
+              <Dot color="hsl(var(--chart-wine))" label={speakers.agent} />
+            </div>
+          ) : null}
+          <span style={{ position: "absolute", left: "50%", transform: "translateX(-50%)", fontFamily: "var(--mono)", fontSize: 12, color: "var(--ink-soft)", fontVariantNumeric: "tabular-nums" }} data-testid="voice-test-review-time">
+            {formatTime(time)} / {formatTime(review.durationSeconds)}
+          </span>
         </div>
       )}
       <div style={row} data-testid="voice-test-review-transport">
@@ -262,7 +272,7 @@ function WaveTrack({ review, blob, url, ext, onTime, seekRef, onFail, onPlay, sp
   );
 }
 
-export function ReviewWaveform({ review, recording, currentS, onTime, seekRef, speakers, missingNote, onPlay, search }: {
+export function ReviewWaveform({ review, recording, currentS, onTime, seekRef, speakers, missingNote, onPlay, onPlaying, search }: {
   review: CallReview; recording: RecordingState; currentS: number; onTime: (s: number) => void; seekRef: SeekRef;
   /** The sides' names in the legend; defaults to the test panel's "You" / "Agent". */
   speakers?: Speakers;
@@ -270,6 +280,7 @@ export function ReviewWaveform({ review, recording, currentS, onTime, seekRef, s
   missingNote?: string;
   /** Playback started (the Calls page picks follow-scroll up again). */
   onPlay?: () => void;
+  onPlaying?: (playing: boolean) => void;
   /** The transcript search (the Calls page): a round button after the zoom button. */
   search?: ReactNode;
 }) {
@@ -283,7 +294,7 @@ export function ReviewWaveform({ review, recording, currentS, onTime, seekRef, s
     return (
       <div style={{ display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }}>
         <WaveTrack review={review} blob={recording.blob} url={recording.url} ext={recording.ext} onTime={onTime} seekRef={seekRef}
-          onFail={() => setFailed(true)} onPlay={onPlay} speakers={names} search={search} />
+          onFail={() => setFailed(true)} onPlay={onPlay} onPlaying={onPlaying} speakers={names} search={search} />
       </div>
     );
   }

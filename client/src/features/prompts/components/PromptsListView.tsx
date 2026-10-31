@@ -3,7 +3,7 @@
 // right, with its preview beside it by default (Ctrl+P toggles it).
 // Parts live in ./promptList/.
 import { useState, useEffect, useRef, useMemo } from "react";
-import { ListPanelFooter, ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import { useTranslation } from "react-i18next";
 import { Plus, Trash2 } from "lucide-react";
 import { useListPanelState } from "@/hooks/useListPanelState";
@@ -21,8 +21,9 @@ import { PageTopbar, ExpandingSearch } from "@/components/crm/primitives";
 import { DataEmptyState } from "@/components/crm/DataEmptyState";
 import { type CampaignForPreview } from "../utils/resolveVariables";
 import { getPromptId, MODEL_OPTIONS, isCampaignPrompt } from "../types";
+import { campaignsByPrompt } from "../utils/campaignPrompt";
 import {
-  CATEGORY_COLOR, PROMPT_CATEGORIES, isDemoPrompt, isPromptCategory, promptCategory,
+  CATEGORY_COLOR, PROMPT_CATEGORIES, VOICE_SECTIONS, isDemoPrompt, isPromptCategory, promptCategory, voiceSection,
   type PromptCategory, type PromptListTab,
 } from "../promptCategories";
 import { PromptEditorPanel, type PromptEditorPanelHandle } from "./PromptEditorPanel";
@@ -92,30 +93,17 @@ export function PromptsListView(props: PromptsListViewProps) {
 
   const accountMap = useMemo(() => new Map(props.availableAccounts.map((a) => [a.id, a.name])), [props.availableAccounts]);
 
-  // Campaigns that talk with each prompt: its own campaign plus every campaign
-  // that borrows it via prompt_campaign_id and has no active prompt of its own
-  // (same fall-through as the engine's get_prompt_for_campaign).
+  // Campaigns that talk with each prompt, resolved like the engine's
+  // get_prompt_for_campaign: the picked prompt_id, the campaign's own row, then
+  // prompt_campaign_id. A helper row (not "conversation") shows its own campaign.
   const servedCampaignNames = useMemo(() => {
-    const ownActive = new Set<number>();
-    for (const p of prompts) {
-      if (isCampaignPrompt(p) && String(p.status || "").toLowerCase().trim() === "active") {
-        ownActive.add(Number(p.campaignsId || p.Campaigns_id));
-      }
-    }
-    const byPromptCampaign = new Map<number, string[]>();
-    for (const c of campaigns) {
-      const target = Number(c.promptCampaignId) || 0;
-      if (!target || target === c.id || ownActive.has(c.id)) continue;
-      const list = byPromptCampaign.get(target) ?? [];
-      list.push(c.name);
-      byPromptCampaign.set(target, list);
-    }
+    const byPrompt = campaignsByPrompt(prompts, campaigns);
     return (p: any): string | undefined => {
+      const served = byPrompt.get(getPromptId(p))?.map((c) => c.name) ?? [];
+      if (served.length) return served.join(" · ");
       const cId = Number(p.campaignsId || p.Campaigns_id) || 0;
-      const own = cId ? campaignMap.get(cId) : undefined;
-      if (!own) return undefined;
-      if (!isCampaignPrompt(p)) return own;
-      return [own, ...(byPromptCampaign.get(cId) ?? [])].join(" · ");
+      if (!cId || isCampaignPrompt(p)) return undefined;
+      return campaignMap.get(cId);
     };
   }, [prompts, campaigns, campaignMap]);
 
@@ -150,6 +138,17 @@ export function PromptsListView(props: PromptsListViewProps) {
 
   const listItems = useMemo(() => {
     type Row = { kind: "header"; label: string; count: number } | { kind: "prompt"; prompt: any };
+    // Voice always splits into GPT Live's parts: voice, backend frame, universal business prompt.
+    if (listTab === "voice") {
+      const rows: Row[] = [];
+      for (const section of VOICE_SECTIONS) {
+        const group = tabFilteredPrompts.filter((p) => voiceSection(p) === section);
+        if (group.length === 0) continue;
+        rows.push({ kind: "header", label: t(`voiceSection.${section}`), count: group.length });
+        group.forEach((p) => rows.push({ kind: "prompt", prompt: p }));
+      }
+      return rows;
+    }
     if (!groupedRows) return tabFilteredPrompts.map((p): Row => ({ kind: "prompt", prompt: p }));
     const rows: Row[] = [];
     groupedRows.forEach((items, label) => {
@@ -159,7 +158,7 @@ export function PromptsListView(props: PromptsListViewProps) {
       group.forEach((p) => rows.push({ kind: "prompt", prompt: p }));
     });
     return rows;
-  }, [groupedRows, tabFilteredPrompts, inTab]);
+  }, [groupedRows, tabFilteredPrompts, inTab, listTab, t]);
 
   /* ── Selection ────────────────────────────────────────────────────────── */
   const [selectedPrompt, setSelectedPrompt] = usePersistedSelection("prompts-selected-id", (p: any) => getPromptId(p), prompts);
@@ -249,6 +248,38 @@ export function PromptsListView(props: PromptsListViewProps) {
   const detailAccent = visiblePrompt ? CATEGORY_COLOR[promptCategory(visiblePrompt)] : "var(--wine)";
   const createCategory: PromptCategory = listTab === "niche" ? "chat" : listTab;
   const divider = <div style={{ width: 1, height: 22, background: "var(--line)", margin: "0 2px" }} />;
+  // The prompt's edit actions: they sit in its header, a step smaller than the topbar's.
+  const promptActions = visiblePrompt && (
+    <div className="la-prompt-actions hidden lg:flex items-center gap-1.5">
+      {MODEL_OPTIONS.includes(visiblePrompt.model) ? (
+        <select
+          className="text-[11px] font-mono outline-none cursor-pointer shrink-0 neu-inset-crisp"
+          style={{ background: "var(--bg)", color: "var(--mute)", borderRadius: "var(--r-pill)", padding: "0 10px", height: 28, border: "none" }}
+          value={visiblePrompt.model}
+          onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
+          aria-label={t("labels.model")}
+        >
+          {MODEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
+        </select>
+      ) : (
+        <span
+          className="text-[11px] font-mono shrink-0 neu-inset-crisp"
+          style={{ background: "var(--bg)", color: "var(--mute-2)", borderRadius: "var(--r-pill)", padding: "0 10px", height: 28, lineHeight: "28px" }}
+        >
+          {t("toolbar.hardcodedModel")}
+        </span>
+      )}
+      <PromptFontPopover
+        previewFont={previewFont}
+        onPreviewFontChange={setPreviewFont}
+        fontSize={editorFontSize}
+        onFontSizeChange={setEditorFontSize}
+      />
+      <PromptSaveVersionPopover open={saveVersionOpen} onOpenChange={setSaveVersionOpen} v={versions} />
+      <PromptVersionHistory v={versions} promptVersion={visiblePrompt.version} />
+    </div>
+  );
+
 
   return (
     <div className="flex flex-col h-full" data-testid="prompts-list-view">
@@ -258,35 +289,6 @@ export function PromptsListView(props: PromptsListViewProps) {
         left={<PromptCategoryTabs value={listTab} onChange={setListTab} counts={tabCounts} />}
         right={listTab === "niche" ? null : (
           <div className="hidden lg:flex items-center gap-1.5">
-            {visiblePrompt && (MODEL_OPTIONS.includes(visiblePrompt.model) ? (
-              <select
-                className="text-[12px] font-mono outline-none cursor-pointer shrink-0 neu-inset-crisp"
-                style={{ background: "var(--bg)", color: "var(--mute)", borderRadius: "var(--r-pill)", padding: "0 14px", height: 38, border: "none" }}
-                value={visiblePrompt.model}
-                onChange={(e) => editPanelRef.current?.setField("model", e.target.value)}
-                aria-label={t("labels.model")}
-              >
-                {MODEL_OPTIONS.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-            ) : (
-              <span
-                className="text-[12px] font-mono shrink-0 neu-inset-crisp"
-                style={{ background: "var(--bg)", color: "var(--mute-2)", borderRadius: "var(--r-pill)", padding: "0 14px", height: 38, lineHeight: "38px" }}
-              >
-                {t("toolbar.hardcodedModel")}
-              </span>
-            ))}
-            {visiblePrompt && (<>
-              <PromptFontPopover
-                previewFont={previewFont}
-                onPreviewFontChange={setPreviewFont}
-                fontSize={editorFontSize}
-                onFontSizeChange={setEditorFontSize}
-              />
-              <PromptSaveVersionPopover open={saveVersionOpen} onOpenChange={setSaveVersionOpen} v={versions} />
-              <PromptVersionHistory v={versions} promptVersion={visiblePrompt.version} />
-              {divider}
-            </>)}
             <ExpandingSearch value={q} onChange={onQChange} placeholder={t("toolbar.searchPlaceholder")} />
             <PromptListControls {...props} />
             {visiblePrompt && (<>
@@ -324,9 +326,7 @@ export function PromptsListView(props: PromptsListViewProps) {
       ) : (
         <div className="flex flex-1 min-h-0 overflow-hidden">
           {/* ── Left: the prompt list ─────────────────────────────────── */}
-          {listPanelState === "hidden" ? (
-            <div className="hidden lg:flex"><ListPanelUnfoldButton /></div>
-          ) : listPanelState === "compact" ? (
+          {listPanelState === "compact" ? (
             <div className="hidden lg:flex">
               <CompactPromptRail
                 items={tabFilteredPrompts}
@@ -338,10 +338,10 @@ export function PromptsListView(props: PromptsListViewProps) {
           ) : (
             <div
               className={cn(
+                "la-list-panel",
                 "min-h-0 overflow-hidden flex-col",
                 mobileView === "detail" ? "hidden lg:flex" : "flex",
-                // Wider than the shared --toolbar-w: prompt names are long.
-                "w-full lg:w-[380px] lg:shrink-0",
+                "w-full lg:w-[var(--toolbar-w)] lg:shrink-0",
               )}
               style={{ borderRight: "1px solid var(--line)", background: "var(--bg)" }}
             >
@@ -384,10 +384,10 @@ export function PromptsListView(props: PromptsListViewProps) {
           {/* ── Right: header + editor (+ preview) ────────────────────── */}
           <div
             className={cn("flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden relative", mobileView === "list" ? "hidden lg:flex" : "flex")}
-            style={{ background: "var(--surface)" }}
+            style={{ background: "var(--bg)" }}
           >
             {visiblePrompt ? (
-              <div key={selectedId} className="animate-panel-slide-up flex flex-col flex-1 min-h-0" style={{ padding: 8, gap: 8 }}>
+              <div key={selectedId} className="animate-panel-slide-up flex flex-col flex-1 min-h-0" style={{ padding: 14, gap: 12 }}>
                 <PromptDetailHeader
                   prompt={visiblePrompt}
                   promptId={selectedId}
@@ -395,7 +395,7 @@ export function PromptsListView(props: PromptsListViewProps) {
                     "name",
                     visiblePrompt.name || "",
                     t("labels.untitledPrompt"),
-                    "text-[16px] font-bold text-[color:var(--ink)] min-w-0 max-w-full",
+                    "text-[18px] font-bold text-[color:var(--ink)] min-w-0 max-w-full",
                   )}
                   campaignLabel={servedCampaignNames(visiblePrompt) || t("labels.noCampaign")}
                   accountName={selCampaign?.accountsId ? accountMap.get(selCampaign.accountsId) : null}
@@ -412,6 +412,7 @@ export function PromptsListView(props: PromptsListViewProps) {
                   onToggleSidebar={() => setShowEditorSidebar((v) => !v)}
                   previewOpen={previewOpen}
                   onTogglePreview={() => setPreviewOpen((p) => !p)}
+                  actions={promptActions}
                 />
                 <PromptEditorPanel
                   ref={editPanelRef}

@@ -153,50 +153,6 @@ Technical questions: "Good question, that's more for the technical team. I can c
 Booking link: {calendar_link}
 Qualification criteria: {qualification_criteria}`;
 
-// Default prompt templates (used to auto-seed the Prompt Library)
-const DEFAULT_CAMPAIGN_SUMMARY_SYSTEM = `You are an AI analyst for a WhatsApp lead reactivation agency. You write a single-sentence TLDR of a campaign's performance. Interpret the numbers, don't just restate them: surface the most important signal (a win, a bottleneck, or one action). Output ONE sentence only — no line breaks, no lists, no headers, no markdown formatting. Aim for under 30 words.`;
-
-const DEFAULT_CAMPAIGN_SUMMARY_PROMPT = `Write a ONE-sentence TLDR of this campaign's performance. Plain text, no markdown, no line breaks.
-
-Campaign: {{campaignName}}
-Status: {{campaignStatus}}
-Report date: {{reportDate}}
-
-Total leads: {{totalLeads}}
-{{pipelineBreakdown}}
-Response rate: {{responseRate}}%  ({{responded}} of {{totalLeads}})
-Booking rate: {{bookingRate}}%  ({{booked}} of {{totalLeads}})
-Cost per booking: \${{costPerBooking}}
-Total cost: \${{totalCost}}
-
-Lead with the single most important insight (a win, a bottleneck, or one action).`;
-
-// Interpolate {{variable}} placeholders in a template string
-function interpolateTemplate(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => vars[key] ?? "");
-}
-
-// Fetch a system prompt from the library, auto-creating it if it doesn't exist
-async function getOrCreateSystemPrompt(useCase: string, defaultName: string, defaultTemplate: string, defaultSystemMsg?: string) {
-  let entry = await storage.getPromptByUseCase(useCase);
-  if (!entry) {
-    entry = await storage.createPrompt({
-      name: defaultName,
-      useCase,
-      promptText: defaultTemplate,
-      ...(defaultSystemMsg ? { systemMessage: defaultSystemMsg } : {}),
-      model: "llama-3.1-8b-instant",
-      temperature: "0.7",
-      maxTokens: BigInt(600),
-      status: "active",
-      category: "crm",
-      notes: "System prompt — auto-created. Edit freely. Use {{variable}} placeholders for dynamic data.",
-    } as any);
-    console.log(`[prompt-library] Auto-created system prompt: "${defaultName}" (useCase=${useCase})`);
-  }
-  return entry;
-}
-
 // Campaign activation readiness. "critical" checks gate activation; the rest are warnings.
 // status per check: "ok" | "warn" | "error". Shared by the GET preflight endpoint and the
 // PATCH activation guard so every activation path enforces the same rules.
@@ -382,6 +338,11 @@ export function registerCampaignsRoutes(app: Express): void {
     }
     const parsed = insertCampaignsSchema.partial().safeParse(fromDbKeys(req.body, campaigns));
     if (!parsed.success) return handleZodError(res, parsed.error);
+    // Which prompt a campaign runs is the agency's to pick (the prompt library is agency-only).
+    if (req.user!.accountsId !== 1) {
+      delete (parsed.data as any).promptId;
+      delete (parsed.data as any).promptPicks;
+    }
 
     // Hard-block activation if preflight critical checks fail (every activation path enforces this).
     const activating = parsed.data.status?.toLowerCase() === "active" && existing.status?.toLowerCase() !== "active";
@@ -638,128 +599,6 @@ export function registerCampaignsRoutes(app: Express): void {
       res.status(500).json({ error: "Internal server error" });
     }
   });
-
-  // POST /api/campaigns/:id/generate-summary — Groq AI summary
-  app.post("/api/campaigns/:id/generate-summary", requireAuth, wrapAsync(async (req, res) => {
-    const campaignId = Number(req.params.id);
-    const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey) return res.status(200).json({ error: "NO_GROQ_API_KEY" });
-
-    const campaign = await storage.getCampaignById(campaignId);
-    if (!campaign) return res.status(404).json({ message: "Campaign not found" });
-    if (!ownsAccount(req, campaign.accountsId)) return res.status(403).json({ message: "Forbidden" });
-
-    // Resolve language from account (source of truth), with fallback
-    let language: string = (req.body?.language as string) || "en";
-    const accountId = (campaign as any).accountsId;
-    if (accountId) {
-      const account = await storage.getAccountById(accountId);
-      if (account?.language) {
-        const accountLangMap: Record<string, string> = {
-          "Portuguese": "pt", "Dutch": "nl", "English": "en",
-        };
-        language = accountLangMap[account.language] || language;
-      }
-    }
-    const languageInstructionMap: Record<string, string> = {
-      pt: "Respond in Brazilian Portuguese.",
-      nl: "Respond in Dutch.",
-      en: "",
-    };
-    const languageInstruction = languageInstructionMap[language] ?? "";
-
-    // Fetch leads for this campaign to build context
-    const leadList = await storage.getLeadsByCampaignId(campaignId);
-    const total = leadList.length;
-    const booked = leadList.filter((l: any) => l.conversion_status === "Booked" || l.Conversion_Status === "Booked").length;
-    const responded = leadList.filter((l: any) => {
-      const s = l.conversion_status || l.Conversion_Status || "";
-      return ["Responded", "Multiple Responses", "Qualified", "Booked", "Closed"].includes(s);
-    }).length;
-    const lost = leadList.filter((l: any) => ["Lost", "DND"].includes(l.conversion_status || l.Conversion_Status || "")).length;
-    const qualified = leadList.filter((l: any) => ["Qualified", "Booked"].includes(l.conversion_status || l.Conversion_Status || "")).length;
-
-    const responseRate = total > 0 ? ((responded / total) * 100).toFixed(1) : "0";
-    const bookingRate = total > 0 ? ((booked / total) * 100).toFixed(1) : "0";
-    const totalCostNum = Number(campaign.totalCost || 0);
-    const costPerBooking = booked > 0 ? (totalCostNum / booked).toFixed(2) : "N/A";
-
-    // Pipeline breakdown: count leads per conversion status
-    const statusCounts = new Map<string, number>();
-    for (const l of leadList) {
-      const s = ((l as any).conversion_status || (l as any).Conversion_Status || "Unknown").trim();
-      statusCounts.set(s, (statusCounts.get(s) || 0) + 1);
-    }
-    const pipelineBreakdown = Array.from(statusCounts.entries())
-      .sort((a, b) => b[1] - a[1])
-      .map(([status, count]) => `  ${status}: ${count}`)
-      .join("\n");
-
-    const vars = {
-      campaignName: campaign.name || "Unknown",
-      campaignStatus: campaign.status || "Unknown",
-      campaignDescription: (campaign as any).description || "",
-      campaignCreatedAt: campaign.createdAt ? new Date(campaign.createdAt).toLocaleDateString() : "Unknown",
-      reportDate: new Date().toLocaleDateString(),
-      totalLeads: String(total),
-      pipelineBreakdown,
-      responseRate,
-      bookingRate,
-      responded: String(responded),
-      booked: String(booked),
-      totalCost: totalCostNum.toFixed(2),
-      costPerBooking,
-    };
-
-    const promptTemplate = await getOrCreateSystemPrompt(
-      "campaign-summary",
-      "Campaign Summary Generator",
-      DEFAULT_CAMPAIGN_SUMMARY_PROMPT,
-      DEFAULT_CAMPAIGN_SUMMARY_SYSTEM,
-    );
-
-    const systemMsg = (promptTemplate as any).systemMessage || DEFAULT_CAMPAIGN_SUMMARY_SYSTEM;
-    const userMsg = interpolateTemplate(
-      (promptTemplate as any).promptText || DEFAULT_CAMPAIGN_SUMMARY_PROMPT,
-      vars,
-    );
-
-    const finalSystemMsg = languageInstruction
-      ? `${systemMsg}\n\n${languageInstruction}`
-      : systemMsg;
-
-    try {
-      const groqRes = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${apiKey}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
-          messages: [
-            { role: "system", content: finalSystemMsg },
-            { role: "user", content: userMsg },
-          ],
-          temperature: 0.6,
-          max_tokens: 90,
-        }),
-      });
-
-      if (!groqRes.ok) {
-        const errBody = await groqRes.text();
-        console.error("[generate-summary] Groq error:", errBody);
-        return res.status(500).json({ error: "Groq API error", detail: errBody });
-      }
-
-      const result = await groqRes.json() as any;
-      const summary = result.choices?.[0]?.message?.content || "";
-      res.json({ summary });
-    } catch (e: any) {
-      console.error("[generate-summary] error:", e);
-      res.status(500).json({ error: e.message });
-    }
-  }));
 
   // ─── Prompt Library ───────────────────────────────────────────────
 

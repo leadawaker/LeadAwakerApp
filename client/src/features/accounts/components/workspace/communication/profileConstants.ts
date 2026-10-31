@@ -7,7 +7,6 @@ import {
   type ReceptionistSetup,
 } from "./setupConstants";
 
-export const AI_STYLE = ["personal", "project", "business"] as const;
 export const STATUS_QUESTION = ["traject", "project", "besluitvorming"] as const;
 
 // Formality replaces the separate je/u question: 3 levels, each implying an
@@ -24,9 +23,10 @@ export function addressFor(value: number | null): string | null {
   return FORMALITY_LEVELS.find((l) => l.value === value)?.address ?? null;
 }
 
-// Perception: 7 options, max 3 picks. "speels" also makes the voice agent joke now and then.
+// Perception: 7 options, max 3 picks. "speels" also makes the voice agent joke now and then;
+// "vrolijk" tells her "Je bent heel vrolijk" (engine: client_setup_slots._CHEERFUL).
 export const PERCEPTION = [
-  "persoonlijk", "deskundig", "betrokken", "exclusief", "hoogwaardig", "toegankelijk", "speels",
+  "persoonlijk", "deskundig", "betrokken", "vrolijk", "hoogwaardig", "toegankelijk", "speels",
 ] as const;
 export const PERCEPTION_MAX = 3;
 
@@ -51,13 +51,6 @@ export function effectiveGender(a: { agentName: string | null; agentNameCustom: 
   return "female";
 }
 
-export const PREFERRED_WORD_GROUPS = {
-  projectTerm: ["keukenproject", "keuken", "project"],
-  proposalTerm: ["ontwerp", "verbouwing", "voorstel", "offerte", "ontwerpvoorstel", "plan"],
-  decisionTerm: ["beslissing", "besluit", "keuze", "besluitvorming", "afweging"],
-} as const;
-export type PreferredWordGroup = keyof typeof PREFERRED_WORD_GROUPS;
-
 // Expert recommendation for the status question, derived from the chosen AI style.
 export function recommendStatus(aiStyle: string | null): string {
   return aiStyle === "personal" ? "traject" : aiStyle === "business" ? "besluitvorming" : "project";
@@ -77,11 +70,9 @@ export type StepKind = "style" | "fact" | "qagrid" | "custom";
 export interface StepDef { key: string; kind: StepKind; section: SectionKey }
 
 export const STEPS: StepDef[] = [
-  { key: "openingStyle", kind: "style", section: "tone" },     // AI style
   { key: "formality", kind: "style", section: "tone" },        // 3 levels, sets je/u
   { key: "perception", kind: "style", section: "tone" },
-  { key: "preferredWords", kind: "style", section: "identity" },
-  { key: "agentName", kind: "style", section: "identity" },    // name + custom + avatar
+  { key: "agentName", kind: "style", section: "identity" },    // name + custom
   { key: "availabilityHours", kind: "custom", section: "availability" }, // open days/hours/duration/notice (account-level)
   { key: "meetingType", kind: "custom", section: "booking" },  // how the booked call happens (account-level)
   { key: "objections", kind: "qagrid", section: "sales" },     // → KB "objections"
@@ -106,6 +97,18 @@ export function buildSteps(services: readonly string[]): StepDef[] {
   return steps;
 }
 
+// What the wizard shows at a time: one question per page, except the facts
+// section, which is one long page. The summary keeps listing every step.
+export function buildPages(steps: StepDef[]): StepDef[][] {
+  const pages: StepDef[][] = [];
+  for (const s of steps) {
+    const last = pages[pages.length - 1];
+    if (s.section === "facts" && last?.[0].section === "facts") last.push(s);
+    else pages.push([s]);
+  }
+  return pages;
+}
+
 export function buildSections(steps: StepDef[]): SectionKey[] {
   const out: SectionKey[] = [];
   for (const s of steps) if (!out.includes(s.section)) out.push(s.section);
@@ -113,10 +116,8 @@ export function buildSections(steps: StepDef[]): SectionKey[] {
 }
 
 export type StyleField =
-  | "openingStyle" | "formality" | "perception"
-  | "preferredWords" | "agentName" | "differentiator" | "bookingUrl";
+  | "formality" | "perception" | "agentName" | "differentiator" | "bookingUrl";
 
-export const STEPS_WITH_EXAMPLES: StyleField[] = [];
 
 // ── Fixed facts → KB entries, matched by category + title. ──────────────────
 // The title is stored in the receptionist's language (a Dutch client's

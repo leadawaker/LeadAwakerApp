@@ -12,7 +12,7 @@ import { InsightPostsTable } from "./InsightPostsTable";
 import { InsightTiles } from "./InsightTiles";
 import { AvgViewsColumns, FollowerTrend } from "./InsightCharts";
 
-const card: React.CSSProperties = { borderRadius: "var(--r-card)", background: "var(--bone)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12, minWidth: 0 };
+const card: React.CSSProperties = { borderRadius: "var(--r-card)", background: "var(--card)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12, minWidth: 0 };
 const h3: React.CSSProperties = { margin: 0, fontSize: 15, fontWeight: 700, color: "var(--ink)" };
 
 export function InsightsSection({ accountId }: { accountId: number }) {

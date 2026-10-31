@@ -28,6 +28,10 @@
       "label": "Behaviour",
       "help": "Who the assistant is, how it writes and when a person takes over."
     },
+    "prompt": {
+      "label": "Prompt",
+      "help": "The prompt the assistant follows in every chat. Pick another from the library or edit this one."
+    },
     "knowledge": {
       "label": "Knowledge",
       "help": "What the assistant knows about the business and where it books.",
@@ -194,5 +198,48 @@
     "stopOnResponseHelp": "Clears the next planned follow-up as soon as a reply comes in.",
     "objectionsTitle": "Objection playbook",
     "objectionsHelp": "Up to five objections, each with the answer the business approves. The assistant uses these answers instead of making one up."
+  },
+  "prompt": {
+    "none": "No prompt picked",
+    "pickTitle": "Prompt in use",
+    "pickHelp": "The chat assistant follows this prompt from the library. Picking another one takes effect on the next message.",
+    "inUse": "Prompt",
+    "noneHelp": "No prompt picked: the chats use the account's prompt or the built-in default.",
+    "alsoUsedBy": "Also used by: {{names}}. Edits here change it for them too. Make a copy to change it for this account only.",
+    "copy": "Make a copy for this account",
+    "copyFailed": "The copy could not be made. Try again.",
+    "copyNote": "Copied from prompt #{{id}} in Chats > Settings.",
+    "openLibrary": "Open #{{id}} in the Prompt Library",
+    "versionLabel": "Before an edit in Chats > Settings ({{campaign}})",
+    "pickHelpDemo": "This demo follows this prompt from the library. Picking another one takes effect on the next message.",
+    "alsoUsedByDemo": "Also used by: {{names}}. Edits here change it for them too. Make a copy to change it for this demo only.",
+    "copyDemo": "Make a copy for this demo"
+  },
+  "channels": {
+    "label": "Channel",
+    "whatsapp": "WhatsApp",
+    "website": "Website",
+    "shared": "WhatsApp and the website chat share these settings, so a change here applies to both.",
+    "split": "Give the website its own settings",
+    "splitFailed": "That did not work. Try again."
+  },
+  "services": {
+    "label": "Service",
+    "soon": "Coming soon",
+    "channel": "Channel: {{channel}}",
+    "speed_to_lead": {
+      "label": "Speed to Lead"
+    },
+    "reactivation": {
+      "label": "Reactivation"
+    },
+    "referrals": {
+      "label": "Referrals",
+      "soon": "Asks happy customers on WhatsApp to recommend you, then follows up with the people they name."
+    },
+    "reputation": {
+      "label": "Reputation",
+      "soon": "Asks customers for a Google review on WhatsApp once a job is done. It starts when the client's booking or job system is connected, so the CRM knows when a customer was served."
+    }
   }
 }

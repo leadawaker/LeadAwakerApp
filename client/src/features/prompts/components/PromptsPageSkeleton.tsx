@@ -9,7 +9,7 @@ export function PromptsPageSkeleton() {
       {/* Topbar skeleton: mirrors the 60px topbar with title, tabs and action buttons */}
       <div
         className="shrink-0 flex items-center gap-3 px-[18px]"
-        style={{ height: 60, borderBottom: "1px solid var(--line)", background: "var(--bg)" }}
+        style={{ height: 60, background: "var(--bg)" }}
       >
         {/* Title */}
         <div className="h-[22px] w-32 bg-primary/10 rounded animate-pulse hidden md:block" />
@@ -36,13 +36,9 @@ export function PromptsPageSkeleton() {
 
       {/* Split pane */}
       <div className="flex flex-1 min-h-0 overflow-hidden">
-        {/* Left panel: width follows the persisted toolbar state
-            (full=380px list, compact=52px bot-icon rail, hidden=none) */}
-        {leftPanelState === "hidden" ? null : leftPanelState === "compact" ? (
-          <div
-            className="shrink-0 hidden lg:flex flex-col min-h-0 overflow-hidden items-center"
-            style={{ width: 52, borderRight: "1px solid var(--line)", background: "var(--bg)" }}
-          >
+        {/* Left panel: width follows the persisted toolbar state (full list or the small rail) */}
+        {leftPanelState === "compact" ? (
+          <div className="la-list-panel shrink-0 hidden lg:flex flex-col min-h-0 overflow-hidden items-center" style={{ width: 52 }}>
             <div className="flex-1 min-h-0 overflow-hidden flex flex-col items-center gap-1.5 py-2">
               {Array.from({ length: 8 }).map((_, i) => (
                 <div
@@ -55,8 +51,8 @@ export function PromptsPageSkeleton() {
           </div>
         ) : (
           <div
-            className="shrink-0 hidden lg:flex flex-col min-h-0 overflow-hidden w-[380px]"
-            style={{ borderRight: "1px solid var(--line)", background: "var(--bg)" }}
+            className="la-list-panel shrink-0 hidden lg:flex flex-col min-h-0 overflow-hidden"
+            style={{ width: "var(--toolbar-w)" }}
           >
             <div className="flex-1 min-h-0 overflow-hidden" style={{ padding: "8px 10px 16px" }}>
               <div className="flex flex-col gap-[3px]">

@@ -15,13 +15,13 @@ function loadCounter(): Promise<Counter> {
   return counterPromise;
 }
 
-export interface ResolveRequest { kind: "layer" | "backend" | "eleven"; accountId: number; lineId?: number }
+export interface ResolveRequest { kind: "layer" | "backend" | "eleven"; accountId: number; lineId?: number; leanLayer?: boolean }
 
 export function PromptCounts({ text, resolve, approx }: { text: string; resolve?: ResolveRequest; approx?: boolean }) {
   const { t, i18n } = useVoiceT();
   const [counts, setCounts] = useState<{ chars: number; tokens: number } | null>(null);
   const [failed, setFailed] = useState(false);
-  const kind = resolve?.kind, accountId = resolve?.accountId, lineId = resolve?.lineId;
+  const kind = resolve?.kind, accountId = resolve?.accountId, lineId = resolve?.lineId, leanLayer = resolve?.leanLayer;
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +33,7 @@ export function PromptCounts({ text, resolve, approx }: { text: string; resolve?
           const res = await apiFetch("/api/voice-prompts/preview", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ kind, accountId, lineId, text }),
+            body: JSON.stringify({ kind, accountId, lineId, text, leanLayer }),
           });
           const body = await res.json().catch(() => ({}));
           if (!res.ok || typeof body.text !== "string") throw new Error();
@@ -46,7 +46,7 @@ export function PromptCounts({ text, resolve, approx }: { text: string; resolve?
       }
     }, 700);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [text, kind, accountId, lineId]);
+  }, [text, kind, accountId, lineId, leanLayer]);
 
   const n = (v: number) => v.toLocaleString(i18n.language);
   const label = failed && !counts

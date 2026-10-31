@@ -28,14 +28,13 @@ interface Props {
   groupBy: AccountGroupBy;
   groupDirection: "asc" | "desc";
   isListCompact: boolean;
-  isListHidden: boolean;
   isNarrow: boolean;
 }
 
 export function AccountsListPanel({
   accounts, loading, selectedAccount, onSelectAccount,
   listSearch, filterStatus, sortBy, groupBy, groupDirection,
-  isListCompact, isListHidden, isNarrow,
+  isListCompact, isNarrow,
 }: Props) {
   const { t } = useTranslation("accounts");
   const [currentPage, setCurrentPage] = useState(0);
@@ -170,14 +169,12 @@ export function AccountsListPanel({
     hovered, rect, onHover, onHoverEnd, cancelHoverEnd, close,
   } = useCompactHoverCard<AccountRow>((a) => getAccountId(a), findEl);
 
-  const widthClass = isListHidden
-    ? cn(isNarrow && selectedAccount ? "hidden" : "flex", "lg:hidden")
-    : isListCompact
-      ? cn("w-[65px] shrink-0", isNarrow && selectedAccount ? "hidden" : "flex")
-      : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedAccount ? "hidden" : "flex");
+  const widthClass = isListCompact
+    ? cn("w-[65px] shrink-0", isNarrow && selectedAccount ? "hidden" : "flex")
+    : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedAccount ? "hidden" : "flex");
 
   return (
-    <div className={cn("flex-col h-full min-h-0 bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", widthClass)}>
+    <div className={cn("la-list-panel flex-col h-full min-h-0 bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", widthClass)}>
       {isListCompact ? (
         <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area">
           {loading ? (

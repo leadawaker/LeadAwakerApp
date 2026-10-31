@@ -60,13 +60,20 @@ const base = (c: Palette, mode: WaveMode): Partial<WaveSurferOptions> => ({
   barWidth: 2, barGap: 1, barRadius: 2, normalize: true, dragToSeek: true, autoScroll: true, autoCenter: true,
 });
 
-export function waveOptions(c: Palette, mode: WaveMode, speaker?: SpeakerSource): Partial<WaveSurferOptions> {
+/** Quietest peak a lane is stretched from: below it the lane is silence and draws flat, not full bars. */
+const SILENCE_FLOOR = 0.05;
+
+/** A lane's normalisation peak: its own loudest sample (the whole call, not per canvas slice), never below the floor. */
+const lanePeak = (peaks: readonly number[] | undefined, lane: number) =>
+  peaks ? Math.max(peaks[lane] ?? 0, SILENCE_FLOOR) : undefined;
+
+export function waveOptions(c: Palette, mode: WaveMode, speaker?: SpeakerSource, lanePeaks?: readonly number[]): Partial<WaveSurferOptions> {
   if (mode === "stereo") {
     return {
       ...base(c, mode), waveColor: c.wave, progressColor: c.progress,
       splitChannels: [
-        { waveColor: c.wave, progressColor: c.progress, height: LANE_PX },
-        { waveColor: c.agentWave, progressColor: c.agentProgress, height: LANE_PX },
+        { waveColor: c.wave, progressColor: c.progress, height: LANE_PX, maxPeak: lanePeak(lanePeaks, 0) },
+        { waveColor: c.agentWave, progressColor: c.agentProgress, height: LANE_PX, maxPeak: lanePeak(lanePeaks, 1) },
       ],
     };
   }

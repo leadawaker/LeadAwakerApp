@@ -21,12 +21,14 @@ export interface TranscriptBubbleProps {
   time?: string;
   /** The line playing now (review). */
   active?: boolean;
+  /** Another line is playing: this one steps back. */
+  faded?: boolean;
   onClick?: () => void;
   title?: string;
   dataTurn?: number;
 }
 
-export function TranscriptBubble({ role, text, speaker, delayMs, time, active, onClick, title, dataTurn }: TranscriptBubbleProps) {
+export function TranscriptBubble({ role, text, speaker, delayMs, time, active, faded, onClick, title, dataTurn }: TranscriptBubbleProps) {
   const { t } = useTranslation("voiceTab");
   const agent = role === "agent";
   // Secondary text on the dark wine: bone, dimmed.
@@ -35,10 +37,11 @@ export function TranscriptBubble({ role, text, speaker, delayMs, time, active, o
     display: "flex", flexDirection: "column", gap: 3, minWidth: 0, maxWidth: "92%", textAlign: "left",
     padding: "7px 10px", borderRadius: "var(--r-surface)", color: agent ? "var(--on-wine)" : "var(--ink)",
     alignSelf: agent ? "flex-start" : "flex-end",
-    background: agent ? "var(--wine-deep)" : "var(--surface)",
-    border: `1px solid ${agent ? "var(--wine-deep)" : "var(--line)"}`,
+    // One gradient across all the agent's lines, pinned to the screen: lighter wine at the top, wine at the bottom.
+    background: agent ? "linear-gradient(to bottom, var(--bubble-low) 5%, var(--bubble-high) 65%) fixed" : "var(--surface)",
+    border: agent ? "1px solid transparent" : "1px solid var(--line)",
     outline: active ? "2px solid var(--wine-soft)" : "none",
-    outlineOffset: 1, transition: "outline-color 150ms, background-color 150ms",
+    outlineOffset: 1, opacity: faded ? 0.42 : 1, transition: "outline-color 150ms, background-color 150ms, opacity 200ms",
     ...(onClick ? { cursor: "pointer", font: "inherit" } : null),
   };
   const body = (

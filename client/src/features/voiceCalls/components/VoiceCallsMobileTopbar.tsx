@@ -122,7 +122,7 @@ export function VoiceCallsMobileTopbar({ scope, isOwner, canTest, onScope, tabs,
       tabSwitcher={(
         <>
           {hasList && canTest && <ScopeSwitch scope={scope} onScope={onScope} canDemo={isOwner} canTest={canTest} menu />}
-          <CallsSettingsButton view={view} listView={listView} onView={onView} variant="mobile" />
+          <CallsSettingsButton view={view} listView={listView} onView={onView} />
         </>
       )}
       searchValue={hasList ? options.query : undefined}

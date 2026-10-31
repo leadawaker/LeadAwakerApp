@@ -31,7 +31,7 @@ function ThumbnailCard({ accountId, thumb, canEdit, canLink, onReuse }: { accoun
   const failure = thumb.status === "failed" ? failureText(thumb.error) : null;
 
   return (
-    <li className="neu-raised" style={{ borderRadius: "var(--r-surface)", background: "var(--bone)", padding: 8, display: "flex", flexDirection: "column", gap: 7, minWidth: 0 }} data-testid={`thumb-${thumb.id}`}>
+    <li className="neu-raised" style={{ borderRadius: "var(--r-surface)", background: "var(--card)", padding: 8, display: "flex", flexDirection: "column", gap: 7, minWidth: 0 }} data-testid={`thumb-${thumb.id}`}>
       <div className="neu-inset-crisp" style={{ aspectRatio: aspectOf(thumb.format), borderRadius: "var(--r-flush)", overflow: "hidden", display: "grid", placeItems: "center", position: "relative" }}>
         {thumb.status === "ready" && thumb.imageUrl ? (
           <a href={imageSrc(thumb.imageUrl)} target="_blank" rel="noreferrer" style={{ display: "block", width: "100%", height: "100%" }}>

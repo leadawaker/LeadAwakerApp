@@ -1,4 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
+import { ListHeadSkeleton, SplitListSkeleton } from "@/components/crm/primitives";
 import type { ListPanelState } from "@/hooks/useListPanelState";
 import { HEADER_H, PX_PER_HOUR } from "../lib/calendarDesign";
 
@@ -9,9 +10,8 @@ interface CalendarLoadingSkeletonProps {
 // Mirrors DesktopCalendar (non-ultra width, week view):
 //  - TopToolbar: 60px surface bar. Title · Week/Month seg · panel button ·
 //    "N appointments this week" | settings · search · filter · sort · group · new
-//  - LEFT (318px): StatusTabs (4 small tabs + counts) above grouped agenda cards
-//    (raised avatar square · name · campaign · time | channel icon + score ring)
-//  - CENTER on the page ground: CenterHeader (refresh + Today | ‹ date › | month
+//  - LEFT (--toolbar-w): StatusTabs above the agenda, one card per group
+//  - CENTER on a white panel: CenterHeader (refresh + Today | ‹ date › | month
 //    strip) above the week grid, drawn inside an inset rounded card (margin 8).
 
 const RAISED_BTN: React.CSSProperties = { background: "var(--bg)", boxShadow: "var(--sh-raised-crisp)", borderRadius: "var(--r-button)" };
@@ -21,42 +21,11 @@ function ToolIcon() {
   return <div className="h-8 w-8 shrink-0 flex items-center justify-center" style={RAISED_BTN}><Skeleton className="h-3.5 w-3.5 rounded bg-primary/10" /></div>;
 }
 
-function AgendaRowSkeleton({ i, faint }: { i: number; faint?: boolean }) {
-  const tone = faint ? "bg-primary/5" : "bg-primary/10";
-  return (
-    <div className="flex items-center gap-[11px]" style={{ padding: "11px 12px 11px 14px" }}>
-      <Skeleton className={`h-9 w-9 shrink-0 rounded-[var(--r-surface)] ${tone}`} style={{ boxShadow: "var(--sh-raised-crisp)" }} />
-      <div className="flex-1 min-w-0 flex flex-col">
-        <Skeleton className={`h-3 rounded ${tone}`} style={{ width: `${55 + (i % 3) * 12}%` }} />
-        <Skeleton className="h-2.5 rounded bg-primary/5 mt-1.5" style={{ width: `${62 + (i % 2) * 14}%` }} />
-        <div className="flex items-center gap-2 mt-2">
-          <Skeleton className={`h-2.5 w-12 rounded ${tone}`} />
-          {i % 3 === 1 && <Skeleton className="h-3 w-12 rounded bg-primary/5" />}
-        </div>
-      </div>
-      <div className="flex flex-col items-end gap-1.5 shrink-0">
-        <Skeleton className="h-3.5 w-3.5 rounded bg-primary/5" />
-        <Skeleton className={`h-6 w-6 rounded-full ${tone}`} />
-      </div>
-    </div>
-  );
-}
-
-function GroupHeaderSkeleton({ w }: { w: number }) {
-  return (
-    <div className="flex items-center gap-2" style={{ padding: "11px 2px 6px" }}>
-      <Skeleton className="h-2.5 rounded bg-primary/10" style={{ width: w }} />
-      <div className="flex-1 h-px" style={{ background: "var(--line)" }} />
-      <Skeleton className="h-2.5 w-4 rounded bg-primary/5" />
-    </div>
-  );
-}
-
 export function CalendarLoadingSkeleton({ leftPanelState }: CalendarLoadingSkeletonProps) {
   return (
     <div className="h-full flex flex-col overflow-hidden" style={{ background: "var(--bg)" }} data-testid="page-calendar">
       {/* TopToolbar */}
-      <div className="shrink-0 flex items-center px-3.5" style={{ height: 60, gap: 18, background: "var(--surface)", borderTop: "1px solid var(--line)", borderBottom: "1px solid var(--line)" }}>
+      <div className="shrink-0 flex items-center px-3.5" style={{ height: 60, gap: 18, background: "var(--bg)", borderTop: "none", borderBottom: "1px solid var(--line)" }}>
         <Skeleton className="h-5 w-24 rounded bg-primary/10" />
         <div className="flex items-center gap-2">
           {/* Week / Month: main pill tabs (la-seg--main), selected one solid wine */}
@@ -86,8 +55,8 @@ export function CalendarLoadingSkeleton({ leftPanelState }: CalendarLoadingSkele
       {/* Body row */}
       <div className="flex-1 min-h-0 flex overflow-hidden">
         {/* LEFT — agenda panel; width follows the persisted panel state */}
-        {leftPanelState === "hidden" ? null : leftPanelState === "compact" ? (
-          <div className="hidden lg:flex flex-col shrink-0 items-center overflow-hidden" style={{ width: 64, background: "hsl(var(--panel-list-bg))", borderRight: "1px solid var(--line)" }}>
+        {leftPanelState === "compact" ? (
+          <div className="la-list-panel hidden lg:flex flex-col shrink-0 items-center overflow-hidden" style={{ width: 64 }}>
             <div className="flex flex-col items-center gap-2.5 py-3">
               {Array.from({ length: 7 }).map((_, i) => (
                 <Skeleton key={i} className="h-9 w-9 rounded-[var(--r-surface)] bg-primary/10" style={{ boxShadow: "var(--sh-raised-crisp)", opacity: i === 0 ? 1 : 0.7 }} />
@@ -95,28 +64,14 @@ export function CalendarLoadingSkeleton({ leftPanelState }: CalendarLoadingSkele
             </div>
           </div>
         ) : (
-          <div className="hidden lg:flex flex-col shrink-0 overflow-hidden" style={{ width: 318, background: "hsl(var(--panel-list-bg))", borderRight: "1px solid var(--line)" }}>
-            {/* StatusTabs: All (active, wine) · Booked · No-show · Rescheduled */}
-            <div className="shrink-0 flex items-center gap-[3px] px-2.5" style={{ height: HEADER_H, borderBottom: "1px solid var(--line)" }}>
-              <Skeleton className="h-[22px] w-12 rounded-[var(--r-button)]" style={{ background: "var(--wine)", opacity: 0.55 }} />
-              {[58, 62, 86].map((w, i) => (
-                <Skeleton key={i} className="h-2.5 mx-2 rounded bg-primary/10" style={{ width: w - 16 }} />
-              ))}
-            </div>
-            {/* AgendaList */}
-            <div className="flex-1 min-h-0 overflow-hidden" style={{ padding: "6px 16px 16px" }}>
-              <GroupHeaderSkeleton w={64} />
-              <AgendaRowSkeleton i={0} />
-              <div className="mt-2"><GroupHeaderSkeleton w={36} /></div>
-              <div className="flex flex-col gap-2">
-                {Array.from({ length: 6 }).map((_, i) => <AgendaRowSkeleton key={i} i={i + 1} faint={i > 2} />)}
-              </div>
-            </div>
+          <div className="la-list-panel la-list-panel--split hidden lg:flex flex-col shrink-0" style={{ width: "var(--toolbar-w)" }}>
+            <ListHeadSkeleton />
+            <div className="la-split-scroll flex-1 min-h-0 overflow-hidden"><SplitListSkeleton groups={[2, 6]} /></div>
           </div>
         )}
 
-        {/* CENTER — on the page ground */}
-        <div className="flex-1 min-w-0 flex flex-col overflow-hidden" style={{ background: "var(--bg)" }}>
+        {/* CENTER — a white panel */}
+        <div className="la-list-panel flex-1 min-w-0 flex flex-col overflow-hidden" style={{ marginRight: 14 }}>
           {/* CenterHeader */}
           <div className="shrink-0 relative flex items-center justify-center gap-4 px-3.5" style={{ height: HEADER_H, borderBottom: "1px solid var(--line)" }}>
             <div className="absolute left-3.5 flex items-center gap-2">

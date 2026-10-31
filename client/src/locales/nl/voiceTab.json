@@ -274,12 +274,6 @@
     "call": "Test in browser",
     "filedNote": "Opent in een nieuw tabblad. Testgesprekken staan hieronder, niet in de cijfers of het CRM van deze klant.",
     "needsPersona": "Maak eerst de live persona aan.",
-    "prompt": {
-      "label": "Testprompt",
-      "standard": "Standaard",
-      "lean": "Kort (A/B-test)",
-      "help": "Alleen voor de browsertest hierboven. Echte telefoongesprekken en demo's gebruiken altijd de standaardprompt."
-    },
     "promptTitle": "Wat ze te horen krijgt",
     "promptFailed": "De prompt kon niet worden geladen.",
     "kind": {

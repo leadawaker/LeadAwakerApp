@@ -82,7 +82,7 @@ export function PostCard({ post, accountId, timeZone, who, onChanged, onEdit }: 
   );
 
   return (
-    <article className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: 14, display: "flex", gap: 14 }} data-testid={`post-${post.id}`}>
+    <article className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: 14, display: "flex", gap: 14 }} data-testid={`post-${post.id}`}>
       {post.videoUrl ? (
         <VideoPreview
           src={`${API_BASE}${post.videoUrl}`}

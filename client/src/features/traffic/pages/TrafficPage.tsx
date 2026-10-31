@@ -66,7 +66,7 @@ export function TrafficPage() {
         </div>
 
         <div className="min-h-0 overflow-y-auto" style={{ flex: 1 }}>
-          <div className="tf-wrap" style={{ maxWidth: 1386, padding: isMobile ? "14px 12px 32px" : "20px 24px 40px", display: "flex", flexDirection: "column", gap: 18 }}>
+          <div className="tf-wrap" style={{ width: "100%", maxWidth: 1386, margin: "0 auto", padding: isMobile ? "14px 12px 32px" : "20px 24px 40px", display: "flex", flexDirection: "column", gap: 18 }}>
             {error ? (
               <ApiErrorFallback error={error} onRetry={refresh} />
             ) : loading ? (

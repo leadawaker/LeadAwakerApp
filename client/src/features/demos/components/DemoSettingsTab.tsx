@@ -4,8 +4,8 @@
 //
 // The AI receptionist comes first. Only DBR shows its campaign's full settings
 // (Business, AI, Behavior); the other chat demos run on the shared demo setup,
-// so their tiles hold only what is their own (the widget's agent photo).
-// Quote follow-up runs on the DBR campaign and has no tile here.
+// so their tiles hold the prompt they run and what is their own (the widget's
+// agent photo). Quote follow-up runs on the DBR campaign and has no tile here.
 import { useTranslation } from "react-i18next";
 import { useIsMobile } from "@/hooks/useIsMobile";
 import { useLastTab } from "@/hooks/useLastTab";
@@ -16,6 +16,7 @@ import { ElevenDemoSettings } from "./ElevenDemoSettings";
 import { VoiceCallsSettings } from "./VoiceCallsSettings";
 import { PublicDemoSettings } from "./PublicDemoSettings";
 import { WidgetSettings } from "./WidgetSettings";
+import { DemoPromptSettings, ReputationPromptSettings } from "./DemoPromptSettings";
 
 /** The service whose campaign settings show here. */
 const CAMPAIGN_TILE = "dbr";
@@ -39,7 +40,6 @@ export function DemoSettingsTab() {
 
   const detailOf = (key: string) => {
     if (key === "voice") return t("settings.rail.voice");
-    if (key === "widget") return t("settings.widget.avatarTitle");
     if (key === CAMPAIGN_TILE) {
       const id = TILES.find((s) => s.key === key)?.campaignId;
       return demoCampaigns.find((c) => c.id === id)?.name || `#${id}`;
@@ -57,7 +57,8 @@ export function DemoSettingsTab() {
       // The menu sticks 18px under the top of this scroller, level with its padding (SectionLayout adds 32px).
       style={{ padding: "18px 24px 24px", ["--ws-sticky-top" as string]: "-14px" }}
     >
-      <div className="la-page-center">
+      {/* As wide as the menu and the 560px cards, so the pair sits centered. */}
+      <div className="la-page-center" style={{ maxWidth: 830 }}>
         <SectionLayout
           stacked={stacked}
           testId="demo-settings"
@@ -79,10 +80,13 @@ export function DemoSettingsTab() {
               </>
             ) : campaignId != null ? (
               <DemoCampaignSettings key={campaignId} campaignId={campaignId} />
-            ) : tile.key === "widget" ? (
-              <WidgetSettings />
+            ) : tile.key === "reputation" ? (
+              <ReputationPromptSettings key={tile.campaignId} campaignId={tile.campaignId} />
             ) : (
-              <span style={{ fontSize: 13, color: "var(--mute-2)" }}>{t("settings.empty")}</span>
+              <>
+                <DemoPromptSettings key={tile.campaignId} campaignId={tile.campaignId} />
+                {tile.key === "widget" && <WidgetSettings />}
+              </>
             )}
           </section>
         </SectionLayout>

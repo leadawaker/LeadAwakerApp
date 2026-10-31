@@ -16,18 +16,19 @@ import {
   urlBase64ToUint8Array,
 } from "../types";
 
-// Client-alert events: the account's Alerts tab decides whether they go out at
+// Client-alert events: the account's Alerts (Settings) decide whether they go out at
 // all; this grid only picks how they reach this one person.
 const ALERT_CONTROLLED = new Set<string>(["booking_confirmed", "booking_rescheduled", "booking_cancelled", "callback_requested", "daily_recap"]);
 
 /**
  * How notifications reach you: Telegram and the per-type matrix (agency), Email
  * (agency), Browser Push. Which client-alert events are sent is the account's
- * Alerts tab, so clients get a pointer there instead of an Email switch that
- * would not change those alerts. `flat` (phone My profile) drops the tinted
- * boxes: rows sit on the tab's one surface under eyebrow headings.
+ * Alerts, so clients get a pointer there instead of an Email switch that would
+ * not change those alerts. `flat` (phone My profile) drops the tinted boxes:
+ * rows sit on the tab's one surface under eyebrow headings. `channelsOnly`
+ * (Settings > Alerts) shows just the channels, with no intro and no per-type grid.
  */
-export function NotificationsSection({ flat = false }: { flat?: boolean } = {}) {
+export function NotificationsSection({ flat = false, channelsOnly = false }: { flat?: boolean; channelsOnly?: boolean } = {}) {
   const { t } = useTranslation("settings");
   const { toast } = useToast();
   const session = useSession();
@@ -253,13 +254,15 @@ export function NotificationsSection({ flat = false }: { flat?: boolean } = {}) 
 
   return (
     <div className={flat ? "space-y-4" : "space-y-3"} data-testid="section-notifications">
-      <p className="text-sm text-muted-foreground leading-relaxed">
-        {t("notifications.description")}
-      </p>
-      {!isAgency && (
+      {!channelsOnly && (
+        <p className="text-sm text-muted-foreground leading-relaxed">
+          {t("notifications.description")}
+        </p>
+      )}
+      {!isAgency && !channelsOnly && (
         <p className="text-sm text-muted-foreground leading-relaxed" data-testid="notifications-alerts-hint">
           {t("notifications.alertsHint")}{" "}
-          <Link href="/platform/accounts?tab=alerts" className="font-semibold" style={{ color: "var(--wine)" }}>
+          <Link href="/platform/settings?tab=alerts" className="font-semibold" style={{ color: "var(--wine)" }}>
             {t("notifications.alertsLink")} &rarr;
           </Link>
         </p>
@@ -436,7 +439,7 @@ export function NotificationsSection({ flat = false }: { flat?: boolean } = {}) 
       </div>
 
       {/* ── Section D: Per-Type Overrides — agency only ─────────────── */}
-      {isAgency && (
+      {isAgency && !channelsOnly && (
         <div className={box} data-testid="section-type-overrides">
           {flat ? (
             <div className="pt-3 pb-1">

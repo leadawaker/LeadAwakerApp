@@ -3,7 +3,7 @@ import { getLeadStatusAvatarColor } from "@/lib/avatarUtils";
 import { useTheme } from "@/hooks/useTheme";
 import { getFullName, getInitials } from "./leadUtils";
 import { presentName, useChatsPresenting } from "../../presenting";
-import { displayStage, stageColorKey, stageHex } from "../../lib/leadDisplay";
+import { displayStage, stageColorKey } from "../../lib/leadDisplay";
 
 interface Props {
   lead: Record<string, any>;
@@ -22,12 +22,11 @@ const SIZE = 38;
  */
 export function CompactLeadCard({ lead, isActive, onClick, onHover, onHoverEnd }: Props) {
   const ref = useRef<HTMLButtonElement>(null);
-  const { isDark } = useTheme();
   const { masked } = useChatsPresenting();
   const name = presentName(getFullName(lead), masked);
   const stage = displayStage(lead);
   const avatarColor = getLeadStatusAvatarColor(stageColorKey(stage));
-  const color = isDark ? avatarColor.bg : stageHex(stage);
+  const color = avatarColor.bg;
   const initials = getInitials(name);
 
   return (
@@ -50,7 +49,7 @@ export function CompactLeadCard({ lead, isActive, onClick, onHover, onHoverEnd }
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        color: isDark ? avatarColor.text : "#fff",
+        color: avatarColor.text,
         fontFamily: "var(--mono)",
         fontWeight: 600,
         fontSize: Math.round(SIZE * 0.34),

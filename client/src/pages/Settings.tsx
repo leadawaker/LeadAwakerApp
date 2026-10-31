@@ -2,7 +2,7 @@ import { useEffect, useCallback, useRef } from "react";
 import { useLocation, useSearch } from "wouter";
 import { useTranslation } from "react-i18next";
 import { CrmShell } from "@/components/crm/CrmShell";
-import { Bell, Receipt, ShieldCheck, SlidersHorizontal, UserRound, Users } from "lucide-react";
+import { BellRing, Receipt, ShieldCheck, SlidersHorizontal, UserRound, Users } from "lucide-react";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { readLastTab, writeLastTab } from "@/lib/lastTab";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -15,25 +15,24 @@ import { MyProfileGate } from "@/features/settings/components/MyProfileGate";
 import { ProfileTab } from "@/features/settings/components/ProfileTab";
 import { PreferencesTab } from "@/features/settings/components/PreferencesTab";
 import { SecurityTab } from "@/features/settings/components/SecurityTab";
-import { NotificationsSection } from "@/features/settings/components/NotificationsSection";
-import { SettingsCard } from "@/features/settings/components/SettingsCard";
+import { AlertsSection } from "@/features/settings/components/AlertsSection";
 import { useTwoFactor } from "@/features/settings/twoFactor/useTwoFactor";
 
 // ── Settings sections ────────────────────────────────────────────────
-// URL contract: /platform/settings?tab=profile|security|preferences|notifications|users|billing.
+// URL contract: /platform/settings?tab=profile|security|preferences|alerts|users|billing.
 // The tab lives in the query string (not local state) so nav links that only
 // change ?tab= switch the tab even while this page is already open.
-// Old links still work: ?tab=team opens Users, ?tab=account (removed: the
+// Old links still work: ?tab=team opens Users, ?tab=notifications opens Alerts, ?tab=account (removed: the
 // Accounts page edits the account) falls back to Profile.
-type SettingsSection = "profile" | "security" | "preferences" | "notifications" | "users" | "billing";
+type SettingsSection = "profile" | "security" | "preferences" | "alerts" | "users" | "billing";
 const DEFAULT_SECTION: SettingsSection = "profile";
-const ALIASES: Record<string, SettingsSection> = { team: "users" };
+const ALIASES: Record<string, SettingsSection> = { team: "users", notifications: "alerts" };
 
 const SECTION_ICON: Record<SettingsSection, React.ElementType> = {
   profile: UserRound,
   security: ShieldCheck,
   preferences: SlidersHorizontal,
-  notifications: Bell,
+  alerts: BellRing,
   users: Users,
   billing: Receipt,
 };
@@ -61,7 +60,7 @@ function SettingsContent() {
   const twoFactor = useTwoFactor();
 
   // A client's own billing (invoices and contracts) is a Settings section; the agency keeps its Billing page.
-  const sections: SettingsSection[] = ["profile", "security", "preferences", "notifications", "users"];
+  const sections: SettingsSection[] = ["profile", "security", "preferences", "alerts", "users"];
   if (!isAgencyUser && hasInvoices) sections.push("billing");
 
   // ── Active section: derived from ?tab=, else the section used last; unknown / unauthorized falls back to profile
@@ -107,7 +106,7 @@ function SettingsContent() {
     profile: t("rail.profile"),
     security: t("rail.security"),
     preferences: t("rail.preferences"),
-    notifications: isAgencyUser ? t("rail.notificationsAgency") : t("rail.notificationsClient"),
+    alerts: t("rail.alerts"),
     users: t("rail.users"),
     billing: t("rail.billing"),
   };
@@ -137,10 +136,8 @@ function SettingsContent() {
             <ProfileTab profile={profile} onProfileUpdated={setProfile} withSecurity={false} />
           ) : active === "security" ? (
             <SecurityTab profile={profile} />
-          ) : active === "notifications" ? (
-            <SettingsCard icon={Bell} title={t("notifications.title")} data-testid="section-notifications-card">
-              <NotificationsSection />
-            </SettingsCard>
+          ) : active === "alerts" ? (
+            <AlertsSection />
           ) : (
             <PreferencesTab profile={profile} onProfileUpdated={setProfile} showNotifications={false} showSecurity={false} />
           )
@@ -185,8 +182,8 @@ function SettingsContent() {
         </div>
       ) : (
         // Desktop: the menu stays put on the left, the open section beside it.
-        <div className="flex-1 min-h-0 flex">
-          <div className="shrink-0 overflow-y-auto" style={{ width: 268, padding: "24px 0 24px 24px" }}>
+        <div className="flex-1 min-h-0 flex w-full mx-auto" style={{ maxWidth: full ? 1386 : 1042 }}>
+          <div className="shrink-0 overflow-y-auto" style={{ width: 282, padding: "24px 14px 24px 24px" }}>
             {rail("rail")}
           </div>
           {full ? (

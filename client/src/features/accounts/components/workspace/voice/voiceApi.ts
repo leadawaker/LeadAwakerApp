@@ -13,8 +13,6 @@ export type LinePurpose = "client" | "demo" | "test";
 export type LineEngine = "gpt-live" | "elevenlabs";
 
 export type AgentGender = "female" | "male";
-/** standard = the shared voice layer; lean = Prompt_Library voice_lean_layer_* (browser test only). */
-export type TestPrompt = "standard" | "lean";
 
 export interface VoiceNumber {
   id: number;
@@ -65,8 +63,6 @@ export interface VoiceLine {
   voice: string | null;
   /** Set explicitly (female | male) it decides the agent's gender for both engines; null = automatic. */
   agentGender?: AgentGender | null;
-  /** Agency A/B test: the voice layer the Test button runs. Phone calls ignore it. */
-  testPrompt?: TestPrompt;
   /** Agency only: the account's other lines, which share every setting here. */
   otherLines?: { phoneNumber: string; purpose: LinePurpose }[];
   /** Agency only: whether ElevenLabs lets a line pick its LLM; false hides that pick. */
@@ -108,7 +104,6 @@ export interface VoiceLinePatch {
   agentNameCustom?: string | null;
   voice?: string | null;
   agentGender?: AgentGender | null;
-  testPrompt?: TestPrompt;
   locale?: string | null;
   transferNumber?: string | null;
   transferName?: string | null;

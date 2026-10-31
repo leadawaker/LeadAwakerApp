@@ -21,7 +21,6 @@ import { myAccountLabelKey } from "@/components/crm/navGates";
 import { useClientNavFacts } from "@/components/crm/useClientNavFacts";
 import { useListPanelState } from "@/hooks/useListPanelState";
 import { useListPanelFold } from "@/hooks/useListPanelFold";
-import { ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
 import { usePublishEntityData } from "@/contexts/PageEntityContext";
 import { AccountsTopBar } from "./AccountsTopBar";
@@ -45,8 +44,9 @@ import { readLastTab, writeLastTab } from "@/lib/lastTab";
 // (an old ?tab=voice / ?tab=chat link is sent there). This page is about the business itself.
 // Reactivation (agency only) is the service the agency runs for the client: shown when the account
 // has a reactivation campaign, and always reachable by ?tab=reactivation or the Services row to start one.
-const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "reactivation", "integrations", "alerts", "automations"];
+const ACCOUNT_TABS: WorkspaceTab[] = ["overview", "reactivation", "integrations", "automations"];
 const LAST_TAB_PAGE = "accounts";
+const ALERTS_HREF = "/platform/settings?tab=alerts";
 
 interface Props {
   accounts: AccountRow[];
@@ -120,7 +120,6 @@ export function AccountsWorkspace(p: Props) {
   useListPanelFold(isAgencyUser && !isNarrow);
   const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 900, deactivateAbove: 1250 });
   const isListCompact = !isNarrow && (listPanelState === "compact" || (listPanelState === "full" && rightPanelNarrow));
-  const isListHidden = !isNarrow && listPanelState === "hidden";
 
   const setDetailNode = useCallback((node: HTMLDivElement | null) => {
     compactObserverRef(node);
@@ -167,7 +166,10 @@ export function AccountsWorkspace(p: Props) {
   const [, setLocation] = useLocation();
   const search = useSearch();
   useEffect(() => {
-    if (new URLSearchParams(search).get("tab") === "social") setLocation(SOCIAL_PAGE_PATH, { replace: true });
+    const wanted = new URLSearchParams(search).get("tab");
+    if (wanted === "social") setLocation(SOCIAL_PAGE_PATH, { replace: true });
+    // Links from before Alerts moved to Settings.
+    if (wanted === "alerts") setLocation(ALERTS_HREF, { replace: true });
   }, [search, setLocation]);
   // Links to the old Phone and Chat tabs (?tab=voice|chat, with ?section= / ?focus=) open Calls >
   // Settings or Chats > Settings on the same account: the one shown here, else the stored pick.
@@ -241,13 +243,14 @@ export function AccountsWorkspace(p: Props) {
     else if (returnAccountRef.current !== accountId) setIntegrationsGroup(undefined);
   }, [integrationsGroup, accountId]);
 
-  // Deep link: /platform/accounts?tab=alerts opens that tab. Stripped once applied.
-  // "voice" and "chat" (Overview's services rows, Automations' Change links) leave for Calls / Chats > Settings.
+  // Deep link: /platform/accounts?tab=integrations opens that tab. Stripped once applied.
+  // "voice" and "chat" (Overview's services rows, Automations' Change links) leave for Calls / Chats > Settings, "alerts" for Settings > Alerts.
   const pickTab = (k: WorkspaceTab) => {
     if (k === "voice" || k === "chat") {
       setLocation(receptionistSettingsHref(k, { accountId: isAgencyUser && accountId ? accountId : undefined }));
       return;
     }
+    if (k === "alerts") { setLocation(ALERTS_HREF); return; }
     lastDeepTab = null; restoredTab.current = false; setIntegrationsGroup(undefined); setTab(k);
   };
 
@@ -257,7 +260,7 @@ export function AccountsWorkspace(p: Props) {
     if (!accountId) return;
     const params = new URLSearchParams(window.location.search);
     const wanted = params.get("tab");
-    if (!wanted || wanted === "voice" || wanted === "chat") return; // redirected above
+    if (!wanted || wanted === "voice" || wanted === "chat" || wanted === "alerts") return; // redirected above
     params.delete("tab");
     lastDeepTab = null;
     const qs = params.toString();
@@ -506,13 +509,11 @@ export function AccountsWorkspace(p: Props) {
             groupBy={p.groupBy}
             groupDirection={p.groupDirection}
             isListCompact={isListCompact}
-            isListHidden={isListHidden}
             isNarrow={isNarrow}
           />
         </MobileRecede>
         )}
         {/* Hidden list: the slim strip that brings it back */}
-        {isAgencyUser && <ListPanelUnfoldButton />}
 
         {/* Desktop detail panel — this div is the single scroll container; 48px h-padding keeps shadows (22.5px reach) within the clip boundary */}
         {showDetailArea && (

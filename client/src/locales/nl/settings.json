@@ -11,7 +11,8 @@
     "security": "Beveiliging",
     "notifications": "Meldingen",
     "users": "Gebruikers",
-    "billing": "Facturatie"
+    "billing": "Facturatie",
+    "alerts": "Meldingen"
   },
   "mobileProfile": {
     "title": "Mijn profiel",
@@ -72,7 +73,6 @@
     "outreachPagesToggle": "Tonen in navigatiebalk",
     "servicePages": "Servicepagina's",
     "servicePagesDescription": "Toon deze servicepagina's in de navigatiebalk en op Stats. Standaard verborgen.",
-    "servicePageSpeed": "Speed to Lead",
     "servicePageReputation": "Reputatie",
     "servicePageMissedCalls": "Gemiste oproepen",
     "landingPage": "Startpagina",
@@ -155,7 +155,11 @@
     },
     "alertsHint": "Welke gebeurtenissen worden verstuurd, en naar wie, stel je per account in bij Meldingen.",
     "alertsLink": "Meldingen openen",
-    "alsoInAlerts": "Alleen verstuurd als de Meldingen van het account dit aan hebben"
+    "alsoInAlerts": "Alleen verstuurd als de Meldingen van het account dit aan hebben",
+    "mine": {
+      "label": "Mijn meldingen",
+      "help": "Wat bij jou persoonlijk binnenkomt, waar je ook bent."
+    }
   },
   "hub": {
     "back": "Terug",
@@ -396,6 +400,7 @@
     "notificationsAgency": "Push, e-mail en Telegram",
     "notificationsClient": "Push op dit apparaat",
     "users": "Wie kan inloggen",
-    "billing": "Facturen en contracten"
+    "billing": "Facturen en contracten",
+    "alerts": "Dagoverzicht, directe meldingen en je apparaten"
   }
 }

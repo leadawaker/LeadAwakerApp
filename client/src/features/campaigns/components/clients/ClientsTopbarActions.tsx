@@ -12,7 +12,7 @@ import type { PersonaView } from "./usePersonaView";
 /**
  * The Personas tab's part of the Demos PageTopbar `right` slot: search, then the Filter menu
  * (the page adds Needs follow-up before them and + New Demo after). The Category | Date switch
- * is not here: it sits in the left group after the tabs (DemosViewSwitch). `view` is the
+ * is not here: it sits at the top of the persona list (ClientsTab).
  * page's one usePersonaView() call, shared with the list.
  */
 export function ClientsTopbarActions({ view }: { view: PersonaView }) {
