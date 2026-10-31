@@ -132,17 +132,6 @@
         }
       }
     },
-    "preferredWords": {
-      "label": "Which words do you prefer to use?",
-      "short": "Preferred words",
-      "nicheLabel": "Niche",
-      "nicheDefault": "Default (kitchen)",
-      "groups": {
-        "projectTerm": "The project",
-        "proposalTerm": "The proposal",
-        "decisionTerm": "The decision"
-      }
-    },
     "formality": {
       "label": "How formal may the communication be?",
       "short": "Formality",
@@ -194,22 +183,6 @@
       "male": "Male",
       "female": "Female",
       "customPlaceholder": "Or type a different name…",
-      "toggleGender": "Switch between male and female avatar",
-      "avatarLabel": "Profile picture",
-      "avatar": {
-        "logo": {
-          "label": "Company logo",
-          "help": "Use the showroom's logo as the profile picture."
-        },
-        "avatar": {
-          "label": "Assistant avatar",
-          "help": "Use a portrait image of the assistant."
-        },
-        "avatarLogo": {
-          "label": "Avatar with logo badge",
-          "help": "Assistant portrait with the company logo in the bottom corner."
-        }
-      },
       "options": {
         "thomas": {
           "label": "Thomas"
@@ -253,9 +226,7 @@
       "short": "Stock feed",
       "help": "If the website shows current stock (cars, homes, products), paste the page or feed link here so the assistant always quotes what is really available. Skip this if there is none.",
       "urlLabel": "Feed or stock page link",
-      "urlPlaceholder": "https://www.example.nl/aanbod/feed/",
-      "notesLabel": "Notes",
-      "notesPlaceholder": "e.g. prices are on the stock page, the feed updates hourly"
+      "urlPlaceholder": "https://www.example.nl/aanbod/feed/"
     },
     "handoffContact": {
       "label": "Who should the assistant reach when a person is needed?",
@@ -395,26 +366,6 @@
       "label": "Set up the website chat",
       "short": "Website chat",
       "help": "Create the key, fill in the website's domain and pick the look. Send the snippet to whoever manages the website."
-    },
-    "whatsappNumber": {
-      "label": "Which number does the WhatsApp assistant use?",
-      "short": "WhatsApp number",
-      "options": {
-        "new": {
-          "label": "A new number just for the assistant",
-          "help": "The client's own WhatsApp stays untouched. The website's WhatsApp button points to the new number."
-        },
-        "existing": {
-          "label": "The client's existing number",
-          "help": "Customers keep the number they know. Only works with the WhatsApp Business app, and every message to that number reaches the assistant. Not available yet."
-        }
-      },
-      "appLabel": "Which WhatsApp does the client use today?",
-      "app": {
-        "business": "WhatsApp Business",
-        "personal": "Regular WhatsApp",
-        "unknown": "Not sure"
-      }
     },
     "whatsappConnect": {
       "label": "Connect WhatsApp",

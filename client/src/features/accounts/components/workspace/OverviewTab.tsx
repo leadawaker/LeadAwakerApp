@@ -11,7 +11,6 @@ import { CommunicationProfilePanel } from "./communication/CommunicationProfileP
 import { CallNotes } from "./communication/CallNotes";
 import { OnboardingEntry, BackToOverview } from "./communication/OnboardingEntry";
 import { useCommunicationProfile } from "./communication/useCommunicationProfile";
-import { AlertsTab } from "./alerts/AlertsTab";
 import { ClientAutomationsTab } from "@/features/automation/components/ClientAutomationsTab";
 import { AccountReactivationTab } from "./reactivation/AccountReactivationTab";
 import type { AccountRow, AccountDetail, WorkspaceTab, ContractRowData, TeamMemberData } from "./types";
@@ -176,8 +175,7 @@ export function TabContent({ tab, isMobile, data, readOnly = false, onOpenTab, i
       {!readOnly && <CallNotes account={data.account} onSave={data.onSave} />}
     </div>
   );
-  // "voice" and "chat" are not tabs any more: the workspace sends them to Calls > Settings and Chats > Settings.
-  if (tab === "alerts") return <AlertsTab accountId={data.accountId} stacked={isMobile} />;
+  // "voice" and "chat" are not tabs any more: the workspace sends them to Calls > Settings and Chats > Settings ("alerts" to Settings > Alerts).
   if (tab === "automations") return <ClientAutomationsTab accountId={data.accountId} onOpenTab={onOpenTab} />;
   return null;
 }

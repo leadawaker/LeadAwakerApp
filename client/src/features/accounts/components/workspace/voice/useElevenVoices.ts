@@ -29,7 +29,7 @@ export async function fetchElevenVoices(): Promise<ElevenVoice[]> {
     const { voices } = await get<{ voices: (EngineVoice & Partial<ElevenVoice>)[] }>("/voice/eleven/voices");
     if (Array.isArray(voices) && voices.length) return voices.map((v) => ({ ...v, preview: v.preview ?? elevenPreviewUrl(v.id) }));
   } catch { /* the engine may not have the route yet: use the options list */ }
-  const opts = await get<EngineOptions>("/voice/xai/options");
+  const opts = await get<EngineOptions>("/voice/engines/options");
   return (opts.voices.elevenlabs ?? []).map((v) => ({ ...v, preview: elevenPreviewUrl(v.id) }));
 }
 

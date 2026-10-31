@@ -89,16 +89,6 @@
         }
       }
     },
-    "preferredWords": {
-      "label": "Quais palavras vocês preferem usar?",
-      "nicheLabel": "Nicho",
-      "nicheDefault": "Padrão (cozinha)",
-      "groups": {
-        "projectTerm": "O projeto",
-        "proposalTerm": "A proposta",
-        "decisionTerm": "A decisão"
-      }
-    },
     "formality": {
       "label": "Quão formal a comunicação pode ser?",
       "levels": {
@@ -138,21 +128,6 @@
       "male": "Masculino",
       "female": "Feminino",
       "customPlaceholder": "Ou digite outro nome…",
-      "avatarLabel": "Foto de perfil",
-      "avatar": {
-        "logo": {
-          "label": "Logo da empresa",
-          "help": "Usar o logo do showroom como foto de perfil."
-        },
-        "avatar": {
-          "label": "Avatar do assistente",
-          "help": "Usar uma foto de retrato do assistente."
-        },
-        "avatarLogo": {
-          "label": "Avatar com logo",
-          "help": "Retrato do assistente com o logo da empresa no canto inferior."
-        }
-      },
       "options": {
         "thomas": {
           "label": "Thomas"
@@ -196,9 +171,7 @@
       "short": "Feed de estoque",
       "help": "Se o site mostra o estoque atual (carros, imóveis, produtos), cole aqui o link da página ou do feed para a assistente sempre citar o que está disponível de verdade. Pule se não houver.",
       "urlLabel": "Link do feed ou da página de estoque",
-      "urlPlaceholder": "https://www.exemplo.com.br/estoque/feed/",
-      "notesLabel": "Observações",
-      "notesPlaceholder": "ex.: os preços estão na página de estoque, o feed atualiza a cada hora"
+      "urlPlaceholder": "https://www.exemplo.com.br/estoque/feed/"
     },
     "handoffContact": {
       "label": "Quem a assistente deve chamar quando precisar de uma pessoa?",
@@ -338,26 +311,6 @@
       "label": "Configurar o chat do site",
       "short": "Chat do site",
       "help": "Crie a chave, preencha o domínio do site e escolha o visual. Envie o código para quem cuida do site."
-    },
-    "whatsappNumber": {
-      "label": "Qual número a assistente de WhatsApp usa?",
-      "short": "Número de WhatsApp",
-      "options": {
-        "new": {
-          "label": "Um número novo só para a assistente",
-          "help": "O WhatsApp do cliente fica intocado. O botão de WhatsApp do site passa a apontar para o número novo."
-        },
-        "existing": {
-          "label": "O número atual do cliente",
-          "help": "Os clientes continuam com o número que já conhecem. Só funciona com o WhatsApp Business, e toda mensagem para esse número chega à assistente. Ainda não disponível."
-        }
-      },
-      "appLabel": "Qual WhatsApp o cliente usa hoje?",
-      "app": {
-        "business": "WhatsApp Business",
-        "personal": "WhatsApp comum",
-        "unknown": "Não sei"
-      }
     },
     "whatsappConnect": {
       "label": "Conectar o WhatsApp",

@@ -6,7 +6,6 @@
 // (on an ElevenLabs line: the draft, then one folded card with the call review, its change cards and the coach).
 import { useEffect, useRef, useState } from "react";
 import { BookOpen, Loader2, MessageSquareQuote, NotebookPen, Waves } from "lucide-react";
-import { useWorkspace } from "@/hooks/useWorkspace";
 import { useVoiceT } from "./voiceGender";
 import { VoiceCardShell, helpStyle, inputStyle } from "./voiceAtoms";
 import { EXTRA_INSTRUCTIONS_MAX, type VoiceLine, type VoiceLinePatch } from "./voiceApi";
@@ -15,7 +14,6 @@ import { AgentVoiceCard } from "./AgentVoiceCard";
 import { LineEngineCard } from "./LineEngineCard";
 import { PromptCounts } from "./PromptCounts";
 import { SHOW_ELEVEN, runsOnEleven } from "./lineEngine";
-import { LivePromptPick } from "./LivePromptPick";
 import { useAutosave } from "./useAutosave";
 import { AutosaveBadge, SharedPromptCard } from "./SharedPromptCard";
 import { useAccountVoicePrompts, useSaveVoicePrompt } from "./voicePromptsApi";
@@ -69,11 +67,8 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
   const savePrompt = useSaveVoicePrompt(line.accountId);
   const language = line.locale ?? "";
   const onEleven = SHOW_ELEVEN && runsOnEleven(line.number);
-  const { isAgencyUser } = useWorkspace();
-  // The voice layer calls run on: lean unless the account picks standard, and standard
-  // where the language has no lean row (pt), as the engine does.
-  const lean = line.testPrompt !== "standard" ? prompts.data?.lean ?? null : null;
-  const layer = lean ?? prompts.data?.layer ?? null;
+  // The voice layer calls run on.
+  const layer = prompts.data?.lean ?? null;
 
   // These two texts are the account's: the client line on it reads the same ones.
   const clientLines = (line.otherLines ?? []).map((l) => l.phoneNumber).join(", ");
@@ -110,10 +105,9 @@ export function PromptSection({ line, canEdit, saving, onSave }: {
           kind="layer"
           accountId={line.accountId}
           icon={<Waves size={17} />}
-          title={t("prompt.layer.title", { language: lean ? `${language}, ${t("test.prompt.lean").toLowerCase()}` : language })}
+          title={t("prompt.layer.title", { language })}
           help={t("prompt.layer.help")}
-          top={isAgencyUser ? <LivePromptPick line={line} canEdit={canEdit} saving={saving} onSave={onSave} /> : undefined}
-          leanLayer={!!lean}
+          leanLayer
           row={layer}
           onSave={savePrompt}
         />

@@ -304,8 +304,7 @@
     "kind": {
       "layer": "Spraaklaag",
       "greeting": "Begroeting",
-      "backend": "Backend",
-      "xai": "Grok-prompt (kort)"
+      "backend": "Backend"
     },
     "noLine": "{{name}} heeft nog geen voicelijn, dus dit is de prompt zonder klantgegevens.",
     "otherLocale": "De lijn van {{name}} spreekt {{line}}, dus gesprekken daar krijgen deze {{prompt}} prompt nooit. Getoond zonder klantgegevens."
@@ -335,5 +334,30 @@
     "sans": "Sans",
     "system": "Systeem",
     "humanist": "Humanist"
+  },
+  "valueEditor": {
+    "help": "Opgeslagen waar deze waarde staat. Het volgende gesprek op deze lijn hoort het.",
+    "loadFailed": "Kon deze waarde niet laden.",
+    "saveFailed": "Opslaan mislukt.",
+    "noPersona": "Dit account heeft nog geen eigen persona. Stel er een in via Gesprekken > Belinstellingen.",
+    "cancel": "Annuleren",
+    "save": "Opslaan",
+    "word": "Woord",
+    "sayAs": "Uitspreken als",
+    "remove": "Verwijderen",
+    "addWord": "Woord toevoegen",
+    "names": {
+      "company_name": "Bedrijfsnaam",
+      "business": "Wat het bedrijf doet",
+      "agent_name": "Haar naam",
+      "tone": "Toon (max. 3)",
+      "address": "Hoe ze bellers aanspreekt",
+      "pronunciation": "Uitspraak"
+    }
+  },
+  "voiceSection": {
+    "voice": "Stemprompt",
+    "backend": "Back-end-prompt",
+    "universal": "Universele prompt"
   }
 }

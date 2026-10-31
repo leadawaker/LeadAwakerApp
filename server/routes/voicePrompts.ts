@@ -11,9 +11,8 @@ import { requireAuth, requireAgency } from "../auth";
 const ENGINE_BASE = process.env.ENGINE_URL || "http://localhost:8100";
 
 const previewSchema = z.object({
-  // xai: the lean Grok prompt (voice_xai_layer_*), as Grok hears it.
   // eleven: the read-only prompt ElevenLabs gets for lineId (needs accountId too).
-  kind: z.enum(["layer", "greeting", "backend", "xai", "eleven"]),
+  kind: z.enum(["layer", "greeting", "backend", "eleven"]),
   // "" renders the saved prompt (the Voice tab's "What she is told").
   text: z.string().max(60_000).default(""),
   locale: z.string().max(10).default("en-GB"),
@@ -22,8 +21,12 @@ const previewSchema = z.object({
   accountId: z.number().int().positive().optional(),
   // kind "eleven": the Voice_Numbers row, which must be accountId's own (the engine 404s otherwise).
   lineId: z.number().int().positive().optional(),
-  // kind "layer": the lean test layer (voice_lean_layer_*), with its compact stock lines.
+  // kind "layer": the voice layer calls run on (voice_lean_layer_*), with its compact stock lines.
   leanLayer: z.boolean().optional(),
+  // kind "backend": `text` is the backend's skeleton (voice_backend_layer), not the business prompt.
+  backendLayer: z.boolean().optional(),
+  // kind "layer" or "backend": also return `marked`, the text with each filled-in value wrapped, for the editor's highlights.
+  mark: z.boolean().optional(),
 });
 
 export function registerVoicePromptRoutes(app: Express) {
@@ -36,6 +39,7 @@ export function registerVoicePromptRoutes(app: Express) {
       body: JSON.stringify({
         ...parsed.data, accountId: undefined, account_id: parsed.data.accountId, lineId: undefined, line_id: parsed.data.lineId,
         leanLayer: undefined, lean_layer: parsed.data.leanLayer ?? false,
+        backendLayer: undefined, backend_layer: parsed.data.backendLayer ?? false,
       }),
       signal: AbortSignal.timeout(15_000),
     });

@@ -274,15 +274,6 @@
     "call": "Test in browser",
     "filedNote": "Opens in a new tab. Test calls show below, not in this client's stats or CRM.",
     "needsPersona": "Create the live persona first.",
-    "prompt": {
-      "label": "Prompt for calls",
-      "standard": "Standard",
-      "lean": "Lean",
-      "help": "Applies to real calls and the test. The prompt below is shared: a change applies to every account with the same pick in this language.",
-      "testWith": "Test with",
-      "live": "Live pick",
-      "testHelp": "Only for this test. Real calls stay on the live pick."
-    },
     "promptTitle": "What she is told",
     "promptFailed": "Could not load the prompt.",
     "kind": {

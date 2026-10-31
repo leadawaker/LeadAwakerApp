@@ -13,21 +13,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { usePersistedState } from "@/hooks/usePersistedState";
 import { PromptPreviewSections, buildPreviewSections, escapeHtml } from "./PromptPreviewSections";
+import { MARK, splitHtmlPreservingMarks } from "../utils/resolveVariables";
+import { VoiceValueEditor, isEditableValue, type EditableValue } from "./VoiceValueEditor";
 
-type Kind = "layer" | "greeting" | "backend" | "xai";
+type Kind = "layer" | "greeting" | "backend";
 
 /** Which builder and language a voice use_case belongs to. */
-export function voicePromptTarget(useCase: string): { kind: Kind; locale: string; leanLayer?: boolean } | null {
+export function voicePromptTarget(useCase: string): { kind: Kind; locale: string; leanLayer?: boolean; backendLayer?: boolean } | null {
   if (!useCase.startsWith("voice_")) return null;
+  // Appended to the voice layer on website demo calls only: the plain preview shows it.
+  if (useCase === "voice_public_demo_closing") return null;
+  // The backend's skeleton, English on every call, filled with the saved business prompt.
+  if (useCase === "voice_backend_layer") return { kind: "backend", locale: "en-GB", backendLayer: true };
   // The lean GPT Live layer under A/B test: the Voice tab's Test button runs it.
   const lean = useCase.match(/^voice_lean_layer_(.+)$/);
   if (lean) return { kind: "layer", locale: lean[1]!, leanLayer: true };
-  // The lean Grok prompt: rendered as Grok hears it, tools section included.
-  const xai = useCase.match(/^voice_xai_layer_(.+)$/);
-  if (xai) return { kind: "xai", locale: xai[1]! };
   const layer = useCase.match(/^voice_layer_(.+)$/);
   if (layer) return { kind: "layer", locale: layer[1]! };
   const greeting = useCase.match(/^voice_greeting_(.+)$/);
@@ -37,12 +41,25 @@ export function voicePromptTarget(useCase: string): { kind: Kind; locale: string
   return { kind: "backend", locale: lang === "nl" ? "nl" : lang === "pt" ? "pt-BR" : "en-GB" };
 }
 
+// U+E000 name U+E001 value U+E002: a filled-in value in the engine's marked text.
+const FILLED = /\uE000([a-z_]+)\uE001([\s\S]*?)\uE002/g;
+const STRAY = /[\uE000-\uE002]/g;
+
+function markedToHtml(raw: string): string {
+  return escapeHtml(raw)
+    .replace(FILLED, (_, name: string, value: string) => `<mark ${MARK} data-var="${name}">${value}</mark>`)
+    // A value cut by a section heading leaves a lone marker behind.
+    .replace(STRAY, "");
+}
+
 const REAL_ACCOUNT_TYPES = new Set(["agency", "client"]);
 /** Stored choice: "" = not chosen yet (the agency account), "none" = no client, else an account id. */
 const NO_CLIENT = "none";
 
 interface Preview {
   text: string;
+  /** The text with each filled-in value wrapped in private-use characters (engine voice_prompt_preview_routes). */
+  marked?: string | null;
   company: string | null;
   phone_line: string | null;
   locale?: string;
@@ -75,6 +92,9 @@ export function VoicePreviewPane({
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [folded, setFolded] = useState<Set<number>>(new Set());
+  // A clicked highlight: its value opens in the pop-up; a save renders the preview again.
+  const [editing, setEditing] = useState<{ name: EditableValue; rect: DOMRect } | null>(null);
+  const [savedTick, setSavedTick] = useState(0);
   // Accounts whose line cannot render this locale: skip the first request next time.
   const fallbackRef = useRef(new Map<string, Note>());
 
@@ -104,7 +124,7 @@ export function VoicePreviewPane({
     // came back without an Agency/Client row, `account` is null: render without one.
     if (choice !== NO_CLIENT && !accountsLoaded) return;
     let cancelled = false;
-    const base = { kind: target.kind, text, locale: target.locale, leanLayer: target.leanLayer };
+    const base = { kind: target.kind, text, locale: target.locale, leanLayer: target.leanLayer, backendLayer: target.backendLayer, mark: target.kind === "layer" || target.kind === "backend" };
     const post = (body: object) => apiFetch("/api/voice-prompts/preview", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -149,14 +169,19 @@ export function VoicePreviewPane({
       }
     }, 500);
     return () => { cancelled = true; clearTimeout(timer); };
-  }, [target, text, account, choice, accountsLoaded, t]);
+  }, [target, text, account, choice, accountsLoaded, savedTick, t]);
 
+  // The values the engine filled in (company, agent, business, tone...) get the same highlight as the normal preview.
   const sections = useMemo(
-    () => buildPreviewSections(preview?.text ?? "", escapeHtml, (html) => html.split("\n")),
-    [preview?.text],
+    () => preview?.marked
+      ? buildPreviewSections(preview.marked, markedToHtml, splitHtmlPreservingMarks)
+      : buildPreviewSections(preview?.text ?? "", escapeHtml, (html) => html.split("\n")),
+    [preview?.text, preview?.marked],
   );
 
   if (!target) return null;
+  // Values are editable only when they are this account's own (not the generic render).
+  const editable = !!account && !note && !!preview?.marked;
 
   const toggleFold = (lineIndex: number) => setFolded((prev) => {
     const next = new Set(prev);
@@ -203,13 +228,30 @@ export function VoicePreviewPane({
           {t("voicePreview.phoneLine", { number: preview.phone_line })}
         </div>
       )}
-      <div className="flex-1 min-h-0 overflow-y-auto px-5 py-4 [scrollbar-width:thin]">
+      <div
+        className={cn("flex-1 min-h-0 overflow-y-auto px-5 py-4 [scrollbar-width:thin]", editable && "la-voice-editable")}
+        onClick={editable ? (e) => {
+          const mark = (e.target as HTMLElement).closest("mark[data-var]") as HTMLElement | null;
+          const name = mark?.dataset.var;
+          if (mark && name && isEditableValue(name)) setEditing({ name, rect: mark.getBoundingClientRect() });
+        } : undefined}
+      >
         {error ? (
           <span style={{ fontSize: 12, color: "hsl(var(--destructive))" }}>{error}</span>
         ) : (
           <PromptPreviewSections sections={sections} folded={folded} onToggleFold={toggleFold} fontSize={fontSize} font={font} />
         )}
       </div>
+      {editing && account && (
+        <VoiceValueEditor
+          key={`${editing.name}-${editing.rect.top}`}
+          accountId={account.id}
+          name={editing.name}
+          rect={editing.rect}
+          onClose={() => setEditing(null)}
+          onSaved={() => setSavedTick((n) => n + 1)}
+        />
+      )}
     </div>
   );
 }

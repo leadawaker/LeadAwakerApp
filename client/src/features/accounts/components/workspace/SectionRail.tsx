@@ -2,12 +2,22 @@
 // (Phone, Alerts): one tile per section with a state dot and the one fact that
 // matters. A tile opens its section. On desktop the tiles stand in a column
 // that stays in place below the account header; on a phone they sit in a
-// grid above the open section. The open tile is the brightest one.
+// grid above the open section. The open tile looks like a selected list card.
 import type { ReactNode } from "react";
 
 export type SectionState = "on" | "pending" | "off";
 
 const DOT: Record<SectionState, string> = { on: "var(--good)", pending: "var(--warn)", off: "var(--mute-2)" };
+
+/** A tile at a corner of the menu takes the menu's radius, so the selected outline follows the rounded edge. */
+function tileRadius(i: number, count: number, cols: number): string {
+  const firstRow = i < cols;
+  const lastRow = i >= count - (count % cols || cols);
+  const left = i % cols === 0;
+  const right = i % cols === cols - 1 || i === count - 1;
+  const r = (on: boolean) => (on ? "var(--r-card)" : "0");
+  return `${r(firstRow && left)} ${r(firstRow && right)} ${r(lastRow && right)} ${r(lastRow && left)}`;
+}
 
 export interface SectionRailItem<K extends string> {
   key: K;
@@ -49,6 +59,7 @@ export function SectionRail<K extends string>({ items, active, onSelect, layout,
         const on = item.key === active;
         // An odd count leaves the last tile alone on its row in the grid: let it span.
         const span = layout === "grid" && items.length % 2 === 1 && i === items.length - 1;
+        const cols = layout === "grid" ? 2 : 1;
         return (
           <button
             key={item.key}
@@ -61,8 +72,9 @@ export function SectionRail<K extends string>({ items, active, onSelect, layout,
             style={{
               display: "flex", flexDirection: "column", gap: 6, alignItems: "flex-start", textAlign: "left", cursor: "pointer",
               padding: layout === "grid" ? "13px 14px" : "15px 18px", border: 0, minWidth: 0,
-              background: on ? "var(--card)" : "var(--bone)",
-              boxShadow: on ? "inset 3px 0 0 var(--wine)" : undefined,
+              background: on ? "var(--list-selected)" : "var(--card)",
+              boxShadow: on ? "inset 0 0 0 1px var(--wine-soft)" : undefined,
+              borderRadius: tileRadius(i, items.length, cols),
               gridColumn: span ? "1 / -1" : undefined,
             }}
           >

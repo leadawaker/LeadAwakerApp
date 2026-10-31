@@ -610,6 +610,9 @@ export const campaigns = nocodb.table("Campaigns", {
   // Prompt or the campaign's "Prompt linked" select. The engine reads it first; NULL falls back
   // to the campaign's own Campaigns_id rows, then prompt_campaign_id.
   promptId: integer("prompt_id"),
+  // The same for the other prompts a campaign reads, as { use_case: prompt id } (the reputation
+  // demo's review-reply and reputation_conversation, Demos > Settings > Reputation).
+  promptPicks: jsonb("prompt_picks").$type<Record<string, number>>(),
   // Reputation: minutes after service_completed_at before the feedback ask is sent.
   reputationDelayMinutes: integer("reputation_delay_minutes"),
   accountsId: integer("Accounts_id"),
@@ -930,10 +933,10 @@ export const voiceCalls = nocodb.table("Voice_Calls", {
   // review screen. {turns:[{i,role,at_s,delay_ms,interrupted}], tools:[{name,at_s,latency_ms}],
   // cost:{total,minutes,ai,recap,telephony,estimate}}. Written by the engine's staff_test.py.
   turnMetrics: jsonb("turn_metrics"),
-  // Grok calls only: "telnyx:<recording id>", recorded by Telnyx because xAI keeps
-  // no recording (engine xai_recording.py, migrate_add_voice_call_recording_ref.py).
+  // The Grok test calls of 2026-10-22 only (Grok was removed 2026-10-30): "telnyx:<recording id>",
+  // recorded by Telnyx because xAI kept none (migrate_add_voice_call_recording_ref.py).
   recordingRef: text("recording_ref"),
-  // Grok calls only: when Telnyx started recording (engine migrate_add_voice_call_events.py).
+  // Those same calls: when Telnyx started recording (engine migrate_add_voice_call_events.py).
   // The call player times transcript bubbles from it; GPT-Live recordings start at started_at.
   recordingStartedAt: timestamp("recording_started_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
@@ -953,7 +956,7 @@ export const voiceCallEvents = nocodb.table("Voice_Call_Events", {
   id: serial("id").primaryKey(),
   callId: text("call_id").notNull(),
   accountsId: integer("accounts_id"),
-  /** 'gpt-live' | 'xai' */
+  /** 'gpt-live' ('xai' on the Grok test calls of 2026-10-22; Grok was removed 2026-10-30) */
   engine: text("engine").notNull(),
   /** 'delegation' | 'tool' | 'refused' */
   kind: text("kind").notNull(),
@@ -1505,6 +1508,8 @@ export const contracts = nocodb.table("Contracts", {
   paymentPreset:       text("payment_preset"),
   contractText:        text("contract_text"),
   signerName:          text("signer_name"),
+  signerEmail:         text("signer_email"),
+  signwellDocumentId:  text("signwell_document_id"),
 }, (t) => [
   index("contracts_accounts_id_idx").on(t.accountsId),
   index("contracts_view_token_idx").on(t.viewToken),

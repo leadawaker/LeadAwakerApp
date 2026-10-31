@@ -9,7 +9,7 @@ import "@/features/campaigns/components/clients/personaRows.css";
 /**
  * The Demos page's part of the PageTopbar `right` slot, in order: the Needs follow-up toggle,
  * search and filter (the persona list's own, ClientsTopbarActions), and the wine + New Demo.
- * The Category | Date switch sits in the left group (DemosViewSwitch).
+ * The Category | Date switch sits at the top of the persona list (ClientsTab).
  */
 export function DemosTopbarActions({ view, followUp, followUpCount, onFollowUp, onNewDemo }: {
   view: PersonaView;

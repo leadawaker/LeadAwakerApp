@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 import { Plus, X } from "lucide-react";
 import { OptionCard, Chip, RecommendedBadge, inputStyle } from "./wizardAtoms";
 import {
-  SERVICES, VOICE_LINES, FORWARD_WHEN, RING_WHEN, AFTER_HOURS, WA_NUMBER_CHOICE, WA_APP_TYPE,
+  SERVICES, VOICE_LINES, FORWARD_WHEN, RING_WHEN, AFTER_HOURS,
   VOICE_OPTIONS, VOICE_LOCALES, MOBILE_FORWARD_CODES, type ReceptionistSetup,
 } from "./setupConstants";
 import { IntakeEditor } from "./IntakeEditor";
@@ -19,7 +19,7 @@ import type { AccountRow, AccountDetail } from "../types";
 
 // Recommended picks (badge only, never preselected).
 const RECOMMENDED: Record<string, string> = {
-  ringWhen: "hours", afterHours: "callback", voice: "marin", numberChoice: "new",
+  ringWhen: "hours", afterHours: "callback", voice: "marin",
 };
 
 const help = { fontSize: 12.5, color: "var(--mute)", margin: "0 0 12px", lineHeight: 1.5 } as const;
@@ -52,7 +52,7 @@ export function ServiceStep({ stepKey, services, onServicesChange, setup, onSetu
   const q = (k: string): string => t(`questions.${stepKey}.${k}`);
   const badge = (field: string, key: string) =>
     RECOMMENDED[field] === key ? <RecommendedBadge label={t("wizard.recommended")} /> : undefined;
-  const { handoff, voice, whatsapp, stock } = setup;
+  const { handoff, voice, stock } = setup;
 
   switch (stepKey) {
     case "services":
@@ -77,17 +77,6 @@ export function ServiceStep({ stepKey, services, onServicesChange, setup, onSetu
           <div>
             <Label>{q("urlLabel")}</Label>
             <TextInput type="url" value={stock.feedUrl} onChange={(feedUrl) => onSetupChange("stock", { feedUrl })} placeholder={q("urlPlaceholder")} />
-          </div>
-          <div>
-            <Label>{q("notesLabel")}</Label>
-            <textarea
-              value={stock.notes}
-              onChange={(e) => onSetupChange("stock", { notes: e.target.value })}
-              placeholder={q("notesPlaceholder")}
-              rows={3}
-              className="neu-inset-crisp"
-              style={{ ...inputStyle, padding: "11px 13px", resize: "vertical", lineHeight: 1.5 }}
-            />
           </div>
         </div>
       );
@@ -320,28 +309,6 @@ export function ServiceStep({ stepKey, services, onServicesChange, setup, onSetu
         <div>
           <p style={help}>{q("help")}</p>
           {accountId ? <WebsiteChatCard accountId={accountId} /> : null}
-        </div>
-      );
-
-    case "whatsappNumber":
-      return (
-        <div style={fieldGap}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {WA_NUMBER_CHOICE.map((k) => (
-              <OptionCard key={k} selected={whatsapp.numberChoice === k} onClick={() => onSetupChange("whatsapp", { numberChoice: k })} badge={badge("numberChoice", k)}>
-                <span style={{ fontSize: 14.5, fontWeight: 600, color: "var(--ink-soft)", display: "block" }}>{q(`options.${k}.label`)}</span>
-                <span style={{ fontSize: 12, color: "var(--mute)", display: "block", marginTop: 4, lineHeight: 1.5 }}>{q(`options.${k}.help`)}</span>
-              </OptionCard>
-            ))}
-          </div>
-          <div>
-            <Label>{q("appLabel")}</Label>
-            <div style={{ display: "flex", gap: 9, flexWrap: "wrap" }}>
-              {WA_APP_TYPE.map((k) => (
-                <Chip key={k} selected={whatsapp.appType === k} onClick={() => onSetupChange("whatsapp", { appType: k })} label={q(`app.${k}`)} />
-              ))}
-            </div>
-          </div>
         </div>
       );
 

@@ -8,11 +8,11 @@
 // those a chooser is shown.
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
+import { SocialAccountPicker } from "@/features/social/components/SocialAccountPicker";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "wouter";
-import { Building2, Check, ChevronDown, Link2, Loader2 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Building2, Link2, Loader2 } from "lucide-react";
 import { getQueryFn } from "@/lib/queryClient";
 import { useWorkspace, type Account } from "@/hooks/useWorkspace";
 import { useIsMobile } from "@/hooks/useIsMobile";
@@ -90,23 +90,13 @@ export function ReceptionistSettings({ channel, fallbackAccountId, pickerSlot }:
   };
 
   const options = [...accounts].sort((a, b) => String(a.name ?? "").localeCompare(String(b.name ?? "")));
+  const pickerOptions = options.map((a) => ({ id: a.id, name: String(a.name ?? ""), timeZone: "", language: null }));
   const picker = isAgencyUser ? (
-    <AccountPicker
-      accounts={options}
-      value={accountId}
-      label={options.find((a) => a.id === accountId)?.name ?? account?.name}
-      onChange={choose}
-    />
+    <SocialAccountPicker options={pickerOptions} selectedId={accountId ?? null} onSelect={choose} />
   ) : null;
   // The same picker in the page's topbar, level with the tabs.
   const topbarPicker = isAgencyUser && accountId && pickerSlot ? createPortal(
-    <AccountPicker
-      accounts={options}
-      value={accountId}
-      label={options.find((a) => a.id === accountId)?.name ?? account?.name}
-      onChange={choose}
-      height={38}
-    />,
+    <SocialAccountPicker options={pickerOptions} selectedId={accountId ?? null} onSelect={choose} />,
     pickerSlot,
   ) : null;
 
@@ -142,6 +132,7 @@ export function ReceptionistSettings({ channel, fallbackAccountId, pickerSlot }:
         key={accountId}
         accountId={accountId}
         inboundCampaignId={account.inbound_campaign_id}
+        accountName={account.name ?? ""}
         readOnly={!isAdmin}
         stacked={stacked}
         onOpenIntegrations={openIntegrations}
@@ -191,46 +182,6 @@ function ChooseAccount({ picker, failed = false }: { picker: ReactNode; failed?:
       <p style={{ margin: 0, maxWidth: 460, fontSize: 13, color: "var(--mute)", lineHeight: 1.5 }}>{t("receptionistSettings.chooseHelp")}</p>
       {picker}
     </div>
-  );
-}
-
-function AccountPicker({ accounts, value, label, onChange, height = 32 }: {
-  accounts: { id: number; name: string }[];
-  value: number | undefined;
-  label: string | undefined;
-  onChange: (id: number) => void;
-  /** 38 in the page's topbar, level with the Stats | Calls | Settings tabs. */
-  height?: number;
-}) {
-  const { t } = useTranslation("accounts");
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          type="button"
-          aria-label={t("receptionistSettings.account")}
-          title={t("receptionistSettings.account")}
-          data-testid="receptionist-settings-account"
-          className={`la-btn la-btn--soft${value ? " on" : ""}`}
-          style={{ height, flexShrink: 0, maxWidth: 280 }}
-        >
-          <Building2 className="h-4 w-4 shrink-0" />
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{label ?? t("receptionistSettings.choose")}</span>
-          <ChevronDown className="h-3 w-3 shrink-0" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-64 max-h-80 overflow-y-auto glass-strong border-none">
-        {accounts.length === 0 && (
-          <div className="px-2 py-1.5 text-[12px]" style={{ color: "var(--mute)" }}>{t("receptionistSettings.noAccounts")}</div>
-        )}
-        {accounts.map((a) => (
-          <DropdownMenuItem key={a.id} className="flex items-center gap-2 text-[12px]" onClick={() => onChange(a.id)} style={{ fontWeight: value === a.id ? 600 : 400 }}>
-            <span className="flex-1 truncate">{a.name}</span>
-            {value === a.id && <Check className="h-3 w-3 ml-auto shrink-0" style={{ color: "var(--wine)" }} />}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
   );
 }
 

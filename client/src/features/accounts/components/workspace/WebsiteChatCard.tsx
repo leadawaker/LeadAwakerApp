@@ -133,7 +133,7 @@ export function WebsiteChatCard({ accountId }: { accountId: number }) {
   return (
     // Settings on the left, the live chat on the right (below on a narrow screen).
     <div style={{ display: "flex", flexWrap: "wrap", gap: 18, alignItems: "flex-start" }}>
-    <div className="neu-raised" style={{ flex: "1 1 320px", minWidth: 0, borderRadius: "var(--r-card)", background: "var(--bone)", padding: "18px 22px" }}>
+    <div className="neu-raised" style={{ flex: "1 1 320px", minWidth: 0, borderRadius: "var(--r-card)", background: "var(--card)", padding: "18px 22px" }}>
       <button
         onClick={() => setOpen((v) => !v)}
         style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", background: "transparent", border: 0, cursor: "pointer", padding: 0 }}
@@ -317,7 +317,7 @@ export function InboundWhatsAppCard({
   };
 
   return (
-    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "18px 22px" }}>
+    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "18px 22px" }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
         <IconTile><MessageSquarePlus size={16} /></IconTile>
         <span style={{ flex: 1 }}>

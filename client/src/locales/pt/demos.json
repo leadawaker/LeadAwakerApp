@@ -212,7 +212,7 @@
     "rail": {
       "label": "Serviços",
       "voice": "Vozes, ligações",
-      "shared": "Configuração de demo compartilhada"
+      "shared": "Prompt em uso"
     },
     "campaign": {
       "help": "A campanha em que esta demo roda. As alterações são salvas sozinhas.",
@@ -284,6 +284,20 @@
         "off": "Desligado",
         "standard": "Padrão (60 a 200 ms)",
         "large": "Grande (100 a 400 ms)"
+      }
+    },
+    "promptTile": {
+      "rail": "Prompt em uso",
+      "inUse": "Prompt",
+      "builtIn": "Padrão embutido",
+      "sharedByClients": "Todo cliente sem versão própria usa este prompt, então alterações aqui valem para eles também. Faça uma cópia para mudar só nesta demo.",
+      "conversation": {
+        "title": "Chat de acompanhamento",
+        "help": "Como o assistente fala com o cliente depois de uma visita."
+      },
+      "reply": {
+        "title": "Resposta à avaliação",
+        "help": "Como o assistente escreve a resposta pública do dono a uma avaliação."
       }
     }
   },

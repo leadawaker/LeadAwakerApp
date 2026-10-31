@@ -274,15 +274,6 @@
     "call": "Testar no navegador",
     "filedNote": "Abre em uma nova aba. As ligações de teste aparecem abaixo, fora das estatísticas e do CRM deste cliente.",
     "needsPersona": "Crie a persona ao vivo primeiro.",
-    "prompt": {
-      "label": "Prompt das ligações",
-      "standard": "Padrão",
-      "lean": "Enxuto",
-      "help": "Vale para ligações reais e para o teste. O prompt abaixo é compartilhado: uma mudança vale para todas as contas com a mesma escolha neste idioma.",
-      "testWith": "Testar com",
-      "live": "Escolha ao vivo",
-      "testHelp": "Só para este teste. Ligações reais continuam na escolha ao vivo."
-    },
     "promptTitle": "O que ela recebe",
     "promptFailed": "Não foi possível carregar o prompt.",
     "kind": {

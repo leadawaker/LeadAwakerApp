@@ -9,10 +9,6 @@ import type { VoiceNumber } from "../voiceApi";
 export type TestEngine = "gpt-live" | "elevenlabs";
 export const TEST_ENGINES: TestEngine[] = ["gpt-live", "elevenlabs"];
 
-/** The voice layer a test runs on: "live" = the account's own pick (VoiceTestProvider keeps it per visit). */
-export type TestPrompt = "live" | "standard" | "lean";
-export const TEST_PROMPTS: TestPrompt[] = ["live", "standard", "lean"];
-
 export interface TestPrefs {
   engine: TestEngine;
   llm: LlmKey;

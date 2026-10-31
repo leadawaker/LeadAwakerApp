@@ -1,9 +1,8 @@
 // The test panel's head: the GPT Live | ElevenLabs tab (hidden while SHOW_ELEVEN is off),
-// the GPT Live pick under it (Sol | Terra | Luna; ElevenLabs always runs Realtime Max), the
-// prompt to test with on GPT Live (agency: the live pick, standard or lean), and the Test
-// button (Hang up during a call). On ElevenLabs a saved prompt draft adds Test draft under
-// it: the same call on the draft, with writes faked. All picks are test only; they never
-// change the line. The live prompt pick itself is in PromptSection (LivePromptPick).
+// the GPT Live pick under it (Sol | Terra | Luna; ElevenLabs always runs Realtime Max), and
+// the Test button (Hang up during a call). On ElevenLabs a saved prompt draft adds Test draft
+// under it: the same call on the draft, with writes faked. All picks are test only; they
+// never change the line.
 import { useTranslation } from "react-i18next";
 import { FlaskConical, Loader2, PhoneCall, PhoneOff } from "lucide-react";
 import { Seg } from "@/features/demos/components/engineControls";
@@ -13,7 +12,7 @@ import { LLM_KEYS, llmLabel } from "../llmOptions";
 import { SHOW_ELEVEN } from "../lineEngine";
 import { promptLangOf, useElevenDraft } from "../coach/coachApi";
 import type { VoiceLine, VoiceLinePatch } from "../voiceApi";
-import { TEST_ENGINES, TEST_PROMPTS } from "./testPanelPrefs";
+import { TEST_ENGINES } from "./testPanelPrefs";
 import { isCallBusy, useVoiceTest } from "./VoiceTestProvider";
 
 const noteStyle = { ...helpStyle, margin: 0 } as const;
@@ -58,16 +57,6 @@ export function TestPanelHead({ line }: {
       )}
       <p style={noteStyle}>{t("test.panel.testOnly")}</p>
       {SHOW_ELEVEN && isAgencyUser && !line.number && <p style={noteStyle} data-testid="voice-test-eleven-no-number">{t("test.panel.elevenNoNumber")}</p>}
-
-      {engine === "gpt-live" && isAgencyUser && canTest && (
-        <div data-testid="voice-test-prompt-pick">
-          <FieldLabel>{t("test.prompt.testWith")}</FieldLabel>
-          <Seg value={test.testPrompt} options={TEST_PROMPTS} ariaLabel={t("test.prompt.testWith")}
-            label={(p) => p === "live" ? `${t("test.prompt.live")} (${t(`test.prompt.${line.testPrompt ?? "lean"}`)})` : t(`test.prompt.${p}`)}
-            disabledOptions={busy ? TEST_PROMPTS : undefined} onChange={test.setTestPrompt} />
-          {test.testPrompt !== "live" && <p style={{ ...noteStyle, marginTop: 8 }}>{t("test.prompt.testHelp")}</p>}
-        </div>
-      )}
 
       <TestButton canTest={canTest} />
       {canTestDraft && <TestDraftButton />}

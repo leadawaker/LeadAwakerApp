@@ -80,8 +80,8 @@ export function PromptListCard({
         display: "flex",
         gap: 9,
         alignItems: "flex-start",
-        background: isActive ? "var(--card)" : "transparent",
-        boxShadow: isActive ? "var(--sh-raised-crisp)" : "none",
+        background: isActive ? "var(--list-selected)" : "transparent",
+        boxShadow: isActive ? "var(--list-selected-shadow)" : "none",
         transition: "background-color 130ms, box-shadow 130ms",
       }}
       onMouseEnter={(e) => {

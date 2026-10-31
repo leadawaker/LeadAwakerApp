@@ -1,10 +1,11 @@
-// Account workspace "Alerts" tab (specs/client-recaps): who gets them, the
-// daily recap, instant alerts and a test send, one section at a time behind
-// the same menu as the Phone tab. The agency edits; the client sees the same
-// cards read-only.
+// Settings > Alerts (specs/client-recaps): who gets them, the daily recap,
+// instant alerts and a test send for one account, one section at a time behind
+// the same menu as Integrations. The agency edits; the client sees the same
+// cards read-only. `extra` adds the host's own section as the last tile.
 import { RequestChangeNote } from "@/components/crm/RequestChangeNote";
 import { useLastTab } from "@/hooks/useLastTab";
 import { useTranslation } from "react-i18next";
+import type { ReactNode } from "react";
 import { BellRing, Loader2, Newspaper, Send, Users } from "lucide-react";
 import { SectionHeader, SectionLayout, SectionRail, type SectionRailItem } from "../SectionRail";
 import { useAlertSettings, type AlertSettingsPatch } from "./alertsApi";
@@ -13,10 +14,18 @@ import { InstantAlertsCard } from "./InstantAlertsCard";
 import { RecipientsCard } from "./RecipientsCard";
 import { TestSendCard } from "./TestSendCard";
 
-type AlertSection = "recipients" | "recap" | "instant" | "test";
-const ALERT_SECTIONS: readonly AlertSection[] = ["recipients", "recap", "instant", "test"];
+type AlertSection = "recipients" | "recap" | "instant" | "test" | "extra";
+const ALERT_SECTIONS: readonly AlertSection[] = ["recipients", "recap", "instant", "test", "extra"];
 
-export function AlertsTab({ accountId, readOnly = false, stacked = false }: { accountId: number; readOnly?: boolean; stacked?: boolean }) {
+export interface AlertsExtraSection {
+  icon: ReactNode;
+  label: string;
+  detail: string;
+  help: string;
+  content: ReactNode;
+}
+
+export function AlertsTab({ accountId, readOnly = false, stacked = false, extra }: { accountId: number; readOnly?: boolean; stacked?: boolean; extra?: AlertsExtraSection }) {
   const { t } = useTranslation("clientAlerts");
   const { t: tc } = useTranslation("crm");
   const { settings, loading, error, save, test } = useAlertSettings(accountId);
@@ -66,9 +75,11 @@ export function AlertsTab({ accountId, readOnly = false, stacked = false }: { ac
       detail: t("rail.instant.detail", { on: instantOn, total: instantTotal }),
     },
     ...(canEdit ? [{ key: "test" as const, icon: <Send size={16} />, label: t("rail.test.label"), detail: t("rail.test.detail") }] : []),
+    ...(extra ? [{ key: "extra" as const, icon: extra.icon, label: extra.label, detail: extra.detail }] : []),
   ];
   const shown = items.some((i) => i.key === section) ? section : "recipients";
   const index = items.findIndex((i) => i.key === shown) + 1;
+  const onExtra = shown === "extra" && !!extra;
 
   return (
     <SectionLayout
@@ -77,9 +88,9 @@ export function AlertsTab({ accountId, readOnly = false, stacked = false }: { ac
       rail={(layout) => <SectionRail items={items} active={shown} onSelect={setSection} layout={layout} testId="alerts-rail" />}
     >
     <section style={{ display: "flex", flexDirection: "column", gap: 22, minWidth: 0 }}>
-      <SectionHeader index={index} title={t(`rail.${shown}.label`)} help={t(`rail.${shown}.help`)} />
-      {!canEdit && <RequestChangeNote area={tc("requestChange.areas.alerts")} />}
-      {!settings.configured && canEdit && (
+      <SectionHeader index={index} title={onExtra ? extra.label : t(`rail.${shown}.label`)} help={onExtra ? extra.help : t(`rail.${shown}.help`)} />
+      {!canEdit && !onExtra && <RequestChangeNote area={tc("requestChange.areas.alerts")} />}
+      {!settings.configured && canEdit && !onExtra && (
         <p className="neu-inset-super-crisp" style={{ borderRadius: "var(--r-surface)", padding: "10px 14px", margin: 0, fontSize: 12.5, color: "var(--ink-soft)" }}>
           {t("notConfigured")}
         </p>
@@ -88,6 +99,7 @@ export function AlertsTab({ accountId, readOnly = false, stacked = false }: { ac
       {shown === "recap" && <RecapCard {...card} />}
       {shown === "instant" && <InstantAlertsCard {...card} />}
       {shown === "test" && canEdit && <TestSendCard settings={settings} onTest={(body) => test.mutateAsync(body)} />}
+      {onExtra && extra.content}
     </section>
     </SectionLayout>
   );

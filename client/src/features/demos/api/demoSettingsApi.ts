@@ -63,6 +63,7 @@ export interface VoiceDemoSettings {
   engineTests?: EngineTest[];
   /** The engine per demo locale, minted and homepage demos alike. Missing = DEFAULT_DEMO_ENGINES. */
   engines?: Partial<Record<ElevenDemoLocale, DemoEngine>>;
+  /** The GPT-Live voice layer per demo locale (engine demo_settings.demo_wants_lean). Missing = lean. */
   /** The ElevenLabs voice per demo locale. Missing = that locale's default. */
   elevenVoices?: Partial<Record<ElevenDemoLocale, string>>;
   /** "Call me + prospect" rings one of these first (E.164; null clears on a save). */
@@ -103,7 +104,7 @@ export function useElevenDemoOptions(enabled = true) {
   });
 }
 
-export type VoiceEngine = "gpt-live" | "xai" | "elevenlabs";
+export type VoiceEngine = "gpt-live" | "elevenlabs";
 
 /** One tester's engine choice. Their calls on a conference-route line only;
  *  every other caller keeps the line's own setup. */
@@ -114,10 +115,6 @@ export interface EngineTest {
   engine: VoiceEngine;
   /** That engine's own voice id; empty keeps the line's voice. */
   voice?: string;
-  /** Grok only: the shared GPT-Live prompt, or the lean Grok-style one. */
-  prompt?: "standard" | "lean";
-  /** Grok only: empty is xAI's default ("high"). */
-  reasoning?: "high" | "none";
   /** Memory off, any engine: heard as a first-time caller. Bookings still go to the diary. */
   freshCaller?: boolean;
 }
@@ -128,10 +125,9 @@ export interface EngineVoice {
   gender: "female" | "male" | "neutral" | null;
 }
 
-/** GET /voice/xai/options on the engine (src/webhooks/xai_voice_routes.py). */
+/** GET /voice/engines/options on the engine (src/webhooks/eleven_voice_routes.py). */
 export interface EngineOptions {
   engines: VoiceEngine[];
-  xai: { ready: boolean; missing: string[]; numbers: string[] };
   /** Optional until the engine ships ElevenLabs: the card works without it. */
   eleven?: { ready: boolean; missing: string[]; numbers: string[] };
   voices: Partial<Record<VoiceEngine, EngineVoice[]>>;
@@ -141,7 +137,7 @@ export function useEngineOptions() {
   return useQuery({
     queryKey: ["voice-engine-options"],
     queryFn: async () => {
-      const res = await fetch(`${ENGINE_BASE_URL}/voice/xai/options`);
+      const res = await fetch(`${ENGINE_BASE_URL}/voice/engines/options`);
       if (!res.ok) throw new Error("Could not reach the voice engine.");
       return (await res.json()) as EngineOptions;
     },

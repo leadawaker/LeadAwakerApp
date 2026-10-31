@@ -132,17 +132,6 @@
         }
       }
     },
-    "preferredWords": {
-      "label": "Welke woorden gebruiken jullie zelf het liefst?",
-      "short": "Gewenste woorden",
-      "nicheLabel": "Niche",
-      "nicheDefault": "Standaard (keuken)",
-      "groups": {
-        "projectTerm": "Het project",
-        "proposalTerm": "Het voorstel",
-        "decisionTerm": "De beslissing"
-      }
-    },
     "formality": {
       "label": "Hoe formeel mag de communicatie zijn?",
       "short": "Formaliteit",
@@ -194,22 +183,6 @@
       "male": "Mannelijk",
       "female": "Vrouwelijk",
       "customPlaceholder": "Of typ een andere naam…",
-      "toggleGender": "Wissel tussen mannelijke en vrouwelijke avatar",
-      "avatarLabel": "Profielfoto",
-      "avatar": {
-        "logo": {
-          "label": "Bedrijfslogo",
-          "help": "Gebruik het logo van de showroom als profielfoto."
-        },
-        "avatar": {
-          "label": "Assistent-avatar",
-          "help": "Gebruik een portretfoto van de assistent."
-        },
-        "avatarLogo": {
-          "label": "Avatar met logo",
-          "help": "Portret van de assistent met het bedrijfslogo in de onderhoek."
-        }
-      },
       "options": {
         "thomas": {
           "label": "Thomas"
@@ -253,9 +226,7 @@
       "short": "Voorraadfeed",
       "help": "Toont de website actuele voorraad (auto's, woningen, producten)? Plak hier de link naar de pagina of feed, dan noemt de assistent altijd wat er echt is. Sla over als die er niet is.",
       "urlLabel": "Link naar feed of aanbodpagina",
-      "urlPlaceholder": "https://www.voorbeeld.nl/aanbod/feed/",
-      "notesLabel": "Notities",
-      "notesPlaceholder": "bijv. prijzen staan op de aanbodpagina, de feed ververst elk uur"
+      "urlPlaceholder": "https://www.voorbeeld.nl/aanbod/feed/"
     },
     "handoffContact": {
       "label": "Wie moet de assistent bereiken als er een mens nodig is?",
@@ -395,26 +366,6 @@
       "label": "De websitechat instellen",
       "short": "Websitechat",
       "help": "Maak de sleutel aan, vul het domein van de website in en kies het uiterlijk. Stuur de code naar wie de website beheert."
-    },
-    "whatsappNumber": {
-      "label": "Welk nummer gebruikt de WhatsApp-assistent?",
-      "short": "WhatsApp-nummer",
-      "options": {
-        "new": {
-          "label": "Een nieuw nummer, alleen voor de assistent",
-          "help": "De eigen WhatsApp van de klant blijft onaangeroerd. De WhatsApp-knop op de website wijst naar het nieuwe nummer."
-        },
-        "existing": {
-          "label": "Het bestaande nummer van de klant",
-          "help": "Klanten houden het nummer dat ze kennen. Werkt alleen met de WhatsApp Business-app, en elk bericht naar dat nummer komt bij de assistent. Nog niet beschikbaar."
-        }
-      },
-      "appLabel": "Welke WhatsApp gebruikt de klant nu?",
-      "app": {
-        "business": "WhatsApp Business",
-        "personal": "Gewone WhatsApp",
-        "unknown": "Weet ik niet"
-      }
     },
     "whatsappConnect": {
       "label": "WhatsApp koppelen",

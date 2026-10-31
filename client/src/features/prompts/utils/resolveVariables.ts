@@ -210,7 +210,7 @@ export function resolveVariables(
   return { resolved, missing };
 }
 
-const MARK = 'class="bg-amber-100 text-amber-800 rounded px-0.5 dark:bg-amber-900/40 dark:text-amber-300"';
+export const MARK = 'class="bg-amber-100 text-amber-800 rounded px-0.5 dark:bg-amber-900/40 dark:text-amber-300"';
 const MARK_OPEN = `<mark ${MARK}>`;
 const MARK_CLOSE = "</mark>";
 

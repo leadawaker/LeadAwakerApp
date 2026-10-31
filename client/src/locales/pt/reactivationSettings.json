@@ -1,0 +1,218 @@
+{
+  "rail": {
+    "overview": {
+      "label": "Visão geral",
+      "help": "O que esta campanha envia, para quem e quando. Clique numa linha para mudar."
+    },
+    "opener": {
+      "label": "Primeira mensagem",
+      "help": "A primeira mensagem que cada lead recebe, e como ela apresenta o assistente."
+    },
+    "followups": {
+      "label": "Lembretes",
+      "help": "Os lembretes que um lead recebe quando não responde."
+    },
+    "behaviour": {
+      "label": "Comportamento",
+      "help": "Quem é o assistente e como ele escreve quando um lead responde."
+    },
+    "prompt": {
+      "label": "Prompt",
+      "help": "O prompt de conversa que esta campanha usa."
+    },
+    "knowledge": {
+      "label": "Conhecimento",
+      "help": "O que o assistente sabe sobre a empresa e sobre estes leads."
+    },
+    "sending": {
+      "label": "Canal e agenda",
+      "help": "WhatsApp ou SMS, e quando e com que ritmo as mensagens saem."
+    },
+    "advanced": {
+      "label": "Avançado",
+      "help": "Configurações do motor para a agência. A maioria das campanhas nunca precisa delas."
+    }
+  },
+  "state": {
+    "notWritten": "Ainda não escrita",
+    "followupsOff": "Sem lembretes",
+    "followups": "{{count}} lembretes",
+    "followups_one": "1 lembrete",
+    "followups_other": "{{count}} lembretes",
+    "noPrompt": "Nenhum prompt escolhido",
+    "noBookingLink": "Sem link de agendamento",
+    "withBookingLink": "Link de agendamento definido",
+    "noKb": "Ainda sem informações da empresa",
+    "unnamed": "Ainda sem nome"
+  },
+  "overview": {
+    "title": "Esta campanha num relance",
+    "status": "Status",
+    "channel": "Canal",
+    "opener": "Primeira mensagem",
+    "followups": "Lembretes",
+    "window": "Janela de envio",
+    "windowValue": "{{start}} às {{end}}, até {{limit}} leads novos por dia",
+    "assistant": "Assistente",
+    "booking": "Link de agendamento",
+    "prompt": "Prompt",
+    "notSet": "Não definido",
+    "range": "{{start}} às {{end}}"
+  },
+  "opener": {
+    "messageTitle": "Primeira mensagem",
+    "messageHelp": "Clique na prévia para editar. Palavras entre chaves, como {first_name}, são preenchidas para cada lead. O botão de modelos oferece aberturas prontas.",
+    "label": "Mensagem",
+    "extrasTitle": "Extras",
+    "voiceNote": "Enviar como mensagem de voz",
+    "voiceNoteHelp": "No WhatsApp a primeira mensagem sai como áudio falado. Precisa das respostas por voz ligadas em Comportamento.",
+    "optOut": "Adicionar linha de descadastro",
+    "optOutHelp": "Coloca uma linha curta \"responda PARAR para parar\" abaixo da primeira mensagem. Esperado para SMS nos EUA."
+  },
+  "followups": {
+    "countTitle": "Quantos",
+    "countHelp": "Cada lembrete só sai se o lead ainda não respondeu. Se o último ficar sem resposta, o lead é marcado como perdido.",
+    "count": "Lembretes",
+    "none": "Nenhum",
+    "bump": "Lembrete {{n}}",
+    "delay": "Esperar",
+    "delayUnit": "horas depois da mensagem anterior",
+    "message": "Mensagem",
+    "messagePlaceholder": "O que este lembrete diz. Se ficar vazio, este lembrete é pulado.",
+    "angle": "Ângulo para a IA",
+    "anglePlaceholder": "ex. Mencione que a agenda de primavera está enchendo. Deixe vazio para o padrão.",
+    "voiceNote": "Mensagem de voz",
+    "howTitle": "Como são escritos",
+    "aiBumps": "Deixar a IA escrever os lembretes",
+    "aiBumpsHelp": "Para leads que já responderam, a IA escreve cada lembrete a partir da conversa e do ângulo indicado. Leads que nunca responderam recebem o texto da mensagem.",
+    "stopOnResponse": "Parar os lembretes quando o lead responder",
+    "stopOnResponseHelp": "Recomendado. Desligado, os lembretes seguem o calendário mesmo depois de uma resposta.",
+    "laterTitle": "Quando um lead pede contato mais tarde",
+    "laterHelp": "Enviado no dia que o lead pediu (\"me procure de novo em março\"). A IA escreve a partir da conversa; este texto é a reserva quando ela não consegue.",
+    "laterPlaceholder": "Oi {first_name}, você pediu para eu voltar a falar com você por agora..."
+  },
+  "behaviour": {
+    "whoTitle": "Quem está escrevendo",
+    "agentName": "Nome do assistente",
+    "agentNameHelp": "O primeiro nome com que o assistente assina.",
+    "language": "Idioma",
+    "languageHelp": "O idioma em que as mensagens saem.",
+    "languages": {
+      "en": "Inglês",
+      "nl": "Holandês",
+      "pt": "Português (Brasil)"
+    },
+    "tone": "Tom",
+    "toneHelp": "Como ele escreve, com as suas palavras.",
+    "tonePlaceholder": "ex. Caloroso e breve, como um colega que lembra deles.",
+    "howTitle": "Como ele responde",
+    "replies": "Mensagens por resposta",
+    "repliesHelp": "Até quantas mensagens curtas ele pode mandar seguidas, como alguém digitando.",
+    "voice": "Respostas por voz",
+    "voiceHelp": "Se ele pode responder com áudios no WhatsApp.",
+    "voiceModes": {
+      "off": "Desligado",
+      "smart": "Quando o lead manda um",
+      "voice_reply": "Sempre"
+    },
+    "objectionsTitle": "Objeções",
+    "objectionsHelp": "Respostas aprovadas por você para as objeções mais comuns destes leads. O assistente as usa com as próprias palavras."
+  },
+  "knowledge": {
+    "businessTitle": "A empresa",
+    "company": "Nome da empresa",
+    "companyHelp": "Como o assistente chama a empresa nas mensagens.",
+    "description": "O que a empresa faz",
+    "descriptionHelp": "Algumas linhas em que o assistente pode se apoiar.",
+    "service": "Serviço",
+    "serviceHelp": "O que estes leads pediram na época.",
+    "kb": "Conhecimento",
+    "kbHelp": "Preços, região atendida, horários, perguntas frequentes: tudo que o assistente pode precisar para responder.",
+    "accountKb": "Usar também o Company Intel da conta",
+    "accountKbHelp": "Adiciona o conhecimento salvo para a conta inteira (compartilhado com a recepcionista).",
+    "bookingLink": "Link de agendamento",
+    "bookingLinkHelp": "Onde o lead agenda. Cada lead recebe um link curto próprio para ele.",
+    "leadsTitle": "Sobre estes leads",
+    "leadContext": "O que o assistente sabe sobre eles",
+    "leadContextHelp": "ex. Pediram um orçamento no ano passado e nunca agendaram. Uma nota no próprio lead tem prioridade.",
+    "whatLeadDid": "O que eles fizeram",
+    "whatLeadDidHelp": "O último passo deles com a empresa.",
+    "when": "Quando",
+    "whenHelp": "Mais ou menos quando foi, ex. na primavera passada."
+  },
+  "sending": {
+    "channelTitle": "Canal",
+    "channelHelp": "Como as mensagens chegam aos leads. As respostas voltam pelo mesmo canal e o assistente responde.",
+    "channels": {
+      "whatsapp_sms": {
+        "label": "WhatsApp, SMS como reserva",
+        "help": "Envia pelo WhatsApp. Quando um número não está no WhatsApp, ou o WhatsApp recusa uma mensagem, ela sai como SMS."
+      },
+      "whatsapp": {
+        "label": "Só WhatsApp",
+        "help": "Nunca envia SMS. Leads sem WhatsApp não são alcançados."
+      },
+      "sms": {
+        "label": "SMS",
+        "help": "Só SMS, para mercados onde o SMS é o padrão, como os EUA."
+      }
+    },
+    "smsNote": "O SMS sai do número Twilio da conta. Nos EUA esse número precisa antes ser registrado para SMS comercial (A2P 10DLC).",
+    "templateTitle": "Modelo do WhatsApp",
+    "template": "Modelo aprovado para a primeira mensagem",
+    "templateHelp": "O WhatsApp só deixa uma empresa iniciar uma conversa com um modelo aprovado. Sem ele, a primeira mensagem sai como SMS (com SMS como reserva) ou não é enviada (só WhatsApp).",
+    "vcard": "Nome no cartão de contato",
+    "vcardHelp": "O nome no cartão de contato que o lead pode salvar. Vazio usa o nome do assistente e da empresa.",
+    "scheduleTitle": "Agenda",
+    "hours": "Horário de envio",
+    "hoursHelp": "As mensagens só saem entre estes horários.",
+    "to": "às",
+    "dailyLimit": "Leads novos por dia",
+    "dailyLimitHelp": "Quantos leads recebem a primeira mensagem por dia.",
+    "interval": "Minutos entre primeiras mensagens",
+    "intervalHelp": "Espalha os envios para parecer natural e proteger o número."
+  },
+  "advanced": {
+    "modelTitle": "Modelo",
+    "model": "Modelo de IA",
+    "modelDefault": "Padrão",
+    "role": "Função",
+    "roleHelp": "Uma linha sobre o trabalho do assistente, usada no prompt.",
+    "conversationTitle": "Conversa",
+    "conversationMode": "Tipo de conversa",
+    "conversationModeHelp": "Exploração pergunta do que o lead precisa. Decisão retoma um orçamento que ele já tem. Automático escolhe por lead.",
+    "conversationModes": {
+      "auto": "Automático",
+      "scoping": "Exploração",
+      "decision": "Decisão (orçamento existente)"
+    },
+    "bookingMode": "Agendamento",
+    "bookingModeHelp": "Agendar uma reunião de vendas, ou agendar o serviço direto.",
+    "bookingModes": {
+      "unset": "Padrão",
+      "Sales Call": "Reunião de vendas",
+      "Direct Booking": "Agendamento direto",
+      "Call Agent": "Avisar uma pessoa",
+      "Qualifying": "Só qualificar"
+    },
+    "typos": "Erros de digitação por conversa",
+    "typosHelp": "Alguns errinhos fazem as mensagens parecerem humanas.",
+    "timingTitle": "Tempo de resposta",
+    "textDelay": "Esperar depois de um texto",
+    "textDelayHelp": "Segundos que o assistente espera por mais mensagens antes de responder.",
+    "voiceDelay": "Esperar depois de um áudio",
+    "voiceDelayHelp": "O mesmo, depois de um áudio.",
+    "seconds": "{{n}} s",
+    "abTitle": "Teste A/B",
+    "ab": "Rodar um teste A/B",
+    "abHelp": "Divide os leads entre o prompt A e o prompt B.",
+    "abSplit": "Parte no A (%)",
+    "legacyTitle": "Variáveis do prompt",
+    "legacyHelp": "Campos antigos que alguns prompts ainda leem como {variáveis}. Deixe vazios a menos que o prompt os use.",
+    "niche": "Nicho",
+    "nicheHelp": "Escolhe as palavras do ramo, como {project}.",
+    "nicheQuestion": "Pergunta do nicho",
+    "firstTouch": "Primeiro contato",
+    "usp": "Diferencial"
+  }
+}

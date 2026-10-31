@@ -6,6 +6,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, Globe, Instagram, MessageCircle, Phone } from "lucide-react";
+import { SectionRail, type SectionRailItem, type SectionState } from "./SectionRail";
 import { useWhatsappSender } from "./whatsapp/whatsappApi";
 import { useVoiceLine } from "./voice/useVoiceLine";
 import { fetchWidgetConfigs } from "../../api/widgetApi";
@@ -14,17 +15,14 @@ import { useSocialStatus } from "@/features/social/components/InstagramConnectCa
 import { instagramTileState } from "@/features/social/lib/socialState";
 
 export type ConnectionGroup = "phone" | "messaging" | "website" | "bookings" | "social";
-type State = "on" | "pending" | "off";
-
-const DOT: Record<State, string> = { on: "var(--good)", pending: "var(--warn)", off: "var(--mute-2)" };
 
 export const groupAnchorId = (group: ConnectionGroup) => `integrations-${group}`;
 
-export function ConnectionsOverview({ accountId, active, onSelect, layout = "row" }: {
+export function ConnectionsOverview({ accountId, active, onSelect, layout }: {
   accountId: number;
   active: ConnectionGroup;
   onSelect: (group: ConnectionGroup) => void;
-  layout?: "row" | "grid" | "rail";
+  layout: "grid" | "rail";
 }) {
   const { t } = useTranslation("accounts");
   const { sender } = useWhatsappSender(accountId);
@@ -46,7 +44,7 @@ export function ConnectionsOverview({ accountId, active, onSelect, layout = "row
   const ownCalendar = calendars?.find((c) => c.provider !== "caldiy") ?? null;
   const bookingPage = calendars?.find((c) => c.provider === "caldiy") ?? null;
 
-  const tiles: { group: ConnectionGroup; icon: React.ReactNode; state: State; detail: string | null }[] = [
+  const tiles: { group: ConnectionGroup; icon: React.ReactNode; state: SectionState; detail: string | null }[] = [
     {
       group: "phone", icon: <Phone size={16} />,
       state: number?.status === "live" ? "on" : number ? "pending" : "off",
@@ -74,54 +72,14 @@ export function ConnectionsOverview({ accountId, active, onSelect, layout = "row
     },
   ];
 
-  return (
-    <div
-      className="neu-raised"
-      // The 1px gap over a line-coloured ground draws the dividers, so they stay right when the tiles wrap.
-      style={{
-        borderRadius: "var(--r-card)", background: "var(--line-strong)", display: "grid", gap: 1, overflow: "hidden",
-        gridTemplateColumns: layout === "rail" ? "1fr" : layout === "grid" ? "1fr 1fr" : `repeat(${tiles.length}, 1fr)`,
-      }}
-      role="tablist"
-      aria-orientation={layout === "rail" ? "vertical" : "horizontal"}
-      data-testid="integrations-overview"
-    >
-      {tiles.map((tile, i) => {
-        const on = tile.group === active;
-        // An odd last tile in the 2-column phone grid spans the row instead of leaving a gap.
-        const spanRow = layout === "grid" && tiles.length % 2 === 1 && i === tiles.length - 1;
-        return (
-        <button
-          key={tile.group}
-          type="button"
-          role="tab"
-          aria-selected={on}
-          aria-controls={groupAnchorId(tile.group)}
-          onClick={() => onSelect(tile.group)}
-          data-testid={`integrations-tab-${tile.group}`}
-          style={{
-            display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-start", textAlign: "left", cursor: "pointer",
-            padding: layout === "grid" ? "14px 14px" : "16px 18px", border: 0, minWidth: 0,
-            gridColumn: spanRow ? "1 / -1" : undefined,
-            // The open tile is the brightest one, like a page lifted out of the stack.
-            background: on ? "var(--card)" : "var(--bone)",
-            boxShadow: on ? "inset 3px 0 0 var(--wine)" : undefined,
-          }}
-        >
-          <span style={{ display: "flex", alignItems: "center", gap: 8, color: on ? "var(--wine)" : "var(--mute)", width: "100%" }}>
-            {tile.icon}
-            <span className="eyebrow eyebrow-sm" style={{ color: on ? "var(--wine)" : "var(--mute)", flex: 1 }}>{t(`integrationGroups.${tile.group}.short`)}</span>
-            <span style={{ width: 8, height: 8, borderRadius: "50%", background: DOT[tile.state], flexShrink: 0 }} />
-          </span>
-          <span style={{ fontSize: 15, fontWeight: 700, color: tile.state === "off" ? "var(--mute)" : "var(--ink)" }}>
-            {t(`integrationGroups.state.${tile.group}.${tile.state}`)}
-          </span>
-          <span style={{ fontSize: 12, color: "var(--mute)", fontFamily: tile.detail ? "var(--mono)" : undefined, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "100%" }}>
-            {tile.detail ?? t(`integrationGroups.${tile.group}.hint`)}
-          </span>
-        </button>
-        );
-      })}
-    </div>
-  );
+  const items: SectionRailItem<ConnectionGroup>[] = tiles.map((tile) => ({
+    key: tile.group,
+    icon: tile.icon,
+    label: t(`integrationGroups.${tile.group}.short`),
+    detail: tile.detail ?? t(`integrationGroups.state.${tile.group}.${tile.state}`),
+    state: tile.state,
+    controls: groupAnchorId(tile.group),
+  }));
+
+  return <SectionRail items={items} active={active} onSelect={onSelect} layout={layout} testId="integrations-tab" />;
 }

@@ -3,9 +3,8 @@
  * "Prompt & test" section (specs/call-costs follow-up, 2026-10-15).
  *
  * Which row a call uses is the engine's choice, mirrored here:
- * - Voice layer: the active `voice_layer_{locale}` row, newest updated_at first
- *   (engine voice_prompt_store.refresh); `voice_lean_layer_{locale}` the same way,
- *   used unless the account's testPrompt is "standard" (no lean row for pt).
+ * - Voice layer: the active `voice_lean_layer_{locale}` row, newest updated_at first
+ *   (engine voice_prompt_store.refresh).
  * - Backend: `voice_receptionist_demo[_{lang}]`, campaign 60 first, else
  *   account 52, newest created_at first, NULLs first like Postgres DESC
  *   (engine realtime_voice_routes._load_prompt_row).
@@ -32,8 +31,7 @@ export interface VoicePromptRow {
 
 export interface AccountVoicePrompts {
   locale: string;
-  layer: VoicePromptRow | null;
-  /** The lean voice layer (`voice_lean_layer_{locale}`), what calls run on unless the account picks standard. None for pt. */
+  /** The voice layer calls run on (`voice_lean_layer_{locale}`). */
   lean: VoicePromptRow | null;
   backend: VoicePromptRow | null;
   /** The ElevenLabs prompt (`eleven_layer_{nl|en|pt}`), shared by every ElevenLabs line in that language. */
@@ -53,9 +51,9 @@ function toRow(r: typeof promptLibrary.$inferSelect | undefined): VoicePromptRow
 
 const active = sql`lower(${promptLibrary.status}) = 'active'`;
 
-async function layerRow(locale: string, prefix = "voice_layer") {
+async function leanRow(locale: string) {
   const [r] = await db.select().from(promptLibrary)
-    .where(and(eq(promptLibrary.useCase, `${prefix}_${locale}`), active))
+    .where(and(eq(promptLibrary.useCase, `voice_lean_layer_${locale}`), active))
     .orderBy(sql`${promptLibrary.updatedAt} DESC NULLS LAST`, desc(promptLibrary.id))
     .limit(1);
   return toRow(r);
@@ -99,10 +97,8 @@ async function elevenRow(locale: string) {
 }
 
 async function getAccountVoicePrompts(locale: string): Promise<AccountVoicePrompts> {
-  const [layer, lean, backend, eleven] = await Promise.all([
-    layerRow(locale), layerRow(locale, "voice_lean_layer"), backendRow(locale), elevenRow(locale),
-  ]);
-  return { locale, layer, lean, backend, eleven };
+  const [lean, backend, eleven] = await Promise.all([leanRow(locale), backendRow(locale), elevenRow(locale)]);
+  return { locale, lean, backend, eleven };
 }
 
 /**

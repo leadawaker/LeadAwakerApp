@@ -15,9 +15,25 @@ export function isPromptListTab(v: unknown): v is PromptListTab {
   return v === "niche" || isPromptCategory(v);
 }
 
-/** Voice agents' prompts: the GPT Live / Grok / ElevenLabs layers, greetings and backend rows. */
+/** Voice agents' prompts: the GPT Live / ElevenLabs layers, greetings and backend rows. */
 export function isVoiceUseCase(useCase: string | null | undefined): boolean {
   return /^(voice|eleven)_/.test(String(useCase ?? ""));
+}
+
+/**
+ * The Voice tab's three sections, in GPT Live's own split:
+ * - voice: what the voice model speaks from (the voice layers, greetings, the website-demo closing).
+ * - backend: the backend's fixed frame (voice_backend_layer), shared by every call.
+ * - universal: the business prompt inside that frame (voice_receptionist_demo*), filled per client or demo.
+ */
+export const VOICE_SECTIONS = ["voice", "backend", "universal"] as const;
+export type VoiceSection = (typeof VOICE_SECTIONS)[number];
+
+export function voiceSection(p: any): VoiceSection {
+  const uc = useCaseOf(p);
+  if (uc === "voice_backend_layer") return "backend";
+  if (uc.startsWith("voice_receptionist")) return "universal";
+  return "voice";
 }
 
 function useCaseOf(p: any): string {

@@ -274,15 +274,6 @@
     "call": "Test in browser",
     "filedNote": "Opent in een nieuw tabblad. Testgesprekken staan hieronder, niet in de cijfers of het CRM van deze klant.",
     "needsPersona": "Maak eerst de live persona aan.",
-    "prompt": {
-      "label": "Prompt voor gesprekken",
-      "standard": "Standaard",
-      "lean": "Lean",
-      "help": "Geldt voor echte gesprekken en de test. De prompt hieronder is gedeeld: een wijziging geldt voor alle accounts met dezelfde keuze in deze taal.",
-      "testWith": "Testen met",
-      "live": "Live keuze",
-      "testHelp": "Alleen voor deze test. Echte gesprekken blijven op de live keuze."
-    },
     "promptTitle": "Wat ze te horen krijgt",
     "promptFailed": "De prompt kon niet worden geladen.",
     "kind": {

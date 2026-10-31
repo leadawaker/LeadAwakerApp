@@ -59,7 +59,7 @@ export function WidgetSettings() {
   const isDefault = !!data && current === data.defaultWidgetAvatarUrl;
 
   return (
-    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "20px 22px", maxWidth: 560 }}>
+    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "20px 22px", maxWidth: 560 }}>
       <span style={{ display: "block", fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{t("settings.widget.avatarTitle")}</span>
       <span style={{ display: "block", fontSize: 12, color: "var(--mute)", marginTop: 2 }}>{t("settings.widget.avatarHint")}</span>
 

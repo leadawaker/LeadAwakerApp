@@ -70,7 +70,7 @@ export function TwilioCardWrapper({ account, d, onSave, fieldCols }: { account: 
   const { isEditing, saving, startEdit, cancelEdit, set, val, save } = useAccountEdit(account, onSave);
 
   return (
-    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
+    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--card)" }}>
       <SectionHead>
         <IconTile><TwilioLogo size={22} /></IconTile>
         <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>Twilio</span>
@@ -175,7 +175,7 @@ export function MessagingCard({ account, d, onSave, fieldCols }: { account: Acco
   const partial = !!status?.partial;
 
   return (
-    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
+    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--card)" }}>
       <SectionHead>
         <IconTile><Smartphone size={18} style={{ color: "var(--mute-2)" }} /></IconTile>
         <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("messaging.title")}</span>
@@ -390,7 +390,7 @@ export function EmailSenderCard({ accountId }: { accountId: number }) {
   const hasDomain = !!status?.sendingDomain;
 
   return (
-    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--bone)" }}>
+    <div className="neu-raised" style={{ borderRadius: "var(--r-card)", padding: "22px 24px", background: "var(--card)" }}>
       <SectionHead>
         <IconTile><Mail size={18} style={{ color: "var(--mute-2)" }} /></IconTile>
         <span style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)", flex: 1 }}>{t("emailSender.title")}</span>

@@ -9,7 +9,6 @@ import { demoClientsQuery, useDemoClients } from "@/features/campaigns/api/demoC
 // a demo persona, not a campaign setting, and this is where demos are made.
 import { usePersonaView } from "@/features/campaigns/components/clients/usePersonaView";
 import { DemoSettingsTab } from "../components/DemoSettingsTab";
-import { DemosViewSwitch } from "../components/DemosViewSwitch";
 import { DemosPanelSlot } from "../components/personas/DemosPanelSlot";
 import { DemosTopbarActions } from "../components/personas/DemosTopbarActions";
 import { PersonasWithDemos } from "../components/personas/PersonasWithDemos";
@@ -71,10 +70,7 @@ function DemosContent() {
         title={t("title")}
         scroll
         left={
-          <>
-            <TopbarTabs tabs={tabs} value={tab} onChange={setTab} className="max-md:[&_.la-seg-btn]:min-h-11" />
-            <DemosViewSwitch tab={tab} personas={personaView} />
-          </>
+          <TopbarTabs tabs={tabs} value={tab} onChange={setTab} className="max-md:[&_.la-seg-btn]:min-h-11" />
         }
         right={
           tab === "personas" ? (

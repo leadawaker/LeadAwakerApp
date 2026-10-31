@@ -43,6 +43,7 @@ import { registerTwilioVoiceRoutes } from "./twilio-voice";
 import { registerUserSettingsRoutes } from "./user-settings";
 import { registerAutomationRoutes } from "./automation";
 import { registerWidgetRoutes } from "./widget";
+import { registerChatSplitRoutes } from "./chatSplit";
 import { registerDemoSettingsRoutes } from "./demoSettings";
 import { registerVoicePromptRoutes } from "./voicePrompts";
 import { registerVoiceElevenTestRoutes } from "./voiceElevenTest";
@@ -130,6 +131,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerUserSettingsRoutes(app);
   registerAutomationRoutes(app);
   registerWidgetRoutes(app);
+  registerChatSplitRoutes(app);
   registerDemoSettingsRoutes(app);
   registerVoicePromptRoutes(app);
   registerVoiceElevenTestRoutes(app);

@@ -280,8 +280,7 @@
     "kind": {
       "layer": "Camada de voz",
       "greeting": "Saudação",
-      "backend": "Backend",
-      "xai": "Prompt do Grok (enxuto)"
+      "backend": "Backend"
     },
     "noLine": "{{name}} ainda não tem linha de voz, então este é o prompt sem os dados do cliente.",
     "otherLocale": "A linha de {{name}} fala {{line}}, então as ligações dela nunca recebem este prompt {{prompt}}. Mostrado sem os dados do cliente."
@@ -311,5 +310,30 @@
     "sans": "Sans",
     "system": "Sistema",
     "humanist": "Humanista"
+  },
+  "valueEditor": {
+    "help": "Salvo onde este valor fica. A próxima ligação nesta linha já ouve a mudança.",
+    "loadFailed": "Não foi possível carregar este valor.",
+    "saveFailed": "Não foi possível salvar.",
+    "noPersona": "Esta conta ainda não tem persona própria. Crie uma em Chamadas > Configurações de chamadas.",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "word": "Palavra",
+    "sayAs": "Pronunciar como",
+    "remove": "Remover",
+    "addWord": "Adicionar palavra",
+    "names": {
+      "company_name": "Nome da empresa",
+      "business": "O que a empresa faz",
+      "agent_name": "Nome dela",
+      "tone": "Tom (até 3)",
+      "address": "Como ela trata quem liga",
+      "pronunciation": "Pronúncia"
+    }
+  },
+  "voiceSection": {
+    "voice": "Prompt de voz",
+    "backend": "Prompt do back-end",
+    "universal": "Prompt universal"
   }
 }

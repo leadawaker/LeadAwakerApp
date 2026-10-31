@@ -212,7 +212,7 @@
     "rail": {
       "label": "Diensten",
       "voice": "Stemmen, gesprekken",
-      "shared": "Gedeelde demo-opzet"
+      "shared": "Prompt in gebruik"
     },
     "campaign": {
       "help": "De campagne waarop deze demo draait. Wijzigingen worden vanzelf opgeslagen.",
@@ -284,6 +284,20 @@
         "off": "Uit",
         "standard": "Standaard (60 tot 200 ms)",
         "large": "Groot (100 tot 400 ms)"
+      }
+    },
+    "promptTile": {
+      "rail": "Prompt in gebruik",
+      "inUse": "Prompt",
+      "builtIn": "Ingebouwde standaard",
+      "sharedByClients": "Elke klant zonder eigen versie gebruikt deze prompt, dus wijzigingen hier gelden ook voor hen. Maak een kopie om hem alleen voor deze demo te wijzigen.",
+      "conversation": {
+        "title": "Check-in chat",
+        "help": "Hoe de assistent na een bezoek met de klant praat."
+      },
+      "reply": {
+        "title": "Reactie op review",
+        "help": "Hoe de assistent de openbare reactie van de eigenaar op een review schrijft."
       }
     }
   },

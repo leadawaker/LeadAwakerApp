@@ -1,15 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Check, Plus, X } from "lucide-react";
 import {
-  buildSteps, buildSections, STEPS_WITH_EXAMPLES, addressFor, EMPTY_ANSWERS, QA_MIN_ROWS,
-  AI_STYLE, FORMALITY_LEVELS, PERCEPTION, PERCEPTION_MAX,
-  AGENT_NAMES, AGENT_GENDER, AVATAR_CHOICES, AGENT_AVATAR_URL, effectiveGender, QA_CATEGORY,
+  buildSteps, buildPages, buildSections, addressFor, EMPTY_ANSWERS, QA_MIN_ROWS,
+  FORMALITY_LEVELS, PERCEPTION, PERCEPTION_MAX,
+  AGENT_NAMES, AGENT_GENDER, QA_CATEGORY,
   FACTS_WITH_NOPE, isRecommended,
-  type ProfileAnswers, type StyleField, type PreferredWordGroup, type FactValues, type QARow,
+  type ProfileAnswers, type StepDef, type StyleField, type FactValues, type QARow,
 } from "./profileConstants";
 import type { QAGrids } from "./useOnboardingFacts";
-import { useNicheWords } from "./useNicheWords";
 import { WhatsAppPreview } from "./WhatsAppPreview";
 import { OptionCard, Chip, RecommendedBadge, inputStyle } from "./wizardAtoms";
 import { ServiceStep } from "./ServiceSteps";
@@ -18,16 +17,6 @@ import { MeetingTypeCard } from "../MeetingTypeCard";
 import { AvailabilityCard } from "../AvailabilityCard";
 import type { AccountRow, AccountDetail } from "../types";
 import type { ReceptionistSetup } from "./setupConstants";
-
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
-// Same niche list as the campaign settings dropdown and the vocabulary manager,
-// so the suggested words stay in sync across the app.
-const WIZARD_NICHE_OPTIONS = [
-  "Kitchens", "Bathrooms", "Countertops", "Flooring", "General Contracting",
-  "Solar Panels", "HVAC", "Roofing", "Landscaping", "Windows & Doors",
-  "Painting", "Pest Control", "Pool Installation", "Moving Services",
-];
 
 function padRows(rows?: QARow[]): QARow[] {
   const out = [...(rows ?? [])];
@@ -42,11 +31,9 @@ interface Props {
   initialGrids?: QAGrids;
   initialStep?: number;
   saving: boolean;
-  niche?: string | null;
   accountName?: string;
   accountLogoUrl?: string | null;
   showPreview?: boolean;
-  prefillWords?: boolean;
   onFinish: (answers: ProfileAnswers, facts: FactValues, grids: QAGrids) => void;
   onClose?: (answers: ProfileAnswers, facts: FactValues, grids: QAGrids) => void;
   bodyMaxHeight?: number;
@@ -58,9 +45,14 @@ interface Props {
   onSaveAccount?: (field: string, value: string) => Promise<void>;
 }
 
-export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, initialStep, saving, niche, accountName, accountLogoUrl, showPreview, prefillWords, onFinish, onClose, bodyMaxHeight, account, detail, onSaveAccount }: Props) {
+export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, initialStep, saving, accountName, accountLogoUrl, showPreview, onFinish, onClose, bodyMaxHeight, account, detail, onSaveAccount }: Props) {
   const { t, i18n } = useTranslation("communicationProfile");
-  const [step, setStep] = useState(initialStep ?? 0);
+  // `step` counts pages; initialStep comes from the summary, which counts steps.
+  const [step, setStep] = useState(() => {
+    const allSteps = buildSteps((initial ?? EMPTY_ANSWERS).services);
+    const target = allSteps[initialStep ?? 0];
+    return Math.max(0, buildPages(allSteps).findIndex((p) => p.some((s) => s.key === target?.key)));
+  });
   const [a, setA] = useState<ProfileAnswers>(initial ?? { ...EMPTY_ANSWERS });
   const [facts, setFacts] = useState<FactValues>(initialFacts ?? {});
   const [grids, setGrids] = useState<QAGrids>(() => {
@@ -68,46 +60,26 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
     for (const key of Object.keys(QA_CATEGORY)) g[key] = padRows(initialGrids?.[key]);
     return g;
   });
-  const [newWordInputs, setNewWordInputs] = useState<Partial<Record<PreferredWordGroup, string>>>({});
-  // Operator can override the niche on the preferred-words step to re-theme the
-  // suggested vocabulary, independent of the account's stored niche.
-  const [activeNiche, setActiveNiche] = useState<string | null | undefined>(niche);
-  useEffect(() => { setActiveNiche(niche); }, [niche]);
-  const nicheWords = useNicheWords(activeNiche);
-
-  // For a NEW profile, default each preferred-word group to the first chip of the
-  // account's niche vocabulary once it loads (only if still unset — never clobber).
-  useEffect(() => {
-    if (!prefillWords) return;
-    setA((prev) => {
-      const pw = { ...prev.preferredWords };
-      let changed = false;
-      (["projectTerm", "proposalTerm", "decisionTerm"] as PreferredWordGroup[]).forEach((g) => {
-        const first = nicheWords.groups[g]?.[0];
-        if (!pw[g] && first) { pw[g] = first; changed = true; }
-      });
-      return changed ? { ...prev, preferredWords: pw } : prev;
-    });
-  }, [prefillWords, nicheWords.groups]);
-
   // The ticked services decide which sections exist (setupConstants).
   const steps = useMemo(() => buildSteps(a.services), [a.services]);
   const sections = useMemo(() => buildSections(steps), [steps]);
-  const total = steps.length;
-  const def = steps[Math.min(step, total - 1)];
+  const pages = useMemo(() => buildPages(steps), [steps]);
+  const total = pages.length;
+  const page = pages[Math.min(step, total - 1)];
+  const def = page[0];
   const isLast = step >= total - 1;
 
   // Section (chapter) progress for the header + segmented bar.
   const currentSection = def.section;
   const sectionIndex = sections.indexOf(currentSection);
-  const posInSection = steps.slice(0, step + 1).filter((s) => s.section === currentSection).length;
+  const posInSection = pages.slice(0, step + 1).filter((p) => p[0].section === currentSection).length;
   const set = (patch: Partial<ProfileAnswers>) => setA((prev) => ({ ...prev, ...patch }));
   const setSetup = <K extends keyof ReceptionistSetup>(part: K, patch: Partial<ReceptionistSetup[K]>) =>
     setA((prev) => ({ ...prev, setup: { ...prev.setup, [part]: { ...prev.setup[part], ...patch } } }));
 
   // Progressive WhatsApp preview: reveal balloons as the call advances rather than
   // showing the whole sample up front. By the start of part 2 (identity) all 5 show.
-  const PREVIEW_REVEAL: Record<string, number> = { openingStyle: 2, formality: 3, perception: 3 };
+  const PREVIEW_REVEAL: Record<string, number> = { formality: 3, perception: 3 };
   const previewCount = PREVIEW_REVEAL[def.key] ?? 5;
 
   const togglePerception = (value: string) => setA((prev) => {
@@ -119,8 +91,6 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
 
   function renderStyle(f: StyleField) {
     switch (f) {
-      case "openingStyle":
-        return <SingleChoice field="openingStyle" options={AI_STYLE} value={a.openingStyle} onSelect={(v) => set({ openingStyle: v })} withBehavior />;
       case "formality":
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -158,82 +128,6 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
           </div>
         );
       }
-      case "preferredWords":
-        return (
-          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Niche selector — re-themes the suggested words to the client's trade */}
-            <div>
-              <div className="eyebrow eyebrow-sm" style={{ marginBottom: 8 }}>{t("questions.preferredWords.nicheLabel")}</div>
-              <select
-                value={activeNiche ?? ""}
-                onChange={(e) => setActiveNiche(e.target.value || null)}
-                style={{
-                  padding: "7px 10px", fontSize: 13, borderRadius: "var(--r-button)",
-                  border: "1px solid var(--line)", background: "transparent", color: "var(--ink-soft)",
-                }}
-              >
-                <option value="">{t("questions.preferredWords.nicheDefault")}</option>
-                {WIZARD_NICHE_OPTIONS.map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
-            </div>
-            {(["projectTerm", "proposalTerm", "decisionTerm"] as PreferredWordGroup[]).map((group) => {
-              const words = nicheWords.groups[group] ?? [];
-              const newWord = newWordInputs[group] ?? "";
-              return (
-                <div key={group}>
-                  <div className="eyebrow eyebrow-sm" style={{ marginBottom: 8 }}>{t(`questions.preferredWords.groups.${group}`)}</div>
-                  <div style={{ display: "flex", flexWrap: "wrap", gap: 9 }}>
-                    {words.map((word) => (
-                      <Chip
-                        key={word}
-                        selected={a.preferredWords[group] === word}
-                        onClick={() => set({ preferredWords: { ...a.preferredWords, [group]: a.preferredWords[group] === word ? undefined : word } })}
-                        label={cap(word)}
-                      />
-                    ))}
-                    {/* Inline add word */}
-                    <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
-                      <input
-                        value={newWord}
-                        onChange={(e) => setNewWordInputs((p) => ({ ...p, [group]: e.target.value }))}
-                        onKeyDown={(e) => {
-                          if (e.key === "Enter" && newWord.trim()) {
-                            e.preventDefault();
-                            nicheWords.addWord(group, newWord).then(() => {
-                              set({ preferredWords: { ...a.preferredWords, [group]: newWord.trim() } });
-                              setNewWordInputs((p) => ({ ...p, [group]: "" }));
-                            });
-                          }
-                        }}
-                        placeholder="+ voeg toe"
-                        style={{
-                          width: 110, padding: "7px 10px", fontSize: 12, borderRadius: "var(--r-button)",
-                          border: "1px solid var(--line)", background: "transparent", color: "var(--ink-soft)",
-                        }}
-                      />
-                      {newWord.trim() && (
-                        <button
-                          type="button"
-                          className="la-btn la-btn--wine"
-                          style={{ padding: "5px 10px", fontSize: 12 }}
-                          disabled={nicheWords.adding}
-                          onClick={() => {
-                            nicheWords.addWord(group, newWord).then(() => {
-                              set({ preferredWords: { ...a.preferredWords, [group]: newWord.trim() } });
-                              setNewWordInputs((p) => ({ ...p, [group]: "" }));
-                            });
-                          }}
-                        >
-                          <Plus size={11} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        );
       case "agentName":
         return (
           <div>
@@ -258,26 +152,6 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
                 className="neu-inset-crisp"
                 style={{ ...inputStyle, flex: 1 }}
               />
-              {a.agentNameCustom.trim() && (
-                <button
-                  type="button"
-                  className="la-btn la-btn--soft la-btn--icon"
-                  title={t("questions.agentName.toggleGender")}
-                  onClick={() => set({ avatarGender: effectiveGender(a) === "male" ? "female" : "male" })}
-                  style={{ width: 38, height: 38, padding: 0, flexShrink: 0, overflow: "hidden" }}
-                >
-                  <img src={AGENT_AVATAR_URL[effectiveGender(a)]} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} />
-                </button>
-              )}
-            </div>
-            <div className="eyebrow eyebrow-sm" style={{ margin: "18px 0 8px" }}>{t("questions.agentName.avatarLabel")}</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
-              {AVATAR_CHOICES.map((c) => (
-                <OptionCard key={c} selected={a.avatarChoice === c} onClick={() => set({ avatarChoice: c })} badge={isRecommended("avatarChoice", c) ? <RecommendedBadge label={t("wizard.recommended")} /> : undefined}>
-                  <span style={{ fontSize: 14, fontWeight: 600, color: "var(--ink-soft)", display: "block" }}>{t(`questions.agentName.avatar.${c}.label`)}</span>
-                  <span style={{ fontSize: 11.5, color: "var(--mute)", display: "block", marginTop: 3 }}>{t(`questions.agentName.avatar.${c}.help`)}</span>
-                </OptionCard>
-              ))}
             </div>
           </div>
         );
@@ -348,29 +222,6 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
     }
   }
 
-  function SingleChoice({ field, options, value, onSelect, withBehavior }: {
-    field: StyleField; options: readonly string[]; value: string | null; onSelect: (v: string) => void; withBehavior?: boolean;
-  }) {
-    const withExample = STEPS_WITH_EXAMPLES.includes(field);
-    return (
-      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {options.map((k) => (
-          <OptionCard key={k} selected={value === k} onClick={() => onSelect(k)} badge={isRecommended(field, k) ? <RecommendedBadge label={t("wizard.recommended")} /> : undefined}>
-            <span style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-soft)", display: "block" }}>{t(`questions.${field}.options.${k}.label`)}</span>
-            {withBehavior && (
-              <span style={{ display: "block", fontSize: 12, color: "var(--mute)", marginTop: 5, lineHeight: 1.5 }}>{t(`questions.${field}.options.${k}.behavior`)}</span>
-            )}
-            {withExample && (
-              <span style={{ display: "block", fontSize: 12, color: "var(--mute)", fontStyle: "italic", marginTop: 6, lineHeight: 1.5 }}>
-                "{t(`questions.${field}.options.${k}.example`)}"
-              </span>
-            )}
-          </OptionCard>
-        ))}
-      </div>
-    );
-  }
-
   function renderFact(key: string) {
     const hasNope = FACTS_WITH_NOPE.includes(key);
     return (
@@ -380,7 +231,7 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
           value={facts[key] ?? ""}
           onChange={(e) => setFacts((prev) => ({ ...prev, [key]: e.target.value }))}
           placeholder={t("facts.placeholder")}
-          rows={6}
+          rows={3}
           className="neu-inset-crisp"
           style={{ ...inputStyle, padding: "11px 13px", resize: "vertical", lineHeight: 1.5 }}
         />
@@ -391,7 +242,6 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
             style={{ marginTop: 8, fontSize: 12 }}
             onClick={() => {
               setFacts((prev) => ({ ...prev, [key]: t(`facts.${key}.negative`) }));
-              setStep((s) => Math.min(total - 1, s + 1));
             }}
           >
             {t("wizard.nope")}
@@ -442,7 +292,36 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
     );
   }
 
-  const questionLabel = def.kind === "fact" ? t(`facts.${def.key}.label`) : t(`questions.${def.key}.label`);
+  const stepLabel = (s: StepDef) => s.kind === "fact" ? t(`facts.${s.key}.label`) : t(`questions.${s.key}.label`);
+
+  function renderStep(s: StepDef) {
+    return (
+      <>
+        {s.kind === "style" && renderStyle(s.key as StyleField)}
+        {s.kind === "fact" && renderFact(s.key)}
+        {s.kind === "qagrid" && renderGrid(s.key)}
+        {s.kind === "custom" && s.key === "meetingType" && accountId && (
+          <MeetingTypeCard accountId={accountId} />
+        )}
+        {s.kind === "custom" && s.key === "availabilityHours" && accountId && (
+          <AvailabilityCard accountId={accountId} />
+        )}
+        {s.kind === "custom" && (
+          <ServiceStep
+            stepKey={s.key}
+            services={a.services}
+            onServicesChange={(services) => set({ services })}
+            setup={a.setup}
+            onSetupChange={setSetup}
+            accountId={accountId}
+            account={account}
+            detail={detail}
+            onSaveAccount={onSaveAccount}
+          />
+        )}
+      </>
+    );
+  }
 
   const progressHeader = (
     <div style={{ marginBottom: 18 }}>
@@ -470,7 +349,7 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
       </div>
       <div style={{ display: "flex", gap: 5 }}>
         {sections.map((sec, i) => {
-          const count = steps.filter((s) => s.section === sec).length;
+          const count = pages.filter((p) => p[0].section === sec).length;
           const fill = i < sectionIndex ? 1 : i === sectionIndex ? posInSection / count : 0;
           return (
             <div key={sec} style={{ flex: 1, height: 4, borderRadius: 999, background: "var(--bg)", boxShadow: "var(--sh-inset-crisp)", overflow: "hidden" }}>
@@ -486,32 +365,20 @@ export function ProfileWizard({ accountId, initial, initialFacts, initialGrids, 
     <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
       {/* Question */}
       <h4 className="serif" style={{ margin: "0 0 16px", fontSize: 21, color: "var(--ink)", lineHeight: 1.3, letterSpacing: "-0.01em" }}>
-        {questionLabel}
+        {page.length > 1 ? t(`sections.${currentSection}`) : stepLabel(def)}
       </h4>
 
       <div style={{ flex: bodyMaxHeight ? undefined : 1, minHeight: 0, maxHeight: bodyMaxHeight, overflowY: "auto", paddingLeft: 6, paddingRight: 6 }}>
-        {def.kind === "style" && renderStyle(def.key as StyleField)}
-        {def.kind === "fact" && renderFact(def.key)}
-        {def.kind === "qagrid" && renderGrid(def.key)}
-        {def.kind === "custom" && def.key === "meetingType" && accountId && (
-          <MeetingTypeCard accountId={accountId} />
-        )}
-        {def.kind === "custom" && def.key === "availabilityHours" && accountId && (
-          <AvailabilityCard accountId={accountId} />
-        )}
-        {def.kind === "custom" && (
-          <ServiceStep
-            stepKey={def.key}
-            services={a.services}
-            onServicesChange={(services) => set({ services })}
-            setup={a.setup}
-            onSetupChange={setSetup}
-            accountId={accountId}
-            account={account}
-            detail={detail}
-            onSaveAccount={onSaveAccount}
-          />
-        )}
+        {page.length > 1 ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+            {page.map((s) => (
+              <div key={s.key}>
+                <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink-soft)", marginBottom: 6 }}>{stepLabel(s)}</div>
+                {renderStep(s)}
+              </div>
+            ))}
+          </div>
+        ) : renderStep(def)}
       </div>
 
       {/* Nav */}
