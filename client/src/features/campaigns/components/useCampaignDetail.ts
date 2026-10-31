@@ -10,7 +10,6 @@ import { useTranslation } from "react-i18next";
 import { useToast } from "@/hooks/use-toast";
 import { apiFetch } from "@/lib/apiUtils";
 import type { Campaign } from "@/types/models";
-import { useCampaignAiSummary } from "../hooks/useCampaignAiSummary";
 import { campaignPromptResolver, isActivePrompt, isConversationPrompt, promptIdOf } from "@/features/prompts/utils/campaignPrompt";
 
 // The only fields POST /api/campaigns/:id/generate writes (CONTEXT_FIELDS in
@@ -226,10 +225,6 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
       .catch(() => {});
   }, [campaign.id, (campaign as any).Id]);
 
-  // ── Local AI summary state (with localStorage fallback) ────────────────────
-  const { localAiSummary, localAiSummaryAt, handleAiSummaryRefreshed, refreshAiSummary, refreshingSummary } =
-    useCampaignAiSummary(campaign as Campaign & { Id?: number });
-
   // ── Always-on editing state (auto-save on change) ──────────────────────────
   const [focusField, setFocusField] = useState<string | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
@@ -330,6 +325,8 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     ai_style_override: (c as any).ai_style_override || "",
     niche: (c as any).niche || "",
     inquiry_timeframe: (c as any).inquiry_timeframe || "",
+    // A {first_touch} prompt variable (Discovery Prompt #93); edited in Reactivation > Advanced.
+    first_touch: (c as any).first_touch || "",
     objection_playbook: (c as any).objection_playbook ?? [
       { objection: "", answer: "" },
       { objection: "", answer: "" },
@@ -493,12 +490,6 @@ export function useCampaignDetail(campaign: Campaign, onSave: (id: number, patch
     contractLoading,
     // AI costs
     aiCosts,
-    // AI summary
-    localAiSummary,
-    localAiSummaryAt,
-    handleAiSummaryRefreshed,
-    refreshAiSummary,
-    refreshingSummary,
     // Edit state
     isEditing,
     focusField,

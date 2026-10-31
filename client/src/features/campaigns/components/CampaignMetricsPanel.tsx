@@ -15,7 +15,6 @@ import { useMemo } from "react";
 import type { Campaign, CampaignMetricsHistory } from "@/types/models";
 import { cn } from "@/lib/utils";
 import { useLeads } from "@/hooks/useApiData";
-import { AISummaryWidget } from "./metricsWidgets";
 import { ABTestCard } from "./metricsWidgets";
 import { PerformancePanel } from "./metricsWidgets/dashboard/PerformancePanel";
 import { PipelinePanel } from "./metricsWidgets/dashboard/PipelinePanel";
@@ -42,11 +41,7 @@ export interface CampaignMetricsPanelProps {
   /** Full (unfiltered) metrics history for this campaign — timeframe is chosen inside the Performance panel. */
   allMetrics: CampaignMetricsHistory[];
   animTrigger: number;
-  localAiSummary: string | null;
-  localAiSummaryAt: string | null;
   compact?: boolean;
-  onRefreshSummary?: () => void;
-  isRefreshingSummary?: boolean;
 }
 
 // ── CampaignMetricsPanel ──────────────────────────────────────────────────────
@@ -54,11 +49,7 @@ export function CampaignMetricsPanel({
   campaign,
   allMetrics,
   animTrigger,
-  localAiSummary,
-  localAiSummaryAt,
   compact = false,
-  onRefreshSummary,
-  isRefreshingSummary,
 }: CampaignMetricsPanelProps) {
   const campaignId = campaign.id || (campaign as any).Id;
   const accountId = campaign.account_id || (campaign as any).Accounts_id;
@@ -78,8 +69,6 @@ export function CampaignMetricsPanel({
   if (compact) {
     return (
       <div className={cn("summary-root w-full flex flex-col")}>
-        <AISummaryWidget summary={localAiSummary} generatedAt={localAiSummaryAt} onRefresh={onRefreshSummary} isRefreshing={isRefreshingSummary} />
-        <Divider />
         <PerformancePanel leads={leadList} campaignId={campaignId} accountId={accountId} animTrigger={animTrigger} compact />
         <Divider />
         <NextPanel leads={leadList} />
@@ -97,9 +86,6 @@ export function CampaignMetricsPanel({
 
   return (
     <div className={cn("summary-root w-full flex flex-col")}>
-
-      {/* AI Read strip — top, flat, full width */}
-      <AISummaryWidget summary={localAiSummary} generatedAt={localAiSummaryAt} onRefresh={onRefreshSummary} isRefreshing={isRefreshingSummary} />
 
       {/*
         Responsive dashboard grid (container-query driven, see design-system.css):

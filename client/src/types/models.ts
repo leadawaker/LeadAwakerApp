@@ -95,9 +95,6 @@ export type Campaign = {
   // Sticker / Profile image
   campaign_sticker?: string | null;
   campaign_hue?: number | null;
-  // AI summary
-  ai_summary?: string | null;
-  ai_summary_generated_at?: string | null;
   ab_enabled?: boolean;
   ab_split_ratio?: number;
   // Demo campaigns

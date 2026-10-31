@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { ListPanelFooter, ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import {
   Megaphone,
   Filter,
@@ -391,7 +391,6 @@ export function CampaignListView({
   // Observer is attached to the main column inside CampaignDetailView (excludes prompt panel).
   const { ref: compactObserverRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 900, deactivateAbove: 1250 });
   const isListCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
-  const isListHidden = !isNarrow && leftPanelState === "hidden";
 
   // Auto-select: handled by CampaignsPage — do NOT auto-select here (causes override)
 
@@ -744,12 +743,10 @@ export function CampaignListView({
           on narrow-but-not-mobile (tablet, 768–1024px) it still collapses to the classic split-panel. */}
       <MobileRecede open={isMobile768 && mobilePanelOpen} fill={isMobile768}>
       <div className={cn(
-        "flex-col h-full bg-panel-list-bg overflow-hidden border-r border-[var(--line)] min-h-0",
-        isListHidden
-          ? cn((isNarrow && !isMobile768) && selectedCampaign ? "hidden" : "flex", "lg:hidden")
-          : isListCompact
-            ? cn("w-[65px] shrink-0", (isNarrow && !isMobile768) && selectedCampaign ? "hidden" : "flex")
-            : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", (isNarrow && !isMobile768) && selectedCampaign ? "hidden" : "flex")
+        "la-list-panel flex-col h-full bg-panel-list-bg overflow-hidden border-r border-[var(--line)] min-h-0",
+        isListCompact
+          ? cn("w-[65px] shrink-0", (isNarrow && !isMobile768) && selectedCampaign ? "hidden" : "flex")
+          : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", (isNarrow && !isMobile768) && selectedCampaign ? "hidden" : "flex")
       )} data-onboarding="campaigns-sidebar">
 
         {isListCompact && (
@@ -865,7 +862,6 @@ export function CampaignListView({
       </div>
       </MobileRecede>
       {/* Hidden list: the slim strip that brings it back */}
-      <ListPanelUnfoldButton />
 
       {/* ── MOBILE FULL-SCREEN DETAIL PANEL (< 768px) ──────────────── */}
       <MobileCampaignDetailPanel

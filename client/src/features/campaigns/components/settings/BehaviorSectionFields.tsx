@@ -177,7 +177,7 @@ export function BehaviorSectionFields({
 
       <InfoRow icon={Zap} label={t("config.campaignType")} value={t(`config.campaignTypes.${campaign.campaign_type || "reactivation"}`)}
         {...editFor("campaign_type")}
-        editChild={isEditing ? <EditSelect value={String(draft.campaign_type ?? "reactivation")} onChange={(v) => setDraft(d => ({...d, campaign_type: v}))} options={["reactivation", "reputation", "speed_to_lead", "missed_call", "receptionist", ...(draft.campaign_type === "social_reply" ? ["social_reply"] : [])]} labels={{
+        editChild={isEditing ? <EditSelect value={String(draft.campaign_type ?? "reactivation")} onChange={(v) => setDraft(d => ({...d, campaign_type: v}))} options={["reactivation", "reputation", "speed_to_lead", "missed_call", ...(draft.campaign_type === "social_reply" ? ["social_reply"] : [])]} labels={{
           reactivation: t("config.campaignTypes.reactivation"),
           reputation: t("config.campaignTypes.reputation"),
           speed_to_lead: t("config.campaignTypes.speed_to_lead"),

@@ -140,7 +140,6 @@
       "callsHandoffs": "Chamadas e Transferências",
       "live": "Ao Vivo",
       "revenue": "Receita",
-      "aiRead": "Leitura IA",
       "experiment": "Experimento"
     },
     "timeframes": {
@@ -185,15 +184,11 @@
     "noPipelineData": "Sem dados de pipeline ainda",
     "noConversionData": "Sem dados de conversão",
     "aiAnalysis": "Análise IA",
-    "noAiAnalysis": "Sem análise de IA ainda",
     "aiRunsNightly": "Executa toda noite ou clique em Gerar",
     "lastRun": "Última execução: {{date}}",
     "noAnalysisYet": "Sem análise ainda",
     "generate": "Gerar",
-    "regenerate": "Regenerar",
     "generating": "Gerando…",
-    "groqApiKeyMissing": "Chave da API Groq não configurada. Adicione GROQ_API_KEY ao .env.",
-    "generateFailed": "Falha ao gerar resumo. Tente novamente.",
     "networkError": "Erro de rede. Tente novamente.",
     "activity": "Atividade",
     "financials": "Financeiro",

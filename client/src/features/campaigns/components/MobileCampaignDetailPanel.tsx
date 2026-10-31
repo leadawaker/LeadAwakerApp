@@ -96,11 +96,7 @@ function MobileCampaignDetailContent({
               campaign={campaign}
               allMetrics={campaignMetrics}
               animTrigger={animTrigger}
-              localAiSummary={detail.localAiSummary}
-              localAiSummaryAt={detail.localAiSummaryAt}
               compact
-              onRefreshSummary={detail.refreshAiSummary}
-              isRefreshingSummary={detail.refreshingSummary}
             />
           )}
           {activeTab === "configurations" && (
