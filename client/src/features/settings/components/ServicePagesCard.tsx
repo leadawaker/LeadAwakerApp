@@ -13,12 +13,11 @@ import {
 import type { UserProfile } from "../types";
 import { parsePrefs, patchPreferences } from "./prefsSave";
 
-// Speed to Lead and Missed calls are hidden until finished (list in
-// components/crm/RightSidebar.tsx): no switch, the Owner opens them by URL.
-const SHOWN_KEYS = SERVICE_PAGE_KEYS.filter((key) => key !== "speed" && key !== "missedcall");
+// Missed calls is hidden until finished (list in components/crm/RightSidebar.tsx):
+// no switch, the Owner opens it by URL.
+const SHOWN_KEYS = SERVICE_PAGE_KEYS.filter((key) => key !== "missedcall");
 
 const LABEL_KEYS: Record<ServicePageKey, string> = {
-  speed: "profile.servicePageSpeed",
   reputation: "profile.servicePageReputation",
   missedcall: "profile.servicePageMissedCalls",
 };
@@ -43,7 +42,6 @@ export function ServicePagesCard({
   const [values, setValues] = useState<Record<ServicePageKey, boolean>>(() => {
     const prefs = parsePrefs(profile.preferences);
     return {
-      speed: !!prefs[SERVICE_PAGE_PREF_KEYS.speed],
       reputation: !!prefs[SERVICE_PAGE_PREF_KEYS.reputation],
       missedcall: !!prefs[SERVICE_PAGE_PREF_KEYS.missedcall],
     };

@@ -1,10 +1,11 @@
-// The one search control for topbars: a rounded-square icon (36px, 38px inside a topbar via --tb-ctl; the
-// --r-button radius of the other square icon buttons) that opens into a pill
-// field on click and folds back once it is empty and loses focus. Escape or the
-// cross clears it. `alwaysOpen` keeps the field visible for pages that need it.
+// The one search control for topbars: a white pill field, always open on a desktop. On a phone it is a
+// rounded-square icon (36px; the --r-button radius of the other square icon buttons) that opens on
+// click and folds back once it is empty and loses focus. Escape or the cross clears it.
+// `alwaysOpen` keeps the field visible on phones too.
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Search, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { cn } from "@/lib/utils";
 
 // The topbar sets --tb-ctl (38px); elsewhere the search is the 36px square.
@@ -38,7 +39,8 @@ export function ExpandingSearch({
   const [open, setOpen] = useState(defaultOpen);
   const [focusNext, setFocusNext] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const expanded = alwaysOpen || open || value.length > 0;
+  const pinned = alwaysOpen || !useIsMobile(768);
+  const expanded = pinned || open || value.length > 0;
   const name = label ?? placeholder;
 
   // Focus only after the user opens it, so a page load never steals focus.
@@ -46,7 +48,7 @@ export function ExpandingSearch({
     if (focusNext && expanded) { inputRef.current?.focus(); setFocusNext(false); }
   }, [focusNext, expanded]);
 
-  const clear = () => { onChange(""); if (!alwaysOpen) setOpen(false); };
+  const clear = () => { onChange(""); if (!pinned) setOpen(false); };
 
   return (
     <div
@@ -56,8 +58,8 @@ export function ExpandingSearch({
       style={{
         height: SIZE, width: expanded ? width : SIZE, minWidth: expanded ? 120 : SIZE, flexShrink: expanded ? 1 : 0,
         display: "flex", alignItems: "center", overflow: "hidden", borderRadius: expanded ? "var(--r-pill)" : "var(--r-button)",
-        background: expanded ? "var(--bg)" : "var(--surface)",
-        boxShadow: expanded ? "var(--sh-inset-crisp)" : "var(--sh-raised-crisp)",
+        background: "var(--card)",
+        boxShadow: "var(--sh-raised-crisp)",
         transition: "width 180ms ease, min-width 180ms ease, box-shadow 180ms, background 180ms, border-radius 180ms",
       }}
     >
@@ -89,7 +91,7 @@ export function ExpandingSearch({
           {matchCount != null && value.trim() && (
             <span style={{ fontSize: 11.5, color: "var(--mute)", flexShrink: 0, whiteSpace: "nowrap" }}>{t("search.matches", { count: matchCount })}</span>
           )}
-          {(value || !alwaysOpen) && (
+          {(value || !pinned) && (
             <button
               type="button"
               onMouseDown={(e) => e.preventDefault()}

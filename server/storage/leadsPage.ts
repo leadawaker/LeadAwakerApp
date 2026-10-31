@@ -80,7 +80,7 @@ export function baseSql(chats: boolean): string {
     l.first_name, l.last_name, l.phone, l."Email" AS email, l.channel_identifier,
     l.created_at, l.booked_call_date,
     COALESCE(l."Conversion_Status", '') AS status_raw,
-    (COALESCE(c.bump_mode, '') = 'receptionist' OR COALESCE(c.campaign_type, '') = 'receptionist'
+    (COALESCE(c.bump_mode, '') = 'receptionist' OR COALESCE(c.campaign_type, '') IN ('receptionist', 'speed_to_lead')
       OR COALESCE(l."Source", '') IN ('voice_receptionist', 'Website Chat')) AS is_receptionist,
     ix.chans, ix.has_out, ix.unread, ix.chat_channel, ix.contact_channel, ix.contact_at,
     ix.msg_dir, ix.msg_ai, ix.last_message, ix.last_dir,
@@ -100,7 +100,8 @@ export function baseSql(chats: boolean): string {
       -- would file website visitors as dbr. Keep in step with client conversationType.ts.
       WHEN COALESCE(l.channel_identifier, '') ~ '^web-demo:' THEN 'widget'
       WHEN COALESCE(c.bump_mode, '') = 'receptionist' THEN 'other'
-      WHEN c.campaign_type IN ('reactivation', 'speed_to_lead') THEN 'dbr'
+      -- Speed to Lead is the receptionist on WhatsApp (campaign_type 'receptionist' was merged into it).
+      WHEN c.campaign_type = 'reactivation' THEN 'dbr'
       ELSE 'other'
     END AS conv_type,
     (NOT COALESCE(l.opted_out, false) AND COALESCE(l."Conversion_Status", '') NOT IN ('DND', 'Lost')

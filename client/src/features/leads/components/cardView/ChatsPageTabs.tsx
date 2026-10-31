@@ -1,7 +1,8 @@
-// The Chats page's way into its settings, mirroring Calls: a "Chat settings" button (gear) in the
-// topbar, and inside the settings a "Chats" back button (arrow). The figures live on Home (/platform/home).
+// The Chats page's main tabs, mirroring Calls: Chats | Chat settings in the topbar (phones: a gear,
+// and a "Chats" back pill inside the settings). The figures live on Home (/platform/home).
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Settings } from "lucide-react";
+import { ArrowLeft, MessagesSquare, Settings } from "lucide-react";
+import { PillSwitch } from "@/components/crm/primitives/PillSwitch";
 import { MobileHeaderIconBtn } from "@/components/crm/mobile/MobileListHeader";
 
 export type ChatsTab = "chats" | "settings";
@@ -29,16 +30,16 @@ export function ChatsPageTabs({ active, onChange, variant = "topbar" }: { active
       </MobileHeaderIconBtn>
     );
   }
-  const Icon = inSettings ? ArrowLeft : Settings;
   return (
-    <button
-      type="button"
-      onClick={go}
-      className={`la-btn ${inSettings ? "la-btn--soft" : "la-btn--wine"} shrink-0`}
-      data-testid={inSettings ? "chats-back" : "chats-open-settings"}
-    >
-      <Icon className="h-4 w-4 shrink-0" />
-      {label}
-    </button>
+    <PillSwitch<ChatsTab>
+      items={[
+        { id: "chats", label: t("chatsTabs.chats"), icon: MessagesSquare },
+        { id: "settings", label: t("chatsTabs.openSettings"), icon: Settings },
+      ]}
+      value={active}
+      onChange={onChange}
+      ariaLabel={t("chatsTabs.aria")}
+      itemTestId={(id) => (id === "settings" ? "chats-open-settings" : "chats-back")}
+    />
   );
 }

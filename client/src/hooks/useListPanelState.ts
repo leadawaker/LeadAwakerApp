@@ -2,17 +2,19 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 
 /**
  * Global list-panel state — shared across Prospects / Leads / Campaigns / Chats.
- * Values: "full" | "compact" | "hidden". When "full" and the right panel is narrow,
+ * Values: "full" | "compact" (a list never folds away). When "full" and the right panel is narrow,
  * pages may auto-squeeze to compact via `useCompactPanelState`.
  */
-export type ListPanelState = "full" | "compact" | "hidden";
+export type ListPanelState = "full" | "compact";
 const STORAGE_KEY = "la:list-panel-state";
 const EVENT_NAME = "la:list-panel-state-changed";
 
 function read(): ListPanelState {
   try {
     const v = localStorage.getItem(STORAGE_KEY);
-    if (v === "full" || v === "compact" || v === "hidden") return v;
+    if (v === "full" || v === "compact") return v;
+    // The retired "hidden" opens as the small panel.
+    if (v === "hidden") return "compact";
     // If value is invalid, clear it and return default
     if (v !== null) localStorage.removeItem(STORAGE_KEY);
   } catch { /* ignore */ }
@@ -39,15 +41,7 @@ export function useListPanelState() {
 
   const setState = useCallback((v: ListPanelState) => write(v), []);
 
-  const cycle = useCallback(() => {
-    const next: ListPanelState =
-      state === "full" ? "compact"
-      : state === "compact" ? "hidden"
-      : "full";
-    write(next);
-  }, [state]);
-
-  return { state, setState, cycle } as const;
+  return { state, setState } as const;
 }
 
 // Back-compat migration: one-time read from legacy per-page keys on first load.

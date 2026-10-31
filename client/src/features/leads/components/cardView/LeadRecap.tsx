@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { CalendarCheck, Globe, MessageCircle } from "lucide-react";
 import { resolveLang } from "@shared/langField";
 import { parseSummary } from "@/components/crm/AiSummaryView";
+import { ListSection } from "@/components/crm/primitives";
 import { Card, CardLabel } from "./designPrimitives";
 import { getChatChannel } from "../chatChannel";
 
@@ -54,7 +55,7 @@ function formatInZone(d: Date, locale: string, timeZone: string | undefined, opt
   try { return d.toLocaleString(locale, { ...opts, timeZone }); } catch { return d.toLocaleString(locale, opts); }
 }
 
-export function LeadRecap({ lead, timeZone }: { lead: Record<string, any>; timeZone?: string }) {
+export function LeadRecap({ lead, timeZone, split = false }: { lead: Record<string, any>; timeZone?: string; /** Title outside the card. */ split?: boolean }) {
   const { t, i18n } = useTranslation("leads");
   const locale = i18n.language || "en";
   const uiLang: "en" | "nl" = locale.toLowerCase().startsWith("nl") ? "nl" : "en";
@@ -101,16 +102,19 @@ export function LeadRecap({ lead, timeZone }: { lead: Record<string, any>; timeZ
   const meta = [language ? language.toUpperCase() : null, received || sent ? t("chatRecap.messageCounts", { received, sent }) : null].filter(Boolean).join(" · ");
   const hasSummary = Boolean(wanted || recap.facts.length || recap.outcome || recap.prose.length);
 
-  return (
+  const channelChip = channel ? (
+    <span style={CHIP} data-testid="chat-recap-channel">
+      <ChannelIcon className="h-[12px] w-[12px]" style={{ color: "var(--wine)" }} />
+      {t(`chatChannel.${channel}`)}
+    </span>
+  ) : undefined;
+
+  const body = (
     <Card
       variant="flat"
+      hideHead={split}
       headLeft={<CardLabel>{t("chatRecap.title")}</CardLabel>}
-      headRight={channel ? (
-        <span style={CHIP} data-testid="chat-recap-channel">
-          <ChannelIcon className="h-[12px] w-[12px]" style={{ color: "var(--wine)" }} />
-          {t(`chatChannel.${channel}`)}
-        </span>
-      ) : undefined}
+      headRight={channelChip}
       style={{ minWidth: 0 }}
       bodyStyle={{ padding: 0, gap: 0 }}
     >
@@ -167,4 +171,5 @@ export function LeadRecap({ lead, timeZone }: { lead: Record<string, any>; timeZ
       )}
     </Card>
   );
+  return split ? <ListSection label={t("chatRecap.title")} trailing={channelChip}>{body}</ListSection> : body;
 }

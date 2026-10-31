@@ -40,7 +40,7 @@ export function SettingsTextCard(p: SettingsTextCardProps) {
   const fieldId = `settings-${p.id}`;
   const near = p.text.length >= p.max * 0.95;
   return (
-    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }} data-testid={p.testIds?.card ?? `${fieldId}-card`}>
+    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 8, minWidth: 0 }} data-testid={p.testIds?.card ?? `${fieldId}-card`}>
       <div className="row" style={{ gap: 10, alignItems: "center", flexWrap: "wrap" }}>
         <label htmlFor={fieldId} style={{ fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>{p.title}</label>
         {p.headerAction && !p.readOnly && <div style={{ marginLeft: "auto" }}>{p.headerAction}</div>}

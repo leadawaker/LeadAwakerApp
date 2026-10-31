@@ -58,6 +58,8 @@ const KEEP_FILES = new Set([
   "logo-icon.svg",
   "logo-v2.svg",
   "logo-v2-dark.svg",
+  "logo-nav-beige.svg",
+  "logo-v2-outline.svg",
   "netherlands.svg",
   ...STANDALONE_PAGES,
 ]);

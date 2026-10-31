@@ -99,8 +99,6 @@ export function LeadsDesktopToolbar({
   showTypeControls,
   filterType,
   onToggleFilterType,
-  channelTabs,
-  scopeSwitch,
   pageTabs,
 }: {
   leadsCount: number;
@@ -154,11 +152,7 @@ export function LeadsDesktopToolbar({
   showTypeControls?: boolean;
   filterType: ConversationType[];
   onToggleFilterType: (v: ConversationType) => void;
-  /** Chats page: All / Website / WhatsApp inbox tabs, shown in place of the view switcher. */
-  channelTabs?: ReactNode;
-  /** Chats page: the Live / Demo switch (Owner). */
-  scopeSwitch?: ReactNode;
-  /** Chats: the "Chat settings" button, in the right cluster after the scope switch. Also turns on the identities item of the "..." menu (Owner). */
+  /** Chats: Chats | Chat settings with the small scope switch beside them. Also turns on the identities item of the "..." menu (Owner). */
   pageTabs?: ReactNode;
 }) {
   const { t } = useTranslation("leads");
@@ -178,9 +172,9 @@ export function LeadsDesktopToolbar({
         <span className="la-page-title">{title ?? t("page.title")}</span>
         <span className="eyebrow eyebrow-sm" style={{ color: "var(--mute-2)" }}>#{leadsCount}</span>
       </div>
-      {channelTabs}
+      {pageTabs}
       {/* Single-view pages (e.g. Conversations) hide the segmented switcher. */}
-      {!channelTabs && !pageTabs && viewTabs.length > 1 && (
+      {!pageTabs && viewTabs.length > 1 && (
         <div className="la-seg la-seg--main shrink-0" role="tablist">
           {viewTabs.map((tab) => (
             <button
@@ -327,10 +321,6 @@ export function LeadsDesktopToolbar({
           <GroupMenuItems groupBy={groupBy} onGroupByChange={onGroupByChange} showTypeControls={showTypeControls} />
         </DropdownMenuContent>
       </DropdownMenu>
-
-      {/* Chats: the Live / Tests / Demo scope dropdown, then "Chat settings" right after it. */}
-      {scopeSwitch}
-      {pageTabs}
 
       {/* "..." at the far right: New lead, the identities switch (Owner, Chats) and, with a lead
           open (agency), the per-lead actions. Those act on the open lead via window events

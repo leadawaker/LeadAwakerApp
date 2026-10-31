@@ -1,32 +1,14 @@
-import { useEffect, useRef, useSyncExternalStore } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 
 /**
- * Registry for the list-panel fold controls (`ListPanelFoldButton` in the list
- * panel footer, `ListPanelUnfoldButton` at its edge while hidden). A page with a
- * list panel calls `useListPanelFold(true, ...)`; the controls render only while
- * some page has registered, and read the page's mode from here.
- *
- * - mode "cycle": full → compact → hidden → full (shared `useListPanelState`).
- * - mode "compact": full ↔ compact (Calls, Chats keep their list as a rail).
- * - `onToggle` + `hidden`: a page with its own local panel state (Speed to Lead).
+ * Registry for the list-panel fold button (`ListPanelFooter`). A page with a list
+ * panel calls `useListPanelFold(true)`; the button renders only while some page has
+ * registered. It flips the shared `useListPanelState` between full and compact.
  */
-export type ListPanelFoldMode = "cycle" | "compact";
-
-export interface ListPanelFoldEntry {
-  id: number;
-  mode: ListPanelFoldMode;
-  /** Only for pages with their own panel state. */
-  hidden?: boolean;
-  toggle?: () => void;
-}
-
-const entries: ListPanelFoldEntry[] = [];
+let count = 0;
 const listeners = new Set<() => void>();
-let snapshot: ListPanelFoldEntry | null = null;
-let seq = 0;
 
 function emit() {
-  snapshot = entries[entries.length - 1] ?? null;
   listeners.forEach((l) => l());
 }
 
@@ -35,35 +17,19 @@ function subscribe(cb: () => void) {
   return () => { listeners.delete(cb); };
 }
 
-export function useListPanelFold(
-  enabled: boolean,
-  opts: { mode?: ListPanelFoldMode; hidden?: boolean; onToggle?: () => void } = {},
-) {
-  const toggleRef = useRef(opts.onToggle);
-  toggleRef.current = opts.onToggle;
-  const mode = opts.mode ?? "cycle";
-  const hidden = opts.hidden;
-  const custom = !!opts.onToggle;
-
+export function useListPanelFold(enabled: boolean) {
   useEffect(() => {
     if (!enabled) return;
-    const entry: ListPanelFoldEntry = {
-      id: ++seq,
-      mode,
-      hidden,
-      toggle: custom ? () => toggleRef.current?.() : undefined,
-    };
-    entries.push(entry);
+    count += 1;
     emit();
     return () => {
-      const i = entries.indexOf(entry);
-      if (i >= 0) entries.splice(i, 1);
+      count -= 1;
       emit();
     };
-  }, [enabled, mode, hidden, custom]);
+  }, [enabled]);
 }
 
-/** The registration of the page on screen, or null when it has no list panel. */
-export function useActiveListPanelFold(): ListPanelFoldEntry | null {
-  return useSyncExternalStore(subscribe, () => snapshot, () => null);
+/** True while the page on screen has a list panel to fold. */
+export function useActiveListPanelFold(): boolean {
+  return useSyncExternalStore(subscribe, () => count > 0, () => false);
 }

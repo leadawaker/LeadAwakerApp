@@ -66,7 +66,6 @@ export function LeadListCard({
   onToggleSelect?: () => void;
 }) {
   const { t } = useTranslation("leads");
-  const { isDark } = useTheme();
   const { label: deleteLabel } = useDeleteAction("lead");
   // Presenting (Owner, Chats): the card shows masked names and numbers.
   const { masked }  = useChatsPresenting();
@@ -82,10 +81,9 @@ export function LeadListCard({
   const shownPhone  = phone ? presentNumber(phone, masked) : "";
   const email       = lead.email || lead.Email || "";
   const statusHex   = stageHex(stage);
-  // Night-mode-friendly avatar: muted dark bg + light initials in dark mode,
-  // keeping the solid saturated look untouched in light mode.
-  const avatarBg    = isDark ? (LEAD_AVATAR_BG_DARK[stageColorKey(stage)] ?? "#2A2D33") : statusHex;
-  const avatarText  = isDark ? (LEAD_AVATAR_TEXT_DARK[stageColorKey(stage)] ?? "#9CA3AF") : "#FFFFFF";
+  // The deep circle with bright initials, in day and night mode alike.
+  const avatarBg    = LEAD_AVATAR_BG_DARK[stageColorKey(stage)] ?? "#2A2D33";
+  const avatarText  = LEAD_AVATAR_TEXT_DARK[stageColorKey(stage)] ?? "#9CA3AF";
   const lastActivity = lastContactAt(lead);
   const contactChannel = lastContactChannel(lead);
   // Contact-later leads sit at a normal pipeline stage but are frozen until a
@@ -102,10 +100,9 @@ export function LeadListCard({
   const bookedCallDate = lead.booked_call_date || lead.bookedCallDate || null;
   const isPastCall = status === "Booked" && !!bookedCallDate && new Date(bookedCallDate) < new Date();
   const isDemo = isDemoLead(lead);
-  // Reactivation chats (conversation type "dbr", minus the speed-to-lead quotes that share the bucket).
-  const campaignType = String(lead.campaign_type ?? (cId && campaignsById?.get(cId)?.campaignType) ?? "");
+  // Reactivation chats (conversation type "dbr").
   // Conversation type only: the server's conv type when present, else the client-side derivation.
-  const isReactivation = (lead.conversation_type ?? getConversationType(lead, campaignsById)) === "dbr" && campaignType !== "speed_to_lead";
+  const isReactivation = (lead.conversation_type ?? getConversationType(lead, campaignsById)) === "dbr";
   const sourceRaw   = String(lead.source || lead.Source || "");
   const sourceLabel = isDemo ? "" : (SOURCE_LABELS[sourceRaw] || (sourceRaw.startsWith("zapier:") ? "Zapier" : ""));
 

@@ -59,7 +59,10 @@ export function ContactWidget({
   gradientTesterOpen,
   isAgencyUser,
   hideNotes,
+  hideTitle = false,
 }: {
+  /** The title sits outside the card (ListSection). */
+  hideTitle?: boolean;
   lead: Record<string, any>;
   onRefresh?: () => void;
   /** Hide the inline Notes block (Contacts page renders Notes separately at the bottom) */
@@ -259,7 +262,7 @@ export function ContactWidget({
   ];
 
   return (
-    <Card headLeft={<CardLabel>{t("contact.title")}</CardLabel>} variant="flat" style={{ flex: 1, minWidth: 0, width: "100%", height: "100%" }}>
+    <Card headLeft={<CardLabel>{t("contact.title")}</CardLabel>} hideHead={hideTitle} variant="flat" style={{ flex: 1, minWidth: 0, width: "100%", height: "100%" }}>
       <div style={{ flex: 1, overflowY: "auto", padding: 16, display: "flex", flexDirection: "column" }}>
         <div className="flex flex-col">
           {editableRows.map((row) => (

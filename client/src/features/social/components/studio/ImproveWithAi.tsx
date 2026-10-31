@@ -72,7 +72,7 @@ export function ImproveWithAi({ accountId, script, title, body, setTitle, setBod
   return (
     <div className="neu-inset-crisp" style={{ borderRadius: "var(--r-surface)", padding: "12px 14px", display: "flex", flexDirection: "column", gap: 10, minWidth: 0 }} data-testid="script-improve">
       {restorable && (
-        <div className="neu-raised" style={{ borderRadius: "var(--r-surface)", background: "var(--bone)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }} role="status" data-testid="script-improve-restore">
+        <div className="neu-raised" style={{ borderRadius: "var(--r-surface)", background: "var(--card)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }} role="status" data-testid="script-improve-restore">
           <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-soft)" }}>{t("improve.restoreBanner")}</p>
           <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
             <button type="button" className="la-btn la-btn--soft" disabled={busy}

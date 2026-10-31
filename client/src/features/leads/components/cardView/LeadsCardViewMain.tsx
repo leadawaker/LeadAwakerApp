@@ -109,9 +109,8 @@ export function LeadsCardView({
   const { ref: rightPanelRef, narrow: rightPanelNarrow } = useCompactPanelState(isNarrow, { activateBelow: 680, deactivateAbove: 860 });
   const { state: leftPanelState } = useListPanelState();
   const isCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
-  const isHidden = !isNarrow && leftPanelState === "hidden";
   // Nav bar fold button: minimize / expand the list to its compact rail.
-  useListPanelFold(!isNarrow, { mode: "compact" });
+  useListPanelFold(!isNarrow);
 
   // ── Mobile kanban toggle (Feature #39): persisted preference ─────────────────
   const [storedMobileListMode, setMobileListMode] = usePersistedState<"list" | "kanban">(
@@ -354,11 +353,7 @@ export function LeadsCardView({
           showTypeControls={isConversationsMode && isAgencyUser}
           filterType={filterType}
           onToggleFilterType={toggleFilterType}
-          pageTabs={pageTabs}
-          channelTabs={isConversationsMode && showChannelFilter ? (
-            <ChatChannelTabs variant="topbar" active={activeChannelTab} onChange={onChannelTabChange} counts={channelCounts} />
-          ) : undefined}
-          scopeSwitch={isConversationsMode ? scopeSwitch?.(false, true) : undefined}
+          pageTabs={pageTabs && <>{pageTabs}{scopeSwitch?.(true)}</>}
         />
       )}
 
@@ -369,7 +364,6 @@ export function LeadsCardView({
       {/* ── LEFT: Lead List ── */}
       <MobileRecede open={isNarrow && mobileView === "detail" && !!selectedLead} fill={isNarrow}>
         <LeadsListPanel
-          isHidden={isHidden}
           showChannelBadge={!!isConversationsMode && showChannelFilter}
           isCompact={isCompact}
           isNarrow={isNarrow}
@@ -388,10 +382,10 @@ export function LeadsCardView({
           filterCampaign={filterCampaign}
           isConversationsMode={isConversationsMode}
           mobilePageTabs={mobilePageTabs}
-          channelTabs={isConversationsMode && isNarrow && showChannelFilter ? (
-            <ChatChannelTabs active={activeChannelTab} onChange={onChannelTabChange} counts={channelCounts} />
+          channelTabs={isConversationsMode && showChannelFilter ? (
+            <ChatChannelTabs active={activeChannelTab} onChange={onChannelTabChange} counts={channelCounts} bare={!isNarrow} />
           ) : undefined}
-          scopeSwitch={isConversationsMode && isNarrow ? scopeSwitch?.(true) : undefined}
+          tabletScopeSwitch={isConversationsMode && isNarrow ? scopeSwitch?.(true) : undefined}
           mobileScopeSwitch={isConversationsMode && isNarrow ? scopeSwitch?.(true, true) : undefined}
           filterType={filterType}
           onToggleFilterType={toggleFilterType}

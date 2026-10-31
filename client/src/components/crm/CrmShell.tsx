@@ -359,7 +359,7 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
           "pt-[var(--banner-h,_0px)]"
         )}
         style={{
-          background: "var(--surface)",
+          background: "var(--bg)",
           paddingBottom: viewportW >= 1024 ? 0 : "var(--bottombar-h)",
           paddingRight: (() => {
             if (!dockActive) return undefined;

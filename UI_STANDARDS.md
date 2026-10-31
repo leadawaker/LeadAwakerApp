@@ -14,10 +14,9 @@ was always there. Calm, warm, data-dense: wine accent on warm paper, soft neumor
 
 1. **Shell.** Outer div `.la-page`. Header is `<PageTopbar>`. Never hand-write a header bar.
 2. **Topbar parts, left to right:** title (same i18n key as the nav label), optional `count`,
-   then `left`: the main tabs (`TopbarTabs` / `PillSwitch`; on Chats the channel tabs). Then `right`:
-   selection actions, `ExpandingSearch`, `TopbarIconButton` menus, then on Calls and Chats the
-   Live | Tests | Demo `ScopeSwitch` with the settings button right after it, and the wine `+`
-   (`TopbarIconButton primary`) last. No list fold button here: it sits in the list panel footer (3.5).
+   then `left`: the main tabs (`TopbarTabs` / `PillSwitch`; on Calls and Chats these are Calls | Call settings, Chats | Chat settings: what filters
+   the list sits in the list panel, see 3.5). Then `right`: selection actions, `ExpandingSearch`, `TopbarIconButton` menus,
+   and the wine `+` (`TopbarIconButton primary`) last. No list fold button here: it sits in the list panel footer (3.5).
 3. **List?** List panel on the left, `w-full lg:w-[var(--toolbar-w)] lg:shrink-0`, scrolling in
    `.la-list-area > .la-cards`. Rows are Chats-style cards: `.la-camp-card` plus `.active` when
    selected. Minimizing uses `useListPanelState` and the `CompactEntityRail` parts; the page calls
@@ -59,13 +58,14 @@ in light, brightened `#B14A5C` in dark) and `--ground-h/-s` with `--ground-page/
 
 | Token | Use |
 |-------|-----|
-| `--bg` / `bg-background` | Page ground (very light warm paper). Also the fill of inset wells. |
-| `--surface` | Topbar, toolbars, list panels, raised chips and soft buttons. |
-| `--bg-2` / `--chrome` | Nav rail. `--chrome-deep` and `--chrome-deep-ink` for phone chrome. |
+| `--bg` / `bg-background` | Page ground, the same color as the topbar on every page. Inside a card it resolves to light bone (`--well`): wells and editors are never as dark as the ground. |
+| `--surface` | Light bone: raised panels, chips and soft buttons. Inside `.la-list-panel` it resolves to white. |
+| `--nav-bg`, `--nav-ink`, `--nav-ink-mute`, `--nav-line`, `--nav-hover`, `--nav-active` | The wine desktop nav bar (`.la-nav-rail`). Its logo is `logo-nav-beige.svg` (the landing page logo, "Awaker" in beige `#ECD8B4`). A changed public asset needs a new file name: browsers keep `/premium/*` for 4 hours. |
+| `--bg-2` / `--chrome` | Sand fills. `--chrome-deep` and `--chrome-deep-ink` for phone chrome. |
 | `--card` / `bg-card` | White cards: the selected list card, detail sections, tiles. |
 | `--muted`, `--bone`, `--input` | Secondary fills, writing surfaces, input fills. |
 | `--line`, `--line-strong` | Hairlines and dividers. Prefer depth over borders. |
-| `--ink`, `--ink-soft`, `--mute`, `--mute-2` | Text: primary, secondary, muted, tertiary (or `text-foreground`, `text-muted-foreground`). |
+| `--ink`, `--ink-soft`, `--mute`, `--mute-2` | Text: primary, secondary, muted, tertiary (or `text-foreground`, `text-muted-foreground`). Ink is warm; `--mute` and `--mute-2` are the cool slate, the one cold note in light mode. |
 | `--primary`, `--wine` | The brand accent: active states, links, focus, the one primary action. |
 | `--wine-soft` | Hover on wine. |
 | `--wine-tint`, `--wine-glow` | 8% and 18% wine washes: hover, applied filters, emphasis. |
@@ -149,8 +149,7 @@ Import primitives from `@/components/crm/primitives`. Markup and props: UI_PATTE
 | Topbar scale | Inside `.la-page-header` everything is one step up (design-system.css "Topbar scale"): 22px `.la-page-title`, main tab items 36px / 13.5px with 16px icons, and 38px (`--tb-ctl`) text buttons (sans 13.5px), icon squares, `IconBtn`s and the search. A hand-rolled bar adds the `la-page-header` class (and `la-page-title`) to follow. Don't pin `height: 32` or small font sizes inline on topbar controls. |
 | `PillSwitch` | Round pill switch (`la-seg la-seg--main`). Default `solid`: the main tabs look. `variant="soft"`: every other switcher on the page (People \| All calls, Billing List \| Table, `ScopeSwitch` Live \| Tests \| Demo, Demos Category \| Date). See 3.2. `compact` for 30px items. |
 | `TopbarTabs` | A page's main tabs (Accounts, Prompts, Prospects, Demos, Reputation, Docs, ...): the same `la-seg--main` pill track, solid wine selected tab. |
-| Settings button | Calls and Chats have no work \| Settings switch: a soft "Call settings" / "Chat settings" button (gear) at the end of the right cluster, after the `ScopeSwitch`, opens settings; inside settings a "Calls" / "Chats" back button (arrow) sits by the title, with the account picker after it. `CallsSettingsButton` (`CallsPageTabs.tsx`), `ChatsPageTabs`. Phones: the round scope menu button sits beside the round gear. |
-| `ExpandingSearch` | The one search: a rounded-square icon (`--r-button`, like the other square icon buttons; 38px in a topbar, 36px elsewhere) that opens into a pill field. Collapsed by default on every page, Calendar included. `TranscriptSearch` (Calls) and the Leads `TopbarSearch` wrap it. Never add another search control. |
+| `ExpandingSearch` | The one search: a white pill field, always open on a desktop. On a phone it is a rounded-square icon (`--r-button`) that opens into the field. `TranscriptSearch` (Calls) and the Leads `TopbarSearch` wrap it. Never add another search control. |
 | `TopbarIconButton` | Icon action: soft `la-btn la-btn--icon` with tooltip, `active` (wine dot when a filter, sort or group is set), `primary` (the wine `+`), `danger`. |
 
 Menus opened from the right side use `align="end"`. Phone headers use `MobileListHeader` (40px round `MobileHeaderIconBtn`s with 18px icons, 40px / 14px tabs) and may keep their own pattern.
@@ -216,23 +215,15 @@ One list card everywhere: **flat until selected.**
 
 ### 3.5 Minimizing the list
 
+- **Calls, Chats, Billing and Calendar split their list**: `.la-list-panel--split` has no card of its own. `.la-list-head` holds the list's filter tabs (the soft pill on the ground, the same as Demos' Category | Date, 10px in from the panel's edges), the round `ScopeSwitch` sits in the topbar right after the page tabs, and each group is a `ListSection`: its title on the ground, its rows on a white card. The lead panels on both pages are built from `ListSection` too.
+- **Every desktop list panel carries `.la-list-panel`** (design-system.css): one white raised card on the page ground, 14px from its edges. Detail panels are plain white raised cards too (`.glass` is one now: no blur, no cast shadow). Phones keep their layout. The selected list card is raised with a wine outline and a light wine tint (`--list-selected`, `--list-selected-shadow`); the shadow is tight because the rows sit 6px from the panel edge. Keep panel gutters at 14px or more: raised shadows reach about 11px (crisp) to 14px (medium), so a tighter gutter inside an `overflow: hidden` parent crops them.
 - `useListPanelState()` (`hooks/useListPanelState.ts`) is the one shared state for every list page:
-  `"full" | "compact" | "hidden"`, remembered across pages.
-- **The fold button sits at the bottom of the panel it folds**: `<ListPanelFooter compact={isCompact} />`
-  (from `components/crm/ListPanelToggleButton.tsx`) is the last child of the list column, after the scrolling
-  list (`flex-1 min-h-0 overflow-y-auto`), so it stays pinned: a 44px bar with a `--line` top hairline and
-  `ListPanelFoldButton` (a soft `TopbarIconButton`, `PanelLeftClose` / `PanelLeft`) at its right end; in the
-  compact rail only the button, centered. A list's own footer ("showing x of y", pagination) goes in as
-  children, on the left of the button. No button-only header rows: lists start at the top.
-  Never in a page topbar, never in the nav bar.
-- **Bringing a hidden list back**: `<ListPanelUnfoldButton />` (no props) is the sibling right after the list
-  panel in the same flex row. It renders a 48px strip (list background, `--line` border) with the unfold button
-  at the bottom, in a footer-height cell, only while the list is hidden.
-- A page with a list panel registers with `useListPanelFold(enabled, opts)` (`hooks/useListPanelFold.ts`);
-  the controls show only while a page is registered. `enabled` is false where the page has no list on screen
-  (narrow layouts, table views, settings). Modes: default `"cycle"` (full → compact → hidden: Accounts,
-  Billing, Calendar, Campaigns, Prompts, Prospects, Outreach), `"compact"` (full ↔ compact: Calls, Chats),
-  or `{ hidden, onToggle }` for a page with its own state (Speed to Lead).
+  `"full" | "compact"`, remembered across pages (an old stored `"hidden"` opens as compact).
+- **The fold button sits at the bottom of the panel it folds**: `<ListPanelFooter compact={isCompact} />` as the
+  panel's last child, right after the scrolling list. A list is full or small, never hidden. Without footer content the
+  button takes no room: it floats in the corner and `.la-fold-float` pads the list before it so nothing sits under it.
+  A list's own footer content (pagination, "x of y") goes in as children and gets a row, with the button at its right end.
+- A page with a list panel registers with `useListPanelFold(enabled)` (`hooks/useListPanelFold.ts`).
 - In `"compact"` the list becomes an avatar rail built from `components/crm/CompactEntityRail`
   (`COMPACT_RAIL_WIDTH`, `useCompactHoverCard`, `CompactHoverCardPortal` shows the full card on hover).
   Example: `CompactCallRail` on Calls.
@@ -248,7 +239,7 @@ From `@/features/accounts/components/workspace/SectionRail`:
   - Settings (`pages/Settings.tsx`).
   - Calls > Settings and Chats > Settings: the receptionist settings (`receptionist/ReceptionistSettings`,
     `voice/VoiceTab` + `VoiceRail`, `chat/ChatTab`).
-  - Accounts > Alerts (`alerts/AlertsTab`) and Accounts > Automations (`ClientAutomationsTab`, via `AutomationRail`).
+  - Settings > Alerts (`alerts/AlertsTab`) and Accounts > Automations (`ClientAutomationsTab`, via `AutomationRail`).
   - Automation logs (`pages/AutomationLogs.tsx`, via `features/automation/components/AutomationRail`).
   - Demo settings (`features/demos/components/DemoSettingsTab`).
   - Campaign settings (`features/campaigns/components/settings/CampaignSettingsLayout`, inside
@@ -277,7 +268,7 @@ From `@/features/accounts/components/workspace/SectionRail`:
 | `SectionCard` | Detail sections, widget shells, kanban columns. |
 | `Pill` | Label or status badge in a soft tint of a color. |
 | `.la-status` + `.dot` | Mono status pill. Modifiers `.active-s`, `.paused`, `.inactive`. |
-| `EntityAvatar` | Every person or account circle, colored from `avatarUtils.ts`. UI_PATTERNS §23. |
+| `EntityAvatar` | Every person or account rounded square, colored from `avatarUtils.ts`. UI_PATTERNS §23. |
 | `.eyebrow` | Mono uppercase label above a value or section. |
 
 `ToolbarButton`, the `xBase` / `xDefault` / `xActive` strings, `SearchPill`, `ViewTabBar` and
@@ -302,7 +293,7 @@ From `@/features/accounts/components/workspace/SectionRail`:
 - **Single-column pages** (Home, Demos, Social, settings-style pages): `.la-page-center`
   on the content column **inside** the scroll container, so the scrollbar stays at the window edge.
 - Details and the mistakes to avoid: `docs/content-width-cap.md`.
-- List panel width: `--toolbar-w` (300px).
+- List panel width: `--toolbar-w` (348px), the same on every page.
 
 ### 4.3 Breakpoints and mobile
 
@@ -337,19 +328,19 @@ Breakpoint tokens (they mirror the values used in media queries and JS, which ca
 - **A lead opens in one place:** the Chats page detail, `/platform/chat?lead=<id>`. Link to it with
   `leadPath()` or navigate with `openLead()`, both from `lib/leadLink.ts`. The old `/platform/leads` and
   `/platform/contacts/:id` only redirect there. Don't add another lead detail route.
-- **Channel pages** (Calls, Chats) are **work + Settings** for that channel: a "Call settings" /
-  "Chat settings" button in the topbar opens Settings, a back button returns. Their figures live on the one Home page (`/platform/home`); Socials keeps its own Insights. Per-account receptionist settings live in the channel's Settings view
+- **Channel pages** (Calls, Chats) are **work + Settings** for that channel: the topbar tabs are Calls | Call settings and
+  Chats | Chat settings. Their figures live on the one Home page (`/platform/home`); Socials keeps its own Insights. Per-account receptionist settings live in the channel's Settings view
   (`?view=settings&account=`).
 - **Accounts** is the business and its connections: Overview, Reactivation (agency only, when the
-  account has a reactivation campaign), Integrations, Alerts, Automations (owner only). One-time
+  account has a reactivation campaign), Integrations, Automations (owner only). One-time
   plumbing (numbers, WhatsApp, calendar, integrations) stays in Accounts > Integrations.
 - **Campaigns** are data, not a page. Each kind of campaign is edited where it lives: Accounts >
   Reactivation (reactivation campaigns) and Demos > Settings (the demo campaigns) open the one campaign
   settings screen (`CampaignStageEditor`); Chats > Settings > Advanced (`chat/ChatAdvanced`) edits the
   receptionist campaign's engine fields with the same `formFields` inputs. The old Campaigns page is
   retired: out of the nav, agency only at `/platform/campaigns` by URL.
-- **Settings** is the person: Profile, Security, Preferences, Notifications, Users, and Billing for clients.
-- **Alerts** decides which events are sent and to whom.
+- **Settings** is the person: Profile, Security, Preferences, Alerts, Users, and Billing for clients.
+- **Settings > Alerts** decides which events are sent and to whom, per account; its last tile is how they reach you yourself.
 - A page title uses the same i18n string as its nav label. Unfinished pages stay hidden until they are finished.
 
 ---

@@ -52,7 +52,7 @@ export function ChatsSideView({ tab, onTab, fallbackAccountId }: {
         />
       ) : (
         <div className="la-page-header" style={{ gap: 12, padding: "0 17px" }}>
-          <span className="la-page-title">{t("chatsTabs.settingsTitle")}</span>
+          <span className="la-page-title">{t("chatsTabs.chats")}</span>
           <ChatsPageTabs active={tab} onChange={onTab} />
           {tab === "settings" && <span ref={setPickerSlot} style={{ display: "contents" }} data-testid="chats-settings-picker-slot" />}
           <div className="flex-1 min-w-0" />

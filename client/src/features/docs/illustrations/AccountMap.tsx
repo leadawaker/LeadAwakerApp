@@ -3,14 +3,13 @@
  * and what each tab holds.
  */
 
-import { Building2, LayoutGrid, PhoneCall, MessageSquare, BellRing, Plug, MessageSquarePlus } from "lucide-react";
+import { Building2, LayoutGrid, PhoneCall, MessageSquare, Plug, MessageSquarePlus } from "lucide-react";
 import { Figure, type K } from "./parts";
 
 const TABS = [
   { key: "overview", icon: LayoutGrid },
   { key: "phone", icon: PhoneCall },
   { key: "chat", icon: MessageSquare },
-  { key: "alerts", icon: BellRing },
   { key: "integrations", icon: Plug },
 ] as const;
 

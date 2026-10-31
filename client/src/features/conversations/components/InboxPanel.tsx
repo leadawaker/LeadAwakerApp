@@ -581,7 +581,7 @@ export function InboxPanel({
   return (
     <section
       className={cn(
-        "flex flex-col bg-panel-list-bg rounded-lg overflow-hidden h-full",
+        "la-list-panel flex flex-col bg-panel-list-bg rounded-lg overflow-hidden h-full",
         className,
       )}
       data-testid="panel-inbox"

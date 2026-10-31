@@ -32,7 +32,7 @@ export function ScriptsPanel({ accountId, selectedId, onSelect }: { accountId: n
   const { t } = useTranslation("social");
   const scripts = useQuery({ queryKey: socialScriptsKey(accountId), queryFn: () => fetchScripts(accountId), staleTime: 15_000 });
   return (
-    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }} data-testid="studio-scripts">
+    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12, minWidth: 0 }} data-testid="studio-scripts">
       <div>
         <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "var(--ink)" }}>{t("scripts.title")}</h3>
         <p style={{ margin: "2px 0 0", fontSize: 12, color: "var(--mute)" }}>{t("scripts.help")}</p>

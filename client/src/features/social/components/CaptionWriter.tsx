@@ -52,7 +52,7 @@ export function CaptionWriter({ accountId, scriptId, scriptTitle, onPick }: {
       {options.length > 0 && !write.isPending && (
         <ol style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8 }} aria-label={t("captions.optionsLabel")}>
           {options.map((o, i) => (
-            <li key={i} className="neu-raised" style={{ borderRadius: "var(--r-surface)", background: "var(--bone)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }} data-testid={`caption-option-${i}`}>
+            <li key={i} className="neu-raised" style={{ borderRadius: "var(--r-surface)", background: "var(--card)", padding: "10px 12px", display: "flex", flexDirection: "column", gap: 8 }} data-testid={`caption-option-${i}`}>
               <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink-soft)", whiteSpace: "pre-wrap", lineHeight: 1.5 }}>{o}</p>
               <div>
                 <button type="button" className={picked === i ? "la-btn la-btn--wine" : "la-btn la-btn--plain"}

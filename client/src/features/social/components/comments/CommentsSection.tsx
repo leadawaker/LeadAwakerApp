@@ -12,7 +12,7 @@ import { deleteDmRule, dmLogKey, dmStatusKey, fetchDmLog, fetchDmStatus, updateD
 import { DmModeCard } from "./DmModeCard";
 import { DmRuleForm } from "./DmRuleForm";
 
-const card: React.CSSProperties = { borderRadius: "var(--r-card)", background: "var(--bone)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 };
+const card: React.CSSProperties = { borderRadius: "var(--r-card)", background: "var(--card)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 12 };
 const STATUS_COLOR: Record<DmLogView["status"], string> = {
   would_send: "var(--warn)", sending: "var(--mute)", sent: "var(--good)", failed: "hsl(var(--destructive))", skipped: "var(--mute)", received: "var(--wine)",
 };

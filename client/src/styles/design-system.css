@@ -37,10 +37,10 @@
   /* Offset/Blur Tiers */
   --d-supercrisp-o: 3px;  /* shallowest press — small buttons, tags, chips */
   --d-supercrisp-b: 4px;
-  --d-crisp-o: 8px;
-  --d-crisp-b: 8px;
-  --d-medium-o: 15px;
-  --d-medium-b: 15px;
+  --d-crisp-o: 6px;
+  --d-crisp-b: 7px;
+  --d-medium-o: 9px;
+  --d-medium-b: 8px;
   --d-large-o: 18px;
   --d-large-b: 18px;
 
@@ -408,13 +408,7 @@ body, html { margin: 0; padding: 0; }
 
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: saturate(160%) blur(32px);
-  -webkit-backdrop-filter: saturate(160%) blur(22px);
-  border: 2px solid var(--glass-border);
-  box-shadow:
-    inset calc(var(--lx) * 1px) calc(var(--ly) * 1px) 0 0 var(--glass-edge),
-    calc(var(--lx) * -40px) calc(var(--ly) * -40px) 70px -28px rgba(113, 82, 41, 0.45),
-    0 2px 10px -2px rgba(60, 45, 20, 0.1);
+  box-shadow: var(--sh-raised-medium);
   border-radius: 12px;
 }
 .glass-strong {
@@ -795,6 +789,99 @@ body, html { margin: 0; padding: 0; }
   padding: 18px 14px 8px;
 }
 
+/* The desktop nav bar is wine: its items turn bone. */
+.la-nav-rail .la-nav-item { color: var(--nav-ink-mute); }
+.la-nav-rail .la-nav-item .icon { color: var(--nav-ink-mute); }
+.la-nav-rail .la-nav-item:hover { background: var(--nav-hover); color: var(--nav-ink); }
+.la-nav-rail .la-nav-item.active { background: var(--nav-active); box-shadow: none; color: var(--nav-ink); animation: none; }
+.la-nav-rail .la-nav-item.active .icon { color: var(--nav-ink); }
+.la-nav-rail .la-nav-section { color: var(--nav-ink-mute); }
+.la-nav-rail .la-switcher { background: var(--nav-hover); box-shadow: none; color: var(--nav-ink); }
+.la-nav-rail .la-switcher:hover { background: var(--nav-active); color: var(--nav-ink); }
+.la-nav-rail .la-notif-btn { color: var(--nav-ink-mute); }
+.la-nav-rail .la-notif-btn:hover { background: var(--nav-hover); color: var(--nav-ink); }
+.la-nav-rail .la-profile { background: var(--nav-hover); box-shadow: none; color: var(--nav-ink); }
+.la-nav-rail .la-profile.open { background: var(--nav-active); box-shadow: none; }
+.la-nav-rail .la-profile-av { box-shadow: none; }
+.la-nav-rail .la-profile-menu { box-shadow: none; border: 1px solid var(--line); }
+
+/* Inside a card the fills that follow the page ground (wells, editors, chips) turn light
+   bone: nothing on a card is ever as dark as the ground behind it. */
+.neu-raised, .neu-raised-medium, .neu-raised-crisp, .neu-raised-large, .glass, .la-list-panel, .la-list-section-card,
+.neu-inset, .neu-inset-medium, .neu-inset-crisp, .neu-inset-super-crisp, .neu-input,
+.bg-card, .bg-popover, [style*="var(--card)"], [style*="var(--paper)"] {
+  --bg: var(--well);
+  --bg-main: var(--well-triple);
+  --background: var(--well-triple);
+  --color-background: var(--well);
+}
+
+/* The fold button of a list panel: takes no room, floats at the panel's bottom corner.
+   The list right before it gets the padding that keeps its last row clear of the button. */
+.la-fold-float { position: relative; flex-shrink: 0; height: 0; z-index: 3; }
+.la-fold-float > * { position: absolute !important; right: 8px; bottom: 8px; }
+.la-fold-float--center > * { right: 50%; transform: translateX(50%); }
+:has(+ .la-fold-float) { padding-bottom: 54px !important; }
+
+/* The row above a list: its filter tabs, in from the panel's edges. */
+.la-list-head { display: flex; align-items: center; gap: 8px; flex-shrink: 0; padding: 0 10px 12px; }
+.la-list-head > .la-seg, .la-list-head > [role="tablist"] { flex: 1; min-width: 0; }
+
+/* A titled section: the title sits on the page ground, the content on its own white card.
+   Used for list groups and the lead panels on Calls and Chats. */
+.la-list-section + .la-list-section { margin-top: 18px; }
+.la-list-section-title {
+  display: flex; align-items: baseline; gap: 8px; margin: 0; padding: 0 4px 8px;
+  font-family: var(--sans); font-size: 17px; font-weight: 700; line-height: 1.2; color: var(--ink);
+}
+.la-list-section-count { font-family: var(--mono); font-size: 11px; font-weight: 500; color: var(--mute); }
+.la-list-section-trailing { margin-left: auto; align-self: center; }
+.la-list-section-card {
+  --surface: var(--card);
+  background: var(--card);
+  border-radius: var(--r-card);
+  box-shadow: var(--sh-raised-medium);
+  overflow: hidden;
+}
+
+/* A list panel on a desktop: one white raised card on the page ground, instead of a
+   column with a line beside it. Beats the inline ground and border its pages set. */
+@media (min-width: 768px) {
+  .la-list-panel {
+    /* Above the pane beside it: that pane's ground would paint over this panel's highlight. */
+    position: relative;
+    z-index: 1;
+    background: var(--card) !important;
+    border-right: none !important;
+    border-radius: var(--r-card) !important;
+    box-shadow: var(--sh-raised-medium) !important;
+    height: calc(100% - 28px) !important;
+    max-width: calc(100% - 28px);
+    margin: 14px 0 14px 14px;
+    overflow: hidden;
+    /* What sits on the panel's old ground (sticky group rows, soft cards) turns white with it. */
+    --surface: var(--card);
+    --panel-list-bg: var(--card-triple);
+    --group-header-bg: var(--card-triple);
+    --color-panel-list-bg: var(--card);
+  }
+  /* The rows sit 6px from the panel's edge: a tight shadow, so the panel never cuts it. */
+  .la-list-panel .la-lead-swipe.is-active { box-shadow: none; }
+
+  /* Calls and Chats: no card of its own. Tabs and totals sit on the ground, each group is its own card. */
+  .la-list-panel--split {
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible;
+  }
+  /* On the ground, the same track as Demos' Category | Date (the panel's token reset does not apply here). */
+  .la-list-panel--split .la-seg { background: hsl(var(--ground-page)); }
+  /* Touch-only swipe trays need that clip; here it would cut the selected row's shadow. */
+  .la-list-panel--split .la-lead-swipe { overflow: visible !important; }
+  /* Reaches past the panel so a card's shadow is never cut by this scroller. */
+  .la-list-panel--split .la-split-scroll { margin: 0 -14px; padding: 2px 14px 14px !important; }
+}
+
 .la-mono-tile {
   width: 44px; height: 44px;
   border-radius: 10px;
@@ -871,9 +958,7 @@ body, html { margin: 0; padding: 0; }
 .la-page-header {
   height: 60px;
   flex-shrink: 0;
-  background: var(--surface);
-  border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
+  background: var(--bg);
   display: flex;
   align-items: center;
   gap: 16px;
@@ -891,6 +976,15 @@ body, html { margin: 0; padding: 0; }
   font-family: var(--sans); font-weight: 700; font-size: 22px; line-height: 1.1;
   color: var(--ink); letter-spacing: -0.015em; white-space: nowrap; flex-shrink: 0;
 }
+/* White on the ground: the soft buttons and the tab track. */
+.la-page-header .la-btn--soft:not(.on) { background: var(--card); }
+.la-page-header .la-seg { background: var(--card); box-shadow: var(--sh-raised-crisp); }
+.la-page-header .la-seg--main .la-seg-btn.on { box-shadow: none; }
+
+/* The edit actions in a prompt's header: a step smaller than a panel's buttons. */
+.la-prompt-actions .la-btn { height: 28px !important; min-width: 28px; }
+.la-prompt-actions .la-btn--icon { width: 28px; padding: 0; }
+
 .la-page-header .la-seg--main .la-seg-btn { height: 36px; padding: 0 15px; gap: 7px; font-size: 13.5px; }
 .la-page-header .la-seg--main.la-seg--compact .la-seg-btn { height: 32px; padding: 0 13px; }
 .la-page-header .la-seg--main .la-seg-btn svg { width: 16px; height: 16px; }
@@ -901,7 +995,7 @@ body, html { margin: 0; padding: 0; }
 .la-page-header .la-btn--icon { width: var(--tb-ctl); padding: 0; gap: 0; }
 .la-page-header .icon-circle-lg { width: var(--tb-ctl); height: var(--tb-ctl); }
 .la-page-header .icon-circle-lg svg { width: 16px; height: 16px; }
-.la-page-header .la-switcher { height: var(--tb-ctl); padding: 0 14px; font-size: 11px; }
+.la-page-header .la-switcher { height: var(--tb-ctl); padding: 0 14px; font-size: 11px; background: var(--card); box-shadow: var(--sh-raised-crisp); }
 
 /* Phone headers (MobileListHeader): 40px round buttons with 18px icons, 40px / 14px tabs. */
 .la-m-hbtn svg { width: 18px; height: 18px; }
@@ -1211,3 +1305,11 @@ body, html { margin: 0; padding: 0; }
     rgba(255, 240, 220, 0.03),
     inset 0 1px 0 0 rgba(255, 240, 220, 0.05);
 }
+
+/* Prompt editor's voice preview: a filled-in value that opens its editor on click. */
+.la-voice-editable mark[data-var="company_name"], .la-voice-editable mark[data-var="business"],
+.la-voice-editable mark[data-var="agent_name"], .la-voice-editable mark[data-var="tone"],
+.la-voice-editable mark[data-var="address"], .la-voice-editable mark[data-var="pronunciation"] {
+  cursor: pointer;
+}
+.la-voice-editable mark[data-var]:hover { box-shadow: 0 0 0 1px currentColor; }

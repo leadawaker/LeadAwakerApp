@@ -33,10 +33,10 @@ import enCalendar from "./locales/en/calendar.json";
 import enTags from "./locales/en/tags.json";
 import enSetup from "./locales/en/setup.json";
 import enCommunicationProfile from "./locales/en/communicationProfile.json";
-import enSpeedToLead from "./locales/en/speedToLead.json";
 import enVoiceTab from "./locales/en/voiceTab.json";
 import enVoiceCoach from "./locales/en/voiceCoach.json";
 import enChatTab from "./locales/en/chatTab.json";
+import enReactivationSettings from "./locales/en/reactivationSettings.json";
 import enWhatsappCloud from "./locales/en/whatsappCloud.json";
 import enClientAlerts from "./locales/en/clientAlerts.json";
 import enSocial from "./locales/en/social.json";
@@ -69,10 +69,10 @@ import ptCalendar from "./locales/pt/calendar.json";
 import ptTags from "./locales/pt/tags.json";
 import ptSetup from "./locales/pt/setup.json";
 import ptCommunicationProfile from "./locales/pt/communicationProfile.json";
-import ptSpeedToLead from "./locales/pt/speedToLead.json";
 import ptVoiceTab from "./locales/pt/voiceTab.json";
 import ptVoiceCoach from "./locales/pt/voiceCoach.json";
 import ptChatTab from "./locales/pt/chatTab.json";
+import ptReactivationSettings from "./locales/pt/reactivationSettings.json";
 import ptWhatsappCloud from "./locales/pt/whatsappCloud.json";
 import ptClientAlerts from "./locales/pt/clientAlerts.json";
 import ptSocial from "./locales/pt/social.json";
@@ -105,10 +105,10 @@ import nlCalendar from "./locales/nl/calendar.json";
 import nlTags from "./locales/nl/tags.json";
 import nlSetup from "./locales/nl/setup.json";
 import nlCommunicationProfile from "./locales/nl/communicationProfile.json";
-import nlSpeedToLead from "./locales/nl/speedToLead.json";
 import nlVoiceTab from "./locales/nl/voiceTab.json";
 import nlVoiceCoach from "./locales/nl/voiceCoach.json";
 import nlChatTab from "./locales/nl/chatTab.json";
+import nlReactivationSettings from "./locales/nl/reactivationSettings.json";
 import nlWhatsappCloud from "./locales/nl/whatsappCloud.json";
 import nlClientAlerts from "./locales/nl/clientAlerts.json";
 import nlSocial from "./locales/nl/social.json";
@@ -143,10 +143,10 @@ const resources = {
     tags: enTags,
     setup: enSetup,
     communicationProfile: enCommunicationProfile,
-    speedToLead: enSpeedToLead,
     voiceTab: enVoiceTab,
     voiceCoach: enVoiceCoach,
     chatTab: enChatTab,
+    reactivationSettings: enReactivationSettings,
     whatsappCloud: enWhatsappCloud,
     clientAlerts: enClientAlerts,
     social: enSocial,
@@ -180,10 +180,10 @@ const resources = {
     tags: ptTags,
     setup: ptSetup,
     communicationProfile: ptCommunicationProfile,
-    speedToLead: ptSpeedToLead,
     voiceTab: ptVoiceTab,
     voiceCoach: ptVoiceCoach,
     chatTab: ptChatTab,
+    reactivationSettings: ptReactivationSettings,
     whatsappCloud: ptWhatsappCloud,
     clientAlerts: ptClientAlerts,
     social: ptSocial,
@@ -217,10 +217,10 @@ const resources = {
     tags: nlTags,
     setup: nlSetup,
     communicationProfile: nlCommunicationProfile,
-    speedToLead: nlSpeedToLead,
     voiceTab: nlVoiceTab,
     voiceCoach: nlVoiceCoach,
     chatTab: nlChatTab,
+    reactivationSettings: nlReactivationSettings,
     whatsappCloud: nlWhatsappCloud,
     clientAlerts: nlClientAlerts,
     social: nlSocial,
@@ -265,10 +265,10 @@ i18n
       "tags",
       "setup",
       "communicationProfile",
-      "speedToLead",
       "voiceTab",
       "voiceCoach",
       "chatTab",
+      "reactivationSettings",
       "whatsappCloud",
       "clientAlerts",
       "social",

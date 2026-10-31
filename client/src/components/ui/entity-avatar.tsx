@@ -7,7 +7,7 @@ interface EntityAvatarProps {
   name: string;
   /** Photo URL (avatar_url, logo_url, etc.) — photo takes priority when truthy */
   photoUrl?: string | null;
-  /** Background color for initials circle */
+  /** Background color for the initials tile */
   bgColor: string;
   /** Text color for initials */
   textColor: string;
@@ -45,7 +45,7 @@ export function EntityAvatar({
   if (photoUrl && !imgError) {
     return (
       <div
-        className={cn("rounded-full overflow-hidden shrink-0", isNamed ? sizeClass.split(" ").slice(0, 2).join(" ") : (SIZE_MAP[size as number] ? sizeClass.split(" ").slice(0, 2).join(" ") : undefined), className)}
+        className={cn("rounded-[28%] overflow-hidden shrink-0", isNamed ? sizeClass.split(" ").slice(0, 2).join(" ") : (SIZE_MAP[size as number] ? sizeClass.split(" ").slice(0, 2).join(" ") : undefined), className)}
         style={{ backgroundColor: bgColor, ...sizeStyle }}
       >
         <img
@@ -60,7 +60,7 @@ export function EntityAvatar({
 
   return (
     <div
-      className={cn("rounded-full flex items-center justify-center font-bold shrink-0 leading-none", sizeClass, className)}
+      className={cn("rounded-[28%] flex items-center justify-center font-bold shrink-0 leading-none", sizeClass, className)}
       style={{ backgroundColor: bgColor, color: textColor, ...sizeStyle }}
     >
       {getInitials(name)}

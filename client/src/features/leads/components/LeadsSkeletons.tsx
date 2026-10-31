@@ -1,6 +1,8 @@
 // Loading skeletons for the Chats and Leads pages, shaped like the real layout:
 // the table (header, group band, 52px rows), the pipeline columns, and the
 // Chats detail pane (hero, recap sidebar on the left, chat on the right).
+import { ListHeadSkeleton, ListSection, SplitListSkeleton } from "@/components/crm/primitives";
+
 const bar = "bg-primary/10 rounded-full";
 
 /** Leads Table view: sticky header, one group band, then 52px rows. */
@@ -68,8 +70,8 @@ export function KanbanSkeleton({ columns = 8 }: { columns?: number }) {
 }
 
 /**
- * Chats detail pane: hero card, then the recap sidebar (310px, left) and the
- * glass chat panel (right), capped at 1100px and centred like LeadDetailView.
+ * Chats detail pane: hero card, then the Recap and Contact cards (left) and the
+ * chat panel (right), capped at 1100px and centred like LeadDetailView.
  */
 export function ChatsDetailSkeleton() {
   return (
@@ -94,16 +96,22 @@ export function ChatsDetailSkeleton() {
           </div>
         </div>
         <div className="flex-1 min-h-0 flex" style={{ gap: 14 }}>
-          <div className="neu-raised animate-pulse shrink-0 flex flex-col" style={{ width: 310, borderRadius: "var(--r-card)", background: "var(--card)", padding: 18, gap: 14 }}>
-            <div className={`h-2 w-20 ${bar}`} />
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <div className={`h-2 w-16 ${bar}`} style={{ opacity: 0.6 }} />
-                <div className={`h-3 ${bar}`} style={{ width: `${60 + i * 8}%` }} />
+          <div className="animate-pulse shrink-0" style={{ width: 338 }}>
+            <ListSection label={<span className={`block h-3.5 w-16 ${bar}`} style={{ marginBlock: 3 }} />}>
+              <div className="space-y-2" style={{ padding: 16 }}>
+                {Array.from({ length: 3 }).map((_, i) => <div key={i} className={`h-2.5 ${bar}`} style={{ width: `${88 - i * 14}%`, opacity: 0.7 }} />)}
               </div>
-            ))}
-            <div className="h-px w-full bg-primary/10 my-1" />
-            {Array.from({ length: 3 }).map((_, i) => <div key={i} className={`h-2.5 ${bar}`} style={{ width: `${70 - i * 12}%`, opacity: 0.7 }} />)}
+            </ListSection>
+            <ListSection label={<span className={`block h-3.5 w-20 ${bar}`} style={{ marginBlock: 3 }} />}>
+              <div className="flex flex-col" style={{ padding: 16, gap: 14 }}>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div key={i} className="space-y-2">
+                    <div className={`h-2 w-16 ${bar}`} style={{ opacity: 0.6 }} />
+                    <div className={`h-3 ${bar}`} style={{ width: `${60 + i * 8}%` }} />
+                  </div>
+                ))}
+              </div>
+            </ListSection>
           </div>
           <div className="glass flex-1 min-w-0 flex flex-col" style={{ borderRadius: "var(--r-card)", padding: 18, gap: 12 }}>
             {[0, 1, 0, 1, 1, 0].map((out, i) => (
@@ -152,7 +160,7 @@ export function CardListSkeleton({ peek = false }: { peek?: boolean }) {
 /** Quick-filter row under the Leads topbar. */
 function QuickFiltersSkeleton() {
   return (
-    <div className="shrink-0 flex items-center gap-3 animate-pulse" style={{ padding: "9px 17px", borderBottom: "1px solid var(--line)" }}>
+    <div className="shrink-0 flex items-center gap-3 animate-pulse" style={{ padding: "9px 17px" }}>
       {[230, 260].map((w, i) => <div key={i} className="h-[30px] rounded-[var(--r-button)] bg-primary/10" style={{ width: w }} />)}
     </div>
   );
@@ -166,8 +174,9 @@ export function LeadsRouteSkeleton({ mode }: { mode: "conversations" | "contacts
   if (mode === "conversations") {
     return (
       <div className="flex min-h-0 flex-1">
-        <div className="hidden md:flex flex-col shrink-0 overflow-hidden" style={{ width: 348, borderRight: "1px solid var(--line)", padding: "3px 6px" }}>
-          <CardListSkeleton peek />
+        <div className="la-list-panel la-list-panel--split hidden md:flex flex-col shrink-0" style={{ width: "var(--toolbar-w)" }}>
+          <ListHeadSkeleton />
+          <div className="la-split-scroll flex-1 min-h-0 overflow-hidden"><SplitListSkeleton /></div>
         </div>
         <div className="hidden lg:flex flex-1 min-w-0"><ChatsDetailSkeleton /></div>
       </div>

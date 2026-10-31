@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
 import { ChevronLeft } from "lucide-react";
 import { CrmShell } from "@/components/crm/CrmShell";
 import { useCompactPanelState } from "@/components/crm/CompactEntityRail";
@@ -103,10 +102,9 @@ export default function OutreachInbox() {
   // Shared global list-panel state (Prospects/Leads/Campaigns/Chats all cycle together).
   const { ref: chatPanelAreaRef, narrow: chatPanelNarrow } = useCompactPanelState(false, { activateBelow: 720, deactivateAbove: 960 });
   const { state: listPanelState } = useListPanelState();
-  // List fold button (panel header): full → compact → hidden.
+  // List fold button: full ↔ small.
   useListPanelFold(!isMobile);
   const isListCompact = !isMobile && (listPanelState === "compact" || (listPanelState === "full" && chatPanelNarrow));
-  const isListHidden = listPanelState === "hidden";
 
   const selectedThread = useMemo(
     () => prospectThreads.find((p) => p.prospect_id === selectedProspectId) ?? null,
@@ -169,23 +167,14 @@ export default function OutreachInbox() {
             onSelectProspect={handleSelectProspect}
             onDialProspect={handleDialProspect}
             prospectFilters={prospectFilters}
-            listPanelState={isListHidden ? "hidden" : isListCompact ? "compact" : "full"}
+            listPanelState={isListCompact ? "compact" : "full"}
             className={cn(
-              isListHidden
-                ? cn(mobileView === "chat" ? "hidden" : "flex", "lg:hidden")
-                : isListCompact
-                  ? cn("w-[65px] lg:flex-shrink-0", mobileView === "chat" ? "hidden lg:flex" : "flex")
-                  : cn("w-full lg:w-[340px] lg:flex-shrink-0", mobileView === "chat" ? "hidden lg:flex" : "flex")
+              isListCompact
+                ? cn("w-[65px] lg:flex-shrink-0", mobileView === "chat" ? "hidden lg:flex" : "flex")
+                : cn("w-full lg:w-[var(--toolbar-w)] lg:flex-shrink-0", mobileView === "chat" ? "hidden lg:flex" : "flex")
             )}
             data-testid="outreach-inbox-panel"
           />
-          {/* Hidden list: the slim strip that brings it back */}
-          {!isMobile && isListHidden && (
-            <div className="hidden lg:flex rounded-lg overflow-hidden">
-              <ListPanelUnfoldButton />
-            </div>
-          )}
-
           {/* Right panel: prospect chat */}
           <div
             ref={chatPanelAreaRef}

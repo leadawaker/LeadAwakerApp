@@ -144,17 +144,15 @@ const COLUMN_BATCH_SIZE = 30;
 
 /* ─────────── Stage avatar — colored rounded square with mono initials ─────────── */
 
-function StageAvatar({ name, status, size = 30, radius = 8 }: { name: string; status: string; size?: number; radius?: number }) {
-  const { isDark } = useTheme();
-  const hex = stageHex(status);
+function StageAvatar({ name, status, size = 30 }: { name: string; status: string; size?: number }) {
   const avatarColor = getLeadStatusAvatarColor(stageColorKey(status));
   return (
     <div
       style={{
-        width: size, height: size, borderRadius: radius, flexShrink: 0,
-        background: isDark ? avatarColor.bg : hex,
+        width: size, height: size, borderRadius: Math.round(size * 0.27), flexShrink: 0,
+        background: avatarColor.bg,
         display: "flex", alignItems: "center", justifyContent: "center",
-        color: isDark ? avatarColor.text : "#fff", fontFamily: "var(--mono)", fontWeight: 600,
+        color: avatarColor.text, fontFamily: "var(--mono)", fontWeight: 600,
         fontSize: Math.round(size * 0.34), letterSpacing: "0.01em",
         boxShadow: "var(--sh-raised-crisp)",
       }}
@@ -365,7 +363,7 @@ function KanbanCardContent({
           {/* Main row: [avatar center-aligned] | name stacked | last interaction */}
           <div className="flex items-center gap-1.5 min-w-0">
             {compactAvatarPx !== null && (
-              <StageAvatar name={name} status={status} size={compactAvatarPx} radius={6} />
+              <StageAvatar name={name} status={status} size={compactAvatarPx} />
             )}
             {/* Name + booked date stacked, center-aligned with avatar */}
             <div className="flex-1 min-w-0 flex flex-col justify-center">
@@ -432,7 +430,7 @@ function KanbanCardContent({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 9 }}>
-        <StageAvatar name={name} status={status} size={30} radius={8} />
+        <StageAvatar name={name} status={status} size={30} />
 
         {/* Name + "{ago} ago" stacked */}
         <div style={{ flex: 1, minWidth: 0 }}>

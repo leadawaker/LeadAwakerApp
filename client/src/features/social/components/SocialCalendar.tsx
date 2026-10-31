@@ -61,7 +61,7 @@ export function SocialCalendar({ accountId, timeZone }: { accountId: number; tim
     : t("calendar.range", { from: fmt(week[0], { day: "numeric", month: "short" }), to: fmt(week[6], { day: "numeric", month: "short" }) });
 
   return (
-    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--bone)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 14 }} data-testid="social-calendar">
+    <section className="neu-raised" style={{ borderRadius: "var(--r-card)", background: "var(--card)", padding: "16px 18px", display: "flex", flexDirection: "column", gap: 14 }} data-testid="social-calendar">
       <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
         <IconBtn onClick={() => move(-1)} title={t("calendar.prev")} aria-label={t("calendar.prev")}><ChevronLeft className="w-4 h-4" /></IconBtn>
         <span style={{ fontSize: 14, fontWeight: 700, color: "var(--ink)", minWidth: 120, textAlign: "center", textTransform: "capitalize" }} aria-live="polite">{label}</span>

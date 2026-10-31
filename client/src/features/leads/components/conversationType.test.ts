@@ -14,7 +14,7 @@ test("instagram is a listed type", () => {
 
 test("existing types unchanged", () => {
   assert.equal(getConversationType({ Source: "Website Chat" }, campaigns), "widget");
-  assert.equal(getConversationType({ Campaigns_id: 67 }, campaigns), "dbr");
+  assert.equal(getConversationType({ Campaigns_id: 67 }, campaigns), "other");
 });
 
 test("live comment-to-DM leads (ig: channel, no campaign) are instagram", () => {

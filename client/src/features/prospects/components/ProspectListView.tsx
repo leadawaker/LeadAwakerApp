@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import { ListPanelFooter, ListPanelUnfoldButton } from "@/components/crm/ListPanelToggleButton";
+import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import {
   ArrowUpDown, ArrowUp, ArrowDown, Filter, Plus, Check,
   Clock, Layers, MapPin, Building2, MoreVertical, Search, X,
@@ -162,7 +162,6 @@ export function ProspectListView({
 
   // Auto-squeeze to compact when right panel is narrow (only if user hasn't explicitly hidden).
   const isCompact = !isNarrow && (leftPanelState === "compact" || (leftPanelState === "full" && rightPanelNarrow));
-  const isHidden = !isNarrow && leftPanelState === "hidden";
 
   // Compact hover card state (shared hook). scrollContainerRef is declared below;
   // findEl is memoized so it captures the ref by closure, read lazily at hover time.
@@ -576,12 +575,10 @@ export function ProspectListView({
 
       {/* ── LEFT PANEL ──────────────────────────────────────────────── */}
       <div className={cn(
-        "flex-col bg-panel-list-bg rounded-lg overflow-hidden shadow-[var(--card-glow)]",
-        isHidden
-          ? cn(isNarrow && selectedProspect ? "hidden" : "flex", "lg:hidden")
-          : isCompact
-            ? cn("w-[65px] shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
-            : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
+        "la-list-panel flex-col bg-panel-list-bg rounded-lg overflow-hidden shadow-[var(--card-glow)]",
+        isCompact
+          ? cn("w-[65px] shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
+          : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedProspect ? "hidden" : "flex")
       )}>
         {/* Scrollable prospect list */}
         <div ref={scrollContainerRef} className="la-list-area">
@@ -693,13 +690,6 @@ export function ProspectListView({
             hideAvatar
           />
         </CompactHoverCardPortal>
-      )}
-
-      {/* Hidden list: the slim strip that brings it back */}
-      {isHidden && (
-        <div className="flex rounded-lg overflow-hidden shadow-[var(--card-glow)]">
-          <ListPanelUnfoldButton />
-        </div>
       )}
 
       {/* ── RIGHT PANEL ──────────────────────────────────────────────── */}
