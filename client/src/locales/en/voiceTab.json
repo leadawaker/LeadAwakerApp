@@ -336,6 +336,7 @@
       "engine": "Engine",
       "engines": {
         "gpt-live": "GPT Live",
+        "gemini-live": "Gemini Live",
         "elevenlabs": "ElevenLabs"
       },
       "testOnly": "Test only. Real callers keep this line's own settings.",
@@ -348,7 +349,8 @@
       "filedNote": "Test calls show in the list below, not in this client's stats or CRM.",
       "besideNote": "The test panel is on the right, beside every section. Test calls show below.",
       "error": {
-        "gptLive": "The GPT Live test could not be started."
+        "gptLive": "The GPT Live test could not be started.",
+        "geminiLive": "The Gemini Live test could not be started."
       },
       "phase": {
         "connecting": "Connecting",
@@ -419,6 +421,15 @@
         "wants": "Wants",
         "notes": "Notes",
         "outcome": "Outcome"
+      },
+      "gemini": {
+        "voice": "Gemini voice",
+        "voiceHelp": "Press play to hear a Dutch sample. Test only.",
+        "gender": {
+          "female": "Female",
+          "male": "Male"
+        },
+        "note": "Gemini Live experiment: same persona and knowledge, Dutch, with the stock tools and the demo diary. Calls end after 10 minutes."
       }
     },
     "facts": {

@@ -72,3 +72,10 @@ test("the key is per account and line", () => {
   assert.notEqual(prefsKey(1, 7), prefsKey(1, 8));
   assert.notEqual(prefsKey(1, null), prefsKey(2, null));
 });
+
+test("a Gemini Live pick is kept while the line's engine stays the same", () => {
+  const d = defaultTestPrefs(num({ engine: "gpt-live" }));
+  const st = memory();
+  saveTestPrefs(st, "k", { engine: "gemini-live", llm: d.llm }, d);
+  assert.equal(loadTestPrefs(st, "k", d).engine, "gemini-live");
+});

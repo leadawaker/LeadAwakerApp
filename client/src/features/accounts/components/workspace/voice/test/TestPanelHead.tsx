@@ -1,4 +1,5 @@
-// The test panel's head: the GPT Live | ElevenLabs tab (hidden while SHOW_ELEVEN is off),
+// The test panel's head: the engine tab (GPT Live, Gemini Live on the Robben experiment
+// account, ElevenLabs while SHOW_ELEVEN is on; hidden when GPT Live is the only one),
 // the GPT Live pick under it (Sol | Terra | Luna; ElevenLabs always runs Realtime Max), and
 // the Test button (Hang up during a call). On ElevenLabs a saved prompt draft adds Test draft
 // under it: the same call on the draft, with writes faked. All picks are test only; they
@@ -13,6 +14,7 @@ import { SHOW_ELEVEN } from "../lineEngine";
 import { promptLangOf, useElevenDraft } from "../coach/coachApi";
 import type { VoiceLine, VoiceLinePatch } from "../voiceApi";
 import { TEST_ENGINES } from "./testPanelPrefs";
+import { GeminiVoicePicker } from "./GeminiVoicePicker";
 import { isCallBusy, useVoiceTest } from "./VoiceTestProvider";
 
 const noteStyle = { ...helpStyle, margin: 0 } as const;
@@ -31,11 +33,12 @@ export function TestPanelHead({ line }: {
   // The call runs on the draft of this line's own language: no button when that one has none, or during a call.
   const draft = useElevenDraft(line.accountId, promptLangOf(line.locale));
   const canTestDraft = engine === "elevenlabs" && canTest && !busy && draft.data?.hasDraft === true;
+  const engines = TEST_ENGINES.filter((e) => (e === "elevenlabs" ? SHOW_ELEVEN : e === "gemini-live" ? test.geminiAvailable : true));
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }} data-testid="voice-test-head">
-      {SHOW_ELEVEN && <div className="la-seg la-seg--fill" role="tablist" aria-label={t("test.panel.engine")}>
-        {TEST_ENGINES.map((e) => (
+      {engines.length > 1 && <div className="la-seg la-seg--fill" role="tablist" aria-label={t("test.panel.engine")}>
+        {engines.map((e) => (
           <button
             key={e} type="button" role="tab" aria-selected={engine === e}
             className={engine === e ? "la-seg-btn on" : "la-seg-btn"}
@@ -55,6 +58,7 @@ export function TestPanelHead({ line }: {
             disabledOptions={busy ? [...LLM_KEYS] : undefined} onChange={test.setLlm} />
         </div>
       )}
+      {engine === "gemini-live" && <GeminiVoicePicker />}
       <p style={noteStyle}>{t("test.panel.testOnly")}</p>
       {SHOW_ELEVEN && isAgencyUser && !line.number && <p style={noteStyle} data-testid="voice-test-eleven-no-number">{t("test.panel.elevenNoNumber")}</p>}
 
@@ -63,14 +67,15 @@ export function TestPanelHead({ line }: {
 
       {!canTest && <p style={{ ...noteStyle, textAlign: "center" }}>{t("test.needsPersona")}</p>}
       {canTest && engine === "elevenlabs" && <p style={noteStyle}>{t("test.eleven.note")}</p>}
+      {canTest && engine === "gemini-live" && <p style={noteStyle} data-testid="voice-test-gemini-note">{t("test.panel.gemini.note")}</p>}
       {canTestDraft && <p style={noteStyle} data-testid="voice-test-draft-note">{tc("testDraft.note")}</p>}
       {phase === "live" && <p style={{ ...noteStyle, color: "var(--ink-soft)" }} data-testid="voice-test-live-note">{t("test.panel.liveNote")}</p>}
       {test.error && (
         <p role="alert" style={{ ...noteStyle, color: "hsl(var(--destructive))" }} data-testid="voice-test-error">
           {test.error.engine === "elevenlabs"
             ? (test.error.key === "noDraft" ? tc("testDraft.noDraft") : t(`test.eleven.error.${test.error.key}`))
-            : t("test.panel.error.gptLive")}
-          {test.error.engine === "gpt-live" && (
+            : test.error.engine === "gemini-live" ? t("test.panel.error.geminiLive") : t("test.panel.error.gptLive")}
+          {test.error.engine !== "elevenlabs" && (
             <span style={{ display: "block", fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute)", marginTop: 4 }}>{test.error.message}</span>
           )}
         </p>

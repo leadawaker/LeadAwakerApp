@@ -336,6 +336,7 @@
       "engine": "Motor",
       "engines": {
         "gpt-live": "GPT Live",
+        "gemini-live": "Gemini Live",
         "elevenlabs": "ElevenLabs"
       },
       "testOnly": "Só para o teste. Quem liga de verdade continua com as configurações desta linha.",
@@ -348,7 +349,8 @@
       "filedNote": "As ligações de teste aparecem na lista abaixo, fora das estatísticas e do CRM deste cliente.",
       "besideNote": "O painel de teste fica à direita, ao lado de cada seção. As ligações de teste aparecem abaixo.",
       "error": {
-        "gptLive": "Não foi possível iniciar o teste no GPT Live."
+        "gptLive": "Não foi possível iniciar o teste no GPT Live.",
+        "geminiLive": "Não foi possível iniciar o teste do Gemini Live."
       },
       "phase": {
         "connecting": "Conectando",
@@ -419,6 +421,15 @@
         "wants": "Quer",
         "notes": "Notas",
         "outcome": "Resultado"
+      },
+      "gemini": {
+        "voice": "Voz do Gemini",
+        "voiceHelp": "Aperte play para ouvir uma amostra em holandês. Só para teste.",
+        "gender": {
+          "female": "Feminina",
+          "male": "Masculina"
+        },
+        "note": "Experimento Gemini Live: mesma persona e conhecimento, em holandês, com as ferramentas de estoque e a agenda de demonstração. As ligações terminam após 10 minutos."
       }
     },
     "facts": {

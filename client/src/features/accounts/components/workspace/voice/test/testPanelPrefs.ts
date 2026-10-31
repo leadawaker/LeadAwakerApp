@@ -6,8 +6,9 @@ import { effectiveLlm } from "../lineEngine";
 import { LLM_KEYS, type LlmKey } from "../llmOptions";
 import type { VoiceNumber } from "../voiceApi";
 
-export type TestEngine = "gpt-live" | "elevenlabs";
-export const TEST_ENGINES: TestEngine[] = ["gpt-live", "elevenlabs"];
+export type TestEngine = "gpt-live" | "gemini-live" | "elevenlabs";
+/** Gemini Live is offered on the Robben experiment account only (geminiAccess.ts). */
+export const TEST_ENGINES: TestEngine[] = ["gpt-live", "gemini-live", "elevenlabs"];
 
 export interface TestPrefs {
   engine: TestEngine;

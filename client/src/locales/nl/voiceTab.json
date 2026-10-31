@@ -336,6 +336,7 @@
       "engine": "Engine",
       "engines": {
         "gpt-live": "GPT Live",
+        "gemini-live": "Gemini Live",
         "elevenlabs": "ElevenLabs"
       },
       "testOnly": "Alleen voor de test. Echte bellers houden de eigen instellingen van deze lijn.",
@@ -348,7 +349,8 @@
       "filedNote": "Testgesprekken staan in de lijst hieronder, niet in de cijfers of het CRM van deze klant.",
       "besideNote": "Het testpaneel staat rechts, naast elke sectie. Testgesprekken staan hieronder.",
       "error": {
-        "gptLive": "De GPT Live-test kon niet worden gestart."
+        "gptLive": "De GPT Live-test kon niet worden gestart.",
+        "geminiLive": "De Gemini Live-test kon niet starten."
       },
       "phase": {
         "connecting": "Verbinden",
@@ -419,6 +421,15 @@
         "wants": "Wil",
         "notes": "Notities",
         "outcome": "Uitkomst"
+      },
+      "gemini": {
+        "voice": "Gemini-stem",
+        "voiceHelp": "Druk op afspelen voor een Nederlands voorbeeld. Alleen voor de test.",
+        "gender": {
+          "female": "Vrouw",
+          "male": "Man"
+        },
+        "note": "Gemini Live-experiment: dezelfde persona en kennis, in het Nederlands, met de voorraadtools en de demo-agenda. Gesprekken stoppen na 10 minuten."
       }
     },
     "facts": {

@@ -1,7 +1,8 @@
 // The Voice tab's test call, above the section switch so changing sections never
 // drops a call or its review (specs/voice-test-panel/design.md, "Panel scope").
-// One provider holds both engines: GPT Live (useLiveCall, the /voice-demo hook,
-// started as a staff test of this account's line) and ElevenLabs (useElevenTestCall).
+// One provider holds the engines: GPT Live (useLiveCall, the /voice-demo hook,
+// started as a staff test of this account's line), Gemini Live (useGeminiLiveCall,
+// the Robben experiment account only) and ElevenLabs (useElevenTestCall).
 // The engine tab and the GPT Live LLM are test-only picks
 // (testPanelPrefs). Starting first waits for pending autosaves, so the call runs on
 // the saved prompt. Leaving the account hangs up.
@@ -9,6 +10,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { useQueryClient } from "@tanstack/react-query";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { useLiveCall } from "@/features/voiceDemo/useLiveCall";
+import { useGeminiLiveCall } from "@/features/voiceDemo/gemini/useGeminiLiveCall";
 import { demoCallerNumber } from "@/features/voiceDemo/demoNumber";
 import { PHONE_STORAGE_KEY, VOICE_DEMO_PASSWORDS, storedVoicePassword } from "@/features/voiceDemo/door";
 import type { CallState, VoiceLocale } from "@/features/voiceDemo/types";
@@ -22,6 +24,7 @@ import {
   browserStorage, defaultTestPrefs, loadTestPrefs, prefsKey, saveTestPrefs,
   type TestEngine, type TestPrefs,
 } from "./testPanelPrefs";
+import { geminiAvailable, loadGeminiVoice, saveGeminiVoice } from "./geminiAccess";
 
 export type TestPhase = "idle" | "connecting" | "live" | "ending" | "review";
 
@@ -38,7 +41,7 @@ export interface LiveView {
 
 export type TestError =
   | { engine: "elevenlabs"; key: ElevenTestError }
-  | { engine: "gpt-live"; message: string };
+  | { engine: "gpt-live" | "gemini-live"; message: string };
 
 export interface VoiceTestValue {
   /** The engine tab (GPT Live when ElevenLabs is not available here). */
@@ -47,6 +50,10 @@ export interface VoiceTestValue {
   llm: LlmKey;
   setLlm(k: LlmKey): void;
   /** The voice layer this test runs on: the account's live pick, or one tried here only. */
+  /** Gemini Live is offered here (the Robben experiment account, agency users). */
+  geminiAvailable: boolean;
+  geminiVoice: string;
+  setGeminiVoice(v: string): void;
   /** ElevenLabs tests need the agency (the relay is agency only) and a number on the line. */
   elevenAvailable: boolean;
   phase: TestPhase;
@@ -150,6 +157,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
   }, []);
 
   const gpt = useLiveCall();
+  const gem = useGeminiLiveCall();
   const eleven = useElevenTestCall(line.accountId, line.number?.id ?? 0);
 
   // --- picks -----------------------------------------------------------------
@@ -173,7 +181,12 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
   }, [key, defaults]);
 
   const elevenAvailable = SHOW_ELEVEN && isAgencyUser && !!line.number;
-  const engine: TestEngine = elevenAvailable ? prefs.engine : "gpt-live";
+  const geminiOk = geminiAvailable(line.accountId, isAgencyUser);
+  const engine: TestEngine =
+    prefs.engine === "gemini-live" ? (geminiOk ? "gemini-live" : "gpt-live")
+      : prefs.engine === "elevenlabs" ? (elevenAvailable ? "elevenlabs" : "gpt-live")
+        : "gpt-live";
+  const [geminiVoice, setGeminiVoiceState] = useState<string>(() => loadGeminiVoice());
 
   // --- phase -----------------------------------------------------------------
   const [callEngine, setCallEngine] = useState<TestEngine>(engine);
@@ -188,9 +201,10 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
   // Hung up while the autosaves were still flushing: the call is never started.
   const cancelled = useRef(false);
 
-  const active: CallPhase = callEngine === "elevenlabs" ? elevenPhase(eleven.status, eleven.callId) : gptPhase(gpt.state, gpt.orbState);
-  const activeCallId = callEngine === "elevenlabs" ? eleven.callId : gpt.callId;
-  const activeStartedAt = callEngine === "elevenlabs" ? eleven.startedAt : gpt.startedAt;
+  const active: CallPhase = callEngine === "elevenlabs" ? elevenPhase(eleven.status, eleven.callId)
+    : callEngine === "gemini-live" ? gem.state : gptPhase(gpt.state, gpt.orbState);
+  const activeCallId = callEngine === "elevenlabs" ? eleven.callId : callEngine === "gemini-live" ? gem.callId : gpt.callId;
+  const activeStartedAt = callEngine === "elevenlabs" ? eleven.startedAt : callEngine === "gemini-live" ? gem.startedAt : gpt.startedAt;
   /** When this panel last pressed Start: a startedAt older than that is the previous call's. */
   const runStartedAt = useRef(0);
 
@@ -220,7 +234,7 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
       setHolding(false);
       setReviewCallId(activeCallId);
     }, END_HOLD_MS);
-    if (callEngine === "gpt-live") {
+    if (callEngine !== "elevenlabs") {
       window.setTimeout(() => { void qc.invalidateQueries({ queryKey: testCallsKey(line.accountId) }); }, LIST_REFRESH_MS);
     }
   }, [active, activeCallId, activeStartedAt, callEngine, qc, line.accountId]);
@@ -250,6 +264,16 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
         const run = eleven.start(opts);
         setFlushing(false); // the hook is connecting now
         await run;
+      } else if (engine === "gemini-live") {
+        const locale = staffLocale(line.locale);
+        const run = gem.start({
+          account: line.accountId,
+          voice: geminiVoice,
+          callerNumber: callerNumber(locale),
+          password: storedVoicePassword() || VOICE_DEMO_PASSWORDS[0],
+        });
+        setFlushing(false);
+        await run;
       } else {
         const locale = staffLocale(line.locale);
         const run = gpt.start(
@@ -270,17 +294,18 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
       starting.current = false;
       if (mounted.current) setFlushing(false);
     }
-  }, [busy, engine, eleven, gpt, line.accountId, line.locale, line.number, line.persona, prefs.llm]);
+  }, [busy, engine, eleven, gem, geminiVoice, gpt, line.accountId, line.locale, line.number, line.persona, prefs.llm]);
 
   const hangup = useCallback(() => {
     if (flushing) { cancelled.current = true; setFlushing(false); return; }
     if (active === "live") setHangingUp(true);
     if (callEngine === "elevenlabs") eleven.hangUp();
+    else if (callEngine === "gemini-live") gem.hangup();
     else gpt.hangup();
-  }, [active, callEngine, eleven, flushing, gpt]);
+  }, [active, callEngine, eleven, flushing, gem, gpt]);
 
   // useElevenTestCall ends its own session on unmount.
-  hangupOnLeave.current = () => { gpt.hangup(); };
+  hangupOnLeave.current = () => { gpt.hangup(); gem.hangup(); };
 
   const openReview = useCallback((callId: string) => {
     if (busy) return;
@@ -292,7 +317,8 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
     setReviewCallId(null);
     setErrorCleared(true);
     if (gpt.state === "ended") gpt.reset();
-  }, [busy, gpt]);
+    if (gem.state === "ended") gem.reset();
+  }, [busy, gem, gpt]);
 
   // --- what the views read ---------------------------------------------------
   const live = useMemo<LiveView>(() => {
@@ -305,6 +331,22 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
         delaysMs: eleven.delaysMs,
         callId: eleven.callId,
         rates: eleven.rates ?? fallbackRates,
+      };
+    }
+    if (callEngine === "gemini-live") {
+      const said = gem.turns.filter((t) => t.text.trim());
+      return {
+        startedAt: gem.startedAt,
+        transcript: said.map((t) => ({ role: t.side === "you" ? "user" : "agent", text: t.text })),
+        tools: gem.tools.map((x, id) => {
+          const at = x.afterTurnId ? gem.turns.findIndex((t) => t.id === x.afterTurnId) : -1;
+          const afterLines = at < 0 ? 0 : gem.turns.slice(0, at + 1).filter((t) => t.text.trim()).length;
+          return { id, name: x.name, result: x.pending ? "" : shortResult(x.result), ms: x.ms, pending: x.pending === true, args: x.args, afterLines };
+        }),
+        delaysMs: gem.replyGaps,
+        callId: gem.callId,
+        // No GPT Live price on a Gemini call.
+        rates: null,
       };
     }
     const spoken = gpt.turns.filter((t) => t.text.trim());
@@ -321,17 +363,22 @@ export function VoiceTestProvider({ line, column, children }: { line: VoiceLine;
       callId: gpt.callId,
       rates: fallbackRates,
     };
-  }, [callEngine, eleven.startedAt, eleven.lines, eleven.callId, eleven.rates, eleven.delaysMs, gpt.options, gpt.startedAt, gpt.turns, gpt.tools, gpt.replyGaps, gpt.callId]);
+  }, [callEngine, gem.startedAt, gem.turns, gem.tools, gem.replyGaps, gem.callId, eleven.startedAt, eleven.lines, eleven.callId, eleven.rates, eleven.delaysMs, gpt.options, gpt.startedAt, gpt.turns, gpt.tools, gpt.replyGaps, gpt.callId]);
 
   const rawError: TestError | null = callEngine === "elevenlabs"
     ? (eleven.error ? { engine: "elevenlabs", key: eleven.error } : null)
-    : (gpt.error ? { engine: "gpt-live", message: gpt.error } : null);
+    : callEngine === "gemini-live"
+      ? (gem.error ? { engine: "gemini-live", message: gem.error } : null)
+      : (gpt.error ? { engine: "gpt-live", message: gpt.error } : null);
 
   const value: VoiceTestValue = {
     engine,
     setEngine: (e) => { if (!busy) pick({ engine: e }); },
     llm: prefs.llm,
     setLlm: (k) => { if (!busy) pick({ llm: k }); },
+    geminiAvailable: geminiOk,
+    geminiVoice,
+    setGeminiVoice: (v) => { if (!busy) { setGeminiVoiceState(v); saveGeminiVoice(v); } },
     elevenAvailable,
     phase,
     callEngine,
