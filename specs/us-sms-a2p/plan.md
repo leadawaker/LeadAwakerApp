@@ -1,6 +1,13 @@
 # US SMS: A2P 10DLC through Telnyx (research 2026-10-31)
 
-Status: researched, not built. Waiting on Gabriel's go and a first US client.
+Status (2026-10-31): built, not yet used on a real client.
+- CRM: Accounts > Integrations > WhatsApp > "US texting" card (client/.../workspace/usSms/),
+  routes server/routes/usSms.ts, Telnyx calls server/usSms/telnyx10dlc.ts, state in
+  Sms_Registrations + Accounts.telnyx_sms_number / telnyx_messaging_profile_id.
+- Engine: sends SMS from Accounts.telnyx_sms_number via Telnyx, inbound message.received on
+  /webhooks/telnyx/messaging (needs TELNYX_PUBLIC_KEY in the engine .env).
+- Not built: toll-free verification, Telnyx 10DLC status webhooks (the card's "Check status"
+  polls instead).
 
 ## Can Lead Awaker register clients itself?
 Yes. Telnyx acts as the registration provider; we register one Brand per client
