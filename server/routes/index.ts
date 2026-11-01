@@ -42,6 +42,7 @@ import { registerUserSettingsRoutes } from "./user-settings";
 import { registerAutomationRoutes } from "./automation";
 import { registerWidgetRoutes } from "./widget";
 import { registerChatSplitRoutes } from "./chatSplit";
+import { registerUsSmsRoutes } from "./usSms";
 import { registerDemoSettingsRoutes } from "./demoSettings";
 import { registerVoicePromptRoutes } from "./voicePrompts";
 import { registerVoiceElevenTestRoutes } from "./voiceElevenTest";
@@ -130,6 +131,7 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   registerAutomationRoutes(app);
   registerWidgetRoutes(app);
   registerChatSplitRoutes(app);
+  registerUsSmsRoutes(app);
   registerDemoSettingsRoutes(app);
   registerVoicePromptRoutes(app);
   registerVoiceElevenTestRoutes(app);

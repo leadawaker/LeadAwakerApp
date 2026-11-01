@@ -1,0 +1,89 @@
+{
+  "title": "US texting (A2P 10DLC)",
+  "intro": "For US clients. Carriers only deliver business texts from a number registered to the business. Register the client here in four steps; after approval the AI texts from this number and replies come back into Chats.",
+  "costs": "Telnyx charges on submit: brand about $4 once, campaign review $15 plus the first 3 months ($10 a month, sole proprietor $2), number about $1 a month. Approval takes 1 to 2 weeks.",
+  "refresh": "Check status",
+  "error": "Telnyx said: {{message}}",
+  "failed": "That did not work.",
+  "steps": {
+    "brand": "Business",
+    "campaign": "Use case",
+    "number": "Number",
+    "assign": "Connect"
+  },
+  "status": {
+    "todo": "To do",
+    "pending": "Waiting for approval",
+    "done": "Done",
+    "failed": "Rejected"
+  },
+  "brand": {
+    "help": "The client's business as the carriers will know it. Use the legal name and address exactly as registered with the IRS.",
+    "entityType": "Kind of business",
+    "entityTypes": {
+      "PRIVATE_PROFIT": "Private company",
+      "PUBLIC_PROFIT": "Public company",
+      "NON_PROFIT": "Non-profit",
+      "SOLE_PROPRIETOR": "Sole proprietor (no EIN)"
+    },
+    "displayName": "Brand name (as customers know it)",
+    "companyName": "Legal company name",
+    "ein": "EIN (tax ID)",
+    "firstName": "Contact first name",
+    "lastName": "Contact last name",
+    "email": "Contact email",
+    "phone": "Business phone",
+    "mobilePhone": "Owner's US mobile (gets a code)",
+    "street": "Street",
+    "city": "City",
+    "state": "State (2 letters)",
+    "postalCode": "ZIP code",
+    "website": "Website",
+    "vertical": "Industry",
+    "submit": "Register the business",
+    "summary": "{{name}} · brand {{id}}",
+    "otpHelp": "Sole proprietors confirm with a code texted to the owner's mobile. Send it, then type the code the owner received (valid 24 hours).",
+    "otpSend": "Text the code",
+    "otpSent": "Code sent",
+    "otpCode": "Code",
+    "otpVerify": "Confirm code"
+  },
+  "campaign": {
+    "help": "What the texts are for, how people agreed to get them, and examples. Carriers reject vague answers, so keep these concrete. Prefilled for a typical client: check every line.",
+    "usecase": "Use case",
+    "usecases": {
+      "MIXED": "Mixed: customer care and marketing",
+      "LOW_VOLUME": "Low volume mixed (under 2,000 texts a month)",
+      "CUSTOMER_CARE": "Customer care only",
+      "MARKETING": "Marketing only"
+    },
+    "description": "What the texts are for",
+    "messageFlow": "How people opt in",
+    "samples": "Sample messages (2 to 5)",
+    "sample": "Sample {{n}}",
+    "helpMessage": "Reply to HELP",
+    "optoutMessage": "Reply to STOP",
+    "optinMessage": "Reply to START",
+    "privacy": "Privacy policy link",
+    "terms": "Terms link",
+    "embeddedLink": "Texts contain links (booking links)",
+    "submit": "Submit for review",
+    "summary": "{{usecase}} · campaign {{id}}"
+  },
+  "number": {
+    "help": "A local number the client's customers will recognise. It gets its own messaging profile that sends inbound texts to the AI.",
+    "areaCode": "Area code",
+    "search": "Find numbers",
+    "none": "No numbers with texting in that area code. Try a neighbouring one.",
+    "buy": "Buy {{number}}",
+    "monthly": "{{price}} a month",
+    "summary": "{{number}}"
+  },
+  "assign": {
+    "help": "Connects the number to the approved campaign. Texts only go out after this.",
+    "waitCampaign": "Possible once the campaign is approved.",
+    "submit": "Connect number to campaign",
+    "summary": "{{number}} is connected"
+  },
+  "off": "Not switched on yet: you can fill in and look around, but nothing is sent to Telnyx and nothing is charged. It is switched on in the server settings (US_SMS_REGISTRATION_ENABLED) when the first US client signs."
+}

@@ -1,0 +1,89 @@
+{
+  "title": "Sms in de VS (A2P 10DLC)",
+  "intro": "Voor klanten in de VS. Providers leveren zakelijke sms alleen af vanaf een nummer dat op het bedrijf is geregistreerd. Registreer de klant hier in vier stappen; na goedkeuring sms't de AI vanaf dit nummer en komen antwoorden binnen in Chats.",
+  "costs": "Telnyx rekent bij het indienen: merk ongeveer $4 eenmalig, campagnebeoordeling $15 plus de eerste 3 maanden ($10 per maand, eenmanszaak $2), nummer ongeveer $1 per maand. Goedkeuring duurt 1 tot 2 weken.",
+  "refresh": "Status controleren",
+  "error": "Telnyx zegt: {{message}}",
+  "failed": "Dat lukte niet.",
+  "steps": {
+    "brand": "Bedrijf",
+    "campaign": "Gebruik",
+    "number": "Nummer",
+    "assign": "Koppelen"
+  },
+  "status": {
+    "todo": "Te doen",
+    "pending": "Wacht op goedkeuring",
+    "done": "Klaar",
+    "failed": "Afgewezen"
+  },
+  "brand": {
+    "help": "Het bedrijf van de klant zoals de providers het kennen. Gebruik de officiële naam en het adres precies zoals geregistreerd bij de IRS.",
+    "entityType": "Soort bedrijf",
+    "entityTypes": {
+      "PRIVATE_PROFIT": "Besloten bedrijf",
+      "PUBLIC_PROFIT": "Beursgenoteerd bedrijf",
+      "NON_PROFIT": "Non-profit",
+      "SOLE_PROPRIETOR": "Eenmanszaak (geen EIN)"
+    },
+    "displayName": "Merknaam (zoals klanten het kennen)",
+    "companyName": "Officiële bedrijfsnaam",
+    "ein": "EIN (belastingnummer)",
+    "firstName": "Voornaam contactpersoon",
+    "lastName": "Achternaam contactpersoon",
+    "email": "E-mail contactpersoon",
+    "phone": "Telefoon bedrijf",
+    "mobilePhone": "Amerikaans mobiel nummer eigenaar (krijgt een code)",
+    "street": "Straat",
+    "city": "Plaats",
+    "state": "Staat (2 letters)",
+    "postalCode": "Postcode (ZIP)",
+    "website": "Website",
+    "vertical": "Branche",
+    "submit": "Bedrijf registreren",
+    "summary": "{{name}} · merk {{id}}",
+    "otpHelp": "Een eenmanszaak bevestigt met een code die naar de mobiel van de eigenaar wordt ge-sms't. Verstuur hem en typ dan de code die de eigenaar kreeg (24 uur geldig).",
+    "otpSend": "Code versturen",
+    "otpSent": "Code verstuurd",
+    "otpCode": "Code",
+    "otpVerify": "Code bevestigen"
+  },
+  "campaign": {
+    "help": "Waar de sms'jes voor zijn, hoe mensen toestemming gaven en voorbeelden. Providers wijzen vage antwoorden af, dus houd het concreet. Vooraf ingevuld voor een gewone klant: controleer elke regel.",
+    "usecase": "Gebruik",
+    "usecases": {
+      "MIXED": "Gemengd: klantenservice en marketing",
+      "LOW_VOLUME": "Gemengd, laag volume (minder dan 2.000 sms per maand)",
+      "CUSTOMER_CARE": "Alleen klantenservice",
+      "MARKETING": "Alleen marketing"
+    },
+    "description": "Waar de sms'jes voor zijn",
+    "messageFlow": "Hoe mensen toestemming geven",
+    "samples": "Voorbeeldberichten (2 tot 5)",
+    "sample": "Voorbeeld {{n}}",
+    "helpMessage": "Antwoord op HELP",
+    "optoutMessage": "Antwoord op STOP",
+    "optinMessage": "Antwoord op START",
+    "privacy": "Link naar privacybeleid",
+    "terms": "Link naar voorwaarden",
+    "embeddedLink": "Sms'jes bevatten links (boekingslinks)",
+    "submit": "Indienen ter beoordeling",
+    "summary": "{{usecase}} · campagne {{id}}"
+  },
+  "number": {
+    "help": "Een lokaal nummer dat de klanten van de klant herkennen. Het krijgt een eigen berichtenprofiel dat binnenkomende sms naar de AI stuurt.",
+    "areaCode": "Netnummer",
+    "search": "Nummers zoeken",
+    "none": "Geen nummers met sms in dat netnummer. Probeer een naburig netnummer.",
+    "buy": "{{number}} kopen",
+    "monthly": "{{price}} per maand",
+    "summary": "{{number}}"
+  },
+  "assign": {
+    "help": "Koppelt het nummer aan de goedgekeurde campagne. Pas daarna gaan er sms'jes uit.",
+    "waitCampaign": "Kan zodra de campagne is goedgekeurd.",
+    "submit": "Nummer aan campagne koppelen",
+    "summary": "{{number}} is gekoppeld"
+  },
+  "off": "Nog niet aangezet: je kunt alles invullen en bekijken, maar er gaat niets naar Telnyx en er wordt niets in rekening gebracht. Het gaat aan in de serverinstellingen (US_SMS_REGISTRATION_ENABLED) zodra de eerste klant in de VS tekent."
+}

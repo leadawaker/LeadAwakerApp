@@ -1,0 +1,89 @@
+{
+  "title": "SMS nos EUA (A2P 10DLC)",
+  "intro": "Para clientes nos EUA. As operadoras só entregam SMS comerciais de um número registrado no nome da empresa. Registre o cliente aqui em quatro passos; depois da aprovação a IA envia SMS deste número e as respostas chegam em Chats.",
+  "costs": "A Telnyx cobra no envio: marca cerca de US$ 4 uma vez, análise da campanha US$ 15 mais os 3 primeiros meses (US$ 10 por mês, empresário individual US$ 2), número cerca de US$ 1 por mês. A aprovação leva de 1 a 2 semanas.",
+  "refresh": "Verificar status",
+  "error": "A Telnyx disse: {{message}}",
+  "failed": "Não deu certo.",
+  "steps": {
+    "brand": "Empresa",
+    "campaign": "Uso",
+    "number": "Número",
+    "assign": "Conectar"
+  },
+  "status": {
+    "todo": "A fazer",
+    "pending": "Aguardando aprovação",
+    "done": "Pronto",
+    "failed": "Rejeitado"
+  },
+  "brand": {
+    "help": "A empresa do cliente como as operadoras vão conhecê-la. Use o nome legal e o endereço exatamente como registrados no IRS.",
+    "entityType": "Tipo de empresa",
+    "entityTypes": {
+      "PRIVATE_PROFIT": "Empresa privada",
+      "PUBLIC_PROFIT": "Empresa de capital aberto",
+      "NON_PROFIT": "Sem fins lucrativos",
+      "SOLE_PROPRIETOR": "Empresário individual (sem EIN)"
+    },
+    "displayName": "Nome da marca (como os clientes conhecem)",
+    "companyName": "Razão social",
+    "ein": "EIN (número fiscal)",
+    "firstName": "Nome do contato",
+    "lastName": "Sobrenome do contato",
+    "email": "E-mail do contato",
+    "phone": "Telefone da empresa",
+    "mobilePhone": "Celular americano do dono (recebe um código)",
+    "street": "Rua",
+    "city": "Cidade",
+    "state": "Estado (2 letras)",
+    "postalCode": "CEP (ZIP)",
+    "website": "Site",
+    "vertical": "Setor",
+    "submit": "Registrar a empresa",
+    "summary": "{{name}} · marca {{id}}",
+    "otpHelp": "O empresário individual confirma com um código enviado por SMS ao celular do dono. Envie e digite o código que o dono recebeu (vale 24 horas).",
+    "otpSend": "Enviar o código",
+    "otpSent": "Código enviado",
+    "otpCode": "Código",
+    "otpVerify": "Confirmar código"
+  },
+  "campaign": {
+    "help": "Para que servem as mensagens, como as pessoas autorizaram e exemplos. As operadoras rejeitam respostas vagas, então seja concreto. Já vem preenchido para um cliente típico: confira cada linha.",
+    "usecase": "Uso",
+    "usecases": {
+      "MIXED": "Misto: atendimento e marketing",
+      "LOW_VOLUME": "Misto de baixo volume (menos de 2.000 SMS por mês)",
+      "CUSTOMER_CARE": "Só atendimento",
+      "MARKETING": "Só marketing"
+    },
+    "description": "Para que servem as mensagens",
+    "messageFlow": "Como as pessoas autorizam",
+    "samples": "Mensagens de exemplo (2 a 5)",
+    "sample": "Exemplo {{n}}",
+    "helpMessage": "Resposta para HELP",
+    "optoutMessage": "Resposta para STOP",
+    "optinMessage": "Resposta para START",
+    "privacy": "Link da política de privacidade",
+    "terms": "Link dos termos",
+    "embeddedLink": "As mensagens têm links (links de agendamento)",
+    "submit": "Enviar para análise",
+    "summary": "{{usecase}} · campanha {{id}}"
+  },
+  "number": {
+    "help": "Um número local que os clientes do cliente reconheçam. Ele ganha um perfil de mensagens próprio que manda os SMS recebidos para a IA.",
+    "areaCode": "Código de área",
+    "search": "Buscar números",
+    "none": "Nenhum número com SMS nesse código de área. Tente um vizinho.",
+    "buy": "Comprar {{number}}",
+    "monthly": "{{price}} por mês",
+    "summary": "{{number}}"
+  },
+  "assign": {
+    "help": "Conecta o número à campanha aprovada. Só depois disso as mensagens saem.",
+    "waitCampaign": "Possível quando a campanha for aprovada.",
+    "submit": "Conectar número à campanha",
+    "summary": "{{number}} está conectado"
+  },
+  "off": "Ainda não ativado: dá para preencher e explorar, mas nada é enviado à Telnyx e nada é cobrado. É ativado nas configurações do servidor (US_SMS_REGISTRATION_ENABLED) quando o primeiro cliente dos EUA assinar."
+}

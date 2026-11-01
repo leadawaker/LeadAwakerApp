@@ -37,6 +37,7 @@ import enVoiceTab from "./locales/en/voiceTab.json";
 import enVoiceCoach from "./locales/en/voiceCoach.json";
 import enChatTab from "./locales/en/chatTab.json";
 import enReactivationSettings from "./locales/en/reactivationSettings.json";
+import enUsTexting from "./locales/en/usTexting.json";
 import enWhatsappCloud from "./locales/en/whatsappCloud.json";
 import enClientAlerts from "./locales/en/clientAlerts.json";
 import enSocial from "./locales/en/social.json";
@@ -73,6 +74,7 @@ import ptVoiceTab from "./locales/pt/voiceTab.json";
 import ptVoiceCoach from "./locales/pt/voiceCoach.json";
 import ptChatTab from "./locales/pt/chatTab.json";
 import ptReactivationSettings from "./locales/pt/reactivationSettings.json";
+import ptUsTexting from "./locales/pt/usTexting.json";
 import ptWhatsappCloud from "./locales/pt/whatsappCloud.json";
 import ptClientAlerts from "./locales/pt/clientAlerts.json";
 import ptSocial from "./locales/pt/social.json";
@@ -109,6 +111,7 @@ import nlVoiceTab from "./locales/nl/voiceTab.json";
 import nlVoiceCoach from "./locales/nl/voiceCoach.json";
 import nlChatTab from "./locales/nl/chatTab.json";
 import nlReactivationSettings from "./locales/nl/reactivationSettings.json";
+import nlUsTexting from "./locales/nl/usTexting.json";
 import nlWhatsappCloud from "./locales/nl/whatsappCloud.json";
 import nlClientAlerts from "./locales/nl/clientAlerts.json";
 import nlSocial from "./locales/nl/social.json";
@@ -147,6 +150,7 @@ const resources = {
     voiceCoach: enVoiceCoach,
     chatTab: enChatTab,
     reactivationSettings: enReactivationSettings,
+    usTexting: enUsTexting,
     whatsappCloud: enWhatsappCloud,
     clientAlerts: enClientAlerts,
     social: enSocial,
@@ -184,6 +188,7 @@ const resources = {
     voiceCoach: ptVoiceCoach,
     chatTab: ptChatTab,
     reactivationSettings: ptReactivationSettings,
+    usTexting: ptUsTexting,
     whatsappCloud: ptWhatsappCloud,
     clientAlerts: ptClientAlerts,
     social: ptSocial,
@@ -221,6 +226,7 @@ const resources = {
     voiceCoach: nlVoiceCoach,
     chatTab: nlChatTab,
     reactivationSettings: nlReactivationSettings,
+    usTexting: nlUsTexting,
     whatsappCloud: nlWhatsappCloud,
     clientAlerts: nlClientAlerts,
     social: nlSocial,
@@ -269,6 +275,7 @@ i18n
       "voiceCoach",
       "chatTab",
       "reactivationSettings",
+      "usTexting",
       "whatsappCloud",
       "clientAlerts",
       "social",

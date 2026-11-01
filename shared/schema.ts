@@ -135,6 +135,9 @@ export const accounts = nocodb.table("Accounts", {
   // Receptionist channels (engine migrate_receptionist_channels.py): alphanumeric SMS sender (max 11
   // characters, one-way) and the WhatsApp sent after each phone call.
   smsSenderId: text("sms_sender_id"),
+  // US texting (specs/us-sms-a2p): the account's own Telnyx number (two-way SMS, 10DLC) and its messaging profile.
+  telnyxSmsNumber: text("telnyx_sms_number"),
+  telnyxMessagingProfileId: text("telnyx_messaging_profile_id"),
   afterCallFollowupEnabled: boolean("after_call_followup_enabled").default(false),
   // Per-account email From-identity — see specs/channel-fallback (task #676 "step 8").
   // Fallback/opener email sends from the client's own domain (deliverability + brand) once their
@@ -721,12 +724,12 @@ export const campaigns = nocodb.table("Campaigns", {
   objectionPlaybook: jsonb("objection_playbook").$type<{ objection: string; answer: string }[]>(),
 
   agentName: text("agent_name"),
-  serviceName: text("service_name"),
-  typoCount: integer("typo_count").default(1),
-  // Performance metrics (calculated fields on Campaigns table)
   // The AI's role in the prompt ({ai_role}, {en,nl} JSON or plain text). The engine reads it first;
   // without this line PATCH stripped it, so the CRM's role fields never saved (found 2026-11-01).
   aiRole: text("ai_role"),
+  serviceName: text("service_name"),
+  typoCount: integer("typo_count").default(1),
+  // Performance metrics (calculated fields on Campaigns table)
   totalLeadsTargeted: integer("total_leads_targeted"),
   totalMessagesSent: integer("total_messages_sent"),
   totalResponsesReceived: integer("total_responses_received"),
@@ -2856,3 +2859,23 @@ export const homeAttentionDismissed = nocodb.table("Home_Attention_Dismissed", {
   uniqueIndex("home_attention_dismissed_ref").on(t.accountsId, t.kind, t.refId),
 ]);
 export type HomeAttentionDismissedRow = typeof homeAttentionDismissed.$inferSelect;
+
+/** US texting registration (A2P 10DLC at Telnyx), one row per account (server/routes/usSms.ts). Created by hand with SQL. */
+export const smsRegistrations = nocodb.table("Sms_Registrations", {
+  id: serial("id").primaryKey(),
+  accountsId: integer("Accounts_id").notNull().unique(),
+  entityType: text("entity_type"),
+  brandId: text("brand_id"),
+  brandStatus: text("brand_status"),
+  brandIdentityStatus: text("brand_identity_status"),
+  campaignId: text("campaign_id"),
+  tcrCampaignId: text("tcr_campaign_id"),
+  campaignStatus: text("campaign_status"),
+  usecase: text("usecase"),
+  numberStatus: text("number_status"),
+  details: jsonb("details").notNull().default(sql`'{}'::jsonb`),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+export type SmsRegistrationRow = typeof smsRegistrations.$inferSelect;

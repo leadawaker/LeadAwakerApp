@@ -10,6 +10,7 @@ import { WhatsAppCloudCard } from "./whatsapp/WhatsAppCloudCard";
 import { WhatsAppTemplatesCard } from "./whatsapp/WhatsAppTemplatesCard";
 import { WhatsAppBehaviourCard } from "./whatsapp/WhatsAppBehaviourCard";
 import { PhoneConnection } from "./PhoneConnection";
+import { UsTextingCard } from "./usSms/UsTextingCard";
 import { VoiceSettingsSection } from "./VoiceSettingsSection";
 import { ConnectionsOverview, groupAnchorId, type ConnectionGroup } from "./ConnectionsOverview";
 import { SectionLayout } from "./SectionRail";
@@ -92,6 +93,8 @@ export function IntegrationsPanel({ account, d, onSave, stacked = false, readOnl
             account={account as unknown as Record<string, unknown>}
             onSave={onSave}
           />
+          {/* US clients: A2P 10DLC registration and a Telnyx texting number (specs/us-sms-a2p). */}
+          <UsTextingCard accountId={accountId} accountName={String(account.name ?? "")} />
         </Group>
       )}
 
