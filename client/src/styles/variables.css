@@ -261,6 +261,7 @@
   /* ── Grounds & surfaces ── */
   --background: 30 15% 10%;           /* #1E1A16: the same as the topbar */
   --bg-main: 30 15% 10%;
+  --ground-page: 30 15% 10%;          /* the page ground (split-list tabs, sticky group titles); light only before */
   --surface: #1E1A16;                 /* topbar, toolbars, raised chips */
   --bg: var(--surface);               /* page ground */
   --well-triple: 30 15% 10%;

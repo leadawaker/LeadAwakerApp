@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
  * sticky offset, padding, bg, count badge, and divider lines so the `top-0` /
  * `-top-[3px]` and `pt-3` / `pt-[15px]` drift across pages disappears.
  *
- * Tokens: --group-header-pad-x/y, --group-header-sticky-top, --group-header-bg.
+ * Tokens: --group-header-pad-x/y, --group-header-sticky-top, --group-header-bg (a full colour).
  */
 export interface GroupHeaderProps {
   label: string;
@@ -40,8 +40,8 @@ export function GroupHeader({
       )}
       style={{
         background: color
-          ? `color-mix(in srgb, ${color} 12%, hsl(var(--group-header-bg)))`
-          : "hsl(var(--group-header-bg))",
+          ? `color-mix(in srgb, ${color} 12%, var(--group-header-bg))`
+          : "var(--group-header-bg)",
         boxShadow: "0 -8px 0 8px var(--group-header-bg)",
       }}
     >

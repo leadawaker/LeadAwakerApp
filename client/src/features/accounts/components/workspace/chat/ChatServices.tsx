@@ -1,22 +1,22 @@
 // Chats > Settings is split per service: each tab is one thing the AI does in
 // chat, with its own campaign (its own prompt, tone, hours). Speed to Lead is the
-// receptionist answering whoever writes in, on WhatsApp and the website chat
-// (ChatTab's channel switch). Reactivation is the agency's outbound campaigns
+// receptionist answering whoever writes in on WhatsApp; Webchat is the same on
+// the website widget (ChatTab's ChannelChat, one campaign each). Reactivation is the agency's outbound campaigns
 // (the Accounts > Reactivation view). Referrals and Reputation are announced but
 // not built: Reputation waits for the integration that tells the CRM a customer
 // was served.
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { MessageCircle, RefreshCw, Star, UserPlus, Zap } from "lucide-react";
+import { Globe, MessageCircle, RefreshCw, Star, UserPlus, Zap } from "lucide-react";
 import { useLastTab } from "@/hooks/useLastTab";
 
-export const CHAT_SERVICES = ["speed_to_lead", "reactivation", "referrals", "reputation"] as const;
+export const CHAT_SERVICES = ["speed_to_lead", "webchat", "reactivation", "referrals", "reputation"] as const;
 export type ChatService = (typeof CHAT_SERVICES)[number];
 
 const SOON = new Set<ChatService>(["referrals", "reputation"]);
 
 const ICON: Record<ChatService, ReactNode> = {
-  speed_to_lead: <Zap size={14} />, reactivation: <RefreshCw size={14} />, referrals: <UserPlus size={14} />, reputation: <Star size={14} />,
+  speed_to_lead: <Zap size={14} />, webchat: <Globe size={14} />, reactivation: <RefreshCw size={14} />, referrals: <UserPlus size={14} />, reputation: <Star size={14} />,
 };
 
 /** The service picked (remembered per user); a link to a section opens Speed to Lead, where the sections live. */

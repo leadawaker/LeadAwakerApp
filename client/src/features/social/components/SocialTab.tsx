@@ -101,7 +101,9 @@ export function SocialTab({ accountId, timeZone }: { accountId: number; timeZone
 
       {sections.map(({ section, posts: list }) => (
         <section key={section} style={{ display: "flex", flexDirection: "column", gap: 10 }} data-testid={`social-section-${section}`}>
-          <header className="row" style={{ gap: 10, padding: "0 4px 8px", borderBottom: "1px solid var(--line)" }}>
+          {/* Stays at the top of the page's scroller while its posts scroll under it; the ground halo hides
+              the cards (and their shadows) above and beside it. */}
+          <header className="row" style={{ position: "sticky", top: 0, zIndex: 2, gap: 10, padding: "8px 4px 8px", borderBottom: "1px solid var(--line)", background: "var(--bg)", boxShadow: "0 -8px 0 var(--bg), -14px -4px 0 var(--bg), 14px -4px 0 var(--bg)" }}>
             <h4 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "var(--ink)" }}>{t(`social.posts.sections.${section}`)}</h4>
             <span style={{ fontFamily: "var(--mono)", fontSize: 11, color: "var(--mute-2)" }}>{list.length}</span>
           </header>

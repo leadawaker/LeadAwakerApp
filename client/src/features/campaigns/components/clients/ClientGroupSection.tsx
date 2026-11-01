@@ -39,7 +39,7 @@ export function ClientGroupSection({ group, layout, selectedNiche, formatDate, o
     : Array.from(new Set(items.map((c) => (c.label || c.niche).trim()).filter(Boolean))).join(", ");
 
   return (
-    <SectionCard padded={false} className="overflow-hidden dp-group" data-testid={`persona-group-${group.key}`}>
+    <SectionCard padded={false} className="overflow-clip dp-group" data-testid={`persona-group-${group.key}`}>
       <div className="am-section-head">
         <div style={{ flex: 1, minWidth: 0 }}>
           <div className="am-section-title">

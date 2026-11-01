@@ -13,9 +13,16 @@ unless said otherwise), so an edit to the English page that this file does not
 know about fails loudly instead of leaving English on the Portuguese page.
 When that happens, update the English side of the pair and re-run.
 
-Not translated on purpose: the hero call (the recording, its transcript and the
-business name it says, Northgate Motors). Gabriel is recording a Portuguese one.
+The hero call is its own Portuguese recording: a caller asking BRASIL CARS
+PREMIUM about a 2022 Corolla XEi, booked for Monday at 3 p.m. (Voice_Calls 8541,
+one closing sentence repeating the price cut out). Its transcript, timing and
+orb levels live in script/site-call-pt.json and replace the English call-en
+block; the audio is /site/audio/edf5a0b647ef.mp3. Every Northgate Motors on the
+page becomes BRASIL CARS PREMIUM, and the recap, WhatsApp note and comparison
+quotes follow the Portuguese call.
 """
+import json
+import re
 import sys
 from pathlib import Path
 
@@ -53,6 +60,7 @@ PAIRS = common_pairs("pt", "/pt") + [
     ('href="/login">Log in</a>', 'href="/login">Entrar</a>', 3),
         ('rel="noopener">Book a call</a>',
      'rel="noopener">Agendar conversa</a>', 3),
+    ('hidden>Try Sara for free</a>', 'hidden>Experimente a Sara grátis</a>'),
     ('aria-label="Open menu"', 'aria-label="Abrir menu"'),
     ('<a href="#website">Website chat</a>', '<a href="#website">Chat no site</a>', 2),
     ('<a href="#calendar">Calendar booking</a>', '<a href="#calendar">Agendamento</a>', 2),
@@ -78,26 +86,31 @@ PAIRS = common_pairs("pt", "/pt") + [
     ('Press play to hear Sara take a call from a buyer, after the showroom has closed.',
      'Aperte o play e ouça a Sara atender um comprador depois que a loja já fechou.'),
     ('aria-label="Pause the call"', 'aria-label="Pausar a ligação"'),
-    ('Live transcript <small>', 'Transcrição ao vivo <small>'),
+    ('Live transcript <span class="talk-r"><small>', 'Transcrição ao vivo <span class="talk-r"><small>'),
     ('<small>New lead · phone call at 19:42</small>', '<small>Novo lead · ligação às 19:42</small>'),
     ('<span class="chip g">Booked</span>', '<span class="chip g">Agendado</span>', 2),
     ('<small>Recap from Sara</small>', '<small>Resumo da Sara</small>'),
     ('<p>Asked about the 2023 Porsche Cayenne Coupé E-Hybrid, for family trips. Saw a cheaper one elsewhere, with three times the mileage.</p>',
-     '<p>Perguntou do Porsche Cayenne Coupé E-Hybrid 2023, para viajar com a família. Viu um mais barato em outra loja, com o triplo da quilometragem.</p>'),
+     '<p>Perguntou do Corolla XEi 2022 e quis saber a parcela. Viu mais barato num concorrente, mas gostou da garantia. Vai trazer um Corsa 2020 na troca.</p>'),
     ('aria-label="Play the recording"', 'aria-label="Ouvir a gravação"'),
     ('<b>Tom’s calendar</b><small>Next week</small>', '<b>Agenda do Rafael</b><small>Próxima semana</small>'),
     ('<span class="d">Mon</span><span class="d">Tue</span><span class="d">Wed</span><span class="d">Thu</span><span class="d">Fri</span><span class="d sat">Sat</span>',
      '<span class="d">Seg</span><span class="d">Ter</span><span class="d">Qua</span><span class="d">Qui</span><span class="d">Sex</span><span class="d sat">Sáb</span>'),
-    ('<small>Tuesday</small><b class="num">19:43</b>', '<small>Terça-feira</small><b class="num">19:43</b>'),
-    ('<time>now</time>', '<time>agora</time>'),
+    ('<small>Tuesday</small><b class="num">19:43</b>', '<small>Terça-feira</small><b class="num">19:43</b>', 2),
+    ('<time>now</time>', '<time>agora</time>', 2),
     ('<span class="u">Booked</span> Gabriel, test drive Monday 15:00, 2023 Porsche Cayenne Coupé E-Hybrid. For family trips. Saw a cheaper one elsewhere, with three times the mileage.',
-     '<span class="u">Agendado</span> Gabriel, test drive segunda às 15:00, Porsche Cayenne Coupé E-Hybrid 2023. Para viajar com a família. Viu um mais barato em outra loja, com o triplo da quilometragem.'),
+     '<span class="u">Agendado</span> Gabriel, test drive segunda às 15:00, Corolla XEi 2022. Viu mais barato num concorrente, gostou da garantia. Traz um Corsa 2020 para avaliar na troca.', 2),
     ('just now', 'agora mesmo'),
     ('<small>New lead · call at 19:42</small>', '<small>Novo lead · ligação às 19:42</small>'),
     ('<small>Mon</small><b class="num">15:00</b>', '<small>Seg</small><b class="num">15:00</b>'),
     ('<span>Added to Tom’s calendar</span>', '<span>Na agenda do Rafael</span>'),
     ('<span class="own-l">Your phone</span>', '<span class="own-l">Seu celular</span>'),
     ('id="again" type="button">Play the call again</button>', 'id="again" type="button">Ouvir de novo</button>'),
+    ('id="again2" type="button">Play the call again</button>', 'id="again2" type="button">Ouvir de novo</button>'),
+    ('<span class="own-l own-l2" aria-hidden="true">Your phone</span>', '<span class="own-l own-l2" aria-hidden="true">Seu celular</span>'),
+    ('id="vol-b" aria-label="Mute"', 'id="vol-b" aria-label="Silenciar"'),
+    ("v===0?'Unmute':'Mute'", "v===0?'Ativar som':'Silenciar'"),
+    ('data-name="Colour band"', 'data-name="Faixa de cor"'),
 
     # ── four ways to answer ──
     ('<h2>Four ways to answer the phone</h2><p>Plenty of callers don’t leave a message. They ring the next business on the list.</p>',
@@ -115,12 +128,12 @@ PAIRS = common_pairs("pt", "/pt") + [
     ('<small>Rings out while you work</small>', '<small>Toca enquanto você trabalha</small>'),
     ('<small>“Leave a message”</small>', '<small>“Deixe seu recado”</small>'),
     ('<small>“How can I help?”</small>', '<small>“Em que posso ajudar?”</small>'),
-    ('<small>“Northgate, Sara speaking”</small>', '<small>“Northgate, aqui é a Sara”</small>'),
+    ('<small>“Northgate, Sara speaking”</small>', '<small>“BRASIL CARS PREMIUM, Sara falando”</small>'),
     ('rowheader">Knows your business<', 'rowheader">Conhece seu negócio<'),
     ('<small>You know it all</small>', '<small>Você sabe tudo</small>'),
     ('<small>Says nothing</small>', '<small>Não fala nada</small>'),
     ('<small>“I’ll pass it on”</small>', '<small>“Vou passar o recado”</small>'),
-    ('<small>“The Cayenne? We’ve got one”</small>', '<small>“O Cayenne? Temos, sim”</small>'),
+    ('<small>“The Cayenne? We’ve got one”</small>', '<small>“O Corolla? Temos, sim”</small>'),
     ('rowheader">Books into your calendar<', 'rowheader">Marca na sua agenda<'),
     ('<small>“Let me call you back”</small>', '<small>“Te ligo depois”</small>'),
     ('<small>Nobody books</small>', '<small>Ninguém marca</small>'),
@@ -388,7 +401,7 @@ PAIRS = common_pairs("pt", "/pt") + [
     ("'Play the call with sound':'Play the call'):hero.mode==='paused'?'Paused · '",
      "'Ouvir a ligação com som':'Ouvir a ligação'):hero.mode==='paused'?'Pausado · '"),
     ("running()?'Pause the call':'Play the call'", "running()?'Pausar a ligação':'Ouvir a ligação'"),
-    ("running()?'Live':hero.mode==='paused'?'Paused':''", "running()?'Ao vivo':hero.mode==='paused'?'Pausado':''"),
+    ("running()?'Live':hero.mode==='paused'?'Paused':hero.mode", "running()?'Ao vivo':hero.mode==='paused'?'Pausado':hero.mode"),
     ("on?'Back to your phone':'See it in the LeadAwaker platform'", "on?'Voltar para o celular':'Ver na plataforma LeadAwaker'"),
     ("'Sound could not start here'", "'O som não pôde tocar aqui'"),
     ("!R.d.mp3?'What Tom hears'", "!R.d.mp3?'O que o Rafael ouve'"),
@@ -424,13 +437,26 @@ PAIRS = common_pairs("pt", "/pt") + [
     ("var VIA={tel:'by phone',web:'on the website',wa:'on WhatsApp'};", "var VIA={tel:'por telefone',web:'pelo site',wa:'pelo WhatsApp'};"),
     ("n.w+' booked '+DAYS[n.d]", "n.w+' marcou '+DAYS[n.d]"),
     ("var ITEMS=[['Name','Sara'],['Works at','Northgate Motors'],['Voice','Warm and calm'],['Knows','All 48 cars in stock'],['Books','Test drives'],['Answers','Opening hours'],",
-     "var ITEMS=[['Nome','Sara'],['Trabalha na','Northgate Motors'],['Voz','Calma e simpática'],['Conhece','Os 48 carros do estoque'],['Agenda','Test drives'],['Responde','Horário de funcionamento'],"),
+     "var ITEMS=[['Nome','Sara'],['Trabalha na','Northgate Motors'],['Voz','Calma e simpática'],['Conhece','Todo o estoque'],['Agenda','Test drives'],['Responde','Horário de funcionamento'],"),
     ("['Books','Trade-in valuations'],['Answers','Financing questions'],['Rings Tom','Buyers ready to sign'],['Never','Makes up a price'],['Says','“Tom talks price in person.”'],['Sends','A recap to Tom']];",
      "['Agenda','Avaliação do seu usado'],['Responde','Dúvidas sobre financiamento'],['Liga para o Rafael','Quando o cliente quer fechar'],['Nunca','Inventa preço'],['Diz','“O preço o Rafael passa pessoalmente.”'],['Envia','Um resumo para o Rafael']];"),
     ("a.textContent='Open app'", "a.textContent='Abrir app'"),
 
     # ── widget: the Portuguese Sara ──
     (WIDGET_KEY_EN, WIDGET_KEY_PT),
+]
+
+# The Portuguese call: replaces the whole English call-en block, then every
+# Northgate Motors left on the page (phone mock, WhatsApp note, "Sara calls you").
+_SCRIPT = Path(__file__).resolve().parent
+_EN_CALL = re.search(r'(<script type="application/json" id="call-en">)(.*?)(</script>)',
+                     (_SCRIPT.parent / "client/public/site/index.html").read_text(encoding="utf-8"), re.S)
+_PT_CALL = json.loads((_SCRIPT / "site-call-pt.json").read_text(encoding="utf-8"))
+_PT_LEN = round(_PT_CALL["lines"][-1]["t1"] - _PT_CALL["lines"][0]["t0"])
+PAIRS += [
+    (_EN_CALL.group(0), _EN_CALL.group(1) + json.dumps(_PT_CALL, ensure_ascii=False) + _EN_CALL.group(3)),
+    ('<small class="num">1:45</small><em>1x</em>', f'<small class="num">{_PT_LEN // 60}:{_PT_LEN % 60:02d}</small><em>1x</em>'),
+    ('Northgate Motors', 'BRASIL CARS PREMIUM', ANY),
 ]
 
 

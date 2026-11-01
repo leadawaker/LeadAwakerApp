@@ -862,7 +862,8 @@ body, html { margin: 0; padding: 0; }
     /* What sits on the panel's old ground (sticky group rows, soft cards) turns white with it. */
     --surface: var(--card);
     --panel-list-bg: var(--card-triple);
-    --group-header-bg: var(--card-triple);
+    /* A full colour, like the root token (GroupHeader paints it as is). */
+    --group-header-bg: hsl(var(--card-triple));
     --color-panel-list-bg: var(--card);
   }
   /* The rows sit 6px from the panel's edge: a tight shadow, so the panel never cuts it. */
@@ -880,6 +881,21 @@ body, html { margin: 0; padding: 0; }
   .la-list-panel--split .la-lead-swipe { overflow: visible !important; }
   /* Reaches past the panel so a card's shadow is never cut by this scroller. */
   .la-list-panel--split .la-split-scroll { margin: 0 -14px; padding: 2px 14px 14px !important; }
+  /* The list runs to the bottom edge of the screen: no gap below the panel, the cards scroll
+     under the edge. The last one still scrolls clear of the floating fold button. */
+  .la-list-panel--split { height: calc(100% - 14px) !important; margin-bottom: 0; }
+  .la-list-panel--split .la-split-scroll:has(+ .la-fold-float) { padding-bottom: 54px !important; }
+  /* A group's title stays at the top while its rows scroll under it; the next title pushes it off.
+     Full scroller width on the ground, with a halo above, so no card or shadow shows around it. */
+  .la-list-panel--split .la-split-scroll .la-list-section-title {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    margin: 0 -14px;
+    padding: 0 18px 8px;
+    background: hsl(var(--ground-page));
+    box-shadow: 0 -4px 0 0 hsl(var(--ground-page));
+  }
 }
 
 .la-mono-tile {

@@ -190,7 +190,8 @@ export function RepInboxTopControls({ views, view, setView, group, setGroup, sor
 // ── Group header (left list pane) ────────────────────────────────
 function RepGroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 8px 5px" }}>
+    // Sticks to the top of the list (across the scroller's 10px side padding) while its group scrolls under it.
+    <div style={{ position: "sticky", top: 0, zIndex: 2, display: "flex", alignItems: "center", gap: 8, margin: "0 -10px", padding: "12px 18px 5px", background: "var(--surface)", boxShadow: "0 -6px 0 0 var(--surface)" }}>
       <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, letterSpacing: "0.14em", textTransform: "uppercase", color: "var(--mute-2)", whiteSpace: "nowrap" }}>{label}</span>
       <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, color: "var(--mute-2)" }}>{count}</span>
       <span style={{ flex: 1, height: 1, background: "var(--line)" }} />

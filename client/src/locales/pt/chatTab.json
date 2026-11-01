@@ -240,6 +240,9 @@
     "reputation": {
       "label": "Reputação",
       "soon": "Pede aos clientes uma avaliação no Google pelo WhatsApp quando o serviço termina. Começa quando o sistema de agendamento ou de serviços do cliente estiver conectado, para o CRM saber quando o cliente foi atendido."
+    },
+    "webchat": {
+      "label": "Chat do site"
     }
   }
 }

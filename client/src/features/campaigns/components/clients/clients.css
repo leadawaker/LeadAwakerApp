@@ -44,6 +44,9 @@
 }
 /* Each section of the list is a raised card with a hairline, so it reads against the page. */
 .dp-group { border: 1px solid var(--line); }
+/* A group's head stays at the top of the list while its personas scroll under it. The card clips
+   (overflow: clip, not hidden) so it is no scroll container and the head sticks to the list's scroller. */
+.dp-group > .am-section-head { position: sticky; top: 0; z-index: 2; background: var(--card); }
 /* A persona is open: the list steps aside into a rail, the editor gets the room. */
 .dp-shell.is-open .dp-list { flex: 0 0 var(--toolbar-w); }
 .dp-shell.is-open .dp-list-inner { gap: 14px; }

@@ -39,7 +39,7 @@ import { useWorkspace } from "@/hooks/useWorkspace";
 import { hapticSave, hapticDelete } from "@/lib/haptics";
 import { getLeadStatusAvatarColor, getCampaignAvatarColor } from "@/lib/avatarUtils";
 
-import { getLeadId, getFullName, getStatus } from "./leadUtils";
+import { getLeadId, getFullName, getStatus, getPhone } from "./leadUtils";
 import { presentName, useChatsPresenting } from "../../presenting";
 import { formatRelativeTime, formatBookedDate } from "./formatUtils";
 import { PipelineProgress, PipelineProgressCompact, PipelineDashBar } from "./atoms";
@@ -74,6 +74,7 @@ export function LeadDetailView({
   // Presenting (Owner, Chats): the header shows the masked name, and the name is not editable meanwhile.
   const { masked }  = useChatsPresenting();
   const name        = presentName(getFullName(lead), masked);
+  const headerPhone = getPhone(lead);
   const status      = getStatus(lead);
   const avatarColor = getStatusAvatarColor(status);
   const leadId      = getLeadId(lead);
@@ -509,6 +510,10 @@ export function LeadDetailView({
                 </span>
               )}
             </div>
+            {/* The number under the name, like the Calls header. Hidden while presenting. */}
+            {!masked && headerPhone && (
+              <div data-testid="lead-header-phone" style={{ fontFamily: "var(--mono)", fontSize: 13, color: "var(--ink-soft)", fontVariantNumeric: "tabular-nums", marginBottom: 6 }}>{headerPhone}</div>
+            )}
             <div style={{ display: "flex", gap: 12, fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute)", letterSpacing: "0.1em", textTransform: "uppercase", flexWrap: "wrap" }}>
               {/* Separators only between parts that are there: never a leading "·". */}
               {[

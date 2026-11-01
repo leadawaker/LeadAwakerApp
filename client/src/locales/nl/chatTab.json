@@ -240,6 +240,9 @@
     "reputation": {
       "label": "Reputatie",
       "soon": "Vraagt klanten via WhatsApp om een Google-review zodra een klus klaar is. Dit start zodra het boekings- of planningssysteem van de klant gekoppeld is, zodat het CRM weet wanneer een klant geholpen is."
+    },
+    "webchat": {
+      "label": "Webchat"
     }
   }
 }

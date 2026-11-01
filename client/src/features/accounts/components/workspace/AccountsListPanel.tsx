@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { apiFetch } from "@/lib/apiUtils";
 import { useFKeyScrollToSelected } from "@/hooks/useFKeyScrollToSelected";
 import { useCompactHoverCard, CompactHoverCardPortal } from "@/components/crm/CompactEntityRail";
+import { ListSection, SplitListSkeleton } from "@/components/crm/primitives";
 import {
   getAccountId, STATUS_GROUP_ORDER, STATUS_I18N_KEY, type VirtualListItem,
   ListSkeleton, CompactListSkeleton,
@@ -131,6 +132,20 @@ export function AccountsListPanel({
 
   useEffect(() => { setCurrentPage(0); }, [listSearch, filterStatus, groupBy, groupDirection, sortBy]);
 
+  // Desktop: each group is its own card under a title on the ground, as on Calls and Chats.
+  const splitGroups = !isNarrow && !isListCompact;
+  const sections = useMemo(() => {
+    const out: { label: string | null; count?: number; items: AccountRow[] }[] = [];
+    for (const it of paginatedItems) {
+      if (it.kind === "header") out.push({ label: it.label, count: it.count, items: [] });
+      else {
+        if (out.length === 0) out.push({ label: null, items: [] });
+        out[out.length - 1].items.push(it.account);
+      }
+    }
+    return out;
+  }, [paginatedItems]);
+
   // Scroll selected card into view.
   useEffect(() => {
     if (!selectedAccount || !scrollRef.current) return;
@@ -139,8 +154,11 @@ export function AccountsListPanel({
       const id = getAccountId(selectedAccount);
       const el = container.querySelector(`[data-account-id="${id}"]`) as HTMLElement | null;
       if (!el) return;
+      // The sticky title over the card: its section's title (split groups) or the group row above it.
       let headerHeight = 0;
-      let sibling = el.previousElementSibling;
+      const sectionTitle = el.closest(".la-list-section")?.querySelector(".la-list-section-title") as HTMLElement | null;
+      if (sectionTitle) headerHeight = sectionTitle.offsetHeight;
+      let sibling = sectionTitle ? null : el.previousElementSibling;
       while (sibling) {
         if (sibling.getAttribute("data-group-header") === "true") { headerHeight = (sibling as HTMLElement).offsetHeight; break; }
         sibling = sibling.previousElementSibling;
@@ -155,7 +173,7 @@ export function AccountsListPanel({
     };
     const raf = requestAnimationFrame(run);
     return () => cancelAnimationFrame(raf);
-  }, [selectedAccount]);
+  }, [selectedAccount, splitGroups]);
 
   useFKeyScrollToSelected({
     containerRef: scrollRef,
@@ -174,7 +192,7 @@ export function AccountsListPanel({
     : cn("w-full lg:w-[var(--toolbar-w)] lg:shrink-0", isNarrow && selectedAccount ? "hidden" : "flex");
 
   return (
-    <div className={cn("la-list-panel flex-col h-full min-h-0 bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", widthClass)}>
+    <div className={cn("la-list-panel flex-col h-full min-h-0 bg-panel-list-bg overflow-hidden border-r border-[var(--line)]", splitGroups && "la-list-panel--split", widthClass)}>
       {isListCompact ? (
         <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area">
           {loading ? (
@@ -196,15 +214,32 @@ export function AccountsListPanel({
         </div>
       ) : (
         <>
-          <div ref={scrollRef} className="flex-1 overflow-y-auto la-list-area">
+          <div ref={scrollRef} className={cn("flex-1 overflow-y-auto la-list-area", splitGroups && "la-split-scroll")}>
             {loading ? (
-              <ListSkeleton />
+              splitGroups ? <SplitListSkeleton /> : <ListSkeleton />
             ) : paginatedItems.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-12 text-center px-4">
                 <Building2 className="w-8 h-8 text-muted-foreground/30 mb-3" />
                 <p className="text-sm font-medium text-muted-foreground">{t("page.noAccountsFound")}</p>
                 {listSearch && <p className="text-xs text-muted-foreground/70 mt-1">{t("page.tryDifferentSearch")}</p>}
               </div>
+            ) : splitGroups ? (
+              sections.map((sec) => (
+                <ListSection key={sec.label ?? "all"} label={sec.label ?? undefined} count={sec.count}>
+                  {/* Flat rows as on Calls and Chats; the selected one is raised (la-cards--flat). */}
+                  <div className="la-cards la-cards--flat">
+                    {sec.items.map((account, idx) => {
+                      const aid = getAccountId(account);
+                      const isSel = selectedAccount ? getAccountId(selectedAccount) === aid : false;
+                      return (
+                        <div key={aid || idx} data-account-id={aid} className="animate-card-enter" style={{ marginInline: 4, scrollMarginTop: 44, animationDelay: `${Math.min(idx, 15) * 30}ms` }}>
+                          <WorkspaceAccountCard account={account} isActive={isSel} onClick={() => onSelectAccount(account)} campaignNames={campaignNamesByAccount.get(aid) ?? []} leadCount={leadCountsByAccount.get(aid) ?? null} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                </ListSection>
+              ))
             ) : (
               <div className="la-cards">
                 {paginatedItems.map((item, idx) => {
@@ -223,7 +258,7 @@ export function AccountsListPanel({
               </div>
             )}
           </div>
-          {/* Bottom bar: pagination on the left, the list fold button at the right end */}
+          {/* The fold button floats at the panel's corner; with more than one page it gets a bar, pagination on the left. */}
           <ListPanelFooter>
             {totalAccounts > PAGE_SIZE && (
               <>

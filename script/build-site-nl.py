@@ -51,6 +51,7 @@ PAIRS = common_pairs("nl", "/nl") + [
      'href="/login">Inloggen</a>', 3),
         ('rel="noopener">Book a call</a>',
      'rel="noopener">Gesprek plannen</a>', 3),
+    ('hidden>Try Sara for free</a>', 'hidden>Probeer Sara gratis</a>'),
     ('aria-label="Open menu"',
      'aria-label="Menu openen"'),
     ('<a href="#website">Website chat</a>',

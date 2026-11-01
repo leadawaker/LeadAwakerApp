@@ -240,6 +240,9 @@
     "reputation": {
       "label": "Reputation",
       "soon": "Asks customers for a Google review on WhatsApp once a job is done. It starts when the client's booking or job system is connected, so the CRM knows when a customer was served."
+    },
+    "webchat": {
+      "label": "Webchat"
     }
   }
 }

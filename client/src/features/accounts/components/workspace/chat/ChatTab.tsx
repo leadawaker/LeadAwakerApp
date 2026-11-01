@@ -9,13 +9,13 @@
 //
 // WhatsApp and the website chat each answer from their own campaign (the engine
 // reads Accounts.inbound_campaign_id and Widget_Configs.Campaigns_id apart), so
-// a channel switch picks which one these sections edit. While both still point
+// each has its own service tab: Speed to Lead (WhatsApp) and Webchat. While both still point
 // at one campaign, the agency can give the website its own copy (chatSplit.ts).
 import { useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { Link } from "wouter";
-import { BookOpen, Bot, Clock, FileText, Globe, Hand, LayoutDashboard, Link2, Loader2, MessageCircle, MessageSquareText, ArrowRight, Check, SlidersHorizontal } from "lucide-react";
+import { BookOpen, Bot, Clock, FileText, Hand, LayoutDashboard, Link2, Loader2, MessageSquareText, ArrowRight, Check, SlidersHorizontal } from "lucide-react";
 import { apiFetch } from "@/lib/apiUtils";
 import { useCampaignDetail } from "@/features/campaigns/components/useCampaignDetail";
 import { useWorkspace } from "@/hooks/useWorkspace";
@@ -23,7 +23,7 @@ import { useLastTab } from "@/hooks/useLastTab";
 import type { Campaign } from "@/types/models";
 import { SectionHeader, SectionLayout, SectionRail, type SectionRailItem } from "../SectionRail";
 import { ReadOnlyNote, hhmm, useLocalized, type ChatEdit } from "./chatAtoms";
-import { receptionistCampaignId, useChatCampaign, useChatWidget, type ChatCampaign } from "./useChatCampaign";
+import { useChatCampaign, useChatWidget, type ChatCampaign } from "./useChatCampaign";
 import { ChatOverview, widgetLive } from "./ChatOverview";
 import { ChatGreeting } from "./ChatGreeting";
 import { ChatBehaviour, ChatKnowledge } from "./ChatBehaviour";
@@ -65,7 +65,8 @@ export function ChatTab(props: ChatTabProps) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 18, minWidth: 0 }}>
       <ChatServiceBar services={services} service={service} onService={setService} />
-      {service === "speed_to_lead" && <SpeedToLeadChat {...props} />}
+      {service === "speed_to_lead" && <ChannelChat key="whatsapp" {...props} channel="whatsapp" onSplit={() => setService("webchat")} />}
+      {service === "webchat" && <ChannelChat key="website" {...props} channel="website" onSplit={() => setService("webchat")} />}
       {service === "reactivation" && (
         <AccountReactivationTab key={props.accountId} accountId={props.accountId} accountName={props.accountName ?? ""} readOnly={!!props.readOnly} isMobile={!!props.stacked} />
       )}
@@ -74,8 +75,14 @@ export function ChatTab(props: ChatTabProps) {
   );
 }
 
-/** Speed to Lead: the receptionist answering on WhatsApp and the website chat, one campaign per channel. */
-function SpeedToLeadChat({ accountId, inboundCampaignId, readOnly = false, stacked = false, onOpenIntegrations, initialSection, knowledgeNote }: ChatTabProps) {
+/**
+ * One channel's receptionist: Speed to Lead answers WhatsApp (Accounts.inbound_campaign_id), Webchat
+ * answers the website widget (Widget_Configs.Campaigns_id). While both point at one campaign, a note
+ * says so and the agency can give the website its own copy (chatSplit.ts).
+ */
+function ChannelChat({ accountId, inboundCampaignId, readOnly = false, stacked = false, onOpenIntegrations, initialSection, knowledgeNote, channel, onSplit }: ChatTabProps & {
+  channel: ChatChannel; onSplit: () => void;
+}) {
   const { t } = useTranslation("chatTab");
   const { isAgencyUser } = useWorkspace();
   const qc = useQueryClient();
@@ -83,11 +90,7 @@ function SpeedToLeadChat({ accountId, inboundCampaignId, readOnly = false, stack
   const inbound = Number(inboundCampaignId);
   const whatsappId = Number.isSafeInteger(inbound) && inbound > 0 ? inbound : null;
   const websiteId = widget?.campaignsId ?? null;
-  // The channels this account has: a WhatsApp campaign, a website widget.
-  const channels = CHAT_CHANNELS.filter((c) => (c === "whatsapp" ? !!whatsappId : !!widget));
-  const [pickedChannel, setChannel] = useLastTab<ChatChannel>("chats.channel", CHAT_CHANNELS, "whatsapp");
-  const channel: ChatChannel | null = channels.includes(pickedChannel) ? pickedChannel : channels[0] ?? null;
-  const campaignId = channel === "whatsapp" ? whatsappId : channel === "website" ? websiteId : receptionistCampaignId(inboundCampaignId, widget);
+  const campaignId = channel === "whatsapp" ? whatsappId : websiteId;
   const { campaign, loading, error, onSave } = useChatCampaign(campaignId);
   const shared = !!whatsappId && whatsappId === websiteId;
   const [splitting, setSplitting] = useState(false);
@@ -100,7 +103,7 @@ function SpeedToLeadChat({ accountId, inboundCampaignId, readOnly = false, stack
       const res = await apiFetch(`/api/accounts/${accountId}/chat/split-website`, { method: "POST" });
       if (!res.ok) throw new Error();
       await qc.invalidateQueries({ queryKey: ["/api/widget-configs", accountId] });
-      setChannel("website");
+      onSplit();
     } catch {
       setSplitFailed(true);
     } finally {
@@ -108,9 +111,8 @@ function SpeedToLeadChat({ accountId, inboundCampaignId, readOnly = false, stack
     }
   };
 
-  const bar = channels.length > 1 || shared ? (
-    <ChannelBar
-      channels={channels} channel={channel} onChannel={setChannel} shared={shared}
+  const bar = shared ? (
+    <SharedNote
       onSplit={isAgencyUser && !readOnly ? () => void split() : undefined} splitting={splitting} splitFailed={splitFailed}
     />
   ) : null;
@@ -139,27 +141,11 @@ function SpeedToLeadChat({ accountId, inboundCampaignId, readOnly = false, stack
   );
 }
 
-const CHANNEL_ICON: Record<ChatChannel, ReactNode> = { whatsapp: <MessageCircle size={14} />, website: <Globe size={14} /> };
-
-/** WhatsApp | Website, and while they share one campaign, a note with the button that separates them. */
-function ChannelBar({ channels, channel, onChannel, shared, onSplit, splitting, splitFailed }: {
-  channels: ChatChannel[]; channel: ChatChannel | null; onChannel: (c: ChatChannel) => void; shared: boolean;
-  onSplit?: () => void; splitting: boolean; splitFailed: boolean;
-}) {
+/** While WhatsApp and the webchat share one campaign: a note with the button that separates them. */
+function SharedNote({ onSplit, splitting, splitFailed }: { onSplit?: () => void; splitting: boolean; splitFailed: boolean }) {
   const { t } = useTranslation("chatTab");
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }} data-testid="chat-channels">
-      {channels.length > 1 && (
-        <div className="la-seg" role="radiogroup" aria-label={t("channels.label")} style={{ alignSelf: "flex-start" }}>
-          {channels.map((c) => (
-            <button key={c} type="button" role="radio" aria-checked={channel === c} className={channel === c ? "la-seg-btn on" : "la-seg-btn"}
-              onClick={() => onChannel(c)} data-testid={`chat-channel-${c}`} style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-              {CHANNEL_ICON[c]}{t(`channels.${c}`)}
-            </button>
-          ))}
-        </div>
-      )}
-      {shared && (
         <div className="neu-inset-crisp" data-testid="chat-channels-shared"
           style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", padding: "10px 14px", borderRadius: "var(--r-button)", fontSize: 12.5, color: "var(--ink-soft)", lineHeight: 1.45 }}>
           <Link2 size={14} style={{ color: "var(--mute)", flexShrink: 0 }} />
@@ -171,7 +157,6 @@ function ChannelBar({ channels, channel, onChannel, shared, onSplit, splitting, 
           )}
           {splitFailed && <span role="alert" style={{ width: "100%", color: "var(--stage-lost)" }}>{t("channels.splitFailed")}</span>}
         </div>
-      )}
     </div>
   );
 }
