@@ -65,7 +65,7 @@ Never use `process.exit()` in Vite or server error handlers — it kills the ent
 
 ## Automation Engine (Python)
 
-The campaign launcher, bump scheduler, AI conversation pipeline, and inbound handler are a **separate Python service** (repo `LeadAwakerAutomations`; on Gabriel's server at `/home/gabriel/automations/`, elsewhere wherever `AUTOMATIONS_DIR` points). It runs independently from the Express backend.
+The campaign launcher, bump scheduler, AI conversation pipeline, and inbound handler are a **separate Python service** (repo `leadawaker/engine`, formerly `LeadAwakerAutomations`; on Gabriel's server at `/home/gabriel/automations/`, elsewhere wherever `AUTOMATIONS_DIR` points). It runs independently from the Express backend.
 
 - Read that repo's `CLAUDE.md` before touching anything bump/campaign/AI-conversation related
 - Campaign config fields (First_Message, bump_1_template, bump_2_template, etc.) are read from the DB by this service — not by Express

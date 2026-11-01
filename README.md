@@ -15,9 +15,13 @@ The app is in English, Dutch and Brazilian Portuguese.
 |---|---|---|
 | CRM frontend | `client/` (this repo) | React app, built by Vite and deployed to Vercel |
 | CRM API | `server/` (this repo) | Express + Drizzle on Postgres, also serves the Vite dev middleware in development |
-| Automations engine | separate repo `LeadAwakerAutomations` | Python (FastAPI) service: the voice and chat AI, campaign sender, follow-ups, alerts. Talks to this API over HTTP (`ENGINE_URL`) and shares the same database |
+| Automations engine | separate repo `leadawaker/engine` | Python (FastAPI) service: the voice and chat AI, campaign sender, follow-ups, alerts. Talks to this API over HTTP (`ENGINE_URL`) and shares the same database |
 | Booking pages | separate checkout of Cal.diy (`CALDIY_DIR`) | Self-hosted booking app the server provisions per client |
 | Marketing site | `client/public/site/`, `client/public/premium/` | The leadawaker.com landing pages. Not part of the CRM; due to move to its own repo |
+
+## Setting up a new platform
+
+To run a complete, independent Lead Awaker platform on a new server (your own domain and provider accounts), follow `SETUP.md` and the guides in `docs/setup/`. They are written for Claude Code to carry out, and say which steps need a person.
 
 ## Repo layout
 
