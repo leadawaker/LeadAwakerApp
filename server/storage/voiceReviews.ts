@@ -11,6 +11,7 @@ import { db } from "../db";
 import {
   accounts, interactions, leads, voiceCallEvents, voiceCalls, voiceReviews, type VoiceReviewRow,
 } from "@shared/schema";
+import { KB_STOCK_PREFIX } from "@shared/knowledgeBase";
 import type { CallLabelDto, ReviewDto, ReviewKind, ReviewReport, ReviewStats, ReviewStatus } from "@shared/voiceReview";
 import type { ReviewCallRow } from "../voice/review/reviewStats";
 import type { ReviewWeek } from "../voice/review/weekWindow";
@@ -20,7 +21,6 @@ export interface TranscriptTurn { role: "caller" | "agent"; text: string }
 export interface ToolEventLite { tool: string; status: string | null; error: string | null; args: string }
 
 const KB_TABLE = sql.raw(`"p2mxx34fvbf3ll6"."Account_Knowledge_Base"`);
-const STOCK_TITLE = "Current stock, updated every hour";
 const SECRET_KEY = /secret|token|header|authoriz|password|api[-_]?key|cookie/i;
 const ARGS_MAX_CHARS = 200;
 const ERROR_MAX_CHARS = 500;
@@ -152,7 +152,7 @@ async function loadReviewToolEvents(callIds: string[]): Promise<Map<string, Tool
 async function loadAccountKnowledge(accountId: number): Promise<{ title: string; content: string }[]> {
   const res = await db.execute(sql`
     SELECT title, content FROM ${KB_TABLE}
-    WHERE account_id = ${accountId} AND COALESCE(title, '') NOT LIKE ${`${STOCK_TITLE}%`}
+    WHERE account_id = ${accountId} AND COALESCE(title, '') NOT LIKE ${`${KB_STOCK_PREFIX}%`}
     ORDER BY category, id
   `);
   return (res.rows as { title: string | null; content: string | null }[])

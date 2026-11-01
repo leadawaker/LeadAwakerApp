@@ -6,9 +6,12 @@ import { accountIdFor, handleZodError, wrapAsync } from "./_helpers";
 import { resolveVoiceAccess } from "./voiceCallsAccess";
 import { LINE_PURPOSES, LLM_KEYS } from "../storage/voiceLineEngine";
 import {
-  AFTER_HOURS, HOLD_MUSIC, NOTICE_SPEEDS, NOTICE_VOICES, TRANSFER_MODES, TRANSFER_WAITING, VOICE_LOCALES,
+  HOLD_MUSIC, NOTICE_SPEEDS, NOTICE_VOICES, TRANSFER_MODES, TRANSFER_WAITING, VOICE_LOCALES,
   VOICE_REGIONS, VoiceLineError, type RecordingNoticeCustom,
 } from "../storage/voiceLines";
+import {
+  afterHoursField, greetingField, intakeField, pronunciationField, screeningPatchField,
+} from "../voice/voiceLineFields";
 
 // Account Workspace "Voice" tab (specs/voice-tab). Reads are open to the
 // account's own users; writes are agency-only.
@@ -63,20 +66,13 @@ const putBodySchema = z.object({
   transferMode: z.enum(TRANSFER_MODES).optional(),
   region: z.enum(VOICE_REGIONS).optional(),
   recordingNotice: z.boolean().optional(),
-  screening: z.object({
-    sales: z.boolean().optional(),
-    robocalls: z.boolean().optional(),
-    abuse: z.boolean().optional(),
-  }).strict().optional(),
+  screening: screeningPatchField.optional(),
   agentGender: z.enum(["female", "male"]).nullable().optional(),
-  greeting: z.string().max(500).optional(),
-  pronunciation: z.array(z.object({
-    word: z.string().max(80),
-    sayAs: z.string().max(120),
-  })).max(50).optional(),
-  // Trimmed and cut to 6 lines of 120 characters on save (storage/voiceLines.ts).
-  intake: z.string().max(5000).optional(),
-  afterHours: z.enum(AFTER_HOURS).nullable().optional(),
+  // The field rules are shared with the setting change cards (voice/voiceLineFields.ts).
+  greeting: greetingField.optional(),
+  pronunciation: pronunciationField.optional(),
+  intake: intakeField.optional(),
+  afterHours: afterHoursField.optional(),
   extraInstructions: z.string().max(1000, "Extra instructions are limited to 1000 characters").optional(),
   // Engine client_setup.TONE_MAX.
   tone: z.string().max(300, "Tone is limited to 300 characters").optional(),

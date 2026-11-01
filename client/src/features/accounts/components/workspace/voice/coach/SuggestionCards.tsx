@@ -15,7 +15,7 @@ const TABS = ["open", "accepted", "done"] as const;
 type Tab = (typeof TABS)[number];
 
 const TAB_OF: Record<SuggestionStatus, Tab> = {
-  proposed: "open", stale: "open", accepted: "accepted", live: "done", rejected: "done",
+  proposed: "open", stale: "open", accepted: "accepted", live: "done", rejected: "done", undone: "done", done: "done",
 };
 
 export function SuggestionCards({ accountId }: { accountId: number }) {

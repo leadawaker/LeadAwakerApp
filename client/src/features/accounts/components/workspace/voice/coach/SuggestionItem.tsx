@@ -17,6 +17,7 @@ const PILL_STYLE = { fontFamily: "var(--mono)", fontSize: 9.5, letterSpacing: "0
 const BTN_STYLE = { minHeight: 36 } as const;
 const STATUS_COLOR: Record<SuggestionStatus, string | undefined> = {
   proposed: "var(--wine)", accepted: "var(--good)", live: "var(--good)", rejected: undefined, stale: "var(--warn)",
+  undone: undefined, done: "var(--good)",
 };
 const DIFF_HEIGHT = 220;
 const COMPACT_DIFF_HEIGHT = 140;
@@ -33,6 +34,7 @@ export function SuggestionItem({ card, accountId, compact, folded }: { card: Sug
 
   const stale = card.status === "stale" || note === "stale";
   const open = card.status === "proposed" || card.status === "stale";
+  // Only a shared card has a language (and so a mirror in the other one).
   const mirrorLang: PromptLang = card.language === "nl" ? "en" : "nl";
   const hasMirror = card.mirrorFind != null && card.mirrorReplace != null;
   const diffHeight = compact ? COMPACT_DIFF_HEIGHT : DIFF_HEIGHT;
@@ -54,7 +56,7 @@ export function SuggestionItem({ card, accountId, compact, folded }: { card: Sug
   const details = (
     <>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-        <Pill style={PILL_STYLE}>{t(`draft.lang.${card.language}`)}</Pill>
+        {card.language && <Pill style={PILL_STYLE}>{t(`draft.lang.${card.language}`)}</Pill>}
         {!compact && <Pill style={PILL_STYLE}>{t(`cards.source.${card.source}`)}</Pill>}
         <Pill color={STATUS_COLOR[shownStatus]} style={PILL_STYLE} data-testid="voice-suggestion-status">{t(`cards.status.${shownStatus}`)}</Pill>
       </div>

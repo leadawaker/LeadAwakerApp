@@ -98,6 +98,8 @@ function setup(opts: {
           replace: r.proposal.replace, mirrorPromptId: r.mirrorPromptId, mirrorFind: r.proposal.mirrorFind,
           mirrorReplace: r.proposal.mirrorReplace, callIds: r.proposal.callIds, status: "proposed", statusNote: null,
           createdAt: NOW.toISOString(), decidedAt: null,
+          scope: "shared", op: "replace", kbId: null, kbTitle: null, kbCategory: null,
+          settingKey: null, settingOld: null, settingNew: null, settingApplies: false,
         });
         return id;
       });

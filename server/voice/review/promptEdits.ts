@@ -34,7 +34,7 @@ export function cleanCopy(s: string): string {
 export type ProposalProblem = "empty" | "no_change" | "too_long" | "not_found" | "ambiguous" | "new_mark"
   | "mirror_not_found" | "mirror_ambiguous" | "mirror_new_mark" | "rejected_before";
 
-const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
+export const collapse = (s: string) => s.replace(/\s+/g, " ").trim();
 const other = (l: PromptLang): PromptLang => (l === "nl" ? "en" : "nl");
 
 function checkEdit(text: string | undefined, find: string, replace: string): "not_found" | "ambiguous" | "new_mark" | null {
@@ -53,10 +53,13 @@ export function validateProposal(
   if (!p.find.trim() || !p.title.trim()) return fail("empty");
   if (p.find === p.replace) return fail("no_change");
   if (p.find.length > 2000 || p.replace.length > 3000) return fail("too_long");
-  const main = checkEdit(texts[p.language], p.find, p.replace);
+  // Only the shared prompt has a language; a card without one has no prompt text to edit here.
+  const lang = p.language;
+  if (!lang) return fail("not_found");
+  const main = checkEdit(texts[lang], p.find, p.replace);
   if (main) return fail(main);
   if (p.mirrorFind) {
-    const mirror = checkEdit(texts[other(p.language)], p.mirrorFind, p.mirrorReplace ?? "");
+    const mirror = checkEdit(texts[other(lang)], p.mirrorFind, p.mirrorReplace ?? "");
     if (mirror) return fail(`mirror_${mirror}`);
   }
   const f = collapse(p.find);

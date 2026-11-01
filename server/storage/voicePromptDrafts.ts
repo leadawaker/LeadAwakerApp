@@ -15,7 +15,10 @@ import {
   promptLibrary, promptVersions, voicePromptDrafts, voicePromptSuggestions,
   type VoicePromptDraftRow, type VoicePromptSuggestionRow,
 } from "@shared/schema";
-import type { DraftView, PromptLang, ProposalInput, SuggestionDto, SuggestionStatus } from "@shared/voiceReview";
+import type {
+  CardOp, CardScope, DraftView, PromptLang, ProposalInput, SuggestionDto, SuggestionStatus,
+} from "@shared/voiceReview";
+import { isSettingCardKey } from "@shared/voiceSettings";
 import { planAccept, planSaveToLive, staleTransitions, STALE_NOTE, type CardEdit, type DraftRowState } from "../voice/review/draftPlans";
 import { elevenPromptRow, type VoicePromptRow } from "./voiceAccountPrompts";
 import type { DbLike, Tx } from "./voicePersona";
@@ -53,8 +56,18 @@ function toSuggestionDto(r: VoicePromptSuggestionRow): SuggestionDto {
     accountId: r.accountsId,
     source: r.source as SuggestionDto["source"],
     reviewId: r.reviewId,
+    // null for knowledge and setting cards (no prompt row), and for client cards before the account's first Save to live
     promptId: r.promptsId,
-    language: r.language as PromptLang,
+    language: r.language as PromptLang | null,
+    scope: r.scope as CardScope,
+    op: r.editOp as CardOp,
+    kbId: r.kbId,
+    kbTitle: r.kbTitle,
+    kbCategory: r.kbCategory,
+    settingKey: r.settingKey,
+    settingOld: r.settingOld,
+    settingNew: r.settingNew,
+    settingApplies: r.scope === "setting" && isSettingCardKey(r.settingKey),
     title: r.title,
     reason: r.reason,
     find: r.findText,
