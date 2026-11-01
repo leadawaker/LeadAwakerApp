@@ -105,14 +105,14 @@ import {
 import type { NotificationItem, ProspectsListParams } from "./types";
 
 export const miscStorage = {
-  // ─── Support Chat ─────────────────────────────────────────────────────
+  // ─── Founder chat (Support_* tables; the AI bot channel is retired) ───
 
   async createSupportSession(data: InsertSupportSession): Promise<SupportSession> {
     const [row] = await db.insert(supportSessions).values(data as any).returning();
     return row;
   },
 
-  async getActiveSupportSession(userId: number, channel = "bot"): Promise<SupportSession | undefined> {
+  async getActiveSupportSession(userId: number, channel = "founder"): Promise<SupportSession | undefined> {
     const [row] = await db
       .select()
       .from(supportSessions)
@@ -153,10 +153,8 @@ export const miscStorage = {
     return db
       .select()
       .from(supportSessions)
-      .where(and(
-        eq(supportSessions.channel, "founder"),
-        inArray(supportSessions.status, ["active", "escalated"]),
-      ))
+      // Every status: a chat the person closed still belongs in Gabriel's inbox.
+      .where(eq(supportSessions.channel, "founder"))
       .orderBy(desc(supportSessions.createdAt));
   },
 

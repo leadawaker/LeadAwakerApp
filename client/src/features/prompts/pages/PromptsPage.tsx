@@ -23,6 +23,7 @@ import { DeletePromptDialog } from "../components/DeletePromptDialog";
 
 import type { PromptViewMode, PromptSortOption, PromptGroupOption, PromptColKey } from "../types";
 import { VIEW_MODE_KEY, getPromptId, DEFAULT_VISIBLE_PROMPT_COLS } from "../types";
+import { toCampaignForPreview, type CampaignForPreview } from "../utils/resolveVariables";
 import { isPromptCategory, isVoiceUseCase, type PromptCategory } from "../promptCategories";
 
 /* ── Constants ─────────────────────────────────────────────────────────── */
@@ -94,7 +95,7 @@ export default function PromptsPage() {
 
   /* ── Data ────────────────────────────────────────────────────────────────── */
   const [promptLibraryData, setPromptLibraryData] = useState<any[]>([]);
-  const [campaigns, setCampaigns] = useState<import("../utils/resolveVariables").CampaignForPreview[]>([]);
+  const [campaigns, setCampaigns] = useState<CampaignForPreview[]>([]);
   const [accounts, setAccounts] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
@@ -115,39 +116,7 @@ export default function PromptsPage() {
       const res = await apiFetch("/api/campaigns");
       if (!res.ok) return;
       const data = await res.json();
-      setCampaigns(
-        (Array.isArray(data) ? data : []).map((c: any) => ({
-          id: c.id || c.Id,
-          name: c.name || c.Name || `Campaign #${c.id || c.Id}`,
-          aiModel: c.aiModel || c.ai_model || "",
-          agentName: c.agentName ?? c.agent_name ?? null,
-          serviceName: c.serviceName ?? c.service_name ?? null,
-          campaignService: c.campaignService ?? c.campaign_service ?? null,
-          campaignUsp: c.campaignUsp ?? c.campaign_usp ?? null,
-          calendarLink: c.calendarLink ?? c.calendar_link ?? null,
-          firstMessage: c.firstMessage ?? c.first_message ?? c.First_Message ?? null,
-          whatLeadDid: c.whatLeadDid ?? c.what_lead_did ?? null,
-          firstTouch: c.firstTouch ?? c.first_touch ?? null,
-          positioning: c.positioning ?? null,
-          aiDisclosure: c.aiDisclosure ?? c.ai_disclosure ?? null,
-          inquiriesSource: c.inquiriesSource ?? c.inquiries_source ?? null,
-          inquiryTimeframe: c.inquiryTimeframe ?? c.inquiry_timeframe ?? null,
-          niche: c.niche ?? c.campaignNicheOverride ?? c.campaign_niche_override ?? null,
-          nicheQuestion: c.nicheQuestion ?? c.niche_question ?? null,
-          bookingMode: c.bookingModeOverride ?? c.booking_mode_override ?? null,
-          language: c.language ?? null,
-          promptCampaignId: c.promptCampaignId ?? c.prompt_campaign_id ?? null,
-          promptId: c.promptId ?? c.prompt_id ?? null,
-          demoClientName: c.demoClientName ?? c.demo_client_name ?? null,
-          companyName: c.companyName ?? c.company_name ?? null,
-          aiStyleOverride: c.aiStyleOverride ?? c.ai_style_override ?? null,
-          description: c.description ?? null,
-          aiRole: c.aiRole ?? c.ai_role ?? null,
-          typoCount: c.typoCount ?? c.typo_count ?? null,
-          kb: c.kb ?? null,
-          accountsId: c.accountsId ?? c.Accounts_id ?? null,
-        })),
-      );
+      setCampaigns((Array.isArray(data) ? data : []).map(toCampaignForPreview));
     } catch { /* ignore — stale names are preferable to a crash */ }
   }, []);
 
@@ -167,39 +136,7 @@ export default function PromptsPage() {
 
       if (campaignsRes.ok) {
         const campaignsData = await campaignsRes.json();
-        setCampaigns(
-          (Array.isArray(campaignsData) ? campaignsData : []).map((c: any) => ({
-            id: c.id || c.Id,
-            name: c.name || c.Name || `Campaign #${c.id || c.Id}`,
-            aiModel: c.aiModel || c.ai_model || "",
-            agentName: c.agentName ?? c.agent_name ?? null,
-            serviceName: c.serviceName ?? c.service_name ?? null,
-            campaignService: c.campaignService ?? c.campaign_service ?? null,
-            campaignUsp: c.campaignUsp ?? c.campaign_usp ?? null,
-            calendarLink: c.calendarLink ?? c.calendar_link ?? null,
-            firstMessage: c.firstMessage ?? c.first_message ?? c.First_Message ?? null,
-            whatLeadDid: c.whatLeadDid ?? c.what_lead_did ?? null,
-            firstTouch: c.firstTouch ?? c.first_touch ?? null,
-            positioning: c.positioning ?? null,
-            aiDisclosure: c.aiDisclosure ?? c.ai_disclosure ?? null,
-            inquiriesSource: c.inquiriesSource ?? c.inquiries_source ?? null,
-            inquiryTimeframe: c.inquiryTimeframe ?? c.inquiry_timeframe ?? null,
-            niche: c.niche ?? c.campaignNicheOverride ?? c.campaign_niche_override ?? null,
-            nicheQuestion: c.nicheQuestion ?? c.niche_question ?? null,
-            bookingMode: c.bookingModeOverride ?? c.booking_mode_override ?? null,
-            language: c.language ?? null,
-            promptCampaignId: c.promptCampaignId ?? c.prompt_campaign_id ?? null,
-            promptId: c.promptId ?? c.prompt_id ?? null,
-            demoClientName: c.demoClientName ?? c.demo_client_name ?? null,
-            companyName: c.companyName ?? c.company_name ?? null,
-            aiStyleOverride: c.aiStyleOverride ?? c.ai_style_override ?? null,
-            description: c.description ?? null,
-            aiRole: c.aiRole ?? c.ai_role ?? null,
-            typoCount: c.typoCount ?? c.typo_count ?? null,
-            kb: c.kb ?? null,
-            accountsId: c.accountsId ?? c.Accounts_id ?? null,
-          })),
-        );
+        setCampaigns((Array.isArray(campaignsData) ? campaignsData : []).map(toCampaignForPreview));
       }
 
       if (accountsRes.ok) {
@@ -218,6 +155,12 @@ export default function PromptsPage() {
       setLoading(false);
     }
   }, [isAgencyView]);
+
+  /* ── A campaign saved from the editor (model, a variable's value): swap in the returned row ── */
+  const handleCampaignUpdated = useCallback((row: any) => {
+    const updated = toCampaignForPreview(row);
+    setCampaigns((prev) => prev.map((c) => (c.id === updated.id ? updated : c)));
+  }, []);
 
   useEffect(() => {
     fetchPrompts();
@@ -545,8 +488,9 @@ export default function PromptsPage() {
               onSaved={handleSaved}
               onDelete={openDelete}
               onOpenCreate={openCreate}
-              campaignMap={campaignMap}
+              accountNames={accountMap}
               campaigns={campaigns}
+              onCampaignUpdated={handleCampaignUpdated}
             />
             </div>
           )}

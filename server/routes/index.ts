@@ -20,8 +20,6 @@ import { registerTasksRoutes, startTaskNotifiers } from "./tasks";
 import { registerBillingRoutes } from "./billing";
 import {
   registerAiAgentsRoutes,
-  startSupportCleanup,
-  seedSupportBotPrompt,
   seedAiAgents,
   startAutomationFailureNotifier,
 } from "./ai-agents";
@@ -163,9 +161,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
   // Seed default AI agents (idempotent)
   await seedAiAgents();
 
-  // Seed support bot prompt into Prompt Library (idempotent)
-  await seedSupportBotPrompt();
-
   // ── Background notifiers ──────────────────────────────────────────────
   // DISABLE_BACKGROUND_JOBS=1 skips every timer below: for a second server (a test copy on other
   // ports) that must never publish, notify or poll on its own.
@@ -173,7 +168,6 @@ export async function registerRoutes(httpServer: Server, app: Express): Promise<
     console.log("[jobs] DISABLE_BACKGROUND_JOBS=1: background jobs not started");
     return httpServer;
   }
-  startSupportCleanup();            // daily support session cleanup
   startTaskNotifiers();             // task due-soon (30min) + task overdue (30min)
   startBookingReminders();          // booking reminder 1h before call (10min check)
   startAutomationFailureNotifier(); // automation failure check (5min)

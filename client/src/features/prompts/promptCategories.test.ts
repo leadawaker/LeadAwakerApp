@@ -6,7 +6,6 @@ import { buildPreviewSections, escapeHtml } from "./components/PromptPreviewSect
 test("use_case fallback matches the backfill mapping", () => {
   const cases: Record<string, string> = {
     conversation: "chat",
-    "customer-support": "chat",
     universal_demo_recap_summary: "chat",
     "voice_layer_en-GB": "voice",
     voice_receptionist_demo_nl: "voice",
@@ -43,7 +42,7 @@ test("demo flag reads both key styles; old tab ids are not valid tabs", () => {
   assert.ok(isDemoPrompt({ isDemo: true }));
   assert.ok(isDemoPrompt({ is_demo: true }));
   assert.ok(!isDemoPrompt({ isDemo: null }));
-  assert.ok(isPromptListTab("niche"));
+  assert.ok(!isPromptListTab("niche"));
   assert.ok(isPromptListTab("reputation"));
   assert.ok(!isPromptListTab("campaign"));
   assert.ok(!isPromptListTab("system"));

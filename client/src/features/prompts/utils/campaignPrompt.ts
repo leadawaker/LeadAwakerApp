@@ -61,3 +61,10 @@ export function campaignsByPrompt(prompts: PromptRowLike[], campaigns: CampaignR
   }
   return out;
 }
+
+/** The model a prompt really runs on: its linked campaign's ai_model (what the engine reads), else the prompt's own. */
+export function effectivePromptModel(p: PromptRowLike, campaigns: CampaignRowLike[]): string {
+  const linked = promptCampaignOf(p);
+  const campaign = linked ? campaigns.find((c) => num(c.id ?? c.Id) === linked) : undefined;
+  return String(campaign?.aiModel || campaign?.ai_model || p.model || "");
+}

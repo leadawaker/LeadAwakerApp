@@ -4,10 +4,9 @@ import { SearchPill } from "@/components/ui/search-pill";
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { LANGS } from "./clientDisplay";
-import type { LangFilter, PersonaFilters, SourceFilter } from "./personaFilters";
+import { SOURCE_FILTERS as SOURCE_OPTIONS, SOURCE_LABEL_KEYS, type LangFilter, type PersonaFilters, type SourceFilter } from "./personaFilters";
 
 const LANG_OPTIONS: LangFilter[] = ["all", ...LANGS];
-const SOURCE_OPTIONS: SourceFilter[] = ["all", "website", "manual"];
 // Radix SelectItem cannot carry value="", so "any niche" travels as this sentinel.
 const ANY_CATEGORY = "__any__";
 
@@ -30,8 +29,7 @@ export function ClientsFilters({ filters, onChange, categories, counts, trailing
   const { t: td } = useTranslation("demos");
   const [searchOpen, setSearchOpen] = useState(false);
   const set = (patch: Partial<PersonaFilters>) => onChange({ ...filters, ...patch });
-  const sourceLabel = (s: SourceFilter) =>
-    s === "all" ? td("personas.sourceAll") : s === "website" ? td("personas.sourceWebsite") : td("personas.sourceManual");
+  const sourceLabel = (s: SourceFilter) => td(SOURCE_LABEL_KEYS[s]);
 
   return (
     <div className="dp-filters">

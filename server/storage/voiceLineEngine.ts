@@ -12,7 +12,7 @@ import type { VoiceLine } from "./voiceLines";
 export const LINE_PURPOSES = ["client", "demo", "test"] as const;
 export type LinePurpose = (typeof LINE_PURPOSES)[number];
 
-/** The reasoning-model keys a line stores (engine llm_choice.py LLM_MODELS); NULL = sol. */
+/** The reasoning-model keys a line stores (engine llm_choice.py LLM_MODELS); NULL = terra. */
 export const LLM_KEYS = ["sol", "terra", "luna"] as const;
 export type LlmKey = (typeof LLM_KEYS)[number];
 
@@ -33,9 +33,9 @@ export interface LineEngineFields {
   /** null = GPT Live. */
   engine: "elevenlabs" | null;
   engineVoice: string | null;
-  /** GPT Live's reasoning model; null = sol. Applies to a client line's real calls too. */
+  /** GPT Live's reasoning model; null = terra. Applies to a client line's real calls too. */
   liveLlm: LlmKey | null;
-  /** ElevenLabs' LLM; null = sol. Ignored by the engine while ELEVEN_LLM_SUPPORTED is false. */
+  /** ElevenLabs' LLM; null = terra. Ignored by the engine while ELEVEN_LLM_SUPPORTED is false. */
   elevenLlm: LlmKey | null;
 }
 

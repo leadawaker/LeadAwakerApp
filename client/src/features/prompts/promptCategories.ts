@@ -8,11 +8,16 @@ import { PROMPT_CATEGORIES, isPromptCategory, type PromptCategory } from "@share
 // The list lives in shared/ so the server validates against the same areas.
 export { PROMPT_CATEGORIES, isPromptCategory, type PromptCategory };
 
-/** The Prompt Library's top tabs: the areas plus the Niche Words manager. */
-export type PromptListTab = PromptCategory | "niche";
+/**
+ * The Prompt Library's top tabs: one per area. The Niches tab is gone (2026-11-01):
+ * niche words and example packs are edited on the Demos page (persona editor, and the
+ * Niche library filter for the curated packs and the fallback row). A remembered "niche"
+ * tab is not in the list, so useLastTab opens the default instead.
+ */
+export type PromptListTab = PromptCategory;
 
 export function isPromptListTab(v: unknown): v is PromptListTab {
-  return v === "niche" || isPromptCategory(v);
+  return isPromptCategory(v);
 }
 
 /** Voice agents' prompts: the GPT Live / ElevenLabs layers, greetings and backend rows. */
@@ -21,19 +26,22 @@ export function isVoiceUseCase(useCase: string | null | undefined): boolean {
 }
 
 /**
- * The Voice tab's three sections, in GPT Live's own split:
+ * The Voice tab's two sections, in GPT Live's own split:
  * - voice: what the voice model speaks from (the voice layers, greetings, the website-demo closing).
- * - backend: the backend's fixed frame (voice_backend_layer), shared by every call.
- * - universal: the business prompt inside that frame (voice_receptionist_demo*), filled per client or demo.
+ * - backend: the backend's fixed frame (voice_backend_layer), shared by every call, first,
+ *   then the business prompts inside it (voice_receptionist_demo*), filled per client or demo.
  */
-export const VOICE_SECTIONS = ["voice", "backend", "universal"] as const;
+export const VOICE_SECTIONS = ["voice", "backend"] as const;
 export type VoiceSection = (typeof VOICE_SECTIONS)[number];
 
 export function voiceSection(p: any): VoiceSection {
   const uc = useCaseOf(p);
-  if (uc === "voice_backend_layer") return "backend";
-  if (uc.startsWith("voice_receptionist")) return "universal";
-  return "voice";
+  return uc === "voice_backend_layer" || uc.startsWith("voice_receptionist") ? "backend" : "voice";
+}
+
+/** Order inside a voice section: the backend frame before the business prompts it wraps. */
+export function voiceSectionRank(p: any): number {
+  return useCaseOf(p) === "voice_backend_layer" ? 0 : 1;
 }
 
 function useCaseOf(p: any): string {
@@ -44,7 +52,7 @@ function useCaseOf(p: any): string {
 export function categoryFromUseCase(useCase: string): PromptCategory {
   const uc = useCase.toLowerCase();
   if (isVoiceUseCase(uc)) return "voice";
-  if (uc === "conversation" || uc === "customer-support" || uc === "universal_demo_recap_summary") return "chat";
+  if (uc === "conversation" || uc === "universal_demo_recap_summary") return "chat";
   if (uc === "review-reply" || uc.startsWith("reputation")) return "reputation";
   if (uc.startsWith("social")) return "social";
   if (uc === "test" || uc === "whatsap") return "test";

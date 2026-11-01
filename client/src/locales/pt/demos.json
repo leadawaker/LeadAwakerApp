@@ -432,6 +432,7 @@
     "sourceAll": "Todas",
     "sourceWebsite": "Site",
     "sourceManual": "Manual",
+    "sourceLibrary": "Biblioteca de nichos",
     "noMatchesFilters": "Nenhuma persona corresponde a estes filtros.",
     "clearFilters": "Limpar filtros",
     "translate": "Traduzir {{from}} para {{to}}",
@@ -471,6 +472,11 @@
       "noPersonaSub": "Prospects adicionados sem persona",
       "website": "Visitantes do site",
       "websiteSub": "Demos iniciadas em leadawaker.com"
+    },
+    "fallback": {
+      "groupTitle": "Padrão",
+      "title": "Palavras padrão",
+      "sub": "O que um nicho sem palavras ou pacotes de exemplos próprios usa"
     },
     "demosTab": {
       "label": "Demos",

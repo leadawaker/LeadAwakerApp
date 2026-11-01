@@ -5,9 +5,9 @@ import type { TFunction } from "i18next";
 export const LLM_KEYS = ["sol", "terra", "luna"] as const;
 export type LlmKey = (typeof LLM_KEYS)[number];
 
-/** A stored key as a valid LlmKey; anything else (null, unknown) is Sol, the default. */
+/** A stored key as a valid LlmKey; anything else (null, unknown) is Terra, the default. */
 export function asLlmKey(v: unknown): LlmKey {
-  return (LLM_KEYS as readonly unknown[]).includes(v) ? (v as LlmKey) : "sol";
+  return (LLM_KEYS as readonly unknown[]).includes(v) ? (v as LlmKey) : "terra";
 }
 
 /** The pick's display name (voiceTab namespace). */

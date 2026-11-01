@@ -630,9 +630,9 @@ export async function generateNicheContextStrict(
     validate: validateNicheContext,
     stage: "generate",
     openai: {
-      // gpt-5.6-terra, was luna, was gpt-4o-mini (4o-mini wrote formal Dutch
+      // gpt-6.1-terra, was gpt-5.6-terra, was luna, was gpt-4o-mini (4o-mini wrote formal Dutch
       // "u" and missed real price drivers).
-      model: "gpt-5.6-terra",
+      model: "gpt-6.1-terra",
       // Reasoning tokens count against this budget. Measured on row 91 for
       // "home lifts": pt 2139 completion / 890 reasoning, so 6000 leaves ~2.8x.
       maxTokens: 6000,

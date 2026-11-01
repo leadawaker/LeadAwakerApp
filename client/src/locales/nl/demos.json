@@ -432,6 +432,7 @@
     "sourceAll": "Alle",
     "sourceWebsite": "Website",
     "sourceManual": "Handmatig",
+    "sourceLibrary": "Nichebibliotheek",
     "noMatchesFilters": "Geen persona's passen bij deze filters.",
     "clearFilters": "Filters wissen",
     "translate": "Vertaal {{from}} naar {{to}}",
@@ -471,6 +472,11 @@
       "noPersonaSub": "Prospects toegevoegd zonder persona",
       "website": "Websitebezoekers",
       "websiteSub": "Demo's gestart op leadawaker.com"
+    },
+    "fallback": {
+      "groupTitle": "Terugval",
+      "title": "Standaardwoorden",
+      "sub": "Wat een niche zonder eigen woorden of voorbeeldpakketten gebruikt"
     },
     "demosTab": {
       "label": "Demo's",

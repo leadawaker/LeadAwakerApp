@@ -83,6 +83,7 @@ export function SupportChatInput({
         {recording ? (
           /* ── Recording mode ── */
           <>
+            <style>{`@keyframes micPulse { 0%,100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); } 50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); } }`}</style>
             <button
               type="button"
               onClick={cancelRecording}

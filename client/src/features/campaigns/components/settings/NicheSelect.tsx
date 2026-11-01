@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2, X, Plus, Sparkles } from "lucide-react";
 import { Select, SelectTrigger, SelectContent, SelectItem } from "@/components/ui/select";
 import { apiFetch } from "@/lib/apiUtils";
-import { resolveNicheIcon } from "@/features/prompts/components/niche/nicheShared";
+import { resolveNicheIcon } from "./nicheIcons";
 import { useToast } from "@/hooks/use-toast";
 
 export function NicheSelect({

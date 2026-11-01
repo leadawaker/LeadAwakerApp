@@ -93,12 +93,12 @@ test("elevenVoicesFor keeps a saved pick of the other gender", () => {
 
 test("effectiveLlm is sol when unset or unknown, else the stored key for that engine", () => {
   const line = (liveLlm: unknown, elevenLlm: unknown = null) => ({ ...num("client", null), liveLlm, elevenLlm }) as VoiceNumber;
-  assert.equal(effectiveLlm(line(null), "gpt-live"), "sol");
+  assert.equal(effectiveLlm(line(null), "gpt-live"), "terra");
   assert.equal(effectiveLlm(line("terra"), "gpt-live"), "terra");
   assert.equal(effectiveLlm(line("luna"), "gpt-live"), "luna");
-  assert.equal(effectiveLlm(line("gpt-9"), "gpt-live"), "sol");
-  assert.equal(effectiveLlm({ ...num("client", null) }, "gpt-live"), "sol");
-  assert.equal(effectiveLlm(null, "gpt-live"), "sol");
+  assert.equal(effectiveLlm(line("gpt-9"), "gpt-live"), "terra");
+  assert.equal(effectiveLlm({ ...num("client", null) }, "gpt-live"), "terra");
+  assert.equal(effectiveLlm(null, "gpt-live"), "terra");
   assert.equal(effectiveLlm(line("terra", "luna"), "elevenlabs"), "luna");
 });
 

@@ -25,8 +25,8 @@ test("defaults follow the line's saved engine and LLM", () => {
   assert.deepEqual(defaultTestPrefs(num({ engine: "elevenlabs", liveLlm: "terra" })),
     { engine: "elevenlabs", llm: "terra" });
   assert.deepEqual(defaultTestPrefs(num({ engine: "gpt-live", liveLlm: null })),
-    { engine: "gpt-live", llm: "sol" });
-  assert.deepEqual(defaultTestPrefs(null), { engine: "gpt-live", llm: "sol" });
+    { engine: "gpt-live", llm: "terra" });
+  assert.deepEqual(defaultTestPrefs(null), { engine: "gpt-live", llm: "terra" });
 });
 
 test("nothing stored: the line's defaults", () => {

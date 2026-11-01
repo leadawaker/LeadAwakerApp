@@ -8,10 +8,9 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { TOUCH_ROW } from "@/features/demos/touchTargets";
 import { LANGS } from "./clientDisplay";
-import type { LangFilter, PersonaFilters, SourceFilter } from "./personaFilters";
+import { SOURCE_FILTERS as SOURCE_OPTIONS, SOURCE_LABEL_KEYS, type LangFilter, type PersonaFilters, type SourceFilter } from "./personaFilters";
 
 const LANG_OPTIONS: LangFilter[] = ["all", ...LANGS];
-const SOURCE_OPTIONS: SourceFilter[] = ["all", "website", "manual"];
 
 const ITEM = `text-[12px] ${TOUCH_ROW}`;
 const LABEL = "text-[10px] uppercase tracking-widest text-muted-foreground";
@@ -35,8 +34,7 @@ export function PersonaFilterMenu({ filters, onChange, categories, counts }: {
 }) {
   const { t } = useTranslation("campaigns");
   const { t: td } = useTranslation("demos");
-  const sourceLabel = (s: SourceFilter) =>
-    s === "all" ? td("personas.sourceAll") : s === "website" ? td("personas.sourceWebsite") : td("personas.sourceManual");
+  const sourceLabel = (s: SourceFilter) => td(SOURCE_LABEL_KEYS[s]);
 
   return (
     <DropdownMenuContent align="end" className="w-60" data-testid="personas-filter-menu">

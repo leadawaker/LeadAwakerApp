@@ -126,7 +126,8 @@
     "saveFailed": "Failed to save",
     "statusUpdated": "Status updated",
     "statusUpdatedDescription": "\"{{name}}\" is now {{status}}.",
-    "statusFailed": "Failed to update status"
+    "statusFailed": "Failed to update status",
+    "unknownError": "Unknown error"
   },
   "detail": {
     "promptDetail": "Prompt Detail",
@@ -146,9 +147,8 @@
     "openCampaign": "Open campaign",
     "systemMsg": "System msg",
     "toggleSystemMessage": "Show or hide the system message",
-    "toggleNotes": "Show or hide the notes",
     "sidebar": "Sections",
-    "toggleSidebar": "Show or hide sections and variables",
+    "toggleSidebar": "Show or hide the sections",
     "preview": "Preview",
     "togglePreview": "Show or hide the preview (Ctrl+P)",
     "sizeEstimate": "~{{tokens}} tok · {{chars}}k chr"
@@ -181,7 +181,8 @@
   "editor": {
     "raw": "Raw",
     "sections": "Sections",
-    "variables": "Variables"
+    "variables": "Variables",
+    "noSections": "No headings in this prompt."
   },
   "time": {
     "justNow": "Just now",
@@ -228,71 +229,26 @@
   "preview": {
     "conditionsTitle": "Preview conditions",
     "cond": {
-      "leadStage": "Lead stage",
-      "positioning": "Positioning",
-      "aiDisclosure": "AI disclosure",
-      "off": "Off",
-      "on": "On",
       "stage": {
         "inquired": "Inquired",
         "visited": "Had a site visit",
         "deciding": "Deciding",
         "declined": "Declined",
-        "quoted": "Received a quote (baseline)"
+        "quoted": "Received a quote (baseline)",
+        "owner": "Existing customer"
       },
-      "pos": {
-        "midMarket": "Mid-market",
-        "premium": "Premium"
-      }
+      "niche": "Niche words from",
+      "nicheDefault": "Default"
     },
-    "empty": "Nothing to preview yet."
-  },
-  "vocabulary": {
-    "intro": "Per-niche words the AI uses to re-theme the universal demo prompt. Pick a niche on a campaign and the prompt swaps these terms in automatically, so the AI sounds native to that trade without a new prompt. The first word in each group is the one the prompt uses.",
-    "defaultNiche": "Default (fallback)",
-    "addNiche": "Add niche",
-    "addNichePlaceholder": "New niche name…",
-    "deleteNiche": "Delete niche",
-    "saveError": "Could not save. Please try again.",
-    "duplicateNiche": "A niche with that name already exists.",
-    "back": "Back",
-    "selectNiche": "Select a niche to view its details.",
-    "groups": {
-      "projectTerm": "Project / product",
-      "proposalTerm": "Proposal / quote",
-      "decisionTerm": "Decision",
-      "advisorTerm": "Advisor",
-      "visitTerm": "Visit / location"
-    },
-    "title": "Niches",
-    "lang": {
-      "en": "English",
-      "nl": "Dutch"
-    },
-    "delete": {
-      "title": "Delete niche?",
-      "body": "This removes all words saved for \"{{niche}}\". This can't be undone.",
-      "confirm": "Delete",
-      "cancel": "Cancel"
-    },
-    "addWord": "Add a word",
-    "showTemplates": "Show templates",
-    "hideTemplates": "Hide templates",
-    "templates": {
-      "title": "Business profile templates",
-      "companyName": "Company name",
-      "description": "Business description",
-      "kb": "Knowledge base"
-    },
-    "showPacks": "Show example packs",
-    "hidePacks": "Hide example packs",
-    "packs": {
-      "title": "Prompt example packs (Discovery Prompt v8.7+)",
-      "questionBank": "Question bank",
-      "badExamples": "Bad examples",
-      "objectionExamples": "Objection & commitment phrasings",
-      "scenarioExamples": "Scenario playbook"
-    }
+    "empty": "Nothing to preview yet.",
+    "emptyValue": "(empty)",
+    "conditionsCount_one": "{{count}} condition",
+    "conditionsCount_other": "{{count}} conditions",
+    "conditionsHint": "Pick which branch the preview shows. Nothing is saved.",
+    "actualValue": "As it is: {{value}}",
+    "foldAll": "Fold all sections",
+    "unfoldAll": "Unfold all sections",
+    "conditions": "Conditions"
   },
   "voicePreview": {
     "client": "Client",
@@ -353,11 +309,236 @@
       "tone": "Tone (up to 3)",
       "address": "How she addresses callers",
       "pronunciation": "Pronunciation"
-    }
+    },
+    "tonePlaceholder": "Warm, relaxed and to the point"
   },
   "voiceSection": {
     "voice": "Voice prompt",
-    "backend": "Back end prompt",
-    "universal": "Universal prompt"
+    "backend": "Back end · GPT Live"
+  },
+  "model": {
+    "latest": "{{tier}} (latest · {{model}})"
+  },
+  "note": {
+    "title": "Note",
+    "view": "View the note",
+    "add": "Add a note",
+    "clear": "Clear",
+    "hint": "Saved with the prompt as you type."
+  },
+  "usedBy": {
+    "title": "Used by",
+    "count_one": "{{count}} campaign",
+    "count_other": "{{count}} campaigns",
+    "none": "Not used",
+    "noActive": "No active campaigns",
+    "showInactive": "Show drafts and archived",
+    "noAccount": "No account",
+    "empty": "No campaign runs this prompt.",
+    "emptyActive": "No active campaign runs this prompt.",
+    "linked": "Linked campaign",
+    "linkedHint": "The model is saved on this campaign.",
+    "status": {
+      "draft": "Draft",
+      "paused": "Paused",
+      "archived": "Archived",
+      "inactive": "Inactive",
+      "completed": "Completed",
+      "finished": "Finished"
+    }
+  },
+  "previewAs": {
+    "label": "Preview as",
+    "none": "No campaign (generic)",
+    "uses": "Uses this prompt",
+    "demoClients": "Demo clients",
+    "campaignOf": "{{name}} ({{account}})"
+  },
+  "vars": {
+    "title": "Variables",
+    "toggle": "Show or hide the variables",
+    "insert": "Insert {{name}} at the cursor",
+    "addVariable": "Insert another variable",
+    "noDescription": "No description yet.",
+    "empty": "Empty",
+    "edit": "Click to edit",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saved": "Saved",
+    "failed": "Not saved: {{reason}}",
+    "none": "This prompt uses no variables.",
+    "pickContext": "Pick a campaign in Preview as to see and edit values.",
+    "noNicheRow": "This niche has no row of its own yet, so this can't be saved here.",
+    "liveClient": "This persona is managed in Account > Voice.",
+    "reason": {
+      "http": "{{message}}",
+      "notStored": "the value did not stick. Try again or check the source.",
+      "noTarget": "there is nothing to save to.",
+      "live": "this persona is managed in Account > Voice."
+    },
+    "savesTo": {
+      "campaign": "Saves to campaign: {{name}}",
+      "account": "Saves to account: {{name}}",
+      "niche": "Saves to niche words: {{name}}, shared by every campaign on this niche",
+      "nicheDefault": "Saves to the default niche words, shared by every campaign without a niche",
+      "client": "Saves to demo client: {{name}}",
+      "persona": "Saves to the live persona of {{name}}",
+      "voiceSetup": "Saves to the phone setup of {{name}}",
+      "voiceProfile": "Saves to the communication profile of {{name}}"
+    },
+    "langSlot": "{{target}} ({{lang}})",
+    "lang": {
+      "en": "English text",
+      "nl": "Dutch text",
+      "pt": "Portuguese text"
+    },
+    "group": {
+      "campaign": "Campaign",
+      "client": "Demo client",
+      "account": "Account",
+      "niche": "Niche words",
+      "auto": "Filled in for you",
+      "unknown": "Not described yet",
+      "voice": "This phone line",
+      "elsewhere": "Edited in Call settings"
+    },
+    "desc": {
+      "first_name": "The lead's first name.",
+      "lead_name": "The lead's first name (same as first_name).",
+      "last_name": "The lead's last name.",
+      "phone": "The lead's phone number.",
+      "email": "The lead's email address.",
+      "when": "When the lead's enquiry or quote happened.",
+      "agent_name": "The name the AI goes by. Empty uses the account's default AI name.",
+      "ai_role": "The job title the AI claims. Empty uses the account's default role.",
+      "ai_style": "How the AI writes. Empty uses the account's default style.",
+      "typo_frequency": "How often the AI makes a human-looking typo.",
+      "typo_count": "The most typos allowed per message.",
+      "language": "The language the AI writes in. A language set on the lead wins.",
+      "company_name": "The business the AI says it works for.",
+      "business": "The business name, same as company_name.",
+      "business_description": "What the business does. Empty uses the account's description.",
+      "campaign_name": "The campaign's name.",
+      "service": "The service this campaign sells, in a word or two.",
+      "service_name": "The service's full name. Empty uses service.",
+      "usp": "Why this business over another: its unique selling point.",
+      "kb": "Facts the AI may use: prices, hours, service area, policies.",
+      "niche": "The trade. It also decides which niche words the prompt gets.",
+      "niche_question": "The question the AI asks to learn the lead's situation.",
+      "qualification_criteria": "What makes a lead a good fit.",
+      "calendar_link": "The booking link. On a live chat each lead gets a personal link built from it.",
+      "booking_mode": "How a booking works: a call with the team, or direct booking.",
+      "calling_number": "The number the booking confirmation promises a call from.",
+      "call_mode": "How the booked call happens: phone, WhatsApp or video.",
+      "what_lead_did": "What the lead did before. It sets lead_stage. The lead's own value wins.",
+      "what_has_the_lead_done": "Same as what_lead_did.",
+      "lead_context": "Specifics about the lead's enquiry or quote. The lead's own value wins.",
+      "inquiries_source": "Where the leads came from.",
+      "inquiry_timeframe": "Roughly when the leads enquired.",
+      "first_touch": "How the business first met the lead.",
+      "first_message": "The opener the lead received. You edit the template, with its {variables}.",
+      "positioning": "Price framing: premium or mid-market.",
+      "ai_disclosure": "When the AI says it is an AI: off, in the opener, or in its second message.",
+      "lead_stage": "Where the lead stands: inquired, deciding, quoted or owner.",
+      "conversation_mode": "The flow: scoping builds the brief, decision discusses a quote.",
+      "voice_mode": "Whether this reply is a voice note.",
+      "voice_live": "Which live voice engine answers this turn, if any.",
+      "immediate_callback": "Whether the AI may promise a call right now.",
+      "opener_names_job": "Whether the opener already named the quoted job.",
+      "decision_opener": "Decision flow only: named or unnamed job in the opener.",
+      "quoted_first_reply": "How the first reply after a job-naming opener is worded.",
+      "disclosure_clause": "The sentence in the opener that says this is an AI.",
+      "lead_source": "How the lead arrived, on special flows such as a social comment.",
+      "social_context": "The post and comment a social lead reacted to.",
+      "today_date": "Today's date, so the AI can reason about time.",
+      "project_term": "The niche's word for the job or project.",
+      "project_term_list": "All accepted words for the job, comma-separated. The first is the main one.",
+      "proposal_term": "The niche's word for a quote or proposal.",
+      "proposal_term_list": "All accepted words for a quote, comma-separated. The first is the main one.",
+      "decision_term": "The niche's word for the buying decision.",
+      "decision_term_list": "All accepted words for the decision, comma-separated. The first is the main one.",
+      "advisor_term": "The niche's word for the human expert.",
+      "advisor_term_list": "All accepted words for the expert, comma-separated. The first is the main one.",
+      "visit_term": "The niche's word for a visit or appointment.",
+      "visit_term_list": "All accepted words for the visit, comma-separated. The first is the main one.",
+      "niche_question_bank": "Example questions that fit this niche.",
+      "niche_bad_examples": "Replies the AI must not imitate in this niche.",
+      "niche_objection_examples": "Common objections in this niche, with good answers.",
+      "niche_scenario_examples": "Worked examples of situations in this niche.",
+      "niche_scoping_ladder": "The questions, in order, that build the brief for this niche.",
+      "opener_phrase": "The short phrase naming the job in the opener.",
+      "campaignname": "The campaign's name, in a report.",
+      "campaignstatus": "The campaign's status, in a report.",
+      "campaigndescription": "The campaign's description, in a report.",
+      "campaigncreatedat": "When the campaign was created.",
+      "reportdate": "The date of the report.",
+      "totalleads": "How many leads the campaign holds.",
+      "pipelinebreakdown": "Leads per pipeline stage.",
+      "responserate": "The share of leads that replied.",
+      "responded": "How many leads replied.",
+      "bookingrate": "The share of leads that booked.",
+      "booked": "How many leads booked."
+    },
+    "note": {
+      "lead": "From the lead. Shown with this campaign's first lead.",
+      "today": "Filled in when the message is written.",
+      "stats": "Live numbers in a real report. The preview shows sample numbers.",
+      "leadStage": "Worked out from what the lead did.",
+      "conversationMode": "Worked out from the lead stage.",
+      "perTurn": "Set per message. The preview shows a normal text message.",
+      "demoCallback": "On for demo campaigns during office hours.",
+      "openerFlow": "Set by the opener that was sent.",
+      "socialDemo": "Only set on a lead from a social comment.",
+      "callMode": "From the account's meeting type.",
+      "nicheRow": "From the niche, edited on the Demos page.",
+      "demoRun": "Set on each demo link.",
+      "demoContext": "Picked per demo from the client's enquiry or quote.",
+      "demoNumber": "The demo's own number for its market.",
+      "bookingMode": "Set by the engine: a call on every campaign, a demo client can switch it.",
+      "voiceAgent": "Set in Call settings, where a new name also updates the greeting and follows the voice.",
+      "voiceHandoff": "Worked out from the transfer and unwanted-call settings. Saving a number there also rewires the line.",
+      "voiceFollowup": "Decided per caller, so the preview leaves it empty.",
+      "voiceKnowledge": "Built from the account's knowledge base and the persona.",
+      "voiceDisclosure": "Depends on the phone line's AI disclosure setting, which has no editor yet.",
+      "voiceService": "From the live persona's row, which the Demos page can't edit.",
+      "voiceCity": "Not filled on client lines: the words around it drop out.",
+      "voiceTask": "The saved business prompt for this line's language.",
+      "voiceDetails": "Built per call: knowledge, client setup, caller and today's date.",
+      "voiceYou": "Follows the form of address.",
+      "voiceLanguage": "Set in Call settings, where the name can follow it.",
+      "voiceNotFilled": "It would reach the call as typed."
+    },
+    "pickAccount": "Pick a client to see and edit values.",
+    "voiceGeneric": "This render is generic, not this line, so it can't be saved here.",
+    "noPersona": "This account has no persona of its own yet.",
+    "editInCallSettings": "Edit in Call settings",
+    "intakeOverridden": "Saved, but this line's buying checklist asks its own questions.",
+    "voiceDesc": {
+      "agent": "The receptionist's name on the phone.",
+      "agent_name": "The receptionist's name on the phone.",
+      "company": "The business the receptionist answers for.",
+      "company_name": "The business the receptionist answers for.",
+      "business_line": "One line on what the business does, plus the AI sentence when the line says it is an AI.",
+      "business_description": "What the business does, for the part that reasons behind the voice.",
+      "tone": "How the receptionist comes across, in your own words. Empty uses the traits picked in onboarding.",
+      "address": "Whether callers are addressed formally or informally.",
+      "pronunciation": "How to say difficult words and names.",
+      "intake": "What the team wants to know for an appointment, one item per line. Empty uses the persona's questions.",
+      "client_rules": "This client's own rules, one per line. They reach the voice and the part behind it.",
+      "handoff": "What happens when a caller asks for a person, and who gets through.",
+      "followup": "Whether to offer a WhatsApp message after the call.",
+      "knowledge": "The business facts the receptionist can answer from without looking anything up.",
+      "language": "The language this line speaks.",
+      "disclosure": "The sentence in the greeting that says this is an AI.",
+      "service_name": "The persona's service or trade.",
+      "city": "The city the business is in.",
+      "you": "The word for \"you\" in the greeting.",
+      "task_instructions": "Where the saved business prompt goes in this frame.",
+      "call_details": "Where the details of this call go in this frame.",
+      "calling_number": "A chat variable. Voice calls don't fill it.",
+      "call_mode": "A chat variable. Voice calls don't fill it."
+    },
+    "notInRender": "Not part of this render."
   }
 }

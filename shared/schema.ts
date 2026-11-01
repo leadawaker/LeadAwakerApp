@@ -724,6 +724,9 @@ export const campaigns = nocodb.table("Campaigns", {
   serviceName: text("service_name"),
   typoCount: integer("typo_count").default(1),
   // Performance metrics (calculated fields on Campaigns table)
+  // The AI's role in the prompt ({ai_role}, {en,nl} JSON or plain text). The engine reads it first;
+  // without this line PATCH stripped it, so the CRM's role fields never saved (found 2026-11-01).
+  aiRole: text("ai_role"),
   totalLeadsTargeted: integer("total_leads_targeted"),
   totalMessagesSent: integer("total_messages_sent"),
   totalResponsesReceived: integer("total_responses_received"),

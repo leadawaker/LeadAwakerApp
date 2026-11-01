@@ -126,7 +126,8 @@
     "saveFailed": "Opslaan mislukt",
     "statusUpdated": "Status bijgewerkt",
     "statusUpdatedDescription": "\"{{name}}\" is nu {{status}}.",
-    "statusFailed": "Status bijwerken mislukt"
+    "statusFailed": "Status bijwerken mislukt",
+    "unknownError": "Onbekende fout"
   },
   "detail": {
     "promptDetail": "Promptdetail",
@@ -146,9 +147,8 @@
     "openCampaign": "Campagne openen",
     "systemMsg": "Systeembericht",
     "toggleSystemMessage": "Systeembericht tonen of verbergen",
-    "toggleNotes": "Notities tonen of verbergen",
     "sidebar": "Secties",
-    "toggleSidebar": "Secties en variabelen tonen of verbergen",
+    "toggleSidebar": "Toon of verberg de secties",
     "preview": "Voorbeeld",
     "togglePreview": "Voorbeeld tonen of verbergen (Ctrl+P)",
     "sizeEstimate": "~{{tokens}} tok · {{chars}}k tek"
@@ -181,7 +181,8 @@
   "editor": {
     "raw": "Raw",
     "sections": "Secties",
-    "variables": "Variabelen"
+    "variables": "Variabelen",
+    "noSections": "Geen koppen in deze prompt."
   },
   "time": {
     "justNow": "Zojuist",
@@ -228,71 +229,26 @@
   "preview": {
     "conditionsTitle": "Voorbeeldcondities",
     "cond": {
-      "leadStage": "Leadfase",
-      "positioning": "Positionering",
-      "aiDisclosure": "AI-vermelding",
-      "off": "Uit",
-      "on": "Aan",
       "stage": {
         "inquired": "Offerte aangevraagd",
         "visited": "Had een bezoek",
         "deciding": "Beslissingsfase",
         "declined": "Afgewezen",
-        "quoted": "Offerte ontvangen (standaard)"
+        "quoted": "Offerte ontvangen (standaard)",
+        "owner": "Bestaande klant"
       },
-      "pos": {
-        "midMarket": "Middensegment",
-        "premium": "Premium"
-      }
+      "niche": "Nichewoorden van",
+      "nicheDefault": "Standaard"
     },
-    "empty": "Nog niets om te tonen."
-  },
-  "vocabulary": {
-    "intro": "Woorden per niche die de AI gebruikt om de universele demo-prompt om te vormen. Kies een niche bij een campagne en de prompt wisselt deze termen automatisch in, zodat de AI native klinkt voor dat vakgebied zonder een nieuwe prompt. Het eerste woord in elke groep is het woord dat de prompt gebruikt.",
-    "defaultNiche": "Standaard (terugval)",
-    "addNiche": "Niche toevoegen",
-    "addNichePlaceholder": "Naam nieuwe niche…",
-    "deleteNiche": "Niche verwijderen",
-    "saveError": "Opslaan mislukt. Probeer het opnieuw.",
-    "duplicateNiche": "Er bestaat al een niche met die naam.",
-    "back": "Terug",
-    "selectNiche": "Selecteer een niche om de details te bekijken.",
-    "groups": {
-      "projectTerm": "Project / product",
-      "proposalTerm": "Voorstel / offerte",
-      "decisionTerm": "Beslissing",
-      "advisorTerm": "Adviseur",
-      "visitTerm": "Bezoek / locatie"
-    },
-    "title": "Niches",
-    "lang": {
-      "en": "Engels",
-      "nl": "Nederlands"
-    },
-    "delete": {
-      "title": "Niche verwijderen?",
-      "body": "Hiermee verwijder je alle woorden die voor \"{{niche}}\" zijn opgeslagen. Dit kan niet ongedaan worden gemaakt.",
-      "confirm": "Verwijderen",
-      "cancel": "Annuleren"
-    },
-    "addWord": "Woord toevoegen",
-    "showTemplates": "Templates tonen",
-    "hideTemplates": "Templates verbergen",
-    "templates": {
-      "title": "Bedrijfsprofieltemplates",
-      "companyName": "Bedrijfsnaam",
-      "description": "Bedrijfsbeschrijving",
-      "kb": "Kennisbank"
-    },
-    "showPacks": "Voorbeeldpakketten tonen",
-    "hidePacks": "Voorbeeldpakketten verbergen",
-    "packs": {
-      "title": "Prompt-voorbeeldpakketten (Discovery Prompt v8.7+)",
-      "questionBank": "Vragenbank",
-      "badExamples": "Slechte voorbeelden",
-      "objectionExamples": "Bezwaar- en commitmentformuleringen",
-      "scenarioExamples": "Scenario-draaiboek"
-    }
+    "empty": "Nog niets om te tonen.",
+    "emptyValue": "(leeg)",
+    "conditionsCount_one": "{{count}} voorwaarde",
+    "conditionsCount_other": "{{count}} voorwaarden",
+    "conditionsHint": "Kies welke tak de preview toont. Er wordt niets opgeslagen.",
+    "actualValue": "Zoals het is: {{value}}",
+    "foldAll": "Alle secties inklappen",
+    "unfoldAll": "Alle secties uitklappen",
+    "conditions": "Voorwaarden"
   },
   "voicePreview": {
     "client": "Klant",
@@ -353,11 +309,236 @@
       "tone": "Toon (max. 3)",
       "address": "Hoe ze bellers aanspreekt",
       "pronunciation": "Uitspraak"
-    }
+    },
+    "tonePlaceholder": "Warm, ontspannen en to the point"
   },
   "voiceSection": {
     "voice": "Stemprompt",
-    "backend": "Back-end-prompt",
-    "universal": "Universele prompt"
+    "backend": "Back-end · GPT Live"
+  },
+  "model": {
+    "latest": "{{tier}} (nieuwste · {{model}})"
+  },
+  "note": {
+    "title": "Notitie",
+    "view": "Bekijk de notitie",
+    "add": "Notitie toevoegen",
+    "clear": "Wissen",
+    "hint": "Wordt tijdens het typen bij de prompt bewaard."
+  },
+  "usedBy": {
+    "title": "Gebruikt door",
+    "count_one": "{{count}} campagne",
+    "count_other": "{{count}} campagnes",
+    "none": "Niet gebruikt",
+    "noActive": "Geen actieve campagnes",
+    "showInactive": "Toon concepten en archief",
+    "noAccount": "Geen account",
+    "empty": "Geen enkele campagne gebruikt deze prompt.",
+    "emptyActive": "Geen actieve campagne gebruikt deze prompt.",
+    "linked": "Gekoppelde campagne",
+    "linkedHint": "Het model wordt op deze campagne bewaard.",
+    "status": {
+      "draft": "Concept",
+      "paused": "Gepauzeerd",
+      "archived": "Gearchiveerd",
+      "inactive": "Inactief",
+      "completed": "Afgerond",
+      "finished": "Klaar"
+    }
+  },
+  "previewAs": {
+    "label": "Bekijk als",
+    "none": "Geen campagne (algemeen)",
+    "uses": "Gebruikt deze prompt",
+    "demoClients": "Demo-klanten",
+    "campaignOf": "{{name}} ({{account}})"
+  },
+  "vars": {
+    "title": "Variabelen",
+    "toggle": "Toon of verberg de variabelen",
+    "insert": "Voeg {{name}} in bij de cursor",
+    "addVariable": "Nog een variabele invoegen",
+    "noDescription": "Nog geen omschrijving.",
+    "empty": "Leeg",
+    "edit": "Klik om te bewerken",
+    "save": "Opslaan",
+    "cancel": "Annuleren",
+    "saving": "Opslaan...",
+    "saved": "Opgeslagen",
+    "failed": "Niet opgeslagen: {{reason}}",
+    "none": "Deze prompt gebruikt geen variabelen.",
+    "pickContext": "Kies een campagne bij Bekijk als om waarden te zien en te bewerken.",
+    "noNicheRow": "Deze niche heeft nog geen eigen rij, dus dit kan hier niet worden opgeslagen.",
+    "liveClient": "Deze persona wordt beheerd in Account > Voice.",
+    "reason": {
+      "http": "{{message}}",
+      "notStored": "de waarde is niet bewaard. Probeer het opnieuw of controleer de bron.",
+      "noTarget": "er is niets om in op te slaan.",
+      "live": "deze persona wordt beheerd in Account > Voice."
+    },
+    "savesTo": {
+      "campaign": "Slaat op in campagne: {{name}}",
+      "account": "Slaat op in account: {{name}}",
+      "niche": "Slaat op in nichewoorden: {{name}}, gedeeld door elke campagne op deze niche",
+      "nicheDefault": "Slaat op in de standaard nichewoorden, gedeeld door elke campagne zonder niche",
+      "client": "Slaat op in demo-klant: {{name}}",
+      "persona": "Slaat op in de live persona van {{name}}",
+      "voiceSetup": "Slaat op in de belinstellingen van {{name}}",
+      "voiceProfile": "Slaat op in het communicatieprofiel van {{name}}"
+    },
+    "langSlot": "{{target}} ({{lang}})",
+    "lang": {
+      "en": "Engelse tekst",
+      "nl": "Nederlandse tekst",
+      "pt": "Portugese tekst"
+    },
+    "group": {
+      "campaign": "Campagne",
+      "client": "Demo-klant",
+      "account": "Account",
+      "niche": "Nichewoorden",
+      "auto": "Wordt voor je ingevuld",
+      "unknown": "Nog niet omschreven",
+      "voice": "Deze telefoonlijn",
+      "elsewhere": "Bewerken in Belinstellingen"
+    },
+    "desc": {
+      "first_name": "De voornaam van de lead.",
+      "lead_name": "De voornaam van de lead (hetzelfde als first_name).",
+      "last_name": "De achternaam van de lead.",
+      "phone": "Het telefoonnummer van de lead.",
+      "email": "Het e-mailadres van de lead.",
+      "when": "Wanneer de aanvraag of offerte van de lead was.",
+      "agent_name": "De naam van de AI. Leeg gebruikt de standaard AI-naam van het account.",
+      "ai_role": "De functie die de AI noemt. Leeg gebruikt de standaardrol van het account.",
+      "ai_style": "Hoe de AI schrijft. Leeg gebruikt de standaardstijl van het account.",
+      "typo_frequency": "Hoe vaak de AI een menselijke typefout maakt.",
+      "typo_count": "Het maximale aantal typefouten per bericht.",
+      "language": "De taal waarin de AI schrijft. Een taal op de lead gaat voor.",
+      "company_name": "Het bedrijf waarvoor de AI zegt te werken.",
+      "business": "De bedrijfsnaam, hetzelfde als company_name.",
+      "business_description": "Wat het bedrijf doet. Leeg gebruikt de omschrijving van het account.",
+      "campaign_name": "De naam van de campagne.",
+      "service": "De dienst van deze campagne, in een of twee woorden.",
+      "service_name": "De volledige naam van de dienst. Leeg gebruikt service.",
+      "usp": "Waarom dit bedrijf en geen ander: het unieke verkoopargument.",
+      "kb": "Feiten die de AI mag gebruiken: prijzen, openingstijden, werkgebied, voorwaarden.",
+      "niche": "De branche. Bepaalt ook welke nichewoorden de prompt krijgt.",
+      "niche_question": "De vraag waarmee de AI de situatie van de lead leert kennen.",
+      "qualification_criteria": "Wat een lead geschikt maakt.",
+      "calendar_link": "De boekingslink. In een echt gesprek krijgt elke lead hiermee een eigen link.",
+      "booking_mode": "Hoe boeken werkt: een gesprek met het team of direct boeken.",
+      "calling_number": "Het nummer waarvan de boekingsbevestiging een belletje belooft.",
+      "call_mode": "Hoe het geboekte gesprek verloopt: telefoon, WhatsApp of video.",
+      "what_lead_did": "Wat de lead eerder deed. Dit bepaalt lead_stage. De waarde op de lead gaat voor.",
+      "what_has_the_lead_done": "Hetzelfde als what_lead_did.",
+      "lead_context": "Details over de aanvraag of offerte. De waarde op de lead gaat voor.",
+      "inquiries_source": "Waar de leads vandaan komen.",
+      "inquiry_timeframe": "Ongeveer wanneer de leads aanvroegen.",
+      "first_touch": "Hoe het bedrijf de lead voor het eerst sprak.",
+      "first_message": "Het eerste bericht aan de lead. Je bewerkt het sjabloon, met de {variabelen}.",
+      "positioning": "Prijspositie: premium of middensegment.",
+      "ai_disclosure": "Wanneer de AI zegt dat het een AI is: uit, in het eerste of in het tweede bericht.",
+      "lead_stage": "Waar de lead staat: inquired, deciding, quoted of owner.",
+      "conversation_mode": "De aanpak: scoping maakt de vraag helder, decision bespreekt een offerte.",
+      "voice_mode": "Of dit antwoord een spraakbericht is.",
+      "voice_live": "Welke live spraakmotor dit antwoord geeft, als die er is.",
+      "immediate_callback": "Of de AI meteen een belletje mag beloven.",
+      "opener_names_job": "Of het eerste bericht de geoffreerde klus al noemde.",
+      "decision_opener": "Alleen bij decision: klus wel of niet genoemd in het eerste bericht.",
+      "quoted_first_reply": "Hoe het eerste antwoord na zo'n eerste bericht is verwoord.",
+      "disclosure_clause": "De zin in het eerste bericht die zegt dat dit een AI is.",
+      "lead_source": "Hoe de lead binnenkwam, bij speciale flows zoals een social reactie.",
+      "social_context": "De post en reactie waarop een social lead reageerde.",
+      "today_date": "De datum van vandaag, zodat de AI met tijd kan rekenen.",
+      "project_term": "Het woord van de niche voor de klus of het project.",
+      "project_term_list": "Alle woorden voor de klus, met komma's. De eerste is de belangrijkste.",
+      "proposal_term": "Het woord van de niche voor een offerte of voorstel.",
+      "proposal_term_list": "Alle woorden voor een offerte, met komma's. De eerste is de belangrijkste.",
+      "decision_term": "Het woord van de niche voor de aankoopbeslissing.",
+      "decision_term_list": "Alle woorden voor de beslissing, met komma's. De eerste is de belangrijkste.",
+      "advisor_term": "Het woord van de niche voor de menselijke expert.",
+      "advisor_term_list": "Alle woorden voor de expert, met komma's. De eerste is de belangrijkste.",
+      "visit_term": "Het woord van de niche voor een bezoek of afspraak.",
+      "visit_term_list": "Alle woorden voor het bezoek, met komma's. De eerste is de belangrijkste.",
+      "niche_question_bank": "Voorbeeldvragen die bij deze niche passen.",
+      "niche_bad_examples": "Antwoorden die de AI in deze niche niet mag nadoen.",
+      "niche_objection_examples": "Veelgehoorde bezwaren in deze niche, met goede antwoorden.",
+      "niche_scenario_examples": "Uitgewerkte voorbeelden van situaties in deze niche.",
+      "niche_scoping_ladder": "De vragen, op volgorde, die de vraag voor deze niche helder maken.",
+      "opener_phrase": "De korte zin die de klus noemt in het eerste bericht.",
+      "campaignname": "De naam van de campagne, in een rapport.",
+      "campaignstatus": "De status van de campagne, in een rapport.",
+      "campaigndescription": "De omschrijving van de campagne, in een rapport.",
+      "campaigncreatedat": "Wanneer de campagne is aangemaakt.",
+      "reportdate": "De datum van het rapport.",
+      "totalleads": "Hoeveel leads de campagne heeft.",
+      "pipelinebreakdown": "Leads per fase in de pipeline.",
+      "responserate": "Het deel van de leads dat antwoordde.",
+      "responded": "Hoeveel leads antwoordden.",
+      "bookingrate": "Het deel van de leads dat boekte.",
+      "booked": "Hoeveel leads boekten."
+    },
+    "note": {
+      "lead": "Komt van de lead. Hier met de eerste lead van deze campagne.",
+      "today": "Wordt ingevuld als het bericht wordt geschreven.",
+      "stats": "Echte cijfers in een echt rapport. De preview toont voorbeeldcijfers.",
+      "leadStage": "Afgeleid van wat de lead deed.",
+      "conversationMode": "Afgeleid van de leadfase.",
+      "perTurn": "Per bericht bepaald. De preview toont een gewoon tekstbericht.",
+      "demoCallback": "Aan voor demo-campagnes tijdens kantooruren.",
+      "openerFlow": "Bepaald door het eerste bericht dat is verstuurd.",
+      "socialDemo": "Alleen ingevuld bij een lead uit een social reactie.",
+      "callMode": "Komt van het afspraaktype van het account.",
+      "nicheRow": "Komt van de niche, te bewerken op de Demos-pagina.",
+      "demoRun": "Per demolink ingesteld.",
+      "demoContext": "Per demo gekozen uit de aanvraag of offerte van de klant.",
+      "demoNumber": "Het eigen nummer van de demo voor die markt.",
+      "bookingMode": "Bepaald door de engine: een gesprek op elke campagne, een demo-klant kan dit wijzigen.",
+      "voiceAgent": "Ingesteld in Belinstellingen, waar een nieuwe naam ook de begroeting aanpast en de stem volgt.",
+      "voiceHandoff": "Afgeleid van de doorschakel- en ongewenste-oproepen-instellingen. Een nummer opslaan schakelt daar ook de lijn om.",
+      "voiceFollowup": "Per beller bepaald, dus de preview laat dit leeg.",
+      "voiceKnowledge": "Opgebouwd uit de kennisbank van het account en de persona.",
+      "voiceDisclosure": "Hangt af van de AI-melding op de telefoonlijn, die nog geen editor heeft.",
+      "voiceService": "Komt uit de rij van de live persona, die de Demos-pagina niet kan bewerken.",
+      "voiceCity": "Wordt op klantlijnen niet ingevuld: de woorden eromheen vervallen.",
+      "voiceTask": "De opgeslagen bedrijfsprompt voor de taal van deze lijn.",
+      "voiceDetails": "Per gesprek opgebouwd: kennis, klantinstellingen, beller en de datum.",
+      "voiceYou": "Volgt de aanspreekvorm.",
+      "voiceLanguage": "Ingesteld in Belinstellingen, waar de naam mee kan veranderen.",
+      "voiceNotFilled": "Het zou letterlijk in het gesprek terechtkomen."
+    },
+    "pickAccount": "Kies een klant om waarden te zien en te bewerken.",
+    "voiceGeneric": "Deze weergave is algemeen, niet van deze lijn, dus dit kan hier niet worden opgeslagen.",
+    "noPersona": "Dit account heeft nog geen eigen persona.",
+    "editInCallSettings": "Bewerk in Belinstellingen",
+    "intakeOverridden": "Opgeslagen, maar de koopchecklist van deze lijn stelt eigen vragen.",
+    "voiceDesc": {
+      "agent": "De naam van de receptionist aan de telefoon.",
+      "agent_name": "De naam van de receptionist aan de telefoon.",
+      "company": "Het bedrijf waarvoor de receptionist opneemt.",
+      "company_name": "Het bedrijf waarvoor de receptionist opneemt.",
+      "business_line": "Eén regel over wat het bedrijf doet, plus de AI-zin als de lijn zegt dat het een AI is.",
+      "business_description": "Wat het bedrijf doet, voor het deel dat achter de stem nadenkt.",
+      "tone": "Hoe de receptionist overkomt, in je eigen woorden. Leeg gebruikt de eigenschappen uit de onboarding.",
+      "address": "Of bellers met u of je worden aangesproken.",
+      "pronunciation": "Hoe lastige woorden en namen worden uitgesproken.",
+      "intake": "Wat het team wil weten voor een afspraak, één punt per regel. Leeg gebruikt de vragen van de persona.",
+      "client_rules": "De eigen regels van deze klant, één per regel. Ze bereiken de stem en het deel erachter.",
+      "handoff": "Wat er gebeurt als een beller een mens wil spreken, en wie er doorkomt.",
+      "followup": "Of er na het gesprek een WhatsApp-bericht wordt aangeboden.",
+      "knowledge": "De bedrijfsfeiten waaruit de receptionist direct kan antwoorden.",
+      "language": "De taal van deze lijn.",
+      "disclosure": "De zin in de begroeting die zegt dat dit een AI is.",
+      "service_name": "De dienst of branche van de persona.",
+      "city": "De plaats van het bedrijf.",
+      "you": "Het woord voor \"je\" of \"u\" in de begroeting.",
+      "task_instructions": "Waar de opgeslagen bedrijfsprompt in dit kader komt.",
+      "call_details": "Waar de gegevens van dit gesprek in dit kader komen.",
+      "calling_number": "Een chatvariabele. Telefoongesprekken vullen deze niet in.",
+      "call_mode": "Een chatvariabele. Telefoongesprekken vullen deze niet in."
+    },
+    "notInRender": "Staat niet in deze weergave."
   }
 }

@@ -39,7 +39,19 @@ export const TEXT_FIELDS: Array<TextFieldDef & { group: PersonaGroup }> = [
   { field: "scopingLadder", labelKey: "clients.fields.scopingLadder", rows: 8, group: "conversation" },
   { field: "questionBank", labelKey: "clients.fields.questionBank", rows: 4, group: "conversation" },
   { field: "objectionExamples", labelKey: "clients.fields.objections", rows: 4, group: "conversation" },
+  { field: "badExamples", labelKey: "clients.fields.badExamples", rows: 4, group: "conversation" },
+  { field: "scenarioExamples", labelKey: "clients.fields.scenarioExamples", rows: 6, group: "conversation" },
 ];
+
+/**
+ * The four example packs the engine merges into prompt 93 ({niche_question_bank} and
+ * friends). The `__default__` row is only these and the terms: every niche without a
+ * pack of its own falls back to it, field by field.
+ */
+export const PACK_FIELDS: ClientTextField[] = ["questionBank", "objectionExamples", "badExamples", "scenarioExamples"];
+
+/** The fallback row every niche inherits from (never a persona, never listed). */
+export const FALLBACK_NICHE = "__default__";
 
 /**
  * Fields that ARE substituted verbatim, so they get the per-language treatment.

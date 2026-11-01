@@ -124,7 +124,8 @@
     "saveFailed": "Falha ao salvar",
     "statusUpdated": "Status atualizado",
     "statusUpdatedDescription": "\"{{name}}\" agora está {{status}}.",
-    "statusFailed": "Falha ao atualizar status"
+    "statusFailed": "Falha ao atualizar status",
+    "unknownError": "Erro desconhecido"
   },
   "detail": {
     "promptDetail": "Detalhe do Prompt",
@@ -142,9 +143,8 @@
     "clickToActivate": "Clique para ativar",
     "systemMsg": "Msg do sistema",
     "toggleSystemMessage": "Mostrar ou ocultar a mensagem do sistema",
-    "toggleNotes": "Mostrar ou ocultar as notas",
     "sidebar": "Seções",
-    "toggleSidebar": "Mostrar ou ocultar seções e variáveis",
+    "toggleSidebar": "Mostrar ou ocultar as seções",
     "preview": "Prévia",
     "togglePreview": "Mostrar ou ocultar a prévia (Ctrl+P)",
     "sizeEstimate": "~{{tokens}} tok · {{chars}}k car"
@@ -177,7 +177,8 @@
   "editor": {
     "raw": "Raw",
     "sections": "Seções",
-    "variables": "Variáveis"
+    "variables": "Variáveis",
+    "noSections": "Nenhum título neste prompt."
   },
   "time": {
     "justNow": "Agora",
@@ -224,51 +225,26 @@
   "preview": {
     "conditionsTitle": "Condições da prévia",
     "cond": {
-      "leadStage": "Estágio do lead",
-      "positioning": "Posicionamento",
-      "aiDisclosure": "Aviso de IA",
-      "off": "Desligado",
-      "on": "Ligado",
       "stage": {
         "inquired": "Pediu um orçamento",
         "visited": "Teve uma visita",
         "deciding": "Em decisão",
         "declined": "Recusou",
-        "quoted": "Recebeu um orçamento (padrão)"
+        "quoted": "Recebeu um orçamento (padrão)",
+        "owner": "Cliente existente"
       },
-      "pos": {
-        "midMarket": "Mercado intermediário",
-        "premium": "Premium"
-      }
+      "niche": "Palavras do nicho de",
+      "nicheDefault": "Padrão"
     },
-    "empty": "Nada para mostrar ainda."
-  },
-  "vocabulary": {
-    "intro": "Palavras por nicho que a IA usa para readaptar o prompt de demonstracao universal. Escolha um nicho em uma campanha e o prompt troca esses termos automaticamente, para a IA soar nativa daquele setor sem um novo prompt. A primeira palavra de cada grupo e a que o prompt utiliza.",
-    "defaultNiche": "Padrao (fallback)",
-    "addNiche": "Adicionar nicho",
-    "addNichePlaceholder": "Selecione um nicho…",
-    "deleteNiche": "Excluir nicho",
-    "saveError": "Nao foi possivel salvar. Tente novamente.",
-    "groups": {
-      "projectTerm": "Projeto / produto",
-      "proposalTerm": "Proposta / orcamento",
-      "decisionTerm": "Decisao",
-      "advisorTerm": "Consultor",
-      "visitTerm": "Visita / local"
-    },
-    "title": "Palavras por Nicho",
-    "lang": {
-      "en": "Inglês",
-      "nl": "Holandês"
-    },
-    "delete": {
-      "title": "Excluir nicho?",
-      "body": "Isso remove todas as palavras salvas para \"{{niche}}\". Não é possível desfazer.",
-      "confirm": "Excluir",
-      "cancel": "Cancelar"
-    },
-    "addWord": "Adicionar palavra"
+    "empty": "Nada para mostrar ainda.",
+    "emptyValue": "(vazio)",
+    "conditionsCount_one": "{{count}} condição",
+    "conditionsCount_other": "{{count}} condições",
+    "conditionsHint": "Escolha qual ramo a prévia mostra. Nada é salvo.",
+    "actualValue": "Como está: {{value}}",
+    "foldAll": "Recolher todas as seções",
+    "unfoldAll": "Expandir todas as seções",
+    "conditions": "Condições"
   },
   "voicePreview": {
     "client": "Cliente",
@@ -329,11 +305,236 @@
       "tone": "Tom (até 3)",
       "address": "Como ela trata quem liga",
       "pronunciation": "Pronúncia"
-    }
+    },
+    "tonePlaceholder": "Calorosa, tranquila e direta"
   },
   "voiceSection": {
     "voice": "Prompt de voz",
-    "backend": "Prompt do back-end",
-    "universal": "Prompt universal"
+    "backend": "Back-end · GPT Live"
+  },
+  "model": {
+    "latest": "{{tier}} (mais recente · {{model}})"
+  },
+  "note": {
+    "title": "Nota",
+    "view": "Ver a nota",
+    "add": "Adicionar nota",
+    "clear": "Limpar",
+    "hint": "Salva com o prompt enquanto você digita."
+  },
+  "usedBy": {
+    "title": "Usado por",
+    "count_one": "{{count}} campanha",
+    "count_other": "{{count}} campanhas",
+    "none": "Não usado",
+    "noActive": "Nenhuma campanha ativa",
+    "showInactive": "Mostrar rascunhos e arquivadas",
+    "noAccount": "Sem conta",
+    "empty": "Nenhuma campanha usa este prompt.",
+    "emptyActive": "Nenhuma campanha ativa usa este prompt.",
+    "linked": "Campanha vinculada",
+    "linkedHint": "O modelo é salvo nesta campanha.",
+    "status": {
+      "draft": "Rascunho",
+      "paused": "Pausada",
+      "archived": "Arquivada",
+      "inactive": "Inativa",
+      "completed": "Concluída",
+      "finished": "Finalizada"
+    }
+  },
+  "previewAs": {
+    "label": "Ver como",
+    "none": "Sem campanha (genérico)",
+    "uses": "Usam este prompt",
+    "demoClients": "Clientes demo",
+    "campaignOf": "{{name}} ({{account}})"
+  },
+  "vars": {
+    "title": "Variáveis",
+    "toggle": "Mostrar ou ocultar as variáveis",
+    "insert": "Inserir {{name}} no cursor",
+    "addVariable": "Inserir outra variável",
+    "noDescription": "Ainda sem descrição.",
+    "empty": "Vazio",
+    "edit": "Clique para editar",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "saving": "Salvando...",
+    "saved": "Salvo",
+    "failed": "Não salvo: {{reason}}",
+    "none": "Este prompt não usa variáveis.",
+    "pickContext": "Escolha uma campanha em Ver como para ver e editar valores.",
+    "noNicheRow": "Este nicho ainda não tem linha própria, então isso não pode ser salvo aqui.",
+    "liveClient": "Esta persona é gerenciada em Conta > Voz.",
+    "reason": {
+      "http": "{{message}}",
+      "notStored": "o valor não foi gravado. Tente de novo ou confira a origem.",
+      "noTarget": "não há onde salvar.",
+      "live": "esta persona é gerenciada em Conta > Voz."
+    },
+    "savesTo": {
+      "campaign": "Salva na campanha: {{name}}",
+      "account": "Salva na conta: {{name}}",
+      "niche": "Salva nas palavras do nicho: {{name}}, compartilhadas por todas as campanhas deste nicho",
+      "nicheDefault": "Salva nas palavras padrão, compartilhadas por todas as campanhas sem nicho",
+      "client": "Salva no cliente demo: {{name}}",
+      "persona": "Salva na persona ativa de {{name}}",
+      "voiceSetup": "Salva na configuração de telefone de {{name}}",
+      "voiceProfile": "Salva no perfil de comunicação de {{name}}"
+    },
+    "langSlot": "{{target}} ({{lang}})",
+    "lang": {
+      "en": "texto em inglês",
+      "nl": "texto em holandês",
+      "pt": "texto em português"
+    },
+    "group": {
+      "campaign": "Campanha",
+      "client": "Cliente demo",
+      "account": "Conta",
+      "niche": "Palavras do nicho",
+      "auto": "Preenchido para você",
+      "unknown": "Ainda sem descrição",
+      "voice": "Esta linha telefônica",
+      "elsewhere": "Editado em Configurações de chamadas"
+    },
+    "desc": {
+      "first_name": "O primeiro nome do lead.",
+      "lead_name": "O primeiro nome do lead (igual a first_name).",
+      "last_name": "O sobrenome do lead.",
+      "phone": "O telefone do lead.",
+      "email": "O e-mail do lead.",
+      "when": "Quando foi o pedido ou orçamento do lead.",
+      "agent_name": "O nome da IA. Vazio usa o nome padrão da IA da conta.",
+      "ai_role": "O cargo que a IA diz ter. Vazio usa o cargo padrão da conta.",
+      "ai_style": "Como a IA escreve. Vazio usa o estilo padrão da conta.",
+      "typo_frequency": "Com que frequência a IA comete um erro de digitação humano.",
+      "typo_count": "O máximo de erros de digitação por mensagem.",
+      "language": "O idioma em que a IA escreve. Um idioma definido no lead tem prioridade.",
+      "company_name": "A empresa para a qual a IA diz trabalhar.",
+      "business": "O nome da empresa, igual a company_name.",
+      "business_description": "O que a empresa faz. Vazio usa a descrição da conta.",
+      "campaign_name": "O nome da campanha.",
+      "service": "O serviço desta campanha, em uma ou duas palavras.",
+      "service_name": "O nome completo do serviço. Vazio usa service.",
+      "usp": "Por que esta empresa e não outra: o diferencial dela.",
+      "kb": "Fatos que a IA pode usar: preços, horários, área de atendimento, regras.",
+      "niche": "O ramo. Também define quais palavras de nicho o prompt recebe.",
+      "niche_question": "A pergunta com que a IA entende a situação do lead.",
+      "qualification_criteria": "O que torna um lead qualificado.",
+      "calendar_link": "O link de agendamento. Em uma conversa real, cada lead recebe um link próprio criado a partir dele.",
+      "booking_mode": "Como funciona o agendamento: uma ligação com a equipe ou agendamento direto.",
+      "calling_number": "O número de onde a confirmação promete a ligação.",
+      "call_mode": "Como é a ligação agendada: telefone, WhatsApp ou vídeo.",
+      "what_lead_did": "O que o lead fez antes. Isso define lead_stage. O valor do próprio lead tem prioridade.",
+      "what_has_the_lead_done": "Igual a what_lead_did.",
+      "lead_context": "Detalhes do pedido ou orçamento. O valor do próprio lead tem prioridade.",
+      "inquiries_source": "De onde os leads vieram.",
+      "inquiry_timeframe": "Mais ou menos quando os leads pediram informações.",
+      "first_touch": "Como a empresa teve o primeiro contato com o lead.",
+      "first_message": "A primeira mensagem ao lead. Você edita o modelo, com as {variáveis}.",
+      "positioning": "Posicionamento de preço: premium ou intermediário.",
+      "ai_disclosure": "Quando a IA diz que é uma IA: desligado, na primeira ou na segunda mensagem.",
+      "lead_stage": "Em que ponto está o lead: inquired, deciding, quoted ou owner.",
+      "conversation_mode": "O fluxo: scoping entende o pedido, decision discute um orçamento.",
+      "voice_mode": "Se esta resposta é uma mensagem de voz.",
+      "voice_live": "Qual motor de voz ao vivo responde agora, se houver.",
+      "immediate_callback": "Se a IA pode prometer uma ligação imediata.",
+      "opener_names_job": "Se a primeira mensagem já citou o serviço orçado.",
+      "decision_opener": "Só no fluxo decision: serviço citado ou não na primeira mensagem.",
+      "quoted_first_reply": "Como é a primeira resposta depois de uma abertura que cita o serviço.",
+      "disclosure_clause": "A frase da primeira mensagem que diz que é uma IA.",
+      "lead_source": "Como o lead chegou, em fluxos especiais como um comentário social.",
+      "social_context": "O post e o comentário ao qual o lead social reagiu.",
+      "today_date": "A data de hoje, para a IA raciocinar sobre o tempo.",
+      "project_term": "A palavra do nicho para o serviço ou projeto.",
+      "project_term_list": "Todas as palavras para o serviço, separadas por vírgula. A primeira é a principal.",
+      "proposal_term": "A palavra do nicho para orçamento ou proposta.",
+      "proposal_term_list": "Todas as palavras para orçamento, separadas por vírgula. A primeira é a principal.",
+      "decision_term": "A palavra do nicho para a decisão de compra.",
+      "decision_term_list": "Todas as palavras para a decisão, separadas por vírgula. A primeira é a principal.",
+      "advisor_term": "A palavra do nicho para o especialista humano.",
+      "advisor_term_list": "Todas as palavras para o especialista, separadas por vírgula. A primeira é a principal.",
+      "visit_term": "A palavra do nicho para visita ou compromisso.",
+      "visit_term_list": "Todas as palavras para a visita, separadas por vírgula. A primeira é a principal.",
+      "niche_question_bank": "Perguntas de exemplo para este nicho.",
+      "niche_bad_examples": "Respostas que a IA não deve imitar neste nicho.",
+      "niche_objection_examples": "Objeções comuns deste nicho, com boas respostas.",
+      "niche_scenario_examples": "Exemplos prontos de situações deste nicho.",
+      "niche_scoping_ladder": "As perguntas, em ordem, que entendem o pedido neste nicho.",
+      "opener_phrase": "A frase curta que cita o serviço na primeira mensagem.",
+      "campaignname": "O nome da campanha, em um relatório.",
+      "campaignstatus": "O status da campanha, em um relatório.",
+      "campaigndescription": "A descrição da campanha, em um relatório.",
+      "campaigncreatedat": "Quando a campanha foi criada.",
+      "reportdate": "A data do relatório.",
+      "totalleads": "Quantos leads a campanha tem.",
+      "pipelinebreakdown": "Leads por etapa do funil.",
+      "responserate": "A parcela de leads que respondeu.",
+      "responded": "Quantos leads responderam.",
+      "bookingrate": "A parcela de leads que agendou.",
+      "booked": "Quantos leads agendaram."
+    },
+    "note": {
+      "lead": "Vem do lead. Aqui com o primeiro lead desta campanha.",
+      "today": "Preenchido quando a mensagem é escrita.",
+      "stats": "Números reais em um relatório real. A prévia mostra números de exemplo.",
+      "leadStage": "Calculado a partir do que o lead fez.",
+      "conversationMode": "Calculado a partir da etapa do lead.",
+      "perTurn": "Definido por mensagem. A prévia mostra uma mensagem de texto normal.",
+      "demoCallback": "Ligado em campanhas demo no horário comercial.",
+      "openerFlow": "Definido pela primeira mensagem enviada.",
+      "socialDemo": "Preenchido só em um lead vindo de um comentário social.",
+      "callMode": "Vem do tipo de reunião da conta.",
+      "nicheRow": "Vem do nicho, editado na página Demos.",
+      "demoRun": "Definido em cada link de demo.",
+      "demoContext": "Escolhido por demo a partir do pedido ou orçamento do cliente.",
+      "demoNumber": "O número próprio da demo para o mercado dela.",
+      "bookingMode": "Definido pelo sistema: ligação em toda campanha, um cliente demo pode mudar isso.",
+      "voiceAgent": "Definido em Configurações de chamadas, onde um novo nome também atualiza a saudação e acompanha a voz.",
+      "voiceHandoff": "Calculado a partir das configurações de transferência e chamadas indesejadas. Salvar um número ali também reconfigura a linha.",
+      "voiceFollowup": "Definido por pessoa que liga, então a prévia deixa vazio.",
+      "voiceKnowledge": "Montado a partir da base de conhecimento da conta e da persona.",
+      "voiceDisclosure": "Depende da configuração de aviso de IA da linha, que ainda não tem editor.",
+      "voiceService": "Vem da linha da persona ativa, que a página Demos não pode editar.",
+      "voiceCity": "Não é preenchido em linhas de clientes: as palavras em volta são removidas.",
+      "voiceTask": "O prompt de negócio salvo para o idioma desta linha.",
+      "voiceDetails": "Montado por ligação: conhecimento, configuração do cliente, quem ligou e a data.",
+      "voiceYou": "Acompanha a forma de tratamento.",
+      "voiceLanguage": "Definido em Configurações de chamadas, onde o nome pode acompanhar.",
+      "voiceNotFilled": "Chegaria à ligação do jeito que foi digitada."
+    },
+    "pickAccount": "Escolha um cliente para ver e editar valores.",
+    "voiceGeneric": "Esta prévia é genérica, não desta linha, então isso não pode ser salvo aqui.",
+    "noPersona": "Esta conta ainda não tem persona própria.",
+    "editInCallSettings": "Editar em Configurações de chamadas",
+    "intakeOverridden": "Salvo, mas a lista de compra desta linha faz as próprias perguntas.",
+    "voiceDesc": {
+      "agent": "O nome de quem atende ao telefone.",
+      "agent_name": "O nome de quem atende ao telefone.",
+      "company": "A empresa para a qual a recepcionista atende.",
+      "company_name": "A empresa para a qual a recepcionista atende.",
+      "business_line": "Uma linha sobre o que a empresa faz, mais a frase de IA quando a linha diz que é uma IA.",
+      "business_description": "O que a empresa faz, para a parte que raciocina por trás da voz.",
+      "tone": "Como a recepcionista soa, com suas próprias palavras. Vazio usa as características escolhidas no onboarding.",
+      "address": "Se quem liga é tratado de forma formal ou informal.",
+      "pronunciation": "Como pronunciar palavras e nomes difíceis.",
+      "intake": "O que a equipe quer saber para um agendamento, um item por linha. Vazio usa as perguntas da persona.",
+      "client_rules": "As regras próprias deste cliente, uma por linha. Elas chegam à voz e à parte por trás dela.",
+      "handoff": "O que acontece quando alguém pede para falar com uma pessoa, e quem é atendido.",
+      "followup": "Se uma mensagem de WhatsApp é oferecida depois da ligação.",
+      "knowledge": "Os fatos da empresa que a recepcionista usa para responder na hora.",
+      "language": "O idioma desta linha.",
+      "disclosure": "A frase da saudação que diz que é uma IA.",
+      "service_name": "O serviço ou ramo da persona.",
+      "city": "A cidade da empresa.",
+      "you": "A palavra usada para tratar a pessoa na saudação.",
+      "task_instructions": "Onde o prompt de negócio salvo entra nesta estrutura.",
+      "call_details": "Onde os detalhes desta ligação entram nesta estrutura.",
+      "calling_number": "Uma variável de chat. Ligações não a preenchem.",
+      "call_mode": "Uma variável de chat. Ligações não a preenchem."
+    },
+    "notInRender": "Não faz parte desta prévia."
   }
 }

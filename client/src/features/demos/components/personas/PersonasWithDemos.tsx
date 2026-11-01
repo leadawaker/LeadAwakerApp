@@ -4,6 +4,7 @@ import type { DemoClientSummary } from "@/features/campaigns/api/demoClientsApi"
 import { ClientActionsMenu } from "@/features/campaigns/components/clients/ClientActionsMenu";
 import { ClientEditor } from "@/features/campaigns/components/clients/ClientEditor";
 import { ClientsTab } from "@/features/campaigns/components/clients/ClientsTab";
+import { FALLBACK_NICHE } from "@/features/campaigns/components/clients/clientDraft";
 import type { PersonaDecoration } from "@/features/campaigns/components/clients/personaDecoration";
 import type { PersonaView } from "@/features/campaigns/components/clients/usePersonaView";
 import {
@@ -17,6 +18,7 @@ import {
 } from "../../personaDemos";
 import { nextSort } from "../../sessionsView";
 import { PersonaCardMeta } from "./PersonaCardMeta";
+import { FallbackNicheCard } from "./FallbackNicheCard";
 import { PersonaDemosTab } from "./PersonaDemosTab";
 import { SpecialPersonaCards } from "./SpecialPersonaCards";
 import { SpecialPersonaPanel } from "./SpecialPersonaPanel";
@@ -29,6 +31,7 @@ import type { useProspectData } from "./useProspectData";
  * adds to it. Each card shows its prospect count and an activity dot; No persona and Website
  * visitors close the list as cards of their own; and an open card's panel starts with the Demos
  * tab (that card's prospects as a table), followed by the persona's own editor tabs.
+ * The Niche library filter (curated niche packs) adds the fallback row's card at the end.
  */
 export function PersonasWithDemos({ state, view, data, activity, select, onAddProspect }: {
   state: DemosPageState;
@@ -62,7 +65,13 @@ export function PersonasWithDemos({ state, view, data, activity, select, onAddPr
     selected: state.selected,
   }).map((key) => ({ key, rows: rowsForKey(split, key), dot: dots.get(key) ?? null }));
 
+  // The fallback row's card: only in the Niche library, and only while no search or another filter hides it.
+  const f = view.filters;
+  const showFallback = f.source === "library" && !f.search.trim() && !f.category && f.lang === "all";
+
   const renderPanel = (key: string, close: () => void) => {
+    // Not a persona: no prospects, no actions, just its words and example packs.
+    if (key === FALLBACK_NICHE) return <ClientEditor niche={key} onBack={close} />;
     const website = key === WEBSITE_KEY;
     const tab = (
       <PersonaDemosTab
@@ -110,7 +119,9 @@ export function PersonasWithDemos({ state, view, data, activity, select, onAddPr
       searchExtra={searchExtra}
       // null (not an empty element) when there is nothing: an element would hide ClientsTab's no-match state.
       trailing={(layout) =>
-        special.length === 0 ? null : (
+        showFallback ? (
+          <FallbackNicheCard layout={layout} selected={state.selected === FALLBACK_NICHE} onSelect={select} />
+        ) : special.length === 0 ? null : (
           <SpecialPersonaCards cards={special} layout={layout} selectedKey={state.selected} onSelect={select} />
         )
       }

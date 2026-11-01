@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { RightSidebar } from "./RightSidebar";
 import { SupportChatWidget } from "@/components/crm/SupportChatWidget";
 import { FounderInbox } from "@/components/crm/FounderInbox";
-import { useSupportChat } from "@/hooks/useSupportChat";
+import { FounderChatLauncher } from "@/components/crm/FounderChatLauncher";
 import { useFounderChat } from "@/hooks/useFounderChat";
 import { PageTransition } from "@/components/crm/PageTransition";
 import { CommandPalette } from "@/components/crm/CommandPalette";
@@ -28,7 +28,7 @@ import { useAgentWidget } from "@/contexts/AgentWidgetContext";
 export function CrmShell({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation("crm");
   const [location, setLocation] = useLocation();
-  const { currentAccount, currentAccountId, isImpersonating, impersonation, isAgencyUser } = useWorkspace();
+  const { currentAccount, currentAccountId, isImpersonating, impersonation, isAgencyUser, isOwner } = useWorkspace();
 
   const { dockMode, dockWidth, isWideViewport, isOpen: agentOpen, toggleWidget: toggleAiWidget } = useAgentWidget();
   const dockActive = dockMode && isWideViewport && agentOpen;
@@ -81,7 +81,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
   const [activePanel, setActivePanel] = useState<string | null>(null);
   const [founderChatOpen, setFounderChatOpen] = useState(false);
   const [founderDraft, setFounderDraft] = useState<string | undefined>(undefined);
-  const supportChat = useSupportChat();
   const founderChat = useFounderChat();
   const [colorPickerOpen, setColorPickerOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -383,11 +382,13 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
         </div>
       </main>
 
-      {/* Floating "Talk to Gabriel" chat — founder direct messages, no AI */}
+      {/* Floating "Talk to Gabriel" chat: founder direct messages, no AI */}
+      {/* Gabriel (Owner) gets his inbox of these chats; everyone else gets the chat with him. */}
+      {!founderChatOpen && (
+        <FounderChatLauncher onClick={() => (isOwner ? setActivePanel('founder-inbox') : setFounderChatOpen(true))} />
+      )}
       {founderChatOpen && (
         <SupportChatWidget
-          mode="floating"
-          founderOnly
           initialDraft={founderDraft}
           onDraftUsed={() => setFounderDraft(undefined)}
           founderChat={{
@@ -399,16 +400,6 @@ export function CrmShell({ children }: { children: React.ReactNode }) {
             closeSession: founderChat.closeSession,
             clearContext: founderChat.clearContext,
           }}
-          messages={supportChat.messages}
-          sending={supportChat.sending}
-          loading={supportChat.loading}
-          escalated={supportChat.escalated}
-          botConfig={supportChat.botConfig}
-          initialize={supportChat.initialize}
-          sendMessage={supportChat.sendMessage}
-          closeSession={supportChat.closeSession}
-          clearContext={supportChat.clearContext}
-          updateBotConfig={supportChat.updateBotConfig}
           isAdmin={isAgencyUser}
           onClose={() => setFounderChatOpen(false)}
         />

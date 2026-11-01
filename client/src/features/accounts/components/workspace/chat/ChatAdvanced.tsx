@@ -10,7 +10,7 @@ import { Cpu, GitBranch, Clock, ShieldCheck, Repeat, HelpCircle } from "lucide-r
 import { EditNumber, EditSelect, EditText, InfoRow } from "@/features/campaigns/components/formFields";
 import { AiDisclosureField } from "@/features/campaigns/components/settings/AiDisclosureField";
 import { ObjectionPlaybookField } from "@/features/campaigns/components/settings/ObjectionPlaybookField";
-import { MODEL_OPTIONS } from "@/features/prompts/types";
+import { MODEL_OPTIONS, modelLabel, modelLabels as labelsForModels } from "@/features/prompts/types";
 import { ChatCard, SwitchRow, helpStyle, useLocalized, type ChatEdit } from "./chatAtoms";
 
 const CONVERSATION_MODES = ["", "scoping", "decision"];
@@ -32,7 +32,7 @@ export function ChatAdvanced(p: ChatEdit) {
   const model = String(draft.ai_model ?? "");
   // A model typed in elsewhere stays selectable instead of showing as the first option.
   const models = Array.from(new Set(["", model, ...MODEL_OPTIONS]));
-  const modelLabels = { "": t("advanced.modelDefault") };
+  const modelLabels = { ...labelsForModels(models), "": t("advanced.modelDefault") };
   const mode = String(draft.conversation_mode_override ?? "");
   const modeLabels = Object.fromEntries(CONVERSATION_MODES.map((m) => [m, t(`advanced.conversationModes.${m || "auto"}`)]));
   const booking = String(draft.booking_mode_override ?? "");
@@ -50,7 +50,7 @@ export function ChatAdvanced(p: ChatEdit) {
     <>
       <ChatCard icon={<Cpu size={17} />} title={t("advanced.modelTitle")} testId="chat-card-model">
         <InfoRow
-          label={t("advanced.model")} value={model || t("advanced.modelDefault")} description={t("advanced.modelHelp")}
+          label={t("advanced.model")} value={model ? modelLabel(model) : t("advanced.modelDefault")} description={t("advanced.modelHelp")}
           editChild={canEdit ? <EditSelect value={model} onChange={(v) => set("ai_model", v)} options={models} labels={modelLabels} /> : undefined}
         />
         <InfoRow

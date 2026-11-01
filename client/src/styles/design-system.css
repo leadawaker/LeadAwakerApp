@@ -1306,10 +1306,6 @@ body, html { margin: 0; padding: 0; }
     inset 0 1px 0 0 rgba(255, 240, 220, 0.05);
 }
 
-/* Prompt editor's voice preview: a filled-in value that opens its editor on click. */
-.la-voice-editable mark[data-var="company_name"], .la-voice-editable mark[data-var="business"],
-.la-voice-editable mark[data-var="agent_name"], .la-voice-editable mark[data-var="tone"],
-.la-voice-editable mark[data-var="address"], .la-voice-editable mark[data-var="pronunciation"] {
-  cursor: pointer;
-}
-.la-voice-editable mark[data-var]:hover { box-shadow: 0 0 0 1px currentColor; }
+/* Prompt editor's previews (voice and text): a filled-in value opens its editor on click. */
+.la-voice-editable mark[data-var], .la-prompt-clickable mark[data-var] { cursor: pointer; }
+.la-voice-editable mark[data-var]:hover, .la-prompt-clickable mark[data-var]:hover { box-shadow: 0 0 0 1px currentColor; }

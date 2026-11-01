@@ -9,7 +9,7 @@
 import { useTranslation } from "react-i18next";
 import { Clock, Cpu, FlaskConical, GitBranch, MessageCircle, MessageSquareText, Send, Variable } from "lucide-react";
 import { EditNumber, EditSelect, EditText, InfoRow } from "@/features/campaigns/components/formFields";
-import { MODEL_OPTIONS } from "@/features/prompts/types";
+import { MODEL_OPTIONS, modelLabel, modelLabels } from "@/features/prompts/types";
 import { FIRST_TOUCH_OPTIONS, USP_OPTIONS, asCampaignLang, optionLabel } from "@/features/campaigns/components/settings/fieldLocale";
 import { useWorkspace } from "@/hooks/useWorkspace";
 import { ChatCard, SwitchRow, helpStyle, hhmm, useLocalized, type ChatEdit } from "../chat/chatAtoms";
@@ -142,8 +142,8 @@ export function RxAdvanced(p: ChatEdit) {
     <>
       <ChatCard icon={<Cpu size={17} />} title={t("advanced.modelTitle")} testId="rx-card-model">
         <InfoRow
-          label={t("advanced.model")} value={model || t("advanced.modelDefault")}
-          editChild={canEdit ? <EditSelect value={model} onChange={(v) => set("ai_model", v)} options={models} labels={{ "": t("advanced.modelDefault") }} /> : undefined}
+          label={t("advanced.model")} value={model ? modelLabel(model) : t("advanced.modelDefault")}
+          editChild={canEdit ? <EditSelect value={model} onChange={(v) => set("ai_model", v)} options={models} labels={{ ...modelLabels(models), "": t("advanced.modelDefault") }} /> : undefined}
         />
         <InfoRow
           label={t("advanced.role")} value={loc.get("ai_role") || null} description={t("advanced.roleHelp")} noBorder

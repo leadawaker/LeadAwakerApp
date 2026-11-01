@@ -432,6 +432,7 @@
     "sourceAll": "All",
     "sourceWebsite": "Website",
     "sourceManual": "Manual",
+    "sourceLibrary": "Niche library",
     "noMatchesFilters": "No personas match these filters.",
     "clearFilters": "Clear filters",
     "translate": "Translate {{from}} to {{to}}",
@@ -471,6 +472,11 @@
       "noPersonaSub": "Prospects added without a persona",
       "website": "Website visitors",
       "websiteSub": "Demos started on leadawaker.com"
+    },
+    "fallback": {
+      "groupTitle": "Fallback",
+      "title": "Fallback words",
+      "sub": "What a niche without its own words or example packs uses"
     },
     "demosTab": {
       "label": "Demos",

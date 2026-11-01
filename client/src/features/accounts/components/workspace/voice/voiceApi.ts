@@ -88,6 +88,7 @@ export interface VoiceLine {
   intake: string | null;
   afterHours: AfterHoursMode | null;
   extraInstructions: string | null;
+  tone?: string;
   /** The WhatsApp message after each call. `whatsappConnected`: the account's own number can send. */
   followUp: { enabled: boolean; smsSenderId: string | null; whatsappConnected: boolean };
   hours: { start: string | null; end: string | null; timezone: string | null };
@@ -119,6 +120,7 @@ export interface VoiceLinePatch {
   intake?: string;
   afterHours?: AfterHoursMode | null;
   extraInstructions?: string;
+  tone?: string;
   followUpEnabled?: boolean;
   /** The name an SMS fallback is sent from; null for none. */
   smsSenderId?: string | null;

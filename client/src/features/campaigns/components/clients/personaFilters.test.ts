@@ -23,6 +23,13 @@ test("source narrows to website or manual", () => {
   assert.equal(personaMatches(c, { ...DEFAULT_PERSONA_FILTERS, source: "website" }), true);
 });
 
+test("the Niche library keeps only the curated packs: no saved demo Client, no live persona", () => {
+  const lib = { ...DEFAULT_PERSONA_FILTERS, source: "library" as const };
+  assert.equal(personaMatches({ ...kitchen, isDemoClient: false, isLive: false }, lib), true);
+  assert.equal(personaMatches({ ...kitchen, isDemoClient: true, isLive: false }, lib), false);
+  assert.equal(personaMatches({ ...kitchen, isDemoClient: false, isLive: true }, lib), false);
+});
+
 test("category must equal the persona's category, empty means any", () => {
   assert.equal(personaMatches(c, { ...DEFAULT_PERSONA_FILTERS, category: "Home & Trades" }), false);
   assert.equal(personaMatches(c, { ...DEFAULT_PERSONA_FILTERS, category: "Automotive" }), true);

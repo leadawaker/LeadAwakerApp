@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from "react";
-import { apiFetch } from "@/lib/apiUtils";
+import { API_BASE, apiFetch } from "@/lib/apiUtils";
 
 export interface FounderMessage {
   id?: number;
@@ -126,18 +126,9 @@ export function useFounderChat() {
       } catch {}
     };
 
-    // Listen on the interactions SSE stream for founder_reply events
-    const es = (window as any).__founderSSE;
-    if (!es) {
-      // Piggyback on existing EventSource if available, or set up a listener
-      const onSSE = (e: Event) => {
-        const detail = (e as CustomEvent).detail;
-        if (detail?.type === "founder_reply") handler(detail);
-      };
-      window.addEventListener("founder_reply", onSSE);
-      return () => window.removeEventListener("founder_reply", onSSE);
-    }
-    return undefined;
+    const es = new EventSource(`${API_BASE}/api/interactions/stream`, { withCredentials: true });
+    es.addEventListener("founder_reply", handler as EventListener);
+    return () => es.close();
   }, [session]);
 
   /** Close session and reset */

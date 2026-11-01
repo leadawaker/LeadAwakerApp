@@ -1,6 +1,6 @@
-// The selected prompt's header bar: icon, editable name, status, campaign,
-// area (category) and the Demo toggle on the left; on the right the section / panel /
-// preview toggles, with the size estimate and the edit actions under them.
+// The selected prompt's header bar: icon, editable name, status and note on the
+// first line; area, Demo toggle, id and "used by" on the second. On the right the
+// panel toggles, with the size estimate and the edit actions under them.
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Bot, Check, Eye, EyeOff } from "lucide-react";
@@ -8,38 +8,47 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { cn } from "@/lib/utils";
+import { promptNote } from "../../types";
 import type { CampaignForPreview } from "../../utils/resolveVariables";
 import { CATEGORY_COLOR, PROMPT_CATEGORIES, isDemoPrompt, promptCategory, type PromptCategory } from "../../promptCategories";
+import { UsedByChip } from "./UsedByChip";
+import { PromptNoteButton } from "./PromptNoteButton";
 
 const metaText = { fontFamily: "var(--mono)", fontSize: 9.5, color: "var(--mute-2)" } as const;
 
-function ToggleButton({ on, highlight, onClick, title, children }: {
+/** One panel switch. Every switch reads the same: open is a wine tint with an open eye, closed a muted crossed eye. */
+function PanelToggle({ on, marked, label, title, onClick, hideLabelWhenNarrow }: {
   on: boolean;
-  /** Wine text: the section has content. */
-  highlight?: boolean;
-  onClick: () => void;
+  /** A small wine dot: the closed panel has content. */
+  marked?: boolean;
+  label: string;
   title: string;
-  children: ReactNode;
+  onClick: () => void;
+  /** Below 1440px only the icon stays, so the prompt name keeps its room. */
+  hideLabelWhenNarrow?: boolean;
 }) {
+  const Icon = on ? Eye : EyeOff;
   return (
     <button
       type="button"
       onClick={onClick}
-      className={cn("la-btn", on ? "la-btn--inset" : "la-btn--soft")}
       style={{
-        height: 28, padding: "0 10px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0, fontSize: 12,
-        color: highlight ? "var(--wine)" : on ? "var(--ink)" : "var(--mute-2)",
+        height: 24, padding: "0 9px", display: "inline-flex", alignItems: "center", gap: 5, flexShrink: 0,
+        fontSize: 12, fontWeight: on ? 600 : 500, border: "none", cursor: "pointer",
+        borderRadius: "var(--r-pill)",
+        background: on ? "var(--wine-tint)" : "transparent",
+        color: on ? "var(--wine)" : "var(--mute-2)",
+        transition: "background-color 130ms, color 130ms",
       }}
       title={title}
       aria-label={title}
       aria-pressed={on}
     >
-      {children}
+      <Icon size={13} />
+      <span className={hideLabelWhenNarrow ? "max-[1439px]:hidden" : undefined}>{label}</span>
+      {marked && !on && <span style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--wine)" }} />}
     </button>
   );
 }
@@ -48,17 +57,16 @@ export function PromptDetailHeader({
   prompt,
   promptId,
   nameField,
-  campaignLabel,
-  accountName,
+  usedBy,
+  accountNames,
   campaigns,
   tokenEstimate,
   onStatusChange,
   onCampaignChange,
+  onNoteChange,
   onPatch,
   showSystemMessage,
   onToggleSystemMessage,
-  showNotes,
-  onToggleNotes,
   showSidebar,
   onToggleSidebar,
   previewOpen,
@@ -69,18 +77,19 @@ export function PromptDetailHeader({
   promptId: number | null;
   /** The inline-editable name (useInlineEditing). */
   nameField: ReactNode;
-  campaignLabel: string;
-  accountName?: string | null;
+  /** Campaigns that run this prompt. */
+  usedBy: CampaignForPreview[];
+  accountNames: Map<number, string>;
   campaigns: CampaignForPreview[];
   tokenEstimate: number;
   onStatusChange: (status: "active" | "archived") => void;
   onCampaignChange: (campaignId: string) => void;
+  /** The note goes through the editor's autosave. */
+  onNoteChange: (note: string) => void;
   /** Saves fields straight to the row (category, isDemo). */
   onPatch: (fields: { category?: PromptCategory; isDemo?: boolean }) => void;
   showSystemMessage: boolean;
   onToggleSystemMessage: () => void;
-  showNotes: boolean;
-  onToggleNotes: () => void;
   showSidebar: boolean;
   onToggleSidebar: () => void;
   previewOpen: boolean;
@@ -97,21 +106,21 @@ export function PromptDetailHeader({
 
   return (
     <div style={{
-      flexShrink: 0, minHeight: 84, padding: "12px 18px",
+      flexShrink: 0, padding: "10px 16px",
       borderRadius: "var(--r-surface)", boxShadow: "var(--sh-raised-crisp)",
       display: "flex", alignItems: "center", gap: 14, background: "var(--paper)",
     }}>
       <div className="flex items-center gap-3 min-w-0 flex-1">
         <span style={{
-          width: 44, height: 44, flexShrink: 0, borderRadius: "var(--r-surface)",
+          width: 38, height: 38, flexShrink: 0, borderRadius: "var(--r-surface)",
           display: "flex", alignItems: "center", justifyContent: "center",
           background: CATEGORY_COLOR[category], color: "var(--on-wine)",
         }}>
-          <Bot size={20} />
+          <Bot size={18} />
         </span>
 
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 min-w-0">
+          <div className="flex items-center gap-1.5 min-w-0">
             {nameField}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -133,6 +142,7 @@ export function PromptDetailHeader({
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
+            <PromptNoteButton note={promptNote(prompt)} onChange={onNoteChange} />
           </div>
 
           <div className="flex items-center gap-2 min-w-0" style={{ marginTop: 3 }}>
@@ -166,56 +176,40 @@ export function PromptDetailHeader({
               {t("demo.tag")}
             </button>
 
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <button type="button" className="min-w-0 truncate text-left" style={{ ...metaText, cursor: "pointer", background: "transparent", border: "none", padding: 0 }}>
-                  #{promptId} · {campaignLabel}{accountName ? ` · ${accountName}` : ""}
-                </button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-52 max-h-60 overflow-y-auto">
-                <DropdownMenuLabel className="text-[10px] uppercase tracking-widest text-muted-foreground">
-                  {t("labels.campaign")}
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-[12px]" onClick={() => onCampaignChange("")}>
-                  {t("labels.noCampaign")}
-                  {!campaignId && <Check className="h-3 w-3 ml-auto" />}
-                </DropdownMenuItem>
-                {campaigns.map((c) => (
-                  <DropdownMenuItem key={c.id} className="text-[12px]" onClick={() => onCampaignChange(String(c.id))}>
-                    <span className="truncate flex-1">{c.name}</span>
-                    {campaignId === String(c.id) && <Check className="h-3 w-3 ml-1 shrink-0" />}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            <UsedByChip
+              usedBy={usedBy}
+              accountNames={accountNames}
+              footer={(
+                <label className="flex flex-col gap-1">
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "var(--mute)" }}>{t("usedBy.linked")}</span>
+                  <select
+                    className="neu-inset-super-crisp outline-none cursor-pointer"
+                    style={{ fontSize: 12, color: "var(--ink)", borderRadius: "var(--r-flush)", padding: "4px 6px", border: "none" }}
+                    value={campaignId}
+                    onChange={(e) => onCampaignChange(e.target.value)}
+                  >
+                    <option value="">{t("labels.noCampaign")}</option>
+                    {campaigns.map((c) => <option key={c.id} value={String(c.id)}>{c.name}</option>)}
+                  </select>
+                  <span style={{ fontSize: 11, color: "var(--mute)" }}>{t("usedBy.linkedHint")}</span>
+                </label>
+              )}
+            />
+
+            <span style={metaText}>#{promptId}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col items-end gap-2 shrink-0">
-        <div className="flex items-center gap-2">
-        <ToggleButton
-          on={showSystemMessage}
-          highlight={!!(prompt.systemMessage || prompt.system_message)}
-          onClick={onToggleSystemMessage}
-          title={t("detail.toggleSystemMessage")}
-        >
-          <EyeOff size={13} /> <span className="max-[1439px]:hidden">{t("detail.systemMsg")}</span>
-        </ToggleButton>
-        <ToggleButton on={showNotes} highlight={!!prompt.notes} onClick={onToggleNotes} title={t("detail.toggleNotes")}>
-          <EyeOff size={13} /> <span className="max-[1439px]:hidden">{t("detail.notes")}</span>
-        </ToggleButton>
-        <ToggleButton on={showSidebar} onClick={onToggleSidebar} title={t("detail.toggleSidebar")}>
-          {showSidebar ? <Eye size={13} /> : <EyeOff size={13} />} <span className="max-[1439px]:hidden">{t("detail.sidebar")}</span>
-        </ToggleButton>
-        <ToggleButton on={previewOpen} onClick={onTogglePreview} title={t("detail.togglePreview")}>
-          {previewOpen ? <EyeOff size={13} /> : <Eye size={13} />} <span className="max-[1439px]:hidden">{t("detail.preview")}</span>
-        </ToggleButton>
+      <div className="flex flex-col items-end gap-1.5 shrink-0">
+        {/* One track, so the three switches read as one control. */}
+        <div className="flex items-center neu-inset-super-crisp" style={{ borderRadius: "var(--r-pill)", padding: 2, gap: 1 }}>
+          <PanelToggle on={showSystemMessage} marked={!!(prompt.systemMessage || prompt.system_message)} label={t("detail.systemMsg")} title={t("detail.toggleSystemMessage")} onClick={onToggleSystemMessage} hideLabelWhenNarrow />
+          <PanelToggle on={showSidebar} label={t("detail.sidebar")} title={t("detail.toggleSidebar")} onClick={onToggleSidebar} hideLabelWhenNarrow />
+          <PanelToggle on={previewOpen} label={t("detail.preview")} title={t("detail.togglePreview")} onClick={onTogglePreview} />
         </div>
         <div className="flex items-center gap-2.5">
-          {/* Below 1440px (no page zoom since 2026-10-29) the size estimate hides and the
-              toggles show only their icon, so the prompt name keeps its room. */}
+          {/* Below 1440px the size estimate hides, so the prompt name keeps its room. */}
           <span className="max-[1439px]:hidden" style={{ fontFamily: "var(--mono)", fontSize: 10, color: "var(--mute-2)", whiteSpace: "nowrap" }}>
             {t("detail.sizeEstimate", { tokens: tokenEstimate, chars: (chars / 1000).toFixed(1) })}
           </span>

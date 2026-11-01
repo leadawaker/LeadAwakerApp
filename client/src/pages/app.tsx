@@ -79,7 +79,7 @@ function AgencyOnly({ children, prefix }: { children: ReactElement; prefix: stri
 }
 
 /**
- * Route guard for Owner-only pages (Automation Logs, Traffic, Demos).
+ * Route guard for Owner-only pages (Automation Logs, Traffic).
  * Everyone else is sent to Home.
  */
 function OwnerOnly({ children, prefix }: { children: ReactElement; prefix: string }) {
@@ -363,9 +363,9 @@ export default function AppArea() {
           <Route path="/platform/traffic">
             <OwnerOnly prefix="/platform"><TrafficPage /></OwnerOnly>
           </Route>
-          {/* Owner-only: the list names every prospect who has been demoed to. */}
+          {/* Owner and Admin: the list names every prospect who has been demoed to. */}
           <Route path="/platform/demos">
-            <OwnerOnly prefix="/platform"><DemosPage /></OwnerOnly>
+            <AgencyOnly prefix="/platform"><DemosPage /></AgencyOnly>
           </Route>
           {/* Owner: Live + Demo tabs. Clients with a voice line: their own Live calls. */}
           <Route path="/platform/voice-calls">

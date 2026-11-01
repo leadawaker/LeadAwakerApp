@@ -223,7 +223,6 @@ export function CampaignDetailView({
   const [promptPreviewOpen, setPromptPreviewOpen] = useState(false);
   const [promptSidebarOpen, setPromptSidebarOpen] = useState(false);
   const [promptSystemOpen, setPromptSystemOpen] = useState(false);
-  const [promptNotesOpen, setPromptNotesOpen] = useState(false);
 
   // ── Animation trigger on campaign change ──────────────────────────────────
   const [animTrigger, setAnimTrigger] = useState(0);
@@ -504,7 +503,6 @@ export function CampaignDetailView({
               {([
                 { open: promptSidebarOpen, toggle: () => setPromptSidebarOpen(p => !p), label: "left panel" },
                 { open: promptSystemOpen, toggle: () => setPromptSystemOpen(p => !p), label: "system prompt" },
-                { open: promptNotesOpen, toggle: () => setPromptNotesOpen(p => !p), label: "notes" },
                 { open: promptPreviewOpen, toggle: () => setPromptPreviewOpen(p => !p), label: "preview" },
               ] as const).map(({ open, toggle, label }) => (
                 <button
@@ -540,7 +538,6 @@ export function CampaignDetailView({
               <PromptEditorPanel
                 prompt={detail.linkedPrompt}
                 onSaved={(_saved) => { detail.reloadPrompts(); }}
-                onDelete={() => {}}
                 campaigns={[{
                   id: campaign.id,
                   name: campaign.name,
@@ -567,10 +564,8 @@ export function CampaignDetailView({
                   kb: (campaign as any).kb ?? null,
                 }]}
                 previewOpen={promptPreviewOpen}
-                setPreviewOpen={setPromptPreviewOpen}
                 showSidebar={promptSidebarOpen}
                 showSystemMessage={promptSystemOpen}
-                showNotes={promptNotesOpen}
                 editorFontSize={13}
               />
             </div>

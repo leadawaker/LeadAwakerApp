@@ -102,7 +102,7 @@ export function registerDemoPersonaRoutes(app: Express) {
           provider,
           claudeModel,
           validate: validateTranslation(src),
-          openai: { model: "gpt-5.6-terra", maxTokens: 6000, timeoutMs: 90_000 },
+          openai: { model: "gpt-6.1-terra", maxTokens: 6000, timeoutMs: 90_000 },
           stage: "translate",
         });
         res.json({ translation: coerceTranslation(data, src) });

@@ -1,11 +1,12 @@
-// The Prompt Library's list parts: the card, the compact icon rail and the
-// group divider. The icon tile takes its area's color (promptCategories).
+// The Prompt Library's list parts: the card and the compact icon rail. The icon tile takes its area's color (promptCategories).
 import { useTranslation } from "react-i18next";
 import { ListPanelFooter } from "@/components/crm/ListPanelToggleButton";
 import { Bot } from "lucide-react";
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { getPromptId } from "../../types";
 import { CATEGORY_COLOR, categoryTint, isDemoPrompt, promptCategory } from "../../promptCategories";
+import type { CampaignForPreview } from "../../utils/resolveVariables";
+import { UsedByChip, usedByLabel } from "./UsedByChip";
 
 type TFn = (key: string, opts?: any) => string;
 
@@ -48,13 +49,16 @@ export function PromptListCard({
   prompt,
   isActive,
   onClick,
-  campaignName,
+  usedBy,
+  accountNames,
   accountName,
 }: {
   prompt: any;
   isActive: boolean;
   onClick: () => void;
-  campaignName?: string;
+  /** Campaigns that run this prompt. */
+  usedBy: CampaignForPreview[];
+  accountNames: Map<number, string>;
   accountName?: string;
 }) {
   const { t } = useTranslation("prompts");
@@ -129,23 +133,15 @@ export function PromptListCard({
             {formatRelativeTime(updatedAt, t)}
           </span>
         </div>
-        {/* Row 2: campaign + account */}
-        {(campaignName || accountName) && (
+        {/* Row 2: used by + account */}
+        {(usedBy.length > 0 || accountName) && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 3, gap: 4 }}>
-            {campaignName && (
-              <span style={{
-                fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)",
-                overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                flex: 1, minWidth: 0,
-              }} title={campaignName}>
-                {campaignName}
-              </span>
-            )}
+            {usedBy.length > 0 ? <UsedByChip usedBy={usedBy} accountNames={accountNames} /> : <span />}
             {accountName && (
               <span style={{
                 fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)",
-                flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                maxWidth: 110,
+                minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                maxWidth: 140,
               }}>
                 {accountName}
               </span>
@@ -167,7 +163,7 @@ export function CompactPromptRail({
   items: any[];
   selectedId: number | null;
   onSelect: (prompt: any) => void;
-  getNames: (p: any) => { campaignName?: string; accountName?: string };
+  getNames: (p: any) => { usedBy: CampaignForPreview[]; accountName?: string };
 }) {
   const { t } = useTranslation("prompts");
   return (
@@ -186,7 +182,7 @@ export function CompactPromptRail({
           const category = promptCategory(p);
           const accent = CATEGORY_COLOR[category];
           const tint = categoryTint(category);
-          const { campaignName, accountName } = getNames(p);
+          const { usedBy, accountName } = getNames(p);
           return (
             <Tooltip key={id}>
               <TooltipTrigger asChild>
@@ -218,7 +214,7 @@ export function CompactPromptRail({
                   <div className="font-semibold">{p.name || t("labels.untitled")}</div>
                   {isDemoPrompt(p) && <div className="text-muted-foreground">{t("demo.tag")}</div>}
                   {p.model && <div className="text-muted-foreground">{p.model}</div>}
-                  {campaignName && <div className="text-muted-foreground">{campaignName}</div>}
+                  {usedBy.length > 0 && <div className="text-muted-foreground">{usedByLabel(usedBy, t)}</div>}
                   {accountName && <div className="text-muted-foreground">{accountName}</div>}
                 </div>
               </TooltipContent>
@@ -228,22 +224,6 @@ export function CompactPromptRail({
       </div>
       {/* Bottom bar: the list fold button, centered in the rail */}
       <ListPanelFooter compact />
-    </div>
-  );
-}
-
-/** Sticky-style divider between groups (label + count). */
-export function PromptGroupHeader({ label, count }: { label: string; count: number }) {
-  return (
-    <div data-group-header="true" style={{ display: "flex", alignItems: "center", gap: 9, padding: "14px 6px 7px" }}>
-      <span style={{
-        fontFamily: "var(--mono)", fontSize: 9, letterSpacing: "0.14em",
-        textTransform: "uppercase", color: "var(--mute-2)", fontWeight: 700,
-      }}>
-        {label}
-      </span>
-      <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
-      <span style={{ fontFamily: "var(--mono)", fontSize: 9, color: "var(--mute-2)" }}>{count}</span>
     </div>
   );
 }

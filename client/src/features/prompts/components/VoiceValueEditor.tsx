@@ -2,7 +2,8 @@
 // name, tone, address form, pronunciation) opens this pop-up, which edits it where
 // it is stored, through the same endpoints as Calls > Settings:
 //   company, description, her name, pronunciation → PUT /api/accounts/:id/voice
-//   tone (perception picks), je/u (formality)     → PUT /api/accounts/:id/communication-profile
+//   je/u (formality)                             → PUT /api/accounts/:id/communication-profile
+//   tone (free text, setup.voice.tone)           → PUT /api/accounts/:id/voice-line
 // The next call on that line hears the change.
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -13,7 +14,7 @@ import { apiFetch } from "@/lib/apiUtils";
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover";
 import { fetchVoiceLine, putVoiceLine, voiceLineKey, type VoiceLine } from "@/features/accounts/components/workspace/voice/voiceApi";
 import { FieldLabel, helpStyle, inputStyle } from "@/features/accounts/components/workspace/voice/voiceAtoms";
-import { FORMALITY_LEVELS, PERCEPTION, PERCEPTION_MAX } from "@/features/accounts/components/workspace/communication/profileConstants";
+import { FORMALITY_LEVELS } from "@/features/accounts/components/workspace/communication/profileConstants";
 import type { PronunciationRow } from "@/features/accounts/components/workspace/communication/setupConstants";
 
 /** The filled-in values a click can edit (the engine's mark names). */
@@ -38,12 +39,12 @@ export function VoiceValueEditor({ accountId, name, rect, onClose, onSaved }: {
   const [line, setLine] = useState<VoiceLine | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [text, setText] = useState("");
-  const [picks, setPicks] = useState<string[]>([]);
   const [formality, setFormality] = useState<number | null>(null);
   const [rows, setRows] = useState<PronunciationRow[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const usesProfile = name === "tone" || name === "address";
+  // Tone is free text on the voice line (setup.voice.tone); only the address form uses the profile.
+  const usesProfile = name === "address";
 
   useEffect(() => {
     let cancelled = false;
@@ -55,7 +56,6 @@ export function VoiceValueEditor({ accountId, name, rect, onClose, onSaved }: {
           if (cancelled) return;
           const p = { perception: Array.isArray(raw?.perception) ? raw.perception : [], formality: raw?.formality ?? null };
           setProfile(p);
-          setPicks(p.perception);
           setFormality(p.formality);
         } else {
           const l = await fetchVoiceLine(accountId);
@@ -64,6 +64,7 @@ export function VoiceValueEditor({ accountId, name, rect, onClose, onSaved }: {
           if (name === "company_name") setText(l.persona?.companyName ?? "");
           if (name === "business") setText(l.persona?.description ?? "");
           if (name === "agent_name") setText(l.agentNameCustom?.trim() || l.agentName || "");
+          if (name === "tone") setText(l.tone ?? "");
           if (name === "pronunciation") setRows(l.pronunciation?.length ? l.pronunciation : [{ word: "", sayAs: "" }]);
         }
       } catch {
@@ -83,9 +84,7 @@ export function VoiceValueEditor({ accountId, name, rect, onClose, onSaved }: {
     setError(null);
     try {
       if (usesProfile) {
-        const body = name === "tone"
-          ? { perception: picks }
-          : { formality, address_form: FORMALITY_LEVELS.find((l) => l.value === formality)?.address ?? null };
+        const body = { formality, address_form: FORMALITY_LEVELS.find((l) => l.value === formality)?.address ?? null };
         const res = await apiFetch(`/api/accounts/${accountId}/communication-profile`, {
           method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
         });
@@ -95,6 +94,7 @@ export function VoiceValueEditor({ accountId, name, rect, onClose, onSaved }: {
           name === "company_name" ? { persona: { companyName: text.trim() } }
           : name === "business" ? { persona: { description: text } }
           : name === "agent_name" ? { agentNameCustom: text.trim() || null, agentName: null }
+          : name === "tone" ? { tone: text.trim() }
           : { pronunciation: rows.filter((r) => r.word.trim() && r.sayAs.trim()) };
         qc.setQueryData(voiceLineKey(accountId), await putVoiceLine(accountId, patch));
       }
@@ -136,19 +136,9 @@ export function VoiceValueEditor({ accountId, name, rect, onClose, onSaved }: {
                 className="neu-inset-crisp" style={{ ...inputStyle, resize: "vertical" }} />
             )}
             {name === "tone" && (
-              <div className="flex flex-wrap gap-1.5">
-                {PERCEPTION.map((p) => {
-                  const on = picks.includes(p);
-                  const full = !on && picks.length >= PERCEPTION_MAX;
-                  return (
-                    <button key={p} type="button" disabled={full}
-                      className={on ? "la-btn la-btn--wine la-btn--pill" : "la-btn la-btn--soft la-btn--pill"}
-                      onClick={() => setPicks(on ? picks.filter((x) => x !== p) : [...picks, p])}>
-                      {cp(`questions.perception.options.${p}.label`)}
-                    </button>
-                  );
-                })}
-              </div>
+              <textarea autoFocus value={text} onChange={(e) => setText(e.target.value)} maxLength={300} rows={3}
+                placeholder={t("valueEditor.tonePlaceholder")}
+                className="neu-inset-crisp" style={{ ...inputStyle, resize: "vertical" }} />
             )}
             {name === "address" && (
               <div className="flex flex-col gap-1.5">

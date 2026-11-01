@@ -1,4 +1,4 @@
-import { eq, desc, asc, count, sum, SQL, inArray, and, or, ilike, gte, lt, isNotNull, isNull, getTableColumns, sql } from "drizzle-orm";
+import { eq, desc, asc, count, sum, SQL, inArray, and, or, ilike, gte, isNotNull, isNull, getTableColumns, sql } from "drizzle-orm";
 import { PgTableWithColumns } from "drizzle-orm/pg-core";
 import { db, pool } from "../db";
 import {
@@ -51,8 +51,6 @@ import {
   type InsertExpenses,
   type Notifications,
   type InsertNotifications,
-  supportSessions,
-  supportMessages,
   type SupportSession,
   type InsertSupportSession,
   type SupportMessage,
@@ -300,18 +298,5 @@ export const tasksStorage = {
   async deleteAttachment(id: number): Promise<boolean> {
     const rows = await db.delete(taskAttachments).where(eq(taskAttachments.id, id)).returning();
     return rows.length > 0;
-  },
-
-  async cleanupOldSupportData(olderThanDays: number): Promise<{ sessions: number; messages: number }> {
-    const cutoff = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
-    const deletedMsgs = await db
-      .delete(supportMessages)
-      .where(lt(supportMessages.createdAt, cutoff))
-      .returning({ id: supportMessages.id });
-    const deletedSessions = await db
-      .delete(supportSessions)
-      .where(lt(supportSessions.createdAt, cutoff))
-      .returning({ id: supportSessions.id });
-    return { sessions: deletedSessions.length, messages: deletedMsgs.length };
   },
 };

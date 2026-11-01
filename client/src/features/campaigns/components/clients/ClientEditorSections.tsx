@@ -143,7 +143,7 @@ export function OpenerSection({ text, onChange }: {
 const PERSONA_GROUPS: PersonaGroup[] = ["business", "lead", "conversation"];
 
 /** Everything the model reads: one language at a time. */
-export function PersonaSection({ text, lang, onLang, onChange, emptyLangSlot, afterKb }: {
+export function PersonaSection({ text, lang, onLang, onChange, emptyLangSlot, afterKb, only, title, blurb }: {
   text: Draft["text"];
   lang: DemoLang;
   onLang: (lang: DemoLang) => void;
@@ -152,9 +152,15 @@ export function PersonaSection({ text, lang, onLang, onChange, emptyLangSlot, af
   emptyLangSlot?: ReactNode;
   /** Closes "The business" group, right after the knowledge base (what it sells, stock page, city). */
   afterKb?: ReactNode;
+  /** Show only these fields (the fallback row: its example packs). Groups left empty are skipped. */
+  only?: readonly ClientTextField[];
+  /** Section heading and hint, when not the persona's own. */
+  title?: string;
+  blurb?: string;
 }) {
   const { t } = useTranslation("campaigns");
-  const withContent = filledLangs(TEXT_FIELDS.map(({ field }) => text[field]));
+  const fieldsShown = only ? TEXT_FIELDS.filter((f) => only.includes(f.field)) : TEXT_FIELDS;
+  const withContent = filledLangs(fieldsShown.map(({ field }) => text[field]));
 
   const box = ({ field, labelKey, rows }: TextFieldDef) => (
     <div key={field}>
@@ -174,8 +180,8 @@ export function PersonaSection({ text, lang, onLang, onChange, emptyLangSlot, af
   return (
     <ClientSection
       icon={BookOpenText}
-      title={t("clients.personaTitle", "Persona")}
-      blurb={t("clients.personaHint")}
+      title={title ?? t("clients.personaTitle", "Persona")}
+      blurb={blurb ?? t("clients.personaHint")}
       aside={
         /* Authored once, in whichever language it was written in (English by
            convention, but a scraped Client may live in NL or PT only). This
@@ -201,7 +207,8 @@ export function PersonaSection({ text, lang, onLang, onChange, emptyLangSlot, af
     >
       {!withContent.includes(lang) && emptyLangSlot}
       {PERSONA_GROUPS.map((group) => {
-        const fields = TEXT_FIELDS.filter((f) => f.group === group);
+        const fields = fieldsShown.filter((f) => f.group === group);
+        if (fields.length === 0) return null;
         const short = fields.filter((f) => f.rows === undefined);
         const long = fields.filter((f) => f.rows !== undefined);
         return (

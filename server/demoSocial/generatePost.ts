@@ -59,7 +59,7 @@ export async function generateSocialPost(
     provider: opts.provider ?? "claude",
     claudeModel: opts.claudeModel ?? "sonnet",
     validate: (d) => validateSocialPost(d) ?? openerNamesBusiness(d, input.companyName),
-    openai: { model: "gpt-5.6-terra", maxTokens: 900, timeoutMs: 30000 },
+    openai: { model: "gpt-6.1-terra", maxTokens: 900, timeoutMs: 30000 },
     stage: "social_post",
   });
   return coerceSocialPost(data);

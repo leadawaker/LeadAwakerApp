@@ -428,6 +428,11 @@ export const CLIENT_TEXT_FIELDS = {
   firstMessage: "first_message",
   questionBank: "question_bank",
   objectionExamples: "objection_examples",
+  // The other two example packs the engine reads (tools/db/niche_vocabulary.py,
+  // {niche_bad_examples} / {niche_scenario_examples}). Edited here since the
+  // Prompt Library's Niches tab was retired (2026-11-01).
+  badExamples: "bad_examples",
+  scenarioExamples: "scenario_examples",
   whenLabel: "when_label",
 } as const;
 

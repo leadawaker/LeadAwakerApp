@@ -7,7 +7,7 @@ const emptyText = { en: "", nl: "", pt: "" };
 const FIELDS = [
   "nicheLabel", "companyNameTemplate", "serviceName", "usp", "descriptionTemplate", "kbTemplate",
   "nicheQuestion", "enquiryContext", "quoteContext", "quoteSubject", "quoteWhen", "scopingLadder",
-  "openerPhrase", "firstMessage", "questionBank", "objectionExamples", "whenLabel",
+  "openerPhrase", "firstMessage", "questionBank", "objectionExamples", "badExamples", "scenarioExamples", "whenLabel",
 ] as const;
 const GROUPS = ["project", "proposal", "decision", "advisor", "visit"] as const;
 

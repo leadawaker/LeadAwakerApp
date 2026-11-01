@@ -1,5 +1,5 @@
-// The Prompt Library's area tabs (Chat, Voice, CRM, Social, Test, Reputation)
-// plus Niche Words, and the Demo show/hide switch above the list.
+// The Prompt Library's area tabs (Chat, Voice, CRM, Social, Test, Reputation),
+// and the Demo show/hide switch above the list.
 import { useTranslation } from "react-i18next";
 import { useScrollFadeX } from "@/hooks/useScrollFadeX";
 import { Switch } from "@/components/ui/switch";
@@ -15,8 +15,8 @@ export function PromptCategoryTabs({
   counts: Record<string, number>;
 }) {
   const { t } = useTranslation("prompts");
-  const tabs: PromptListTab[] = [...PROMPT_CATEGORIES, "niche"];
-  // Seven tabs do not fit beside the editor actions at laptop widths: the track scrolls
+  const tabs: readonly PromptListTab[] = PROMPT_CATEGORIES;
+  // Six tabs do not fit beside the editor actions at laptop widths: the track scrolls
   // sideways with an edge fade instead of the actions overlapping it.
   const scrollRef = useScrollFadeX<HTMLDivElement>(value);
   return (
@@ -33,10 +33,8 @@ export function PromptCategoryTabs({
             onClick={() => onChange(id)}
             data-testid={`prompts-tab-${id}`}
           >
-            {id === "niche" ? t("vocabulary.title") : t(`category.${id}`)}
-            {id !== "niche" && (
-              <span className="la-seg-count">{counts[id] ?? 0}</span>
-            )}
+            {t(`category.${id}`)}
+            <span className="la-seg-count">{counts[id] ?? 0}</span>
           </button>
         );
       })}

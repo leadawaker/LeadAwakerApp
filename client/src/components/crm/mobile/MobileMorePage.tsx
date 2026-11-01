@@ -101,7 +101,7 @@ function rowsWithDividers(nodes: React.ReactNode[]) {
  * Layout (top → bottom):
  *   1. Topbar: "More" title + Lead Awaker AI (owner)
  *   2. Account switcher (agency only) — chevron-down dropdown affordance
- *   3. Sales (Demos, Owner) / Services / Engage / Admin / Backend: one raised
+ *   3. Sales (Demos, Owner and Admin) / Services / Engage / Admin / Backend: one raised
  *      panel per section, rows split by dividers (grouped like the desktop nav bar)
  *   4. Help: Documentation + Support inbox (owner) or Assistance
  *   5. Account panel: flat Language · Theme · Notifications buttons, then the
@@ -168,9 +168,9 @@ export function MobileMorePage({
   // Calendar lives here unless the bar already holds it.
   const calendarInBar = agencyBottomBar(navCtx.hasVoiceCalls).includes("calendar");
   // Speed to Lead and Missed calls are hidden until finished (list in RightSidebar.tsx).
-  // Demos sits first, as on the desktop nav bar (right under Stats): Owner only.
+  // Demos sits first, as on the desktop nav bar (right under Stats): Owner and Admin.
   const salesItems = visible([
-    { label: t("sidebar.demos"), href: `${prefix}/demos`, icon: MonitorPlay, ownerOnly: true },
+    { label: t("sidebar.demos"), href: `${prefix}/demos`, icon: MonitorPlay, agencyOnly: true },
   ]);
   const serviceItems = visible([
     { label: t("sidebar.reputation"), href: `${prefix}/reputation`, icon: Star, serviceKey: "reputation" },

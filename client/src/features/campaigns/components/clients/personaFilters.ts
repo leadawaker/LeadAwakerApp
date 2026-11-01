@@ -6,7 +6,19 @@
 import type { DemoClientSummary, DemoLang } from "../../api/demoClientsApi";
 
 export type LangFilter = "all" | DemoLang;
-export type SourceFilter = "all" | "website" | "manual";
+/**
+ * "library": the Niche library, the curated niche packs (not a saved demo Client, not a
+ * live persona) whose words and example packs real campaigns read.
+ */
+export type SourceFilter = "all" | "website" | "manual" | "library";
+export const SOURCE_FILTERS: readonly SourceFilter[] = ["all", "website", "manual", "library"];
+/** Each source option's label key (demos namespace), translated at render. */
+export const SOURCE_LABEL_KEYS: Record<SourceFilter, string> = {
+  all: "personas.sourceAll",
+  website: "personas.sourceWebsite",
+  manual: "personas.sourceManual",
+  library: "personas.sourceLibrary",
+};
 
 export interface PersonaFilters {
   /** Matches niche, label, company name and category, ignoring case. */
@@ -25,7 +37,9 @@ export const DEFAULT_PERSONA_FILTERS: PersonaFilters = { search: "", category: "
  */
 export function personaMatches(c: DemoClientSummary, f: PersonaFilters, extraTexts: readonly string[] = []): boolean {
   if (f.lang !== "all" && !c.languages.includes(f.lang)) return false;
-  if (f.source !== "all" && c.source !== f.source) return false;
+  if (f.source === "library") {
+    if (c.isDemoClient || c.isLive) return false;
+  } else if (f.source !== "all" && c.source !== f.source) return false;
   if (f.category && (c.category ?? "").trim() !== f.category) return false;
   const q = f.search.trim().toLowerCase();
   if (!q) return true;

@@ -78,6 +78,8 @@ const putBodySchema = z.object({
   intake: z.string().max(5000).optional(),
   afterHours: z.enum(AFTER_HOURS).nullable().optional(),
   extraInstructions: z.string().max(1000, "Extra instructions are limited to 1000 characters").optional(),
+  // Engine client_setup.TONE_MAX.
+  tone: z.string().max(300, "Tone is limited to 300 characters").optional(),
   followUpEnabled: z.boolean().optional(),
   smsSenderId: smsSender.optional(),
   live: z.boolean().optional(),

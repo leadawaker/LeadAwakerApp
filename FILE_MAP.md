@@ -81,7 +81,7 @@ The marketing site (leadawaker.com landing) is static files in `client/public/si
 | mobile/ | `mobile/` | `MobileListHeader` (+ `MobileHeaderIconBtn`, `MobileDrawerOption`), `MobileSheet` (pull down to close anywhere on the sheet while its content is at the top: `useSwipeDownToClose`), `MobileMorePage` (phone More tab: grouped row panels, Demos for the Owner, an account panel with the profile row, flat Language / Theme / Notifications, Settings and Logout; no My profile page, Settings holds it), `MobileAgencySwitcher` |
 | NotificationCenter | `NotificationCenter.tsx` | Bell dropdown: message, takeover, booking, campaign notifications. Phone version: `MobileNotificationsPanel.tsx`. The phone leaves out `campaign_summary` (list, badge, toasts) via `lib/phoneNotifications.ts` and the `?exclude=` param on `/api/notifications` and `/count` |
 | CommandPalette | `CommandPalette.tsx` | Cmd+K: pages, leads and accounts (campaign search removed with the Campaigns page) |
-| SupportChatWidget | `SupportChatWidget.tsx` (+ `SupportChatHeader`, `SupportChatInput`, `SupportChatHelpers`) | Support chat with doodle bg, draw/emoji tools |
+| SupportChatWidget | `SupportChatWidget.tsx` (+ `SupportChatHeader`, `SupportChatInput`, `SupportChatHelpers`) | Floating "Talk to Gabriel" founder chat (no AI; the AI support bot was removed 2026-11-01) |
 | FounderInbox | `FounderInbox.tsx` | Gabriel's inbox for the support chats clients start (`/api/support-chat/founder/*`) |
 | RequestChangeNote | `RequestChangeNote.tsx` | Clients' read-only note: Lead Awaker looks after this; opens the founder chat with a draft (`lib/founderChat.ts`) |
 | ImpersonationBanner | `ImpersonationBanner.tsx` | "Viewing as" banner |
@@ -97,7 +97,6 @@ The marketing site (leadawaker.com landing) is static files in `client/public/si
 | ApiErrorFallback | `ApiErrorFallback.tsx` | API error display |
 | ErrorBoundary | `ErrorBoundary.tsx` | React error boundary |
 | PageTransition | `PageTransition.tsx` | Route transition wrapper |
-| BotPhotoCropModal | `BotPhotoCropModal.tsx` | Crop the AI agent's photo |
 
 ### Primitives (`components/crm/primitives/`, import from `@/components/crm/primitives`)
 
@@ -173,7 +172,7 @@ The Campaigns page is retired (agency only by URL). A campaign stays as data: ev
 | Component | File | Notes |
 |-----------|------|-------|
 | CampaignStageEditor | `components/CampaignStageEditor.tsx` | **The one campaign settings screen**: wraps `settings/CampaignSettingsLayout` (own `SectionRail`: Business, AI, Behavior) with agency gating and niche-template auto-fill |
-| settings/ | `components/settings/` | `CampaignSettingsLayout`, `{Business,AI,Behavior}SectionFields`, `AiDisclosureField`, `ObjectionPlaybookField`, `NicheSelect`, `OpenerTemplatePicker`, `CampaignGenerateButton`, `fieldLocale.ts` |
+| settings/ | `components/settings/` | `CampaignSettingsLayout`, `{Business,AI,Behavior}SectionFields`, `AiDisclosureField`, `ObjectionPlaybookField`, `NicheSelect` (+ `nicheIcons.ts`), `OpenerTemplatePicker`, `CampaignGenerateButton`, `fieldLocale.ts` |
 | formFields/ | `components/formFields/` | Field inputs shared by every settings home (`EditText`, `EditSelect`, `EditNumber`, `EditToggle`, `EditDate`, `InfoRow`, `ContractSelect`, `LocalizedCombo`...) + `campaignFormatters.ts` |
 | useCampaignDetail | `components/useCampaignDetail.ts` | Data, draft and 1.5s autosave behind the settings screen |
 | useCampaignById | `hooks/useCampaignById.ts` | One campaign by id for the hosts outside the Campaigns page (Accounts > Reactivation, Home > Reactivation, Demos) |
@@ -297,7 +296,7 @@ The business and its connections. Tabs: Overview, Reactivation (agency, when the
 | Component | File | Notes |
 |-----------|------|-------|
 | DemosPage | `pages/DemosPage.tsx` | `PageTopbar` with tabs Personas and Settings (a remembered "sessions" or "clients" tab opens Personas); the Category \| Date switch (the Category | Date switch at the top of the persona list er menu, and "+ New Demo" (opens the create panel, a `RightPanel`). Calls `useDemoDraft()` once, and the page state, prospect data and seen store once, so a tab switch keeps them |
-| Personas with demos | `components/personas/` | `PersonasWithDemos` composes the persona library (`ClientsTab`) with the Demos page's parts: `PersonaCardMeta` (prospect count) and the activity dot (`usePersonaActivity`: wine = reply, sand = open, last 7 days, after this user's seen time in `usePersonaSeen`), `SpecialPersonaCards` + `SpecialPersonaPanel` (No persona, Website visitors), and per open card a **Demos tab** (`PersonaDemosTab`: that card's prospects in `SessionsTable`, "+ Add prospect"). `useDemosPageState` (open card, follow-up toggle, table sort, right panel, row highlight), `useProspectData` (prospects and links joined into rows), `DemosPanelSlot` (create / detail `RightPanel`), `DemosTopbarActions` |
+| Personas with demos | `components/personas/` | `PersonasWithDemos` composes the persona library (`ClientsTab`) with the Demos page's parts: `PersonaCardMeta` (prospect count) and the activity dot (`usePersonaActivity`: wine = reply, sand = open, last 7 days, after this user's seen time in `usePersonaSeen`), `SpecialPersonaCards` + `SpecialPersonaPanel` (No persona, Website visitors), `FallbackNicheCard` (the `__default__` row, shown under Filter > Niche library, opens `ClientEditor` with the Wording view only), and per open card a **Demos tab** (`PersonaDemosTab`: that card's prospects in `SessionsTable`, "+ Add prospect"). `useDemosPageState` (open card, follow-up toggle, table sort, right panel, row highlight), `useProspectData` (prospects and links joined into rows), `DemosPanelSlot` (create / detail `RightPanel`), `DemosTopbarActions` |
 | Table | `components/table/` | `SessionsTable` (`SessionsTableHead` sortable headers, `DateGroupRow`, `useDateGroups` date headings) > `ProspectTableRow`: `LinkCell`, `DbrQuoteCell`, `OtherCell`, `LinkStatusPill`, `LinkActionsPopover` (+ `linkActions.ts`), `SiteThumb`. Delete asks in `components/DeleteConfirmDialog.tsx` |
 | Prospect detail | `components/detail/` | The prospect panel, opened from a Demos tab row (`ProspectDetailPanel`, `ProspectLinksList`, `OtherLinks` for live links outside the service columns, `ProspectNotes`, `ProspectSettingsForm`, hidden for a public website demo). Beside them: `notesSaver.ts` (ordered notes sends, so a delete never overtakes a note), `prospectDetail.ts` (counts and settings from a row), `serviceOf.ts` (which column a link belongs in), `touchTargets.ts` (the 44px phone classes) |
 | Create panel | `components/create/`, `components/form/` | `CreateDemoPanel` with `ExistingClientFields`, `WebsiteScanFields`, `ScanProgress`, `ScanReviewStep`; shared fields `ClientPicker` (a dropdown, `clientMatch.ts`), `DisclosureMarketFields` (`settingsOptions.ts`), `LanguageSeg`, `ProductListEditor`. The half-filled form survives in `createDraft.ts` + `useDemoDraft.ts` (localStorage); progress steps in `scanSteps.ts` |
@@ -323,14 +322,16 @@ No page any more (`/platform/tags` redirects Home) and nothing imports this fold
 | Component | File | Notes |
 |-----------|------|-------|
 | PromptsPage | `pages/PromptsPage.tsx` | Feature page (phones: `MobilePromptsView`) |
-| PromptsListView | `components/PromptsListView.tsx` | Split-pane list view: area tabs (Chat, Voice, CRM, Social, Test, Reputation, Niche Words), 380px list with a Demo switch, `PromptEditorPanel` with the preview beside it by default, `NicheVocabularyPanel` (`niche/`) |
-| promptList parts | `components/promptList/` | `PromptListCard` (card, compact rail, group header, Demo chip), `PromptCategoryTabs` (+ list strip), `PromptDetailHeader` (area select, Demo toggle), `PromptListControls` (sort/filter/group), `PromptVersionControls` (font, save version, history), `usePromptVersions` |
+| PromptsListView | `components/PromptsListView.tsx` | Split-pane list view: area tabs (Chat, Voice, CRM, Social, Test, Reputation), 380px list with a Demo switch, `PromptEditorPanel` with the preview beside it by default. Niche words and example packs are edited on the Demos page (`ClientEditor`; Filter > Niche library for the curated packs and the `__default__` fallback card) |
+| promptList parts | `components/promptList/` | `PromptListCard` (card, compact rail, Demo chip), `PromptCategoryTabs` (+ list strip), `PromptDetailHeader` (area select, Demo toggle, panel switches), `UsedByChip` ("N campaigns" + popover by account, linked campaign), `PromptNoteButton` (info icon + note popover), `PromptListControls` (sort/filter/group), `PromptVersionControls` (font, save version, history), `usePromptVersions` |
 | Areas | `promptCategories.ts` | `Prompt_Library.category` / `is_demo`, use_case fallback, area colors, `isVoiceUseCase` (voice_*, eleven_*) |
 | PromptPreviewSections | `components/PromptPreviewSections.tsx` | Heading-folding preview body shared by the normal and the voice preview |
 | PromptsInlineTable | `components/PromptsInlineTable.tsx` | Table view |
 | PromptsToolbar | `components/PromptsToolbar.tsx` | Toolbar |
 | PromptFormPanel | `components/PromptFormPanel.tsx` (+ `.css`) | Create/edit form (right panel) |
-| PromptEditorPanel | `components/PromptEditorPanel.tsx` (+ `PromptCodeEditor`, `PromptVariableAutocomplete`, `VoicePreviewPane`: engine render per real account, sent as accountId) | Prompt editor; also opened from the hidden Campaigns page |
+| PromptEditorPanel | `components/PromptEditorPanel.tsx` (+ `PromptCodeEditor`, `VoicePreviewPane`: engine render per real account, sent as accountId) | Prompt editor (form state, autosave); also opened from the hidden Campaigns page |
+| Editor parts | `components/editor/` | `PreviewPane` (bar + text + variables), `PreviewAsPicker`, `PreviewConditions` (from the text's `{{#if}}`), `VariablesPanel` + `VariableRow` (edit a value at its source), `SectionsRail`, `usePreviewContext` (loads the picked campaign, account, lead, niche words or demo client), `useTokenCounter` |
+| Variables | `utils/variableRegistry.ts`, `utils/variableWrites.ts`, `utils/promptVariables.ts`, `utils/previewContext.ts`, `utils/engineVars.ts` | Registry: what each variable means (i18n `prompts:vars.desc.*`) and where it lives. Writes: save to that source and read it back. Detection from the prompt text. Context helpers. Ports of the engine's rules; keep in step with automations `tools/ai_service.py` |
 | DeletePromptDialog | `components/DeletePromptDialog.tsx` | Delete confirmation |
 | utils | `utils/{promptDecorations,resolveVariables}.ts` | |
 | types | `types.ts` | Prompt type definitions, `MODEL_OPTIONS` |
@@ -360,7 +361,7 @@ No page any more (`/platform/tags` redirects Home) and nothing imports this fold
 | ViewTabBar | `view-tab-bar.tsx` | Retired Style B tab switcher (still in the Outreach inbox and the leads list panel) |
 | SearchPill | `search-pill.tsx` | Retired Style B search (use `ExpandingSearch`) |
 | DonutChart | `donut-chart.tsx` | Chart visualization |
-| ColorPickerWidget / gradient-tester | `color-picker-widget.tsx`, `gradient-tester.tsx` | Background gradient tools (support chat, shell) |
+| ColorPickerWidget / gradient-tester | `color-picker-widget.tsx`, `gradient-tester.tsx` | Background gradient tools (shell) |
 | DoodlePatterns | `doodle-patterns.tsx` | Chat background patterns |
 | CollapsibleSection / SimpleSelect | `collapsible-section.tsx`, `simple-select.tsx` | Used by Prospects |
 | PullToRefreshIndicator | `PullToRefreshIndicator.tsx` | Phone pull-to-refresh |
@@ -386,7 +387,7 @@ All standard shadcn/ui components are in `components/ui/`: `alert-dialog`, `avat
 | useNotificationStream | `useNotificationStream.ts` | Real-time notifications (SSE) |
 | useImpersonation | `useImpersonation.ts` | View-as |
 | useServicePageToggles | `useServicePageToggles.ts` | Owner switches for the hidden service pages |
-| useSupportChat / useFounderChat | `useSupportChat.ts`, `useFounderChat.ts` | Support chat widget; founder chat |
+| useFounderChat | `useFounderChat.ts` | Founder chat ("Talk to Gabriel"), `/api/support-chat/*` |
 | useChatDoodle / useBgSlots | `useChatDoodle.ts`, `useBgSlots.ts` | Chat doodle and background slots |
 | useClaudeApiKey | `useClaudeApiKey.ts` | AI agents' API key setup |
 | others | `useCountry`, `useDeleteAction`, `useFKeyScrollToSelected`, `usePullToRefresh`, `useRotatingLabel`, `useScoreBreakdown` | |
@@ -598,7 +599,7 @@ Login stops after the password when the user has a method; the session is issued
 
 Nothing reachable from `main.tsx` imports these. Delete them or wire them up; don't build on them.
 
-- `components/crm/`: `ActivityFeed`, `AgendaWidget`, `ChatBubble`, `DbStatusIndicator`, `FiltersBar`, `HelpMenu`, `InteractionsChat`, `LeadCard`, `ManualSend`, `MobileSupportPanel`, `NotificationsPanel`, `SupportChat`, `ViewTabStrip`
+- `components/crm/`: `ActivityFeed`, `AgendaWidget`, `ChatBubble`, `DbStatusIndicator`, `FiltersBar`, `HelpMenu`, `InteractionsChat`, `LeadCard`, `ManualSend`, `NotificationsPanel`, `ViewTabStrip`
 - `components/`: `LeadDetailLayout.tsx`, `LeadReactivationAnimation.tsx`, `siriOrb/SiriOrb.tsx`
 - `features/campaigns/`: `components/CampaignExecutionHistory.tsx`, `components/CampaignTagsSection.tsx` + `hooks/useCampaignTags.ts`, `components/columns/` (all four files)
 - `features/leads/`: `components/{LeadCard,LeadFilters,LeadsFiltersBar,LeadsListRow}.tsx`, `hooks/useLeadsData.ts`
@@ -606,7 +607,6 @@ Nothing reachable from `main.tsx` imports these. Delete them or wire them up; do
 - `features/tags/` (the whole folder)
 - `features/accounts/`: `components/{AccountsInlineTable,AccountsTable}.tsx`, `components/workspace/useUltraWide.ts`
 - `features/billing/components/{InvoiceDetailView,ExpenseDetailView}.tsx`
-- `features/prompts/components/{PromptsCardView,PromptSearchBar}.tsx`
 - `features/prospects/components/{InteractionTimeline,ProspectBusinessIdeas}.tsx`
 - `features/ai-agents/components/AgentConversationList.tsx`
 - `hooks/`: `useActivityFeed`, `useCurrency`, `useHealthCheck`, `useLeads`, `useMediaQuery`, `useSwipeGesture`

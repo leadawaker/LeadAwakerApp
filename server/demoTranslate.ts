@@ -34,6 +34,8 @@ const TEXT_FIELDS: Record<ClientTextField, true> = {
   firstMessage: true,
   questionBank: true,
   objectionExamples: true,
+  badExamples: true,
+  scenarioExamples: true,
   whenLabel: true,
 };
 const TERM_GROUP_KEYS: Record<TermGroup, true> = { project: true, proposal: true, decision: true, advisor: true, visit: true };

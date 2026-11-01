@@ -99,7 +99,7 @@ export function CommandPalette() {
     { href: `${prefix}/prospects`, labelKey: "sidebar.prospects", icon: UserSearch, keywords: "prospects outreach pipeline", ownerOnly: true, outreachOnly: true },
     { href: `${prefix}/automation-logs`, labelKey: "sidebar.automations", icon: ScrollText, keywords: "automation logs n8n workflows automations health engine", ownerOnly: true },
     { href: `${prefix}/traffic`, labelKey: "sidebar.traffic", icon: ChartNoAxesColumn, keywords: "traffic visitors visits analytics seo google search console ai chatgpt website", ownerOnly: true },
-    { href: `${prefix}/demos`, labelKey: "sidebar.demos", icon: MonitorPlay, keywords: "demos browser demo sessions links", ownerOnly: true },
+    { href: `${prefix}/demos`, labelKey: "sidebar.demos", icon: MonitorPlay, keywords: "demos browser demo sessions links", agencyOnly: true },
     { href: `${prefix}/settings`, labelKey: "sidebar.settings", icon: Settings, keywords: "settings preferences profile account" },
     { href: `${prefix}/settings?tab=users`, labelKey: "commandPalette.team", icon: Users, keywords: "users team members roles", agencyOnly: true },
   ], [prefix]);

@@ -1,5 +1,5 @@
 import { forwardRef, useImperativeHandle, useRef, useEffect } from "react";
-import { EditorState, StateField, Compartment } from "@codemirror/state";
+import { EditorState, StateField, Compartment, type Text } from "@codemirror/state";
 import {
   EditorView,
   keymap,
@@ -21,7 +21,6 @@ export type PromptCodeEditorHandle = {
 type Props = {
   initialValue: string;
   fontSize: number;
-  accentColor?: string;
   onChange: (value: string) => void;
   onScroll?: () => void;
   onActiveHeadingsChange?: (activeH1Line: number, activeH2Line: number) => void;
@@ -62,7 +61,7 @@ function buildTheme(fontSize: number) {
     "&.cm-focused": { outline: "none" },
     ".cm-cursor, .cm-dropCursor": { borderLeftColor: "var(--wine)" },
     ".cm-var": {
-      background: "rgba(114,47,55,0.13)",
+      background: "var(--wine-tint)",
       color: "var(--wine)",
       borderRadius: "2px",
     },
@@ -95,30 +94,33 @@ export const PromptCodeEditor = forwardRef<PromptCodeEditorHandle, Props>(
     onScrollRef.current = onScroll;
     onActiveRef.current = onActiveHeadingsChange;
 
+    /* The `#` / `##` lines, read once per document change instead of on every
+       scroll frame: scrolling only measures these few lines. */
+    const headingLinesRef = useRef<{ lineNo: number; level: number }[]>([]);
+    function readHeadingLines(doc: Text) {
+      const out: { lineNo: number; level: number }[] = [];
+      for (let i = 1; i <= doc.lines; i++) {
+        const m = doc.line(i).text.match(HEADING_RE);
+        if (m && m[1]!.length <= 2) out.push({ lineNo: i, level: m[1]!.length });
+      }
+      headingLinesRef.current = out;
+    }
+
     /* Find the topmost-visible `#` and the topmost-visible `##` inside it. */
     function emitActiveHeadings(view: EditorView) {
       const cb = onActiveRef.current;
       if (!cb) return;
       const top = view.scrollDOM.scrollTop;
-      const { doc } = view.state;
       let activeH1 = -1;
       let activeH2 = -1;
-      for (let i = 1; i <= doc.lines; i++) {
-        const line = doc.line(i);
-        const m = line.text.match(HEADING_RE);
-        if (!m) continue;
-        const level = m[1].length;
-        if (level > 2) continue;
-        const blockTop = view.lineBlockAt(line.from).top;
-        if (blockTop <= top + 1) {
-          if (level === 1) {
-            activeH1 = i - 1;
-            activeH2 = -1; // reset deeper heading when entering a new H1
-          } else if (level === 2) {
-            activeH2 = i - 1;
-          }
+      for (const { lineNo, level } of headingLinesRef.current) {
+        const blockTop = view.lineBlockAt(view.state.doc.line(lineNo).from).top;
+        if (blockTop > top + 1) break;
+        if (level === 1) {
+          activeH1 = lineNo - 1;
+          activeH2 = -1; // reset deeper heading when entering a new H1
         } else {
-          break;
+          activeH2 = lineNo - 1;
         }
       }
       cb(activeH1, activeH2);
@@ -129,50 +131,14 @@ export const PromptCodeEditor = forwardRef<PromptCodeEditorHandle, Props>(
       rafRef.current = requestAnimationFrame(() => emitActiveHeadings(view));
     }
 
-    /* Correct cursor placement when html { zoom } != 1.
-       CM6 mixes visual-pixel clientY with layout-pixel scrollTop/height-map,
-       causing clicks to land on the wrong line when a CSS zoom is active.
-       We intercept mousedown in capture phase (before CM6) and re-dispatch
-       with zoom-normalised coordinates. Only corrects simple clicks — drag
-       selection is left to CM6 (the anchor may drift slightly during drag,
-       which is an acceptable trade-off vs rewriting CM6's selection logic). */
-    useEffect(() => {
-      const view = viewRef.current;
-      if (!view) return;
-
-      const correctionHandler = (e: MouseEvent) => {
-        const zoom = parseFloat(getComputedStyle(document.documentElement).zoom) || 1;
-        if (Math.abs(zoom - 1) < 0.01) return; // noop when no zoom active
-        if (e.detail > 1 || e.shiftKey || e.metaKey || e.ctrlKey) return; // let CM6 handle multi/modifier clicks
-        if (e.buttons !== 1) return; // left button only
-
-        const rect = view.scrollDOM.getBoundingClientRect();
-        // Corrected coords: translate visual click into layout-pixel space so CM6's
-        // posAtCoords + scrollTop arithmetic uses the same unit throughout.
-        const correctedX = rect.left + (e.clientX - rect.left) / zoom;
-        const correctedY = rect.top + (e.clientY - rect.top) / zoom;
-        const pos = view.posAtCoords({ x: correctedX, y: correctedY });
-        if (pos === null) return;
-
-        // Run after CM6 has processed mousedown (focus, internal drag state) so
-        // we don't interfere with its setup, then fix cursor to the right position.
-        requestAnimationFrame(() => {
-          if (view.state.selection.main.empty) {
-            view.dispatch({ selection: { anchor: pos, head: pos } });
-          }
-        });
-      };
-
-      view.scrollDOM.addEventListener("mousedown", correctionHandler, true);
-      return () => view.scrollDOM.removeEventListener("mousedown", correctionHandler, true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []); // runs once after editor mount; viewRef.current is stable
-
     useEffect(() => {
       if (!hostRef.current) return;
 
       const updateListener = EditorView.updateListener.of((u) => {
-        if (u.docChanged) onChangeRef.current(u.state.doc.toString());
+        if (u.docChanged) {
+          readHeadingLines(u.state.doc);
+          onChangeRef.current(u.state.doc.toString());
+        }
         if (u.geometryChanged || u.viewportChanged) scheduleActive(u.view);
       });
 
@@ -196,6 +162,7 @@ export const PromptCodeEditor = forwardRef<PromptCodeEditorHandle, Props>(
 
       const view = new EditorView({ state, parent: hostRef.current });
       viewRef.current = view;
+      readHeadingLines(state.doc);
       requestAnimationFrame(() => emitActiveHeadings(view));
 
       return () => {

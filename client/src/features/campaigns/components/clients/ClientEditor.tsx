@@ -24,6 +24,10 @@
  * The form is split over three views (persona, wording, media). All three stay
  * mounted and the inactive ones are only hidden, so switching view never drops
  * what was typed, including the Instagram post's own unsaved draft.
+ *
+ * The `__default__` row (FALLBACK_NICHE) opens here too, from the Demos page's
+ * Niche library: it is not a persona, only the terms and the four example packs
+ * every niche without its own inherits, so it gets the Wording view alone.
  */
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -47,6 +51,8 @@ import { SocialPostSection } from "./SocialPostSection";
 import { LiveClientView } from "./LiveClientView";
 import { LANGS } from "./clientDisplay";
 import {
+  FALLBACK_NICHE,
+  PACK_FIELDS,
   TEXT_FIELDS,
   buildDraft,
   buildPatch,
@@ -76,6 +82,7 @@ export function ClientEditor({ niche, onBack, actions, leadingView }: ClientEdit
   const { data: clients } = useDemoClients();
   const summary = clients?.find((c) => c.niche === niche);
   const update = useUpdateDemoClient();
+  const fallback = niche === FALLBACK_NICHE;
 
   const [draft, setDraft] = useState<Draft | null>(null);
   const [originalDraft, setOriginalDraft] = useState<Draft | null>(null);
@@ -84,8 +91,10 @@ export function ClientEditor({ niche, onBack, actions, leadingView }: ClientEdit
   // below whenever a different Client loads, defaulting to whichever
   // language its content actually lives in.
   const [personaLang, setPersonaLang] = useState<DemoLang>("en");
-  const [view, setView] = useState<EditorView>(leadingView ? "lead" : "persona");
+  const [chosenView, setView] = useState<EditorView>(leadingView ? "lead" : "persona");
   useEffect(() => { if (leadingView) setView("lead"); }, [niche]);
+  // The fallback row has nothing but wording.
+  const view: EditorView = fallback ? "wording" : chosenView;
   // The three views share one scroll area: each view, and each persona, starts at its top.
   const bodyRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -235,8 +244,8 @@ export function ClientEditor({ niche, onBack, actions, leadingView }: ClientEdit
   return (
     <>
       <ClientPanelHeader
-        client={client}
-        category={draft.category}
+        client={fallback ? { ...client, companyName: t("clients.fallback.title"), label: "", niche: "" } : client}
+        category={fallback ? t("clients.fallback.tag") : draft.category}
         actions={actions}
         onBack={onBack}
         status={
@@ -250,7 +259,7 @@ export function ClientEditor({ niche, onBack, actions, leadingView }: ClientEdit
           )
         }
       >
-        <EditorViewSwitch
+        {!fallback && <EditorViewSwitch
           views={[
             ...(leadingView ? [{ id: "lead" as const, label: leadingView.label }] : []),
             ...VIEWS.map((v) => ({ id: v, label: t(`clients.views.${v}`) })),
@@ -258,13 +267,13 @@ export function ClientEditor({ niche, onBack, actions, leadingView }: ClientEdit
           value={view}
           onChange={setView}
           label={t("clients.viewsLabel")}
-        />
+        />}
       </ClientPanelHeader>
 
       <div className="dp-panel-body" ref={bodyRef}>
         {leadingView && <div className="dp-panel-inner dp-panel-inner--wide" hidden={view !== "lead"}>{leadingView.content}</div>}
         {/* ── Everything the model reads, and where the persona is filed ── */}
-        <div className="dp-panel-inner" hidden={view !== "persona"}>
+        {!fallback && <div className="dp-panel-inner" hidden={view !== "persona"}>
           <IdentitySection category={draft.category} onCategory={setCategory} />
           <PersonaSection
             text={draft.text}
@@ -289,16 +298,28 @@ export function ClientEditor({ niche, onBack, actions, leadingView }: ClientEdit
               />
             }
           />
-        </div>
+        </div>}
 
         {/* ── Pasted as typed, so one slot per language ── */}
         <div className="dp-panel-inner" hidden={view !== "wording"}>
           <WordsSection terms={draft.terms} onChange={setTermSlot} />
-          <OpenerSection text={draft.text} onChange={setTextSlot} />
+          {fallback ? (
+            <PersonaSection
+              text={draft.text}
+              lang={personaLang}
+              onLang={setPersonaLang}
+              onChange={setTextSlot}
+              only={PACK_FIELDS}
+              title={t("clients.fallback.packsTitle")}
+              blurb={t("clients.fallback.packsHint")}
+            />
+          ) : (
+            <OpenerSection text={draft.text} onChange={setTextSlot} />
+          )}
         </div>
 
         {/* ── What the widget and Instagram demos are dressed in ── */}
-        <div className="dp-panel-inner" hidden={view !== "media"}>
+        {!fallback && <div className="dp-panel-inner" hidden={view !== "media"}>
           <ClientScreenshot key={`shot-${niche}`} niche={niche} screenshot={client?.screenshot ?? null} />
           <SocialPostSection
             key={`post-${niche}`}
@@ -306,7 +327,7 @@ export function ClientEditor({ niche, onBack, actions, leadingView }: ClientEdit
             socialPost={client?.socialPost ?? null}
             socialImage={client?.socialImage ?? null}
           />
-        </div>
+        </div>}
       </div>
     </>
   );

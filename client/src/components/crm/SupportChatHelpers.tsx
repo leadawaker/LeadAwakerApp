@@ -1,8 +1,7 @@
-import { useRef, useState, useEffect } from "react";
-import { Headphones, Play, Pause } from "lucide-react";
+import { useRef, useState } from "react";
+import { Play, Pause } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { type SupportChatMessage, type SupportBotConfig } from "@/hooks/useSupportChat";
-import founderPhoto from "@/assets/founder-photo.webp";
+import { type FounderMessage } from "@/hooks/useFounderChat";
 
 // ─── Voice memo player (custom controls — reliable across browsers) ───────────
 function fmtClock(s: number): string {
@@ -81,39 +80,6 @@ export function VoiceMemo({ src, onDark }: { src: string; onDark: boolean }) {
   );
 }
 
-// ─── Typing indicator ─────────────────────────────────────────────────────────
-export function TypingDots() {
-  return (
-    <div className="flex items-end gap-1.5">
-      <div className="h-9 w-9 shrink-0" />
-      <div className="relative">
-        <div className="flex items-center gap-1 px-3.5 py-2.5 bg-white dark:bg-card rounded-lg rounded-bl-none w-fit shadow-sm">
-          {[0, 1, 2].map((i) => (
-            <span
-              key={i}
-              className="block h-1.5 w-1.5 rounded-full bg-muted-foreground/50"
-              style={{
-                animation: "supportDotBounce 1.2s ease-in-out infinite",
-                animationDelay: `${i * 0.15}s`,
-              }}
-            />
-          ))}
-          <style>{`
-            @keyframes supportDotBounce {
-              0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
-              30% { transform: translateY(-4px); opacity: 1; }
-            }
-            @keyframes micPulse {
-              0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.5); }
-              50% { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
-            }
-          `}</style>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 // ─── Time/date helpers ────────────────────────────────────────────────────────
 export function formatTime(iso?: string): string {
   if (!iso) return "";
@@ -152,54 +118,13 @@ export function DateSeparator({ label }: { label: string }) {
   );
 }
 
-// ─── Bot avatar (36px, matching EntityAvatar standard) ───────────────────────
-export function BotAvatarFull({ config, size = 36 }: { config: SupportBotConfig; size?: number }) {
-  return (
-    <div
-      className="rounded-full shrink-0 overflow-hidden flex items-center justify-center bg-brand-indigo/10"
-      style={{ width: size, height: size }}
-    >
-      {config.photoUrl ? (
-        <img src={config.photoUrl} alt={config.name} className="w-full h-full object-cover" />
-      ) : (
-        <Headphones className="text-brand-indigo" style={{ width: size * 0.44, height: size * 0.44 }} />
-      )}
-    </div>
-  );
-}
-
 // ─── Single message bubble ────────────────────────────────────────────────────
-export function FounderAvatarFull({ size = 36 }: { size?: number }) {
-  const [src, setSrc] = useState(() => localStorage.getItem("leadawaker_user_avatar") || founderPhoto);
-  useEffect(() => {
-    const handler = () => setSrc(localStorage.getItem("leadawaker_user_avatar") || founderPhoto);
-    window.addEventListener("leadawaker-avatar-changed", handler);
-    return () => window.removeEventListener("leadawaker-avatar-changed", handler);
-  }, []);
-  return (
-    <img
-      src={src}
-      alt="Gabriel"
-      className="rounded-full shrink-0 object-cover"
-      style={{ width: size, height: size }}
-    />
-  );
-}
-
 export function ChatBubble({
   msg,
-  botConfig,
   isFirstInGroup,
-  avatarSize,
-  showBubbleAvatar,
-  activeChannel,
 }: {
-  msg: SupportChatMessage;
-  botConfig: SupportBotConfig;
+  msg: FounderMessage;
   isFirstInGroup: boolean;
-  avatarSize: number;
-  showBubbleAvatar: boolean;
-  activeChannel: "bot" | "founder";
 }) {
   const isUser = msg.role === "user";
   const time = formatTime(msg.createdAt);
@@ -215,19 +140,13 @@ export function ChatBubble({
   return (
     <div className={cn("flex flex-col", isUser ? "items-end" : "items-start")}>
       <div className={cn("flex gap-1.5", isUser ? "justify-end" : "justify-start")}>
-        {showBubbleAvatar && !isUser && isFirstInGroup && (
-          activeChannel === "founder" ? <FounderAvatarFull size={avatarSize} /> : <BotAvatarFull config={botConfig} size={avatarSize} />
-        )}
-        {showBubbleAvatar && !isUser && !isFirstInGroup && <div style={{ width: avatarSize }} className="shrink-0" />}
         <div
           className={cn(
             "max-w-[80%] px-3 pt-2 pb-1 text-[13px] leading-relaxed whitespace-pre-wrap",
             bubbleRadius,
             isUser
               ? "bg-brand-indigo text-white shadow-sm"
-              : activeChannel === "founder"
-                ? "bg-white dark:bg-card text-foreground shadow-[var(--sh-inset-crisp)]"
-                : "bg-white dark:bg-card text-foreground shadow-sm",
+              : "bg-white dark:bg-card text-foreground shadow-[var(--sh-inset-crisp)]",
           )}
         >
           {isAudio ? (

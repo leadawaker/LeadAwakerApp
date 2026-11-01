@@ -607,6 +607,8 @@
       "scopingLadder": "Roteiro de escopo",
       "questionBank": "Banco de perguntas",
       "objections": "Objeções",
+      "badExamples": "Exemplos ruins",
+      "scenarioExamples": "Roteiro de cenários",
       "firstMessage": "Primeira mensagem",
       "openerPhrase": "Frase de abertura",
       "whenLabel": "Referência de tempo",
@@ -684,6 +686,12 @@
     },
     "close": "Fechar",
     "autosave": "Salva enquanto você digita",
+    "fallback": {
+      "title": "Palavras padrão",
+      "tag": "Padrão para todos os nichos",
+      "packsTitle": "Pacotes de exemplos",
+      "packsHint": "O prompt 93 lê estes quando um nicho não tem pacote próprio, campo por campo. Escritos uma vez, em inglês ou holandês: a IA traduz ao responder."
+    },
     "viewsLabel": "Partes desta persona",
     "views": {
       "persona": "Persona",

@@ -101,6 +101,8 @@ export interface VoiceLine {
   intake: string;
   afterHours: (typeof AFTER_HOURS)[number] | null;
   extraInstructions: string;
+  /** Free-text tone (setup.voice.tone); when set the engine uses it instead of the perception picks. */
+  tone: string;
   /**
    * The WhatsApp message after each call (engine after_call_followup.py).
    * `whatsappConnected`: the account's own WhatsApp number can send; without
@@ -150,6 +152,7 @@ export interface VoiceLinePatch {
   intake?: string;
   afterHours?: (typeof AFTER_HOURS)[number] | null;
   extraInstructions?: string;
+  tone?: string;
   /** Accounts.after_call_followup_enabled. */
   followUpEnabled?: boolean;
   /** Accounts.sms_sender_id: the name an SMS fallback is sent from, or null for none. */
@@ -293,6 +296,7 @@ function toVoiceLine(accountId: number, st: State): VoiceLine {
     intake: normalizeIntake(voiceSetup.intake),
     afterHours,
     extraInstructions: typeof voiceSetup.extraInstructions === "string" ? voiceSetup.extraInstructions : "",
+    tone: typeof voiceSetup.tone === "string" ? voiceSetup.tone : "",
     followUp: {
       enabled: account.afterCallFollowupEnabled === true,
       smsSenderId: text(account.smsSenderId) || null,
@@ -397,6 +401,7 @@ async function applyProfile(tx: Tx, accountId: number, profile: AccountCommunica
   if (patch.intake !== undefined) setVoice("intake", normalizeIntake(patch.intake));
   if (patch.afterHours !== undefined) setVoice("afterHours", patch.afterHours);
   if (patch.extraInstructions !== undefined) setVoice("extraInstructions", patch.extraInstructions);
+  if (patch.tone !== undefined) setVoice("tone", patch.tone.trim());
   if (patch.transferNumber !== undefined) setHandoff("number", patch.transferNumber ?? "");
   if (patch.transferName !== undefined) setHandoff("name", patch.transferName ?? "");
   if (patch.transferWaiting !== undefined) setHandoff("waiting", patch.transferWaiting);

@@ -782,6 +782,8 @@
       "scopingLadder": "Scoping ladder",
       "questionBank": "Question bank",
       "objections": "Objections",
+      "badExamples": "Bad examples",
+      "scenarioExamples": "Scenario playbook",
       "firstMessage": "First message",
       "openerPhrase": "Opener phrase",
       "whenLabel": "Time reference",
@@ -823,6 +825,12 @@
     },
     "close": "Close",
     "autosave": "Saves as you type",
+    "fallback": {
+      "title": "Fallback words",
+      "tag": "Fallback for every niche",
+      "packsTitle": "Example packs",
+      "packsHint": "Prompt 93 reads these when a niche has no pack of its own, field by field. Written once, in English or Dutch: the AI translates as it replies."
+    },
     "viewsLabel": "Parts of this persona",
     "views": {
       "persona": "Persona",

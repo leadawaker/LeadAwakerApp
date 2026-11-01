@@ -335,15 +335,15 @@ export function RightSidebar({
       ownerOnly: true,
     },
     { href: `${prefix}/traffic`, label: t("sidebar.traffic"), labelKey: "Traffic", icon: ChartNoAxesColumn, testId: "nav-traffic", ownerOnly: true },
-    // Browser-demo links and their sessions. ownerOnly for the same reason the
-    // API behind it is: the list names every prospect who has been demoed to.
+    // Browser-demo links and their sessions. Owner and Admin only: the list names
+    // every prospect who has been demoed to.
     {
       href: `${prefix}/demos`,
       label: t("sidebar.demos"),
       labelKey: "Demos",
       icon: MonitorPlay,
       testId: "nav-demos",
-      ownerOnly: true,
+      agencyOnly: true,
     },
   ];
 

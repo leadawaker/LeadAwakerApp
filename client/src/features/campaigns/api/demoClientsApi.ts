@@ -42,6 +42,9 @@ export const CLIENT_TEXT_FIELDS = [
   "firstMessage",
   "questionBank",
   "objectionExamples",
+  // The other two example packs the engine reads ({niche_bad_examples}, {niche_scenario_examples}).
+  "badExamples",
+  "scenarioExamples",
   "whenLabel",
 ] as const;
 

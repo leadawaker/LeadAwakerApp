@@ -1,3 +1,4 @@
+import i18n from "@/i18n";
 // View mode
 export type PromptViewMode = "list" | "table";
 export const VIEW_MODE_KEY = "prompts-view-mode";
@@ -29,14 +30,39 @@ export const EMPTY_FORM: PromptFormData = {
   campaignsId: "",
 };
 
+// Tier aliases: "terra-latest" etc. resolve to a real model id in the engine
+// (automations tools/model_tiers.py), so a new release is a one-line change
+// there. Keep MODEL_TIERS in step with that file; it is only used for labels.
+export const MODEL_TIERS: Record<string, string> = {
+  sol: "gpt-6.1-sol",
+  terra: "gpt-6.1-terra",
+  luna: "gpt-5.6-luna",
+};
+export const LATEST_MODEL_OPTIONS = ["terra-latest", "sol-latest", "luna-latest"];
+
+/** Display text for a model value: "Terra (latest · gpt-6.1-terra)" for an alias, else the id. */
+export function modelLabel(m: string): string {
+  const tier = m.endsWith("-latest") ? m.slice(0, -"-latest".length) : "";
+  if (!tier || !MODEL_TIERS[tier]) return m;
+  return i18n.t("prompts:model.latest", { tier: tier[0].toUpperCase() + tier.slice(1), model: MODEL_TIERS[tier] });
+}
+
+/** Labels for every option in a model select, for EditSelect's `labels` prop. */
+export function modelLabels(options: string[]): Record<string, string> {
+  return Object.fromEntries(options.filter(Boolean).map((m) => [m, modelLabel(m)]));
+}
+
 // Order matters: the first entry is what a new campaign/prompt is nudged towards.
-// gpt-5.6-terra is the engine default (src/config.py). The 5.6 family rejects
+// terra-latest is the engine default (src/config.py). The 5.6+ families reject
 // max_tokens and temperature, so only call sites that already send
 // max_completion_tokens can use them.
 export const MODEL_OPTIONS = [
-  "gpt-5.6-terra",
+  ...LATEST_MODEL_OPTIONS,
+  "gpt-6.1-sol",
+  "gpt-6.1-terra",
+  "gpt-6-astra",
+  "gpt-6-luna",
   "gpt-5.6-luna",
-  "gpt-5.6-sol",
   "gpt-5.5",
   "gpt-5.4",
   "gpt-5.4-pro",
@@ -125,6 +151,11 @@ export function getScoreColorClasses(score: string | null | undefined): string {
 // Helper: get prompt ID (handles id vs Id)
 export function getPromptId(p: any): number {
   return p.id || p.Id;
+}
+
+/** The prompt's note, without the line the server writes on auto-created rows. */
+export function promptNote(p: any): string {
+  return String(p?.notes || "").replace(/^System prompt\s*[-\u2013\u2014]?\s*auto[- ]created.*$/im, "").trim();
 }
 
 export interface PromptVersion {

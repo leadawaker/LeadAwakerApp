@@ -782,6 +782,8 @@
       "scopingLadder": "Scoping ladder",
       "questionBank": "Vragenbank",
       "objections": "Bezwaren",
+      "badExamples": "Slechte voorbeelden",
+      "scenarioExamples": "Scenario-draaiboek",
       "firstMessage": "Eerste bericht",
       "openerPhrase": "Openingszin",
       "whenLabel": "Tijdsaanduiding",
@@ -823,6 +825,12 @@
     },
     "close": "Sluiten",
     "autosave": "Slaat op terwijl je typt",
+    "fallback": {
+      "title": "Standaardwoorden",
+      "tag": "Terugval voor elke niche",
+      "packsTitle": "Voorbeeldpakketten",
+      "packsHint": "Prompt 93 leest deze als een niche geen eigen pakket heeft, per veld. Eén keer geschreven, in het Engels of Nederlands: de AI vertaalt terwijl hij antwoordt."
+    },
     "viewsLabel": "Onderdelen van deze persona",
     "views": {
       "persona": "Persona",
