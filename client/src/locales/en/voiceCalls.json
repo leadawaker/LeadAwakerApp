@@ -75,7 +75,6 @@
     "today": "Today",
     "earlier": "Earlier"
   },
-  "showing": "Showing {{shown}} of {{total}}",
   "voiceCall": "Voice call",
   "nothingHere": "Nothing here",
   "play": "Play recording",
@@ -229,6 +228,7 @@
     "showMore": "Show more ({{count}})",
     "showLess": "Show less",
     "openLead": "Open the lead",
+    "editName": "Click to edit the name",
     "callNumber": "Call {{n}}",
     "whatsappHint": "Opens a WhatsApp chat with this person",
     "lastAttempt": {

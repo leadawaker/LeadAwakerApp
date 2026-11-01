@@ -31,7 +31,7 @@ export function CallListSkeleton({ rows = 7 }: { rows?: number }) {
   );
 }
 
-/** A section title on the ground, in place of Calls, Summary or Details. */
+/** A section title on the ground, in place of Calls, Booked or Summary. */
 function SectionTitle({ w }: { w: number }) {
   return <Bar w={w} h={14} r="var(--r-pill)" style={{ marginBlock: 3 }} />;
 }
@@ -54,24 +54,18 @@ export function CallDetailSkeleton({ narrow, sidebar }: { narrow: boolean; sideb
             <div className="neu-raised" style={{ ...panel, width: narrow ? "auto" : SIDEBAR_WIDTH, flexShrink: 0, minHeight: 0, overflowY: "auto" }}>{sidebar}</div>
           ) : (
             <div className="animate-pulse" style={{ width: narrow ? "auto" : SIDEBAR_WIDTH, flexShrink: 0 }}>
-              <ListSection label={<SectionTitle w={64} />}>
-                <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                    <Bar w={56} h={56} r="28%" />
-                    <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 7 }}><Bar w="60%" h={14} /><Bar w="40%" h={9} /></div>
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}><Bar w={36} h={36} r="50%" /><Bar w={36} h={36} r="50%" /><Bar w={36} h={36} r="50%" /></div>
+              {/* The header on its own card (no title), like CallSidebar. */}
+              <div className="neu-raised" style={{ ...panel, marginBottom: 18, padding: "18px 16px 16px", display: "flex", flexDirection: "column", gap: 12 }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
+                  <Bar w={56} h={56} r="28%" />
+                  <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8, paddingTop: 4 }}><Bar w="60%" h={16} /><Bar w="42%" h={11} /></div>
+                  <div style={{ display: "flex", gap: 6 }}><Bar w={36} h={36} r="50%" /><Bar w={36} h={36} r="50%" /></div>
                 </div>
-              </ListSection>
+                <Bar w="46%" h={13} />
+                <Bar w={92} h={22} r="var(--r-pill)" />
+              </div>
               <ListSection label={<SectionTitle w={84} />}>
-                <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}><Bar w="100%" h={10} /><Bar w="92%" h={10} /><Bar w="70%" h={10} /></div>
-              </ListSection>
-              <ListSection label={<SectionTitle w={72} />}>
-                <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 12 }}>
-                  {[0, 1, 2].map((i) => (
-                    <div key={i} style={{ display: "flex", justifyContent: "space-between" }}><Bar w={80} h={9} /><Bar w={110} h={9} /></div>
-                  ))}
-                </div>
+                <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}><Bar w="100%" h={10} /><Bar w="92%" h={10} /><Bar w="70%" h={10} /><Bar w={90} h={8} style={{ marginTop: 6 }} /></div>
               </ListSection>
             </div>
           )}

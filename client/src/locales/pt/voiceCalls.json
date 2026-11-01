@@ -75,7 +75,6 @@
     "today": "Hoje",
     "earlier": "Anteriores"
   },
-  "showing": "Mostrando {{shown}} de {{total}}",
   "voiceCall": "Chamada de voz",
   "nothingHere": "Nada por aqui",
   "play": "Ouvir gravação",
@@ -229,6 +228,7 @@
     "showMore": "Mostrar mais ({{count}})",
     "showLess": "Mostrar menos",
     "openLead": "Abrir o lead",
+    "editName": "Clique para editar o nome",
     "callNumber": "Ligação {{n}}",
     "whatsappHint": "Abre uma conversa no WhatsApp com esta pessoa",
     "lastAttempt": {

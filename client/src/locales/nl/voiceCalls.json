@@ -75,7 +75,6 @@
     "today": "Vandaag",
     "earlier": "Eerder"
   },
-  "showing": "{{shown}} van {{total}}",
   "voiceCall": "Spraakgesprek",
   "nothingHere": "Niets gevonden",
   "play": "Opname afspelen",
@@ -229,6 +228,7 @@
     "showMore": "Meer tonen ({{count}})",
     "showLess": "Minder tonen",
     "openLead": "Open de lead",
+    "editName": "Klik om de naam te bewerken",
     "callNumber": "Gesprek {{n}}",
     "whatsappHint": "Opent een WhatsApp-chat met deze persoon",
     "lastAttempt": {

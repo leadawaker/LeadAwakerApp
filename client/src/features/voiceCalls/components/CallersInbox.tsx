@@ -56,7 +56,8 @@ interface Props {
 
 function GroupHeader({ label, count }: { label: string; count: number }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "12px 8px 5px" }}>
+    // Sticks to the top of the phone list (the scroller's 8px side padding included) while its group scrolls under it.
+    <div style={{ position: "sticky", top: 0, zIndex: 2, display: "flex", alignItems: "center", gap: 8, margin: "0 -8px", padding: "12px 16px 5px", background: "var(--surface)", boxShadow: "0 -6px 0 0 var(--surface)" }}>
       <MonoLabel>{label}</MonoLabel>
       <span style={{ fontFamily: "var(--mono)", fontSize: 9, fontWeight: 700, color: "var(--mute-2)" }}>{count}</span>
       <span style={{ flex: 1, height: 1, background: "var(--line)" }} />
@@ -164,10 +165,8 @@ export function CallersInbox({ callers, calls, isLoading, error, query, options,
       <div className="la-split-scroll" style={{ flex: 1, minHeight: 0, overflowY: "auto", padding: "6px 8px 8px", display: "flex", flexDirection: "column" }}>
         {listBody}
       </div>
-      {/* Bottom bar: "showing x of y" on the left, the fold button at the right end (desktop, two panes). */}
-      <ListPanelFooter>
-        {callers.length > 0 && <MonoLabel>{t("showing", { shown: items.length, total: callers.length })}</MonoLabel>}
-      </ListPanelFooter>
+      {/* The fold button floats at the panel's bottom corner (desktop, two panes), as on Chats. */}
+      <ListPanelFooter />
     </div>
   );
 

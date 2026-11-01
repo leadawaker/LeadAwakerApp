@@ -64,7 +64,7 @@ function StatusPane({ caller, narrow, children }: { caller?: CallerContext; narr
 }
 
 /**
- * Laid out like the Chats page: the header, booking, summary and details
+ * Laid out like the Chats page: the header, booking and summary
  * panel on the left, the conversation with its audio player on the right,
  * all in a centered column capped at DETAIL_MAX_WIDTH (the Chats width) so
  * nothing stretches on a wide screen. Below 1100px the whole pane scrolls as
@@ -98,7 +98,7 @@ export function VoiceCallDetail({ callId, masked, caller }: Props) {
     <div style={{ flex: 1, minHeight: 0, padding: 14, display: "flex", flexDirection: "column", overflowY: narrow ? "auto" : "hidden", overflowX: "hidden" }}>
       <div style={{ width: "100%", maxWidth: DETAIL_MAX_WIDTH, margin: "0 auto", flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: "column", gap: 14 }}>
         <div style={{ flex: narrow ? "0 0 auto" : 1, minHeight: 0, display: "flex", flexDirection: narrow ? "column" : "row", gap: 14 }}>
-          <CallSidebar call={call} narrow={narrow} caller={caller} />
+          <CallSidebar call={call} narrow={narrow} caller={caller} masked={masked} />
           <div style={{ flex: narrow ? "0 0 auto" : 1, minWidth: 0, minHeight: narrow ? 760 : 0, display: "flex", flexDirection: "column", order: narrow ? 2 : 0 }}>
             <CallReviewPanel key={call.callId} call={call} mask={maskText} />
           </div>

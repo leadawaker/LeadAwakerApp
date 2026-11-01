@@ -1,10 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "wouter";
-import { Building2, ChevronDown, ChevronUp, UserRound } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { ListSection } from "@/components/crm/primitives";
 import { Card, CardLabel } from "@/features/leads/components/cardView/designPrimitives";
-import { openLead } from "@/lib/leadLink";
 import type { VoiceCaller, VoiceCallDetail, VoiceCallListItem } from "../api/voiceCallsApi";
 import { formatDateTime, formatDurationUnits } from "../format";
 import { CallHeader } from "./CallHeader";
@@ -26,12 +24,6 @@ export interface CallerContext {
   calls: VoiceCallListItem[];
   onSelectCall: (callId: string) => void;
 }
-
-const CHIP: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: 6, background: "var(--bg)", boxShadow: "var(--sh-inset-super-crisp)",
-  borderRadius: "var(--r-pill)", padding: "5px 12px 5px 10px", color: "var(--ink-soft)", fontSize: 12.5, fontWeight: 600,
-  textDecoration: "none", whiteSpace: "nowrap", maxWidth: "100%",
-};
 
 const HISTORY_SHOWN = 3;
 
@@ -105,64 +97,11 @@ export function CallerHistory({ ctx, divider = true, split = false }: { ctx: Cal
 }
 
 /**
- * Opens this lead in its one home (Chats with the lead selected, lib/leadLink),
- * with a way back to Calls on the phone.
- */
-function useOpenLead() {
-  const [, setLocation] = useLocation();
-  return (leadId: number) => {
-    try { localStorage.setItem("leadawaker-returnto", "/platform/voice-calls"); } catch { /* private mode: the page still opens */ }
-    openLead(setLocation, leadId);
-  };
-}
-
-function Details({ call, ctx }: { call: VoiceCallDetail; ctx?: CallerContext }) {
-  const { t } = useTranslation("voiceCalls");
-  const openLead = useOpenLead();
-  const caller = ctx?.caller;
-  const leadId = caller ? caller.leadsId : call.leadsId;
-  const demo = call.scope === "demo";
-  const company = caller ? caller.personaCompany : demo ? call.personaCompany || t("persona.universal") : null;
-  const niche = !caller && demo ? call.personaNiche : null;
-  const meta = [call.language ? call.language.toUpperCase() : null, t("turns", { count: call.turnCount })].filter(Boolean).join(" · ");
-
-  return (
-    <ListSection label={t("sections.details")}>
-    <Card variant="flat" hideHead bodyStyle={{ padding: "14px 16px 18px", gap: 12 }}>
-      <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8 }}>
-        {leadId != null && (
-          <button
-            type="button"
-            onClick={() => openLead(leadId)}
-            className="la-btn la-btn--soft"
-            style={SOFT_RAISED}
-            title={t("callers.openLead")}
-            data-testid="voice-caller-lead-chip"
-          >
-            <UserRound size={13} style={{ color: "var(--wine)" }} />
-            {t("callers.lead")}
-          </button>
-        )}
-        {company && (
-          <span style={CHIP}>
-            <Building2 className="h-[13px] w-[13px] shrink-0" style={{ color: "var(--wine)" }} />
-            {company}
-            {niche && <span style={{ fontWeight: 400, color: "var(--mute)" }}>{`· ${niche}`}</span>}
-          </span>
-        )}
-      </div>
-      <div style={{ fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.06em", color: "var(--mute)" }}>{meta}</div>
-    </Card>
-    </ListSection>
-  );
-}
-
-/**
  * Left column, like the Chats recap sidebar: the header on its own card, then (Callers view)
- * this person's calls, the booking, the summary and the details, each a card with its title on
+ * this person's calls, the booking and the summary, each a card with its title on
  * the ground. The column reaches 14px past its cards so its scrolling never cuts their shadows.
  */
-export function CallSidebar({ call, narrow, caller }: { call: VoiceCallDetail; narrow: boolean; caller?: CallerContext }) {
+export function CallSidebar({ call, narrow, caller, masked = false }: { call: VoiceCallDetail; narrow: boolean; caller?: CallerContext; masked?: boolean }) {
   const history = !!caller && caller.calls.length > 0;
   return (
     <div
@@ -174,12 +113,11 @@ export function CallSidebar({ call, narrow, caller }: { call: VoiceCallDetail; n
       }}
     >
       <div className="neu-raised" style={{ flexShrink: 0, borderRadius: "var(--r-card)", background: "var(--card)", marginBottom: 18 }}>
-        <CallHeader call={call} narrow={narrow} caller={caller} />
+        <CallHeader call={call} narrow={narrow} caller={caller} masked={masked} />
       </div>
       {caller && history && <CallerHistory ctx={caller} split />}
       <CallBooking call={call} split />
       <CallSummaryCard call={call} divider={false} split />
-      <Details call={call} ctx={caller} />
     </div>
   );
 }

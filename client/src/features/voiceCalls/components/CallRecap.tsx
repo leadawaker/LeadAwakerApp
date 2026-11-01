@@ -94,6 +94,10 @@ export function CallSummaryCard({ call, divider, split = false }: { call: VoiceC
       bodyStyle={{ padding: "14px 16px 18px" }}
     >
       <CallSummaryBody call={call} withBooking={!!call.bookedSlot} />
+      {/* What used to be the Details section: the call's language and length in turns. */}
+      <div data-testid="voice-call-summary-meta" style={{ marginTop: 14, fontFamily: "var(--mono)", fontSize: 11, letterSpacing: "0.06em", color: "var(--mute)" }}>
+        {[call.language ? call.language.toUpperCase() : null, t("turns", { count: call.turnCount })].filter(Boolean).join(" · ")}
+      </div>
     </Card>
   );
   return split ? <ListSection label={t("sections.summary")}>{body}</ListSection> : body;
