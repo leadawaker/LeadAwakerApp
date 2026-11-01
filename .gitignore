@@ -121,3 +121,6 @@ client/public/images/*.png
 __pycache__/
 /proposals/
 script/home/img/
+
+# Vercel CLI project link (deploy/vercel/deploy.sh)
+.vercel/
